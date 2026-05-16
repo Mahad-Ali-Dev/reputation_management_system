@@ -1,0 +1,72 @@
+[Unit]
+# Repulabs SaaS — Next.js production server
+# Path: /etc/systemd/system/repulabs.service  (symlink or copy)
+# Install:   sudo systemctl daemon-reload && sudo systemctl enable repulabs
+# Status:    sudo systemctl status repulabs
+# Logs:      sudo journalctl -u repulabs -f
+
+Description=Repulabs Next.js production server
+Documentation=https://github.com/repulabs/repulabs (or your repo URL)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+
+# ---- Identity ----
+# Create with: sudo adduser --system --group --no-create-home --shell /bin/false repulabs
+User=repulabs
+Group=repulabs
+
+# ---- Working directory ----
+WorkingDirectory=/var/www/repulabs
+# Env file (mode 600, owned by repulabs:repulabs)
+EnvironmentFile=/var/www/repulabs/.env.production
+
+# ---- Command ----
+# pnpm must be on the PATH for the service user. Either install via corepack
+# system-wide (`corepack enable; corepack prepare pnpm@latest --activate`) or
+# point to the absolute path of pnpm in this ExecStart.
+ExecStart=/usr/bin/pnpm exec next start -p 3000
+
+# ---- Lifecycle ----
+# Reload-on-edit: send SIGHUP for graceful reload. Next.js handles SIGTERM
+# for connection draining (~10s by default).
+KillSignal=SIGTERM
+TimeoutStopSec=20
+Restart=always
+RestartSec=5
+# After 3 crashes in 30s, give up — prevents fork bombs.
+StartLimitIntervalSec=30
+StartLimitBurst=3
+
+# ---- Resource limits ----
+LimitNOFILE=65536
+# Cap memory at 1.5GB on a typical 2GB Hostinger VPS — kills runaway leaks
+# before they OOM the box.
+MemoryMax=1536M
+MemoryHigh=1280M
+
+# ---- Security hardening (systemd sandboxing) ----
+NoNewPrivileges=true
+PrivateTmp=true
+PrivateDevices=true
+ProtectSystem=strict
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictSUIDSGID=true
+RestrictRealtime=true
+LockPersonality=true
+# Allow writes only to the app dir (uploads, .next/cache, logs)
+ReadWritePaths=/var/www/repulabs
+
+# ---- Logging ----
+# Send stdout/stderr to journald. Use `journalctl -u repulabs --since "1 hour ago"`.
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=repulabs
+
+[Install]
+WantedBy=multi-user.target

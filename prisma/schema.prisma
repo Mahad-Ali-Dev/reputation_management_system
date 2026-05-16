@@ -1,0 +1,1309 @@
+// RepuBoost — Prisma schema (Day 1 foundation)
+// Multi-tenant via Postgres RLS. RLS policies + WITH CHECK + FORCE applied via raw SQL migration.
+// Auth.js Drizzle/Prisma adapter compatible.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+  binaryTargets   = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [pgcrypto, pg_trgm]
+}
+
+// ============================================================
+// IDENTITY & TENANCY
+// ============================================================
+
+model Organization {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  name            String
+  slug            String    @unique
+  plan            String    @default("trial") // trial | pro | suspended | free
+  trialEndsAt     DateTime? @map("trial_ends_at")
+  stripeCustomerId String?  @unique @map("stripe_customer_id")
+  onboardingStep  Int       @default(0) @map("onboarding_step")
+  // Day 11 V3 — enriched profile
+  ownerName       String?   @map("owner_name")
+  ownerEmail      String?   @map("owner_email")
+  phone           String?
+  country         String?
+  websiteUrl      String?   @map("website_url")
+  logoUrl         String?   @map("logo_url")
+  businessDescription String? @map("business_description")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  memberships    Membership[]
+  invitations    Invitation[]
+  subscription   Subscription?
+  webhookEvents  WebhookDelivery[] @relation("OrgWebhooks")
+  establishments Establishment[]
+  connections    Connection[]
+  hardwareOrders HardwareOrder[]
+  inboxThreads   InboxThread[]
+  reviewRequests ReviewRequest[]
+
+  @@index([plan])
+  @@index([stripeCustomerId])
+  @@map("organizations")
+}
+
+model Establishment {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  name            String
+  category        String?
+  address         Json?
+  timezone        String    @default("UTC")
+  brandVoice      Json?     @map("brand_voice")
+  businessHours   Json?     @map("business_hours")
+  googlePlaceId   String?   @map("google_place_id")
+  // Day 11 V3 — UI extras
+  imageUrl        String?   @map("image_url")
+  websiteUrl      String?   @map("website_url")
+  phone           String?
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+  deletedAt       DateTime? @map("deleted_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  connections  Connection[]
+  reviews      Review[]
+  devices      Device[]
+  hardwareOrderItems HardwareOrderItem[]
+  inboxThreads InboxThread[]
+  reviewRequests ReviewRequest[]
+  reviewRequestTemplates ReviewRequestTemplate[]
+  surveyCampaigns SurveyCampaign[] @relation("EstablishmentSurveys")
+
+  @@index([organizationId])
+  @@index([googlePlaceId])
+  @@map("establishments")
+}
+
+// ============================================================
+// DAY 6: OUTREACH (review requests, inbox, consent)
+// ============================================================
+
+model SmsConsent {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  phoneE164       String   @map("phone_e164")
+  consentTextHash String   @map("consent_text_hash")
+  consentSource   String   @map("consent_source")
+  consentIp       String?  @map("consent_ip") @db.Inet
+  consentUa       String?  @map("consent_ua")
+  consentedAt     DateTime @map("consented_at")
+  revokedAt       DateTime? @map("revoked_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([organizationId, phoneE164])
+  @@map("sms_consents")
+}
+
+model Unsubscribe {
+  channel         String   // email | sms
+  emailOrPhone    String   @map("email_or_phone")
+  organizationId  String   @map("organization_id") @db.Uuid
+  unsubscribedAt  DateTime @default(now()) @map("unsubscribed_at")
+  source          String?
+
+  @@id([channel, emailOrPhone, organizationId])
+  @@index([emailOrPhone, channel, organizationId])
+  @@map("unsubscribes")
+}
+
+model ReviewRequestTemplate {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  name            String
+  channel         String   // sms | email | both
+  subject         String?
+  body            String
+  isDefault       Boolean  @default(false) @map("is_default")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  reviewRequests ReviewRequest[]
+
+  @@map("review_request_templates")
+}
+
+model ReviewRequest {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  establishmentId   String   @map("establishment_id") @db.Uuid
+  templateId        String?  @map("template_id") @db.Uuid
+  channel           String
+  recipient         String
+  recipientName     String?  @map("recipient_name")
+  shortSlug         String?  @map("short_slug")
+  scheduledFor      DateTime @map("scheduled_for")
+  sentAt            DateTime? @map("sent_at")
+  deliveredAt       DateTime? @map("delivered_at")
+  openedAt          DateTime? @map("opened_at")
+  clickedAt         DateTime? @map("clicked_at")
+  convertedAt       DateTime? @map("converted_at")
+  status            String   @default("queued")
+  triggerSource     String?  @map("trigger_source")
+  error             String?
+  providerMessageId String?  @map("provider_message_id")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  template      ReviewRequestTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, establishmentId, createdAt(sort: Desc)])
+  @@index([organizationId, recipient])
+  @@map("review_requests")
+}
+
+model InboxThread {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId        String   @map("organization_id") @db.Uuid
+  establishmentId       String?  @map("establishment_id") @db.Uuid
+  channel               String   // email | facebook_msg | instagram_dm | gbp_qa | webchat | sms
+  externalThreadId      String?  @map("external_thread_id")
+  subject               String?
+  participant           Json?
+  status                String   @default("open")
+  assigneeId            String?  @map("assignee_id") @db.Uuid
+  lastMessageAt         DateTime @default(now()) @map("last_message_at")
+  lastMessageBody       String?  @map("last_message_body")
+  lastMessageDirection  String?  @map("last_message_direction")
+  unreadCount           Int      @default(0) @map("unread_count")
+  createdAt             DateTime @default(now()) @map("created_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  messages      InboxMessage[]
+
+  @@index([organizationId, status, lastMessageAt(sort: Desc)])
+  @@map("inbox_threads")
+}
+
+model InboxMessage {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  threadId        String   @map("thread_id") @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  direction       String   // inbound | outbound
+  authorUserId    String?  @map("author_user_id") @db.Uuid
+  body            String
+  attachments     Json?
+  aiSuggested     String?  @map("ai_suggested")
+  externalId      String?  @map("external_id")
+  sentAt          DateTime @default(now()) @map("sent_at")
+
+  thread InboxThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  @@index([threadId, sentAt(sort: Desc)])
+  @@map("inbox_messages")
+}
+
+// ============================================================
+// DAY 7: SURVEYS
+// ============================================================
+
+model SurveyCampaign {
+  id                  String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId      String   @map("organization_id") @db.Uuid
+  establishmentId     String?  @map("establishment_id") @db.Uuid
+  name                String
+  type                String   @default("nps")
+  channel             String   @default("email")
+  triggerEvent        String?  @map("trigger_event")
+  delayMinutes        Int      @default(0) @map("delay_minutes")
+  incentive           Json?
+  status              String   @default("draft")
+  smartRouteEnabled   Boolean  @default(true) @map("smart_route_enabled")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  establishment Establishment? @relation("EstablishmentSurveys", fields: [establishmentId], references: [id], onDelete: Cascade)
+  questions     SurveyQuestion[]
+  responses     SurveyResponse[]
+  tokens        SurveyResponseToken[]
+
+  @@index([organizationId, status])
+  @@map("survey_campaigns")
+}
+
+model SurveyQuestion {
+  id          String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId  String  @map("campaign_id") @db.Uuid
+  position    Int
+  type        String
+  prompt      String
+  options     Json?
+  required    Boolean @default(true)
+
+  campaign SurveyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  answers  SurveyAnswer[]
+
+  @@unique([campaignId, position])
+  @@index([campaignId, position])
+  @@map("survey_questions")
+}
+
+model SurveyResponseToken {
+  tokenHash       String    @id @map("token_hash")
+  campaignId      String    @map("campaign_id") @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  recipient       String
+  recipientName   String?   @map("recipient_name")
+  expiresAt       DateTime  @map("expires_at")
+  consumedAt      DateTime? @map("consumed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  campaign SurveyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([campaignId])
+  @@index([expiresAt])
+  @@map("survey_response_tokens")
+}
+
+model SurveyResponse {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId      String    @map("campaign_id") @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  recipient       String?
+  ratingSummary   Decimal?  @map("rating_summary") @db.Decimal(3, 2)
+  smartRouteTo    String?   @map("smart_route_to")
+  completedAt     DateTime? @map("completed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  campaign SurveyCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  answers  SurveyAnswer[]
+
+  @@index([campaignId, createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("survey_responses")
+}
+
+model SurveyAnswer {
+  responseId String @map("response_id") @db.Uuid
+  questionId String @map("question_id") @db.Uuid
+  value      Json
+
+  response SurveyResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  question SurveyQuestion @relation(fields: [questionId], references: [id])
+
+  @@id([responseId, questionId])
+  @@map("survey_answers")
+}
+
+// ============================================================
+// DAY 8: AI CHATBOT — RAG + Widget
+// ============================================================
+
+model AiDocument {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  establishmentId String?   @map("establishment_id") @db.Uuid
+  title           String
+  sourceType      String    @map("source_type")           // manual | url | pdf | gbp_listing
+  sourceUri       String?   @map("source_uri")
+  sourceMetadata  Json?     @map("source_metadata")       // {fetched_at, http_status, content_type, robots_disallowed}
+  content         String
+  contentHash     String    @map("content_hash")
+  status          String    @default("indexing")
+  lastIndexedAt   DateTime? @map("last_indexed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  embeddings AiEmbedding[]
+
+  @@index([organizationId, status])
+  @@map("ai_documents")
+}
+
+// NOTE: `embedding` column is a pgvector `vector(1024)` type. Prisma has no native vector type,
+// so we model the column with @ignore for the vector and access it via raw SQL only.
+// The rest of the fields are queryable through Prisma.
+model AiEmbedding {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  documentId      String   @map("document_id") @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  chunkText       String   @map("chunk_text")
+  // embedding     Unsupported("vector(1024)")  — accessed via raw SQL only
+  contentHash     String   @map("content_hash")
+  position        Int
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  document AiDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, establishmentId])
+  @@index([documentId, position])
+  @@map("ai_embeddings")
+}
+
+model AiConversation {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String    @map("organization_id") @db.Uuid
+  establishmentId        String?   @map("establishment_id") @db.Uuid
+  visitorId              String    @map("visitor_id")
+  channel                String    @default("webchat")
+  leadEmail              String?   @map("lead_email")
+  leadPhone              String?   @map("lead_phone")
+  handedOffAt            DateTime? @map("handed_off_at")
+  consentRecordedAt      DateTime? @map("consent_recorded_at")
+  parentConversationId   String?   @map("parent_conversation_id") @db.Uuid
+  terminatedReason       String?   @map("terminated_reason")
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  parent   AiConversation?  @relation("ConversationFork", fields: [parentConversationId], references: [id])
+  children AiConversation[] @relation("ConversationFork")
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([visitorId, createdAt(sort: Desc)])
+  @@map("ai_conversations")
+}
+
+model WidgetKey {
+  id                     String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String   @map("organization_id") @db.Uuid
+  establishmentId        String?  @map("establishment_id") @db.Uuid
+  publicKey              String   @unique @map("public_key")
+  hmacSecret             String   @map("hmac_secret")
+  originAllowlist        String[] @map("origin_allowlist")
+  rateLimitWindowSec     Int      @default(300) @map("rate_limit_window_sec")
+  rateLimitMaxMsgs       Int      @default(20) @map("rate_limit_max_msgs")
+  status                 String   @default("active")
+  createdAt              DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId])
+  @@map("widget_keys")
+}
+
+// ============================================================
+// HARDWARE (Day 4)
+// ============================================================
+
+model HardwareProduct {
+  id              String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sku             String  @unique
+  name            String
+  description     String?
+  priceCents      Int     @map("price_cents")
+  currency        String  @default("USD")
+  hasNfc          Boolean @default(false) @map("has_nfc")
+  unitsPerPack    Int     @default(1) @map("units_per_pack")
+  imageUrl        String? @map("image_url")
+  stripePriceId   String? @map("stripe_price_id")
+  isActive        Boolean @default(true) @map("is_active")
+  sortOrder       Int     @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  orderItems HardwareOrderItem[]
+
+  @@map("hardware_products")
+}
+
+model HardwareOrder {
+  id                       String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId           String   @map("organization_id") @db.Uuid
+  status                   String   @default("pending")
+  shippingAddress          Json     @map("shipping_address")
+  totalCents               Int      @map("total_cents")
+  currency                 String   @default("USD")
+  stripeSessionId          String?  @unique @map("stripe_session_id")
+  stripePaymentIntentId    String?  @unique @map("stripe_payment_intent_id")
+  carrier                  String?
+  trackingNumber           String?  @map("tracking_number")
+  shippedAt                DateTime? @map("shipped_at")
+  deliveredAt              DateTime? @map("delivered_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @updatedAt @map("updated_at")
+
+  organization Organization        @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  items        HardwareOrderItem[]
+  devices      Device[]
+
+  @@index([organizationId, status, createdAt(sort: Desc)])
+  @@map("hardware_orders")
+}
+
+model HardwareOrderItem {
+  id               String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  orderId          String  @map("order_id") @db.Uuid
+  productId        String  @map("product_id") @db.Uuid
+  establishmentId  String? @map("establishment_id") @db.Uuid
+  quantity         Int
+  unitPriceCents   Int     @map("unit_price_cents")
+
+  order         HardwareOrder    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product       HardwareProduct  @relation(fields: [productId], references: [id])
+  establishment Establishment?   @relation(fields: [establishmentId], references: [id])
+
+  @@index([orderId])
+  @@map("hardware_order_items")
+}
+
+model Device {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String?   @map("organization_id") @db.Uuid
+  establishmentId        String?   @map("establishment_id") @db.Uuid
+  orderId                String?   @map("order_id") @db.Uuid
+  productSku             String    @map("product_sku")
+  serial                 String    @unique
+  shortSlug              String    @unique @map("short_slug")
+  slugSignature          String    @map("slug_signature")
+  nfcUid                 String?   @unique @map("nfc_uid")
+  activationCodeHash     String    @map("activation_code_hash")
+  activationCodeUsedAt   DateTime? @map("activation_code_used_at")
+  redirectUrl            String?   @map("redirect_url")
+  redirectMode           String    @default("direct") @map("redirect_mode")
+  redirectChangedAt      DateTime? @map("redirect_changed_at")
+  status                 String    @default("unactivated")
+  scanCount              Int       @default(0) @map("scan_count")
+  lastScanAt             DateTime? @map("last_scan_at")
+  activatedAt            DateTime? @map("activated_at")
+  createdAt              DateTime  @default(now()) @map("created_at")
+
+  establishment Establishment? @relation(fields: [establishmentId], references: [id])
+  order         HardwareOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  scans         DeviceScan[]
+
+  @@index([shortSlug])
+  @@map("devices")
+}
+
+model DeviceScan {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  deviceId        String   @map("device_id") @db.Uuid
+  organizationId  String?  @map("organization_id") @db.Uuid
+  scanId          String   @map("scan_id")
+  scannedAt       DateTime @default(now()) @map("scanned_at")
+  userAgent       String?  @map("user_agent")
+  ip              String?  @db.Inet
+  country         String?
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@unique([deviceId, scanId])
+  @@index([deviceId, scannedAt(sort: Desc)])
+  @@map("device_scans")
+}
+
+model Review {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String    @map("organization_id") @db.Uuid
+  establishmentId        String    @map("establishment_id") @db.Uuid
+  source                 String    // google | facebook | yelp | trustpilot | internal | mock
+  externalId             String    @map("external_id")
+  reviewerName           String?   @map("reviewer_name")
+  rating                 Int
+  body                   String?
+  language               String?
+  postedAt               DateTime  @map("posted_at")
+  attributedDeviceId     String?   @map("attributed_device_id") @db.Uuid
+  attributedRequestId    String?   @map("attributed_request_id") @db.Uuid
+  sentiment              Decimal?  @db.Decimal(3, 2)
+  topics                 String[]
+  topicsExtractedAt      DateTime? @map("topics_extracted_at")
+  sentimentExtractedAt   DateTime? @map("sentiment_extracted_at")
+  raw                    Json?
+  fetchedAt              DateTime  @default(now()) @map("fetched_at")
+
+  establishment Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  reply         ReviewReply?
+
+  @@unique([establishmentId, source, externalId])
+  @@index([organizationId, establishmentId, postedAt(sort: Desc)])
+  @@index([organizationId, rating, postedAt(sort: Desc)])
+  @@map("reviews")
+}
+
+model ReviewReply {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewId        String    @unique @map("review_id") @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  body            String
+  status          String    @default("draft") // draft | pending_review | published | failed
+  generatedBy     String?   @map("generated_by")
+  approvedBy      String?   @map("approved_by") @db.Uuid
+  publishedAt     DateTime? @map("published_at")
+  publishError    String?   @map("publish_error")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@map("review_replies")
+}
+
+model PromptVersion {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  purpose           String
+  version           Int
+  template          String
+  model             String
+  params            Json
+  cacheBreakpoints  Json?    @map("cache_breakpoints")
+  active            Boolean  @default(false)
+  rolloutPct        Int      @default(0) @map("rollout_pct")
+  createdBy         String?  @map("created_by") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  aiMessages AiMessage[]
+
+  @@unique([purpose, version])
+  @@map("prompt_versions")
+}
+
+model AiMessage {
+  id                    String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId        String    @map("organization_id") @db.Uuid
+  conversationId        String?   @map("conversation_id") @db.Uuid
+  purpose               String
+  promptVersionId       String?   @map("prompt_version_id") @db.Uuid
+  retrievedChunkIds     String[]  @map("retrieved_chunk_ids") @db.Uuid
+  role                  String    // user | assistant | system
+  content               String
+  model                 String?
+  tokensIn              Int?      @map("tokens_in")
+  tokensOut             Int?      @map("tokens_out")
+  cacheReadTokens       Int?      @map("cache_read_tokens")
+  cacheCreationTokens   Int?      @map("cache_creation_tokens")
+  costMicros            Int?      @map("cost_micros")
+  latencyMs             Int?      @map("latency_ms")
+  renderedPromptHash    String?   @map("rendered_prompt_hash")
+  anthropicMessageId    String?   @map("anthropic_message_id")
+  modelFingerprint      String?   @map("model_fingerprint")
+  cacheState            Json?     @map("cache_state")
+  legalHold             Boolean   @default(false) @map("legal_hold")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  promptVersion PromptVersion?      @relation(fields: [promptVersionId], references: [id])
+  safetyVerdict AiSafetyVerdict?
+
+  @@index([organizationId, purpose, createdAt(sort: Desc)])
+  @@map("ai_messages")
+}
+
+model AiSafetyVerdict {
+  messageId             String   @id @map("message_id") @db.Uuid
+  toxic                 Boolean  @default(false)
+  piiLeak               Boolean  @default(false) @map("pii_leak")
+  offBrand              Boolean  @default(false) @map("off_brand")
+  factualClaim          Boolean  @default(false) @map("factual_claim")
+  jailbreakAttempt      Boolean  @default(false) @map("jailbreak_attempt")
+  exfilUrl              Boolean  @default(false) @map("exfil_url")
+  systemPromptLeak      Boolean  @default(false) @map("system_prompt_leak")
+  medicalClaim          Boolean  @default(false) @map("medical_claim")
+  legalClaim            Boolean  @default(false) @map("legal_claim")
+  financialClaim        Boolean  @default(false) @map("financial_claim")
+  reviewerNameQuoted    Boolean  @default(false) @map("reviewer_name_quoted")
+  classifierModel       String?  @map("classifier_model")
+  rawJson               Json?    @map("raw_json")
+  decidedAt             DateTime @default(now()) @map("decided_at")
+  blocked               Boolean  @default(false)
+
+  message AiMessage @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@map("ai_safety_verdicts")
+}
+
+model Connection {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  establishmentId  String?  @map("establishment_id") @db.Uuid
+  provider         String   // google_business | meta | linkedin | x | shopify | woocommerce | square | hubspot | salesforce | quickbooks | xero
+  accountLabel     String?  @map("account_label")
+  externalId       String?  @map("external_id")
+  accessTokenCt    Bytes    @map("access_token_ct")
+  refreshTokenCt   Bytes?   @map("refresh_token_ct")
+  dekCiphertext    Bytes    @default(dbgenerated("'\\x'::bytea")) @map("dek_ciphertext")
+  keyVersion       Int      @default(1) @map("key_version")
+  encryptionCtx    Json     @map("encryption_ctx")
+  iv               Bytes
+  tokenExpiresAt   DateTime? @map("token_expires_at")
+  scopes           String[]
+  status           String   @default("active") // active | revoked | expired | error
+  lastSyncedAt     DateTime? @map("last_synced_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, provider, status])
+  @@map("connections")
+}
+
+model User {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email           String    @unique @db.Citext
+  name            String?
+  emailVerified   DateTime? @map("email_verified")
+  image           String?
+  passwordHash    String?   @map("password_hash")
+  totpSecret      String?   @map("totp_secret") // encrypted
+  lastLoginAt     DateTime? @map("last_login_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  accounts    Account[]
+  sessions    Session[]
+  memberships Membership[]
+
+  @@map("users")
+}
+
+// Auth.js adapter tables
+model Account {
+  id                String  @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  userId            String  @map("user_id") @db.Uuid
+  type              String
+  provider          String
+  providerAccountId String  @map("provider_account_id")
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  sessionToken String   @unique @map("session_token")
+  userId       String   @map("user_id") @db.Uuid
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+model Membership {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  role           String   // owner | admin | manager | member | viewer
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@index([userId])
+  @@map("memberships")
+}
+
+model Invitation {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  email          String    @db.Citext
+  role           String
+  tokenHash      String    @map("token_hash")
+  expiresAt      DateTime  @map("expires_at")
+  acceptedAt     DateTime? @map("accepted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId])
+  @@index([tokenHash])
+  @@map("invitations")
+}
+
+// Admin (us) — completely separate identity, never mixed with tenant users
+model AdminUser {
+  id            String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  email         String   @unique @db.Citext
+  passwordHash  String   @map("password_hash")
+  totpSecret    String   @map("totp_secret") // mandatory
+  role          String   // super_admin | support | finance | engineering
+  isActive      Boolean  @default(true) @map("is_active")
+  lastIp        String?  @map("last_ip") @db.Inet
+  lastLoginAt   DateTime? @map("last_login_at")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("admin_users")
+}
+
+// ============================================================
+// BILLING
+// ============================================================
+
+model Subscription {
+  id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId         String    @unique @map("organization_id") @db.Uuid
+  stripeSubscriptionId   String?   @unique @map("stripe_subscription_id")
+  plan                   String    // pro_monthly | pro_annual
+  status                 String    // trialing | active | past_due | canceled | unpaid
+  currentPeriodEnd       DateTime? @map("current_period_end")
+  cancelAtPeriodEnd      Boolean   @default(false) @map("cancel_at_period_end")
+  trialEndsAt            DateTime? @map("trial_ends_at")
+  stripeEventCreatedAt   DateTime? @map("stripe_event_created_at") // ordering check
+  createdAt              DateTime  @default(now()) @map("created_at")
+  updatedAt              DateTime  @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([status])
+  @@map("subscriptions")
+}
+
+// ============================================================
+// WEBHOOK IDEMPOTENCY
+// ============================================================
+
+model WebhookDelivery {
+  provider       String
+  externalId     String    @map("external_id")
+  organizationId String?   @map("organization_id") @db.Uuid // when known
+  receivedAt     DateTime  @default(now()) @map("received_at")
+  payloadSha256  String    @map("payload_sha256")
+  status         String    // accepted | rejected_signature | replay | error
+  processedAt    DateTime? @map("processed_at")
+  error          String?
+
+  organization Organization? @relation("OrgWebhooks", fields: [organizationId], references: [id])
+
+  @@id([provider, externalId])
+  @@index([receivedAt])
+  @@index([organizationId])
+  @@map("webhook_deliveries")
+}
+
+// ============================================================
+// OAUTH STATE (CSRF + tenant fixation defense)
+// ============================================================
+
+model OAuthStateConsumed {
+  nonce          String   @id
+  organizationId String   @map("organization_id") @db.Uuid
+  userId         String   @map("user_id") @db.Uuid
+  provider       String
+  consumedAt     DateTime @default(now()) @map("consumed_at")
+
+  @@index([consumedAt]) // for hourly TTL cleanup
+  @@map("oauth_state_consumed")
+}
+
+// ============================================================
+// AUDIT LOG (append-only — INSERT only via app; UPDATE/DELETE blocked by trigger)
+// ============================================================
+
+model AuditLog {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String?  @map("organization_id") @db.Uuid
+  actorType      String   @map("actor_type") // user | admin_user | system
+  actorId        String   @map("actor_id") @db.Uuid
+  action         String
+  resourceType   String?  @map("resource_type")
+  resourceId     String?  @map("resource_id") @db.Uuid
+  beforeData     Json?    @map("before_data")
+  afterData      Json?    @map("after_data")
+  ip             String?  @db.Inet
+  userAgent      String?  @map("user_agent")
+  prevHash       Bytes?   @map("prev_hash")
+  rowHash        Bytes?   @map("row_hash") // populated by trigger on insert
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([actorId, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId, createdAt(sort: Desc)])
+  @@map("audit_log")
+}
+
+// ============================================================
+// DAY 10 V2 — disputes, coupons, feature flags
+// ============================================================
+
+model ReviewDispute {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  reviewId                 String    @unique @map("review_id") @db.Uuid
+  organizationId           String    @map("organization_id") @db.Uuid
+  reason                   String                                       // fake | offensive | conflict_of_interest | wrong_business | other
+  details                  String?
+  status                   String    @default("submitted")              // submitted | submitted_to_google | accepted | rejected | withdrawn
+  submittedBy              String    @map("submitted_by") @db.Uuid
+  submittedToProviderAt    DateTime? @map("submitted_to_provider_at")
+  providerResponse         Json?     @map("provider_response")
+  resolvedAt               DateTime? @map("resolved_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId, status, createdAt(sort: Desc)])
+  @@map("review_disputes")
+}
+
+model SurveyCoupon {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  responseId      String    @unique @map("response_id") @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  campaignId      String    @map("campaign_id") @db.Uuid
+  code            String    @unique
+  codeHash        String    @map("code_hash")
+  valueCents      Int       @map("value_cents")
+  currency        String    @default("USD")
+  description     String?
+  expiresAt       DateTime  @map("expires_at")
+  redeemedAt      DateTime? @map("redeemed_at")
+  redeemedByNote  String?   @map("redeemed_by_note")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, redeemedAt])
+  @@index([codeHash])
+  @@map("survey_coupons")
+}
+
+model FeatureFlag {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String?  @map("organization_id") @db.Uuid       // NULL = global default
+  key             String
+  enabled         Boolean  @default(false)
+  rolloutPct      Int      @default(0) @map("rollout_pct")
+  metadata        Json?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([organizationId, key])
+  @@index([key, enabled])
+  @@map("feature_flags")
+}
+
+// ============================================================
+// DAY 11 V3 — notifications, templates, FAQs, AI training, etc.
+// ============================================================
+
+model Notification {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  userId          String?   @map("user_id") @db.Uuid                  // NULL = org-wide
+  type            String                                                // new_review | new_comment | reply_needed | dispute_update | system | digest_ready
+  title           String
+  body            String?
+  resourceType    String?   @map("resource_type")
+  resourceId      String?   @map("resource_id") @db.Uuid
+  href            String?
+  readAt          DateTime? @map("read_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, userId, readAt, createdAt(sort: Desc)])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+model OutreachTemplate {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  channel         String                                                // email | sms
+  name            String
+  subject         String?
+  body            String                                                 // {{customerName}} {{businessName}} {{reviewLink}}
+  bodyHtml        String?  @map("body_html")
+  logoUrl         String?  @map("logo_url")
+  backgroundColor String?  @map("background_color")
+  isDefault       Boolean  @default(false) @map("is_default")
+  isAiGenerated   Boolean  @default(false) @map("is_ai_generated")
+  aiTone          String?  @map("ai_tone")                              // friendly | formal | brief | warm
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId, channel])
+  @@map("outreach_templates")
+}
+
+model Faq {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  title           String
+  description     String
+  position        Int      @default(0)
+  isActive        Boolean  @default(true) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId, isActive, position])
+  @@map("faqs")
+}
+
+model AiTrainingProfile {
+  organizationId        String   @id @map("organization_id") @db.Uuid
+  businessOverview      String?  @map("business_overview")
+  servicesProducts      String?  @map("services_products")
+  operatingHours        Json?    @map("operating_hours")
+  pricingDetails        String?  @map("pricing_details")
+  aiPersonalityStyle    String?  @default("friendly") @map("ai_personality_style")
+  customerInquiryStyle  String?  @default("warm_intro_quick_qualification") @map("customer_inquiry_style")
+  bookingStyle          String?  @default("propose_time_slots") @map("booking_style")
+  complaintStyle        String?  @default("apologize_propose_fix") @map("complaint_style")
+  supportStyle          String?  @default("check_in_after_purchase") @map("support_style")
+  customPrompt          String?  @map("custom_prompt")
+  satisfactionAvg       Decimal? @map("satisfaction_avg") @db.Decimal(3, 2)
+  unsureTopics          String[] @map("unsure_topics")
+  confidentTopics       String[] @map("confident_topics")
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("ai_training_profiles")
+}
+
+model CommentBlacklist {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  keyword         String
+  matchMode       String   @default("contains") @map("match_mode")     // contains | exact | regex
+  isActive        Boolean  @default(true) @map("is_active")
+  hiddenCount     Int      @default(0) @map("hidden_count")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@unique([organizationId, keyword])
+  @@index([organizationId, isActive])
+  @@map("comment_blacklists")
+}
+
+model Contact {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  source          String                                                 // manual | csv | shopify | hubspot | quickbooks | etc.
+  externalId      String?  @map("external_id")
+  name            String?
+  email           String?
+  phone           String?
+  tags            String[]
+  metadata        Json?
+  lastContactedAt DateTime? @map("last_contacted_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("contacts")
+}
+
+model SocialPost {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  establishmentId String?   @map("establishment_id") @db.Uuid
+  platforms       String[]                                                // facebook | instagram | twitter | linkedin
+  caption         String?
+  hashtags        String[]
+  mediaUrl        String?   @map("media_url")
+  mediaType       String?   @map("media_type")                             // image | video | reel
+  scheduledFor    DateTime? @map("scheduled_for")
+  postedAt        DateTime? @map("posted_at")
+  status          String    @default("draft")                              // draft | scheduled | posted | failed
+  externalIds     Json?     @map("external_ids")
+  error           String?
+  isAiCaption     Boolean   @default(false) @map("is_ai_caption")
+  bulkBatchId     String?   @map("bulk_batch_id") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId, status, scheduledFor])
+  @@map("social_posts")
+}
+
+model SocialComment {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  establishmentId   String?   @map("establishment_id") @db.Uuid
+  platform          String                                                  // facebook | instagram | google_qa
+  externalPostId    String?   @map("external_post_id")
+  externalId        String    @map("external_id")
+  authorName        String?   @map("author_name")
+  authorAvatarUrl   String?   @map("author_avatar_url")
+  body              String
+  status            String    @default("needs_reply")                       // needs_reply | replied | hidden | live | starred
+  aiSuggested       String?   @map("ai_suggested")
+  assignedTo        String?   @map("assigned_to") @db.Uuid
+  postedAt          DateTime  @map("posted_at")
+  respondedAt       DateTime? @map("responded_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@unique([platform, externalId])
+  @@index([organizationId, status, postedAt(sort: Desc)])
+  @@map("social_comments")
+}
+
+model ProviderApp {
+  provider          String   @id                                            // google_business | facebook | shopify | hubspot | etc.
+  displayName       String   @map("display_name")
+  category          String                                                  // social | crm | ecommerce | pos | accounting | email_marketing | live_chat
+  clientId          String?  @map("client_id")
+  clientSecretCt    Bytes?   @map("client_secret_ct")
+  clientSecretIv    Bytes?   @map("client_secret_iv")
+  clientSecretAad   Json?    @map("client_secret_aad")
+  scopes            String[]
+  oauthUrl          String?  @map("oauth_url")
+  tokenUrl          String?  @map("token_url")
+  redirectPath      String   @map("redirect_path")
+  webhookSecret     String?  @map("webhook_secret")
+  status            String   @default("unconfigured")                       // unconfigured | configured | disabled
+  metadata          Json?
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("provider_apps")
+}
+
+model ChatAutomationRule {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  ruleKey         String   @map("rule_key")                                 // greeting | ask_contact | leaving | custom
+  name            String
+  message         String
+  trigger         String                                                    // on_open | after_seconds | on_inactivity | on_leave_intent
+  delaySeconds    Int      @default(0) @map("delay_seconds")
+  isActive        Boolean  @default(false) @map("is_active")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([organizationId, ruleKey])
+  @@map("chat_automation_rules")
+}
+
+model LiveChatVisitor {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  visitorId       String   @map("visitor_id")
+  conversationId  String?  @map("conversation_id") @db.Uuid
+  displayName     String?  @map("display_name")
+  email           String?
+  phone           String?
+  country         String?
+  region          String?
+  city            String?
+  ipInet          String?  @map("ip_inet") @db.Inet
+  userAgent       String?  @map("user_agent")
+  currentUrl      String?  @map("current_url")
+  lastActivityAt  DateTime @default(now()) @map("last_activity_at")
+  satisfaction    Int?
+  tags            String[]
+  firstSeenAt     DateTime @default(now()) @map("first_seen_at")
+
+  @@unique([organizationId, visitorId])
+  @@index([organizationId, lastActivityAt(sort: Desc)])
+  @@map("live_chat_visitors")
+}
+
+// ============================================================
+// DAY 12 — AI Phone Receptionist
+// ============================================================
+
+model PhoneNumber {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  establishmentId   String?  @map("establishment_id") @db.Uuid
+  phoneE164         String   @unique @map("phone_e164")
+  twilioSid         String   @unique @map("twilio_sid")
+  friendlyName      String?  @map("friendly_name")
+  forwardToE164     String?  @map("forward_to_e164")
+  businessHoursOnly Boolean  @default(false) @map("business_hours_only")
+  status            String   @default("active")
+  capabilities      Json
+  monthlyCostCents  Int      @default(100) @map("monthly_cost_cents")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@index([organizationId, status])
+  @@map("phone_numbers")
+}
+
+model PhoneCall {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String    @map("organization_id") @db.Uuid
+  phoneNumberId     String?   @map("phone_number_id") @db.Uuid
+  twilioCallSid     String    @unique @map("twilio_call_sid")
+  fromE164          String    @map("from_e164")
+  toE164            String    @map("to_e164")
+  direction         String    @default("inbound")
+  status            String    @default("ringing")
+  startedAt         DateTime  @default(now()) @map("started_at")
+  endedAt           DateTime? @map("ended_at")
+  durationSeconds   Int?      @map("duration_seconds")
+  forwardedTo       String?   @map("forwarded_to")
+  recordingUrl      String?   @map("recording_url")
+  transcriptUrl     String?   @map("transcript_url")
+  aiTotalTurns      Int       @default(0) @map("ai_total_turns")
+  aiCostMicros      Int       @default(0) @map("ai_cost_micros")
+  leadName          String?   @map("lead_name")
+  leadEmail         String?   @map("lead_email")
+  leadPhone         String?   @map("lead_phone")
+  intent            String?
+  summary           String?
+  callerCountry     String?   @map("caller_country")
+  callerState       String?   @map("caller_state")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  turns             PhoneCallTurn[]
+
+  @@index([organizationId, startedAt(sort: Desc)])
+  @@map("phone_calls")
+}
+
+model PhoneCallTurn {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  callId          String   @map("call_id") @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  turnNumber      Int      @map("turn_number")
+  role            String                                       // caller | assistant | system
+  text            String
+  confidence      Decimal? @db.Decimal(3, 2)
+  tokensIn        Int?     @map("tokens_in")
+  tokensOut       Int?     @map("tokens_out")
+  costMicros      Int?     @map("cost_micros")
+  latencyMs       Int?     @map("latency_ms")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  call PhoneCall @relation(fields: [callId], references: [id], onDelete: Cascade)
+
+  @@unique([callId, turnNumber])
+  @@index([callId, turnNumber])
+  @@map("phone_call_turns")
+}
+
+model PhoneAssistant {
+  organizationId        String   @id @map("organization_id") @db.Uuid
+  greeting              String   @default("Hi, thanks for calling. How can I help you today?")
+  voice                 String   @default("alice")
+  language              String   @default("en-US")
+  maxTurns              Int      @default(12) @map("max_turns")
+  endCallPhrases        String[] @map("end_call_phrases")
+  handoffPhrases        String[] @map("handoff_phrases")
+  handoffNumber         String?  @map("handoff_number")
+  businessHours         Json?    @map("business_hours")
+  customInstructions    String?  @map("custom_instructions")
+  enabled               Boolean  @default(false)
+  // Day 13 — voice cloning + booking
+  voiceProvider         String   @default("twilio") @map("voice_provider")
+  elevenlabsVoiceId     String?  @map("elevenlabs_voice_id")
+  elevenlabsModel       String?  @default("eleven_turbo_v2_5") @map("elevenlabs_model")
+  bookingProvider       String?  @map("booking_provider")
+  calComApiKeyCt        Bytes?   @map("cal_com_api_key_ct")
+  calComIv              Bytes?   @map("cal_com_iv")
+  calComEventType       Int?     @map("cal_com_event_type")
+  bookingBufferMin      Int      @default(60) @map("booking_buffer_min")
+  updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@map("phone_assistants")
+}
+
+model PhoneVoice {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  provider         String   @default("elevenlabs")
+  externalVoiceId  String   @map("external_voice_id")
+  displayName      String   @map("display_name")
+  description      String?
+  sourceSampleUrl  String?  @map("source_sample_url")
+  previewAudioUrl  String?  @map("preview_audio_url")
+  status           String   @default("active")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  @@unique([organizationId, externalVoiceId])
+  @@index([organizationId, status])
+  @@map("phone_voices")
+}
+
+model PhoneBooking {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId      String    @map("organization_id") @db.Uuid
+  callId              String    @map("call_id") @db.Uuid
+  provider            String
+  externalBookingId   String?   @map("external_booking_id")
+  attendeeName        String?   @map("attendee_name")
+  attendeeEmail       String?   @map("attendee_email")
+  attendeePhone       String?   @map("attendee_phone")
+  startAt             DateTime  @map("start_at")
+  endAt               DateTime? @map("end_at")
+  timezone            String?   @default("UTC")
+  status              String    @default("pending")
+  notes               String?
+  createdAt           DateTime  @default(now()) @map("created_at")
+
+  @@index([organizationId, startAt(sort: Desc)])
+  @@map("phone_bookings")
+}
+
+model PhoneCampaign {
+  id                   String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId       String    @map("organization_id") @db.Uuid
+  phoneNumberId        String?   @map("phone_number_id") @db.Uuid
+  name                 String
+  purpose              String
+  status               String    @default("draft")
+  script               String?
+  callWindowStart      DateTime  @default(dbgenerated("'09:00:00'::time")) @map("call_window_start") @db.Time
+  callWindowEnd        DateTime  @default(dbgenerated("'20:00:00'::time")) @map("call_window_end") @db.Time
+  callWindowTimezone   String    @default("America/New_York") @map("call_window_timezone")
+  callWindowDays       String[]  @map("call_window_days")
+  ratePerMinute        Int       @default(5) @map("rate_per_minute")
+  totalTargets         Int       @default(0) @map("total_targets")
+  completedTargets     Int       @default(0) @map("completed_targets")
+  failedTargets        Int       @default(0) @map("failed_targets")
+  scheduledFor         DateTime? @map("scheduled_for")
+  startedAt            DateTime? @map("started_at")
+  completedAt          DateTime? @map("completed_at")
+  createdAt            DateTime  @default(now()) @map("created_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  targets              PhoneCampaignTarget[]
+
+  @@index([organizationId, status, scheduledFor])
+  @@map("phone_campaigns")
+}
+
+model PhoneCampaignTarget {
+  id                  String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  campaignId          String    @map("campaign_id") @db.Uuid
+  organizationId      String    @map("organization_id") @db.Uuid
+  toE164              String    @map("to_e164")
+  attendeeName        String?   @map("attendee_name")
+  context             Json?
+  callId              String?   @map("call_id") @db.Uuid
+  attempts            Int       @default(0)
+  status              String    @default("queued")
+  scheduledFor        DateTime  @default(now()) @map("scheduled_for")
+  lastAttemptedAt     DateTime? @map("last_attempted_at")
+  completedAt         DateTime? @map("completed_at")
+  consentAttestedAt   DateTime? @map("consent_attested_at")
+  failureReason       String?   @map("failure_reason")
+
+  campaign PhoneCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+
+  @@index([status, scheduledFor])
+  @@index([campaignId, status])
+  @@map("phone_campaign_targets")
+}
+
+model DigestRun {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  day              DateTime  @db.Date
+  startedAt        DateTime  @default(now()) @map("started_at")
+  completedAt      DateTime? @map("completed_at")
+  recipientsSent   Int       @default(0) @map("recipients_sent")
+  recipientsFailed Int       @default(0) @map("recipients_failed")
+  errorSummary     String?   @map("error_summary")
+
+  @@unique([organizationId, day], map: "digest_runs_uniq")
+  @@index([organizationId, day(sort: Desc)], map: "idx_digest_runs_org")
+  @@map("digest_runs")
+}

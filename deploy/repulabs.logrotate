@@ -1,0 +1,23 @@
+# Repulabs — log rotation for Nginx access/error logs.
+# Path: /etc/logrotate.d/repulabs
+# Test: sudo logrotate -d /etc/logrotate.d/repulabs
+#
+# journald (which captures the Node process stdout) handles its own retention
+# via /etc/systemd/journald.conf (SystemMaxUse=500M recommended). This file
+# is only for the Nginx logs.
+
+/var/log/nginx/repulabs.access.log
+/var/log/nginx/repulabs.error.log
+{
+  daily
+  rotate 14
+  compress
+  delaycompress
+  notifempty
+  missingok
+  create 0640 www-data adm
+  sharedscripts
+  postrotate
+    [ -f /var/run/nginx.pid ] && kill -USR1 `cat /var/run/nginx.pid`
+  endscript
+}

@@ -1,0 +1,303 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* shadcn (HSL fragments — used via hsl(var(--x))) */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --primary: 244 75% 59%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 244 75% 59%;
+    --radius: 0.5rem;
+
+    /* repulabs v2 design system — Light, indigo-accent (teal) */
+    /* surfaces */
+    --bg: #f6f7f4;
+    --bg-2: #eef0eb;
+    --surface: #ffffff;
+    --surface-2: #fafbf8;
+    --surface-3: #f2f4ef;
+
+    /* ink */
+    --ink: #0b0d0e;
+    --ink-2: #1e2225;
+    --ink-3: #3a4046;
+
+    /* muted — prefixed (rl-) to avoid colliding with shadcn's HSL --muted */
+    --rl-muted: #61697a;
+    --rl-muted-2: #8e96a4;
+    --rl-muted-3: #b8bfcb;
+
+    /* line */
+    --line: #eceeea;
+    --line-2: #d8dcd3;
+    --line-3: #b8bfb1;
+
+    /* signature blue */
+    --pri: #2563eb;
+    --pri-50: #eff6ff;
+    --pri-100: #dbeafe;
+    --pri-300: #93c5fd;
+    --pri-700: #1d4ed8;
+    --pri-900: #1e3a8a;
+
+    /* state */
+    --ok: #10b981;
+    --ok-soft: #d1fae5;
+    --warn: #f59e0b;
+    --warn-soft: #fef3c7;
+    --bad: #ef4444;
+    --bad-soft: #fee2e2;
+    --info: #0ea5e9;
+    --info-soft: #e0f2fe;
+    --gold: #eab308;
+
+    /* type */
+    --f-ui: var(--font-geist), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+      sans-serif;
+    --f-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+
+    /* radii */
+    --r-xs: 4px;
+    --r-sm: 8px;
+    --r: 10px;
+    --r-md: 14px;
+    --r-lg: 18px;
+    --r-xl: 24px;
+    --r-pill: 999px;
+
+    /* shadow */
+    --sh: 0 1px 2px rgba(11, 13, 14, 0.03), 0 0 0 1px rgba(11, 13, 14, 0.05);
+    --sh-1: 0 1px 3px rgba(11, 13, 14, 0.04), 0 1px 2px rgba(11, 13, 14, 0.03);
+    --sh-2: 0 6px 20px -8px rgba(11, 13, 14, 0.08), 0 2px 6px -2px rgba(11, 13, 14, 0.04);
+    --sh-pop: 0 16px 40px -12px rgba(11, 13, 14, 0.18), 0 4px 12px -4px rgba(11, 13, 14, 0.08);
+    --sh-inset: inset 0 0 0 1px var(--line);
+    --sh-glow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+
+    /* shell numeric */
+    --h-tb: 60px;
+    --w-sb: 244px;
+  }
+
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --primary: 244 75% 59%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 244 75% 59%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+/* ============================================================
+   Landing page — Aceternity-style effects (CSS-only)
+   ============================================================ */
+
+/* Subtle grid background pattern. Used behind hero + final CTA. */
+.lp-grid {
+  background-image: linear-gradient(to right, rgba(11, 13, 14, 0.06) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(11, 13, 14, 0.06) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 80%);
+}
+.lp-grid--dots {
+  background-image: radial-gradient(rgba(11, 13, 14, 0.1) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, #000 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse 70% 50% at 50% 50%, #000 40%, transparent 80%);
+}
+
+/* Spotlight glow — drop behind hero headline. */
+.lp-spot {
+  position: absolute;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: 0.5;
+}
+.lp-spot--teal {
+  background: radial-gradient(circle, rgba(37, 99, 235, 0.55) 0%, transparent 70%);
+}
+.lp-spot--mint {
+  background: radial-gradient(circle, rgba(94, 234, 212, 0.45) 0%, transparent 70%);
+}
+
+/* Marquee — infinite logo strip. */
+@keyframes lp-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.lp-marquee {
+  display: flex;
+  width: max-content;
+  animation: lp-marquee 35s linear infinite;
+}
+.lp-marquee--pause:hover .lp-marquee {
+  animation-play-state: paused;
+}
+
+/* Shine sweep across borders. */
+@keyframes lp-shine {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+.lp-shine {
+  background: linear-gradient(110deg, transparent 30%, rgba(37, 99, 235, 0.55) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: lp-shine 3s linear infinite;
+}
+
+/* Gradient-border card — Aceternity "evervault" look. */
+.lp-gradient-border {
+  position: relative;
+  isolation: isolate;
+  border-radius: 18px;
+  background: var(--surface);
+}
+.lp-gradient-border::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    140deg,
+    rgba(37, 99, 235, 0.6),
+    rgba(94, 234, 212, 0.25) 40%,
+    rgba(11, 13, 14, 0.08) 70%
+  );
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Bento card — gentle hover lift. */
+.lp-bento {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  overflow: hidden;
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+.lp-bento:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 18px 40px -18px rgba(11, 13, 14, 0.18), 0 2px 6px -2px rgba(11, 13, 14, 0.06);
+  border-color: var(--line-2);
+}
+
+/* Floating particles for hero background — pure CSS dots. */
+@keyframes lp-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+.lp-float {
+  animation: lp-float 6s ease-in-out infinite;
+}
+.lp-float-2 {
+  animation: lp-float 8s ease-in-out infinite;
+  animation-delay: -2s;
+}
+.lp-float-3 {
+  animation: lp-float 10s ease-in-out infinite;
+  animation-delay: -4s;
+}
+
+/* Ticker dot pulse */
+@keyframes lp-ping {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  75%,
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+.lp-ping {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  animation: lp-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* Fade-up on scroll-in (degrades gracefully — pure animation, no observer). */
+@keyframes lp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.lp-fade-up {
+  animation: lp-fade-up .8s ease-out both;
+}
+
+/* Text gradient — for headline accents. */
+.lp-text-gradient {
+  background: linear-gradient(135deg, #2563eb 0%, #6366f1 45%, #5eead4 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Number stat card hover ring. */
+.lp-stat:hover .lp-stat__ring {
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
