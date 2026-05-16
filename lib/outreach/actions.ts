@@ -126,7 +126,9 @@ export async function createReviewRequest(form: FormData): Promise<void> {
         recipientName: data.recipientName ?? null,
         shortSlug: trackingSlug,
         scheduledFor,
-        status: data.scheduleHours > 0 ? "queued" : "queued",
+        // Scheduled = future-dated, picked up by the cron at scheduledFor.
+        // Queued (zero delay) = ready for immediate dispatch by the worker.
+        status: data.scheduleHours > 0 ? "scheduled" : "queued",
         triggerSource: "manual",
       },
     });

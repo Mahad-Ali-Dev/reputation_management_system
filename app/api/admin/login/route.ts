@@ -1,13 +1,9 @@
+import { ADMIN_COOKIE_NAME, ADMIN_SESSION_TTL, signAdminSession } from "@/lib/admin/session";
+import { prisma } from "@/lib/db/client";
+import { logger } from "@/lib/logger";
 import argon2 from "argon2";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db/client";
-import { logger } from "@/lib/logger";
-import {
-  ADMIN_COOKIE_NAME,
-  ADMIN_SESSION_TTL,
-  signAdminSession,
-} from "@/lib/admin/session";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -79,9 +75,13 @@ export async function POST(req: NextRequest) {
   });
 
   const res = NextResponse.json({ ok: true });
+  // SameSite=strict on admin: no third-party site should ever be able to
+  // initiate a request that carries the admin session, even via top-level
+  // navigation. The admin login flow is fully same-origin so users won't
+  // see logged-out state when arriving from external links.
   res.cookies.set(ADMIN_COOKIE_NAME, jwt, {
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: "strict",
     secure: process.env.NODE_ENV === "production",
     maxAge: ADMIN_SESSION_TTL,
     path: "/",

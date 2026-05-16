@@ -55,6 +55,11 @@ export default async function EditDevicePage({
     }),
   );
   if (!device) notFound();
+  // Retired devices stay in the DB for audit history but the user can't
+  // re-edit them. Send them back to the list.
+  if (device.status === "retired") {
+    notFound();
+  }
 
   // Derive a suggested review URL from the establishment's googlePlaceId — if
   // set, this is the "correct" Google review form for the business.

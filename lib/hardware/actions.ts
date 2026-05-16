@@ -9,6 +9,7 @@ import {
   generateSlug,
   googleReviewUrl,
   hashActivationCode,
+  isStorableRedirectUrl,
   signSlug,
 } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
@@ -196,19 +197,17 @@ export async function activateDevice(form: FormData): Promise<void> {
     throw new Error("invalid_establishment_id");
   }
 
-  // Optional pasted URL — if present, must be a valid http(s) URL.
+  // Optional pasted URL — must parse AND pass the storable-redirect check
+  // (rejects javascript:/data:/file: schemes, IP-literal hosts, localhost in
+  // production). Defends `/r/{slug}` against being weaponized as an open
+  // redirect to phishing/malware destinations.
   let pastedUrl: string | null = null;
   if (typeof reviewUrlRaw === "string" && reviewUrlRaw.trim().length > 0) {
     const trimmed = reviewUrlRaw.trim();
-    try {
-      const u = new URL(trimmed);
-      if (u.protocol !== "https:" && u.protocol !== "http:") {
-        throw new Error("invalid_review_url");
-      }
-      pastedUrl = trimmed;
-    } catch {
+    if (!isStorableRedirectUrl(trimmed)) {
       throw new Error("invalid_review_url");
     }
+    pastedUrl = trimmed;
   }
 
   const codeHash = hashActivationCode(codeRaw);
@@ -277,7 +276,11 @@ export async function activateDevice(form: FormData): Promise<void> {
           slug: device.shortSlug,
           establishmentId,
           redirectUrl,
-          redirectSource: pastedUrl ? "pasted_url" : estab.googlePlaceId ? "place_id" : "search_fallback",
+          redirectSource: pastedUrl
+            ? "pasted_url"
+            : estab.googlePlaceId
+              ? "place_id"
+              : "search_fallback",
         },
       },
     });
@@ -331,7 +334,16 @@ export async function activateDevice(form: FormData): Promise<void> {
 const SelfServiceSchema = z.object({
   establishmentId: z.string().uuid(),
   displayName: z.string().max(64).optional(),
-  reviewUrl: z.string().url().max(500).optional().or(z.literal("")),
+  reviewUrl: z
+    .string()
+    .url()
+    .max(500)
+    .refine(isStorableRedirectUrl, {
+      message:
+        "URL must use http(s) and a real public host (no IP addresses, no javascript:/data: schemes)",
+    })
+    .optional()
+    .or(z.literal("")),
 });
 
 export async function generateSelfServiceQr(form: FormData): Promise<void> {
@@ -437,10 +449,10 @@ const UpdateRedirectSchema = z.object({
     .string()
     .url("Must be a valid URL starting with https://")
     .max(500)
-    .refine(
-      (u) => u.startsWith("https://") || u.startsWith("http://"),
-      "URL must start with https:// or http://",
-    ),
+    .refine(isStorableRedirectUrl, {
+      message:
+        "URL must use http(s) and a real public host (no IP addresses, no javascript:/data: schemes)",
+    }),
 });
 
 export async function updateDeviceRedirectUrl(form: FormData): Promise<void> {
@@ -466,7 +478,7 @@ export async function updateDeviceRedirectUrl(form: FormData): Promise<void> {
       },
     });
     if (!device) throw new Error("device_not_found");
-    if (device.status === "deleted") throw new Error("device_deleted");
+    if (device.status === "retired") throw new Error("device_retired");
 
     // Use activation time as the expiry epoch base (5y sliding) — matches how
     // /r/[slug]/route.ts verifies the signature at scan time.
@@ -513,9 +525,24 @@ export async function updateDeviceRedirectUrl(form: FormData): Promise<void> {
 }
 
 /**
- * Delete (soft) a device — sets status="deleted", clears redirectUrl so any
- * scan after delete hits /not-activated. Audit-logged. Cannot be undone via
- * the UI (admin can restore by direct DB edit if needed).
+ * Soft-delete a device by flipping status to "retired".
+ *
+ * Schema constraints (devices_status_chk, devices_redirect_when_active) mean
+ * we can't introduce a "deleted" status without a migration, AND we can't
+ * null out redirect_url on any non-unactivated row. So we re-use "retired"
+ * from the existing enum and leave redirect_url intact.
+ *
+ * Behavior:
+ *   - /r/[slug] route checks `status !== "active"` and 302s to /not-activated,
+ *     so scans of a retired device land on the inactive page (the URL just
+ *     isn't read by the redirect logic anymore).
+ *   - The hardware list page filters by `status === "active"`, so retired
+ *     devices vanish from the UI.
+ *   - Row stays in DB so audit history + analytics queries still resolve the
+ *     device by ID.
+ *
+ * Audit-logged with the prior status + URL so an admin can restore via direct
+ * DB update if needed (set status back to "active").
  */
 const DeleteDeviceSchema = z.object({
   deviceId: z.string().uuid(),
@@ -535,18 +562,23 @@ export async function deleteDevice(form: FormData): Promise<void> {
         id: true,
         shortSlug: true,
         status: true,
+        redirectUrl: true,
         establishmentId: true,
       },
     });
     if (!device) throw new Error("device_not_found");
+    if (device.status === "retired") {
+      // Already deleted — idempotent: don't double-log, just redirect.
+      return;
+    }
 
-    // Soft-delete: clear redirectUrl so scans 302 to /not-activated, flip
-    // status. Keep the row so audit/history queries still resolve.
     await tx.device.update({
       where: { id: device.id },
       data: {
-        status: "deleted",
-        redirectUrl: null,
+        status: "retired",
+        // redirect_url intentionally kept — CHECK constraint requires it
+        // non-null for any non-unactivated row, AND keeping it makes
+        // forensic restore via `status='active'` a one-field update.
       },
     });
 
@@ -555,19 +587,23 @@ export async function deleteDevice(form: FormData): Promise<void> {
         organizationId: orgId,
         actorType: "user",
         actorId: userId,
-        action: "device.deleted",
+        action: "device.retired",
         resourceType: "device",
         resourceId: device.id,
         beforeData: {
           shortSlug: device.shortSlug,
           status: device.status,
+          redirectUrl: device.redirectUrl ?? null,
           establishmentId: device.establishmentId,
         },
       },
     });
   });
 
-  logger.info({ event: "device.deleted", orgId, deviceId: parsed.data.deviceId }, "device deleted");
+  logger.info(
+    { event: "device.retired", orgId, deviceId: parsed.data.deviceId },
+    "device retired (soft-deleted)",
+  );
 
   revalidatePath("/hardware");
   redirect("/hardware?deleted=1");

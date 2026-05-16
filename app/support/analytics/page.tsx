@@ -134,12 +134,7 @@ export default async function SupportAnalyticsPage() {
         kicker="Last 30 days"
         title="Support analytics"
         description="How fast you reply, where your audience is loudest, and which channels need attention."
-        actions={
-          <button type="button" className="btn">
-            <Icon name="download" size={12} />
-            Export
-          </button>
-        }
+        actions={undefined}
       />
 
       {/* Sub-tabs */}

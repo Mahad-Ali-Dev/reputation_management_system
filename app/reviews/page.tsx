@@ -60,10 +60,10 @@ export default async function ReviewsPage({
               <Icon name="flag" size={12} />
               View disputes
             </Link>
-            <button type="button" className="btn btn--pri">
+            <Link href="/reviews?reply=pending" className="btn btn--pri">
               <Icon name="sparkle" size={12} />
               Draft pending
-            </button>
+            </Link>
           </>
         }
       />

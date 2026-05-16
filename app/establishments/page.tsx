@@ -204,16 +204,12 @@ export default async function EstablishmentsPage() {
         title="Establishments"
         description="Every location, its review stream and team — rolled up to one composite score."
         actions={
-          <>
-            <button type="button" className="btn">
-              <Icon name="filter" size={12} />
-              Filter
-            </button>
-            <Link href="/establishments/new" className="btn btn--pri">
-              <Icon name="plus" size={12} />
-              Add establishment
-            </Link>
-          </>
+          // Filter chip removed until per-establishment filter logic ships.
+          // Add-establishment CTA stays.
+          <Link href="/establishments/new" className="btn btn--pri">
+            <Icon name="plus" size={12} />
+            Add establishment
+          </Link>
         }
       />
 

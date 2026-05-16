@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/client";
-import { verifySlugSignature } from "@/lib/hardware/codes";
+import { isAllowedReviewHost, verifySlugSignature } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import type { NextRequest } from "next/server";
@@ -117,6 +117,18 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     .catch((err) => {
       logger.error({ err: String(err), slug, event: "scan.write_failed" });
     });
+
+  // ---- H-1 OPEN-REDIRECT DEFENSE ----
+  // If the destination isn't a known Google review host, route through an
+  // interstitial page that shows the destination + a confirmation click.
+  // This stops bot-driven phishing flows that use repulabs.com as a free
+  // first-hop, while keeping legit Google review redirects fast.
+  if (!isAllowedReviewHost(device.redirectUrl)) {
+    const url = new URL("/r/external", req.url);
+    url.searchParams.set("slug", normalizedSlug);
+    url.searchParams.set("to", device.redirectUrl);
+    return NextResponse.redirect(url, { status: 302 });
+  }
 
   return NextResponse.redirect(device.redirectUrl, { status: 302 });
 }

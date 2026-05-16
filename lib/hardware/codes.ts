@@ -105,3 +105,86 @@ export function googleReviewUrl(placeId: string | null | undefined, businessName
   }
   return "https://www.google.com/";
 }
+
+/**
+ * Open-redirect / phishing defense for QR destinations.
+ *
+ * The redirect route `/r/{slug}` proxies authenticated-tenant-controlled URLs.
+ * Without a host allowlist, repulabs.com becomes a free first-hop for phishing
+ * campaigns: attacker signs up, sets `redirectUrl = https://phish.example`,
+ * shares `repulabs.com/r/ABCD123456` as a "trusted" link.
+ *
+ * Strategy:
+ *   - REVIEW_HOSTS: known-good destinations that bypass the interstitial.
+ *     These are the URLs Google's own review-link generator emits.
+ *   - Everything else: allowed to be set, but `/r/{slug}` renders an
+ *     interstitial ("You are leaving repulabs.com — destination: X") before
+ *     redirecting. Defeats automated phishing flows; legit non-Google
+ *     destinations still work after a click-through.
+ *
+ * Subdomain matching: an entry like `google.com` matches `foo.google.com`
+ * (suffix match anchored on a dot). Bare match still allowed for `google.com`
+ * itself. `goo.gl` matches only `goo.gl` (no dot prefix).
+ */
+const REVIEW_HOSTS: ReadonlyArray<string> = [
+  "google.com", // covers www.google.com, search.google.com, maps.google.com, business.google.com, etc.
+  "g.page",
+  "goo.gl",
+  "google.co.uk",
+  "google.com.au",
+  "google.co.in",
+  "google.de",
+  "google.fr",
+  "google.es",
+  "google.it",
+  "google.com.pk",
+  "google.ca",
+  "google.nl",
+];
+
+/**
+ * Returns true if the URL points to a known Google review host and can be
+ * redirected without an interstitial. Anything else gets the interstitial.
+ *
+ * - Rejects non-http(s) schemes (defeats `javascript:`, `data:`, `file:`).
+ * - Rejects IP-literal hosts (defeats `http://127.0.0.1`, `http://10.0.0.1`).
+ * - Subdomain-aware: `business.google.com` matches `google.com`.
+ */
+export function isAllowedReviewHost(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    const host = u.hostname.toLowerCase();
+    // Reject raw IPv4 / IPv6 literals — never a legit review destination.
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+    if (host.includes(":")) return false; // IPv6 in brackets etc.
+    return REVIEW_HOSTS.some((h) => host === h || host.endsWith(`.${h}`));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Validate that a URL is safe to store as a redirect target. Rejects
+ * obviously-malicious schemes/hosts. NOT a guarantee the URL is a review
+ * page — that's why `/r/{slug}` shows an interstitial for non-allowlisted
+ * hosts.
+ */
+export function isStorableRedirectUrl(url: string): boolean {
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:" && u.protocol !== "http:") return false;
+    const host = u.hostname.toLowerCase();
+    // Reject empty host (e.g. `http:///path`).
+    if (!host) return false;
+    // Reject IP-literal hosts to defeat SSRF-style abuse via the redirect.
+    if (/^\d+\.\d+\.\d+\.\d+$/.test(host)) return false;
+    if (host === "localhost" || host.endsWith(".localhost")) {
+      // Allow only in dev to keep local testing working.
+      return process.env.NODE_ENV !== "production";
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}

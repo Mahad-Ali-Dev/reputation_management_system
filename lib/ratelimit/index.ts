@@ -51,6 +51,7 @@ const LIMITER_CONFIGS = {
   login_attempt: { max: 10, windowSec: 300, prefix: "rl:login" }, // 10/5min per email
   signup_attempt: { max: 3, windowSec: 3600, prefix: "rl:signup" }, // 3/hour per IP
   scan_redirect: { max: 60, windowSec: 60, prefix: "rl:scan" }, // 60/min per IP per slug
+  hardware_batch: { max: 3, windowSec: 3600, prefix: "rl:hw_batch" }, // 3/hour per admin — bounds DoS via 500-device QR generation
 } as const satisfies Record<string, LimiterConfig>;
 
 export type LimiterName = keyof typeof LIMITER_CONFIGS;

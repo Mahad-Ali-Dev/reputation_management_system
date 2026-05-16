@@ -92,14 +92,43 @@ run "echo $CURRENT_SHA > .deploy-current-sha"
 
 # ---- Install + build ----
 log "Installing dependencies (frozen lockfile)"
-run "pnpm install --frozen-lockfile --prod=false"
+# CI=true silences pnpm's interactive prompts (e.g. confirm-modules-purge on
+# lockfile shifts); --frozen-lockfile fails fast if lockfile is stale.
+run "CI=true pnpm install --frozen-lockfile --prod=false"
+
+# CRITICAL: pnpm install is a no-op when lockfile matches (Already up to date
+# in ~400ms). That skips the postinstall script — so the Prisma client may
+# still be the stale one from before node_modules was rebuilt. Run
+# `prisma generate` ourselves, unconditionally, before any TypeScript compile.
+log "Running Prisma generate (forced, regardless of install result)"
+run "pnpm exec prisma generate"
+
+# Sanity check: if the .d.ts isn't on disk after `prisma generate`, the build
+# WILL fail with "Type 'unknown'" errors deep inside server components.
+# Fail loudly here instead.
+PRISMA_DTS="node_modules/.prisma/client/index.d.ts"
+if [ "$DRY_RUN" -eq 0 ] && [ ! -f "$PRISMA_DTS" ]; then
+  err "Prisma client types missing at $PRISMA_DTS after generate. Aborting."
+  err "Check that prisma/schema.prisma is valid and node_modules/.prisma is writable."
+  exit 1
+fi
 
 log "Running Prisma migrate deploy"
-run "pnpm db:generate"
 run "pnpm db:migrate:deploy"
 
 log "Building Next.js production bundle"
-run "NODE_ENV=production pnpm exec next build"
+# Call `pnpm build` (which itself runs `prisma generate && next build`)
+# instead of `pnpm exec next build` directly. Belt-and-suspenders with the
+# explicit `prisma generate` above — but harmless to run twice.
+run "NODE_ENV=production pnpm build"
+
+# Sanity check: BUILD_ID must exist or systemctl restart will just run the
+# OLD bundle (or worse: crash on missing manifest).
+if [ "$DRY_RUN" -eq 0 ] && [ ! -f ".next/BUILD_ID" ]; then
+  err "Build did NOT produce .next/BUILD_ID. Refusing to restart service."
+  err "Inspect output above for compilation errors."
+  exit 1
+fi
 
 # ---- Restart service ----
 log "Restarting $SERVICE_NAME"
@@ -130,8 +159,9 @@ while true; do
       PREV_SHA=$(cat "$PREV_SHA_FILE")
       warn "Attempting rollback to $PREV_SHA"
       git checkout "$PREV_SHA"
-      pnpm install --frozen-lockfile --prod=false
-      NODE_ENV=production pnpm exec next build
+      CI=true pnpm install --frozen-lockfile --prod=false
+      pnpm exec prisma generate
+      NODE_ENV=production pnpm build
       sudo systemctl restart "$SERVICE_NAME"
       sleep 5
       if curl -sf -m 3 "$HEALTH_URL" >/dev/null 2>&1; then

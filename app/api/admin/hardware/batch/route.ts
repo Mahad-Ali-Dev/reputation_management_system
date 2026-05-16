@@ -1,9 +1,4 @@
-// archiver is a CommonJS module (`module.exports = factory`). Next's bundler
-// emits "no default export" when imported via `import archiver from "archiver"`.
-// Namespace-import + extract via `.default` (esModuleInterop wrapper) avoids
-// the warning AND works at runtime.
-import * as archiverModule from "archiver";
-import type { Archiver, ArchiverOptions, Format } from "archiver";
+import { createRequire } from "node:module";
 import { getAdminSession } from "@/lib/admin/session";
 import { prisma } from "@/lib/db/client";
 import {
@@ -13,9 +8,22 @@ import {
   signSlug,
 } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
-import { NextResponse, type NextRequest } from "next/server";
+import { checkRateLimit } from "@/lib/ratelimit";
+// archiver is a CommonJS module (`module.exports = factory`). Next 15's webpack
+// emits "Attempted import error: ... does not contain a default export" for
+// both `import archiver from "archiver"` AND `import * as archiverModule from
+// "archiver"`. The fix that ACTUALLY silences the warning: load via Node's
+// `createRequire` so webpack doesn't try to ESM-interop it. Types still come
+// from the package's .d.ts via a type-only import. Works at runtime because
+// this route already declares `runtime = "nodejs"`.
+import type { Archiver, ArchiverOptions, Format } from "archiver";
+import { type NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { z } from "zod";
+
+const cjsRequire = createRequire(import.meta.url);
+type ArchiverFactory = (format: Format, opts?: ArchiverOptions) => Archiver;
+const archiver = cjsRequire("archiver") as ArchiverFactory;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -52,15 +60,65 @@ export const maxDuration = 60;
  * Response: 200 application/zip with Content-Disposition: attachment
  */
 
+// Restrict SKU character class to defeat CSV-formula injection (=, @, +, -)
+// AND filename-injection via `Content-Disposition` (quotes, slashes, CR/LF).
+// Real SKUs are kebab-case alphanumerics like "plaque-brass" or "stand-acrylic".
 const BatchSchema = z.object({
-  productSku: z.string().min(1).max(64),
+  productSku: z
+    .string()
+    .min(1)
+    .max(64)
+    .regex(
+      /^[a-z0-9][a-z0-9_-]{0,63}$/i,
+      "productSku must be alphanumeric with hyphens/underscores",
+    ),
   quantity: z.coerce.number().int().min(1).max(500),
   notes: z.string().max(500).optional(),
 });
 
 const ALLOWED_ROLES = new Set(["super_admin", "engineering"] as const);
 
+/**
+ * Neutralize CSV formula-injection: prefix cells starting with =, +, -, @,
+ * \t, \r with a single quote so spreadsheet engines treat them as text. Also
+ * quote cells containing , " \n \r and escape internal quotes by doubling.
+ * Reference: OWASP "CSV Injection" / CWE-1236.
+ */
+function csvCell(v: string): string {
+  let s = String(v);
+  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
+  if (/[",\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+/**
+ * Strip anything that could break a Content-Disposition filename token.
+ * RFC 6266 allows only token characters in the unquoted form, and quoted
+ * form still can't contain CR/LF or unescaped `"`. We slugify defensively.
+ */
+function safeFilenameSegment(s: string): string {
+  return s.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 64);
+}
+
 export async function POST(req: NextRequest) {
+  // ---- M-1: CSRF defense — same-origin Origin check ----
+  // The cookie is SameSite=strict (see /api/admin/login), so a cross-site form
+  // POST already can't carry the session. The Origin check is belt-and-
+  // suspenders against older browsers that don't fully honor SameSite.
+  const origin = req.headers.get("origin");
+  if (origin) {
+    try {
+      if (new URL(origin).host !== req.nextUrl.host) {
+        return NextResponse.json(
+          { error: "origin_mismatch", message: "cross-site requests not allowed" },
+          { status: 403 },
+        );
+      }
+    } catch {
+      return NextResponse.json({ error: "invalid_origin" }, { status: 400 });
+    }
+  }
+
   const session = await getAdminSession();
   if (!session) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
@@ -69,6 +127,24 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       { error: "forbidden", message: "super_admin or engineering role required" },
       { status: 403 },
+    );
+  }
+
+  // ---- L-1: Rate limit — 3 batches/hour/admin. Bounds the DoS surface where
+  // a compromised admin token could spam 500-device generations (each holds
+  // ~15 MB of PNG buffers in memory).
+  const rl = await checkRateLimit("hardware_batch", session.adminId);
+  if (!rl.success) {
+    return NextResponse.json(
+      {
+        error: "rate_limited",
+        message: `Batch generation is limited to 3/hour/admin. Try again in ${rl.retryAfterSeconds}s.`,
+        retryAfterSeconds: rl.retryAfterSeconds,
+      },
+      {
+        status: 429,
+        headers: { "retry-after": String(rl.retryAfterSeconds) },
+      },
     );
   }
 
@@ -179,10 +255,15 @@ export async function POST(req: NextRequest) {
 
   // ===== Build the ZIP =====
   const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  const zipFilename = `repulabs-batch-${product.sku}-${quantity}x-${ts}.zip`;
+  // M-2: sanitize SKU before interpolation into Content-Disposition filename.
+  // Even though BatchSchema restricts the character class, defense in depth.
+  const safeSku = safeFilenameSegment(product.sku);
+  const zipFilename = `repulabs-batch-${safeSku}-${quantity}x-${ts}.zip`;
   const generatedAt = new Date().toISOString();
 
-  // CSV manifest
+  // CSV manifest. Every cell passes through csvCell() to defeat formula
+  // injection — productSku is the highest-risk field (admin-supplied via
+  // hardware_products row) but we escape everything for consistency.
   const csvHeader = [
     "slug",
     "activation_code",
@@ -193,7 +274,9 @@ export async function POST(req: NextRequest) {
     "qr_png_filename",
     "qr_svg_filename",
     "generated_at",
-  ].join(",");
+  ]
+    .map(csvCell)
+    .join(",");
   const csvRows = rows.map((r) =>
     [
       r.slug,
@@ -205,9 +288,13 @@ export async function POST(req: NextRequest) {
       `qr-png/${r.slug}.png`,
       `qr-svg/${r.slug}.svg`,
       generatedAt,
-    ].join(","),
+    ]
+      .map(csvCell)
+      .join(","),
   );
-  const csv = [csvHeader, ...csvRows].join("\n") + "\n";
+  // Excel reads CRLF more reliably and treats it as the canonical CSV line
+  // ending. UTF-8 BOM up front helps Excel autodetect encoding.
+  const csv = `﻿${[csvHeader, ...csvRows].join("\r\n")}\r\n`;
 
   // README for the factory
   const readme = [
@@ -223,8 +310,8 @@ export async function POST(req: NextRequest) {
     "-------------",
     "  README.txt         — this file",
     "  manifest.csv       — table mapping each plaque to its slug + activation code",
-    `  qr-png/<slug>.png  — 1024x1024 PNG QR code (recommended for printing)`,
-    `  qr-svg/<slug>.svg  — scalable vector QR (use for huge prints or signage)`,
+    "  qr-png/<slug>.png  — 1024x1024 PNG QR code (recommended for printing)",
+    "  qr-svg/<slug>.svg  — scalable vector QR (use for huge prints or signage)",
     "",
     "What to print on each plaque",
     "----------------------------",
@@ -245,16 +332,10 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join("\n");
 
-  // Resolve archiver's factory — CJS interop yields either .default or the
-  // module itself depending on bundler. Cast through unknown to satisfy TS.
-  type ArchiverFactory = (format: Format, opts?: ArchiverOptions) => Archiver;
-  const createArchive =
-    ((archiverModule as unknown as { default?: ArchiverFactory }).default ??
-      (archiverModule as unknown as ArchiverFactory)) as ArchiverFactory;
-
-  // Build the archive in memory.
+  // Build the archive in memory. `archiver` is loaded at module scope via
+  // createRequire (see top of file).
   const chunks: Buffer[] = [];
-  const archive = createArchive("zip", {
+  const archive = archiver("zip", {
     zlib: { level: 9 }, // max compression (PNG already compressed, but CSV/SVG benefit)
   });
 

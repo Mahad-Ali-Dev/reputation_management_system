@@ -58,8 +58,9 @@ export async function provisionDevicesForOrder(orderId: string): Promise<{
         const serial = generateSerial();
         const { plaintext, hash } = generateActivationCode();
         // Sign a placeholder so the field isn't empty; real signature set on activation when
-        // the redirect_url is known.
-        const placeholderRedirect = "https://Repulabs.io/activate-needed";
+        // the redirect_url is known. The literal value doesn't matter — it's overwritten on
+        // activation — but we use the production domain so any leak isn't misleading.
+        const placeholderRedirect = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com"}/not-activated`;
         const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5;
         const placeholderSig = signSlug(slug, placeholderRedirect, expiresAtUnix);
 

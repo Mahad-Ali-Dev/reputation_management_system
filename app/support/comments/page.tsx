@@ -71,10 +71,10 @@ export default async function CommentsInboxPage({
         title="Support inbox"
         description="Every public comment and DM across your connected social pages — in one queue."
         actions={
-          <button type="button" className="btn btn--pri">
+          <Link href="/support/comments?status=needs_reply" className="btn btn--pri">
             <Icon name="sparkle" size={12} />
             Draft pending
-          </button>
+          </Link>
         }
       />
 

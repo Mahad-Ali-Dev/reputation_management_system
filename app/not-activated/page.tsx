@@ -21,11 +21,11 @@ export default async function NotActivatedPage({
           <div className="mt-6 rounded-md border border-dashed bg-white p-4 text-sm text-left">
             <p className="font-semibold mb-2">Are you the business owner?</p>
             <p>
-              Sign in at{" "}
+              Sign in to your{" "}
               <Link href="/dashboard" className="text-primary underline">
-                Repulabs.io
+                Repulabs workspace
               </Link>{" "}
-              and go to <strong>Hardware → Activate device</strong>. Enter the activation code
+              and go to <strong>QR Codes → Redeem code</strong>. Enter the activation code
               printed on the card inside your package.
             </p>
           </div>
