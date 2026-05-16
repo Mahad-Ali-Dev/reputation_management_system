@@ -77,10 +77,10 @@ export function AdminShell({
           overflowY: "auto",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <Logo mode="mark" size={28} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: 13, fontWeight: 600, letterSpacing: "-0.015em" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <Logo mode="mark" size={32} />
+          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+            <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.02em" }}>
               repulabs
             </span>
             <span

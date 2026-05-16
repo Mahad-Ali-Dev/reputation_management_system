@@ -7,6 +7,7 @@ import {
   ReviewsInboxScene,
   SceneFrame,
 } from "@/components/landing/app-scenes";
+import { Logo } from "@/components/shell/logo";
 import Image from "next/image";
 import Link from "next/link";
 import {
@@ -111,21 +112,12 @@ function TopNav() {
       }}
     >
       <div className="mx-auto flex h-[64px] w-full max-w-[1280px] items-center gap-3 px-6">
-        <Link href="/" className="flex items-center gap-2.5" aria-label="Repulabs home">
-          <Image
-            src="/repulabs-logo.png"
-            alt="Repulabs"
-            width={32}
-            height={32}
-            priority
-            style={{
-              borderRadius: 8,
-              objectFit: "contain",
-            }}
-          />
-          <span style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.018em" }}>
-            repu<span style={{ color: C.pri }}>labs</span>
-          </span>
+        <Link
+          href="/"
+          aria-label="Repulabs home"
+          style={{ textDecoration: "none", color: "inherit" }}
+        >
+          <Logo size={32} />
         </Link>
 
         <nav className="ml-8 hidden items-center gap-1 md:flex">
@@ -1952,20 +1944,12 @@ function Footer() {
       <div className="mx-auto max-w-[1280px] px-6 py-16">
         <div className="grid grid-cols-2 gap-10 lg:grid-cols-[1.5fr_3fr]">
           <div>
-            <Link href="/" className="flex items-center gap-2.5" aria-label="Repulabs home">
-              <Image
-                src="/repulabs-logo.png"
-                alt="Repulabs"
-                width={32}
-                height={32}
-                style={{
-                  borderRadius: 8,
-                  objectFit: "contain",
-                }}
-              />
-              <span style={{ fontSize: 18, fontWeight: 600 }}>
-                repu<span style={{ color: C.pri }}>labs</span>
-              </span>
+            <Link
+              href="/"
+              aria-label="Repulabs home"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              <Logo size={32} />
             </Link>
             <p
               className="mt-4 max-w-[260px]"

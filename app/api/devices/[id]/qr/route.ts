@@ -38,6 +38,8 @@ export async function GET(
 
   const format = req.nextUrl.searchParams.get("format") ?? "svg";
 
+  const filename = `repulabs-${device.shortSlug}`;
+
   if (format === "png") {
     const buffer = await QRCode.toBuffer(url, {
       type: "png",
@@ -49,7 +51,11 @@ export async function GET(
     const ab = new ArrayBuffer(buffer.byteLength);
     new Uint8Array(ab).set(buffer);
     return new NextResponse(ab, {
-      headers: { "content-type": "image/png", "cache-control": "private, max-age=300" },
+      headers: {
+        "content-type": "image/png",
+        "cache-control": "private, max-age=300",
+        "content-disposition": `attachment; filename="${filename}.png"`,
+      },
     });
   }
 
@@ -61,6 +67,10 @@ export async function GET(
     errorCorrectionLevel: "M",
   });
   return new NextResponse(svg, {
-    headers: { "content-type": "image/svg+xml", "cache-control": "private, max-age=300" },
+    headers: {
+      "content-type": "image/svg+xml",
+      "cache-control": "private, max-age=300",
+      "content-disposition": `attachment; filename="${filename}.svg"`,
+    },
   });
 }

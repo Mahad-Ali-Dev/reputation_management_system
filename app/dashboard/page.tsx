@@ -10,6 +10,7 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
+import Link from "next/link";
 
 /**
  * Dashboard — repulabs v2 design, real-data wired.
@@ -259,29 +260,28 @@ export default async function DashboardPage({
         title={`${greeting(now)}, ${welcomeName}`}
         description={dashboardSummary(data, ratingDelta)}
         actions={
+          // Decorative time-range segmented control is intentional placeholder
+          // until per-range data loaders land. The "New request" CTA links to
+          // the real outreach flow; "Export" hidden until the export API ships.
           <>
             <div className="seg">
-              <button type="button" className="seg__t">
+              <button type="button" className="seg__t" aria-disabled="true">
                 24h
               </button>
               <button type="button" className="seg__t is-active">
                 7d
               </button>
-              <button type="button" className="seg__t">
+              <button type="button" className="seg__t" aria-disabled="true">
                 30d
               </button>
-              <button type="button" className="seg__t">
+              <button type="button" className="seg__t" aria-disabled="true">
                 12mo
               </button>
             </div>
-            <button type="button" className="btn">
-              <Icon name="download" size={13} />
-              Export
-            </button>
-            <button type="button" className="btn btn--pri">
+            <Link href="/outreach/send" className="btn btn--pri">
               <Icon name="plus" size={13} />
               New request
-            </button>
+            </Link>
           </>
         }
       />

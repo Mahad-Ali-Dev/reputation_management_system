@@ -6,6 +6,7 @@ import Resend from "next-auth/providers/resend";
 import { Resend as ResendClient } from "resend";
 
 import { prisma } from "@/lib/db/client";
+import { magicLinkEmail } from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 
 type AuthProvider = NonNullable<NextAuthConfig["providers"]>[number];
@@ -50,12 +51,13 @@ if (process.env.RESEND_API_KEY) {
       from: process.env.EMAIL_FROM ?? "Repulabs <auth@repulabs.com>",
       async sendVerificationRequest({ identifier: email, url, provider }) {
         const fromAddress = provider.from ?? process.env.EMAIL_FROM ?? "auth@repulabs.com";
+        const { html, text } = magicLinkEmail(url);
         const { error } = await getResend().emails.send({
           from: fromAddress,
           to: email,
-          subject: "Sign in to Repulabs",
-          html: magicLinkEmail(url),
-          text: `Sign in to Repulabs: ${url}\n\nThis link expires in 15 minutes.`,
+          subject: "Your sign-in link for Repulabs",
+          html,
+          text,
         });
         if (error) {
           logger.error({ error, event: "auth.magic_link.send_failed" });
@@ -151,20 +153,6 @@ async function uniqueSlug(email: string): Promise<string> {
   }
   const rand = Math.random().toString(36).slice(2, 8);
   return `${base}-${rand}`;
-}
-
-function magicLinkEmail(url: string): string {
-  return `<!doctype html>
-<html>
-  <body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:40px;">
-    <div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
-      <h1 style="margin:0 0 16px;font-size:22px;color:#0f172a;">Sign in to Repulabs</h1>
-      <p style="margin:0 0 24px;color:#475569;">Click the button below to sign in. This link expires in 15 minutes.</p>
-      <a href="${url}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 20px;border-radius:8px;text-decoration:none;font-weight:600;">Sign in</a>
-      <p style="margin:24px 0 0;color:#94a3b8;font-size:13px;">If you didn't request this, you can safely ignore this email.</p>
-    </div>
-  </body>
-</html>`;
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth(authConfig);

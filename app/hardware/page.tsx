@@ -362,6 +362,7 @@ export default async function QrCodesPage({
         }}
       >
         <DeviceQrPanel
+          deviceId={selectedDevice.id}
           code={selectedDevice.shortSlug}
           name={titleFromSku(selectedDevice.productSku)}
           location={selectedDevice.establishment?.name ?? "Unassigned"}
@@ -707,16 +708,35 @@ function DeviceCard({
   );
 }
 
-async function DeviceQrPanel({
+function DeviceQrPanel({
+  deviceId,
   code,
   name,
   location,
 }: {
+  deviceId: string;
   code: string;
   name: string;
   location: string;
 }) {
   const url = publicQrUrl(code);
+  // The /api/devices/[id]/qr route streams PNG/SVG with the right Content-Type
+  // + Content-Disposition headers — the browser triggers a download via the
+  // `download` attribute on the anchor. PDF intentionally omitted for now; the
+  // PNG prints well or can be "Save as PDF" via the browser print dialog.
+  const downloadHref = (format: "png" | "svg") =>
+    `/api/devices/${deviceId}/qr?format=${format}`;
+  const downloadName = (format: "png" | "svg") => `repulabs-${code}.${format}`;
+
+  const linkStyle: React.CSSProperties = {
+    flex: 1,
+    justifyContent: "center",
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 4,
+    textDecoration: "none",
+  };
+
   return (
     <div className="ds-card" style={{ padding: 18 }}>
       <h3 className="ds-card__title">QR for {code}</h3>
@@ -739,22 +759,24 @@ async function DeviceQrPanel({
         <QrCode value={url} size={280} />
       </div>
       <div className="row" style={{ marginTop: 12, gap: 6 }}>
-        <button type="button" className="btn btn--sm" style={{ flex: 1, justifyContent: "center" }}>
-          <Icon name="download" size={11} />
-          PNG
-        </button>
-        <button type="button" className="btn btn--sm" style={{ flex: 1, justifyContent: "center" }}>
-          <Icon name="download" size={11} />
-          SVG
-        </button>
-        <button
-          type="button"
+        <a
+          href={downloadHref("png")}
+          download={downloadName("png")}
           className="btn btn--sm btn--pri"
-          style={{ flex: 1, justifyContent: "center" }}
+          style={linkStyle}
         >
           <Icon name="download" size={11} />
-          PDF
-        </button>
+          PNG (high-res)
+        </a>
+        <a
+          href={downloadHref("svg")}
+          download={downloadName("svg")}
+          className="btn btn--sm"
+          style={linkStyle}
+        >
+          <Icon name="download" size={11} />
+          SVG (vector)
+        </a>
       </div>
       <div
         className="mono dim"
