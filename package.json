@@ -5,6 +5,7 @@
   "description": "RepuBoost — multi-tenant reputation management SaaS",
   "scripts": {
     "dev": "next dev",
+    "postinstall": "prisma generate",
     "build": "prisma generate && next build",
     "start": "next start -p ${PORT:-3000}",
     "lint": "biome check .",

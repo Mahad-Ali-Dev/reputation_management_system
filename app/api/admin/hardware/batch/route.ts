@@ -1,4 +1,9 @@
-import archiver from "archiver";
+// archiver is a CommonJS module (`module.exports = factory`). Next's bundler
+// emits "no default export" when imported via `import archiver from "archiver"`.
+// Namespace-import + extract via `.default` (esModuleInterop wrapper) avoids
+// the warning AND works at runtime.
+import * as archiverModule from "archiver";
+import type { Archiver, ArchiverOptions, Format } from "archiver";
 import { getAdminSession } from "@/lib/admin/session";
 import { prisma } from "@/lib/db/client";
 import {
@@ -240,9 +245,16 @@ export async function POST(req: NextRequest) {
     .filter(Boolean)
     .join("\n");
 
+  // Resolve archiver's factory — CJS interop yields either .default or the
+  // module itself depending on bundler. Cast through unknown to satisfy TS.
+  type ArchiverFactory = (format: Format, opts?: ArchiverOptions) => Archiver;
+  const createArchive =
+    ((archiverModule as unknown as { default?: ArchiverFactory }).default ??
+      (archiverModule as unknown as ArchiverFactory)) as ArchiverFactory;
+
   // Build the archive in memory.
   const chunks: Buffer[] = [];
-  const archive = archiver("zip", {
+  const archive = createArchive("zip", {
     zlib: { level: 9 }, // max compression (PNG already compressed, but CSV/SVG benefit)
   });
 
