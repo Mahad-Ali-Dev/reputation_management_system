@@ -89,7 +89,15 @@ function subtitleFromSku(sku: string): string {
 export default async function QrCodesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ activated?: string }>;
+  searchParams: Promise<{
+    activated?: string;
+    /** Device id to focus in the QR + analytics panels. */
+    selected?: string;
+    /** Set after a redirect-URL update to show a success banner. */
+    updated?: string;
+    /** Set after a device delete to show a success banner. */
+    deleted?: string;
+  }>;
 }) {
   const { orgId } = await getOrgContext();
 
@@ -107,7 +115,12 @@ export default async function QrCodesPage({
     return <EmptyState recentActivation={sp.activated} />;
   }
 
-  const selectedDevice = activeDevices[0];
+  // Use ?selected=<deviceId> to focus the QR + analytics panels on a specific
+  // device. Falls back to the first active device when no selection is
+  // provided or the ID is invalid.
+  const selectedDevice =
+    (sp.selected && activeDevices.find((d) => d.id === sp.selected)) ||
+    activeDevices[0];
   if (!selectedDevice) return <EmptyState recentActivation={sp.activated} />;
 
   // Real analytics: 30d scans, prior 30d scans (for delta), reviews from QR
@@ -251,6 +264,31 @@ export default async function QrCodesPage({
           Google review page.
         </div>
       )}
+      {sp.updated && (
+        <div
+          className="ds-card ds-card--pri"
+          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
+        >
+          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
+          Redirect URL updated. Scans now route to the new destination.
+        </div>
+      )}
+      {sp.deleted && (
+        <div
+          className="ds-card"
+          style={{
+            padding: "10px 14px",
+            marginBottom: 16,
+            fontSize: 12.5,
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#7f1d1d",
+          }}
+        >
+          <span style={{ marginRight: 8 }}>🗑</span>
+          QR code deleted. Any scans of that code now show the "not activated" page.
+        </div>
+      )}
 
       <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>
         <KpiCard
@@ -306,6 +344,7 @@ export default async function QrCodesPage({
           return (
             <DeviceCard
               key={d.id}
+              deviceId={d.id}
               code={d.shortSlug}
               name={titleFromSku(d.productSku)}
               type={subtitleFromSku(d.productSku)}
@@ -355,10 +394,12 @@ export default async function QrCodesPage({
       </div>
 
       <div
+        id="qr-panel"
         style={{
           display: "grid",
           gridTemplateColumns: "320px minmax(0, 1fr)",
           gap: 16,
+          scrollMarginTop: 80,
         }}
       >
         <DeviceQrPanel
@@ -524,6 +565,7 @@ function KpiCard({
 }
 
 function DeviceCard({
+  deviceId,
   code,
   name,
   type,
@@ -534,6 +576,7 @@ function DeviceCard({
   ratingCount,
   hero,
 }: {
+  deviceId: string;
   code: string;
   name: string;
   type: string;
@@ -683,25 +726,41 @@ function DeviceCard({
           className="row"
           style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)", gap: 6 }}
         >
-          <button type="button" className="btn btn--xs">
+          {/* Get QR + Analytics: select this device in the panels below via ?selected= */}
+          <Link
+            href={`/hardware?selected=${deviceId}#qr-panel`}
+            className="btn btn--xs"
+            style={{ textDecoration: "none" }}
+          >
             <Icon name="qr" size={10} />
             Get QR
-          </button>
-          <button type="button" className="btn btn--xs">
+          </Link>
+          <Link
+            href={`/hardware?selected=${deviceId}#qr-panel`}
+            className="btn btn--xs"
+            style={{ textDecoration: "none" }}
+          >
             <Icon name="bars" size={10} />
             Analytics
-          </button>
-          <button type="button" className="btn btn--xs btn--ghost" aria-label="Edit">
-            <Icon name="edit" size={10} />
-          </button>
-          <button
-            type="button"
+          </Link>
+          {/* Edit: opens the edit page with redirect-URL form */}
+          <Link
+            href={`/hardware/edit/${deviceId}`}
             className="btn btn--xs btn--ghost"
-            style={{ marginLeft: "auto", color: "var(--bad)" }}
+            aria-label="Edit"
+            style={{ textDecoration: "none" }}
+          >
+            <Icon name="edit" size={10} />
+          </Link>
+          {/* Delete: edit page has the delete form (soft delete with audit) */}
+          <Link
+            href={`/hardware/edit/${deviceId}#delete`}
+            className="btn btn--xs btn--ghost"
             aria-label="Delete"
+            style={{ marginLeft: "auto", color: "var(--bad)", textDecoration: "none" }}
           >
             <Icon name="trash" size={10} />
-          </button>
+          </Link>
         </div>
       </div>
     </div>

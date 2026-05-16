@@ -149,6 +149,92 @@ Each P0/P1 item is independently shippable. Recommended cadence:
 
 ---
 
+## QR / hardware feature pass (2026-05-17)
+
+### Shipped ✅
+
+- **`/hardware/edit/[deviceId]`** — new page: edit redirect URL, view current QR, download PNG/SVG, soft-delete with confirmation
+- **`updateDeviceRedirectUrl`** server action — validates URL, re-signs slug HMAC, audit-logs before/after, revalidates
+- **`deleteDevice`** server action — soft-delete (status=deleted + clear redirectUrl), audit-logged
+- **QR card buttons** (Get QR / Analytics / Edit / Delete) — all four now have working handlers
+- **`?selected=<deviceId>`** query param — focuses the QR + analytics panels on a specific device
+- **`#qr-panel`** anchor — scrolls to the panel when clicking Get QR
+- **`/activate`** flow — now accepts an **optional pasted Google review URL** as step 3; precedence: pasted > Place ID > Google search fallback
+- **Audit log** records `redirectSource` so admins can see how each device was configured (pasted_url / place_id / search_fallback)
+
+### Future: Google Places autocomplete (Phase 2)
+
+Currently users either pick an existing establishment (and rely on its `googlePlaceId`) or paste their Google review URL. A nicer UX is type-ahead search of Google Maps for the business:
+
+- **API to enable:** Google Places API → enable in the same Cloud Console project as Auth/OAuth
+- **Cost:** ~$17 per 1,000 sessions for Autocomplete (Place Details is separate)
+- **UI:** `/activate` step 2 gets a `<Combobox>` that calls `places.autocomplete` on each keystroke
+- **Selection writes:** `establishment.googlePlaceId` + auto-fills the review URL on step 3
+- **Effort:** ~4-6 hours including client-side debouncing, error handling, and per-tenant rate limiting
+
+This is a real upgrade but the current paste-URL flow covers the use case for v1.
+
+---
+
+## 4-Agent code audit findings (2026-05-17 second pass)
+
+Parallel audit across pages / API routes / server actions / cross-cutting code quality.
+Fixed items struck-through; backlog items grouped by severity.
+
+### P0 — fixed this session ✅
+
+- **`lib/outreach/actions.ts:129` createReviewRequest** — status branch was `data.scheduleHours > 0 ? "queued" : "queued"` (identical both branches). Now correctly returns `"scheduled"` for future and `"queued"` for immediate dispatch. Effect: scheduled review requests were silently treated like immediate ones; cron picked them up at the wrong time.
+- **`app/support/analytics/page.tsx:138` Export button** — removed (no export API exists yet)
+- **`app/reviews/page.tsx:63` Draft pending button** — now `<Link href="/reviews?reply=pending">`
+- **`app/establishments/page.tsx:208` Filter button** — removed (no filter UI implemented)
+- **`app/support/comments/page.tsx:74` Draft pending button** — now `<Link href="/support/comments?status=needs_reply">`
+- **`lib/hardware/provision.ts:62`** — `https://Repulabs.io/activate-needed` placeholder replaced with `${NEXT_PUBLIC_APP_URL}/not-activated`
+- **`app/not-activated/page.tsx:26`** — hardcoded "Repulabs.io" text → "Repulabs workspace" with correct nav path
+
+### P0 — DEFERRED (needs schema migration, do in next session)
+
+- **`lib/account/actions.ts:206-230` updateSecurityPrefs** — ⚠️ **silent failure**. Writes audit log but never persists the security preferences (sessionTimeoutMinutes, twoFactorRequired) anywhere. The Settings → Security UI looks like it works but nothing is saved.
+  - **Fix:** add `settings Json?` column to `Organization` model
+    - `prisma/schema.prisma`: add `settings Json? @map("settings")` to the Organization model
+    - New migration: `ALTER TABLE organizations ADD COLUMN settings jsonb;`
+    - Update `updateSecurityPrefs` to merge the parsed prefs into `org.settings.security`
+  - **Effort:** 30 min including local migrate test + prod deploy.
+
+### P1 — Missing audit logs (compliance gap)
+
+- **`lib/contacts/actions.ts:85-92` deleteContact** — Contact deletion writes no audit row.
+- **`lib/faqs/actions.ts:70-78` deleteFaq** — FAQ deletion writes no audit row.
+- **`lib/phone/actions.ts:130-140` deletePhoneNumber** — Phone number release writes no audit row.
+
+Each is a ~5-line fix: add `tx.auditLog.create({ ... })` before the delete, capture `beforeData` from the row. Use `device.self_service_created` style action naming.
+
+### P1 — Admin login rate limit (brute-force risk)
+
+- **`app/api/admin/login/route.ts`** — no `checkRateLimit("login_attempt", email)` call. Already-defined limiter (10 attempts / 5 min per email) just needs wiring.
+- **Effort:** 15 minutes, ~5 lines.
+
+### P1 — Hardware page device card buttons inert
+
+- **`app/hardware/page.tsx:686-704`** — "Get QR", "Analytics", "Edit", "Delete" on each device card are decorative.
+  - Get QR: should scroll to / open the same DeviceQrPanel
+  - Analytics: link to a per-device analytics page (doesn't exist yet — needs route)
+  - Edit: open a server-action form to rename / re-assign establishment
+  - Delete: confirm dialog + server action to soft-delete + revoke slug
+- **Effort:** 4-6h for all four properly (one new route + 2 server actions).
+
+### Confirmed clean (no issues found by audit)
+
+- All cron routes verify `CRON_SECRET` before doing work
+- Stripe + Twilio webhook routes verify HMAC signatures with raw body
+- All AI routes use `checkRateLimit()`
+- All Prisma queries use real schema field names (`postedAt`, `respondedAt`, etc.)
+- No `@ts-ignore` / `@ts-nocheck` / `as any` masking type errors in production code
+- No missing `await` on critical async paths
+- All authenticated API routes correctly call `auth()` and check session
+- No imports of non-existent functions
+
+---
+
 ## Confirmed working (audited 2026-05-17)
 
 - ✅ `/api/health` returns ok with all 4 deps connected

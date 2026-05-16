@@ -77,9 +77,12 @@ export default async function ActivatePage() {
                 and come back.
               </div>
             ) : (
-              <form action={activateDevice} className="col" style={{ gap: 14 }}>
+              <form action={activateDevice} className="col" style={{ gap: 16 }}>
+                {/* Step 1: code */}
                 <label className="col" style={{ gap: 4 }}>
-                  <span className="lbl">Activation code</span>
+                  <span className="lbl">
+                    <strong>1.</strong> Activation code
+                  </span>
                   <input
                     name="activationCode"
                     required
@@ -103,11 +106,15 @@ export default async function ActivatePage() {
                     }}
                   />
                   <span className="dim" style={{ fontSize: 11.5 }}>
-                    Letters and digits only. The dash is optional — we&apos;ll find it either way.
+                    The 8-character code printed under the QR on your plaque. Dashes are optional.
                   </span>
                 </label>
+
+                {/* Step 2: establishment */}
                 <label className="col" style={{ gap: 4 }}>
-                  <span className="lbl">Establishment this stand belongs to</span>
+                  <span className="lbl">
+                    <strong>2.</strong> Which business is this QR for?
+                  </span>
                   <select
                     name="establishmentId"
                     required
@@ -130,14 +137,72 @@ export default async function ActivatePage() {
                       </option>
                     ))}
                   </select>
+                  <span className="dim" style={{ fontSize: 11.5 }}>
+                    Need a new location?{" "}
+                    <Link
+                      href="/establishments/new"
+                      style={{ color: "var(--pri)", textDecoration: "none" }}
+                    >
+                      Add an establishment →
+                    </Link>
+                  </span>
                 </label>
-                <div className="row" style={{ justifyContent: "flex-end", gap: 8 }}>
+
+                {/* Step 3: Google review URL (optional but strongly recommended) */}
+                <label className="col" style={{ gap: 4 }}>
+                  <span className="lbl">
+                    <strong>3.</strong> Paste your Google review link
+                    <span
+                      className="dim"
+                      style={{ marginLeft: 8, fontWeight: 400, fontSize: 11.5 }}
+                    >
+                      Strongly recommended
+                    </span>
+                  </span>
+                  <input
+                    type="url"
+                    name="reviewUrl"
+                    placeholder="https://g.page/r/... or https://search.google.com/local/writereview?placeid=..."
+                    autoComplete="off"
+                    style={{
+                      width: "100%",
+                      height: 42,
+                      padding: "0 14px",
+                      borderRadius: "var(--r)",
+                      border: "1px solid var(--line)",
+                      background: "var(--surface)",
+                      color: "var(--ink)",
+                      fontSize: 13,
+                      fontFamily: "var(--f-mono)",
+                      outline: "none",
+                    }}
+                  />
+                  <span className="dim" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
+                    Where scans should land. Get it from{" "}
+                    <a
+                      href="https://business.google.com/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "var(--pri)", textDecoration: "none" }}
+                    >
+                      Google Business Profile
+                    </a>{" "}
+                    → Customers → Reviews → <strong>Share review form</strong>. Leave blank
+                    to derive automatically from your business — you can always change it
+                    later via Edit on the QR card.
+                  </span>
+                </label>
+
+                <div
+                  className="row"
+                  style={{ justifyContent: "flex-end", gap: 8, marginTop: 4 }}
+                >
                   <Link href="/hardware" className="btn">
                     Cancel
                   </Link>
                   <button type="submit" className="btn btn--pri">
                     <Icon name="check" size={12} />
-                    Activate stand
+                    Configure + activate
                   </button>
                 </div>
               </form>
@@ -152,18 +217,23 @@ export default async function ActivatePage() {
           <div className="ds-card__body col" style={{ gap: 14, fontSize: 13, lineHeight: 1.55 }}>
             <Step
               n={1}
-              t="Find the code"
-              d="Each stand ships with a small card. The 8-character code is printed below the QR."
+              t="Verify the product"
+              d="The 8-character code printed under the QR proves you own this plaque. We hash it and match it to an unactivated stand on your account."
             />
             <Step
               n={2}
-              t="Pair the stand"
-              d="Pick which location this stand belongs to. The QR will redirect to that location's Google review page."
+              t="Pick the business"
+              d="Choose which establishment this QR represents — scans get attributed to that location for analytics."
             />
             <Step
               n={3}
+              t="Set the destination"
+              d="Paste your Google review link so scans land on the review form directly. (Optional — we'll derive one if your establishment has a Google Place ID, but pasting your own link is the most reliable option.)"
+            />
+            <Step
+              n={4}
               t="Test the redirect"
-              d="After activation, scan the stand with your phone — it should bounce you to Google's review form."
+              d="Scan the plaque with your phone after activation — it should bounce you straight to Google's review form."
             />
             <div
               style={{
@@ -175,8 +245,8 @@ export default async function ActivatePage() {
                 fontSize: 12,
               }}
             >
-              Codes are single-use. If you mistype one, the stand stays unactivated and you can try
-              again — no need to re-order.
+              Codes are single-use. After activation, you can change the redirect URL any time via
+              the Edit button on the QR card — no re-printing needed.
             </div>
           </div>
         </aside>

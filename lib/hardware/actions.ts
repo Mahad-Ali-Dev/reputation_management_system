@@ -176,18 +176,39 @@ export async function startHardwareCheckout(form: FormData): Promise<void> {
  *   3. Link to org + establishment, compute redirect_url + slug_signature, push status to active
  *   4. Audit log
  *
+ * The redirect URL precedence:
+ *   - If `reviewUrl` is pasted on the form, use it verbatim (must be valid URL).
+ *   - Else, derive from the establishment's `googlePlaceId` (Google review form).
+ *   - Else, fallback to a Google search for the business name.
+ *
  * Rate limiting + Turnstile happens at the API layer (Day 4 finalization).
  */
 export async function activateDevice(form: FormData): Promise<void> {
   const { orgId, userId } = await requireOrg();
   const codeRaw = form.get("activationCode");
   const establishmentId = form.get("establishmentId");
+  const reviewUrlRaw = form.get("reviewUrl");
 
   if (typeof codeRaw !== "string" || codeRaw.length < 6) {
     throw new Error("invalid_activation_code");
   }
   if (typeof establishmentId !== "string" || !/^[0-9a-f-]{36}$/i.test(establishmentId)) {
     throw new Error("invalid_establishment_id");
+  }
+
+  // Optional pasted URL — if present, must be a valid http(s) URL.
+  let pastedUrl: string | null = null;
+  if (typeof reviewUrlRaw === "string" && reviewUrlRaw.trim().length > 0) {
+    const trimmed = reviewUrlRaw.trim();
+    try {
+      const u = new URL(trimmed);
+      if (u.protocol !== "https:" && u.protocol !== "http:") {
+        throw new Error("invalid_review_url");
+      }
+      pastedUrl = trimmed;
+    } catch {
+      throw new Error("invalid_review_url");
+    }
   }
 
   const codeHash = hashActivationCode(codeRaw);
@@ -216,7 +237,8 @@ export async function activateDevice(form: FormData): Promise<void> {
       return { ok: false as const, reason: "establishment_not_found" as const };
     }
 
-    const redirectUrl = googleReviewUrl(estab.googlePlaceId, estab.name);
+    // Precedence: pasted URL > establishment's googlePlaceId > Google search fallback.
+    const redirectUrl = pastedUrl ?? googleReviewUrl(estab.googlePlaceId, estab.name);
     const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5; // 5 years
     const signature = signSlug(device.shortSlug, redirectUrl, expiresAtUnix);
 
@@ -251,7 +273,12 @@ export async function activateDevice(form: FormData): Promise<void> {
         action: "device.activated",
         resourceType: "device",
         resourceId: device.id,
-        afterData: { slug: device.shortSlug, establishmentId, redirectUrl },
+        afterData: {
+          slug: device.shortSlug,
+          establishmentId,
+          redirectUrl,
+          redirectSource: pastedUrl ? "pasted_url" : estab.googlePlaceId ? "place_id" : "search_fallback",
+        },
       },
     });
     return { ok: true as const, device };
@@ -394,6 +421,156 @@ export async function generateSelfServiceQr(form: FormData): Promise<void> {
 
   revalidatePath("/hardware");
   redirect(`/hardware?activated=${device.shortSlug}`);
+}
+
+/**
+ * Update a device's redirect URL (the destination users land on after scan).
+ *
+ * This is the user-facing "edit my QR" flow. Re-signs the slug signature so
+ * the HMAC stays valid for the new URL. Audit-logged.
+ *
+ * Used by /hardware/edit/[deviceId].
+ */
+const UpdateRedirectSchema = z.object({
+  deviceId: z.string().uuid(),
+  redirectUrl: z
+    .string()
+    .url("Must be a valid URL starting with https://")
+    .max(500)
+    .refine(
+      (u) => u.startsWith("https://") || u.startsWith("http://"),
+      "URL must start with https:// or http://",
+    ),
+});
+
+export async function updateDeviceRedirectUrl(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireOrg();
+  const parsed = UpdateRedirectSchema.safeParse({
+    deviceId: form.get("deviceId"),
+    redirectUrl: (form.get("redirectUrl") as string | null)?.trim() ?? "",
+  });
+  if (!parsed.success) {
+    throw new Error(parsed.error.issues.map((i) => i.message).join("; "));
+  }
+  const { deviceId, redirectUrl } = parsed.data;
+
+  await withTenant(orgId, async (tx) => {
+    const device = await tx.device.findFirst({
+      where: { id: deviceId },
+      select: {
+        id: true,
+        shortSlug: true,
+        activatedAt: true,
+        status: true,
+        redirectUrl: true,
+      },
+    });
+    if (!device) throw new Error("device_not_found");
+    if (device.status === "deleted") throw new Error("device_deleted");
+
+    // Use activation time as the expiry epoch base (5y sliding) — matches how
+    // /r/[slug]/route.ts verifies the signature at scan time.
+    const activatedAt = device.activatedAt ?? new Date();
+    const expiresAtUnix = Math.floor(activatedAt.getTime() / 1000) + 60 * 60 * 24 * 365 * 5;
+    const signature = signSlug(device.shortSlug, redirectUrl, expiresAtUnix);
+
+    await tx.device.update({
+      where: { id: deviceId },
+      data: {
+        redirectUrl,
+        slugSignature: signature,
+        redirectChangedAt: new Date(),
+        // If this was a previously-inactive device with no target, activating it
+        // by setting a URL flips it active too.
+        ...(device.status === "active" || device.activatedAt
+          ? {}
+          : { status: "active", activatedAt: new Date() }),
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "device.redirect_updated",
+        resourceType: "device",
+        resourceId: deviceId,
+        beforeData: { redirectUrl: device.redirectUrl ?? null },
+        afterData: { redirectUrl },
+      },
+    });
+  });
+
+  logger.info(
+    { event: "device.redirect_updated", orgId, deviceId, redirectUrl },
+    "device redirect updated",
+  );
+
+  revalidatePath("/hardware");
+  revalidatePath(`/hardware/edit/${deviceId}`);
+  redirect(`/hardware?selected=${deviceId}&updated=1`);
+}
+
+/**
+ * Delete (soft) a device — sets status="deleted", clears redirectUrl so any
+ * scan after delete hits /not-activated. Audit-logged. Cannot be undone via
+ * the UI (admin can restore by direct DB edit if needed).
+ */
+const DeleteDeviceSchema = z.object({
+  deviceId: z.string().uuid(),
+});
+
+export async function deleteDevice(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireOrg();
+  const parsed = DeleteDeviceSchema.safeParse({
+    deviceId: form.get("deviceId"),
+  });
+  if (!parsed.success) throw new Error("invalid_device_id");
+
+  await withTenant(orgId, async (tx) => {
+    const device = await tx.device.findFirst({
+      where: { id: parsed.data.deviceId },
+      select: {
+        id: true,
+        shortSlug: true,
+        status: true,
+        establishmentId: true,
+      },
+    });
+    if (!device) throw new Error("device_not_found");
+
+    // Soft-delete: clear redirectUrl so scans 302 to /not-activated, flip
+    // status. Keep the row so audit/history queries still resolve.
+    await tx.device.update({
+      where: { id: device.id },
+      data: {
+        status: "deleted",
+        redirectUrl: null,
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "device.deleted",
+        resourceType: "device",
+        resourceId: device.id,
+        beforeData: {
+          shortSlug: device.shortSlug,
+          status: device.status,
+          establishmentId: device.establishmentId,
+        },
+      },
+    });
+  });
+
+  logger.info({ event: "device.deleted", orgId, deviceId: parsed.data.deviceId }, "device deleted");
+
+  revalidatePath("/hardware");
+  redirect("/hardware?deleted=1");
 }
 
 /**
