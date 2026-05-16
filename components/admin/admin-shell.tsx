@@ -32,6 +32,7 @@ const NAV: Array<{ group: string; items: NavItem[] }> = [
   {
     group: "Operations",
     items: [
+      { href: "/admin/hardware", label: "Hardware batches", icon: "qr" },
       { href: "/admin/fulfillment", label: "Fulfillment", icon: "box" },
       { href: "/admin/flags", label: "Feature flags", icon: "flag" },
       { href: "/admin/providers", label: "OAuth providers", icon: "plug" },
