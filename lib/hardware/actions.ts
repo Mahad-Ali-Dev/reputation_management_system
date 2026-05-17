@@ -169,6 +169,16 @@ export async function startHardwareCheckout(form: FormData): Promise<void> {
 }
 
 /**
+ * State returned by the `activateDevice` server action. Designed for the
+ * `useActionState` hook in `app/activate/activate-form.tsx` — `error` is
+ * non-null when the action failed, `null` on success (and on success the
+ * action also `redirect()`s so the page rerenders).
+ */
+export type ActivateDeviceState = {
+  error: string | null;
+};
+
+/**
  * Activate a device using its printed activation code.
  *
  * Flow:
@@ -182,19 +192,29 @@ export async function startHardwareCheckout(form: FormData): Promise<void> {
  *   - Else, derive from the establishment's `googlePlaceId` (Google review form).
  *   - Else, fallback to a Google search for the business name.
  *
+ * Signature: takes the previous state (unused, but `useActionState` passes
+ * it) and the form. Returns `{ error: "..." }` on user-facing failures so
+ * the form can render an inline message. Throws only for genuinely
+ * exceptional cases (auth failure -> redirect handled by requireOrg).
+ *
  * Rate limiting + Turnstile happens at the API layer (Day 4 finalization).
  */
-export async function activateDevice(form: FormData): Promise<void> {
+export async function activateDevice(
+  _prev: ActivateDeviceState,
+  form: FormData,
+): Promise<ActivateDeviceState> {
   const { orgId, userId } = await requireOrg();
   const codeRaw = form.get("activationCode");
   const establishmentId = form.get("establishmentId");
   const reviewUrlRaw = form.get("reviewUrl");
 
   if (typeof codeRaw !== "string" || codeRaw.length < 6) {
-    throw new Error("invalid_activation_code");
+    return {
+      error: "Please enter the full 8-character activation code from the card inside your package.",
+    };
   }
   if (typeof establishmentId !== "string" || !/^[0-9a-f-]{36}$/i.test(establishmentId)) {
-    throw new Error("invalid_establishment_id");
+    return { error: "Pick a business from the list before activating." };
   }
 
   // Optional pasted URL — must parse AND pass the storable-redirect check
@@ -205,7 +225,10 @@ export async function activateDevice(form: FormData): Promise<void> {
   if (typeof reviewUrlRaw === "string" && reviewUrlRaw.trim().length > 0) {
     const trimmed = reviewUrlRaw.trim();
     if (!isStorableRedirectUrl(trimmed)) {
-      throw new Error("invalid_review_url");
+      return {
+        error:
+          "That review link doesn’t look right. Paste a Google review URL (https://g.page/r/... or https://search.google.com/local/writereview?placeid=...).",
+      };
     }
     pastedUrl = trimmed;
   }
@@ -293,9 +316,15 @@ export async function activateDevice(form: FormData): Promise<void> {
         { orgId, event: "device.activation.miss" },
         "activation code did not match any unactivated device",
       );
-      throw new Error("activation_code_not_found_or_used");
+      return {
+        error:
+          "We couldn’t match that activation code. Double-check the 8 characters from the card inside your package — codes are one-time-use and can’t be reused once redeemed.",
+      };
     }
-    throw new Error("establishment_not_found");
+    return {
+      error:
+        "That business isn’t in your workspace. Add it on the Establishments page first, then come back here.",
+    };
   }
   const device = result.device;
 

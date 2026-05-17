@@ -4,8 +4,8 @@ import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
-import { activateDevice } from "@/lib/hardware/actions";
 import Link from "next/link";
+import { ActivateForm } from "./activate-form";
 
 export const dynamic = "force-dynamic";
 
@@ -77,135 +77,7 @@ export default async function ActivatePage() {
                 and come back.
               </div>
             ) : (
-              <form action={activateDevice} className="col" style={{ gap: 16 }}>
-                {/* Step 1: code */}
-                <label className="col" style={{ gap: 4 }}>
-                  <span className="lbl">
-                    <strong>1.</strong> Activation code
-                  </span>
-                  <input
-                    name="activationCode"
-                    required
-                    placeholder="XXXX - XXXX"
-                    autoComplete="off"
-                    inputMode="text"
-                    maxLength={10}
-                    style={{
-                      width: "100%",
-                      height: 48,
-                      padding: "0 16px",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--line)",
-                      background: "var(--surface)",
-                      color: "var(--ink)",
-                      fontFamily: "var(--f-mono)",
-                      fontSize: 18,
-                      letterSpacing: ".18em",
-                      textTransform: "uppercase",
-                      outline: "none",
-                    }}
-                  />
-                  <span className="dim" style={{ fontSize: 11.5 }}>
-                    The 8-character code printed under the QR on your plaque. Dashes are optional.
-                  </span>
-                </label>
-
-                {/* Step 2: establishment */}
-                <label className="col" style={{ gap: 4 }}>
-                  <span className="lbl">
-                    <strong>2.</strong> Which business is this QR for?
-                  </span>
-                  <select
-                    name="establishmentId"
-                    required
-                    defaultValue={establishments[0]?.id}
-                    style={{
-                      width: "100%",
-                      height: 42,
-                      padding: "0 14px",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--line)",
-                      background: "var(--surface)",
-                      color: "var(--ink)",
-                      fontSize: 13,
-                      outline: "none",
-                    }}
-                  >
-                    {establishments.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                  </select>
-                  <span className="dim" style={{ fontSize: 11.5 }}>
-                    Need a new location?{" "}
-                    <Link
-                      href="/establishments/new"
-                      style={{ color: "var(--pri)", textDecoration: "none" }}
-                    >
-                      Add an establishment →
-                    </Link>
-                  </span>
-                </label>
-
-                {/* Step 3: Google review URL (optional but strongly recommended) */}
-                <label className="col" style={{ gap: 4 }}>
-                  <span className="lbl">
-                    <strong>3.</strong> Paste your Google review link
-                    <span
-                      className="dim"
-                      style={{ marginLeft: 8, fontWeight: 400, fontSize: 11.5 }}
-                    >
-                      Strongly recommended
-                    </span>
-                  </span>
-                  <input
-                    type="url"
-                    name="reviewUrl"
-                    placeholder="https://g.page/r/... or https://search.google.com/local/writereview?placeid=..."
-                    autoComplete="off"
-                    style={{
-                      width: "100%",
-                      height: 42,
-                      padding: "0 14px",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--line)",
-                      background: "var(--surface)",
-                      color: "var(--ink)",
-                      fontSize: 13,
-                      fontFamily: "var(--f-mono)",
-                      outline: "none",
-                    }}
-                  />
-                  <span className="dim" style={{ fontSize: 11.5, lineHeight: 1.55 }}>
-                    Where scans should land. Get it from{" "}
-                    <a
-                      href="https://business.google.com/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      style={{ color: "var(--pri)", textDecoration: "none" }}
-                    >
-                      Google Business Profile
-                    </a>{" "}
-                    → Customers → Reviews → <strong>Share review form</strong>. Leave blank
-                    to derive automatically from your business — you can always change it
-                    later via Edit on the QR card.
-                  </span>
-                </label>
-
-                <div
-                  className="row"
-                  style={{ justifyContent: "flex-end", gap: 8, marginTop: 4 }}
-                >
-                  <Link href="/hardware" className="btn">
-                    Cancel
-                  </Link>
-                  <button type="submit" className="btn btn--pri">
-                    <Icon name="check" size={12} />
-                    Configure + activate
-                  </button>
-                </div>
-              </form>
+              <ActivateForm establishments={establishments} />
             )}
           </div>
         </section>
