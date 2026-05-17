@@ -105,12 +105,23 @@ export async function POST(req: NextRequest) {
   // The cookie is SameSite=strict (see /api/admin/login), so a cross-site form
   // POST already can't carry the session. The Origin check is belt-and-
   // suspenders against older browsers that don't fully honor SameSite.
+  //
+  // IMPORTANT: behind Nginx, `req.nextUrl.host` is the internal binding host
+  // (e.g. `localhost:3000`) — NOT the public host the browser sees. Compare
+  // against the forwarded `Host` / `X-Forwarded-Host` header instead, falling
+  // back to nextUrl.host for local dev where there's no proxy.
   const origin = req.headers.get("origin");
   if (origin) {
     try {
-      if (new URL(origin).host !== req.nextUrl.host) {
+      const originHost = new URL(origin).host;
+      const requestHost =
+        req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+      if (originHost !== requestHost) {
         return NextResponse.json(
-          { error: "origin_mismatch", message: "cross-site requests not allowed" },
+          {
+            error: "origin_mismatch",
+            message: "cross-site requests not allowed",
+          },
           { status: 403 },
         );
       }
