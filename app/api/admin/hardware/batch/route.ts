@@ -1,4 +1,3 @@
-import { createRequire } from "node:module";
 import { getAdminSession } from "@/lib/admin/session";
 import { prisma } from "@/lib/db/client";
 import {
@@ -9,21 +8,15 @@ import {
 } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
-// archiver is a CommonJS module (`module.exports = factory`). Next 15's webpack
-// emits "Attempted import error: ... does not contain a default export" for
-// both `import archiver from "archiver"` AND `import * as archiverModule from
-// "archiver"`. The fix that ACTUALLY silences the warning: load via Node's
-// `createRequire` so webpack doesn't try to ESM-interop it. Types still come
-// from the package's .d.ts via a type-only import. Works at runtime because
-// this route already declares `runtime = "nodejs"`.
-import type { Archiver, ArchiverOptions, Format } from "archiver";
+// archiver is a CommonJS module (`module.exports = factory`). To get both the
+// default export AND the type imports working without webpack mangling the
+// runtime value into something non-callable, `archiver` is declared in
+// `serverExternalPackages` in next.config.mjs — Next.js skips bundling and
+// Node `require`s it normally at runtime.
+import archiver from "archiver";
 import { type NextRequest, NextResponse } from "next/server";
 import QRCode from "qrcode";
 import { z } from "zod";
-
-const cjsRequire = createRequire(import.meta.url);
-type ArchiverFactory = (format: Format, opts?: ArchiverOptions) => Archiver;
-const archiver = cjsRequire("archiver") as ArchiverFactory;
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
