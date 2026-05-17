@@ -7,9 +7,9 @@ import {
   ReviewsInboxScene,
   SceneFrame,
 } from "@/components/landing/app-scenes";
+import { BRAND_LOGOS } from "@/components/landing/brand-logos";
+import { LandingAnimations } from "@/components/landing/landing-animations";
 import { Logo } from "@/components/shell/logo";
-import Image from "next/image";
-import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -27,6 +27,8 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
 
 export const metadata = {
   title: "repulabs — Run your reputation like a system.",
@@ -84,6 +86,10 @@ export default function Landing() {
       <Faq />
       <FinalCta />
       <Footer />
+      {/* Client-only scroll/entrance animations. No-op when JS disabled or
+          prefers-reduced-motion is set. Loaded after LCP via dynamic import
+          inside the component. */}
+      <LandingAnimations />
     </main>
   );
 }
@@ -564,8 +570,7 @@ function LogoMarquee() {
       <div
         className="overflow-hidden"
         style={{
-          maskImage:
-            "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
+          maskImage: "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
           WebkitMaskImage:
             "linear-gradient(to right, transparent, black 8%, black 92%, transparent)",
         }}
@@ -714,10 +719,7 @@ function TrainStepArt() {
       ))}
       <div className="mt-2 flex items-center gap-2 text-[10.5px]" style={{ color: C.mute }}>
         <span className="h-1 flex-1 rounded-full" style={{ background: C.surface3 }}>
-          <span
-            className="block h-full rounded-full"
-            style={{ width: "78%", background: C.pri }}
-          />
+          <span className="block h-full rounded-full" style={{ width: "78%", background: C.pri }} />
         </span>
         <span style={{ fontFamily: "var(--f-mono)" }}>78%</span>
       </div>
@@ -771,9 +773,9 @@ function ProductTour() {
         This is the <span className="lp-text-gradient">actual app.</span>
       </SectionHeading>
       <SectionDescription>
-        Every screen below is rendered straight from the React components your
-        team will see after sign-in — same design tokens, same components, same
-        layouts. Sign in to use them with your data.
+        Every screen below is rendered straight from the React components your team will see after
+        sign-in — same design tokens, same components, same layouts. Sign in to use them with your
+        data.
       </SectionDescription>
 
       <div className="mt-14 grid gap-10 lg:grid-cols-[200px_1fr]">
@@ -1001,8 +1003,8 @@ function ReplyDemo() {
           <Sparkles size={9} /> AI DRAFT
         </div>
         <p style={{ fontSize: 12.5, color: C.ink2, lineHeight: 1.6 }}>
-          Judith — really appreciate the candid feedback, and sorry the new formula didn&apos;t
-          land for you. We tightened the texture for better water resistance, but it&apos;s not for
+          Judith — really appreciate the candid feedback, and sorry the new formula didn&apos;t land
+          for you. We tightened the texture for better water resistance, but it&apos;s not for
           everyone. DM&apos;d you a refund link and a sample of the lighter SKU.
         </p>
         <div className="mt-2.5 flex items-center gap-2">
@@ -1070,11 +1072,7 @@ function QrDemo() {
         className="grid place-items-center rounded-lg border p-3"
         style={{ borderColor: C.line, background: C.surface }}
       >
-        <div
-          className="grid grid-cols-7 gap-0.5"
-          style={{ width: 84 }}
-          aria-hidden
-        >
+        <div className="grid grid-cols-7 gap-0.5" style={{ width: 84 }} aria-hidden>
           {Array.from({ length: 49 }).map((_, i) => (
             <span
               key={i}
@@ -1249,8 +1247,7 @@ function ComparisonCell({ value, positive }: { value: string | boolean; positive
   if (value === false) {
     return (
       <span className="inline-flex items-center gap-1.5" style={{ color: C.mute2 }}>
-        <X size={13} />
-        —
+        <X size={13} />—
       </span>
     );
   }
@@ -1328,24 +1325,6 @@ function StatsBand() {
    8. Integrations.
 ============================================================ */
 function Integrations() {
-  const items = [
-    "Google",
-    "Facebook",
-    "Instagram",
-    "LinkedIn",
-    "Twitter",
-    "Square",
-    "Toast",
-    "Clover",
-    "Xero",
-    "HubSpot",
-    "QuickBooks",
-    "MYOB",
-    "Google Cal",
-    "Outlook",
-    "Zapier",
-    "Cal.com",
-  ];
   return (
     <section id="integrations" className="mx-auto max-w-[1280px] px-6 py-24">
       <SectionLabel>INTEGRATIONS</SectionLabel>
@@ -1353,31 +1332,45 @@ function Integrations() {
         Lives where your <span className="lp-text-gradient">business already lives.</span>
       </SectionHeading>
       <SectionDescription>
-        20+ native integrations. Set them up in two clicks and your data starts flowing in seconds.
+        Native two-click connections to the platforms your reputation actually depends on — review
+        hosts, social, payments, CRMs, and automation pipes.
       </SectionDescription>
 
-      <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-        {items.map((name) => (
+      <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-7">
+        {BRAND_LOGOS.map(({ name, Icon, color }) => (
           <div
             key={name}
-            className="lp-bento flex flex-col items-center justify-center gap-2 py-5"
+            className="lp-bento group flex flex-col items-center justify-center gap-3 py-6 transition-transform hover:-translate-y-0.5"
+            data-lp-stagger="integration"
           >
             <div
-              className="grid h-9 w-9 place-items-center rounded-lg text-[14px] font-bold"
+              className="grid h-12 w-12 place-items-center rounded-xl transition-colors"
               style={{
-                background: `linear-gradient(140deg, ${C.pri50} 0%, ${C.surface} 100%)`,
+                background: `linear-gradient(140deg, ${C.surface} 0%, ${C.surface2} 100%)`,
                 border: `1px solid ${C.line}`,
-                color: C.pri,
+                color,
               }}
             >
-              {name.slice(0, 1)}
+              <Icon size={22} />
             </div>
-            <span className="text-[11px] font-medium" style={{ color: C.ink2 }}>
+            <span className="text-[11.5px] font-medium" style={{ color: C.ink2 }}>
               {name}
             </span>
           </div>
         ))}
       </div>
+
+      <p className="mt-10 text-center text-[12.5px]" style={{ color: C.mute }}>
+        And 30+ more via{" "}
+        <Link
+          href="/connections"
+          className="underline"
+          style={{ color: C.pri, textUnderlineOffset: 3 }}
+        >
+          our connections marketplace
+        </Link>{" "}
+        — Zapier-bridged for anything we don&rsquo;t natively support yet.
+      </p>
     </section>
   );
 }
@@ -1454,7 +1447,7 @@ function Pricing() {
         <PriceCard
           name="Pro"
           badge="MOST POPULAR"
-          price="$89"
+          price="$59.99"
           priceSuffix="/mo"
           period="per location · billed annually"
           features={PRO}
@@ -1682,10 +1675,7 @@ function Security() {
                   </span>
                   <div>
                     <div style={{ fontSize: 14.5, fontWeight: 600 }}>{it.t}</div>
-                    <p
-                      className="mt-1"
-                      style={{ fontSize: 13, color: C.mute, lineHeight: 1.55 }}
-                    >
+                    <p className="mt-1" style={{ fontSize: 13, color: C.mute, lineHeight: 1.55 }}>
                       {it.d}
                     </p>
                   </div>
@@ -1739,10 +1729,7 @@ function Security() {
             >
               <span className="relative grid h-2 w-2 place-items-center" aria-hidden>
                 <span className="lp-ping" style={{ background: C.ok }} />
-                <span
-                  className="relative h-2 w-2 rounded-full"
-                  style={{ background: C.ok }}
-                />
+                <span className="relative h-2 w-2 rounded-full" style={{ background: C.ok }} />
               </span>
               All systems operational ·{" "}
               <span style={{ fontFamily: "var(--f-mono)" }}>status.repulabs.com</span>
@@ -1923,81 +1910,123 @@ function FinalCta() {
    14. Footer.
 ============================================================ */
 function Footer() {
-  const cols = [
+  const cols: Array<{ h: string; links: Array<{ label: string; href: string }> }> = [
     {
       h: "Product",
       links: [
-        "Dashboard",
-        "Review requests",
-        "Inbox",
-        "AI training",
-        "Phone receptionist",
-        "Surveys",
+        { label: "Dashboard", href: "/dashboard" },
+        { label: "Review requests", href: "/outreach" },
+        { label: "Inbox", href: "/reviews" },
+        { label: "AI training", href: "/ai/training" },
+        { label: "Phone receptionist", href: "/phone" },
+        { label: "Surveys", href: "/surveys" },
+        { label: "QR plaques", href: "/hardware" },
       ],
     },
-    { h: "Resources", links: ["Docs", "API reference", "Changelog", "Status", "Brand assets"] },
-    { h: "Company", links: ["About", "Customers", "Press", "Contact"] },
-    { h: "Legal", links: ["Privacy", "Terms", "Security", "DPA", "Cookies"] },
+    {
+      h: "Resources",
+      links: [
+        { label: "Docs", href: "/docs" },
+        { label: "API reference", href: "/docs/api" },
+        { label: "Changelog", href: "/changelog" },
+        { label: "Status", href: "/status" },
+        { label: "Brand assets", href: "/brand" },
+      ],
+    },
+    {
+      h: "Company",
+      links: [
+        { label: "About", href: "/about" },
+        { label: "Customers", href: "/customers" },
+        { label: "Press", href: "/press" },
+        { label: "Contact", href: "/contact" },
+      ],
+    },
+    {
+      h: "Legal",
+      links: [
+        { label: "Privacy", href: "/legal/privacy" },
+        { label: "Terms", href: "/legal/terms" },
+        { label: "Security", href: "/legal/security" },
+        { label: "DPA", href: "/legal/dpa" },
+        { label: "Sub-processors", href: "/legal/subprocessors" },
+        { label: "Cookies", href: "/legal/cookies" },
+      ],
+    },
   ];
   return (
     <footer className="border-t" style={{ borderColor: C.line, background: C.surface2 }}>
-      <div className="mx-auto max-w-[1280px] px-6 py-16">
-        <div className="grid grid-cols-2 gap-10 lg:grid-cols-[1.5fr_3fr]">
+      <div className="mx-auto max-w-[1280px] px-6 py-20">
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-[1.4fr_3fr]">
           <div>
             <Link
               href="/"
               aria-label="Repulabs home"
               style={{ textDecoration: "none", color: "inherit" }}
             >
-              <Logo size={32} />
+              <Logo size={48} />
             </Link>
             <p
-              className="mt-4 max-w-[260px]"
-              style={{ fontSize: 13, color: C.mute, lineHeight: 1.55 }}
+              className="mt-5 max-w-[320px]"
+              style={{ fontSize: 14, color: C.mute, lineHeight: 1.6 }}
             >
-              The reputation operating system for ambitious small businesses. Made in Melbourne.
+              The reputation operating system for ambitious small businesses. Built in Melbourne;
+              loved everywhere review stars matter.
             </p>
-            <div
-              className="mt-5 inline-flex items-center gap-2 rounded-full border px-2.5 py-1 text-[11px]"
-              style={{
-                borderColor: C.line,
-                background: C.surface,
-                color: C.mute,
-              }}
-            >
-              <span className="relative grid h-1.5 w-1.5 place-items-center" aria-hidden>
-                <span className="lp-ping" style={{ background: C.ok }} />
-                <span
-                  className="relative h-1.5 w-1.5 rounded-full"
-                  style={{ background: C.ok }}
-                />
-              </span>
-              All systems operational
+            <div className="mt-6 flex flex-wrap items-center gap-2">
+              <div
+                className="inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-[11.5px]"
+                style={{
+                  borderColor: C.line,
+                  background: C.surface,
+                  color: C.mute,
+                }}
+              >
+                <span className="relative grid h-1.5 w-1.5 place-items-center" aria-hidden>
+                  <span className="lp-ping" style={{ background: C.ok }} />
+                  <span
+                    className="relative h-1.5 w-1.5 rounded-full"
+                    style={{ background: C.ok }}
+                  />
+                </span>
+                <Link href="/status" style={{ color: "inherit", textDecoration: "none" }}>
+                  All systems operational
+                </Link>
+              </div>
+              <Link
+                href="/contact"
+                className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[11.5px] transition-colors hover:bg-white"
+                style={{ borderColor: C.line, color: C.mute, background: C.surface }}
+              >
+                Contact sales
+                <ArrowUpRight size={11} />
+              </Link>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-10 sm:grid-cols-4">
             {cols.map((col) => (
               <div key={col.h}>
                 <div
-                  className="mb-4 text-[10.5px]"
+                  className="mb-5 text-[10.5px]"
                   style={{
                     color: C.mute,
                     fontFamily: "var(--f-mono)",
-                    letterSpacing: ".12em",
+                    letterSpacing: ".14em",
+                    fontWeight: 600,
                   }}
                 >
                   {col.h.toUpperCase()}
                 </div>
-                <ul className="space-y-2.5">
+                <ul className="space-y-3">
                   {col.links.map((l) => (
-                    <li key={l}>
+                    <li key={l.href}>
                       <Link
-                        href="#"
-                        className="text-[12.5px] transition-colors"
-                        style={{ color: C.ink2 }}
+                        href={l.href}
+                        className="text-[13px] transition-colors hover:underline"
+                        style={{ color: C.ink2, textUnderlineOffset: 3 }}
                       >
-                        {l}
+                        {l.label}
                       </Link>
                     </li>
                   ))}
@@ -2008,10 +2037,10 @@ function Footer() {
         </div>
 
         <div
-          className="mt-12 flex flex-wrap items-center justify-between gap-3 border-t pt-6"
+          className="mt-14 flex flex-wrap items-center justify-between gap-3 border-t pt-6"
           style={{ borderColor: C.line, fontSize: 11.5, color: C.mute }}
         >
-          <span>© 2026 repulabs. All rights reserved.</span>
+          <span>© 2026 Repulabs Pty Ltd. All rights reserved.</span>
           <span style={{ fontFamily: "var(--f-mono)", letterSpacing: ".06em" }}>
             v2.0.4 · MAY 2026
           </span>

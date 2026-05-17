@@ -4,14 +4,16 @@ import Image from "next/image";
  * Brand logo. Single source of truth for the repulabs mark.
  *
  * Modes:
- *   - "mark"  — square logo only (sidebar collapsed, favicon-equivalent)
- *   - "full"  — logo + wordmark (sidebar, topbar, login, marketing)
+ *   - "mark"  — square favicon only (sidebar collapsed, navbar mobile)
+ *   - "full"  — favicon + wordmark text (default for sidebar, navbar, footer)
  *
  * Sizing convention: `size` is the visual height of the mark in px. The
- * wordmark text uses `size * 0.62` for visually balanced lockup — calibrated
+ * wordmark text uses `size * 0.66` for a visually balanced lockup — calibrated
  * so the cap-height of "r" matches the height of the square mark.
  *
- * The image asset lives at /public/repulabs-logo.png.
+ * Asset: /public/favicon.png (1254×1254, square — crops cleanly at any size).
+ * Previously this used /repulabs-logo.png (666×375, wide) which letterboxed
+ * inside any square container and looked off at small sizes.
  */
 export function Logo({
   mode = "full",
@@ -24,10 +26,8 @@ export function Logo({
   className?: string;
   monochrome?: boolean;
 }) {
-  // Wordmark sized so cap-height ≈ mark height; gap tightened so the mark
-  // and wordmark read as one logotype rather than two separate elements.
-  const wordmarkSize = Math.round(size * 0.62);
-  const gap = Math.round(size * 0.22);
+  const wordmarkSize = Math.round(size * 0.66);
+  const gap = Math.round(size * 0.28);
 
   return (
     <span
@@ -40,14 +40,14 @@ export function Logo({
       }}
     >
       <Image
-        src="/repulabs-logo.png"
+        src="/favicon.png"
         alt="Repulabs"
         width={size}
         height={size}
         priority
         style={{
           borderRadius: Math.round(size * 0.22),
-          objectFit: "contain",
+          objectFit: "cover",
           filter: monochrome ? "grayscale(1) brightness(1.4)" : undefined,
           flexShrink: 0,
         }}
@@ -57,11 +57,9 @@ export function Logo({
           style={{
             fontSize: wordmarkSize,
             fontWeight: 600,
-            letterSpacing: "-0.03em",
+            letterSpacing: "-0.025em",
             color: "var(--ink)",
             lineHeight: 1,
-            // Nudge the wordmark down a hair so it optically centers with
-            // the mark (text baselines tend to sit a touch high vs squares)
             position: "relative",
             top: 1,
           }}
