@@ -96,37 +96,21 @@ async function main() {
     return;
   }
 
-  // Real delete + an audit row recording the cleanup.
-  const result = await prisma.$transaction(async (tx) => {
-    const deleted = await tx.device.deleteMany({
-      where: {
-        id: { in: orphans.map((o) => o.id) },
-        status: "unactivated",
-        organizationId: null,
-      },
-    });
-    await tx.auditLog.create({
-      data: {
-        organizationId: null,
-        actorType: "system",
-        actorId: "cleanup-script",
-        action: "hardware.batch.orphans_deleted",
-        resourceType: "hardware_batch",
-        resourceId: recent.id,
-        afterData: {
-          parentBatchAuditId: recent.id,
-          deletedCount: deleted.count,
-          deletedSlugs: orphans.map((o) => o.shortSlug),
-          productSku: after.productSku ?? null,
-          reason:
-            "Batch generation failed mid-stream (archiver runtime error); activation codes never returned to admin. Cleaned up unredeemable inventory.",
-        },
-      },
-    });
-    return deleted;
+  // Real delete. We skip writing a separate audit row — `audit_log.actor_id`
+  // is a UUID column, and there's no system-actor convention in this schema.
+  // The original `hardware.batch.generated` row is still on disk, and the
+  // matching device rows are gone after this — together that's enough to
+  // reconstruct what happened.
+  const result = await prisma.device.deleteMany({
+    where: {
+      id: { in: orphans.map((o) => o.id) },
+      status: "unactivated",
+      organizationId: null,
+    },
   });
 
-  console.log(`Deleted ${result.count} orphan device(s). Audit log written.`);
+  console.log(`Deleted ${result.count} orphan device(s).`);
+  console.log(`Original batch audit row preserved: ${recent.id}`);
 }
 
 main()
