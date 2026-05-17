@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/client";
 import { isAllowedReviewHost, verifySlugSignature } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { publicUrl } from "@/lib/url";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
@@ -43,7 +44,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   }
 
   if (!/^[0-9A-HJKMNP-TV-Z]{10}$/.test(normalizedSlug)) {
-    return NextResponse.redirect(new URL("/not-activated", req.url));
+    return NextResponse.redirect(publicUrl("/not-activated", req));
   }
 
   const device = await prisma.device.findUnique({
@@ -52,15 +53,15 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
 
   if (!device) {
     logger.warn({ slug, event: "redirect.unknown_slug" });
-    return NextResponse.redirect(new URL("/not-activated", req.url));
+    return NextResponse.redirect(publicUrl("/not-activated", req));
   }
 
   if (device.status !== "active") {
-    return NextResponse.redirect(new URL("/not-activated?reason=inactive", req.url));
+    return NextResponse.redirect(publicUrl("/not-activated?reason=inactive", req));
   }
 
   if (!device.redirectUrl) {
-    return NextResponse.redirect(new URL("/not-activated?reason=no_target", req.url));
+    return NextResponse.redirect(publicUrl("/not-activated?reason=no_target", req));
   }
 
   // Verify signature — defeats DB tampering / KV poisoning attacks.
@@ -72,7 +73,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   // process with the prior `!` non-null assertion. Treat as inactive instead.
   if (!device.activatedAt) {
     logger.warn({ slug, deviceId: device.id, event: "redirect.no_activated_at" });
-    return NextResponse.redirect(new URL("/not-activated?reason=inactive", req.url));
+    return NextResponse.redirect(publicUrl("/not-activated?reason=inactive", req));
   }
   const expiresAtUnix = Math.floor(device.activatedAt.getTime() / 1000) + 60 * 60 * 24 * 365 * 5;
   if (
@@ -82,7 +83,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
       { slug, deviceId: device.id, event: "redirect.signature_invalid" },
       "slug signature verification failed — possible tampering",
     );
-    return NextResponse.redirect(new URL("/not-activated?reason=signature", req.url));
+    return NextResponse.redirect(publicUrl("/not-activated?reason=signature", req));
   }
 
   // Emit scan event. Idempotent on (device_id, scan_id) where scan_id is a per-visit nonce.
@@ -124,7 +125,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   // This stops bot-driven phishing flows that use repulabs.com as a free
   // first-hop, while keeping legit Google review redirects fast.
   if (!isAllowedReviewHost(device.redirectUrl)) {
-    const url = new URL("/r/external", req.url);
+    const url = publicUrl("/r/external", req);
     url.searchParams.set("slug", normalizedSlug);
     url.searchParams.set("to", device.redirectUrl);
     return NextResponse.redirect(url, { status: 302 });

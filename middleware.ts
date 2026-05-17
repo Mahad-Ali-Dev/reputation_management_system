@@ -25,10 +25,7 @@ function applySecurityHeaders(res: NextResponse, pathname: string): NextResponse
 
   // Strict-Transport-Security: HTTPS only in production. 1 year, include subdomains.
   if (process.env.NODE_ENV === "production") {
-    res.headers.set(
-      "Strict-Transport-Security",
-      "max-age=31536000; includeSubDomains; preload",
-    );
+    res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
   }
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("X-Frame-Options", "DENY");
@@ -105,14 +102,25 @@ export function middleware(req: NextRequest) {
   // For /admin/* (except /admin/login), require an admin_session cookie.
   // We do NOT verify the JWT here (that needs node crypto, edge runtime is limited).
   // Layout/page does full verification. This is just a fast UX redirect.
-  if (
-    pathname.startsWith("/admin") &&
-    !pathname.startsWith("/admin/login")
-  ) {
+  if (pathname.startsWith("/admin") && !pathname.startsWith("/admin/login")) {
     const cookie = req.cookies.get("admin_session");
     if (!cookie?.value) {
-      url.pathname = "/admin/login";
-      return applySecurityHeaders(NextResponse.redirect(url), pathname);
+      // Build the redirect target from the FORWARDED Host so we hit the
+      // public hostname, not the proxy-internal binding. `url.pathname = ...`
+      // alone keeps the host from `req.nextUrl`, which behind Nginx is
+      // `localhost:3000` → users got redirected to https://localhost:3000/admin/login.
+      const envBase = process.env.NEXT_PUBLIC_APP_URL;
+      const fwHost = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+      const fwProto = req.headers.get("x-forwarded-proto") ?? "https";
+      const target = envBase
+        ? new URL("/admin/login", envBase)
+        : fwHost
+          ? new URL("/admin/login", `${fwProto}://${fwHost}`)
+          : (() => {
+              url.pathname = "/admin/login";
+              return url;
+            })();
+      return applySecurityHeaders(NextResponse.redirect(target), pathname);
     }
   }
 
