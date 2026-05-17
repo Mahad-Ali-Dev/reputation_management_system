@@ -362,9 +362,27 @@
   background: transparent;
   min-width: 0;
 }
+/* Admin shell main column: matches tenant `.scroll` padding behavior. */
+.admin-main {
+  flex: 1;
+  padding: 24px 32px;
+  min-width: 0;
+}
+@media (max-width: 767px) {
+  .admin-main {
+    padding: 16px 14px 28px;
+  }
+}
 .scroll {
   flex: 1;
   padding: 32px 36px 40px;
+}
+/* Mobile: trim the chunky horizontal padding so card-grids actually have
+   room to breathe. 36px on each side eats ~20% of a 360px viewport. */
+@media (max-width: 767px) {
+  .scroll {
+    padding: 16px 14px 28px;
+  }
 }
 .scroll::-webkit-scrollbar {
   width: 10px;
@@ -393,6 +411,8 @@
   margin: 0;
   font-weight: 600;
   letter-spacing: -0.03em;
+  word-break: normal;
+  overflow-wrap: anywhere;
 }
 .ph__sub {
   font-size: 14px;
@@ -400,6 +420,24 @@
   margin-top: 8px;
   max-width: 640px;
   line-height: 1.55;
+}
+
+/* Mobile: title gets squeezed when actions take horizontal room. Stack
+   the two blocks vertically and trim the title size so it doesn't wrap
+   per-word on narrow viewports. */
+@media (max-width: 767px) {
+  .ph {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  .ph__title {
+    font-size: 24px;
+  }
+  .ph__sub {
+    font-size: 13px;
+  }
 }
 .ph__kicker {
   font-family: var(--f-mono);
@@ -878,6 +916,28 @@
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 16px;
+}
+
+/* ---------- Mobile/tablet collapse for fixed-column grids ----------
+   Without this, `.grid-4` stays at 4 columns even on a 360px phone
+   viewport, producing ~90px-wide cards with text wrapping per word.
+   Stack to 2 cols on tablet (<960px) and 1 col on phone (<640px).
+   Same logic for grid-2/3/5. */
+@media (max-width: 959px) {
+  .grid-3,
+  .grid-4,
+  .grid-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+@media (max-width: 639px) {
+  .grid-2,
+  .grid-3,
+  .grid-4,
+  .grid-5 {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
 }
 .divider {
   height: 1px;

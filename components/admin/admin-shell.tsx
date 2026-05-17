@@ -275,7 +275,7 @@ export function AdminShell({
           </div>
         )}
 
-        <main style={{ flex: 1, padding: "24px 32px", minWidth: 0 }}>{children}</main>
+        <main className="admin-main">{children}</main>
       </div>
     </div>
   );

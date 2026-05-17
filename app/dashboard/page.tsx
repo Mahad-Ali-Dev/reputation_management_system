@@ -248,8 +248,7 @@ export default async function DashboardPage({
   const stackedChart = compute12WeekChart(data.reviewsForChart, since12weeks);
   const funnel = computeFunnel(requestStats);
 
-  const welcomeName =
-    userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
+  const welcomeName = userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
   const kicker = `${now.toLocaleDateString("en-US", { weekday: "short" })} · ${now.toLocaleDateString("en-US", { month: "short", day: "numeric" })} · ${now.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" })}`;
   const params = await searchParams;
 
@@ -341,14 +340,7 @@ export default async function DashboardPage({
       </div>
 
       {/* Reviews chart + queue */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.4fr) minmax(0, 1fr)",
-          gap: 14,
-          marginBottom: 14,
-        }}
-      >
+      <div className="grid-2" style={{ gap: 14, marginBottom: 14 }}>
         <div className="ds-card">
           <div className="ds-card__head">
             <div>
@@ -440,14 +432,7 @@ export default async function DashboardPage({
       </div>
 
       {/* AI insights + Channel mix + Funnel */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 1fr)",
-          gap: 14,
-          marginBottom: 14,
-        }}
-      >
+      <div className="grid-3" style={{ gap: 14, marginBottom: 14 }}>
         <InsightsRibbon replyCount={data.publishedReplyCount} pending={data.pendingReplyCount} />
         <ChannelMixCard channels={channelMix} />
         <FunnelCard funnel={funnel} />
