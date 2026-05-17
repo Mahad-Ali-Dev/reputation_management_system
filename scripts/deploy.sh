@@ -103,18 +103,32 @@ run "CI=true pnpm install --frozen-lockfile --prod=false"
 log "Running Prisma generate (forced, regardless of install result)"
 run "pnpm exec prisma generate"
 
-# Sanity check: if the .d.ts isn't on disk after `prisma generate`, the build
-# WILL fail with "Type 'unknown'" errors deep inside server components.
-# Fail loudly here instead.
-PRISMA_DTS="node_modules/.prisma/client/index.d.ts"
-if [ "$DRY_RUN" -eq 0 ] && [ ! -f "$PRISMA_DTS" ]; then
-  err "Prisma client types missing at $PRISMA_DTS after generate. Aborting."
-  err "Check that prisma/schema.prisma is valid and node_modules/.prisma is writable."
-  exit 1
+# Sanity check: confirm the @prisma/client module can be resolved AND has the
+# generated types on disk. With pnpm's virtual store the .d.ts lives at
+# node_modules/.pnpm/@prisma+client@<version>_*/node_modules/@prisma/client/
+# rather than the legacy node_modules/.prisma/client/ path. Just ask Node to
+# resolve it — works regardless of where pnpm dropped the files.
+if [ "$DRY_RUN" -eq 0 ]; then
+  if ! node -e "require.resolve('@prisma/client')" >/dev/null 2>&1; then
+    err "Prisma client cannot be resolved after generate. Aborting."
+    err "Check that prisma/schema.prisma is valid and node_modules is writable."
+    exit 1
+  fi
 fi
 
-log "Running Prisma migrate deploy"
-run "pnpm db:migrate:deploy"
+# Migrations are optional: only run if DIRECT_URL is set in the env file.
+# The dev workflow uses pooled DATABASE_URL through the connection pooler,
+# but `prisma migrate deploy` insists on a direct connection. If DIRECT_URL
+# isn't configured (e.g. small-team deploys that run migrations manually),
+# skip rather than aborting the whole deploy.
+if grep -q '^DIRECT_URL=' "$ENV_FILE" 2>/dev/null; then
+  log "Running Prisma migrate deploy"
+  run "pnpm db:migrate:deploy"
+else
+  warn "DIRECT_URL not in $ENV_FILE — skipping prisma migrate deploy."
+  warn "If this deploy includes schema changes, run migrations manually:"
+  warn "  DIRECT_URL=... pnpm db:migrate:deploy"
+fi
 
 log "Building Next.js production bundle"
 # Call `pnpm build` (which itself runs `prisma generate && next build`)
