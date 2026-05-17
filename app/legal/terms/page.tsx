@@ -12,7 +12,7 @@ export default function TermsPage() {
 
       <p>
         These Terms govern your use of the Repulabs platform ("Service") at{" "}
-        <strong>repuboost.io</strong>. By signing up you agree to these Terms.
+        <strong>repulabs.com</strong>. By signing up you agree to these Terms.
       </p>
 
       <h2>1. Account</h2>
@@ -84,7 +84,7 @@ export default function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        <a href="mailto:legal@repuboost.io">legal@repuboost.io</a>
+        <a href="mailto:legal@repulabs.com">legal@repulabs.com</a>
       </p>
     </>
   );

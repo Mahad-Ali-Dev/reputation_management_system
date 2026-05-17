@@ -64,6 +64,48 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
     );
   }
 
+  // Multi-platform picker — instead of a 302 to one destination, redirect
+  // to the picker page where the guest selects Airbnb / Google / TripAdvisor.
+  // The picker page records its own ReviewPlatformChoice on click.
+  //
+  // We skip the redirect_url + signature checks here because picker devices
+  // don't have a single redirect_url — the platform URLs live on the
+  // attached Establishment row, which is what the picker page reads. The
+  // HMAC signature was protection against poisoning of redirect_url; with
+  // no single URL to poison, the protection is moot. Picker devices are
+  // safe by construction.
+  if (device.productKind === "multi_platform") {
+    // Best-effort scan event (same pattern as the redirect branch below).
+    const hourBucket = Math.floor(Date.now() / 3600_000);
+    const scanId = createHash("sha256")
+      .update(`${normalizedSlug}|${ip}|${hourBucket}`)
+      .digest("hex")
+      .slice(0, 32);
+    prisma.deviceScan
+      .upsert({
+        where: { deviceId_scanId: { deviceId: device.id, scanId } },
+        create: {
+          deviceId: device.id,
+          organizationId: device.organizationId,
+          scanId,
+          userAgent: req.headers.get("user-agent") ?? null,
+          ip: ip !== "unknown" ? ip : null,
+        },
+        update: {},
+      })
+      .then(() =>
+        prisma.device.update({
+          where: { id: device.id },
+          data: { scanCount: { increment: 1 }, lastScanAt: new Date() },
+        }),
+      )
+      .catch((err) => {
+        logger.error({ err: String(err), slug, event: "scan.write_failed" });
+      });
+
+    return NextResponse.redirect(publicUrl(`/r/pick/${normalizedSlug}`, req));
+  }
+
   if (!device.redirectUrl) {
     return NextResponse.redirect(
       publicUrl(`/not-activated?reason=no_target&slug=${normalizedSlug}`, req),

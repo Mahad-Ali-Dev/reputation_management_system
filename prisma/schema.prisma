@@ -48,6 +48,7 @@ model Organization {
   hardwareOrders HardwareOrder[]
   inboxThreads   InboxThread[]
   reviewRequests ReviewRequest[]
+  inboundEmails  InboundEmail[]
 
   @@index([plan])
   @@index([stripeCustomerId])
@@ -57,6 +58,10 @@ model Organization {
 model Establishment {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   organizationId  String    @map("organization_id") @db.Uuid
+  // kind = 'business' (default), 'airbnb_listing', 'booking_listing'.
+  // Determines onboarding flow + which CTAs surface in the dashboard.
+  // CHECK constraint enforced at the DB level (see migration).
+  kind            String    @default("business")
   name            String
   category        String?
   address         Json?
@@ -68,6 +73,18 @@ model Establishment {
   imageUrl        String?   @map("image_url")
   websiteUrl      String?   @map("website_url")
   phone           String?
+  // Day 17 V8 — Short-term rental host extensions (Airbnb / Booking.com)
+  airbnbListingId      String? @map("airbnb_listing_id")
+  airbnbListingUrl     String? @map("airbnb_listing_url")
+  bookingcomListingId  String? @map("bookingcom_listing_id")
+  directBookingUrl     String? @map("direct_booking_url")
+  houseRules           String? @map("house_rules")
+  wifiSsid             String? @map("wifi_ssid")
+  // WiFi password is AES-256-GCM encrypted at rest. Plaintext never persisted
+  // anywhere except the customer's NFC programmer when they re-write the tag.
+  wifiPasswordCt       Bytes?  @map("wifi_password_ct")
+  wifiPasswordIv       Bytes?  @map("wifi_password_iv")
+  localRecommendations Json?   @default("[]") @map("local_recommendations")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
@@ -81,9 +98,12 @@ model Establishment {
   reviewRequests ReviewRequest[]
   reviewRequestTemplates ReviewRequestTemplate[]
   surveyCampaigns SurveyCampaign[] @relation("EstablishmentSurveys")
+  platformChoices ReviewPlatformChoice[]
 
   @@index([organizationId])
   @@index([googlePlaceId])
+  @@index([airbnbListingId])
+  @@index([bookingcomListingId])
   @@map("establishments")
 }
 
@@ -454,6 +474,10 @@ model Device {
   establishmentId        String?   @map("establishment_id") @db.Uuid
   orderId                String?   @map("order_id") @db.Uuid
   productSku             String    @map("product_sku")
+  // Physical product kind. 'qr' = printed QR plaque, 'nfc' = NFC tag,
+  // 'wifi' = WiFi-credentials NFC card, 'multi_platform' = picker QR that
+  // shows guest a "where do you want to review?" page.
+  productKind            String    @default("qr") @map("product_kind")
   serial                 String    @unique
   shortSlug              String    @unique @map("short_slug")
   slugSignature          String    @map("slug_signature")
@@ -472,6 +496,7 @@ model Device {
   establishment Establishment? @relation(fields: [establishmentId], references: [id])
   order         HardwareOrder? @relation(fields: [orderId], references: [id], onDelete: SetNull)
   scans         DeviceScan[]
+  platformChoices ReviewPlatformChoice[]
 
   @@index([shortSlug])
   @@map("devices")
@@ -1306,4 +1331,73 @@ model DigestRun {
   @@unique([organizationId, day], map: "digest_runs_uniq")
   @@index([organizationId, day(sort: Desc)], map: "idx_digest_runs_org")
   @@map("digest_runs")
+}
+
+// ============================================================
+// PHASE 2 — AIRBNB / SHORT-TERM RENTAL REVIEW MANAGEMENT
+// ============================================================
+
+/// Raw inbound emails forwarded by hosts from their Airbnb (and later
+/// Booking.com) notification stream. Parse-once-store-raw pattern: we keep
+/// the original HTML/text so that if our parser breaks (Airbnb changes
+/// their template), we can re-parse historical emails without asking the
+/// host to re-forward anything.
+///
+/// Routing model: the host sets up a Gmail/forward rule from
+/// `automated@airbnb.com` to `reviews-<org-slug>@inbound.repulabs.com`. The
+/// Resend inbound webhook hits our endpoint, which:
+///   1. Reads the local-part of the To address, resolves it to an org
+///   2. Inserts a row with parsed_at = NULL
+///   3. Runs the parser; on success, links parsed_review_id; on failure,
+///      stores the error message in parse_error and leaves the row for the
+///      retry-sweep cron to try later (after we ship a parser fix).
+///
+/// `provider_message_id` is Resend's message UUID — unique per inbound
+/// delivery, used to dedupe at-least-once webhook retries.
+model InboundEmail {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String?   @map("organization_id") @db.Uuid
+  source            String    @default("airbnb")
+  toAddress         String    @map("to_address")
+  fromAddress       String    @map("from_address")
+  subject           String?
+  htmlBody          String?   @map("html_body")
+  textBody          String?   @map("text_body")
+  parsedAt          DateTime? @map("parsed_at")
+  parsedReviewId    String?   @map("parsed_review_id") @db.Uuid
+  parseError        String?   @map("parse_error")
+  providerMessageId String?   @unique @map("provider_message_id")
+  receivedAt        DateTime  @default(now()) @map("received_at")
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, receivedAt(sort: Desc)])
+  @@index([parsedAt])
+  @@map("inbound_emails")
+}
+
+/// Which review platform a guest tapped on the multi-platform picker QR.
+/// Powers attribution: "47 of 89 Airbnb reviews this month came from QR
+/// taps via this stand." Also stores opt-in email for the day-after-checkout
+/// reminder cron (only if the guest provided it; never required).
+model ReviewPlatformChoice {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  deviceId        String   @map("device_id") @db.Uuid
+  establishmentId String   @map("establishment_id") @db.Uuid
+  /// 'google' | 'airbnb' | 'tripadvisor' | 'booking_com' | 'direct'
+  /// `direct` = guest tapped "Book us directly next time" → host's URL.
+  platform        String
+  guestEmail      String?  @map("guest_email")
+  reservationHint String?  @map("reservation_hint")
+  ip              String?  @db.Inet
+  userAgent       String?  @map("user_agent")
+  chosenAt        DateTime @default(now()) @map("chosen_at")
+
+  device        Device        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  establishment Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([establishmentId, chosenAt(sort: Desc)])
+  @@index([organizationId, chosenAt(sort: Desc)])
+  @@map("review_platform_choices")
 }

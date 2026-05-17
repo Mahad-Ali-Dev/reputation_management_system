@@ -1,7 +1,7 @@
-import { cache } from "react";
-import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db/client";
+import { redirect } from "next/navigation";
+import { cache } from "react";
 
 /**
  * Per-request memoized org context.
@@ -25,6 +25,10 @@ export const getOrgContext = cache(async () => {
     select: {
       id: true,
       name: true,
+      // Slug is the per-tenant URL identifier (used for inbound-email
+      // routing like `reviews-<slug>@inbound.repulabs.com`). Keep it in
+      // the org-context cache so onboarding pages don't have to re-fetch.
+      slug: true,
       plan: true,
       stripeCustomerId: true,
       ownerName: true,

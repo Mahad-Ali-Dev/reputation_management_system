@@ -1,11 +1,12 @@
 "use server";
 
+import { auth } from "@/lib/auth/config";
+import { encrypt } from "@/lib/crypto/envelope";
+import { withTenant } from "@/lib/db/with-tenant";
+import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
-import { logger } from "@/lib/logger";
 
 // ─── Validation ──────────────────────────────────────────────
 
@@ -27,6 +28,39 @@ const CreateSchema = z.object({
   timezone: z.string().max(60).default("UTC"),
   address: AddressSchema.optional(),
 });
+
+/**
+ * Airbnb-listing onboarding payload.
+ *
+ * We accept the public listing URL and extract the numeric listing id
+ * (`/rooms/12345`) ourselves — hosts copy-paste the URL from their
+ * browser tab; expecting them to find the id is friction we don't need.
+ *
+ * `houseRules` is free-text; we cap at 4 KB so it fits in a single email
+ * body without truncation. WiFi credentials are stored encrypted at rest
+ * (see schema comment) — never persist the plaintext password into our
+ * normal logs.
+ */
+const CreateAirbnbSchema = z.object({
+  name: z.string().min(1).max(120),
+  timezone: z.string().max(60).default("UTC"),
+  airbnbListingUrl: z
+    .string()
+    .url()
+    .max(500)
+    .refine((u) => /airbnb\.[a-z.]+\/rooms\/\d+/i.test(u), {
+      message: "URL must look like https://www.airbnb.com/rooms/12345678",
+    }),
+  directBookingUrl: z.string().url().max(500).optional().or(z.literal("")),
+  houseRules: z.string().max(4000).optional().or(z.literal("")),
+  wifiSsid: z.string().max(128).optional().or(z.literal("")),
+  wifiPassword: z.string().max(256).optional().or(z.literal("")),
+});
+
+function extractAirbnbListingId(url: string): string | null {
+  const m = url.match(/airbnb\.[a-z.]+\/rooms\/(\d{6,12})/i);
+  return m?.[1] ?? null;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────
 
@@ -202,4 +236,155 @@ export async function setGooglePlaceId(establishmentId: string, placeId: string)
   });
 
   revalidatePath(`/establishments/${establishmentId}`);
+}
+
+// ─── Airbnb listing onboarding ────────────────────────────────
+
+/**
+ * State returned by `createAirbnbListing` for the `useActionState` hook on
+ * the onboarding form. Same pattern as `activateDevice` — return an error
+ * shape instead of throwing, so the form can render an inline message.
+ */
+export type CreateAirbnbListingState = {
+  error: string | null;
+  fieldErrors?: Partial<Record<string, string>>;
+};
+
+/**
+ * Create an Establishment with kind="airbnb_listing".
+ *
+ * Differences vs. the standard business onboarding:
+ *   - The listing URL is required, and we extract the numeric Airbnb id
+ *     from it (so we can later match inbound review emails by listing id).
+ *   - House rules + WiFi credentials live on the same row — they're
+ *     metadata the welcome-flow QR will surface to guests.
+ *   - WiFi password is encrypted at rest via envelope encryption. We
+ *     decrypt only at NFC programming time, never log it, and never
+ *     return it to the dashboard except masked.
+ *
+ * Audit-logged. Address/category are optional for STR hosts (some don't
+ * have a public address listed for safety reasons).
+ */
+export async function createAirbnbListing(
+  _prev: CreateAirbnbListingState,
+  form: FormData,
+): Promise<CreateAirbnbListingState> {
+  const { orgId, userId } = await requireOrg();
+
+  const parsed = CreateAirbnbSchema.safeParse({
+    name: fd(form, "name"),
+    timezone: fd(form, "timezone") ?? "UTC",
+    airbnbListingUrl: fd(form, "airbnb_listing_url"),
+    directBookingUrl: fd(form, "direct_booking_url") ?? "",
+    houseRules: fd(form, "house_rules") ?? "",
+    wifiSsid: fd(form, "wifi_ssid") ?? "",
+    wifiPassword: fd(form, "wifi_password") ?? "",
+  });
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0];
+      if (typeof key === "string") fieldErrors[key] = issue.message;
+    }
+    return {
+      error: "Please correct the highlighted fields and try again.",
+      fieldErrors,
+    };
+  }
+  const data = parsed.data;
+  const listingId = extractAirbnbListingId(data.airbnbListingUrl);
+
+  // Encrypt the WiFi password if provided. We use the existing envelope
+  // module with purpose="general" — same module that handles OAuth tokens,
+  // so rotation tooling already covers it.
+  //
+  // Prisma's `Bytes` column maps to `Uint8Array<ArrayBuffer>` in TS but
+  // `encrypt()` returns `Buffer<ArrayBufferLike>`. Use the same copy
+  // pattern as `lib/connections/oauth-helpers.ts` to coerce. Cheap copy
+  // (~30 bytes for IV, ~20–280 bytes for ciphertext) — not a hot path.
+  const toBytes = (b: Buffer): Uint8Array<ArrayBuffer> => {
+    const out = new Uint8Array(new ArrayBuffer(b.byteLength));
+    out.set(b);
+    return out;
+  };
+  let wifiCt: Uint8Array<ArrayBuffer> | null = null;
+  let wifiIv: Uint8Array<ArrayBuffer> | null = null;
+  if (data.wifiPassword && data.wifiPassword.length > 0) {
+    try {
+      const enc = encrypt(data.wifiPassword, {
+        orgId,
+        provider: "wifi",
+        purpose: "general",
+      });
+      wifiCt = toBytes(enc.ciphertext);
+      wifiIv = toBytes(enc.iv);
+    } catch (err) {
+      // If encryption fails (missing master key), refuse to write a row
+      // with plaintext — fail closed, never store the plaintext.
+      logger.error(
+        {
+          err: err instanceof Error ? err.message : String(err),
+          orgId,
+          event: "establishment.airbnb.wifi_encrypt_failed",
+        },
+        "WiFi password encryption failed; aborting create",
+      );
+      return {
+        error:
+          "Couldn't securely store the WiFi password. Leave it blank for now and add it later from the listing's edit page.",
+        fieldErrors: { wifiPassword: "encryption_failed" },
+      };
+    }
+  }
+
+  const created = await withTenant(orgId, async (tx) => {
+    const e = await tx.establishment.create({
+      data: {
+        organizationId: orgId,
+        kind: "airbnb_listing",
+        name: data.name,
+        timezone: data.timezone,
+        airbnbListingUrl: data.airbnbListingUrl,
+        airbnbListingId: listingId,
+        directBookingUrl: data.directBookingUrl || null,
+        houseRules: data.houseRules || null,
+        wifiSsid: data.wifiSsid || null,
+        wifiPasswordCt: wifiCt,
+        wifiPasswordIv: wifiIv,
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "establishment.created",
+        resourceType: "establishment",
+        resourceId: e.id,
+        afterData: {
+          id: e.id,
+          name: e.name,
+          kind: "airbnb_listing",
+          airbnbListingId: listingId,
+          // Never write the WiFi password itself to the audit log.
+          wifiSsidConfigured: !!data.wifiSsid,
+          wifiPasswordConfigured: !!wifiCt,
+        },
+      },
+    });
+    return e;
+  });
+
+  logger.info(
+    {
+      orgId,
+      establishmentId: created.id,
+      airbnbListingId: listingId,
+      event: "establishment.airbnb.created",
+    },
+    "airbnb listing onboarded",
+  );
+
+  revalidatePath("/establishments");
+  redirect(`/establishments/${created.id}?onboarded=airbnb`);
 }

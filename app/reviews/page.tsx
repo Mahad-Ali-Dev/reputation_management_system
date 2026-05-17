@@ -5,7 +5,14 @@ import { Icon } from "@/components/shell/icon";
 import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
-import { listReviews, reviewStats } from "@/lib/reviews/queries";
+import {
+  REVIEW_SOURCES,
+  type ReviewSource,
+  listReviews,
+  reviewCountsBySource,
+  reviewStats,
+} from "@/lib/reviews/queries";
+import { buildReplyDeepLink, getReviewSourceMeta } from "@/lib/reviews/source-meta";
 import Link from "next/link";
 
 /**
@@ -28,17 +35,23 @@ const RATING_COLORS = {
 export default async function ReviewsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ rating?: string; reply?: string; q?: string }>;
+  searchParams: Promise<{ rating?: string; reply?: string; q?: string; source?: string }>;
 }) {
   const { orgId } = await getOrgContext();
 
   const sp = await searchParams;
   const rating = sp.rating ? Number.parseInt(sp.rating, 10) : undefined;
   const hasReply = sp.reply === "yes" ? true : sp.reply === "no" ? false : undefined;
+  // Validate source against the known enum so a tampered URL can't poke
+  // at unknown values and turn into a SQL filter we didn't intend.
+  const source = (REVIEW_SOURCES as readonly string[]).includes(sp.source ?? "")
+    ? (sp.source as ReviewSource)
+    : undefined;
 
-  const [reviews, stats] = await Promise.all([
-    listReviews(orgId, { rating, hasReply, search: sp.q, limit: 50 }),
+  const [reviews, stats, sourceCounts] = await Promise.all([
+    listReviews(orgId, { rating, hasReply, search: sp.q, source, limit: 50 }),
     reviewStats(orgId),
+    reviewCountsBySource(orgId),
   ]);
 
   const distribution = [5, 4, 3, 2, 1].map((r) => ({
@@ -148,6 +161,34 @@ export default async function ReviewsPage({
           ))}
         </select>
         <select
+          name="source"
+          defaultValue={sp.source ?? ""}
+          aria-label="Filter by platform"
+          style={{
+            height: 36,
+            padding: "0 32px 0 12px",
+            borderRadius: "var(--r)",
+            border: "1px solid var(--line)",
+            background: "var(--surface)",
+            fontFamily: "var(--f-ui)",
+            fontSize: 13,
+          }}
+        >
+          <option value="">All platforms</option>
+          {(["google", "airbnb", "booking_com", "facebook", "yelp", "trustpilot"] as const).map(
+            (s) => {
+              const meta = getReviewSourceMeta(s);
+              const count = sourceCounts[s] ?? 0;
+              return (
+                <option key={s} value={s}>
+                  {meta.label}
+                  {count > 0 ? ` (${count})` : ""}
+                </option>
+              );
+            },
+          )}
+        </select>
+        <select
           name="reply"
           defaultValue={sp.reply ?? ""}
           aria-label="Filter by reply status"
@@ -187,6 +228,20 @@ export default async function ReviewsPage({
           {reviews.map((r, i) => {
             const tone = ((i % 7) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7;
             const hasReplyBool = "reply" in r && r.reply !== null && r.reply !== undefined;
+            const sourceMeta = getReviewSourceMeta(r.source);
+            // For the deep-link CTA: only render when the source supports it
+            // AND we have enough establishment info to route correctly.
+            const replyDeepLink = sourceMeta.canReplyDeepLink
+              ? buildReplyDeepLink({
+                  source: r.source,
+                  establishment: {
+                    googlePlaceId: r.establishment?.googlePlaceId ?? null,
+                    airbnbListingUrl: r.establishment?.airbnbListingUrl ?? null,
+                    bookingcomListingId: r.establishment?.bookingcomListingId ?? null,
+                  },
+                })
+              : null;
+
             return (
               <Link
                 key={r.id}
@@ -199,14 +254,38 @@ export default async function ReviewsPage({
                   display: "block",
                 }}
               >
-                <div className="row" style={{ marginBottom: 8 }}>
+                <div className="row" style={{ marginBottom: 8, gap: 10 }}>
                   <Avatar name={r.reviewerName ?? "User"} size={32} tone={tone} />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>
+                    <div
+                      style={{
+                        fontSize: 13,
+                        fontWeight: 500,
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: 8,
+                      }}
+                    >
                       {r.reviewerName ?? "Anonymous"}
+                      <span
+                        title={sourceMeta.description}
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 700,
+                          letterSpacing: "0.04em",
+                          padding: "2px 6px",
+                          borderRadius: 999,
+                          background: sourceMeta.bgTint,
+                          color: sourceMeta.fg,
+                          fontFamily: "var(--f-mono)",
+                        }}
+                      >
+                        {sourceMeta.label.toUpperCase()}
+                      </span>
                     </div>
                     <div className="dim mono" style={{ fontSize: 10.5 }}>
                       {r.postedAt ? relativeTime(r.postedAt) : "—"}
+                      {r.establishment?.name ? ` · ${r.establishment.name}` : ""}
                     </div>
                   </div>
                   <Stars value={r.rating} size={13} />
@@ -229,6 +308,36 @@ export default async function ReviewsPage({
                   >
                     "{r.body}"
                   </p>
+                )}
+                {/* Reply-on-platform deep-link. Stops propagation so clicking
+                    the link doesn't navigate to the review detail page first. */}
+                {replyDeepLink && !hasReplyBool && (
+                  <div
+                    style={{
+                      marginTop: 10,
+                      paddingTop: 10,
+                      borderTop: "1px solid var(--line)",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 8,
+                      fontSize: 11.5,
+                    }}
+                  >
+                    <span style={{ color: "var(--rl-muted)" }}>Reply on platform:</span>
+                    <a
+                      href={replyDeepLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        color: sourceMeta.fg,
+                        textDecoration: "none",
+                        fontWeight: 500,
+                      }}
+                    >
+                      Open in {sourceMeta.label} →
+                    </a>
+                  </div>
                 )}
               </Link>
             );

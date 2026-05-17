@@ -111,7 +111,7 @@ export default function SubprocessorsPage() {
       <h2>Notification</h2>
       <p>
         To receive sub-processor change notifications, email{" "}
-        <a href="mailto:privacy@repuboost.io">privacy@repuboost.io</a> with the subject
+        <a href="mailto:privacy@repulabs.com">privacy@repulabs.com</a> with the subject
         "subprocessor notifications".
       </p>
     </>

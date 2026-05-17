@@ -4,7 +4,7 @@ import { SignJWT, jwtVerify } from "jose";
  * Per-visitor JWT for the chatbot widget.
  *
  * Bootstrap flow:
- *   1. Widget script loads from chat.repuboost.io/widget.js?key=PUBLIC_KEY
+ *   1. Widget script loads from chat.repulabs.com/widget.js?key=PUBLIC_KEY
  *   2. Widget calls /api/ai/widget/bootstrap?key=PUBLIC_KEY → server verifies origin, returns visitor JWT
  *   3. All subsequent /api/ai/chatbot/converse calls carry `Authorization: Bearer <jwt>`
  *

@@ -8,7 +8,7 @@ export const dynamic = "force-static";
  * GET /widget.js?key=<publicKey>
  *
  * Returns a self-contained chatbot widget JS bundle. Customers embed:
- *   <script src="https://chat.repuboost.io/widget.js?key=PUBLIC_KEY" async></script>
+ *   <script src="https://chat.repulabs.com/widget.js?key=PUBLIC_KEY" async></script>
  *
  * The widget:
  *   - Bootstraps a visitor JWT via /api/ai/widget/bootstrap

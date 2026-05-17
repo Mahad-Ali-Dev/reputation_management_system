@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 /**
  * POST /api/voice/status — Twilio call status updates.
  *
- * Configure in Twilio: Status Callback URL = https://app.repuboost.io/api/voice/status
+ * Configure in Twilio: Status Callback URL = https://app.repulabs.com/api/voice/status
  * Events: completed, no-answer, busy, failed
  *
  * Writes the final duration + status to the phone_calls row.

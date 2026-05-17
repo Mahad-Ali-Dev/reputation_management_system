@@ -15,11 +15,11 @@ export function GET() {
   // Expires roughly 1 year from now. Keep this updated.
   const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
   const body = [
-    "Contact: mailto:security@repuboost.io",
+    "Contact: mailto:security@repulabs.com",
     `Expires: ${expires}`,
     "Preferred-Languages: en",
-    "Canonical: https://repuboost.io/.well-known/security.txt",
-    "Policy: https://repuboost.io/legal/security-policy",
+    "Canonical: https://repulabs.com/.well-known/security.txt",
+    "Policy: https://repulabs.com/legal/security-policy",
     "",
     "# We appreciate responsible disclosure. Please give us 90 days before public disclosure.",
     "# Out of scope: denial-of-service, social engineering, physical attacks, third-party services.",

@@ -12,7 +12,7 @@ export default function PrivacyPage() {
 
       <p>
         Repulabs ("we") operates the reputation-management platform at{" "}
-        <strong>repuboost.io</strong>. This policy explains what data we collect, why,
+        <strong>repulabs.com</strong>. This policy explains what data we collect, why,
         and how you control it. By using the service you agree to this policy.
       </p>
 
@@ -78,7 +78,7 @@ export default function PrivacyPage() {
       <h2>5. Your rights</h2>
       <p>
         You can export, correct, or delete your data at any time. Email{" "}
-        <a href="mailto:privacy@repuboost.io">privacy@repuboost.io</a>. Under GDPR and CCPA you
+        <a href="mailto:privacy@repulabs.com">privacy@repulabs.com</a>. Under GDPR and CCPA you
         have the right to access, rectify, delete, restrict processing, and port your data.
         We respond within 30 days.
       </p>
@@ -93,8 +93,8 @@ export default function PrivacyPage() {
 
       <h2>7. Contact</h2>
       <p>
-        Data Protection Officer: <a href="mailto:privacy@repuboost.io">privacy@repuboost.io</a>.
-        General: <a href="mailto:support@repuboost.io">support@repuboost.io</a>.
+        Data Protection Officer: <a href="mailto:privacy@repulabs.com">privacy@repulabs.com</a>.
+        General: <a href="mailto:support@repulabs.com">support@repulabs.com</a>.
       </p>
     </>
   );
