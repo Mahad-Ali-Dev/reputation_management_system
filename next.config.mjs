@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Don't bundle CJS-only Node packages — let Node `require` them at runtime.
-  // `archiver` is plain `module.exports = factory`; Next 15's webpack mangles
-  // it into something where the default export isn't callable, producing
-  // `TypeError: b is not a function` at runtime. Same family of issue for
-  // any deeply-CJS Node-only package — list them here as needed.
+  // archiver@7 is CJS (`module.exports = factory`). Next 15's webpack stumbles
+  // when trying to ESM-interop it, so opt out of bundling and let Node's
+  // `require()` load it at runtime. Add any other CJS-only Node-native
+  // package that misbehaves under bundling to this list.
+  //
+  // Critical: do NOT upgrade archiver to v8. v8 is a pure-ESM rewrite that
+  // replaces the factory with `new ZipArchive(...)`, ships zero TS types,
+  // and breaks every call site in this codebase.
   serverExternalPackages: ["archiver"],
   experimental: {
     serverActions: {
