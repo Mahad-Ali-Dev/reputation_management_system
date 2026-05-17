@@ -57,11 +57,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   }
 
   if (device.status !== "active") {
-    return NextResponse.redirect(publicUrl("/not-activated?reason=inactive", req));
+    // Pass the slug through so /not-activated can pre-fill the activate form
+    // and the "Activate this QR" CTA routes the owner to the right place.
+    return NextResponse.redirect(
+      publicUrl(`/not-activated?reason=inactive&slug=${normalizedSlug}`, req),
+    );
   }
 
   if (!device.redirectUrl) {
-    return NextResponse.redirect(publicUrl("/not-activated?reason=no_target", req));
+    return NextResponse.redirect(
+      publicUrl(`/not-activated?reason=no_target&slug=${normalizedSlug}`, req),
+    );
   }
 
   // Verify signature — defeats DB tampering / KV poisoning attacks.

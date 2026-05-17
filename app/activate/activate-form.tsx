@@ -22,13 +22,35 @@ const initialState: ActivateDeviceState = { error: null };
 
 export function ActivateForm({
   establishments,
+  prefilledSlug,
 }: {
   establishments: Array<{ id: string; name: string }>;
+  prefilledSlug?: string | null;
 }) {
   const [state, formAction] = useActionState(activateDevice, initialState);
 
   return (
     <form action={formAction} className="col" style={{ gap: 16 }}>
+      {prefilledSlug && (
+        <div
+          style={{
+            padding: "10px 14px",
+            borderRadius: 10,
+            background: "var(--pri-50, #ecfdf7)",
+            border: "1px solid var(--pri-100, #cffaf0)",
+            color: "var(--pri-700, #0f766e)",
+            fontSize: 13,
+            lineHeight: 1.55,
+          }}
+        >
+          <strong style={{ display: "block", marginBottom: 2 }}>
+            You&rsquo;re activating QR <code className="mono">{prefilledSlug}</code>
+          </strong>
+          You&rsquo;ll find the 8-character code on the card inside the package this plaque shipped
+          in. Enter it below to bind the QR to your business.
+        </div>
+      )}
+
       {state.error && (
         <div
           role="alert"

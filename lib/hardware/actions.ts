@@ -639,6 +639,89 @@ export async function deleteDevice(form: FormData): Promise<void> {
 }
 
 /**
+ * Restore a soft-deleted device. Flips status from "retired" back to "active".
+ *
+ * Why this exists: customers occasionally hit the Delete button by mistake,
+ * or test the flow on their own plaque and want it back. Without a restore
+ * path, the only recovery was a support DB-write — bad UX.
+ *
+ * Security:
+ *   - Single-tenant by RLS — only the org that retired the device can restore it.
+ *   - Device.redirectUrl is preserved across retire/restore (we never null it
+ *     on retire, exactly so this is a one-field flip).
+ *   - The slug HMAC signature stays valid because redirectUrl + slug + expiry
+ *     are unchanged. Edge redirect verifier will accept it without re-sign.
+ *
+ * Audit-logged before+after so a malicious or buggy double-restore is detectable.
+ */
+const RestoreDeviceSchema = z.object({
+  deviceId: z.string().uuid(),
+});
+
+export async function restoreDevice(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireOrg();
+  const parsed = RestoreDeviceSchema.safeParse({ deviceId: form.get("deviceId") });
+  if (!parsed.success) throw new Error("invalid_device_id");
+
+  await withTenant(orgId, async (tx) => {
+    const device = await tx.device.findFirst({
+      where: { id: parsed.data.deviceId },
+      select: {
+        id: true,
+        shortSlug: true,
+        status: true,
+        redirectUrl: true,
+        establishmentId: true,
+      },
+    });
+    if (!device) throw new Error("device_not_found");
+    if (device.status === "active") {
+      // Already restored — idempotent, just bounce back.
+      return;
+    }
+    if (device.status !== "retired") {
+      throw new Error("device_not_retired");
+    }
+
+    await tx.device.update({
+      where: { id: device.id },
+      data: {
+        status: "active",
+        // activatedAt is intact from original activation — don't reset it.
+        // redirect_url stayed populated through the retire, so the CHECK
+        // constraint (devices_redirect_when_active) passes immediately.
+      },
+    });
+
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "device.restored",
+        resourceType: "device",
+        resourceId: device.id,
+        beforeData: { status: "retired" },
+        afterData: {
+          shortSlug: device.shortSlug,
+          status: "active",
+          redirectUrl: device.redirectUrl ?? null,
+          establishmentId: device.establishmentId,
+        },
+      },
+    });
+  });
+
+  logger.info(
+    { event: "device.restored", orgId, deviceId: parsed.data.deviceId },
+    "device restored from trash",
+  );
+
+  revalidatePath("/hardware");
+  redirect(`/hardware?restored=${parsed.data.deviceId}`);
+}
+
+/**
  * Re-target a device (e.g., establishment changes Google Place ID).
  */
 export async function refreshDeviceRedirect(deviceId: string): Promise<void> {

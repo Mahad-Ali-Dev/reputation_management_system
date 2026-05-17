@@ -16,8 +16,21 @@ export const dynamic = "force-dynamic";
  * operator activates a new stand HERE by entering the 8-char code from the
  * card in the box and picking which establishment it points to.
  */
-export default async function ActivatePage() {
+export default async function ActivatePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ slug?: string }>;
+}) {
   const { orgId } = await getOrgContext();
+  const sp = await searchParams;
+
+  // Pre-filled slug arrives from /not-activated when the owner scanned an
+  // un-redeemed QR — we display it as a context hint so they know which
+  // device they're activating, but the activation code is still the secret
+  // they need to enter manually.
+  const prefilledSlug = /^[0-9A-HJKMNP-TV-Z]{10}$/.test((sp.slug ?? "").toUpperCase())
+    ? (sp.slug ?? "").toUpperCase()
+    : null;
 
   const establishments = await withTenant(orgId, (tx) =>
     tx.establishment.findMany({
@@ -77,7 +90,7 @@ export default async function ActivatePage() {
                 and come back.
               </div>
             ) : (
-              <ActivateForm establishments={establishments} />
+              <ActivateForm establishments={establishments} prefilledSlug={prefilledSlug} />
             )}
           </div>
         </section>

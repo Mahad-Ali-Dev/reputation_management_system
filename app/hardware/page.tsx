@@ -7,6 +7,7 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
+import { restoreDevice } from "@/lib/hardware/actions";
 import { listOrgDevices } from "@/lib/hardware/queries";
 import Link from "next/link";
 
@@ -97,12 +98,23 @@ export default async function QrCodesPage({
     updated?: string;
     /** Set after a device delete to show a success banner. */
     deleted?: string;
+    /** Filter view: "active" (default) | "trash". */
+    view?: string;
+    /** Set after restore to show a success banner. */
+    restored?: string;
   }>;
 }) {
   const { orgId } = await getOrgContext();
 
   const devices = await listOrgDevices(orgId);
   const sp = await searchParams;
+
+  // Trash view — show only retired devices with a Restore button per card.
+  // Early return so it works whether or not the user has any active devices.
+  if (sp.view === "trash") {
+    const retiredDevices = devices.filter((d) => d.status === "retired");
+    return <TrashView devices={retiredDevices} justRestored={sp.restored} />;
+  }
 
   const activeDevices = devices.filter((d) => d.status === "active");
   const lastScanDevice = activeDevices.reduce<(typeof devices)[number] | null>((latest, d) => {
@@ -119,8 +131,7 @@ export default async function QrCodesPage({
   // device. Falls back to the first active device when no selection is
   // provided or the ID is invalid.
   const selectedDevice =
-    (sp.selected && activeDevices.find((d) => d.id === sp.selected)) ||
-    activeDevices[0];
+    (sp.selected && activeDevices.find((d) => d.id === sp.selected)) || activeDevices[0];
   if (!selectedDevice) return <EmptyState recentActivation={sp.activated} />;
 
   // Real analytics: 30d scans, prior 30d scans (for delta), reviews from QR
@@ -175,7 +186,9 @@ export default async function QrCodesPage({
             where: { organizationId: orgId, attributedDeviceId: { in: activeDeviceIds } },
             _count: { _all: true },
           })
-        : Promise.resolve([] as Array<{ attributedDeviceId: string | null; _count: { _all: number } }>),
+        : Promise.resolve(
+            [] as Array<{ attributedDeviceId: string | null; _count: { _all: number } }>,
+          ),
       activeEstablishmentIds.length > 0
         ? tx.review.groupBy({
             by: ["establishmentId"],
@@ -184,7 +197,11 @@ export default async function QrCodesPage({
             _avg: { rating: true },
           })
         : Promise.resolve(
-            [] as Array<{ establishmentId: string; _count: { _all: number }; _avg: { rating: number | null } }>,
+            [] as Array<{
+              establishmentId: string;
+              _count: { _all: number };
+              _avg: { rating: number | null };
+            }>,
           ),
     ]);
     return {
@@ -286,7 +303,23 @@ export default async function QrCodesPage({
           }}
         >
           <span style={{ marginRight: 8 }}>🗑</span>
-          QR code deleted. Any scans of that code now show the "not activated" page.
+          QR code moved to Trash. You have 30 days to{" "}
+          <Link
+            href="/hardware?view=trash"
+            style={{ color: "inherit", textDecoration: "underline" }}
+          >
+            restore it
+          </Link>{" "}
+          before it&rsquo;s permanently deleted.
+        </div>
+      )}
+      {sp.restored && (
+        <div
+          className="ds-card ds-card--pri"
+          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
+        >
+          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
+          QR code restored. Scans now route to the original Google review page again.
         </div>
       )}
 
@@ -319,15 +352,35 @@ export default async function QrCodesPage({
 
       <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div className="seg">
-          <button type="button" className="seg__t is-active">
-            All
-          </button>
-          <button type="button" className="seg__t">
+          <Link href="/hardware" className="seg__t is-active" style={{ textDecoration: "none" }}>
             Active
-          </button>
-          <button type="button" className="seg__t">
-            Unactivated
-          </button>
+          </Link>
+          <Link
+            href="/hardware?view=trash"
+            className="seg__t"
+            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
+          >
+            Trash
+            {devices.filter((d) => d.status === "retired").length > 0 && (
+              <span
+                style={{
+                  display: "inline-grid",
+                  placeItems: "center",
+                  minWidth: 18,
+                  height: 18,
+                  padding: "0 6px",
+                  borderRadius: 999,
+                  background: "var(--rl-muted, #94a3b8)",
+                  color: "#fff",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  fontFamily: "var(--f-mono)",
+                }}
+              >
+                {devices.filter((d) => d.status === "retired").length}
+              </span>
+            )}
+          </Link>
         </div>
         <div style={{ flex: 1 }} />
         <span className="mono dim" style={{ fontSize: 10.5 }}>
@@ -783,8 +836,7 @@ function DeviceQrPanel({
   // + Content-Disposition headers — the browser triggers a download via the
   // `download` attribute on the anchor. PDF intentionally omitted for now; the
   // PNG prints well or can be "Save as PDF" via the browser print dialog.
-  const downloadHref = (format: "png" | "svg") =>
-    `/api/devices/${deviceId}/qr?format=${format}`;
+  const downloadHref = (format: "png" | "svg") => `/api/devices/${deviceId}/qr?format=${format}`;
   const downloadName = (format: "png" | "svg") => `repulabs-${code}.${format}`;
 
   const linkStyle: React.CSSProperties = {
@@ -1012,4 +1064,232 @@ function Mini({ l, v }: { l: string; v: string }) {
 function labelFromDays(daysAgo: number): string {
   const d = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/* ============================================================
+   Trash view — visible when /hardware?view=trash.
+   Lists every retired (soft-deleted) device with a Restore button.
+   Real hard-deletion only happens via a background sweep after 30 days
+   (planned cron job; for now the rows stay forever — easy to recover).
+============================================================ */
+
+type RetiredDevice = Awaited<ReturnType<typeof listOrgDevices>>[number];
+
+function TrashView({
+  devices,
+  justRestored,
+}: {
+  devices: RetiredDevice[];
+  justRestored?: string;
+}) {
+  return (
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Codes", "Trash"]}>
+      <PageHeader
+        kicker="QR codes · trash"
+        title="Restore a deleted QR"
+        description="Soft-deleted QRs live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL — no need to re-enter anything."
+        actions={
+          <Link href="/hardware" className="btn">
+            <Icon name="chevL" size={12} />
+            Back to active QRs
+          </Link>
+        }
+      />
+
+      {justRestored && (
+        <div
+          className="ds-card ds-card--pri"
+          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
+        >
+          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
+          QR restored. Visit <Link href="/hardware">Active QRs</Link> to confirm.
+        </div>
+      )}
+
+      {/* Tab segment so user can flip back to active. Same shape as the
+          one on the active list for consistency. */}
+      <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
+        <div className="seg">
+          <Link href="/hardware" className="seg__t" style={{ textDecoration: "none" }}>
+            Active
+          </Link>
+          <Link
+            href="/hardware?view=trash"
+            className="seg__t is-active"
+            style={{
+              textDecoration: "none",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+            }}
+          >
+            Trash
+            <span
+              style={{
+                display: "inline-grid",
+                placeItems: "center",
+                minWidth: 18,
+                height: 18,
+                padding: "0 6px",
+                borderRadius: 999,
+                background: "var(--ink, #0b0d0e)",
+                color: "#fff",
+                fontSize: 10,
+                fontWeight: 600,
+                fontFamily: "var(--f-mono)",
+              }}
+            >
+              {devices.length}
+            </span>
+          </Link>
+        </div>
+      </div>
+
+      {devices.length === 0 ? (
+        <div
+          className="ds-card"
+          style={{
+            padding: "40px 24px",
+            textAlign: "center",
+            background: "var(--surface)",
+          }}
+        >
+          <div style={{ fontSize: 32, marginBottom: 12 }} aria-hidden>
+            🗑
+          </div>
+          <h3
+            style={{
+              fontSize: 18,
+              fontWeight: 600,
+              letterSpacing: "-0.015em",
+              marginBottom: 6,
+            }}
+          >
+            Trash is empty
+          </h3>
+          <p style={{ fontSize: 13.5, color: "var(--rl-muted)", lineHeight: 1.55 }}>
+            You haven&rsquo;t deleted any QR codes recently. Deleted QRs land here for 30 days
+            before they&rsquo;re hard-deleted.
+          </p>
+          <Link href="/hardware" className="btn" style={{ marginTop: 16, display: "inline-flex" }}>
+            <Icon name="chevL" size={12} />
+            Back to active QRs
+          </Link>
+        </div>
+      ) : (
+        <div className="grid-3" style={{ gap: 16 }}>
+          {devices.map((d) => (
+            <TrashedDeviceCard key={d.id} device={d} />
+          ))}
+        </div>
+      )}
+
+      <div
+        className="ds-card"
+        style={{
+          marginTop: 24,
+          padding: "12px 16px",
+          background: "var(--surface-2, #fafbf8)",
+          border: "1px dashed var(--line)",
+          color: "var(--rl-muted)",
+          fontSize: 12,
+          lineHeight: 1.6,
+        }}
+      >
+        <strong style={{ color: "var(--ink-2)" }}>Heads up.</strong> Restoring a QR brings back the
+        original slug, redirect URL, and HMAC signature. If you&rsquo;ve printed new plaques with
+        the same code in the meantime, scanners of the old plaque will route to the restored URL —
+        make sure that&rsquo;s what you want.
+      </div>
+    </AppShellServer>
+  );
+}
+
+function TrashedDeviceCard({ device: d }: { device: RetiredDevice }) {
+  return (
+    <div
+      className="ds-card"
+      style={{
+        padding: 18,
+        opacity: 0.92,
+        background: "var(--surface)",
+        border: "1px solid var(--line)",
+      }}
+    >
+      <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontFamily: "var(--f-mono)",
+            letterSpacing: ".12em",
+            color: "var(--rl-muted)",
+            fontWeight: 600,
+          }}
+        >
+          CODE · {d.shortSlug}
+        </span>
+        <span
+          style={{
+            fontSize: 10.5,
+            fontFamily: "var(--f-mono)",
+            letterSpacing: ".08em",
+            color: "#b91c1c",
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            padding: "1px 6px",
+            borderRadius: 4,
+            fontWeight: 600,
+          }}
+        >
+          RETIRED
+        </span>
+      </div>
+      <h3
+        style={{
+          fontSize: 15,
+          fontWeight: 600,
+          letterSpacing: "-0.015em",
+          margin: 0,
+        }}
+      >
+        {d.establishment?.name ?? "Unassigned"}
+      </h3>
+      <p
+        style={{
+          fontSize: 11.5,
+          color: "var(--rl-muted)",
+          marginTop: 4,
+          marginBottom: 12,
+        }}
+      >
+        SKU: {d.productSku} · Created {new Date(d.createdAt).toLocaleDateString()}
+      </p>
+      <div
+        style={{
+          padding: "8px 10px",
+          background: "var(--surface-2, #fafbf8)",
+          border: "1px solid var(--line)",
+          borderRadius: 8,
+          fontSize: 11.5,
+          fontFamily: "var(--f-mono)",
+          color: "var(--ink-2)",
+          wordBreak: "break-all",
+          marginBottom: 14,
+        }}
+      >
+        {d.redirectUrl ?? "—"}
+      </div>
+      <form action={restoreDevice}>
+        <input type="hidden" name="deviceId" value={d.id} />
+        <button
+          type="submit"
+          className="btn btn--pri"
+          style={{ width: "100%", justifyContent: "center" }}
+        >
+          <Icon name="arrowR" size={11} />
+          Restore QR
+        </button>
+      </form>
+    </div>
+  );
 }
