@@ -1,0 +1,12 @@
+# pnpm v10+ build-script approval. All packages listed here also live in
+# package.json's `pnpm.onlyBuiltDependencies` — kept in sync intentionally.
+# Adding a new native dep? Set it to true here AND in package.json.
+allowBuilds:
+  '@biomejs/biome': true
+  '@prisma/client': true
+  '@prisma/engines': true
+  '@sentry/cli': true
+  argon2: true
+  esbuild: true
+  prisma: true
+  sharp: true
