@@ -38,8 +38,8 @@ function isGroup(x: NavItem): x is NavGroup {
 const NAV: NavItem[] = [
   { group: "Workspace" },
   { href: "/dashboard", label: "Dashboard", icon: "grid" },
-  { href: "/establishments", label: "Establishments", icon: "building" },
-  { href: "/hardware", label: "QR Codes", icon: "qr" },
+  { href: "/establishments", label: "Listings", icon: "building" },
+  { href: "/hardware", label: "QR Stands", icon: "qr" },
 
   { group: "Reputation" },
   {
@@ -54,7 +54,7 @@ const NAV: NavItem[] = [
   },
   {
     href: "/reviews",
-    label: "Manage Reviews",
+    label: "Reviews",
     icon: "star",
     children: [
       { href: "/reviews", label: "All reviews" },
@@ -65,7 +65,7 @@ const NAV: NavItem[] = [
   },
   {
     href: "/surveys",
-    label: "Customer Surveys",
+    label: "Surveys",
     icon: "survey",
     children: [
       { href: "/surveys", label: "Campaigns" },
@@ -133,7 +133,7 @@ export function SidebarNav({
         style={{ textDecoration: "none", color: "inherit" }}
       >
         <Image
-          src="/repulabs-logo.png"
+          src="/favicon.png"
           alt=""
           width={32}
           height={32}

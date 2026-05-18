@@ -131,9 +131,9 @@ export function ActivateForm({
           ))}
         </select>
         <span className="dim" style={{ fontSize: 11.5 }}>
-          Need a new location?{" "}
+          Need a new listing?{" "}
           <Link href="/establishments/new" style={{ color: "var(--pri)", textDecoration: "none" }}>
-            Add an establishment →
+            Add a listing →
           </Link>
         </span>
       </label>

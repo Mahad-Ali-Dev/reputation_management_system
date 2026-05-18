@@ -32,7 +32,7 @@ export default async function SurveysPage() {
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Surveys"]}>
       <PageHeader
         kicker="NPS · CSAT · custom flows"
-        title="Customer surveys"
+        title="Surveys"
         description="Send surveys after every interaction. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
         actions={
           <>

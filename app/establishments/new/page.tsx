@@ -11,18 +11,21 @@ export default async function NewEstablishmentPage() {
   await getOrgContext();
 
   return (
-    <AppShellServer topBar={<TopBar title="Add Establishment" />}>
+    <AppShellServer topBar={<TopBar title="Add Listing" />}>
       <PageHeader
-        title="Add Establishment"
-        breadcrumb={[{"label":"Establishments","href":"/establishments"},{"label":"New"}]}
+        title="Add listing"
+        breadcrumb={[
+          { label: "Listings", href: "/establishments" },
+          { label: "New" },
+        ]}
       />
 
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle>Add establishment</CardTitle>
+            <CardTitle>Add listing</CardTitle>
             <CardDescription>
-              A location you want to manage reviews for. You'll connect Google Business Profile in
+              A listing you want to manage reviews for. You'll connect Google Business Profile in
               the next step.
             </CardDescription>
           </CardHeader>

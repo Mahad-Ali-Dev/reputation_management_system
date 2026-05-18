@@ -39,12 +39,16 @@ export const metadata: Metadata = {
     "AI phone receptionist",
   ],
   icons: {
+    // Single source of truth — favicon.png covers the standard tab icon,
+    // the 180×180 retina slot, and the apple-touch-icon. Cache-busted via
+    // a versioned querystring so browsers that aggressively cache the
+    // favicon (Chrome, Safari) refresh on next visit.
     icon: [
-      { url: "/favicon.png", type: "image/png" },
-      { url: "/repulabs-logo.png", sizes: "180x180", type: "image/png" },
+      { url: "/favicon.png?v=2", type: "image/png" },
+      { url: "/favicon.png?v=2", sizes: "180x180", type: "image/png" },
     ],
-    apple: "/repulabs-logo.png",
-    shortcut: "/favicon.png",
+    apple: "/favicon.png?v=2",
+    shortcut: "/favicon.png?v=2",
   },
   openGraph: {
     type: "website",

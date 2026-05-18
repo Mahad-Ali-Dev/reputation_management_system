@@ -208,14 +208,14 @@ export default async function ListingAnalyticsPage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Establishments", data.establishment.name, "Analytics"]}
+      crumbs={["Listings", data.establishment.name, "Analytics"]}
     >
       <PageHeader
         kicker={data.establishment.kind === "airbnb_listing" ? "Airbnb listing" : "Listing"}
         title={`Analytics · ${data.establishment.name}`}
         description="Real metrics across every connected review source for this listing."
         breadcrumb={[
-          { label: "Establishments", href: "/establishments" },
+          { label: "Listings", href: "/establishments" },
           {
             label: data.establishment.name,
             href: `/establishments/${data.establishment.id}`,

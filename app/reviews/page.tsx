@@ -65,7 +65,7 @@ export default async function ReviewsPage({
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Reviews"]}>
       <PageHeader
         kicker={`${stats.total.toLocaleString()} total · avg ${stats.avgRating ? stats.avgRating.toFixed(2) : "—"}`}
-        title="Manage reviews"
+        title="Reviews"
         description="Every review across every connected platform, in one queue. AI drafts replies you approve."
         actions={
           <>

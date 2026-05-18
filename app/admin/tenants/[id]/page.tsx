@@ -99,7 +99,7 @@ export default async function TenantDetailPage({
       <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>
         <KpiCard l="Members" v={String(org.memberships.length)} d="users on the team" />
         <KpiCard
-          l="Establishments"
+          l="Listings"
           v={String(org.establishments.length)}
           d="locations"
         />
@@ -163,9 +163,9 @@ export default async function TenantDetailPage({
           </ul>
         </div>
 
-        {/* Establishments card */}
+        {/* Listings card */}
         <div className="ds-card" style={{ padding: 18 }}>
-          <h3 className="ds-card__title">Establishments</h3>
+          <h3 className="ds-card__title">Listings</h3>
           <ul
             style={{
               marginTop: 10,

@@ -197,18 +197,18 @@ export default async function EstablishmentsPage() {
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "Establishments", data.selected.name]}
+      crumbs={["Workspace", "Listings", data.selected.name]}
     >
       <PageHeader
-        kicker={`${data.establishments.length} location${data.establishments.length === 1 ? "" : "s"} · ${activeCount} active`}
-        title="Establishments"
-        description="Every location, its review stream and team — rolled up to one composite score."
+        kicker={`${data.establishments.length} listing${data.establishments.length === 1 ? "" : "s"} · ${activeCount} active`}
+        title="Listings"
+        description="Every listing, its review stream and team — rolled up to one composite score."
         actions={
-          // Filter chip removed until per-establishment filter logic ships.
-          // Add-establishment CTA stays.
+          // Filter chip removed until per-listing filter logic ships.
+          // Add-listing CTA stays.
           <Link href="/establishments/new" className="btn btn--pri">
             <Icon name="plus" size={12} />
-            Add establishment
+            Add listing
           </Link>
         }
       />
@@ -255,15 +255,15 @@ export default async function EstablishmentsPage() {
 
 function EmptyEstablishments() {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Establishments"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Listings"]}>
       <PageHeader
-        kicker="No locations yet"
-        title="Add your first establishment"
-        description="Locations are the rooted unit of a repulabs account. Each syncs its own reviews and rolls up to your composite score."
+        kicker="No listings yet"
+        title="Add your first listing"
+        description="Listings are the rooted unit of a repulabs account. Each syncs its own reviews and rolls up to your composite score."
         actions={
           <Link href="/establishments/new" className="btn btn--pri">
             <Icon name="plus" size={12} />
-            Add establishment
+            Add listing
           </Link>
         }
       />
@@ -294,7 +294,7 @@ function EmptyEstablishments() {
         </p>
         <Link href="/establishments/new" className="btn btn--pri btn--lg" style={{ marginTop: 18 }}>
           <Icon name="plus" size={14} />
-          Add establishment
+          Add listing
         </Link>
       </div>
     </AppShellServer>

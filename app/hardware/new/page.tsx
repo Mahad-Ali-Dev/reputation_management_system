@@ -41,15 +41,15 @@ export default async function NewQrPage({
 
   if (establishments.length === 0) {
     return (
-      <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Codes", "Generate"]}>
+      <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands", "Generate"]}>
         <PageHeader
           kicker="Generate a QR code"
-          title="Add a location first"
-          description="A QR code points to a specific business's Google review page. Add your first establishment so we know where to send scanners."
+          title="Add a listing first"
+          description="A QR code points to a specific listing's Google review page. Add your first listing so we know where to send scanners."
           actions={
             <Link href="/establishments/new" className="btn btn--pri">
               <Icon name="plus" size={12} />
-              Add establishment
+              Add listing
             </Link>
           }
         />
@@ -71,14 +71,14 @@ export default async function NewQrPage({
           >
             <Icon name="building" size={26} />
           </div>
-          <h3 style={{ fontSize: 17, fontWeight: 600 }}>No establishments yet</h3>
+          <h3 style={{ fontSize: 17, fontWeight: 600 }}>No listings yet</h3>
           <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
-            Add the business this QR will point to. Once it exists, you can connect Google Business
+            Add the listing this QR will point to. Once it exists, you can connect Google Business
             Profile to pull reviews automatically — or paste your Google review link directly.
           </p>
           <Link href="/establishments/new" className="btn btn--pri" style={{ marginTop: 16 }}>
             <Icon name="plus" size={12} />
-            Add your first business
+            Add your first listing
           </Link>
         </div>
       </AppShellServer>
@@ -86,7 +86,7 @@ export default async function NewQrPage({
   }
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Codes", "Generate"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands", "Generate"]}>
       <PageHeader
         kicker="Free · self-service"
         title="Generate a QR code"
@@ -94,7 +94,7 @@ export default async function NewQrPage({
         actions={
           <Link href="/hardware" className="btn">
             <Icon name="chevL" size={12} />
-            Back to QR codes
+            Back to QR stands
           </Link>
         }
       />

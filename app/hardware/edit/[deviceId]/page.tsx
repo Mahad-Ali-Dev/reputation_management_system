@@ -73,7 +73,7 @@ export default async function EditDevicePage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "QR Codes", device.shortSlug]}
+      crumbs={["Workspace", "QR Stands", device.shortSlug]}
     >
       <PageHeader
         kicker={`QR code · ${device.shortSlug}`}
@@ -86,7 +86,7 @@ export default async function EditDevicePage({
         actions={
           <Link href="/hardware" className="btn">
             <Icon name="chevL" size={12} />
-            Back to QR codes
+            Back to QR stands
           </Link>
         }
       />

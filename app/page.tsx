@@ -336,7 +336,7 @@ function Hero() {
 function DashboardPreview() {
   const navs = [
     { i: "▦", t: "Dashboard", on: true },
-    { i: "◉", t: "Establishments" },
+    { i: "◉", t: "Listings" },
     { i: "✉", t: "Requests" },
     { i: "★", t: "Reviews" },
     { i: "❒", t: "Inbox" },

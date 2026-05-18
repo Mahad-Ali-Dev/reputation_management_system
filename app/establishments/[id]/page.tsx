@@ -100,7 +100,7 @@ export default async function EstablishmentDetailPage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "Establishments", establishment.name]}
+      crumbs={["Workspace", "Listings", establishment.name]}
     >
       <PageHeader
         kicker={
@@ -114,7 +114,7 @@ export default async function EstablishmentDetailPage({
           <>
             <Link href="/establishments" className="btn">
               <Icon name="chevL" size={12} />
-              All locations
+              All listings
             </Link>
             {establishment.googlePlaceId && (
               <a

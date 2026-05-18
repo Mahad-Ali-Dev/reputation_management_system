@@ -34,7 +34,7 @@ export default async function NewAirbnbListingPage() {
   const forwardAddress = `reviews-${org.slug}@inbound.repulabs.com`;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Establishments", "Add Airbnb listing"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Listings", "Add Airbnb listing"]}>
       <PageHeader
         kicker="Short-term rental"
         title="Add an Airbnb listing"
@@ -42,7 +42,7 @@ export default async function NewAirbnbListingPage() {
         actions={
           <Link href="/establishments" className="btn">
             <Icon name="chevL" size={12} />
-            Back to establishments
+            Back to listings
           </Link>
         }
       />

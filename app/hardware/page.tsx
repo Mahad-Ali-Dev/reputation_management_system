@@ -248,11 +248,11 @@ export default async function QrCodesPage({
   const selectedScans = analytics.selectedScans;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Codes"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands"]}>
       <PageHeader
         kicker="QR codes · stands · plaques"
-        title="QR Codes"
-        description="Every prompt that turns a scan into a 5-star Google review. Generate a free QR yourself in 30 seconds, or activate a stand you bought."
+        title="QR Stands"
+        description="Every prompt that turns a scan into a 5-star review. Generate a free QR yourself in 30 seconds, or activate a stand you bought."
         actions={
           <>
             <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
@@ -473,10 +473,10 @@ export default async function QrCodesPage({
 
 function EmptyState({ recentActivation }: { recentActivation?: string }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Codes"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands"]}>
       <PageHeader
         kicker="Get your first 5-star review"
-        title="QR Codes"
+        title="QR Stands"
         description="Every prompt that turns a scan into a Google review. Free to generate, no hardware required."
       />
       {recentActivation && (
@@ -1083,9 +1083,9 @@ function TrashView({
   justRestored?: string;
 }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Codes", "Trash"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands", "Trash"]}>
       <PageHeader
-        kicker="QR codes · trash"
+        kicker="QR stands · trash"
         title="Restore a deleted QR"
         description="Soft-deleted QRs live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL — no need to re-enter anything."
         actions={

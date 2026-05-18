@@ -591,7 +591,7 @@ function LocationsCard({
   return (
     <div className="ds-card">
       <div className="ds-card__head">
-        <h3 className="ds-card__title">Locations</h3>
+        <h3 className="ds-card__title">Listings</h3>
         <a href="/establishments" className="btn btn--xs">
           View all
         </a>
@@ -606,7 +606,7 @@ function LocationsCard({
               fontSize: 12.5,
             }}
           >
-            No locations yet —{" "}
+            No listings yet —{" "}
             <a href="/establishments/new" style={{ color: "var(--pri)" }}>
               add your first
             </a>

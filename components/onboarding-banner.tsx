@@ -22,9 +22,9 @@ function nextStep(f: OnboardingFacts): Step | null {
   if (!f.hasEstablishment) {
     return {
       key: "establishment",
-      title: "Add your first establishment",
-      body: "Tell us about the location you're managing — name, address, hours. Takes 30 seconds.",
-      cta: "Add establishment",
+      title: "Add your first listing",
+      body: "Tell us about the listing you're managing — name, address, hours. Takes 30 seconds.",
+      cta: "Add listing",
       href: "/establishments",
     };
   }
