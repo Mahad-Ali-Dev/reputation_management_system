@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Inline these env vars into BOTH server and client bundles at build time.
+  // Without this, next-auth@5 beta's client SDK reads process.env.NEXTAUTH_URL
+  // as undefined at runtime and falls back to `http://localhost:3000/api/auth`,
+  // which then becomes the redirect_uri sent to Google during sign-in. That's
+  // why every login attempt was bouncing to localhost no matter what we set in
+  // .env.production.
+  env: {
+    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+    AUTH_URL: process.env.AUTH_URL,
+  },
   // archiver@7 is CJS (`module.exports = factory`). Next 15's webpack stumbles
   // when trying to ESM-interop it, so opt out of bundling and let Node's
   // `require()` load it at runtime. Add any other CJS-only Node-native
