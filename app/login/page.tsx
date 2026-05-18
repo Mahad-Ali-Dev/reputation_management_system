@@ -73,7 +73,7 @@ export default function LoginPage() {
 
         <div className="row" style={{ position: "relative", marginBottom: "auto", gap: 10 }}>
           <Image
-            src="/repulabs-logo.png"
+            src="/favicon.png?v=2"
             alt=""
             width={36}
             height={36}
@@ -85,7 +85,9 @@ export default function LoginPage() {
               padding: 3,
             }}
           />
-          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em" }}>repulabs</div>
+          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em" }}>
+            repu<span style={{ opacity: 0.8 }}>labs</span>
+          </div>
         </div>
 
         <div style={{ position: "relative" }}>
@@ -190,7 +192,7 @@ export default function LoginPage() {
           {/* Mobile-only inline brand */}
           <div className="login-mobile-brand row" style={{ marginBottom: 24, gap: 10 }}>
             <Image
-              src="/repulabs-logo.png"
+              src="/favicon.png?v=2"
               alt=""
               width={36}
               height={36}
