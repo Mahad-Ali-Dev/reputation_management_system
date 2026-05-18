@@ -2,6 +2,62 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 /**
+ * Route migration map (Wave 2b).
+ *
+ * The sidebar uses action-led labels — Home, Businesses, Get Reviews, etc.
+ * The page files are still at their original locations (app/dashboard,
+ * app/establishments, app/outreach, ...). Two-direction middleware bridges
+ * the gap:
+ *
+ *   1. ROUTE_REDIRECTS: old → new (308). External bookmarks, internal
+ *      <Link href="/dashboard">, server-action redirect("/dashboard") all
+ *      land on /home in the user's address bar.
+ *
+ *   2. ROUTE_REWRITES: new → old (internal rewrite). When the user is on
+ *      /home, Next.js needs to find a page — the actual code lives at
+ *      app/dashboard/page.tsx, so we rewrite back to /dashboard internally
+ *      while the URL bar stays at /home.
+ *
+ * Prefix matching handles every sub-path. /businesses/abc → /establishments/abc,
+ * /get-reviews/bulk → /outreach/bulk, etc.
+ */
+const ROUTE_REDIRECTS: Record<string, string> = {
+  "/dashboard": "/home",
+  "/establishments": "/businesses",
+  "/outreach": "/get-reviews",
+  "/support": "/messages",
+  "/ai/training": "/auto-replies",
+  "/subscription": "/billing",
+};
+const ROUTE_REWRITES: Record<string, string> = {
+  "/home": "/dashboard",
+  "/businesses": "/establishments",
+  "/get-reviews": "/outreach",
+  "/messages": "/support",
+  "/auto-replies": "/ai/training",
+  "/billing": "/subscription",
+};
+
+function tryRouteMigration(req: NextRequest): NextResponse | null {
+  const pathname = req.nextUrl.pathname;
+  for (const [oldPath, newPath] of Object.entries(ROUTE_REDIRECTS)) {
+    if (pathname === oldPath || pathname.startsWith(`${oldPath}/`)) {
+      const target = req.nextUrl.clone();
+      target.pathname = newPath + pathname.slice(oldPath.length);
+      return NextResponse.redirect(target, 308);
+    }
+  }
+  for (const [newPath, oldPath] of Object.entries(ROUTE_REWRITES)) {
+    if (pathname === newPath || pathname.startsWith(`${newPath}/`)) {
+      const target = req.nextUrl.clone();
+      target.pathname = oldPath + pathname.slice(newPath.length);
+      return NextResponse.rewrite(target);
+    }
+  }
+  return null;
+}
+
+/**
  * Apply security response headers to every response.
  *
  * CSP rationale:
@@ -96,6 +152,14 @@ export function middleware(req: NextRequest) {
   // Webhooks must work on whatever host Stripe/Twilio/etc were configured to hit
   if (pathname.startsWith("/api/webhooks")) {
     return NextResponse.next({ request: { headers: requestHeaders } });
+  }
+
+  // ---- Route migration (Wave 2b) ----
+  // Old → new redirects (308) and new → old internal rewrites. Skip for /admin
+  // and /api to avoid surprising those flows; their paths aren't in our maps.
+  if (!pathname.startsWith("/admin") && !pathname.startsWith("/api")) {
+    const migrated = tryRouteMigration(req);
+    if (migrated) return applySecurityHeaders(migrated, pathname);
   }
 
   // ---- Admin auth gate ----

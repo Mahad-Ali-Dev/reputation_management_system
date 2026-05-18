@@ -37,18 +37,18 @@ function isGroup(x: NavItem): x is NavGroup {
 
 const NAV: NavItem[] = [
   { group: "Workspace" },
-  { href: "/dashboard", label: "Home", icon: "grid" },
-  { href: "/establishments", label: "Businesses", icon: "building" },
+  { href: "/home", label: "Home", icon: "grid" },
+  { href: "/businesses", label: "Businesses", icon: "building" },
   { href: "/hardware", label: "QR Stands", icon: "qr" },
 
   { group: "Reputation" },
   {
-    href: "/outreach",
+    href: "/get-reviews",
     label: "Get Reviews",
     icon: "send",
     children: [
-      { href: "/outreach/send", label: "One-off send" },
-      { href: "/outreach/bulk", label: "Automations" },
+      { href: "/get-reviews/send", label: "One-off send" },
+      { href: "/get-reviews/bulk", label: "Automations" },
       { href: "/contacts", label: "Recipients" },
     ],
   },
@@ -76,16 +76,16 @@ const NAV: NavItem[] = [
 
   { group: "Engagement" },
   {
-    href: "/support",
+    href: "/messages",
     label: "Messages",
     icon: "chat",
     children: [
-      { href: "/support/comments", label: "Comments" },
-      { href: "/support/dms", label: "DMs" },
-      { href: "/support/live-chat", label: "Live chat" },
-      { href: "/support/customers", label: "Visitors" },
-      { href: "/support/chat-automation", label: "Automations" },
-      { href: "/support/analytics", label: "Analytics" },
+      { href: "/messages/comments", label: "Comments" },
+      { href: "/messages/dms", label: "DMs" },
+      { href: "/messages/live-chat", label: "Live chat" },
+      { href: "/messages/customers", label: "Visitors" },
+      { href: "/messages/chat-automation", label: "Automations" },
+      { href: "/messages/analytics", label: "Analytics" },
     ],
   },
   {
@@ -100,12 +100,12 @@ const NAV: NavItem[] = [
   },
 
   { group: "Intelligence" },
-  { href: "/ai/training", label: "Auto-Replies", icon: "brain" },
+  { href: "/auto-replies", label: "Auto-Replies", icon: "brain" },
   { href: "/phone", label: "Phone AI", icon: "phone", badge: "AI" },
 
   { group: "Settings" },
   { href: "/connections", label: "Connections", icon: "plug" },
-  { href: "/subscription", label: "Billing", icon: "card" },
+  { href: "/billing", label: "Billing", icon: "card" },
   { href: "/settings/account", label: "Account", icon: "settings" },
 ];
 
