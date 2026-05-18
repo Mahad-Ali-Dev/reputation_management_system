@@ -60,6 +60,7 @@ const NAV: NavItem[] = [
       { href: "/reviews", label: "All reviews" },
       { href: "/reviews/dispute", label: "Dispute" },
       { href: "/reviews/replies", label: "Replies" },
+      { href: "/reviews/auto-reply", label: "Auto-reply" },
     ],
   },
   {

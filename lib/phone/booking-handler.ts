@@ -19,6 +19,7 @@
  */
 
 import { fetchAvailableSlots, formatSlotsForVoice, createBooking, loadCalComConfig } from "./calcom";
+import { notifyBookingInBackground } from "./notify-booking";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
@@ -125,9 +126,10 @@ export async function confirmBooking(args: {
       notes: args.notes,
     });
 
-    // Save to phone_bookings
-    await withTenant(args.orgId, async (tx) => {
-      await tx.phoneBooking.create({
+    // Save to phone_bookings. We capture the returned id so the
+    // fire-and-forget notifier knows which row to act on.
+    const phoneBookingId = await withTenant(args.orgId, async (tx) => {
+      const row = await tx.phoneBooking.create({
         data: {
           organizationId: args.orgId,
           callId: args.callId,
@@ -141,8 +143,16 @@ export async function confirmBooking(args: {
           status: result.status === "confirmed" ? "confirmed" : "pending",
           notes: args.notes ?? null,
         },
+        select: { id: true },
       });
+      return row.id;
     });
+
+    // Send the two confirmation emails (customer + owner) without
+    // blocking the live phone conversation. The notifier is idempotent
+    // via PhoneBooking.notified_*_at timestamps, so a retry sweep can
+    // pick up any failures later.
+    notifyBookingInBackground(phoneBookingId);
 
     const friendlyTime = new Date(args.startUtc).toLocaleString("en-US", {
       weekday: "long",

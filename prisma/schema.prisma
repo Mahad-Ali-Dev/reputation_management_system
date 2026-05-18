@@ -49,6 +49,7 @@ model Organization {
   inboxThreads   InboxThread[]
   reviewRequests ReviewRequest[]
   inboundEmails  InboundEmail[]
+  autoReplyRules AutoReplyRule[]
 
   @@index([plan])
   @@index([stripeCustomerId])
@@ -85,6 +86,11 @@ model Establishment {
   wifiPasswordCt       Bytes?  @map("wifi_password_ct")
   wifiPasswordIv       Bytes?  @map("wifi_password_iv")
   localRecommendations Json?   @default("[]") @map("local_recommendations")
+  // Phase 2 follow-on: bad-review SMS early-warning. Opt-in only — both
+  // flag and number must be set for alerts to fire.
+  alertSmsEnabled    Boolean @default(false) @map("alert_sms_enabled")
+  alertSmsPhone      String? @map("alert_sms_phone")              // E.164
+  alertSmsMinRating  Int     @default(3) @map("alert_sms_min_rating")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
@@ -99,6 +105,7 @@ model Establishment {
   reviewRequestTemplates ReviewRequestTemplate[]
   surveyCampaigns SurveyCampaign[] @relation("EstablishmentSurveys")
   platformChoices ReviewPlatformChoice[]
+  autoReplyRules  AutoReplyRule[]
 
   @@index([organizationId])
   @@index([googlePlaceId])
@@ -1225,6 +1232,9 @@ model PhoneAssistant {
   calComIv              Bytes?   @map("cal_com_iv")
   calComEventType       Int?     @map("cal_com_event_type")
   bookingBufferMin      Int      @default(60) @map("booking_buffer_min")
+  // Phase 2 follow-on: booking confirmation emails to the host (owner).
+  notifyOwnerOnBooking  Boolean  @default(true) @map("notify_owner_on_booking")
+  notifyOwnerEmail      String?  @map("notify_owner_email")
   updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("phone_assistants")
@@ -1262,6 +1272,11 @@ model PhoneBooking {
   status              String    @default("pending")
   notes               String?
   createdAt           DateTime  @default(now()) @map("created_at")
+  // Phase 2 follow-on: confirmation-email idempotency markers. Non-null
+  // timestamps mean "we already sent the corresponding email" and the
+  // notifier worker treats this as a do-not-resend signal.
+  notifiedCustomerAt  DateTime? @map("notified_customer_at")
+  notifiedOwnerAt     DateTime? @map("notified_owner_at")
 
   @@index([organizationId, startAt(sort: Desc)])
   @@map("phone_bookings")
@@ -1393,6 +1408,10 @@ model ReviewPlatformChoice {
   ip              String?  @db.Inet
   userAgent       String?  @map("user_agent")
   chosenAt        DateTime @default(now()) @map("chosen_at")
+  /// Idempotency marker for the day-after-checkout reminder cron. Non-null
+  /// = we already emailed this guest; cron skips. Null + chosen_at in
+  /// the 22–26h window = eligible for send.
+  reminderSentAt  DateTime? @map("reminder_sent_at")
 
   device        Device        @relation(fields: [deviceId], references: [id], onDelete: Cascade)
   establishment Establishment @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
@@ -1400,4 +1419,49 @@ model ReviewPlatformChoice {
   @@index([establishmentId, chosenAt(sort: Desc)])
   @@index([organizationId, chosenAt(sort: Desc)])
   @@map("review_platform_choices")
+}
+
+/// Per-listing automation rule for AI replies.
+///
+/// Evaluation model: when a Review is ingested, rules for that
+/// organization are iterated in `createdAt` order. The FIRST rule whose
+/// match criteria all match the review fires. Match criteria are AND'd —
+/// a rule with min_rating=5, max_rating=5, sources=['airbnb','google']
+/// fires only on 5-star reviews from those two platforms.
+///
+/// `action`:
+///   - 'draft_only'              — AI generates a reply draft in `pending_review`
+///     status. Host approves manually.
+///   - 'auto_publish_after_delay' — Same draft + auto-publish after
+///     `delay_minutes` minutes. Soft buffer = host can intercept a
+///     mis-publish via the dashboard's pending list.
+model AutoReplyRule {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  /// NULL = org-wide rule. Per-establishment rules let mixed Airbnb/Google
+  /// hosts tune behavior independently per listing.
+  establishmentId  String?  @map("establishment_id") @db.Uuid
+  name             String
+  enabled          Boolean  @default(true)
+  // Match criteria (all AND'd at evaluation time).
+  matchMinRating   Int      @default(5) @map("match_min_rating")
+  matchMaxRating   Int      @default(5) @map("match_max_rating")
+  matchKeywords    String[] @default([]) @map("match_keywords")  // case-insensitive substring; ≥1 must match if non-empty
+  matchSources     String[] @default([]) @map("match_sources")    // empty = all sources
+  // Action.
+  action           String   @default("draft_only")
+  delayMinutes     Int      @default(5) @map("delay_minutes")
+  replyTone        String   @default("warm") @map("reply_tone")
+  // Audit.
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+  fireCount        Int      @default(0) @map("fire_count")
+  lastFiredAt      DateTime? @map("last_fired_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, enabled])
+  @@index([establishmentId])
+  @@map("auto_reply_rules")
 }

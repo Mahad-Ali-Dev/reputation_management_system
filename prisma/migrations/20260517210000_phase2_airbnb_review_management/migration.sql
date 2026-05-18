@@ -164,9 +164,9 @@ CREATE POLICY tenant_isolation ON review_platform_choices
   WITH CHECK  (organization_id = (SELECT app.current_org()));
 
 -- Grant tenant-role read access to both new tables.
-GRANT SELECT ON inbound_emails          TO app_tenant;
-GRANT SELECT ON review_platform_choices TO app_tenant;
-GRANT INSERT, UPDATE, DELETE ON review_platform_choices TO app_tenant;
+GRANT SELECT ON inbound_emails          TO app_tenant_user;
+GRANT SELECT ON review_platform_choices TO app_tenant_user;
+GRANT INSERT, UPDATE, DELETE ON review_platform_choices TO app_tenant_user;
 
 -- The privileged role (DATABASE_URL, not tenant role) needs full access for
 -- the webhook worker and admin tooling. Default role already has full

@@ -16,6 +16,14 @@
     {
       "path": "/api/cron/dispatch-outbound",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/picker-reminder",
+      "schedule": "3 * * * *"
+    },
+    {
+      "path": "/api/cron/auto-reply-publish",
+      "schedule": "*/5 * * * *"
     }
   ]
 }

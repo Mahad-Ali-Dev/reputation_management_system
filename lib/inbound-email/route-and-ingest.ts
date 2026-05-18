@@ -23,6 +23,8 @@
  * (which depends on the To address).
  */
 
+import { maybeFireBadReviewAlert } from "@/lib/alerts/bad-review-sms";
+import { executeAutoReplyRules } from "@/lib/auto-reply/executor";
 import { prisma } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { type ParseResult, parseAirbnbReviewEmail } from "./parse-airbnb";
@@ -296,6 +298,52 @@ export async function ingestInboundEmail(payload: InboundPayload): Promise<Inges
     "airbnb review ingested",
   );
 
+  // Bad-review SMS early-warning — fire-and-forget so a Twilio outage
+  // can't bottleneck ingest. The alert module short-circuits cheaply
+  // when not enabled, so it's safe to call on every review.
+  void maybeFireBadReviewAlert({
+    reviewId: review.id,
+    organizationId,
+    establishmentId: establishment.id,
+    establishmentName: establishment.name,
+    reviewerName: parsed.reviewerName,
+    rating: parsed.rating,
+    bodyPreview: parsed.body || null,
+    source: "airbnb",
+    alert: {
+      enabled: establishment.alertSmsEnabled,
+      phone: establishment.alertSmsPhone,
+      minRating: establishment.alertSmsMinRating,
+    },
+  }).catch((err) => {
+    logger.error(
+      {
+        err: err instanceof Error ? err.message : String(err),
+        reviewId: review.id,
+        event: "inbound.alert.unhandled",
+      },
+      "bad-review alert threw unexpectedly",
+    );
+  });
+
+  // Auto-reply rule executor — also fire-and-forget. The executor
+  // self-protects against rule mismatches and concurrent writers so a
+  // misconfigured rule can't crash ingest.
+  void executeAutoReplyRules({
+    reviewId: review.id,
+    organizationId,
+    establishmentId: establishment.id,
+  }).catch((err) => {
+    logger.error(
+      {
+        err: err instanceof Error ? err.message : String(err),
+        reviewId: review.id,
+        event: "inbound.auto_reply.unhandled",
+      },
+      "auto-reply executor threw unexpectedly",
+    );
+  });
+
   return {
     inboundEmailId: inbound.id,
     reviewId: review.id,
@@ -308,11 +356,30 @@ export async function ingestInboundEmail(payload: InboundPayload): Promise<Inges
 // Helpers
 // =========================================================================
 
+/** Subset of Establishment columns the ingest path actually uses. We
+ *  include the alert-SMS config because the alert path fires immediately
+ *  after a successful ingest — avoids a second round-trip. */
+type EstablishmentForIngest = {
+  id: string;
+  name: string;
+  alertSmsEnabled: boolean;
+  alertSmsPhone: string | null;
+  alertSmsMinRating: number;
+};
+
 async function findMatchingEstablishment(args: {
   organizationId: string;
   listingId: string | null;
   listingName: string;
-}): Promise<{ id: string; name: string } | null> {
+}): Promise<EstablishmentForIngest | null> {
+  const SELECT = {
+    id: true,
+    name: true,
+    alertSmsEnabled: true,
+    alertSmsPhone: true,
+    alertSmsMinRating: true,
+  } as const;
+
   // Try Airbnb listing id first — exact match, most reliable.
   if (args.listingId) {
     const byId = await prisma.establishment.findFirst({
@@ -321,7 +388,7 @@ async function findMatchingEstablishment(args: {
         airbnbListingId: args.listingId,
         deletedAt: null,
       },
-      select: { id: true, name: true },
+      select: SELECT,
     });
     if (byId) return byId;
   }
@@ -341,7 +408,7 @@ async function findMatchingEstablishment(args: {
         { name: { contains: args.listingName, mode: "insensitive" } },
       ],
     },
-    select: { id: true, name: true },
+    select: SELECT,
   });
   return byName;
 }
