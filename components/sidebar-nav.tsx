@@ -37,14 +37,14 @@ function isGroup(x: NavItem): x is NavGroup {
 
 const NAV: NavItem[] = [
   { group: "Workspace" },
-  { href: "/dashboard", label: "Dashboard", icon: "grid" },
-  { href: "/establishments", label: "Listings", icon: "building" },
+  { href: "/dashboard", label: "Home", icon: "grid" },
+  { href: "/establishments", label: "Businesses", icon: "building" },
   { href: "/hardware", label: "QR Stands", icon: "qr" },
 
   { group: "Reputation" },
   {
     href: "/outreach",
-    label: "Review Requests",
+    label: "Get Reviews",
     icon: "send",
     children: [
       { href: "/outreach/send", label: "One-off send" },
@@ -54,7 +54,7 @@ const NAV: NavItem[] = [
   },
   {
     href: "/reviews",
-    label: "Reviews",
+    label: "Manage Reviews",
     icon: "star",
     children: [
       { href: "/reviews", label: "All reviews" },
@@ -77,7 +77,7 @@ const NAV: NavItem[] = [
   { group: "Engagement" },
   {
     href: "/support",
-    label: "Support Inbox",
+    label: "Messages",
     icon: "chat",
     children: [
       { href: "/support/comments", label: "Comments" },
@@ -90,7 +90,7 @@ const NAV: NavItem[] = [
   },
   {
     href: "/social/posts",
-    label: "Social Studio",
+    label: "Social",
     icon: "share",
     children: [
       { href: "/social/posts", label: "Create post" },
@@ -100,12 +100,12 @@ const NAV: NavItem[] = [
   },
 
   { group: "Intelligence" },
-  { href: "/ai/training", label: "AI Training", icon: "brain" },
-  { href: "/phone", label: "Phone Receptionist", icon: "phone", badge: "AI" },
+  { href: "/ai/training", label: "Auto-Replies", icon: "brain" },
+  { href: "/phone", label: "Phone AI", icon: "phone", badge: "AI" },
 
   { group: "Settings" },
   { href: "/connections", label: "Connections", icon: "plug" },
-  { href: "/subscription", label: "Subscription", icon: "card" },
+  { href: "/subscription", label: "Billing", icon: "card" },
   { href: "/settings/account", label: "Account", icon: "settings" },
 ];
 
