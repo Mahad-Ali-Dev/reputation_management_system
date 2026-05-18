@@ -1,10 +1,10 @@
-# Neon → Singapore migration runbook
+# Neon → Singapore migration runbook (Hostinger VPS edition)
 
-Move the Neon Postgres project from **`us-east-1` (Virginia)** to **`ap-southeast-1` (Singapore)**, plus pin Vercel functions to `sin1` so app + DB sit in the same region.
+Move the Neon Postgres project from **`us-east-1` (Virginia)** to **`ap-southeast-1` (Singapore)** so it sits next to your Hostinger VPS in **Kuala Lumpur**.
 
-**Why:** founder + most customers are in South Asia. Current path: user → Vercel `iad1` → Neon `us-east-1` round-trips the planet twice per page. After this change, everything terminates in Singapore. Expected end-user page-load improvement: 2–4× on slow pages, especially first-paint.
+**Why:** your VPS is in Kuala Lumpur. KL ↔ Singapore is ~300 km on the same submarine cable infrastructure — typical RTT 5–20 ms. Current path: VPS in KL → Neon in Virginia = ~250 ms cross-Pacific per query. A page that runs 8 queries pays 2 s of pure network time before any real work. After this move, that drops to ~80–160 ms total — a **15–25× improvement on DB latency**.
 
-**Estimated downtime:** 5–15 minutes during the cutover (Step 6). Plan it for low traffic.
+**Estimated downtime:** 2–5 minutes for the systemd restart at Step 6. Plan it for low traffic.
 
 **Reversible:** yes. The old `us-east-1` project stays live until you delete it in Step 8.
 
@@ -129,40 +129,70 @@ If anything breaks, you can revert by swapping the env values back to the old `u
 
 ---
 
-## Step 6 — Pin Vercel functions to Singapore
+## Step 6 — Update production env on the VPS
 
-In `vercel.json`, add the `regions` key at the top level:
+SSH into the VPS:
 
-```json
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["sin1"],
-  "crons": [
-    ...
-  ]
-}
+```bash
+ssh deploy@<your-vps-ip>
 ```
 
-Then update the production env vars in the Vercel dashboard:
-- `DATABASE_URL` → new SG pooled URL with `&pgbouncer=true&connection_limit=1`
-- `DIRECT_URL` → new SG direct URL
+Edit the production env file:
 
-Commit the `vercel.json` change and push to `main`. Vercel will redeploy and provision functions in `sin1`.
+```bash
+sudo nano /var/www/repulabs/.env.production
+```
 
-**Important:** do NOT push the `vercel.json` change *before* updating `DATABASE_URL` in the Vercel dashboard — otherwise Singapore functions will reach across the Pacific to the old US database for one deploy cycle.
+Update these two lines (and **only** these two — leave every other secret alone):
+
+```bash
+DATABASE_URL="<SG_POOLED_URL>&pgbouncer=true&connection_limit=1"
+DIRECT_URL="<SG_DIRECT_URL>"
+```
+
+Save (`Ctrl+O`, `Enter`, `Ctrl+X` in nano). Then re-lock permissions just in case nano left them open:
+
+```bash
+sudo chown repulabs:repulabs /var/www/repulabs/.env.production
+sudo chmod 600 /var/www/repulabs/.env.production
+```
+
+Restart the service to pick up the new env:
+
+```bash
+sudo systemctl restart repulabs
+sudo systemctl status repulabs    # should show "active (running)"
+```
+
+Watch the logs for the first ~30 seconds to catch any DB connection errors:
+
+```bash
+sudo journalctl -u repulabs -f
+```
+
+You're looking for normal request logs. If you see `PrismaClientInitializationError` or `Can't reach database server`, the URL is wrong — re-check Steps 5–6, fix, and `restart` again.
+
+**Important:** do NOT restart the service before Step 5's local smoke test passes. If the new SG database is missing data or wasn't restored properly, restarting will hard-fail your live site.
 
 ---
 
 ## Step 7 — Verify production
 
-After the Vercel deploy completes:
+After the service restarts cleanly:
 
-1. Hit https://repulabs.com from a Pakistan connection.
-2. DevTools → Network → check the Time-to-First-Byte on a logged-in page. Should be <500 ms (was 1–3 s before).
-3. Check Vercel function logs for any `prisma:error` events around the cutover window.
-4. Verify cron jobs ran on schedule (Vercel dashboard → Crons tab).
+1. Hit https://repulabs.com from your browser. Log in, click Dashboard → Listings → Reviews.
+2. DevTools → Network → check Time-to-First-Byte on a logged-in page. Should be **<400 ms** (was 1–3 s before). The first hit may still be slow if the Next.js page cache is cold; the second hit is the honest measurement.
+3. Watch journald for any errors over the next few minutes:
+   ```bash
+   sudo journalctl -u repulabs --since "5 minutes ago" | grep -iE "error|prisma|econnref"
+   ```
+4. Verify cron jobs ran on schedule:
+   ```bash
+   sudo journalctl -u repulabs --since "1 hour ago" | grep "api/cron"
+   ```
+5. Open https://repulabs.com on your phone (4G/5G, not WiFi) to feel the real-world end-user difference.
 
-Leave both projects running for **at least 24 hours** so you have a quick rollback option if a delayed bug surfaces.
+Leave both Neon projects running for **at least 24 hours** so you have a quick rollback option if a delayed bug surfaces.
 
 ---
 
@@ -184,8 +214,12 @@ Remove-Item D:\reputation_management_system\repulabs-us.dump
 
 If anything goes wrong at any step before Step 8:
 
-1. Revert `DATABASE_URL` and `DIRECT_URL` in `.env.local` (and in Vercel) back to the old us-east-1 values.
-2. Remove the `regions` key from `vercel.json` and redeploy.
-3. The old project is untouched and continues serving traffic.
+1. **Local rollback:** edit `D:\reputation_management_system\.env.local` and revert `DATABASE_URL` + `DIRECT_URL` to the old us-east-1 values. Restart `pnpm dev`.
+2. **Production rollback:** SSH into the VPS, edit `/var/www/repulabs/.env.production`, revert the two URLs, then:
+   ```bash
+   sudo systemctl restart repulabs
+   ```
+   The old us-east-1 Neon project is still live, so the app comes back up serving from the original DB within seconds.
+3. Verify with `sudo journalctl -u repulabs -f` for ~30 seconds to confirm normal request logs.
 
 You don't lose data — `pg_dump` is read-only against the source.
