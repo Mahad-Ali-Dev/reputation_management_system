@@ -17,8 +17,12 @@ cd /opt/repulabs
 echo "=== 1/7  Fix ownership (deploy owns repo, repulabs reads via group) ==="
 sudo chown -R deploy:repulabs .
 sudo chmod -R g+w .
-sudo chown repulabs:repulabs .env.production
-sudo chmod 600 .env.production
+# .env.production: owner=deploy (for build-time read), group=repulabs (for runtime read),
+# mode 640 = rw-r----- so no other user can see live secrets.
+sudo chown deploy:repulabs .env.production
+sudo chmod 640 .env.production
+# Wipe stale .next from previous runs (avoid 'permission denied unlink' on rebuild)
+sudo rm -rf .next
 
 echo "=== 2/7  pnpm v11 compat flag ==="
 if ! grep -q "verify-deps-before-run" .npmrc 2>/dev/null; then
