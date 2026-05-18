@@ -355,6 +355,27 @@
   box-shadow: 0 0 0 2px var(--surface);
 }
 
+/* Mobile topbar: trim padding, hide crumbs + location pill so the hamburger,
+   page actions, and sign-out stay above the fold on narrow screens. */
+@media (max-width: 767px) {
+  .tb {
+    padding: 0 12px;
+    gap: 8px;
+  }
+  .tb__crumbs,
+  .tb__divider,
+  .tb__loc {
+    display: none;
+  }
+  .tb__right {
+    gap: 4px;
+  }
+  .tb__iconbtn {
+    width: 32px;
+    height: 32px;
+  }
+}
+
 /* ---------- main ---------- */
 .main {
   display: flex;

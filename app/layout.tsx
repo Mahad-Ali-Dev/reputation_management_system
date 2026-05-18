@@ -1,8 +1,24 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 import "./design-system.css";
+
+/**
+ * Viewport meta — critical for mobile. Without this, mobile browsers render
+ * the page at 980px and zoom out to fit, so @media (max-width: 1023px) rules
+ * effectively never trigger on phones. Adding device-width fixes the mobile
+ * responsive layout app-wide.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#F6F7F4" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B0D0E" },
+  ],
+};
 
 const geist = Geist({
   subsets: ["latin"],
