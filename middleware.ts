@@ -42,13 +42,29 @@ function tryRouteMigration(req: NextRequest): NextResponse | null {
   const pathname = req.nextUrl.pathname;
   for (const [oldPath, newPath] of Object.entries(ROUTE_REDIRECTS)) {
     if (pathname === oldPath || pathname.startsWith(`${oldPath}/`)) {
-      const target = req.nextUrl.clone();
-      target.pathname = newPath + pathname.slice(oldPath.length);
+      // Build the redirect target from the FORWARDED host so behind Nginx
+      // we redirect to the public hostname (repulabs.com), not the internal
+      // bind address (127.0.0.1:3000) that req.nextUrl carries.
+      const newPathname = newPath + pathname.slice(oldPath.length);
+      const search = req.nextUrl.search;
+      const envBase = process.env.NEXT_PUBLIC_APP_URL;
+      const fwHost = req.headers.get("x-forwarded-host") ?? req.headers.get("host");
+      const fwProto = req.headers.get("x-forwarded-proto") ?? "https";
+      const target = envBase
+        ? new URL(newPathname + search, envBase)
+        : fwHost
+          ? new URL(newPathname + search, `${fwProto}://${fwHost}`)
+          : (() => {
+              const u = req.nextUrl.clone();
+              u.pathname = newPathname;
+              return u;
+            })();
       return NextResponse.redirect(target, 308);
     }
   }
   for (const [newPath, oldPath] of Object.entries(ROUTE_REWRITES)) {
     if (pathname === newPath || pathname.startsWith(`${newPath}/`)) {
+      // Rewrites are internal — URL bar doesn't change — so nextUrl is fine.
       const target = req.nextUrl.clone();
       target.pathname = oldPath + pathname.slice(newPath.length);
       return NextResponse.rewrite(target);
