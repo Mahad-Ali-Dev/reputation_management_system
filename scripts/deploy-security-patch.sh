@@ -35,6 +35,13 @@ pnpm install --frozen-lockfile
 echo "=== 4/7  pnpm build ==="
 pnpm build
 
+# After the fresh build, .next is owned by deploy:deploy with default mode -
+# the runtime user (repulabs) can't mkdir .next/cache/images for image
+# optimization. Re-set ownership + group write so the service can write its
+# runtime cache.
+sudo chown -R deploy:repulabs .next
+sudo chmod -R g+w .next
+
 echo "=== 5/7  systemctl restart repulabs ==="
 sudo systemctl restart repulabs
 sleep 2
