@@ -1,15 +1,27 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  // Inline these env vars into BOTH server and client bundles at build time.
-  // Without this, next-auth@5 beta's client SDK reads process.env.NEXTAUTH_URL
-  // as undefined at runtime and falls back to `http://localhost:3000/api/auth`,
-  // which then becomes the redirect_uri sent to Google during sign-in. That's
-  // why every login attempt was bouncing to localhost no matter what we set in
-  // .env.production.
-  env: {
-    NEXTAUTH_URL: process.env.NEXTAUTH_URL,
-    AUTH_URL: process.env.AUTH_URL,
+  // Force-inline these env vars into EVERY bundle (server + client + RSC) via
+  // webpack DefinePlugin. Next.js's `env` field alone didn't reliably reach
+  // next-auth's internal module which has a literal `S(process.env.NEXTAUTH_URL)`
+  // call that needs to be replaced at build time.
+  //
+  // Falls back to "https://repulabs.com" if build env doesn't have the value,
+  // so prod builds always end up with the correct production URL baked in.
+  webpack: (config, { webpack }) => {
+    const authBaseUrl =
+      process.env.NEXTAUTH_URL ||
+      process.env.AUTH_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://repulabs.com";
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        "process.env.NEXTAUTH_URL": JSON.stringify(authBaseUrl),
+        "process.env.AUTH_URL": JSON.stringify(authBaseUrl),
+        "process.env.NEXTAUTH_URL_INTERNAL": JSON.stringify(authBaseUrl),
+      }),
+    );
+    return config;
   },
   // archiver@7 is CJS (`module.exports = factory`). Next 15's webpack stumbles
   // when trying to ESM-interop it, so opt out of bundling and let Node's
