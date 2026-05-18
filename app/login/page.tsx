@@ -4,6 +4,7 @@ import { Icon } from "@/components/shell/icon";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useState } from "react";
+import { googleSignIn } from "./actions";
 
 /**
  * Login — repulabs v2 design, side-by-side 2-pane layout.
@@ -253,24 +254,22 @@ export default function LoginPage() {
           ) : (
             <>
               <div style={{ marginTop: 24 }}>
-                {/* Plain anchor — not signIn() — so the OAuth flow goes
-                    server-side via /api/auth/signin/google. The server uses
-                    process.env.AUTH_URL (set correctly in .env.production) to
-                    build the redirect_uri. Bypasses next-auth/react's broken
-                    client-side URL discovery in v5 beta.25 that was baking
-                    `http://localhost:3000` into the bundle. */}
-                <a
-                  href="/api/auth/signin/google?callbackUrl=%2Fdashboard"
-                  className="btn btn--lg"
-                  style={{
-                    width: "100%",
-                    justifyContent: "center",
-                    textDecoration: "none",
-                  }}
-                >
-                  <Icon name="google" size={14} />
-                  Continue with Google
-                </a>
+                {/* Server action — NextAuth v5 requires POST for /api/auth/signin/*.
+                    A bare <a> GET produces "UnknownAction: Unsupported action".
+                    Using a <form> with a server action handles CSRF automatically
+                    and runs signIn() server-side, where process.env.AUTH_URL is
+                    correctly set. Bypasses the broken next-auth/react client
+                    helper (which bakes localhost into the bundle in v5 beta.25). */}
+                <form action={googleSignIn}>
+                  <button
+                    type="submit"
+                    className="btn btn--lg"
+                    style={{ width: "100%", justifyContent: "center" }}
+                  >
+                    <Icon name="google" size={14} />
+                    Continue with Google
+                  </button>
+                </form>
               </div>
 
               <div className="row" style={{ margin: "20px 0" }}>
