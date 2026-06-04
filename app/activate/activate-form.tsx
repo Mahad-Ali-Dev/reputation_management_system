@@ -46,7 +46,7 @@ export function ActivateForm({
           <strong style={{ display: "block", marginBottom: 2 }}>
             You&rsquo;re activating QR <code className="mono">{prefilledSlug}</code>
           </strong>
-          You&rsquo;ll find the 8-character code on the card inside the package this plaque shipped
+          You&rsquo;ll find the 5-character code on the card inside the package this plaque shipped
           in. Enter it below to bind the QR to your business.
         </div>
       )}
@@ -79,10 +79,10 @@ export function ActivateForm({
         <input
           name="activationCode"
           required
-          placeholder="XXXX - XXXX"
+          placeholder="XXXXX"
           autoComplete="off"
           inputMode="text"
-          maxLength={10}
+          maxLength={12}
           style={{
             width: "100%",
             height: 48,
@@ -99,7 +99,7 @@ export function ActivateForm({
           }}
         />
         <span className="dim" style={{ fontSize: 11.5 }}>
-          The 8-character code printed under the QR on your plaque. Dashes are optional.
+          The 5-character code printed under the QR on your plaque.
         </span>
       </label>
 

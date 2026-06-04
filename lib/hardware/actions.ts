@@ -208,9 +208,9 @@ export async function activateDevice(
   const establishmentId = form.get("establishmentId");
   const reviewUrlRaw = form.get("reviewUrl");
 
-  if (typeof codeRaw !== "string" || codeRaw.length < 6) {
+  if (typeof codeRaw !== "string" || codeRaw.replace(/[-\s]/g, "").length < 5) {
     return {
-      error: "Please enter the full 8-character activation code from the card inside your package.",
+      error: "Please enter the full 5-character activation code from the card inside your package.",
     };
   }
   if (typeof establishmentId !== "string" || !/^[0-9a-f-]{36}$/i.test(establishmentId)) {
@@ -261,7 +261,12 @@ export async function activateDevice(
 
     // Precedence: pasted URL > establishment's googlePlaceId > Google search fallback.
     const redirectUrl = pastedUrl ?? googleReviewUrl(estab.googlePlaceId, estab.name);
-    const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5; // 5 years
+    // Read the clock ONCE. /r/[slug] recomputes the signature expiry from
+    // device.activatedAt, so the signed expiry base must be the exact instant
+    // we persist as activatedAt — two separate clock reads can straddle a
+    // second boundary and permanently break verification.
+    const activatedAt = new Date();
+    const expiresAtUnix = Math.floor(activatedAt.getTime() / 1000) + 60 * 60 * 24 * 365 * 5; // 5 years
     const signature = signSlug(device.shortSlug, redirectUrl, expiresAtUnix);
 
     // Race-safe activation: only claim if it's still unactivated AND the org is
@@ -281,7 +286,7 @@ export async function activateDevice(
         redirectUrl,
         slugSignature: signature,
         status: "active",
-        activatedAt: new Date(),
+        activatedAt,
       },
     });
     if (claimed.count === 0) {
@@ -318,7 +323,7 @@ export async function activateDevice(
       );
       return {
         error:
-          "We couldn’t match that activation code. Double-check the 8 characters from the card inside your package — codes are one-time-use and can’t be reused once redeemed.",
+          "We couldn’t match that activation code. Double-check the 5 characters from the card inside your package — codes are one-time-use and can’t be reused once redeemed.",
       };
     }
     return {
@@ -412,7 +417,10 @@ export async function generateSelfServiceQr(form: FormData): Promise<void> {
   // Self-service codes never get a physical activation step — store a hash
   // of a random throwaway so the column stays NOT NULL.
   const { hash: activationCodeHash } = generateActivationCode();
-  const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5;
+  // Read the clock ONCE — the signed expiry base must equal the stored
+  // activatedAt (see /r/[slug] signature verification).
+  const activatedAt = new Date();
+  const expiresAtUnix = Math.floor(activatedAt.getTime() / 1000) + 60 * 60 * 24 * 365 * 5;
   const signature = signSlug(slug, redirectUrl, expiresAtUnix);
 
   const device = await withTenant(orgId, async (tx) => {
@@ -429,7 +437,7 @@ export async function generateSelfServiceQr(form: FormData): Promise<void> {
         redirectUrl,
         redirectMode: "direct",
         status: "active",
-        activatedAt: new Date(),
+        activatedAt,
       },
     });
     await tx.auditLog.create({
@@ -522,10 +530,13 @@ export async function updateDeviceRedirectUrl(form: FormData): Promise<void> {
         slugSignature: signature,
         redirectChangedAt: new Date(),
         // If this was a previously-inactive device with no target, activating it
-        // by setting a URL flips it active too.
+        // by setting a URL flips it active too. Persist the SAME `activatedAt`
+        // the signature's expiry was derived from (above), not a fresh clock
+        // read — otherwise /r/[slug] would recompute a different expiry and the
+        // signature would never verify.
         ...(device.status === "active" || device.activatedAt
           ? {}
-          : { status: "active", activatedAt: new Date() }),
+          : { status: "active", activatedAt }),
       },
     });
 
@@ -738,7 +749,12 @@ export async function refreshDeviceRedirect(deviceId: string): Promise<void> {
       device.establishment.googlePlaceId,
       device.establishment.name,
     );
-    const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5;
+    // The expiry base MUST be the device's ORIGINAL activatedAt (which we do
+    // NOT change here) — /r/[slug] verifies against device.activatedAt. Signing
+    // with Date.now() here would produce a signature that never validates,
+    // dead-ending every scan at /not-activated?reason=signature.
+    const expiresAtUnix =
+      Math.floor((device.activatedAt ?? new Date()).getTime() / 1000) + 60 * 60 * 24 * 365 * 5;
     const signature = signSlug(device.shortSlug, redirectUrl, expiresAtUnix);
 
     await tx.device.update({

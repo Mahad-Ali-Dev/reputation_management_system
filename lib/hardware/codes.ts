@@ -5,8 +5,8 @@ import { createHash, createHmac, randomBytes } from "node:crypto";
  *
  * Two separate identifiers per device:
  *   - short_slug          = public, encoded in QR/NFC. 10-char Crockford base32 (50 bits entropy).
- *   - activation_code     = private, printed only on packaging insert. 8-char Crockford base32,
- *                           displayed as XXXX-XXXX. Stored as SHA-256 hash.
+ *   - activation_code     = private, printed only on packaging insert. 5-char Crockford base32,
+ *                           displayed as-is (short enough to read ungrouped). Stored as SHA-256 hash.
  *
  * Edge redirect verifies HMAC(slug || redirect_url || expires_at) to defeat KV poisoning.
  *
@@ -16,7 +16,7 @@ import { createHash, createHmac, randomBytes } from "node:crypto";
 // Crockford base32 alphabet (no I, L, O, U to avoid ambiguity)
 const CROCKFORD = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
 const SLUG_LEN = 10;
-const ACTIVATION_LEN = 8;
+const ACTIVATION_LEN = 5;
 
 function randomCrockford(len: number): string {
   const buf = randomBytes(len);
@@ -35,8 +35,9 @@ export function generateSlug(): string {
 export function generateActivationCode(): { plaintext: string; hash: string; display: string } {
   const plaintext = randomCrockford(ACTIVATION_LEN);
   const hash = hashActivationCode(plaintext);
-  // Display as XXXX-XXXX for readability
-  const display = `${plaintext.slice(0, 4)}-${plaintext.slice(4)}`;
+  // 5 chars is short enough to read without grouping, so display == plaintext.
+  // (hashActivationCode still strips any dashes/spaces a user might type.)
+  const display = plaintext;
   return { plaintext, hash, display };
 }
 

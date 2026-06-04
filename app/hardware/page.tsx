@@ -553,7 +553,7 @@ function EmptyState({ recentActivation }: { recentActivation?: string }) {
           </h3>
           <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
             Bought a Counter Card, Wall Plaque, or Stand from our Shopify store? Enter the
-            8-character code from your package and we'll bind it to a business.
+            5-character code from your package and we'll bind it to a business.
           </p>
           <div className="row" style={{ gap: 8, marginTop: 16, flexWrap: "wrap" }}>
             <Link href="/activate" className="btn">

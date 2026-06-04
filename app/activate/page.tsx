@@ -13,7 +13,7 @@ export const dynamic = "force-dynamic";
  * Hardware activation page — paired with a QR review stand.
  *
  * The customer scans the printed code, the stand redirects to /r/{slug}; the
- * operator activates a new stand HERE by entering the 8-char code from the
+ * operator activates a new stand HERE by entering the 5-char code from the
  * card in the box and picking which establishment it points to.
  */
 export default async function ActivatePage({
@@ -45,7 +45,7 @@ export default async function ActivatePage({
       <PageHeader
         kicker="Hardware"
         title="Activate a Review Stand"
-        description="Enter the 8-character activation code from the card inside your stand's package, then pick which location it lives at."
+        description="Enter the 5-character activation code from the card inside your stand's package, then pick which location it lives at."
         actions={
           <Link href="/hardware" className="btn">
             <Icon name="chevL" size={12} />
@@ -65,7 +65,7 @@ export default async function ActivatePage({
         <section className="ds-card">
           <div className="ds-card__head">
             <h3 className="ds-card__title">Activation code</h3>
-            <span className="chip">8 characters · Crockford base32</span>
+            <span className="chip">5 characters · Crockford base32</span>
           </div>
           <div className="ds-card__body">
             {establishments.length === 0 ? (
@@ -103,7 +103,7 @@ export default async function ActivatePage({
             <Step
               n={1}
               t="Verify the product"
-              d="The 8-character code printed under the QR proves you own this plaque. We hash it and match it to an unactivated stand on your account."
+              d="The 5-character code printed under the QR proves you own this plaque. We hash it and match it to an unactivated stand on your account."
             />
             <Step
               n={2}

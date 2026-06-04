@@ -1,13 +1,5 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import {
-  ActionLink,
-  Badge,
-  KpiCard,
-  TableCard,
-  THead,
-  Th,
-  Td,
-} from "@/components/admin/admin-ui";
+import { ActionLink, Badge, KpiCard, THead, TableCard, Td, Th } from "@/components/admin/admin-ui";
 import { Icon } from "@/components/shell/icon";
 import { prisma } from "@/lib/db/client";
 import Link from "next/link";
@@ -31,36 +23,35 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function AdminHardwarePage() {
-  const [products, unactivated, activeCount, retiredCount, recentBatches] =
-    await Promise.all([
-      prisma.hardwareProduct.findMany({
-        where: { isActive: true },
-        select: {
-          sku: true,
-          name: true,
-          description: true,
-          priceCents: true,
-          currency: true,
-          unitsPerPack: true,
-        },
-        orderBy: { sortOrder: "asc" },
-      }),
-      prisma.device.count({ where: { status: "unactivated" } }),
-      prisma.device.count({ where: { status: "active" } }),
-      prisma.device.count({ where: { status: "retired" } }),
-      // Pull recent hardware.batch.generated audit rows to list past batches.
-      prisma.auditLog.findMany({
-        where: { action: "hardware.batch.generated" },
-        orderBy: { createdAt: "desc" },
-        take: 10,
-        select: {
-          id: true,
-          createdAt: true,
-          actorId: true,
-          afterData: true,
-        },
-      }),
-    ]);
+  const [products, unactivated, activeCount, retiredCount, recentBatches] = await Promise.all([
+    prisma.hardwareProduct.findMany({
+      where: { isActive: true },
+      select: {
+        sku: true,
+        name: true,
+        description: true,
+        priceCents: true,
+        currency: true,
+        unitsPerPack: true,
+      },
+      orderBy: { sortOrder: "asc" },
+    }),
+    prisma.device.count({ where: { status: "unactivated" } }),
+    prisma.device.count({ where: { status: "active" } }),
+    prisma.device.count({ where: { status: "retired" } }),
+    // Pull recent hardware.batch.generated audit rows to list past batches.
+    prisma.auditLog.findMany({
+      where: { action: "hardware.batch.generated" },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+      select: {
+        id: true,
+        createdAt: true,
+        actorId: true,
+        afterData: true,
+      },
+    }),
+  ]);
 
   return (
     <>
@@ -87,11 +78,7 @@ export default async function AdminHardwarePage() {
           d="redeemed + redirecting"
           up={activeCount > 0}
         />
-        <KpiCard
-          l="Retired"
-          v={retiredCount.toLocaleString()}
-          d="soft-deleted by tenants"
-        />
+        <KpiCard l="Retired" v={retiredCount.toLocaleString()} d="soft-deleted by tenants" />
         <KpiCard
           l="Batches generated"
           v={recentBatches.length.toLocaleString()}
@@ -112,11 +99,11 @@ export default async function AdminHardwarePage() {
           lineHeight: 1.55,
         }}
       >
-        <strong>⚠ Activation codes are one-time-view.</strong> They're SHA-256
-        hashed on insert — the plaintext only exists in the ZIP that downloads
-        right after you click Generate. <strong>Save that ZIP immediately.</strong>{" "}
-        Once the tab closes, the codes are unrecoverable and the whole batch is
-        wasted hardware (no plaque can be activated without its printed code).
+        <strong>⚠ Activation codes are one-time-view.</strong> They're SHA-256 hashed on insert —
+        the plaintext only exists in the ZIP that downloads right after you click Generate.{" "}
+        <strong>Save that ZIP immediately.</strong> Once the tab closes, the codes are unrecoverable
+        and the whole batch is wasted hardware (no plaque can be activated without its printed
+        code).
       </div>
 
       {/* Generation form + product list */}
@@ -143,9 +130,12 @@ export default async function AdminHardwarePage() {
             <code className="mono" style={chipStyle}>
               Device
             </code>{" "}
-            rows with status=<code className="mono" style={chipStyle}>unactivated</code>,
-            generate unique slugs + activation codes for each, stream a CSV
-            back to your browser, and audit-log the batch.
+            rows with status=
+            <code className="mono" style={chipStyle}>
+              unactivated
+            </code>
+            , generate unique slugs + activation codes for each, stream a CSV back to your browser,
+            and audit-log the batch.
           </p>
 
           {/* Native HTML form: browser-native download on submit; no JS needed. */}
@@ -176,7 +166,8 @@ export default async function AdminHardwarePage() {
                 <span style={hintStyle}>
                   No active hardware products. Seed one via Prisma:{" "}
                   <code className="mono" style={chipStyle}>
-                    INSERT INTO hardware_products (sku, name, price_cents) VALUES ('plaque-brass', 'Brass Plaque', 4900)
+                    INSERT INTO hardware_products (sku, name, price_cents) VALUES ('plaque-brass',
+                    'Brass Plaque', 4900)
                   </code>
                 </span>
               ) : null}
@@ -206,7 +197,8 @@ export default async function AdminHardwarePage() {
                 style={inputStyle}
               />
               <span style={hintStyle}>
-                Recorded on the audit log only — not printed on the plaque or shared with the factory.
+                Recorded on the audit log only — not printed on the plaque or shared with the
+                factory.
               </span>
             </FormField>
 
@@ -231,8 +223,8 @@ export default async function AdminHardwarePage() {
                 Generate batch + download ZIP
               </button>
               <span style={{ alignSelf: "center", fontSize: 11.5, color: "var(--rl-muted)" }}>
-                Browser saves the ZIP automatically. Large batches (500+) take 10-20s — wait
-                for the download.
+                Browser saves the ZIP automatically. Large batches (500+) take 10-20s — wait for the
+                download.
               </span>
             </div>
           </form>
@@ -270,15 +262,14 @@ export default async function AdminHardwarePage() {
             </li>
             <li>
               Factory prints each plaque with its QR image + the matching{" "}
-              <strong>activation_code_display</strong> (XXXX-XXXX format) printed below or beside the QR.
+              <strong>activation_code</strong> (5-character code) printed below or beside the QR.
             </li>
             <li>
               Customer redeems via{" "}
               <code className="mono" style={chipStyle}>
                 /activate
               </code>{" "}
-              — verifies activation_code, picks business, pastes Google review
-              URL. QR goes live.
+              — verifies activation_code, picks business, pastes Google review URL. QR goes live.
             </li>
           </ol>
         </div>
@@ -316,11 +307,7 @@ export default async function AdminHardwarePage() {
                   <Td mono>{row.createdAt.toISOString().replace("T", " ").slice(0, 19)}</Td>
                   <Td mono>admin:{row.actorId.slice(0, 8)}</Td>
                   <Td>
-                    {data.productSku ? (
-                      <Badge tone="info">{data.productSku}</Badge>
-                    ) : (
-                      "—"
-                    )}
+                    {data.productSku ? <Badge tone="info">{data.productSku}</Badge> : "—"}
                     {data.productName && (
                       <div style={{ fontSize: 11, color: "var(--rl-muted)", marginTop: 2 }}>
                         {data.productName}
@@ -349,10 +336,9 @@ export default async function AdminHardwarePage() {
             borderTop: "1px solid var(--line)",
           }}
         >
-          ⚠ The ZIP for each past batch is NOT recoverable. If you need to re-export, you'd
-          have to generate a fresh batch — the old plaques are stuck with their
-          original (now-lost) activation codes. Always save the ZIP at generation
-          time.
+          ⚠ The ZIP for each past batch is NOT recoverable. If you need to re-export, you'd have to
+          generate a fresh batch — the old plaques are stuck with their original (now-lost)
+          activation codes. Always save the ZIP at generation time.
         </p>
       </div>
     </>
@@ -392,7 +378,14 @@ function FormField({
 }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 10.5, color: "var(--rl-muted)", letterSpacing: "0.04em", fontWeight: 600 }}>
+      <span
+        style={{
+          fontSize: 10.5,
+          color: "var(--rl-muted)",
+          letterSpacing: "0.04em",
+          fontWeight: 600,
+        }}
+      >
         {label.toUpperCase()}
       </span>
       {children}
