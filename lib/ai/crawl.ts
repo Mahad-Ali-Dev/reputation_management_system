@@ -32,6 +32,7 @@ export type CrawlError =
   | "fetch_failed"
   | "content_too_large"
   | "unsupported_content_type"
+  | "too_many_redirects"
   | "empty_after_strip";
 
 export type CrawlResult = {
@@ -39,7 +40,7 @@ export type CrawlResult = {
   finalUrl: string;
   contentType: string;
   bytes: number;
-  text: string;            // plain text + markdown-style headers
+  text: string; // plain text + markdown-style headers
   fetchedAt: Date;
 };
 
@@ -48,7 +49,7 @@ export type CrawlResult = {
  * Block: 10.x, 127.x, 169.254.x, 172.16.x-172.31.x, 192.168.x, 0.x, 100.64.x (CGNAT)
  */
 function isPrivateIPv4(ip: string): boolean {
-  const parts = ip.split(".").map((p) => parseInt(p, 10));
+  const parts = ip.split(".").map((p) => Number.parseInt(p, 10));
   if (parts.length !== 4 || parts.some((p) => Number.isNaN(p) || p < 0 || p > 255)) return true;
   const [a, b] = parts as [number, number, number, number];
   if (a === 10) return true;
@@ -174,8 +175,7 @@ export function htmlToText(html: string): string {
     .replace(/<h4\b[^>]*>([\s\S]*?)<\/h4>/gi, "\n\n#### $1\n\n");
 
   // Paragraph + list + line breaks
-  cleaned = cleaned
-    .replace(/<\/?(?:p|div|section|article|li|tr|br|hr)\b[^>]*>/gi, "\n");
+  cleaned = cleaned.replace(/<\/?(?:p|div|section|article|li|tr|br|hr)\b[^>]*>/gi, "\n");
 
   // Strip remaining tags
   cleaned = cleaned.replace(/<[^>]+>/g, " ");
@@ -201,7 +201,9 @@ export function htmlToText(html: string): string {
   return cleaned;
 }
 
-export async function crawlUrl(rawUrl: string): Promise<{ result: CrawlResult } | { error: CrawlError; details?: string }> {
+export async function crawlUrl(
+  rawUrl: string,
+): Promise<{ result: CrawlResult } | { error: CrawlError; details?: string }> {
   const validated = await validateUrlForFetch(rawUrl);
   if ("error" in validated) return { error: validated.error };
   const url = validated.url;
@@ -209,18 +211,45 @@ export async function crawlUrl(rawUrl: string): Promise<{ result: CrawlResult } 
   const robots = await checkRobots(url);
   if (!robots.allowed) return { error: "robots_disallowed" };
 
+  // Follow redirects MANUALLY so every hop is re-validated against the
+  // private-IP / scheme / credentials rules. With redirect:"follow" a public
+  // URL could 30x to http://169.254.169.254/… (cloud metadata) and we'd fetch
+  // it blindly — the SSRF the up-front validation was meant to stop.
+  // (Residual: DNS rebinding between validate and fetch is not covered here;
+  // that needs resolved-IP pinning and is tracked separately.)
+  const MAX_REDIRECTS = 5;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
   let res: Response;
+  let currentUrl = url;
   try {
-    res = await fetch(url.toString(), {
-      signal: ctrl.signal,
-      redirect: "follow",
-      headers: {
-        "User-Agent": "RepulabsBot/1.0 (+https://repulabs.com/bot)",
-        Accept: "text/html,application/xhtml+xml,text/plain",
-      },
-    });
+    let hop = 0;
+    while (true) {
+      res = await fetch(currentUrl.toString(), {
+        signal: ctrl.signal,
+        redirect: "manual",
+        headers: {
+          "User-Agent": "RepulabsBot/1.0 (+https://repulabs.com/bot)",
+          Accept: "text/html,application/xhtml+xml,text/plain",
+        },
+      });
+      // Non-3xx (or 3xx without Location) → this is the final response.
+      const isRedirect = res.status >= 300 && res.status < 400;
+      const location = isRedirect ? res.headers.get("location") : null;
+      if (!location) break;
+      if (++hop > MAX_REDIRECTS) {
+        clearTimeout(timer);
+        return { error: "too_many_redirects", details: `>${MAX_REDIRECTS} hops` };
+      }
+      // Resolve relative redirects against the current URL, then re-validate.
+      const nextRaw = new URL(location, currentUrl).toString();
+      const revalidated = await validateUrlForFetch(nextRaw);
+      if ("error" in revalidated) {
+        clearTimeout(timer);
+        return { error: revalidated.error, details: `blocked redirect to ${nextRaw}` };
+      }
+      currentUrl = revalidated.url;
+    }
   } catch (err) {
     clearTimeout(timer);
     return { error: "fetch_failed", details: err instanceof Error ? err.message : String(err) };
@@ -235,7 +264,7 @@ export async function crawlUrl(rawUrl: string): Promise<{ result: CrawlResult } 
   }
 
   const contentLength = res.headers.get("content-length");
-  if (contentLength && parseInt(contentLength, 10) > MAX_BYTES) {
+  if (contentLength && Number.parseInt(contentLength, 10) > MAX_BYTES) {
     return { error: "content_too_large", details: `${contentLength} bytes` };
   }
 
@@ -264,7 +293,7 @@ export async function crawlUrl(rawUrl: string): Promise<{ result: CrawlResult } 
   return {
     result: {
       url: rawUrl,
-      finalUrl: res.url,
+      finalUrl: currentUrl.toString(),
       contentType,
       bytes: total,
       text,

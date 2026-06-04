@@ -3,7 +3,12 @@ import { PageHeader } from "@/components/page-header";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
-import { inviteTeammate, removeMember, updateAccountSettings } from "@/lib/account/actions";
+import {
+  inviteTeammate,
+  removeMember,
+  updateAccountSettings,
+  updateSecurityPrefs,
+} from "@/lib/account/actions";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/db/client";
 
@@ -69,7 +74,7 @@ export default async function AccountSettingsPage() {
     // We need plan + createdAt which aren't in the cached context yet.
     prisma.organization.findUnique({
       where: { id: orgId },
-      select: { plan: true, createdAt: true },
+      select: { plan: true, createdAt: true, settings: true },
     }),
     // Membership joins to User (auth-domain) which the tenant role can't read.
     // orgId comes from the verified session, so direct prisma with an explicit
@@ -94,6 +99,13 @@ export default async function AccountSettingsPage() {
     plan: orgWithCreated?.plan ?? "trial",
     createdAt: orgWithCreated?.createdAt ?? new Date(),
   };
+
+  // Saved security preferences (settings.security) — default to a 30-min
+  // timeout when the org has never saved any.
+  const savedSecurity =
+    (orgWithCreated?.settings as { security?: { sessionTimeoutMinutes?: number } } | null)
+      ?.security ?? {};
+  const sessionTimeoutMinutes = savedSecurity.sessionTimeoutMinutes ?? 30;
 
   const ownerDisplayName =
     org.ownerName ?? sessionUser.name ?? sessionUser.email?.split("@")[0] ?? "Owner";
@@ -417,6 +429,31 @@ export default async function AccountSettingsPage() {
               </span>
             </div>
             <div className="ds-card__body">
+              <form action={updateSecurityPrefs}>
+                <FormSelect
+                  label="Session timeout"
+                  name="sessionTimeoutMinutes"
+                  defaultValue={String(sessionTimeoutMinutes)}
+                  options={[
+                    ["15", "After 15 minutes of inactivity"],
+                    ["30", "After 30 minutes of inactivity"],
+                    ["60", "After 1 hour of inactivity"],
+                    ["120", "After 2 hours of inactivity"],
+                    ["480", "After 8 hours of inactivity"],
+                  ]}
+                />
+                <div className="dim" style={{ fontSize: 11, marginTop: 6 }}>
+                  Saved to your workspace now. Active enforcement of the timeout ships with the
+                  Phase 0 session-policy update.
+                </div>
+                <div className="row" style={{ marginTop: 14, justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn btn--pri">
+                    <Icon name="check" size={12} />
+                    Save security settings
+                  </button>
+                </div>
+              </form>
+              <div className="divider" />
               <ToggleRowDisplay
                 title="Two-factor authentication"
                 sub="Coming in Phase 0 — WebAuthn passkeys + TOTP fallback"
@@ -426,12 +463,6 @@ export default async function AccountSettingsPage() {
                 title="Single sign-on (SSO)"
                 sub="Google Workspace + Microsoft 365 — available on Scale"
                 icon="users"
-              />
-              <ToggleRowDisplay
-                title="Session timeout"
-                sub="After 30 min of inactivity"
-                icon="clock"
-                on
               />
               <div className="divider" />
               <div className="lbl-mono">Active sessions</div>

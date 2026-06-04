@@ -33,6 +33,7 @@
 
 import { generateReply } from "@/lib/ai/generate-reply";
 import { classifyReplySafety } from "@/lib/ai/safety-classify";
+import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
@@ -54,7 +55,10 @@ export interface ExecuteAutoReplyInput {
 }
 
 export type ExecuteAutoReplyResult =
-  | { ran: false; reason: "no_matching_rule" | "reply_already_exists" | "review_missing" }
+  | {
+      ran: false;
+      reason: "no_matching_rule" | "reply_already_exists" | "review_missing" | "plan_inactive";
+    }
   | {
       ran: true;
       ruleId: string;
@@ -140,6 +144,12 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
     return { ran: false, reason: "reply_already_exists" };
   }
 
+  // Auto-reply generation spends AI budget — a paid feature. Skip silently for
+  // orgs without an active plan (lapsed / free / expired trial).
+  if (!(await isOrgEntitled(organizationId))) {
+    return { ran: false, reason: "plan_inactive" };
+  }
+
   const rule = pickRule(
     {
       rating: ctx.review.rating,
@@ -217,7 +227,12 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
         // Always pending_review — even auto-publish flow lands here first.
         // The publish cron promotes to `published` after `autoPublishAt`.
         status: "pending_review",
-        generatedBy: `auto_reply:${rule.id}`,
+        // Durably record a safety-classifier block with a prefix the publish
+        // cron's `startsWith("auto_reply:")` filter EXCLUDES. Without this the
+        // block was only logged, so the cron would still auto-publish a flagged
+        // reply after the delay. A blocked draft can now go live ONLY via
+        // manual human approval (which publishes by reviewId, prefix-agnostic).
+        generatedBy: blocked ? `auto_reply_blocked:${rule.id}` : `auto_reply:${rule.id}`,
       },
     });
     // Bump rule audit counters in the same tx. Cheap, and useful for the

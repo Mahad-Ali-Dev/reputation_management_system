@@ -1,4 +1,3 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
 import {
   exchangeCodeForTokens,
@@ -7,6 +6,7 @@ import {
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     logger.warn({ event: "connection.oauth.user_denied", provider: "hubspot", error });
-    return NextResponse.redirect(new URL(`/connections?error=${encodeURIComponent(error)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/connections?error=${encodeURIComponent(error)}`, req.url),
+    );
   }
   if (!code || !state) {
     return NextResponse.redirect(new URL("/connections?error=missing_code_or_state", req.url));
@@ -46,6 +48,7 @@ export async function GET(req: NextRequest) {
       state,
       cookieHash,
       sessionUserId: userId,
+      sessionOrgId: orgId,
       expectedProvider: "hubspot",
     });
 
@@ -65,9 +68,12 @@ export async function GET(req: NextRequest) {
     });
 
     // Probe identity to get account info
-    const identity = await fetch("https://api.hubapi.com/oauth/v1/access-tokens/" + tokens.accessToken, {
-      headers: { accept: "application/json" },
-    });
+    const identity = await fetch(
+      "https://api.hubapi.com/oauth/v1/access-tokens/" + tokens.accessToken,
+      {
+        headers: { accept: "application/json" },
+      },
+    );
     let accountLabel = "HubSpot account";
     let externalId: string | undefined;
     if (identity.ok) {

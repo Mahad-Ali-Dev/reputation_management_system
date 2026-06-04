@@ -84,6 +84,13 @@ export async function verifyAndConsumeOAuthState(args: {
   cookieHash: string;
   expectedProvider: string;
   sessionUserId: string;
+  /**
+   * The org currently active in the caller's session. When provided, the
+   * state's `orgId` claim MUST match it — otherwise a user who belongs to
+   * multiple orgs (or who influenced the orgId placed into the state) could
+   * complete a callback that attaches encrypted tokens to the wrong tenant.
+   */
+  sessionOrgId?: string;
 }): Promise<VerifiedState> {
   // 1. Cookie binding check
   const expectedCookie = createHash("sha256").update(args.state).digest("base64url");
@@ -103,6 +110,12 @@ export async function verifyAndConsumeOAuthState(args: {
   // 4. Session user must match — defends against tenant fixation
   if (claims.userId !== args.sessionUserId) {
     throw new Error("oauth_state: session user mismatch");
+  }
+
+  // 4b. Org binding — the state's org must match the caller's active org so a
+  // multi-org user can't land tokens under a different tenant than intended.
+  if (args.sessionOrgId !== undefined && claims.orgId !== args.sessionOrgId) {
+    throw new Error("oauth_state: session org mismatch");
   }
 
   // 5. Single-use enforcement via DB nonce table

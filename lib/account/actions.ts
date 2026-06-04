@@ -1,12 +1,12 @@
 "use server";
 
 import { createHash, randomBytes } from "node:crypto";
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod";
-import { auth } from "@/lib/auth/config";
+import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import type { Prisma } from "@prisma/client";
+import { revalidatePath } from "next/cache";
+import { z } from "zod";
 
 const ProfileSchema = z.object({
   ownerName: z.string().max(120).optional(),
@@ -19,16 +19,9 @@ const ProfileSchema = z.object({
   businessDescription: z.string().max(2000).optional(),
 });
 
-async function requireSession() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
-}
-
 export async function updateAccountSettings(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireSession();
+  // Workspace settings are an owner/admin concern.
+  const { orgId, userId } = await requireRole("admin");
 
   const parsed = ProfileSchema.safeParse({
     ownerName: (form.get("ownerName") as string) || undefined,
@@ -103,7 +96,8 @@ const INVITE_TTL_DAYS = 14;
  * ops can deliver it manually until then.
  */
 export async function inviteTeammate(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireSession();
+  // Managing the team is an owner/admin action.
+  const { orgId, userId, role } = await requireRole("admin");
 
   const parsed = InviteSchema.safeParse({
     email: (form.get("email") as string)?.trim().toLowerCase(),
@@ -111,6 +105,11 @@ export async function inviteTeammate(form: FormData): Promise<void> {
   });
   if (!parsed.success) {
     throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+  }
+  // Only an owner may mint privileged (owner/admin) invitations — otherwise an
+  // admin could escalate themselves or others to owner.
+  if ((parsed.data.role === "owner" || parsed.data.role === "admin") && role !== "owner") {
+    throw new ForbiddenError("owner", role);
   }
 
   const plaintextToken = randomBytes(24).toString("base64url");
@@ -154,7 +153,8 @@ const RemoveMemberSchema = z.object({
 });
 
 export async function removeMember(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireSession();
+  // Managing the team is an owner/admin action.
+  const { orgId, userId, role } = await requireRole("admin");
   const { membershipId } = RemoveMemberSchema.parse({ membershipId: form.get("membershipId") });
 
   await withTenant(orgId, async (tx) => {
@@ -164,6 +164,10 @@ export async function removeMember(form: FormData): Promise<void> {
       select: { role: true, userId: true },
     });
     if (!target) return;
+    // Only an owner may remove another owner or an admin.
+    if ((target.role === "owner" || target.role === "admin") && role !== "owner") {
+      throw new ForbiddenError("owner", role);
+    }
     if (target.role === "owner") {
       const ownerCount = await tx.membership.count({
         where: { organizationId: orgId, role: "owner" },
@@ -198,22 +202,53 @@ const SecurityPrefsSchema = z.object({
   twoFactorRequired: z.coerce.boolean().optional(),
 });
 
+/** Narrow an unknown Json value to a plain object (not array / scalar / null). */
+function asJsonObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
 /**
- * Persist security preferences as a JSON blob on the organization row. The
- * actual enforcement of `sessionTimeoutMinutes` ships with the Auth.js
- * session-policy update (Phase 0).
+ * Persist security preferences as a JSON blob on the organization row, merged
+ * into `settings.security` so other setting groups aren't clobbered. The actual
+ * enforcement of `sessionTimeoutMinutes` ships with the Auth.js session-policy
+ * update (Phase 0); until then this stores the preference durably.
  */
 export async function updateSecurityPrefs(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireSession();
+  // Security settings are an owner/admin concern.
+  const { orgId, userId } = await requireRole("admin");
   const parsed = SecurityPrefsSchema.safeParse({
     sessionTimeoutMinutes: form.get("sessionTimeoutMinutes") ?? 30,
-    twoFactorRequired: form.get("twoFactorRequired") === "on" || form.get("twoFactorRequired") === "true",
+    twoFactorRequired:
+      form.get("twoFactorRequired") === "on" || form.get("twoFactorRequired") === "true",
   });
   if (!parsed.success) {
     throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
   }
 
   await withTenant(orgId, async (tx) => {
+    // Read-merge-write inside the txn so concurrent setting-group writes don't
+    // race away each other's keys. RLS scopes both the read and the write to
+    // this org.
+    const current = await tx.organization.findUnique({
+      where: { id: orgId },
+      select: { settings: true },
+    });
+    const existing = asJsonObject(current?.settings);
+    const nextSettings = {
+      ...existing,
+      security: {
+        ...asJsonObject(existing.security),
+        sessionTimeoutMinutes: parsed.data.sessionTimeoutMinutes,
+        twoFactorRequired: parsed.data.twoFactorRequired ?? false,
+      },
+    };
+
+    await tx.organization.update({
+      where: { id: orgId },
+      data: { settings: nextSettings as Prisma.InputJsonValue },
+    });
     await tx.auditLog.create({
       data: {
         organizationId: orgId,

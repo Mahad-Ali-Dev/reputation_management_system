@@ -1,5 +1,4 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { auth } from "@/lib/auth/config";
 import {
   exchangeCodeForTokens,
@@ -8,6 +7,7 @@ import {
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,23 +40,30 @@ export async function GET(req: NextRequest) {
       state,
       cookieHash,
       sessionUserId: userId,
+      sessionOrgId: orgId,
       expectedProvider: "shopify",
     });
 
     const app = await loadProviderApp("shopify");
     if (!app) throw new Error("shopify_not_configured");
 
-    // Shopify HMAC verification: re-compute over sorted query params (minus hmac)
-    if (hmac) {
-      const params = Array.from(req.nextUrl.searchParams.entries())
-        .filter(([k]) => k !== "hmac" && k !== "signature")
-        .sort(([a], [b]) => a.localeCompare(b))
-        .map(([k, v]) => `${k}=${v}`)
-        .join("&");
-      const computed = createHmac("sha256", app.clientSecret).update(params).digest("hex");
-      if (computed !== hmac) {
-        throw new Error("hmac_mismatch");
-      }
+    // Shopify HMAC verification: MANDATORY. Re-compute over sorted query params
+    // (minus hmac). Omitting `hmac` must NOT skip the check — it's the only
+    // cryptographic integrity guarantee on the query string (which feeds the
+    // token-exchange host below).
+    if (!hmac) {
+      throw new Error("missing_hmac");
+    }
+    const params = Array.from(req.nextUrl.searchParams.entries())
+      .filter(([k]) => k !== "hmac" && k !== "signature")
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([k, v]) => `${k}=${v}`)
+      .join("&");
+    const computed = createHmac("sha256", app.clientSecret).update(params).digest("hex");
+    const computedBuf = Buffer.from(computed);
+    const hmacBuf = Buffer.from(hmac);
+    if (computedBuf.length !== hmacBuf.length || !timingSafeEqual(computedBuf, hmacBuf)) {
+      throw new Error("hmac_mismatch");
     }
 
     const tokens = await exchangeCodeForTokens({

@@ -1,4 +1,3 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
 import {
   exchangeCodeForTokens,
@@ -7,6 +6,7 @@ import {
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +29,11 @@ export async function GET(req: NextRequest) {
   }
   try {
     const verified = await verifyProviderState({
-      state, cookieHash, sessionUserId: userId, expectedProvider: "mailchimp",
+      state,
+      cookieHash,
+      sessionUserId: userId,
+      sessionOrgId: orgId,
+      expectedProvider: "mailchimp",
     });
     const app = await loadProviderApp("mailchimp");
     if (!app) throw new Error("mailchimp_not_configured");
@@ -51,7 +55,11 @@ export async function GET(req: NextRequest) {
     let accountLabel = "Mailchimp";
     let externalId: string | undefined;
     if (metaRes.ok) {
-      const data = (await metaRes.json()) as { dc?: string; login?: { email?: string; login_email?: string }; user_id?: number };
+      const data = (await metaRes.json()) as {
+        dc?: string;
+        login?: { email?: string; login_email?: string };
+        user_id?: number;
+      };
       accountLabel = data.login?.email ?? data.login?.login_email ?? `Mailchimp (${data.dc})`;
       externalId = data.user_id ? `${data.user_id}@${data.dc}` : data.dc;
     }

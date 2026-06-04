@@ -1,4 +1,3 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
 import {
   exchangeCodeForTokens,
@@ -7,6 +6,7 @@ import {
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -32,7 +32,11 @@ export async function GET(req: NextRequest) {
   }
   try {
     const verified = await verifyProviderState({
-      state, cookieHash, sessionUserId: userId, expectedProvider: "quickbooks",
+      state,
+      cookieHash,
+      sessionUserId: userId,
+      sessionOrgId: orgId,
+      expectedProvider: "quickbooks",
     });
     const app = await loadProviderApp("quickbooks");
     if (!app) throw new Error("quickbooks_not_configured");
@@ -59,7 +63,9 @@ export async function GET(req: NextRequest) {
       },
     );
     if (companyRes.ok) {
-      const data = (await companyRes.json()) as { CompanyInfo?: { CompanyName?: string; LegalName?: string } };
+      const data = (await companyRes.json()) as {
+        CompanyInfo?: { CompanyName?: string; LegalName?: string };
+      };
       accountLabel = data.CompanyInfo?.CompanyName ?? data.CompanyInfo?.LegalName ?? accountLabel;
     }
 

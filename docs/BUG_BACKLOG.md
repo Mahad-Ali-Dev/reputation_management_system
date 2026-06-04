@@ -3,7 +3,31 @@
 Living list of UX bugs, dead buttons, and rough edges found during the
 post-deploy walk-through. Triaged by impact. Strike-through means fixed.
 
-Last updated: 2026-05-17
+Last updated: 2026-06-04
+
+---
+
+## Security & correctness pass — 2026-06-04 ✅
+
+5-domain parallel audit (tenant-isolation / API-auth / billing / server-actions / crypto-injection). Tenant-isolation audit found **no** cross-tenant IDOR or SQL injection. Fixed this session (all typecheck-clean; 153 tests pass, RLS suite needs a live DB):
+
+- ✅ **Forgeable unsubscribe links** (`app/u/route.ts`) — was `!==` (timing) + hardcoded `"fallback-secret-do-not-use"`. Now `getHmacSecret()` + `timingSafeEqual`.
+- ✅ **Twilio webhooks failed OPEN** (`lib/phone/twilio-verify.ts`, `app/api/webhooks/twilio/sms-status`) — accepted unsigned requests if `TWILIO_AUTH_TOKEN` unset + signed with internal host. Now fail-closed in prod (`isProductionRuntime()`) + forwarded host.
+- ✅ **Refund double-spend** (`lib/admin/refunds.ts`) — no prior-refund subtraction. Now Stripe-sourced remaining-balance check + cumulative status + idempotency key.
+- ✅ **Auto-reply safety bypass** (`lib/auto-reply/executor.ts`) — safety block was only logged; cron auto-published flagged replies. Now durable `auto_reply_blocked:` prefix the publish cron excludes.
+- ✅ **OAuth state not org-bound** (`lib/oauth/state.ts` + 6 callbacks) — now asserts `claims.orgId === sessionOrgId`.
+- ✅ **Admin login unthrottled** (`/api/admin/login`) — wired `login_attempt` limiter (per-email + per-IP).
+- ✅ **Shopify HMAC skippable** — now mandatory + `timingSafeEqual`.
+- ✅ **`saveConnection` org-blind lookup** — explicit `organizationId` filter (defense-in-depth).
+- ✅ **SSRF in KB crawler** (`lib/ai/crawl.ts`) — followed redirects unvalidated; now manual redirect loop re-validating each hop. (Residual: DNS-rebinding via resolved-IP pinning still TODO.)
+- ✅ **Missing audit rows** — `deleteContact`/`deleteFaq`/`deletePhoneNumber`/`deleteSocialPost` now audit-logged.
+- ✅ **QR signature could brick activated stands** (`lib/hardware/actions.ts`) — `/r/[slug]` recomputes the HMAC expiry from `device.activatedAt`, but `refreshDeviceRedirect` re-signed with a fresh `Date.now()` (signature **never** verified → every scan dead-ended at `/not-activated?reason=signature`), and `activateDevice` + self-service gen + `updateDeviceRedirectUrl` used two separate clock reads (intermittent second-boundary failure). All four now sign over the exact `activatedAt` that's persisted. New regression test: `tests/hardware/activation-flow.test.ts` (10 tests) locks the full slug→code→sign→verify→redirect chain.
+
+### Entitlement enforcement (new) — `lib/billing/entitlements.ts`
+Canonical `PLAN` enum + `planAllowsPaidFeatures()` / `assertEntitled()` / `isOrgEntitled()`. Entitled = `pro` OR (`trial` && not expired); `past_due`/`suspended`/`free` blocked. **Gated so far:** outreach single + bulk send, AI assistant route (402), AI KB URL-ingest, auto-reply executor (skips). **Not yet gated (follow-up):** customer-facing chatbot/widget, phone outbound campaigns, AI reply-generate on the reviews page, social AI caption. The `/subscription` display page still casts to a `standard|scale` enum that's never written — cosmetic reconcile pending.
+
+### Intra-tenant RBAC (new) — `lib/auth/rbac.ts`
+`roleAtLeast()` + `requireRole(min)` (owner>admin>manager>member>viewer). **Applied:** team invite/remove (admin; owner required to grant/remove owner+admin), account + security settings (admin), billing checkout/portal routes (admin), destructive deletes contact/faq/phone/social (admin). **Not yet applied (follow-up):** establishment delete, device retire/delete, provider/connection management, content-create actions → `manager+` (reviews reply, surveys, social posts, faqs upsert, auto-reply rules, templates). RLS still enforces org isolation regardless.
 
 ---
 
@@ -191,14 +215,15 @@ Fixed items struck-through; backlog items grouped by severity.
 - **`lib/hardware/provision.ts:62`** — `https://Repulabs.io/activate-needed` placeholder replaced with `${NEXT_PUBLIC_APP_URL}/not-activated`
 - **`app/not-activated/page.tsx:26`** — hardcoded "Repulabs.io" text → "Repulabs workspace" with correct nav path
 
-### P0 — DEFERRED (needs schema migration, do in next session)
+### ~~P0 — updateSecurityPrefs silent failure~~ ✅ FIXED 2026-06-04
 
-- **`lib/account/actions.ts:206-230` updateSecurityPrefs** — ⚠️ **silent failure**. Writes audit log but never persists the security preferences (sessionTimeoutMinutes, twoFactorRequired) anywhere. The Settings → Security UI looks like it works but nothing is saved.
-  - **Fix:** add `settings Json?` column to `Organization` model
-    - `prisma/schema.prisma`: add `settings Json? @map("settings")` to the Organization model
-    - New migration: `ALTER TABLE organizations ADD COLUMN settings jsonb;`
-    - Update `updateSecurityPrefs` to merge the parsed prefs into `org.settings.security`
-  - **Effort:** 30 min including local migrate test + prod deploy.
+- **`lib/account/actions.ts` updateSecurityPrefs** — ⚠️ **silent failure**: wrote an audit log but never persisted the security preferences anywhere (and the v2 account-page redesign had also left the action orphaned — the Security card was static `ToggleRowDisplay` placeholders with no form).
+  - ✅ Added `settings Json? @map("settings")` to the `Organization` model
+  - ✅ New migration `20260604120000_org_settings` — `ALTER TABLE organizations ADD COLUMN IF NOT EXISTS settings jsonb;`
+  - ✅ `updateSecurityPrefs` now does a read-merge-write into `settings.security` inside the tenant txn (RLS-scoped), so independent setting groups never clobber each other
+  - ✅ Wired a real session-timeout form into the Security section, repopulated from saved prefs, honestly labeled that enforcement ships with the Phase 0 session-policy update
+  - **Note:** enforcement of `sessionTimeoutMinutes` is still deferred to Phase 0 (Auth.js session-policy); this fix makes the preference persist durably rather than vanish. 2FA/SSO remain coming-soon display rows (no fake-persist of unenforced toggles).
+  - **Deploy:** needs `pnpm db:migrate:deploy` on the VPS to apply the new migration.
 
 ### P1 — Missing audit logs (compliance gap)
 

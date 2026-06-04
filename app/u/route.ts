@@ -1,7 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { logger } from "@/lib/logger";
 import { recordUnsubscribe } from "@/lib/outreach/suppression";
+import { getHmacSecret } from "@/lib/secrets";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -27,9 +28,14 @@ async function handle(req: NextRequest) {
     return new NextResponse("Bad token", { status: 400 });
   }
 
-  const secret = process.env.AUTH_SECRET ?? "fallback-secret-do-not-use";
+  // Same secret the token GENERATOR uses (lib/outreach/actions.ts buildUnsubToken).
+  // getHmacSecret() fails closed in production — never a public literal fallback.
+  const secret = getHmacSecret();
   const expected = createHmac("sha256", secret).update(payload).digest("base64url");
-  if (expected !== s) {
+  // Constant-time compare to deny a timing side-channel that could forge `s`.
+  const expectedBuf = Buffer.from(expected);
+  const providedBuf = Buffer.from(s);
+  if (expectedBuf.length !== providedBuf.length || !timingSafeEqual(expectedBuf, providedBuf)) {
     return new NextResponse("Bad signature", { status: 400 });
   }
 

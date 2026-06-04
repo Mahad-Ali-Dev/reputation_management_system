@@ -1,10 +1,11 @@
 "use server";
 
+import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
+import { withTenant } from "@/lib/db/with-tenant";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
 
 const Schema = z.object({
   id: z.string().uuid().optional(),
@@ -18,8 +19,9 @@ const Schema = z.object({
 async function requireOrg() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;
-  if (!session || !orgId) redirect("/login");
-  return { orgId };
+  const userId = session?.user?.id;
+  if (!session || !orgId || !userId) redirect("/login");
+  return { orgId, userId };
 }
 
 export async function upsertFaq(form: FormData): Promise<void> {
@@ -68,10 +70,26 @@ export async function upsertFaq(form: FormData): Promise<void> {
 }
 
 export async function deleteFaq(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
   const id = z.string().uuid().parse(form.get("id"));
   await withTenant(orgId, async (tx) => {
+    const before = await tx.faq.findFirst({
+      where: { id },
+      select: { title: true, establishmentId: true },
+    });
+    if (!before) return;
     await tx.faq.delete({ where: { id } });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "faq.deleted",
+        resourceType: "faq",
+        resourceId: id,
+        beforeData: before,
+      },
+    });
   });
   revalidatePath("/faqs");
   revalidatePath("/ai");

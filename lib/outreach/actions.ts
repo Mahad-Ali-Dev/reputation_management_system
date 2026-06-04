@@ -1,14 +1,15 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createHmac } from "node:crypto";
-import { z } from "zod";
 import { auth } from "@/lib/auth/config";
+import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
 import { generateSlug, googleReviewUrl } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { getHmacSecret } from "@/lib/secrets";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 import { defaultReviewRequestHtml, sendReviewRequestEmail } from "./email";
 import { hasSmsConsent, isUnsubscribed, recordSmsConsent } from "./suppression";
 import { sendSms } from "./twilio";
@@ -24,8 +25,8 @@ const Body = z.object({
   recipient: z.string().min(3).max(200),
   recipientName: z.string().max(120).optional(),
   scheduleHours: z.coerce.number().int().min(0).max(720).optional().default(0),
-  consentAttested: z.coerce.boolean().optional(),  // required for SMS
-  customBody: z.string().max(4000).optional(),     // override default template body
+  consentAttested: z.coerce.boolean().optional(), // required for SMS
+  customBody: z.string().max(4000).optional(), // override default template body
 });
 
 async function requireOrg() {
@@ -43,6 +44,8 @@ async function requireOrg() {
  */
 export async function createReviewRequest(form: FormData): Promise<void> {
   const { orgId, userId } = await requireOrg();
+  // Outreach sends incur SMS/email cost — gate on an active plan.
+  await assertEntitled(orgId);
 
   const parsed = Body.safeParse({
     establishmentId: form.get("establishmentId"),
@@ -206,7 +209,9 @@ async function dispatchReviewRequest(
     if (args.customBody) {
       text = renderCustom(args.customBody) + `\n\nUnsubscribe: ${args.unsubscribeUrl}`;
       const escaped = renderCustom(args.customBody)
-        .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
         .replace(/\n/g, "<br>");
       html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;"><div style="color:#0f172a;font-size:14px;line-height:1.6;">${escaped}</div><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:12px;margin:0;">Don't want these? <a href="${args.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a></p></div></body></html>`;
     } else {

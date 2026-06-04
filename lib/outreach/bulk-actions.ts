@@ -1,14 +1,15 @@
 "use server";
 
+import { auth } from "@/lib/auth/config";
+import { assertEntitled } from "@/lib/billing/entitlements";
+import { withTenant } from "@/lib/db/with-tenant";
+import { generateSlug } from "@/lib/hardware/codes";
+import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
-import { logger } from "@/lib/logger";
-import { generateSlug } from "@/lib/hardware/codes";
-import { recordSmsConsent } from "./suppression";
 import { MAX_CSV_BYTES, parseRecipientsCsv, previewBulkRecipients } from "./bulk";
+import { recordSmsConsent } from "./suppression";
 
 const BulkInput = z.object({
   establishmentId: z.string().uuid(),
@@ -34,6 +35,8 @@ async function requireOrg() {
  */
 export async function commitBulkReviewRequests(form: FormData): Promise<void> {
   const { orgId, userId } = await requireOrg();
+  // Bulk outreach incurs SMS/email cost — gate on an active plan.
+  await assertEntitled(orgId);
 
   const parsed = BulkInput.safeParse({
     establishmentId: form.get("establishmentId"),

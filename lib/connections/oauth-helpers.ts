@@ -14,12 +14,15 @@
  *   - Refresh-token flow via the standard `refreshConnectionToken` helper
  */
 
-import { randomBytes, createHash } from "node:crypto";
+import { createHash, randomBytes } from "node:crypto";
 import { decrypt, encrypt } from "@/lib/crypto/envelope";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
-import { signOAuthState as baseSignOAuthState, verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { logger } from "@/lib/logger";
+import {
+  signOAuthState as baseSignOAuthState,
+  verifyAndConsumeOAuthState,
+} from "@/lib/oauth/state";
 
 export type ProviderApp = {
   provider: string;
@@ -47,7 +50,11 @@ export async function loadProviderApp(provider: string): Promise<ProviderApp | n
     iv: Buffer.from(row.clientSecretIv),
     dekCiphertext: Buffer.alloc(0),
     keyVersion: 1,
-    encryptionContext: row.clientSecretAad as { orgId: string; provider: string; purpose: "oauth" | "widget" | "phone" | "general" },
+    encryptionContext: row.clientSecretAad as {
+      orgId: string;
+      provider: string;
+      purpose: "oauth" | "widget" | "phone" | "general";
+    },
   });
 
   return {
@@ -89,7 +96,9 @@ export function buildAuthorizeUrl(args: {
     redirect_uri: args.redirectUri,
     scope: args.scopes.join(" "),
     state: args.state,
-    ...(args.pkceChallenge ? { code_challenge: args.pkceChallenge, code_challenge_method: "S256" } : {}),
+    ...(args.pkceChallenge
+      ? { code_challenge: args.pkceChallenge, code_challenge_method: "S256" }
+      : {}),
     ...args.extraParams,
   });
   return `${args.baseUrl}?${params.toString()}`;
@@ -108,26 +117,36 @@ export async function exchangeCodeForTokens(args: {
   pkceVerifier?: string;
   contentType?: "form" | "json";
   authMode?: "basic" | "body";
-}): Promise<{ accessToken: string; refreshToken?: string; expiresIn?: number; raw: Record<string, unknown> }> {
+}): Promise<{
+  accessToken: string;
+  refreshToken?: string;
+  expiresIn?: number;
+  raw: Record<string, unknown>;
+}> {
   const body =
     args.contentType === "json"
       ? JSON.stringify({
           grant_type: "authorization_code",
           code: args.code,
           redirect_uri: args.redirectUri,
-          ...(args.authMode === "body" ? { client_id: args.clientId, client_secret: args.clientSecret } : {}),
+          ...(args.authMode === "body"
+            ? { client_id: args.clientId, client_secret: args.clientSecret }
+            : {}),
           ...(args.pkceVerifier ? { code_verifier: args.pkceVerifier } : {}),
         })
       : new URLSearchParams({
           grant_type: "authorization_code",
           code: args.code,
           redirect_uri: args.redirectUri,
-          ...(args.authMode === "body" ? { client_id: args.clientId, client_secret: args.clientSecret } : {}),
+          ...(args.authMode === "body"
+            ? { client_id: args.clientId, client_secret: args.clientSecret }
+            : {}),
           ...(args.pkceVerifier ? { code_verifier: args.pkceVerifier } : {}),
         }).toString();
 
   const headers: Record<string, string> = {
-    "content-type": args.contentType === "json" ? "application/json" : "application/x-www-form-urlencoded",
+    "content-type":
+      args.contentType === "json" ? "application/json" : "application/x-www-form-urlencoded",
     accept: "application/json",
   };
   if ((args.authMode ?? "basic") === "basic") {
@@ -190,11 +209,17 @@ export async function saveConnection(args: {
   };
   const accessCt = toBytes(accessEnc.ciphertext);
   const accessIv = toBytes(accessEnc.iv);
-  const refreshCt: Uint8Array<ArrayBuffer> | null = refreshEnc ? toBytes(refreshEnc.ciphertext) : null;
+  const refreshCt: Uint8Array<ArrayBuffer> | null = refreshEnc
+    ? toBytes(refreshEnc.ciphertext)
+    : null;
 
   return withTenant(args.orgId, async (tx) => {
     const existing = await tx.connection.findFirst({
       where: {
+        // Explicit org scope as defense-in-depth: RLS already constrains this
+        // query to the tenant, but two orgs can share an externalId (same
+        // Shopify shop / HubSpot hub), so never rely on RLS alone here.
+        organizationId: args.orgId,
         provider: args.provider,
         ...(args.externalId ? { externalId: args.externalId } : {}),
       },
@@ -217,7 +242,12 @@ export async function saveConnection(args: {
         },
       });
       logger.info(
-        { event: "connection.refreshed", orgId: args.orgId, provider: args.provider, connectionId: updated.id },
+        {
+          event: "connection.refreshed",
+          orgId: args.orgId,
+          provider: args.provider,
+          connectionId: updated.id,
+        },
         "connection tokens refreshed",
       );
       return { id: updated.id };
@@ -244,7 +274,7 @@ export async function saveConnection(args: {
       data: {
         organizationId: args.orgId,
         actorType: "system",
-        actorId: args.orgId,  // synthetic
+        actorId: args.orgId, // synthetic
         action: "connection.created",
         resourceType: "connection",
         resourceId: created.id,
@@ -253,7 +283,12 @@ export async function saveConnection(args: {
     });
 
     logger.info(
-      { event: "connection.created", orgId: args.orgId, provider: args.provider, connectionId: created.id },
+      {
+        event: "connection.created",
+        orgId: args.orgId,
+        provider: args.provider,
+        connectionId: created.id,
+      },
       "new connection created",
     );
 
@@ -283,6 +318,8 @@ export async function verifyProviderState(args: {
   state: string;
   cookieHash: string;
   sessionUserId: string;
+  /** Active org from the caller's session — state.orgId must match it. */
+  sessionOrgId: string;
   expectedProvider: string;
 }): Promise<{ orgId: string; userId: string; pkceVerifier: string }> {
   const verified = await verifyAndConsumeOAuthState({
@@ -290,6 +327,7 @@ export async function verifyProviderState(args: {
     cookieHash: args.cookieHash,
     expectedProvider: args.expectedProvider,
     sessionUserId: args.sessionUserId,
+    sessionOrgId: args.sessionOrgId,
   });
   return {
     orgId: verified.orgId,

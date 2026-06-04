@@ -1,9 +1,9 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { encrypt } from "@/lib/crypto/envelope";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -76,6 +76,7 @@ export async function GET(req: NextRequest) {
       cookieHash,
       expectedProvider: "google_business",
       sessionUserId,
+      sessionOrgId: orgId,
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
@@ -145,9 +146,7 @@ export async function GET(req: NextRequest) {
   const accessEnc = encrypt(tokens.access_token, encryptionCtx);
   const refreshEnc = tokens.refresh_token ? encrypt(tokens.refresh_token, encryptionCtx) : null;
 
-  const expiresAt = tokens.expires_in
-    ? new Date(Date.now() + tokens.expires_in * 1000)
-    : null;
+  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : null;
   const scopes = tokens.scope?.split(/\s+/).filter(Boolean) ?? [];
 
   await withTenant(orgId, async (tx) => {

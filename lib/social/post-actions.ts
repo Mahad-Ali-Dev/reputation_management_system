@@ -1,16 +1,17 @@
 "use server";
 
+import { MODELS, anthropic } from "@/lib/ai/client";
+import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
+import { withTenant } from "@/lib/db/with-tenant";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
-import { anthropic, MODELS } from "@/lib/ai/client";
 
 const PostSchema = z.object({
   caption: z.string().max(3000).optional(),
-  hashtags: z.string().max(500).optional(),       // comma or space separated
-  platforms: z.string().min(1).max(200),           // comma-separated
+  hashtags: z.string().max(500).optional(), // comma or space separated
+  platforms: z.string().min(1).max(200), // comma-separated
   mediaUrl: z.string().url().max(2000).or(z.literal("")).optional(),
   mediaType: z.enum(["image", "video", "reel"]).optional(),
   scheduledFor: z.string().datetime().optional(),
@@ -20,8 +21,9 @@ const PostSchema = z.object({
 async function requireOrg() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;
-  if (!session || !orgId) redirect("/login");
-  return { orgId };
+  const userId = session?.user?.id;
+  if (!session || !orgId || !userId) redirect("/login");
+  return { orgId, userId };
 }
 
 export async function createSocialPost(form: FormData): Promise<void> {
@@ -38,7 +40,10 @@ export async function createSocialPost(form: FormData): Promise<void> {
   if (!parsed.success) throw new Error(parsed.error.issues.map((i) => i.message).join("; "));
   const d = parsed.data;
 
-  const platforms = d.platforms.split(",").map((p) => p.trim()).filter(Boolean);
+  const platforms = d.platforms
+    .split(",")
+    .map((p) => p.trim())
+    .filter(Boolean);
   if (platforms.length === 0) throw new Error("Pick at least one platform");
 
   const hashtags = d.hashtags
@@ -77,7 +82,9 @@ const AiCaptionSchema = z.object({
   tone: z.enum(["professional", "friendly", "playful", "informative"]).default("friendly"),
 });
 
-export async function generateSocialCaption(form: FormData): Promise<{ caption: string; hashtags: string[] }> {
+export async function generateSocialCaption(
+  form: FormData,
+): Promise<{ caption: string; hashtags: string[] }> {
   const { orgId } = await requireOrg();
   const parsed = AiCaptionSchema.safeParse({
     platforms: form.get("platforms"),
@@ -93,7 +100,11 @@ export async function generateSocialCaption(form: FormData): Promise<{ caption: 
   });
 
   const platforms = parsed.data.platforms.split(",").map((p) => p.trim());
-  const charLimit = platforms.includes("twitter") ? 280 : platforms.includes("instagram") ? 2200 : 600;
+  const charLimit = platforms.includes("twitter")
+    ? 280
+    : platforms.includes("instagram")
+      ? 2200
+      : 600;
 
   const SYSTEM = `You write social media captions for local businesses. Tone: ${parsed.data.tone}.
 
@@ -126,7 +137,9 @@ Rules:
     const parsed = JSON.parse(match[0]) as { caption: string; hashtags?: string[] };
     return {
       caption: String(parsed.caption ?? "").slice(0, charLimit),
-      hashtags: Array.isArray(parsed.hashtags) ? parsed.hashtags.slice(0, 8).map((h) => String(h).replace(/^#/, "")) : [],
+      hashtags: Array.isArray(parsed.hashtags)
+        ? parsed.hashtags.slice(0, 8).map((h) => String(h).replace(/^#/, ""))
+        : [],
     };
   } catch {
     return { caption: text.text.slice(0, charLimit), hashtags: [] };
@@ -134,10 +147,30 @@ Rules:
 }
 
 export async function deleteSocialPost(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
   const id = z.string().uuid().parse(form.get("id"));
   await withTenant(orgId, async (tx) => {
+    const before = await tx.socialPost.findFirst({
+      where: { id },
+      select: { platforms: true, status: true, scheduledFor: true },
+    });
+    if (!before) return;
     await tx.socialPost.delete({ where: { id } });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "social_post.deleted",
+        resourceType: "social_post",
+        resourceId: id,
+        beforeData: {
+          platforms: before.platforms,
+          status: before.status,
+          scheduledFor: before.scheduledFor?.toISOString() ?? null,
+        },
+      },
+    });
   });
   revalidatePath("/social/posts");
 }

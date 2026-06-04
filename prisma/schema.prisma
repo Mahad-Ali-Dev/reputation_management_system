@@ -35,6 +35,9 @@ model Organization {
   websiteUrl      String?   @map("website_url")
   logoUrl         String?   @map("logo_url")
   businessDescription String? @map("business_description")
+  // Free-form workspace settings (e.g. { security: { sessionTimeoutMinutes, twoFactorRequired } }).
+  // Merge-on-write so independent setting groups never clobber each other.
+  settings        Json?     @map("settings")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")

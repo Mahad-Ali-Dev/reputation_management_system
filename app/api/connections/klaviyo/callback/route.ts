@@ -1,4 +1,3 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
 import {
   exchangeCodeForTokens,
@@ -7,6 +6,7 @@ import {
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +29,11 @@ export async function GET(req: NextRequest) {
   }
   try {
     const verified = await verifyProviderState({
-      state, cookieHash, sessionUserId: userId, expectedProvider: "klaviyo",
+      state,
+      cookieHash,
+      sessionUserId: userId,
+      sessionOrgId: orgId,
+      expectedProvider: "klaviyo",
     });
     const app = await loadProviderApp("klaviyo");
     if (!app) throw new Error("klaviyo_not_configured");
@@ -56,11 +60,17 @@ export async function GET(req: NextRequest) {
     let accountLabel = "Klaviyo account";
     let externalId: string | undefined;
     if (identity.ok) {
-      const data = (await identity.json()) as { data?: Array<{ id: string; attributes?: { contact_information?: { organization_name?: string } } }> };
+      const data = (await identity.json()) as {
+        data?: Array<{
+          id: string;
+          attributes?: { contact_information?: { organization_name?: string } };
+        }>;
+      };
       const first = data.data?.[0];
       if (first) {
         externalId = first.id;
-        accountLabel = first.attributes?.contact_information?.organization_name ?? `Klaviyo (${first.id})`;
+        accountLabel =
+          first.attributes?.contact_information?.organization_name ?? `Klaviyo (${first.id})`;
       }
     }
 

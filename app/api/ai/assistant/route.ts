@@ -1,10 +1,11 @@
+import { checkBudget } from "@/lib/ai/budget";
+import { MODELS, anthropic } from "@/lib/ai/client";
+import { getOrgContext } from "@/lib/auth/org-context";
+import { isOrgEntitled } from "@/lib/billing/entitlements";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { anthropic, MODELS } from "@/lib/ai/client";
-import { getOrgContext } from "@/lib/auth/org-context";
-import { checkBudget } from "@/lib/ai/budget";
-import { checkRateLimit } from "@/lib/ratelimit";
-import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -80,6 +81,19 @@ STYLE
 export async function POST(req: NextRequest) {
   const { orgId, userId } = await getOrgContext();
 
+  // AI features are paid — block lapsed/free orgs (past_due, suspended, free,
+  // expired trial). Active + in-trial orgs pass.
+  if (!(await isOrgEntitled(orgId))) {
+    return NextResponse.json(
+      {
+        error: "plan_inactive",
+        message:
+          "AI features aren't included on your current plan. Upgrade in Settings → Subscription.",
+      },
+      { status: 402 },
+    );
+  }
+
   const rl = await checkRateLimit("ai_assistant", `${orgId}:${userId}`);
   if (!rl.success) {
     return NextResponse.json(
@@ -97,8 +111,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(
       {
         error: "ai_budget_exceeded",
-        message:
-          "Your daily AI usage cap has been hit. The cap resets at midnight UTC.",
+        message: "Your daily AI usage cap has been hit. The cap resets at midnight UTC.",
       },
       { status: 429 },
     );

@@ -1,15 +1,16 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { createHash, randomBytes } from "node:crypto";
-import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
 import { crawlUrl } from "@/lib/ai/crawl";
 import { ingestDocument } from "@/lib/ai/ingest";
+import { auth } from "@/lib/auth/config";
+import { assertEntitled } from "@/lib/billing/entitlements";
+import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { assertRateLimit } from "@/lib/ratelimit";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 async function requireOrg() {
   const session = await auth();
@@ -116,6 +117,8 @@ const UrlIngestSchema = z.object({
  */
 export async function ingestAiDocumentFromUrl(form: FormData): Promise<void> {
   const { orgId, userId } = await requireOrg();
+  // URL crawl + embedding is a paid AI feature.
+  await assertEntitled(orgId);
 
   // Rate limit before any external fetch
   await assertRateLimit("url_crawl", orgId);
@@ -132,7 +135,9 @@ export async function ingestAiDocumentFromUrl(form: FormData): Promise<void> {
 
   const crawl = await crawlUrl(url);
   if ("error" in crawl) {
-    throw new Error(`URL crawl failed: ${crawl.error}${crawl.details ? ` (${crawl.details})` : ""}`);
+    throw new Error(
+      `URL crawl failed: ${crawl.error}${crawl.details ? ` (${crawl.details})` : ""}`,
+    );
   }
   const { result } = crawl;
 
@@ -245,7 +250,7 @@ export async function deleteAiDocument(documentId: string): Promise<void> {
  */
 const WidgetSchema = z.object({
   establishmentId: z.string().uuid().optional(),
-  originAllowlist: z.string().max(2000).optional(),  // comma-separated origins
+  originAllowlist: z.string().max(2000).optional(), // comma-separated origins
 });
 
 export async function createWidgetKey(form: FormData): Promise<void> {

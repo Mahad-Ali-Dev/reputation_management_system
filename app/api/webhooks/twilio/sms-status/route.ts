@@ -1,9 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { recordUnsubscribe } from "@/lib/outreach/suppression";
 import { verifyTwilioSignature } from "@/lib/outreach/twilio";
+import { isProductionRuntime } from "@/lib/secrets";
 import { handleIdempotent } from "@/lib/webhooks/idempotency";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,13 +29,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "missing_signature" }, { status: 400 });
   }
 
-  // The URL Twilio signed is the public URL we configured. For local dev with stripe listen / ngrok,
-  // this would be the ngrok URL. For now we accept the request URL itself.
-  const url = `${req.nextUrl.protocol}//${req.nextUrl.host}${req.nextUrl.pathname}`;
+  // Twilio signs the public URL it was configured with. Behind Nginx the bare
+  // Host is the internal bind host, so rebuild from the forwarded headers
+  // (same convention as the voice routes + middleware fixes).
+  const proto = req.headers.get("x-forwarded-proto") ?? req.nextUrl.protocol.replace(/:$/, "");
+  const host = req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
+  const url = `${proto}://${host}${req.nextUrl.pathname}`;
   const verified = await verifyTwilioSignature({ url, params, signature });
-  // Fail-closed whenever Twilio is configured (any env). Only skip in pure
-  // dev when TWILIO_AUTH_TOKEN is absent.
-  if (!verified && process.env.TWILIO_AUTH_TOKEN) {
+  // Fail closed whenever Twilio is configured OR we're in production. A prod
+  // deploy with TWILIO_AUTH_TOKEN unset must reject (forged STOP/status), not
+  // accept everything. Only a pure-dev box with no token may pass through.
+  if (!verified && (process.env.TWILIO_AUTH_TOKEN || isProductionRuntime())) {
     logger.warn({ event: "webhook.twilio.bad_signature", url });
     return NextResponse.json({ error: "bad_signature" }, { status: 401 });
   }

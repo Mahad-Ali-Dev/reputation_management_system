@@ -1,25 +1,27 @@
 "use server";
 
+import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
+import { withTenant } from "@/lib/db/with-tenant";
+import { parseRecipientsCsv } from "@/lib/outreach/bulk";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
-import { parseRecipientsCsv } from "@/lib/outreach/bulk";
 
 const ContactSchema = z.object({
   name: z.string().max(120).optional(),
   email: z.string().email().max(200).optional().or(z.literal("")),
   phone: z.string().max(40).optional(),
-  tags: z.string().max(500).optional(),  // comma-separated
+  tags: z.string().max(500).optional(), // comma-separated
   source: z.enum(["manual", "csv"]).default("manual"),
 });
 
 async function requireOrg() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;
-  if (!session || !orgId) redirect("/login");
-  return { orgId };
+  const userId = session?.user?.id;
+  if (!session || !orgId || !userId) redirect("/login");
+  return { orgId, userId };
 }
 
 export async function addContact(form: FormData): Promise<void> {
@@ -47,7 +49,10 @@ export async function addContact(form: FormData): Promise<void> {
         email: email || null,
         phone: phone ?? null,
         tags: tags
-          ? tags.split(",").map((t) => t.trim()).filter((t) => t.length > 0)
+          ? tags
+              .split(",")
+              .map((t) => t.trim())
+              .filter((t) => t.length > 0)
           : [],
       },
     });
@@ -83,10 +88,26 @@ export async function importContactsCsv(form: FormData): Promise<void> {
 }
 
 export async function deleteContact(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
   const id = z.string().uuid().parse(form.get("id"));
   await withTenant(orgId, async (tx) => {
+    const before = await tx.contact.findFirst({
+      where: { id },
+      select: { name: true, email: true, phone: true },
+    });
+    if (!before) return;
     await tx.contact.delete({ where: { id } });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "contact.deleted",
+        resourceType: "contact",
+        resourceId: id,
+        beforeData: before,
+      },
+    });
   });
   revalidatePath("/contacts");
 }

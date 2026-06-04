@@ -11,9 +11,20 @@
  */
 
 function isProd(): boolean {
-  return process.env.NODE_ENV === "production"
-    || process.env.VERCEL_ENV === "production"
-    || process.env.VERCEL_ENV === "preview";
+  return (
+    process.env.NODE_ENV === "production" ||
+    process.env.VERCEL_ENV === "production" ||
+    process.env.VERCEL_ENV === "preview"
+  );
+}
+
+/**
+ * True when running in a production-grade environment. Use this to make
+ * signature/secret checks fail CLOSED in prod even when the relevant token
+ * env var is unset (a misconfiguration must reject traffic, never accept it).
+ */
+export function isProductionRuntime(): boolean {
+  return isProd();
 }
 
 function requireOrFallback(envName: string, devFallback: string): string {
@@ -27,7 +38,9 @@ function requireOrFallback(envName: string, devFallback: string): string {
     const key = `__secret_warned_${envName}`;
     if (!(globalThis as Record<string, unknown>)[key]) {
       // eslint-disable-next-line no-console
-      console.warn(`[secrets] ${envName} not set — using INSECURE dev fallback. Set it before deploying.`);
+      console.warn(
+        `[secrets] ${envName} not set — using INSECURE dev fallback. Set it before deploying.`,
+      );
       (globalThis as Record<string, unknown>)[key] = true;
     }
   }
@@ -77,7 +90,7 @@ export function getCronSecret(): string | null {
  * matching header.
  */
 export function verifyCronRequest(authHeader: string | null): boolean {
-  const expected = getCronSecret();  // throws in prod if unset
-  if (!expected) return true;        // dev mode, no secret configured
+  const expected = getCronSecret(); // throws in prod if unset
+  if (!expected) return true; // dev mode, no secret configured
   return authHeader === `Bearer ${expected}`;
 }

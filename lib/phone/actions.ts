@@ -1,19 +1,20 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { withTenant } from "@/lib/db/with-tenant";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 const AssistantSchema = z.object({
   greeting: z.string().min(5).max(500),
   voice: z.string().max(80).default("alice"),
   language: z.string().max(20).default("en-US"),
   maxTurns: z.coerce.number().int().min(2).max(30).default(12),
-  endCallPhrases: z.string().max(500).optional(),     // comma-separated
+  endCallPhrases: z.string().max(500).optional(), // comma-separated
   handoffPhrases: z.string().max(500).optional(),
-  handoffNumber: z.string().max(40).optional(),       // E.164 forward number
+  handoffNumber: z.string().max(40).optional(), // E.164 forward number
   customInstructions: z.string().max(3000).optional(),
   enabled: z.coerce.boolean().default(false),
 });
@@ -21,8 +22,9 @@ const AssistantSchema = z.object({
 async function requireOrg() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;
-  if (!session || !orgId) redirect("/login");
-  return { orgId };
+  const userId = session?.user?.id;
+  if (!session || !orgId || !userId) redirect("/login");
+  return { orgId, userId };
 }
 
 export async function saveAssistantConfig(form: FormData): Promise<void> {
@@ -43,10 +45,16 @@ export async function saveAssistantConfig(form: FormData): Promise<void> {
   }
   const d = parsed.data;
   const endPhrases = d.endCallPhrases
-    ? d.endCallPhrases.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    ? d.endCallPhrases
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
     : ["goodbye", "bye now", "have a good day", "hang up"];
   const handoffPhrases = d.handoffPhrases
-    ? d.handoffPhrases.split(",").map((s) => s.trim().toLowerCase()).filter(Boolean)
+    ? d.handoffPhrases
+        .split(",")
+        .map((s) => s.trim().toLowerCase())
+        .filter(Boolean)
     : ["speak to a human", "representative", "manager", "customer service"];
 
   await withTenant(orgId, async (tx) => {
@@ -90,8 +98,8 @@ export async function saveAssistantConfig(form: FormData): Promise<void> {
 }
 
 const PhoneNumberSchema = z.object({
-  phoneE164:    z.string().regex(/^\+[1-9][0-9]{1,14}$/),
-  twilioSid:    z.string().min(5).max(80),
+  phoneE164: z.string().regex(/^\+[1-9][0-9]{1,14}$/),
+  twilioSid: z.string().min(5).max(80),
   friendlyName: z.string().max(120).optional(),
   forwardToE164: z.string().max(40).optional(),
 });
@@ -128,12 +136,28 @@ export async function registerPhoneNumber(form: FormData): Promise<void> {
 }
 
 export async function deletePhoneNumber(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
   const id = z.string().uuid().parse(form.get("id"));
   await withTenant(orgId, async (tx) => {
+    const before = await tx.phoneNumber.findFirst({
+      where: { id },
+      select: { phoneE164: true, friendlyName: true, status: true },
+    });
+    if (!before) return;
     await tx.phoneNumber.update({
       where: { id },
       data: { status: "released" },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "phone_number.released",
+        resourceType: "phone_number",
+        resourceId: id,
+        beforeData: before,
+      },
     });
   });
   revalidatePath("/phone");

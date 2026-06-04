@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
+import { roleAtLeast } from "@/lib/auth/rbac";
 import { createCheckoutSession } from "@/lib/billing/actions";
 import { logger } from "@/lib/logger";
+import { NextResponse } from "next/server";
 
 /**
  * POST /api/billing/checkout
@@ -15,6 +16,10 @@ export async function POST() {
   const userEmail = session?.user?.email;
   if (!session || !orgId || !userEmail) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  }
+  // Billing is an owner/admin action.
+  if (!roleAtLeast((session as { role?: string }).role, "admin")) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 
   try {
