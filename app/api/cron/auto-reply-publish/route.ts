@@ -10,17 +10,20 @@ export const maxDuration = 60;
 /**
  * GET /api/cron/auto-reply-publish
  *
- * Every 5 minutes. Promotes drafted auto-reply replies whose delay window
- * has elapsed into a `published` state by calling the platform's publish
- * API (currently Google; Airbnb/Booking are no-ops since we don't have
- * programmatic publish there).
+ * Every 5 minutes. Promotes drafted auto-reply replies whose durable
+ * `scheduled_publish_at` has elapsed into a `published` state by calling the
+ * platform's publish API (currently Google; Airbnb/Booking are no-ops since we
+ * don't have programmatic publish there). The drain is column-driven: it picks
+ * up BOTH executor-staged auto-replies and human-approved-then-scheduled
+ * replies uniformly (`status='pending_review' AND scheduled_publish_at<=now()`,
+ * excluding safety-blocked drafts). Pre-migration it transparently falls back
+ * to the legacy `created_at + delay_minutes` derived window.
  *
  * Why 5 minutes (not 1):
- *   - Hosts set `delay_minutes` as their "cancel window". A 1-minute cron
- *     would publish a 5-minute-delay rule in ≈5m which is correct, but the
- *     cost is 12× more wakeups for no real benefit. The host's perceived
- *     "after roughly the delay" is close enough.
- *   - Keeps publish concurrency to one host's rules at a time per tick
+ *   - The 5★ auto-reply window is a randomized 2–4h "reads as human" delay.
+ *     Actual post time is the scheduled instant rounded up to the next 5-min
+ *     tick — well within tolerance, and 12× fewer wakeups than a 1-min cron.
+ *   - Keeps publish concurrency to one host's replies at a time per tick
  *     — predictable, and aligned with our hourly Google API quota.
  *
  * Auth: same dual auth as the other cron routes (Bearer header for

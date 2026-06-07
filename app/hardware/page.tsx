@@ -2,14 +2,23 @@ import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { QrCode } from "@/components/shell/qr-code";
-import { Sparkline } from "@/components/shell/sparkline";
-import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { orgHasFeature } from "@/lib/billing/feature-access";
 import { withTenant } from "@/lib/db/with-tenant";
+import { listEstablishments } from "@/lib/establishments/queries";
 import { restoreDevice } from "@/lib/hardware/actions";
-import { listOrgDevices } from "@/lib/hardware/queries";
+import {
+  formatConversionPct,
+  getDeviceMetrics,
+  listOrgDevices,
+  listOrgDevicesWithProduct,
+} from "@/lib/hardware/queries";
 import Link from "next/link";
+import { ConnectDeviceModal } from "./_components/connect-device-modal";
+import { DeviceCard } from "./_components/device-card";
+import { NextStepBanner } from "./_components/next-step-banner";
+import { SummaryStats } from "./_components/summary-stats";
 
 /**
  * QR Codes — per repulabs v2 design, adapted: physical-product commerce
@@ -33,44 +42,6 @@ const SHOPIFY_URL = process.env.NEXT_PUBLIC_SHOPIFY_STORE_URL ?? "https://repula
 function publicQrUrl(slug: string): string {
   const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com";
   return `${base}/r/${slug}`;
-}
-
-/**
- * Bucket a list of dated events into N equal-width buckets over the last
- * `totalDays` days for a tiny sparkline. Returns a zero-length array if no
- * events — caller should fall back to omitting the sparkline.
- */
-function bucketIntoSparkline(dates: Date[], totalDays = 30, buckets = 7): number[] {
-  if (dates.length === 0) return [];
-  const out = Array<number>(buckets).fill(0);
-  const windowMs = totalDays * 24 * 60 * 60 * 1000;
-  const start = Date.now() - windowMs;
-  const msPerBucket = windowMs / buckets;
-  for (const d of dates) {
-    const idx = Math.floor((d.getTime() - start) / msPerBucket);
-    if (idx >= 0 && idx < buckets) out[idx] = (out[idx] ?? 0) + 1;
-  }
-  return out;
-}
-
-function formatDelta(current: number, prior: number): { label: string; up: boolean | undefined } {
-  if (prior === 0 && current === 0) return { label: "no scans yet", up: undefined };
-  if (prior === 0 && current > 0) return { label: "new", up: true };
-  const pct = Math.round(((current - prior) / prior) * 100);
-  if (pct === 0) return { label: "flat vs prior 30d", up: undefined };
-  return { label: `${pct > 0 ? "+" : ""}${pct}% vs prior 30d`, up: pct > 0 };
-}
-
-function relativeTime(d: Date | null): string {
-  if (!d) return "—";
-  const ms = Date.now() - d.getTime();
-  const minutes = Math.floor(ms / 60000);
-  if (minutes < 60) return `${minutes}m ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 function titleFromSku(sku: string): string {
@@ -106,7 +77,11 @@ export default async function QrCodesPage({
 }) {
   const { orgId } = await getOrgContext();
 
-  const devices = await listOrgDevices(orgId);
+  const [devices, establishments] = await Promise.all([
+    listOrgDevicesWithProduct(orgId),
+    listEstablishments(orgId),
+  ]);
+  const businessOptions = establishments.map((e) => ({ id: e.id, name: e.name }));
   const sp = await searchParams;
 
   // Trash view — show only retired devices with a Restore button per card.
@@ -117,14 +92,9 @@ export default async function QrCodesPage({
   }
 
   const activeDevices = devices.filter((d) => d.status === "active");
-  const lastScanDevice = activeDevices.reduce<(typeof devices)[number] | null>((latest, d) => {
-    if (!d.lastScanAt) return latest;
-    if (!latest?.lastScanAt) return d;
-    return d.lastScanAt > latest.lastScanAt ? d : latest;
-  }, null);
 
   if (activeDevices.length === 0) {
-    return <EmptyState recentActivation={sp.activated} />;
+    return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
   }
 
   // Use ?selected=<deviceId> to focus the QR + analytics panels on a specific
@@ -132,141 +102,48 @@ export default async function QrCodesPage({
   // provided or the ID is invalid.
   const selectedDevice =
     (sp.selected && activeDevices.find((d) => d.id === sp.selected)) || activeDevices[0];
-  if (!selectedDevice) return <EmptyState recentActivation={sp.activated} />;
+  if (!selectedDevice)
+    return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
 
-  // Real analytics: 30d scans, prior 30d scans (for delta), reviews from QR
-  // (rows on Review with attributedDeviceId set), prior 30d reviews, plus the
-  // selected device's scan series for the analytics panel. All inside one
-  // tenant-scoped transaction so RLS predicates are evaluated once.
-  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const since60d = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000);
-  const activeDeviceIds = activeDevices.map((d) => d.id);
-  const activeEstablishmentIds = Array.from(
-    new Set(activeDevices.map((d) => d.establishmentId).filter((id): id is string => !!id)),
-  );
-  const analytics = await withTenant(orgId, async (tx) => {
-    const [
-      orgScans30d,
-      orgScansPrior30d,
-      reviewsFromQr30d,
-      reviewsFromQrPrior30d,
-      selectedScans,
-      reviewsPerDevice,
-      ratingsPerEstablishment,
-    ] = await Promise.all([
-      tx.deviceScan.findMany({
-        where: { organizationId: orgId, scannedAt: { gte: since30d } },
-        select: { scannedAt: true },
-      }),
-      tx.deviceScan.count({
-        where: { organizationId: orgId, scannedAt: { gte: since60d, lt: since30d } },
-      }),
-      tx.review.findMany({
-        where: {
-          organizationId: orgId,
-          attributedDeviceId: { not: null },
-          postedAt: { gte: since30d },
-        },
-        select: { postedAt: true },
-      }),
-      tx.review.count({
-        where: {
-          organizationId: orgId,
-          attributedDeviceId: { not: null },
-          postedAt: { gte: since60d, lt: since30d },
-        },
-      }),
-      tx.deviceScan.findMany({
-        where: { deviceId: selectedDevice.id, scannedAt: { gte: since30d } },
-        select: { scannedAt: true },
-      }),
-      activeDeviceIds.length > 0
-        ? tx.review.groupBy({
-            by: ["attributedDeviceId"],
-            where: { organizationId: orgId, attributedDeviceId: { in: activeDeviceIds } },
-            _count: { _all: true },
-          })
-        : Promise.resolve(
-            [] as Array<{ attributedDeviceId: string | null; _count: { _all: number } }>,
-          ),
-      activeEstablishmentIds.length > 0
-        ? tx.review.groupBy({
-            by: ["establishmentId"],
-            where: { organizationId: orgId, establishmentId: { in: activeEstablishmentIds } },
-            _count: { _all: true },
-            _avg: { rating: true },
-          })
-        : Promise.resolve(
-            [] as Array<{
-              establishmentId: string;
-              _count: { _all: number };
-              _avg: { rating: number | null };
-            }>,
-          ),
-    ]);
-    return {
-      orgScans30d,
-      orgScansPrior30d,
-      reviewsFromQr30d,
-      reviewsFromQrPrior30d,
-      selectedScans,
-      reviewsPerDevice,
-      ratingsPerEstablishment,
-    };
-  });
+  // Aggregate summary (the spec's 3-pill row) via the extracted, unit-tested
+  // helper. The Pro/Free banner branch reads the canonical entitlement (same
+  // source as <ProGate> — we never fork the plan check).
+  const [metrics, isPro] = await Promise.all([
+    getDeviceMetrics(orgId),
+    orgHasFeature(orgId, "ai_autopilot"),
+  ]);
 
+  // Per-device review counts come from listOrgDevicesWithProduct (one groupBy).
+  // The selected-device QR/analytics panels still need that device's scan
+  // series — a single tenant-scoped read so the RLS predicate runs once.
   const reviewsByDeviceId = new Map<string, number>();
-  for (const r of analytics.reviewsPerDevice) {
-    if (r.attributedDeviceId) reviewsByDeviceId.set(r.attributedDeviceId, r._count._all);
-  }
-  const ratingByEstablishmentId = new Map<string, { count: number; avg: number | null }>();
-  for (const r of analytics.ratingsPerEstablishment) {
-    ratingByEstablishmentId.set(r.establishmentId, {
-      count: r._count._all,
-      avg: r._avg.rating !== null ? Number(r._avg.rating) : null,
-    });
-  }
+  for (const d of activeDevices) reviewsByDeviceId.set(d.id, d.reviewCount);
 
-  const totalScans30d = analytics.orgScans30d.length;
-  const reviewsFromQrCount = analytics.reviewsFromQr30d.length;
-  const scansSparkline = bucketIntoSparkline(
-    analytics.orgScans30d.map((s) => s.scannedAt),
-    30,
-    7,
+  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const selectedScans = await withTenant(orgId, (tx) =>
+    tx.deviceScan.findMany({
+      where: { deviceId: selectedDevice.id, scannedAt: { gte: since30d } },
+      select: { scannedAt: true },
+    }),
   );
-  const reviewsSparkline = bucketIntoSparkline(
-    analytics.reviewsFromQr30d.map((r) => r.postedAt),
-    30,
-    7,
-  );
-  const scansDelta = formatDelta(totalScans30d, analytics.orgScansPrior30d);
-  const reviewsDelta = formatDelta(reviewsFromQrCount, analytics.reviewsFromQrPrior30d);
-  const conversion =
-    totalScans30d > 0
-      ? `${(Math.round((reviewsFromQrCount / totalScans30d) * 1000) / 10).toFixed(1)}% conv.`
-      : "—";
-  const selectedScans = analytics.selectedScans;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
       <PageHeader
-        kicker="QR codes · stands · plaques"
-        title="QR Stands"
-        description="Every prompt that turns a scan into a 5-star review. Generate a free QR yourself in 30 seconds, or activate a stand you bought."
+        kicker="Cards · plaques · stands"
+        title="My Devices"
+        description="Manage and track your connected ReviewBoost devices."
         actions={
           <>
             <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
               <Icon name="ext" size={12} />
               Buy stands
             </a>
-            <Link href="/activate" className="btn">
-              <Icon name="check" size={12} />
-              Redeem code
-            </Link>
-            <Link href="/hardware/new" className="btn btn--pri">
-              <Icon name="plus" size={12} />
+            <Link href="/hardware/new" className="btn">
+              <Icon name="qr" size={12} />
               Generate QR
             </Link>
+            <ConnectDeviceModal establishments={businessOptions} />
           </>
         }
       />
@@ -323,32 +200,13 @@ export default async function QrCodesPage({
         </div>
       )}
 
-      <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>
-        <KpiCard
-          l="Active QRs"
-          v={String(activeDevices.length)}
-          d={`${devices.length - activeDevices.length} pending`}
-        />
-        <KpiCard
-          l="Total scans · 30d"
-          v={String(totalScans30d)}
-          d={scansDelta.label}
-          up={scansDelta.up}
-          spark={scansSparkline.length > 0 ? scansSparkline : undefined}
-        />
-        <KpiCard
-          l="Reviews from QR · 30d"
-          v={String(reviewsFromQrCount)}
-          d={reviewsFromQrCount > 0 ? conversion : reviewsDelta.label}
-          up={reviewsFromQrCount > 0 ? undefined : reviewsDelta.up}
-          spark={reviewsSparkline.length > 0 ? reviewsSparkline : undefined}
-        />
-        <KpiCard
-          l="Last scan"
-          v={lastScanDevice ? relativeTime(lastScanDevice.lastScanAt) : "—"}
-          d={lastScanDevice?.establishment?.name ?? "No scans yet"}
-        />
-      </div>
+      <NextStepBanner isPro={isPro} />
+
+      <SummaryStats
+        totalScans={metrics.totalScans}
+        reviewsFromScans={metrics.reviewsFromScans}
+        conversionRate={formatConversionPct(metrics.reviewsFromScans, metrics.totalScans)}
+      />
 
       <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div className="seg">
@@ -388,62 +246,65 @@ export default async function QrCodesPage({
         </span>
       </div>
 
-      <div className="grid-3" style={{ gap: 16, marginBottom: 22 }}>
-        {activeDevices.slice(0, 5).map((d, i) => {
-          const reviewsForDevice = reviewsByDeviceId.get(d.id) ?? 0;
-          const estRating = d.establishmentId
-            ? ratingByEstablishmentId.get(d.establishmentId)
-            : undefined;
-          return (
-            <DeviceCard
-              key={d.id}
-              deviceId={d.id}
-              code={d.shortSlug}
-              name={titleFromSku(d.productSku)}
-              type={subtitleFromSku(d.productSku)}
-              location={d.establishment?.name ?? "Unassigned"}
-              scans={d.scanCount}
-              reviews={reviewsForDevice}
-              rating={estRating?.avg ?? null}
-              ratingCount={estRating?.count ?? 0}
-              hero={i % 2 === 0 ? "amber" : "dark"}
-            />
-          );
-        })}
-        <Link
-          href="/activate"
+      <div className="col" style={{ gap: 12, marginBottom: 22 }}>
+        {activeDevices.map((d) => (
+          <DeviceCard
+            key={d.id}
+            deviceId={d.id}
+            productImageUrl={d.productImageUrl}
+            productTitle={d.productName ?? titleFromSku(d.productSku)}
+            productSubtitle={subtitleFromSku(d.productSku)}
+            establishmentName={d.establishment?.name ?? null}
+            scans={d.scanCount}
+            reviews={d.reviewCount}
+            shortSlug={d.shortSlug}
+          />
+        ))}
+        <div
+          className="ds-card"
           style={{
-            border: "1.5px dashed var(--line-2)",
-            borderRadius: 12,
-            padding: 22,
-            display: "grid",
-            placeItems: "center",
-            minHeight: 360,
-            color: "var(--rl-muted)",
-            background: "rgba(255,255,255,.4)",
-            textDecoration: "none",
+            border: "1.5px dashed var(--line)",
+            background: "var(--surface-2)",
+            boxShadow: "none",
+            padding: "14px 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+            flexWrap: "wrap",
           }}
         >
-          <div style={{ textAlign: "center" }}>
-            <div
+          <div className="row" style={{ gap: 10 }}>
+            <span
+              aria-hidden
               style={{
-                width: 44,
-                height: 44,
-                borderRadius: 10,
-                background: "var(--surface)",
-                border: "1px solid var(--line)",
                 display: "grid",
                 placeItems: "center",
-                margin: "0 auto 10px",
+                width: 34,
+                height: 34,
+                borderRadius: 9,
+                background: "var(--surface)",
+                border: "1px solid var(--line)",
                 color: "var(--pri)",
               }}
             >
-              <Icon name="plus" size={20} />
+              <Icon name="plus" size={16} />
+            </span>
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
+                Add another device
+              </div>
+              <div className="dim" style={{ fontSize: 11.5 }}>
+                Enter the code from a new card, plaque, or stand.
+              </div>
             </div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>Add QR code</div>
-            <div style={{ fontSize: 11.5, marginTop: 2 }}>Redeem activation code</div>
           </div>
-        </Link>
+          <ConnectDeviceModal
+            establishments={businessOptions}
+            triggerClassName="btn"
+            triggerLabel="Add Device"
+          />
+        </div>
       </div>
 
       <div
@@ -471,13 +332,20 @@ export default async function QrCodesPage({
   );
 }
 
-function EmptyState({ recentActivation }: { recentActivation?: string }) {
+function EmptyState({
+  establishments,
+  recentActivation,
+}: {
+  establishments: Array<{ id: string; name: string }>;
+  recentActivation?: string;
+}) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
       <PageHeader
-        kicker="Get your first 5-star review"
-        title="QR Stands"
-        description="Every prompt that turns a scan into a Google review. Free to generate, no hardware required."
+        kicker="Cards · plaques · stands"
+        title="My Devices"
+        description="Manage and track your connected ReviewBoost devices."
+        actions={<ConnectDeviceModal establishments={establishments} />}
       />
       {recentActivation && (
         <div
@@ -489,334 +357,64 @@ function EmptyState({ recentActivation }: { recentActivation?: string }) {
         </div>
       )}
 
-      {/* Two cards: generate (primary) vs activate (secondary) */}
+      {/* Dashed connect-a-device empty card with the brand illustration. */}
       <div
+        className="ds-card"
         style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-          gap: 16,
-          maxWidth: 920,
+          border: "2px dashed var(--line)",
+          boxShadow: "none",
+          background: "var(--surface-2)",
+          padding: "44px 28px",
+          textAlign: "center",
+          maxWidth: 640,
           marginInline: "auto",
         }}
       >
-        <div className="ds-card" style={{ padding: 28, position: "relative", overflow: "hidden" }}>
-          <span
-            className="chip chip--pri"
-            style={{ position: "absolute", top: 14, right: 14, fontSize: 10 }}
-          >
-            FREE · INSTANT
-          </span>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "var(--pri-50)",
-              color: "var(--pri)",
-              display: "grid",
-              placeItems: "center",
-              marginBottom: 14,
-            }}
-          >
-            <Icon name="qr" size={22} />
-          </div>
-          <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: "-0.015em" }}>
-            Generate a QR yourself
-          </h3>
-          <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
-            Paste your Google review link, pick a business — get a downloadable QR in seconds. Print
-            it, embed it, share it. No hardware purchase needed.
-          </p>
-          <Link href="/hardware/new" className="btn btn--pri btn--lg" style={{ marginTop: 16 }}>
-            <Icon name="plus" size={14} />
-            Generate QR code
+        {/* biome-ignore lint/performance/noImgElement: static brand SVG illustration */}
+        <img
+          src="/assets/repulabs/illustrations/qr-stands-empty.svg"
+          alt=""
+          width={180}
+          height={130}
+          style={{ margin: "0 auto 18px", display: "block", maxWidth: "60%", height: "auto" }}
+        />
+        <h3 style={{ fontSize: 19, fontWeight: 600, margin: 0, letterSpacing: "-0.015em" }}>
+          Connect your first device
+        </h3>
+        <p
+          className="dim"
+          style={{ fontSize: 13.5, marginTop: 8, lineHeight: 1.6, maxWidth: 420, marginInline: "auto" }}
+        >
+          Got a ReviewBoost card, plaque, or stand? Enter the 5-character code from your package and
+          we&rsquo;ll route every scan to your Google review page.
+        </p>
+        <div
+          className="row"
+          style={{ gap: 8, marginTop: 18, justifyContent: "center", flexWrap: "wrap" }}
+        >
+          <ConnectDeviceModal
+            establishments={establishments}
+            triggerClassName="btn btn--pri btn--lg"
+            triggerLabel="Connect a Device"
+          />
+          <Link href="/hardware/new" className="btn btn--lg">
+            <Icon name="qr" size={14} />
+            Generate a QR instead
           </Link>
         </div>
-
-        <div className="ds-card" style={{ padding: 28 }}>
-          <div
-            style={{
-              width: 48,
-              height: 48,
-              borderRadius: 12,
-              background: "var(--surface-3)",
-              color: "var(--ink-2)",
-              display: "grid",
-              placeItems: "center",
-              marginBottom: 14,
-            }}
+        <div className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
+          Don&rsquo;t have a device yet?{" "}
+          <a
+            href={SHOPIFY_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "var(--pri)", textDecoration: "none" }}
           >
-            <Icon name="box" size={22} />
-          </div>
-          <h3 style={{ fontSize: 17, fontWeight: 600, margin: 0, letterSpacing: "-0.015em" }}>
-            Or activate a stand
-          </h3>
-          <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
-            Bought a Counter Card, Wall Plaque, or Stand from our Shopify store? Enter the
-            5-character code from your package and we'll bind it to a business.
-          </p>
-          <div className="row" style={{ gap: 8, marginTop: 16, flexWrap: "wrap" }}>
-            <Link href="/activate" className="btn">
-              Redeem code
-            </Link>
-            <a
-              href={SHOPIFY_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn--ghost dim"
-            >
-              <Icon name="ext" size={12} />
-              Shop stands
-            </a>
-          </div>
+            Shop cards &amp; stands →
+          </a>
         </div>
       </div>
     </AppShellServer>
-  );
-}
-
-function KpiCard({
-  l,
-  v,
-  em,
-  d,
-  up,
-  spark,
-}: {
-  l: string;
-  v: string;
-  em?: string;
-  d: string;
-  /** true = up arrow + green; false = down arrow + red; undefined = neutral, no arrow */
-  up?: boolean;
-  spark?: number[];
-}) {
-  const deltaClass =
-    up === true ? "stat__delta up" : up === false ? "stat__delta down" : "stat__delta";
-  return (
-    <div className="ds-card">
-      <div className="stat">
-        <div className="stat__label">{l}</div>
-        <div
-          className="row"
-          style={{ alignItems: "flex-end", gap: 8, justifyContent: "space-between" }}
-        >
-          <span className="stat__value">
-            {v}
-            {em && <em> {em}</em>}
-          </span>
-          {spark && spark.length > 0 && <Sparkline points={spark} width={68} height={26} />}
-        </div>
-        <div className={deltaClass}>
-          {up === true && <Icon name="arrowU" size={10} stroke={2.4} />}
-          {up === false && <Icon name="arrowD" size={10} stroke={2.4} />}
-          {d}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function DeviceCard({
-  deviceId,
-  code,
-  name,
-  type,
-  location,
-  scans,
-  reviews,
-  rating,
-  ratingCount,
-  hero,
-}: {
-  deviceId: string;
-  code: string;
-  name: string;
-  type: string;
-  location: string;
-  scans: number;
-  reviews: number;
-  /** Average rating from the establishment's reviews, 1-5; null when none yet. */
-  rating: number | null;
-  /** Total review count for the establishment. */
-  ratingCount: number;
-  hero: "amber" | "dark";
-}) {
-  const grad =
-    hero === "dark"
-      ? "linear-gradient(155deg, #232734 0%, #0E0F14 100%)"
-      : "linear-gradient(155deg, #EEF0FF 0%, #DEE0FF 100%)";
-  const textColor = hero === "dark" ? "#fff" : "var(--ink)";
-  const conv = scans > 0 ? `${Math.round((reviews / scans) * 100)}%` : "—";
-  const ratingDisplay = rating !== null ? rating.toFixed(1) : null;
-  const starsValue = rating !== null ? Math.round(rating) : 0;
-  return (
-    <div className="ds-card" style={{ overflow: "hidden", padding: 0 }}>
-      <div
-        style={{
-          padding: 22,
-          background: grad,
-          color: textColor,
-          position: "relative",
-          minHeight: 200,
-        }}
-      >
-        <div
-          style={{
-            background: "#fff",
-            color: "var(--ink)",
-            borderRadius: 8,
-            padding: "12px 14px",
-            display: "flex",
-            alignItems: "center",
-            gap: 12,
-            boxShadow: "0 8px 24px rgba(0,0,0,.18), 0 0 0 1px rgba(0,0,0,.05)",
-            transform: "rotate(-2deg)",
-            width: "92%",
-            marginTop: 4,
-          }}
-        >
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              className="mono"
-              style={{
-                fontSize: 8.5,
-                letterSpacing: ".12em",
-                textTransform: "uppercase",
-                color: "var(--rl-muted)",
-              }}
-            >
-              Scan to leave a review
-            </div>
-            <div
-              style={{
-                fontSize: 13,
-                fontWeight: 600,
-                marginTop: 2,
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {location}
-            </div>
-            <div className="row" style={{ gap: 2, marginTop: 2 }}>
-              {ratingDisplay !== null ? (
-                <>
-                  <Stars value={starsValue} size={9} />
-                  <span style={{ fontSize: 9.5, color: "var(--rl-muted)", marginLeft: 4 }}>
-                    {ratingDisplay} · {ratingCount}
-                  </span>
-                </>
-              ) : (
-                <span style={{ fontSize: 9.5, color: "var(--rl-muted)" }}>No reviews yet</span>
-              )}
-            </div>
-          </div>
-          <div
-            style={{
-              width: 44,
-              height: 44,
-              background: "#fff",
-              borderRadius: 4,
-              position: "relative",
-            }}
-          >
-            <QrCode value={publicQrUrl(code)} size={44} withLogo={false} />
-          </div>
-        </div>
-        <div
-          className="mono"
-          style={{
-            position: "absolute",
-            bottom: 14,
-            left: 22,
-            fontSize: 9.5,
-            letterSpacing: ".15em",
-            textTransform: "uppercase",
-            opacity: 0.65,
-          }}
-        >
-          CODE · {code}
-        </div>
-        <span
-          className="chip"
-          style={{
-            position: "absolute",
-            top: 14,
-            right: 14,
-            background: "rgba(255,255,255,.85)",
-            color: "var(--ink)",
-            backdropFilter: "blur(6px)",
-          }}
-        >
-          <span className="live" />
-          Active
-        </span>
-      </div>
-
-      <div style={{ padding: 16 }}>
-        <h3 style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{name}</h3>
-        <div className="dim" style={{ fontSize: 11.5, marginTop: 2 }}>
-          {type}
-        </div>
-        <div className="dim" style={{ fontSize: 11.5, marginTop: 2 }}>
-          <Icon
-            name="pin"
-            size={10}
-            style={{ display: "inline", verticalAlign: -1, marginRight: 3 }}
-          />
-          {location}
-        </div>
-
-        <div className="grid-3" style={{ marginTop: 14, gap: 6 }}>
-          <Mini l="SCANS" v={String(scans)} />
-          <Mini l="REVIEWS" v={String(reviews)} />
-          <Mini l="CONV." v={conv} />
-        </div>
-
-        <div
-          className="row"
-          style={{ marginTop: 14, paddingTop: 12, borderTop: "1px solid var(--line)", gap: 6 }}
-        >
-          {/* Get QR + Analytics: select this device in the panels below via ?selected= */}
-          <Link
-            href={`/hardware?selected=${deviceId}#qr-panel`}
-            className="btn btn--xs"
-            style={{ textDecoration: "none" }}
-          >
-            <Icon name="qr" size={10} />
-            Get QR
-          </Link>
-          <Link
-            href={`/hardware?selected=${deviceId}#qr-panel`}
-            className="btn btn--xs"
-            style={{ textDecoration: "none" }}
-          >
-            <Icon name="bars" size={10} />
-            Analytics
-          </Link>
-          {/* Edit: opens the edit page with redirect-URL form */}
-          <Link
-            href={`/hardware/edit/${deviceId}`}
-            className="btn btn--xs btn--ghost"
-            aria-label="Edit"
-            style={{ textDecoration: "none" }}
-          >
-            <Icon name="edit" size={10} />
-          </Link>
-          {/* Delete: edit page has the delete form (soft delete with audit) */}
-          <Link
-            href={`/hardware/edit/${deviceId}#delete`}
-            className="btn btn--xs btn--ghost"
-            aria-label="Delete"
-            style={{ marginLeft: "auto", color: "var(--bad)", textDecoration: "none" }}
-          >
-            <Icon name="trash" size={10} />
-          </Link>
-        </div>
-      </div>
-    </div>
   );
 }
 
@@ -1083,15 +681,15 @@ function TrashView({
   justRestored?: string;
 }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "QR Stands", "Trash"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Trash"]}>
       <PageHeader
-        kicker="QR stands · trash"
-        title="Restore a deleted QR"
-        description="Soft-deleted QRs live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL — no need to re-enter anything."
+        kicker="My devices · trash"
+        title="Restore a deleted device"
+        description="Soft-deleted devices live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL — no need to re-enter anything."
         actions={
           <Link href="/hardware" className="btn">
             <Icon name="chevL" size={12} />
-            Back to active QRs
+            Back to my devices
           </Link>
         }
       />

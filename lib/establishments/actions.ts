@@ -211,6 +211,61 @@ export async function deleteEstablishment(id: string) {
   redirect("/establishments");
 }
 
+// UUID v1–v5 guard, same shape used on the detail page route.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+/**
+ * Disconnect the active Google Business Profile connection for an
+ * establishment. Soft-revoke only (`status: "revoked"`) — mirrors the dedupe
+ * path already in the OAuth callback. We never hard-delete: the
+ * envelope-encrypted tokens stay for audit/rotation, and reconnect re-runs the
+ * existing OAuth flow which revokes-then-creates.
+ *
+ * Safe by construction: the `updateMany` is both org-scoped (explicit
+ * `organizationId` in the where, defense-in-depth) AND runs inside
+ * `withTenant` (RLS). A foreign/garbage `establishmentId` simply updates 0
+ * rows and never throws or leaks.
+ */
+export async function disconnectGoogle(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireOrg();
+
+  const establishmentId = fd(form, "establishmentId");
+  // Bail quietly on a missing/malformed id — no throw, no leak.
+  if (!establishmentId || !UUID_RE.test(establishmentId)) {
+    revalidatePath("/establishments");
+    return;
+  }
+
+  await withTenant(orgId, async (tx) => {
+    const result = await tx.connection.updateMany({
+      where: {
+        organizationId: orgId,
+        establishmentId,
+        provider: "google_business",
+        status: "active",
+      },
+      data: { status: "revoked" },
+    });
+    // Only audit-log when something actually changed.
+    if (result.count > 0) {
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "connection.disconnected",
+          resourceType: "connection",
+          resourceId: establishmentId,
+          afterData: { provider: "google_business", establishmentId, revoked: result.count },
+        },
+      });
+    }
+  });
+
+  revalidatePath(`/establishments/${establishmentId}`);
+  revalidatePath("/establishments");
+}
+
 export async function setGooglePlaceId(establishmentId: string, placeId: string): Promise<void> {
   const { orgId, userId } = await requireOrg();
   if (!/^[a-zA-Z0-9_-]{1,200}$/.test(placeId)) {

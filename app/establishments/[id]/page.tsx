@@ -10,6 +10,7 @@ import { deleteEstablishment, setGooglePlaceId } from "@/lib/establishments/acti
 import { getEstablishment } from "@/lib/establishments/queries";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EstablishmentMenu } from "../_components/establishment-menu";
 
 /**
  * Establishment detail — repulabs v2 design.
@@ -100,7 +101,7 @@ export default async function EstablishmentDetailPage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "Listings", establishment.name]}
+      crumbs={["Workspace", "Establishments", establishment.name]}
     >
       <PageHeader
         kicker={
@@ -111,23 +112,19 @@ export default async function EstablishmentDetailPage({
           establishment.category ?? "Update category to help the AI personalize replies."
         }
         actions={
-          <>
-            <Link href="/establishments" className="btn">
-              <Icon name="chevL" size={12} />
-              All listings
-            </Link>
-            {establishment.googlePlaceId && (
-              <a
-                href={`https://www.google.com/maps/place/?q=place_id:${establishment.googlePlaceId}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn"
-              >
-                <Icon name="ext" size={12} />
-                Open Google card
-              </a>
-            )}
-          </>
+          // "Go Back"/"All listings" removed per spec — the breadcrumb already
+          // provides back-navigation.
+          establishment.googlePlaceId ? (
+            <a
+              href={`https://www.google.com/maps/place/?q=place_id:${establishment.googlePlaceId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn"
+            >
+              <Icon name="ext" size={12} />
+              Open Google card
+            </a>
+          ) : undefined
         }
       />
 
@@ -333,10 +330,18 @@ export default async function EstablishmentDetailPage({
                 </div>
               </div>
               {googleConn ? (
-                <span className="chip chip--ok">
-                  <Icon name="checkCircle" size={9} stroke={2.4} />
-                  Connected
-                </span>
+                <div className="row" style={{ gap: 8 }}>
+                  <span className="chip chip--ok">
+                    <Icon name="checkCircle" size={9} stroke={2.4} />
+                    Connected
+                  </span>
+                  {/* Disconnect lives behind the "…" menu + confirmation modal
+                      — never a bare red button (spec acceptance). */}
+                  <EstablishmentMenu
+                    establishmentId={establishment.id}
+                    googlePlaceId={establishment.googlePlaceId}
+                  />
+                </div>
               ) : (
                 <span className="chip chip--warn">Not connected</span>
               )}

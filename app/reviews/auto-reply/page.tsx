@@ -5,6 +5,7 @@ import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { deleteAutoReplyRule, toggleAutoReplyRule } from "@/lib/auto-reply/actions";
 import { listAutoReplyRules } from "@/lib/auto-reply/queries";
+import { MANAGED_5STAR_RULE_NAME } from "@/lib/auto-reply/managed-rule";
 import { getReviewSourceMeta } from "@/lib/reviews/source-meta";
 import Link from "next/link";
 import { ConfirmDeleteRuleButton } from "./confirm-delete-button";
@@ -28,7 +29,12 @@ export const dynamic = "force-dynamic";
 
 export default async function AutoReplyRulesPage() {
   const { orgId } = await getOrgContext();
-  const rules = await listAutoReplyRules(orgId);
+  const allRules = await listAutoReplyRules(orgId);
+  // The managed 5★ rule is driven exclusively by the "Auto-Reply to 5-Star
+  // Reviews" toggle on /reviews. Hide it here so a host can't half-edit it
+  // into an inconsistent state; surface a pointer to the toggle instead.
+  const managed = allRules.find((r) => r.name === MANAGED_5STAR_RULE_NAME && !r.establishmentId);
+  const rules = allRules.filter((r) => r.name !== MANAGED_5STAR_RULE_NAME);
   const orgWideCount = rules.filter((r) => !r.establishmentId).length;
   const listingCount = rules.filter((r) => r.establishmentId).length;
 
@@ -45,6 +51,30 @@ export default async function AutoReplyRulesPage() {
           </Link>
         }
       />
+
+      {managed?.enabled && (
+        <div
+          className="ds-card"
+          style={{
+            padding: 14,
+            marginBottom: 12,
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            background: "var(--pri-50, #eff6ff)",
+            border: "1px solid var(--pri-100, #dbeafe)",
+          }}
+        >
+          <Icon name="sparkle" size={16} style={{ color: "var(--pri, #2563eb)" }} />
+          <div style={{ flex: 1, fontSize: 12.5, color: "var(--ink-2, #475569)" }}>
+            <strong>5★ Auto-Reply is on.</strong> Clean 5★ reviews get an AI reply on a randomized
+            2–4h delay. Managed from the toggle on the reviews page.
+          </div>
+          <Link href="/reviews" className="btn" style={{ fontSize: 11.5 }}>
+            Manage
+          </Link>
+        </div>
+      )}
 
       {rules.length === 0 ? (
         <EmptyState />
@@ -292,8 +322,8 @@ function HowItWorks() {
         </li>
         <li>
           <strong>Draft for approval</strong> rules generate a draft and leave it under{" "}
-          <Link href="/reviews?reply=no" style={{ color: "var(--pri)" }}>
-            Reviews → Draft pending
+          <Link href="/reviews?status=draft_ready" style={{ color: "var(--pri)" }}>
+            Reviews → AI Draft Ready
           </Link>{" "}
           for you to approve.
         </li>
