@@ -87,7 +87,9 @@ export type IconName =
   | "ext"
   | "copy"
   | "minus"
-  | "triangleR";
+  | "triangleR"
+  | "round"
+  | "presentation";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   home: (
@@ -459,6 +461,16 @@ const PATHS: Record<IconName, React.ReactNode> = {
   ),
   minus: <path d="M5 12h14" />,
   triangleR: <path d="m8 5 11 7-11 7V5Z" fill="currentColor" />,
+  round: <circle cx="12" cy="12" r="9" />,
+  presentation: (
+    <>
+      <path d="M3 4h18" />
+      <path d="M4 4v9h16V4" />
+      <path d="M12 13v4" />
+      <path d="m9 21 3-3 3 3" />
+      <path d="M8.5 9.5 11 7l2 2 2.5-3" />
+    </>
+  ),
 };
 
 export function Icon({
