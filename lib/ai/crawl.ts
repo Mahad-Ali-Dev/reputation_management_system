@@ -40,6 +40,8 @@ export type CrawlResult = {
   finalUrl: string;
   contentType: string;
   bytes: number;
+  /** Raw HTML (empty for text/plain). Used by crawlSite to discover links. */
+  raw: string;
   text: string; // plain text + markdown-style headers
   fetchedAt: Date;
 };
@@ -296,7 +298,137 @@ export async function crawlUrl(
       finalUrl: currentUrl.toString(),
       contentType,
       bytes: total,
+      raw: contentType.includes("text/plain") ? "" : raw,
       text,
+      fetchedAt: new Date(),
+    },
+  };
+}
+
+/**
+ * Extract same-origin links from raw HTML. Regex over href= is acceptable for
+ * v1 (mirrors htmlToText's regex approach). Returns normalized absolute URLs on
+ * the same origin as `base`, deduped, capped.
+ */
+export function extractSameOriginLinks(html: string, base: URL, cap = 50): string[] {
+  const out = new Set<string>();
+  const hrefRe = /href\s*=\s*["']([^"']+)["']/gi;
+  let m: RegExpExecArray | null;
+  while ((m = hrefRe.exec(html)) !== null) {
+    const rawHref = m[1];
+    if (!rawHref) continue;
+    const href = rawHref.trim();
+    if (!href || href.startsWith("#") || href.startsWith("mailto:") || href.startsWith("tel:")) continue;
+    if (/^javascript:/i.test(href) || /^data:/i.test(href)) continue;
+    let abs: URL;
+    try {
+      abs = new URL(href, base);
+    } catch {
+      continue;
+    }
+    if (abs.protocol !== "https:" && abs.protocol !== "http:") continue;
+    // Same-origin only (protocol + host + port).
+    if (abs.origin !== base.origin) continue;
+    // Skip obvious non-page assets.
+    if (/\.(png|jpe?g|gif|svg|webp|ico|css|js|pdf|zip|mp4|woff2?|ttf)$/i.test(abs.pathname)) continue;
+    abs.hash = "";
+    out.add(abs.toString());
+    if (out.size >= cap) break;
+  }
+  return [...out];
+}
+
+export type SiteCrawlResult = {
+  rootUrl: string;
+  pagesCrawled: number;
+  text: string; // concatenated page texts with `\n\n# <path>\n` separators
+  fetchedAt: Date;
+};
+
+/**
+ * Depth-N, same-origin BFS crawl (ENHANCE). Reuses the single-page `crawlUrl`
+ * (and ALL its SSRF / robots / size / redirect guards) per hop. Hard caps on
+ * depth and pages bound cost + politeness; cross-origin and already-visited
+ * links are skipped.
+ *
+ * Returns one concatenated corpus suitable for `extractBusinessProfile` /
+ * `ingestDocument`. Returns an error only if the ROOT page can't be crawled;
+ * per-child crawl failures are skipped silently (best-effort breadth).
+ */
+export async function crawlSite(
+  rootUrl: string,
+  opts?: { maxDepth?: number; maxPages?: number },
+): Promise<{ result: SiteCrawlResult } | { error: CrawlError; details?: string }> {
+  const maxDepth = Math.max(0, Math.min(opts?.maxDepth ?? 3, 4));
+  const maxPages = Math.max(1, Math.min(opts?.maxPages ?? 20, 30));
+
+  let baseOrigin: URL;
+  try {
+    baseOrigin = new URL(rootUrl);
+  } catch {
+    return { error: "invalid_url" };
+  }
+
+  const visited = new Set<string>();
+  const queue: Array<{ url: string; depth: number }> = [{ url: rootUrl, depth: 0 }];
+  const parts: string[] = [];
+  let pagesCrawled = 0;
+  let rootError: { error: CrawlError; details?: string } | null = null;
+
+  while (queue.length > 0 && pagesCrawled < maxPages) {
+    const next = queue.shift();
+    if (!next) break;
+    const normalized = (() => {
+      try {
+        const u = new URL(next.url);
+        u.hash = "";
+        return u.toString();
+      } catch {
+        return next.url;
+      }
+    })();
+    if (visited.has(normalized)) continue;
+    visited.add(normalized);
+
+    const crawled = await crawlUrl(next.url);
+    if ("error" in crawled) {
+      // The root page must succeed; children are best-effort.
+      if (pagesCrawled === 0 && parts.length === 0) {
+        rootError = { error: crawled.error, details: crawled.details };
+      }
+      continue;
+    }
+
+    const { result } = crawled;
+    pagesCrawled += 1;
+    let path = "/";
+    try {
+      path = new URL(result.finalUrl).pathname || "/";
+    } catch {
+      /* keep default */
+    }
+    parts.push(`# ${path}\n${result.text}`);
+
+    // Enqueue same-origin children up to maxDepth.
+    if (next.depth < maxDepth && result.raw) {
+      const links = extractSameOriginLinks(result.raw, baseOrigin, 50);
+      for (const link of links) {
+        if (!visited.has(link) && queue.length + pagesCrawled < maxPages * 2) {
+          queue.push({ url: link, depth: next.depth + 1 });
+        }
+      }
+    }
+  }
+
+  if (pagesCrawled === 0) {
+    return rootError ?? { error: "fetch_failed", details: "no pages crawled" };
+  }
+
+  return {
+    result: {
+      rootUrl,
+      pagesCrawled,
+      text: parts.join("\n\n"),
       fetchedAt: new Date(),
     },
   };

@@ -10,9 +10,8 @@ import { getHmacSecret } from "@/lib/secrets";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { defaultReviewRequestHtml, sendReviewRequestEmail } from "./email";
+import { dispatchReviewRequest } from "./dispatch";
 import { hasSmsConsent, isUnsubscribed, recordSmsConsent } from "./suppression";
-import { sendSms } from "./twilio";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
@@ -27,6 +26,11 @@ const Body = z.object({
   scheduleHours: z.coerce.number().int().min(0).max(720).optional().default(0),
   consentAttested: z.coerce.boolean().optional(), // required for SMS
   customBody: z.string().max(4000).optional(), // override default template body
+  // Optional OutreachTemplate to hydrate body/subject/logo from at send time.
+  // NOTE (FK correctness): this is an OutreachTemplate.id and is passed through
+  // to dispatch as `outreachTemplateId` — it is NEVER written to
+  // ReviewRequest.templateId (which is a FK → ReviewRequestTemplate).
+  outreachTemplateId: z.string().uuid().optional(),
 });
 
 async function requireOrg() {
@@ -55,6 +59,7 @@ export async function createReviewRequest(form: FormData): Promise<void> {
     scheduleHours: form.get("scheduleHours") ?? 0,
     consentAttested: form.get("consentAttested") === "on",
     customBody: (form.get("customBody") as string) || undefined,
+    outreachTemplateId: (form.get("outreachTemplateId") as string) || undefined,
   });
   if (!parsed.success) {
     throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
@@ -151,12 +156,24 @@ export async function createReviewRequest(form: FormData): Promise<void> {
 
   // Send now if no delay
   if (data.scheduleHours === 0) {
-    await dispatchReviewRequest(rr.id, orgId, {
-      reviewLink: effectiveLink,
-      unsubscribeUrl,
-      businessName: estab.name,
-      customBody: data.customBody,
-    });
+    // Race-safe claim (queued → sending) BEFORE dispatching, identical to the
+    // dispatch cron. Without this, a cron tick firing between row creation and
+    // the inline send could claim the same queued row and double-send.
+    const claimed = await withTenant(orgId, (tx) =>
+      tx.reviewRequest.updateMany({
+        where: { id: rr.id, status: "queued" },
+        data: { status: "sending" },
+      }),
+    );
+    if (claimed.count > 0) {
+      await dispatchReviewRequest(rr.id, orgId, {
+        reviewLink: effectiveLink,
+        unsubscribeUrl,
+        businessName: estab.name,
+        customBody: data.customBody,
+        outreachTemplateId: data.outreachTemplateId,
+      });
+    }
   } else {
     logger.info(
       { orgId, reviewRequestId: rr.id, scheduledFor, event: "review_request.scheduled" },
@@ -167,82 +184,42 @@ export async function createReviewRequest(form: FormData): Promise<void> {
   revalidatePath("/outreach");
 }
 
-async function dispatchReviewRequest(
-  reviewRequestId: string,
-  orgId: string,
-  args: { reviewLink: string; unsubscribeUrl: string; businessName: string; customBody?: string },
-): Promise<void> {
+/**
+ * Server action: re-queue an already-sent (or failed/bounced) review request so
+ * the dispatch cron sends it again. Used by the Sent-History "Resend" button.
+ *
+ * We re-queue the EXISTING row (`status:"queued"`, `scheduledFor:now`) rather than
+ * cloning it, so history stays a single stream. The cron's race-safe claim then
+ * picks it up. Suppression is re-checked at send time only implicitly — so we also
+ * hard-block here if the recipient has since unsubscribed.
+ */
+export async function resendReviewRequest(form: FormData): Promise<void> {
+  const { orgId } = await requireOrg();
+  await assertEntitled(orgId);
+  const id = z.string().uuid().parse(form.get("id"));
+
   const rr = await withTenant(orgId, (tx) =>
-    tx.reviewRequest.findUnique({ where: { id: reviewRequestId } }),
+    tx.reviewRequest.findUnique({
+      where: { id },
+      select: { id: true, channel: true, recipient: true },
+    }),
   );
   if (!rr) throw new Error("review_request_not_found");
 
-  // Substitute placeholders in custom body
-  const renderCustom = (s: string) =>
-    s
-      .replaceAll("{{customerName}}", rr.recipientName ?? "there")
-      .replaceAll("{{businessName}}", args.businessName)
-      .replaceAll("{{reviewLink}}", args.reviewLink);
-
-  if (rr.channel === "sms") {
-    const body = args.customBody
-      ? renderCustom(args.customBody)
-      : `Hi${rr.recipientName ? ` ${rr.recipientName}` : ""}, thanks for choosing ${args.businessName}! We'd love your honest feedback: ${args.reviewLink}`;
-    const result = await sendSms({ to: rr.recipient, body, isFirstMessage: true });
-    await withTenant(orgId, (tx) =>
-      result.ok
-        ? tx.reviewRequest.update({
-            where: { id: rr.id },
-            data: { status: "sent", sentAt: new Date(), providerMessageId: result.messageSid },
-          })
-        : tx.reviewRequest.update({
-            where: { id: rr.id },
-            data: { status: "failed", error: result.error },
-          }),
-    );
-    return;
+  const channel = rr.channel === "sms" ? "sms" : "email";
+  if (await isUnsubscribed({ channel, recipient: rr.recipient, organizationId: orgId })) {
+    throw new Error(`This recipient has unsubscribed from ${channel}`);
   }
 
-  if (rr.channel === "email") {
-    let html: string;
-    let text: string;
-    if (args.customBody) {
-      text = renderCustom(args.customBody) + `\n\nUnsubscribe: ${args.unsubscribeUrl}`;
-      const escaped = renderCustom(args.customBody)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/\n/g, "<br>");
-      html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;"><div style="color:#0f172a;font-size:14px;line-height:1.6;">${escaped}</div><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:12px;margin:0;">Don't want these? <a href="${args.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a></p></div></body></html>`;
-    } else {
-      const generated = defaultReviewRequestHtml({
-        reviewerName: rr.recipientName,
-        businessName: args.businessName,
-        reviewLink: args.reviewLink,
-        unsubscribeUrl: args.unsubscribeUrl,
-      });
-      html = generated.html;
-      text = generated.text;
-    }
-    const result = await sendReviewRequestEmail({
-      to: rr.recipient,
-      subject: `How was your experience at ${args.businessName}?`,
-      bodyText: text,
-      bodyHtml: html,
-      unsubscribeUrl: args.unsubscribeUrl,
-    });
-    await withTenant(orgId, (tx) =>
-      result.ok
-        ? tx.reviewRequest.update({
-            where: { id: rr.id },
-            data: { status: "sent", sentAt: new Date(), providerMessageId: result.messageId },
-          })
-        : tx.reviewRequest.update({
-            where: { id: rr.id },
-            data: { status: "failed", error: result.error },
-          }),
-    );
-  }
+  await withTenant(orgId, (tx) =>
+    tx.reviewRequest.update({
+      where: { id },
+      data: { status: "queued", scheduledFor: new Date(), error: null },
+    }),
+  );
+
+  logger.info({ orgId, reviewRequestId: id, event: "review_request.resend_queued" });
+  revalidatePath("/outreach");
 }
 
 /**

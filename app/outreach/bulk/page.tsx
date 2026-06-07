@@ -26,7 +26,7 @@ export default async function BulkOutreachPage() {
       <PageHeader
         title="Bulk Send"
         description="Upload a CSV of past customers."
-        breadcrumb={[{"label":"Outreach","href":"/outreach"},{"label":"Bulk"}]}
+        breadcrumb={[{ label: "Review Requests", href: "/outreach" }, { label: "Bulk" }]}
       />
 
         

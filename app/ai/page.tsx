@@ -63,7 +63,6 @@ export default async function AiSettingsPage() {
                   <span className="font-medium">Title</span>
                   <input
                     name="title"
-                    required
                     placeholder="Business FAQ"
                     className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm"
                   />
@@ -85,7 +84,6 @@ export default async function AiSettingsPage() {
                 <span className="font-medium">Content (markdown supported)</span>
                 <textarea
                   name="content"
-                  required
                   rows={10}
                   placeholder={`## Hours\nMon-Fri 9am-9pm, Sat 10am-10pm, closed Sundays.\n\n## Location\n123 Main St, Springfield...\n\n## Pricing\nHaircuts from $35...`}
                   className="mt-1 w-full rounded-md border border-input px-3 py-2 font-mono text-xs"
@@ -94,7 +92,22 @@ export default async function AiSettingsPage() {
                   Use ## headings to organize sections — the AI uses them as context. Re-uploading the same title replaces the previous version.
                 </span>
               </label>
-              <Button type="submit">Save & re-index</Button>
+              <div className="rounded-md border border-dashed border-input p-3">
+                <label className="block text-sm">
+                  <span className="font-medium">Or upload a document (.pdf, .txt, .md)</span>
+                  <input
+                    type="file"
+                    name="file"
+                    accept=".pdf,text/plain,.md,application/pdf"
+                    className="mt-1 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
+                  />
+                  <span className="mt-1 block text-xs text-muted-foreground">
+                    PDFs are text-extracted server-side (max 8 MB). Scanned/image-only PDFs won&apos;t
+                    extract — paste the text instead. A file takes priority over pasted content.
+                  </span>
+                </label>
+              </div>
+              <Button type="submit">Upload Document</Button>
             </form>
 
             <hr className="my-4" />
@@ -267,7 +280,7 @@ export default async function AiSettingsPage() {
               Test page renders the widget on a blank page so you can interact with it.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             {widgets.length === 0 ? (
               <p className="text-sm text-muted-foreground">Generate a key above first.</p>
             ) : (
@@ -277,6 +290,12 @@ export default async function AiSettingsPage() {
                 </Link>
               </Button>
             )}
+            <p className="text-xs text-muted-foreground">
+              Prefer an in-app tester?{" "}
+              <Link href="/ai/training#test" className="text-primary hover:underline">
+                Open the Test AI tab →
+              </Link>
+            </p>
           </CardContent>
         </Card>
       </div>

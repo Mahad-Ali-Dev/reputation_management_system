@@ -32,6 +32,22 @@
     {
       "path": "/api/cron/daily-briefing",
       "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/ai-kb-refresh",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/dispatch-review-requests",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/dispute-status",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-survey-insights",
+      "schedule": "0 4 * * 0"
     }
   ]
 }

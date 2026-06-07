@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { anthropic, MODELS, PRICING } from "./client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { estimateReplyConfidence, recordConfidence } from "./confidence";
 
 /**
  * Generate an AI reply to a Google review.
@@ -117,6 +118,12 @@ export type GeneratedReply = {
   tokensIn: number;
   tokensOut: number;
   costMicros: number;
+  /**
+   * Heuristic confidence (0-1) in the generated reply. This site has no
+   * model-returned score, so we estimate it from hedging signals. Additive +
+   * default-safe — existing callers can ignore it.
+   */
+  confidence: number;
 };
 
 export async function generateReply(args: {
@@ -226,6 +233,27 @@ export async function generateReply(args: {
     "review reply generated",
   );
 
+  // This site returns no model confidence, so estimate it from hedging signals
+  // and route a low score into the per-tenant knowledge-gap queue. Non-blocking
+  // + fail-soft so a gap write can't break reply generation for existing callers.
+  const confidence = estimateReplyConfidence(replyBody);
+  try {
+    await recordConfidence({
+      orgId,
+      purpose,
+      question: review.body ?? "",
+      answer: replyBody,
+      confidence,
+      aiMessageId: stored.id,
+      establishmentId: establishment.id,
+      source: "review_reply",
+    });
+  } catch (err) {
+    logger.warn(
+      { event: "ai.reply.gap_route_failed", error: err instanceof Error ? err.message : String(err) },
+    );
+  }
+
   return {
     body: replyBody,
     model,
@@ -234,5 +262,6 @@ export async function generateReply(args: {
     tokensIn: response.usage.input_tokens,
     tokensOut: response.usage.output_tokens,
     costMicros,
+    confidence,
   };
 }

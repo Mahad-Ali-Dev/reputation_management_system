@@ -93,6 +93,12 @@ export default async function AiTestPage({
               gracefully say it doesn't know and offer to escalate.
             </li>
           </ul>
+          <p className="text-xs">
+            Prefer the in-app tester (with answer ratings that feed your Learning Monitor)?{" "}
+            <Link href="/ai/training#test" className="text-primary hover:underline">
+              Open the Test AI tab →
+            </Link>
+          </p>
         </div>
 
         <div className="rounded-lg border bg-slate-900 text-slate-100 p-4 text-xs font-mono overflow-x-auto">
