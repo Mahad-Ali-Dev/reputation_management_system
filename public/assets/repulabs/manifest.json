@@ -1,0 +1,406 @@
+{
+  "brand": "Repulabs",
+  "icons": [
+    {
+      "name": "home",
+      "path": "/assets/repulabs/icons/home.svg"
+    },
+    {
+      "name": "grid",
+      "path": "/assets/repulabs/icons/grid.svg"
+    },
+    {
+      "name": "building",
+      "path": "/assets/repulabs/icons/building.svg"
+    },
+    {
+      "name": "box",
+      "path": "/assets/repulabs/icons/box.svg"
+    },
+    {
+      "name": "star",
+      "path": "/assets/repulabs/icons/star.svg"
+    },
+    {
+      "name": "send",
+      "path": "/assets/repulabs/icons/send.svg"
+    },
+    {
+      "name": "sparkle",
+      "path": "/assets/repulabs/icons/sparkle.svg"
+    },
+    {
+      "name": "chat",
+      "path": "/assets/repulabs/icons/chat.svg"
+    },
+    {
+      "name": "share",
+      "path": "/assets/repulabs/icons/share.svg"
+    },
+    {
+      "name": "survey",
+      "path": "/assets/repulabs/icons/survey.svg"
+    },
+    {
+      "name": "flag",
+      "path": "/assets/repulabs/icons/flag.svg"
+    },
+    {
+      "name": "brain",
+      "path": "/assets/repulabs/icons/brain.svg"
+    },
+    {
+      "name": "phone",
+      "path": "/assets/repulabs/icons/phone.svg"
+    },
+    {
+      "name": "settings",
+      "path": "/assets/repulabs/icons/settings.svg"
+    },
+    {
+      "name": "plug",
+      "path": "/assets/repulabs/icons/plug.svg"
+    },
+    {
+      "name": "card",
+      "path": "/assets/repulabs/icons/card.svg"
+    },
+    {
+      "name": "lock",
+      "path": "/assets/repulabs/icons/lock.svg"
+    },
+    {
+      "name": "plus",
+      "path": "/assets/repulabs/icons/plus.svg"
+    },
+    {
+      "name": "minus",
+      "path": "/assets/repulabs/icons/minus.svg"
+    },
+    {
+      "name": "chevR",
+      "path": "/assets/repulabs/icons/chevR.svg"
+    },
+    {
+      "name": "chevD",
+      "path": "/assets/repulabs/icons/chevD.svg"
+    },
+    {
+      "name": "chevU",
+      "path": "/assets/repulabs/icons/chevU.svg"
+    },
+    {
+      "name": "chevL",
+      "path": "/assets/repulabs/icons/chevL.svg"
+    },
+    {
+      "name": "arrowR",
+      "path": "/assets/repulabs/icons/arrowR.svg"
+    },
+    {
+      "name": "arrowU",
+      "path": "/assets/repulabs/icons/arrowU.svg"
+    },
+    {
+      "name": "arrowD",
+      "path": "/assets/repulabs/icons/arrowD.svg"
+    },
+    {
+      "name": "arrowUR",
+      "path": "/assets/repulabs/icons/arrowUR.svg"
+    },
+    {
+      "name": "arrowDR",
+      "path": "/assets/repulabs/icons/arrowDR.svg"
+    },
+    {
+      "name": "search",
+      "path": "/assets/repulabs/icons/search.svg"
+    },
+    {
+      "name": "bell",
+      "path": "/assets/repulabs/icons/bell.svg"
+    },
+    {
+      "name": "menu",
+      "path": "/assets/repulabs/icons/menu.svg"
+    },
+    {
+      "name": "filter",
+      "path": "/assets/repulabs/icons/filter.svg"
+    },
+    {
+      "name": "sliders",
+      "path": "/assets/repulabs/icons/sliders.svg"
+    },
+    {
+      "name": "download",
+      "path": "/assets/repulabs/icons/download.svg"
+    },
+    {
+      "name": "upload",
+      "path": "/assets/repulabs/icons/upload.svg"
+    },
+    {
+      "name": "qr",
+      "path": "/assets/repulabs/icons/qr.svg"
+    },
+    {
+      "name": "edit",
+      "path": "/assets/repulabs/icons/edit.svg"
+    },
+    {
+      "name": "trash",
+      "path": "/assets/repulabs/icons/trash.svg"
+    },
+    {
+      "name": "check",
+      "path": "/assets/repulabs/icons/check.svg"
+    },
+    {
+      "name": "checkCircle",
+      "path": "/assets/repulabs/icons/checkCircle.svg"
+    },
+    {
+      "name": "x",
+      "path": "/assets/repulabs/icons/x.svg"
+    },
+    {
+      "name": "xCircle",
+      "path": "/assets/repulabs/icons/xCircle.svg"
+    },
+    {
+      "name": "clock",
+      "path": "/assets/repulabs/icons/clock.svg"
+    },
+    {
+      "name": "cal",
+      "path": "/assets/repulabs/icons/cal.svg"
+    },
+    {
+      "name": "play",
+      "path": "/assets/repulabs/icons/play.svg"
+    },
+    {
+      "name": "pause",
+      "path": "/assets/repulabs/icons/pause.svg"
+    },
+    {
+      "name": "pause2",
+      "path": "/assets/repulabs/icons/pause2.svg"
+    },
+    {
+      "name": "sound",
+      "path": "/assets/repulabs/icons/sound.svg"
+    },
+    {
+      "name": "image",
+      "path": "/assets/repulabs/icons/image.svg"
+    },
+    {
+      "name": "user",
+      "path": "/assets/repulabs/icons/user.svg"
+    },
+    {
+      "name": "users",
+      "path": "/assets/repulabs/icons/users.svg"
+    },
+    {
+      "name": "pin",
+      "path": "/assets/repulabs/icons/pin.svg"
+    },
+    {
+      "name": "eye",
+      "path": "/assets/repulabs/icons/eye.svg"
+    },
+    {
+      "name": "eyeOff",
+      "path": "/assets/repulabs/icons/eyeOff.svg"
+    },
+    {
+      "name": "reply",
+      "path": "/assets/repulabs/icons/reply.svg"
+    },
+    {
+      "name": "bot",
+      "path": "/assets/repulabs/icons/bot.svg"
+    },
+    {
+      "name": "hash",
+      "path": "/assets/repulabs/icons/hash.svg"
+    },
+    {
+      "name": "grip",
+      "path": "/assets/repulabs/icons/grip.svg"
+    },
+    {
+      "name": "bolt",
+      "path": "/assets/repulabs/icons/bolt.svg"
+    },
+    {
+      "name": "target",
+      "path": "/assets/repulabs/icons/target.svg"
+    },
+    {
+      "name": "trend",
+      "path": "/assets/repulabs/icons/trend.svg"
+    },
+    {
+      "name": "pie",
+      "path": "/assets/repulabs/icons/pie.svg"
+    },
+    {
+      "name": "bars",
+      "path": "/assets/repulabs/icons/bars.svg"
+    },
+    {
+      "name": "mail",
+      "path": "/assets/repulabs/icons/mail.svg"
+    },
+    {
+      "name": "smartphone",
+      "path": "/assets/repulabs/icons/smartphone.svg"
+    },
+    {
+      "name": "info",
+      "path": "/assets/repulabs/icons/info.svg"
+    },
+    {
+      "name": "alert",
+      "path": "/assets/repulabs/icons/alert.svg"
+    },
+    {
+      "name": "help",
+      "path": "/assets/repulabs/icons/help.svg"
+    },
+    {
+      "name": "move",
+      "path": "/assets/repulabs/icons/move.svg"
+    },
+    {
+      "name": "refresh",
+      "path": "/assets/repulabs/icons/refresh.svg"
+    },
+    {
+      "name": "archive",
+      "path": "/assets/repulabs/icons/archive.svg"
+    },
+    {
+      "name": "ext",
+      "path": "/assets/repulabs/icons/ext.svg"
+    },
+    {
+      "name": "copy",
+      "path": "/assets/repulabs/icons/copy.svg"
+    },
+    {
+      "name": "triangleR",
+      "path": "/assets/repulabs/icons/triangleR.svg"
+    }
+  ],
+  "skippedBrandIcons": [
+    "google",
+    "fb",
+    "insta",
+    "twitter",
+    "linkedin"
+  ],
+  "illustrations": [
+    {
+      "name": "dashboard-welcome",
+      "path": "/assets/repulabs/illustrations/dashboard-welcome.svg"
+    },
+    {
+      "name": "reviews-empty",
+      "path": "/assets/repulabs/illustrations/reviews-empty.svg"
+    },
+    {
+      "name": "requests-empty",
+      "path": "/assets/repulabs/illustrations/requests-empty.svg"
+    },
+    {
+      "name": "responses-empty",
+      "path": "/assets/repulabs/illustrations/responses-empty.svg"
+    },
+    {
+      "name": "disputes-empty",
+      "path": "/assets/repulabs/illustrations/disputes-empty.svg"
+    },
+    {
+      "name": "surveys-empty",
+      "path": "/assets/repulabs/illustrations/surveys-empty.svg"
+    },
+    {
+      "name": "insights-empty",
+      "path": "/assets/repulabs/illustrations/insights-empty.svg"
+    },
+    {
+      "name": "messages-empty",
+      "path": "/assets/repulabs/illustrations/messages-empty.svg"
+    },
+    {
+      "name": "social-empty",
+      "path": "/assets/repulabs/illustrations/social-empty.svg"
+    },
+    {
+      "name": "ai-assistant",
+      "path": "/assets/repulabs/illustrations/ai-assistant.svg"
+    },
+    {
+      "name": "phone-empty",
+      "path": "/assets/repulabs/illustrations/phone-empty.svg"
+    },
+    {
+      "name": "listings-empty",
+      "path": "/assets/repulabs/illustrations/listings-empty.svg"
+    },
+    {
+      "name": "qr-stands-empty",
+      "path": "/assets/repulabs/illustrations/qr-stands-empty.svg"
+    },
+    {
+      "name": "contacts-empty",
+      "path": "/assets/repulabs/illustrations/contacts-empty.svg"
+    },
+    {
+      "name": "integrations-empty",
+      "path": "/assets/repulabs/illustrations/integrations-empty.svg"
+    },
+    {
+      "name": "billing-empty",
+      "path": "/assets/repulabs/illustrations/billing-empty.svg"
+    },
+    {
+      "name": "settings",
+      "path": "/assets/repulabs/illustrations/settings.svg"
+    },
+    {
+      "name": "success",
+      "path": "/assets/repulabs/illustrations/success.svg"
+    },
+    {
+      "name": "processing",
+      "path": "/assets/repulabs/illustrations/processing.svg"
+    },
+    {
+      "name": "not-found",
+      "path": "/assets/repulabs/illustrations/not-found.svg"
+    },
+    {
+      "name": "error",
+      "path": "/assets/repulabs/illustrations/error.svg"
+    },
+    {
+      "name": "upgrade",
+      "path": "/assets/repulabs/illustrations/upgrade.svg"
+    },
+    {
+      "name": "login-hero",
+      "path": "/assets/repulabs/illustrations/login-hero.svg"
+    },
+    {
+      "name": "onboarding-steps",
+      "path": "/assets/repulabs/illustrations/onboarding-steps.svg"
+    }
+  ]
+}
