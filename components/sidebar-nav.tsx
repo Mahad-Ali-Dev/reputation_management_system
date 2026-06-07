@@ -1,115 +1,61 @@
 "use client";
 
-import { Avatar } from "@/components/shell/avatar";
 import { Icon, type IconName } from "@/components/shell/icon";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 /**
- * Persistent sidebar nav — 244px glass-blur shell per the repulabs v2 design.
+ * Persistent sidebar nav — repulabs v3 (clean redesign).
  *
- * Structure ported from the design handoff (project/repu.jsx NAV), with hrefs
- * mapped to actual app routes. Groups: Workspace, Reputation, Engagement,
- * Intelligence, Settings.
+ * Flat, grouped navigation matching the reference: a single Dashboard link
+ * followed by grouped sections (Reputation, Engage, Grow, Settings). Each item
+ * links straight to its section's main page; sub-navigation lives as in-page
+ * tabs. Active state = blue-tint pill. A "Unlock more growth" upgrade card sits
+ * at the bottom for non-Pro plans.
  *
- * Active state: highlights the link matching the current pathname. Items with
- * children auto-expand when any child route is active.
- *
- * Public API matches the previous component: { onNavigate?, orgName, planLabel }.
+ * Public API unchanged: { onNavigate?, orgName, planLabel }.
  */
 
-type NavSubitem = { href: string; label: string };
-type NavLink = {
-  href: string;
-  label: string;
-  icon: IconName;
-  badge?: string;
-  children?: NavSubitem[];
-};
+type NavLink = { href: string; label: string; icon: IconName; badge?: string };
 type NavGroup = { group: string };
 type NavItem = NavLink | NavGroup;
 
-function isGroup(x: NavItem): x is NavGroup {
-  return "group" in x;
-}
+const isGroup = (x: NavItem): x is NavGroup => "group" in x;
 
 const NAV: NavItem[] = [
-  { group: "Workspace" },
-  { href: "/dashboard", label: "Home", icon: "grid" },
-  { href: "/establishments", label: "Businesses", icon: "building" },
-  { href: "/hardware", label: "QR Stands", icon: "qr" },
+  { href: "/dashboard", label: "Dashboard", icon: "home" },
 
   { group: "Reputation" },
-  {
-    href: "/outreach",
-    label: "Get Reviews",
-    icon: "send",
-    children: [
-      { href: "/outreach/send", label: "One-off send" },
-      { href: "/outreach/bulk", label: "Automations" },
-      { href: "/contacts", label: "Recipients" },
-    ],
-  },
-  {
-    href: "/reviews",
-    label: "Manage Reviews",
-    icon: "star",
-    children: [
-      { href: "/reviews", label: "All reviews" },
-      { href: "/reviews/dispute", label: "Dispute" },
-      { href: "/reviews/replies", label: "Replies" },
-      { href: "/reviews/auto-reply", label: "Auto-reply" },
-    ],
-  },
-  {
-    href: "/surveys",
-    label: "Surveys",
-    icon: "survey",
-    children: [
-      { href: "/surveys", label: "Campaigns" },
-      { href: "/surveys/new", label: "Templates" },
-      { href: "/surveys/coupons", label: "Coupons" },
-    ],
-  },
+  { href: "/reviews", label: "Reviews", icon: "star" },
+  { href: "/outreach", label: "Requests", icon: "send" },
+  { href: "/reviews/auto-reply", label: "Responses", icon: "reply" },
+  { href: "/reviews/dispute", label: "Disputes", icon: "flag" },
+  { href: "/surveys", label: "Surveys", icon: "survey" },
+  { href: "/analytics", label: "Insights", icon: "bars" },
 
-  { group: "Engagement" },
-  {
-    href: "/support",
-    label: "Messages",
-    icon: "chat",
-    children: [
-      { href: "/support/comments", label: "Comments" },
-      { href: "/support/dms", label: "DMs" },
-      { href: "/support/live-chat", label: "Live chat" },
-      { href: "/support/customers", label: "Visitors" },
-      { href: "/support/chat-automation", label: "Automations" },
-      { href: "/support/analytics", label: "Analytics" },
-    ],
-  },
-  {
-    href: "/social/posts",
-    label: "Social",
-    icon: "share",
-    children: [
-      { href: "/social/posts", label: "Create post" },
-      { href: "/social/posts/bulk", label: "Bulk schedule" },
-      { href: "/social/calendar", label: "Calendar" },
-    ],
-  },
-
-  { group: "Intelligence" },
-  { href: "/ai/training", label: "Auto-Replies", icon: "brain" },
+  { group: "Engage" },
+  { href: "/support/comments", label: "Messages", icon: "chat" },
+  { href: "/social/posts", label: "Social Posts", icon: "share" },
+  { href: "/ai/training", label: "AI Assistant", icon: "sparkle" },
   { href: "/phone", label: "Phone AI", icon: "phone", badge: "AI" },
 
+  { group: "Grow" },
+  { href: "/establishments", label: "Listings", icon: "pin" },
+  { href: "/hardware", label: "QR Stands", icon: "qr" },
+  { href: "/contacts", label: "Contacts", icon: "users" },
+
   { group: "Settings" },
-  { href: "/connections", label: "Connections", icon: "plug" },
+  { href: "/connections", label: "Integrations", icon: "plug" },
   { href: "/subscription", label: "Billing", icon: "card" },
-  { href: "/settings/account", label: "Account", icon: "settings" },
+  { href: "/settings/account", label: "Settings", icon: "settings" },
 ];
 
 function pathMatches(pathname: string, href: string): boolean {
+  if (href === "/reviews") {
+    // keep Reviews from swallowing /reviews/auto-reply + /reviews/dispute
+    return pathname === "/reviews" || /^\/reviews\/[^/]+$/.test(pathname);
+  }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
@@ -123,6 +69,7 @@ export function SidebarNav({
   planLabel: string;
 }) {
   const pathname = usePathname();
+  const isPro = /pro|scale|business|enterprise/i.test(planLabel);
 
   return (
     <aside className="sb">
@@ -135,127 +82,67 @@ export function SidebarNav({
         <Image
           src="/favicon.png"
           alt=""
-          width={32}
-          height={32}
+          width={30}
+          height={30}
           priority
-          style={{ borderRadius: 8, objectFit: "contain", flex: "0 0 32px" }}
+          style={{ borderRadius: 8, objectFit: "contain", flex: "0 0 30px" }}
         />
         <div className="sb__brandname">
           repu<span>labs</span>
         </div>
-        <Icon name="chevD" size={12} style={{ marginLeft: "auto", color: "var(--rl-muted)" }} />
       </Link>
 
       <button type="button" className="sb__search" aria-label="Search">
-        <Icon name="search" size={13} />
+        <Icon name="search" size={14} />
         <span>Search…</span>
         <kbd>⌘K</kbd>
       </button>
 
-      <div
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          marginRight: -6,
-          paddingRight: 6,
-        }}
+      <nav
+        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", marginRight: -6, paddingRight: 6 }}
       >
-        {NAV.map((n) => {
-          if (isGroup(n)) {
-            return (
-              <div key={`g-${n.group}`} className="sb__group">
-                {n.group}
-              </div>
-            );
-          }
-          return <SidebarItem key={n.href} item={n} pathname={pathname} onNavigate={onNavigate} />;
-        })}
-      </div>
+        {NAV.map((n) =>
+          isGroup(n) ? (
+            <div key={`g-${n.group}`} className="sb__group">
+              {n.group}
+            </div>
+          ) : (
+            <Link
+              key={n.href}
+              href={n.href}
+              onClick={onNavigate}
+              className={`sb__item${pathMatches(pathname, n.href) ? " is-active" : ""}`}
+            >
+              <Icon name={n.icon} />
+              <span style={{ flex: 1 }}>{n.label}</span>
+              {n.badge && <span className="sb__badge">{n.badge}</span>}
+            </Link>
+          ),
+        )}
+      </nav>
 
       <div className="sb__bottom">
-        <Link href="/settings/account" onClick={onNavigate} className="sb__profile">
-          <Avatar name={orgName || "User"} size={28} tone={5} />
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div
-              style={{
-                fontSize: 12.5,
-                fontWeight: 500,
-                color: "var(--ink)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {orgName}
-            </div>
-            <div style={{ fontSize: 10.5, color: "var(--rl-muted)" }}>{planLabel}</div>
+        {isPro ? (
+          <div className="sb__plan">
+            <span className="sb__planbadge">{planLabel}</span>
+            <span style={{ fontSize: 11.5, color: "var(--rl-muted)" }}>{orgName}</span>
           </div>
-          <Icon name="chevR" size={12} style={{ color: "var(--rl-muted-2)" }} />
-        </Link>
+        ) : (
+          <div className="sb__upsell">
+            <div className="sb__upsell-title">
+              <Icon name="bolt" size={13} />
+              Unlock more growth
+            </div>
+            <p className="sb__upsell-sub">
+              Upgrade to Pro for advanced AI, competitor insights, and more.
+            </p>
+            <Link href="/subscription" onClick={onNavigate} className="sb__upsell-btn">
+              <Icon name="sparkle" size={12} />
+              Upgrade Now
+            </Link>
+          </div>
+        )}
       </div>
     </aside>
-  );
-}
-
-function SidebarItem({
-  item,
-  pathname,
-  onNavigate,
-}: {
-  item: NavLink;
-  pathname: string;
-  onNavigate?: () => void;
-}) {
-  const selfActive = pathMatches(pathname, item.href);
-  const childActive = !!item.children?.some((c) => pathMatches(pathname, c.href));
-  const isActive = selfActive || childActive;
-  const [open, setOpen] = useState<boolean>(isActive);
-
-  // Re-open when navigating to a child route from outside
-  useEffect(() => {
-    if (isActive) setOpen(true);
-  }, [isActive]);
-
-  return (
-    <div>
-      <Link
-        href={item.href}
-        onClick={(e) => {
-          if (item.children) {
-            e.preventDefault();
-            setOpen((o) => !o);
-          } else {
-            onNavigate?.();
-          }
-        }}
-        className={`sb__item${isActive ? " is-active" : ""}`}
-      >
-        <Icon name={item.icon} />
-        <span style={{ flex: 1 }}>{item.label}</span>
-        {item.badge && <span className="sb__badge">{item.badge}</span>}
-        {item.children && !item.badge && (
-          <Icon
-            name={open ? "chevD" : "chevR"}
-            size={11}
-            style={{ color: isActive ? "var(--pri-300)" : "var(--rl-muted-2)" }}
-          />
-        )}
-      </Link>
-      {item.children && open && (
-        <div className="sb__sub">
-          {item.children.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              onClick={onNavigate}
-              className={`sb__subitem${pathMatches(pathname, c.href) ? " is-active" : ""}`}
-            >
-              {c.label}
-            </Link>
-          ))}
-        </div>
-      )}
-    </div>
   );
 }

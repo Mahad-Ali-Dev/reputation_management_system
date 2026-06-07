@@ -328,7 +328,6 @@ export default async function ReviewsPage({
                       href={replyDeepLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
                       style={{
                         color: sourceMeta.fg,
                         textDecoration: "none",
