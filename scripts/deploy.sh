@@ -78,7 +78,12 @@ fi
 log "Fetching git ref: $GIT_REF"
 run "git fetch --tags origin"
 run "git checkout $GIT_REF"
-run "git pull --ff-only origin $GIT_REF || true"
+# Force-sync the working tree to the fetched remote ref. We use `reset --hard`
+# rather than `pull --ff-only || true`: the `|| true` could SILENTLY swallow a
+# permission-blocked / partial update and leave a SPLIT tree (some files old, some
+# new) that then fails the build with confusing errors. This makes the tree EXACTLY
+# match origin/<ref> or fail loudly.
+run "git reset --hard \"origin/$GIT_REF\""
 
 CURRENT_SHA=$(git rev-parse HEAD)
 log "HEAD is now $CURRENT_SHA"
