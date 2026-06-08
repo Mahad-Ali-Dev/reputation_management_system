@@ -50,8 +50,10 @@ describe("TabBar active-pill — design-system.css contract", () => {
   it("keeps the default (non-tabbar) `.tabs__t.is-active` underline rule intact", () => {
     // The bare underline rule must still exist for any future standalone `.tabs`
     // strip — we only ADDED a scoped override, we didn't remove the base.
+    // (The premium palette pass recoloured the underline from --ink to the --pri
+    // accent; the base rule is still present, which is what this guards.)
     expect(css).toMatch(
-      /\.tabs__t\.is-active\s*\{[^}]*border-bottom-color:\s*var\(--ink\)/,
+      /\.tabs__t\.is-active\s*\{[^}]*border-bottom-color:\s*var\(--pri\)/,
     );
   });
 });
