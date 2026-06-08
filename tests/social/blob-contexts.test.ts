@@ -15,6 +15,8 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { isUploadAllowed, uploadToBlob } from "@/lib/uploads/blob";
 
 const MB = 1024 * 1024;
+// Valid PNG magic header (>=12 bytes) — uploadToBlob now sniffs content vs declared MIME.
+const PNG_BYTES = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 13]);
 let savedToken: string | undefined;
 
 beforeEach(() => {
@@ -58,7 +60,7 @@ describe("ai_creative context", () => {
 
 describe("dev fallback (no Blob token)", () => {
   it("uploadToBlob returns a data: URL for content_library", async () => {
-    const buffer = Buffer.from("hello");
+    const buffer = PNG_BYTES;
     const res = await uploadToBlob({
       orgId: "11111111-1111-4111-8111-111111111111",
       context: "content_library",
@@ -71,7 +73,7 @@ describe("dev fallback (no Blob token)", () => {
   });
 
   it("uploadToBlob returns a data: URL for ai_creative", async () => {
-    const buffer = Buffer.from("img");
+    const buffer = PNG_BYTES;
     const res = await uploadToBlob({
       orgId: "11111111-1111-4111-8111-111111111111",
       context: "ai_creative",
@@ -80,5 +82,19 @@ describe("dev fallback (no Blob token)", () => {
       filename: "creative.png",
     });
     expect(res.url.startsWith("data:image/png;base64,")).toBe(true);
+  });
+});
+
+describe("content sniff (#9 — magic bytes vs declared MIME)", () => {
+  it("rejects a buffer whose bytes don't match the declared MIME", async () => {
+    await expect(
+      uploadToBlob({
+        orgId: "11111111-1111-4111-8111-111111111111",
+        context: "ai_creative",
+        buffer: Buffer.from("this is plainly not a png image"),
+        mimeType: "image/png",
+        filename: "fake.png",
+      }),
+    ).rejects.toThrow(/file_content_does_not_match_declared_type/);
   });
 });

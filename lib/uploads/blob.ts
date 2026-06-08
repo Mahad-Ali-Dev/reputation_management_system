@@ -64,6 +64,31 @@ export function isUploadAllowed(args: { context: UploadContext; mimeType: string
 }
 
 /**
+ * Verify a file's leading magic bytes are consistent with its DECLARED MIME type.
+ * Defense against polyglot / mislabeled uploads (e.g. a script claiming image/png),
+ * which Vercel Blob would otherwise store + serve with a trusted content-type.
+ * Unknown declared types are already rejected by isUploadAllowed → default true.
+ */
+function magicBytesMatchMime(buffer: Buffer, declaredMime: string): boolean {
+  if (buffer.byteLength < 12) return false;
+  const b = buffer;
+  const png = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
+  const jpeg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
+  const webp =
+    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
+    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
+  const ftyp = b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70; // mp4 / mov
+  switch (declaredMime.toLowerCase()) {
+    case "image/png": return png;
+    case "image/jpeg": return jpeg;
+    case "image/webp": return webp;
+    case "video/mp4":
+    case "video/quicktime": return ftyp;
+    default: return true;
+  }
+}
+
+/**
  * Upload a file (Buffer) to Vercel Blob and return the public URL.
  *
  * Path is namespaced by org + context to keep things organized + auditable:
@@ -82,6 +107,12 @@ export async function uploadToBlob(args: {
     sizeBytes: args.buffer.byteLength,
   });
   if (!validation.ok) throw new Error(validation.reason);
+
+  // Content sniff: bytes must match the DECLARED type so a polyglot / mislabeled file
+  // can't be stored + served with a trusted content-type.
+  if (!magicBytesMatchMime(args.buffer, args.mimeType)) {
+    throw new Error("file_content_does_not_match_declared_type");
+  }
 
   // Dev fallback: when no Blob token, return data: URL
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
