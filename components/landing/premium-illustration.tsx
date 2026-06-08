@@ -213,6 +213,9 @@ export function PremiumIllustration({
           alt={alt}
           loading="lazy"
           decoding="async"
+          ref={(n) => {
+            if (n && n.complete && n.naturalWidth > 0) setLoaded(true);
+          }}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
           style={{
@@ -258,6 +261,9 @@ export function PremiumImageOverlay({
           src={src}
           alt={alt}
           decoding="async"
+          ref={(n) => {
+            if (n && n.complete && n.naturalWidth > 0) setLoaded(true);
+          }}
           onLoad={() => setLoaded(true)}
           onError={() => setFailed(true)}
           style={{
