@@ -1,6 +1,6 @@
 "use client";
 
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -25,6 +25,7 @@ export const BackgroundBeamsWithCollision = ({
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const parentRef = useRef<HTMLDivElement>(null);
+  const reduced = useReducedMotion();
 
   const beams: BeamOptions[] = [
     { initialX: 10, translateX: 10, duration: 7, repeatDelay: 3, delay: 2 },
@@ -79,6 +80,7 @@ export const BackgroundBeamsWithCollision = ({
           beamOptions={beam}
           containerRef={containerRef}
           parentRef={parentRef}
+          reduced={!!reduced}
         />
       ))}
 
@@ -105,8 +107,9 @@ const CollisionMechanism = React.forwardRef<
     containerRef: React.RefObject<HTMLDivElement | null>;
     parentRef: React.RefObject<HTMLDivElement | null>;
     beamOptions?: BeamOptions;
+    reduced?: boolean;
   }
->(({ parentRef, containerRef, beamOptions = {} }, _ref) => {
+>(({ parentRef, containerRef, beamOptions = {}, reduced = false }, _ref) => {
   const beamRef = useRef<HTMLDivElement>(null);
   const [collision, setCollision] = useState<{
     detected: boolean;
@@ -116,6 +119,8 @@ const CollisionMechanism = React.forwardRef<
   const [cycleCollisionDetected, setCycleCollisionDetected] = useState(false);
 
   useEffect(() => {
+    // Respect prefers-reduced-motion: no collision polling / explosions.
+    if (reduced) return;
     const checkCollision = () => {
       if (
         beamRef.current &&
@@ -142,7 +147,7 @@ const CollisionMechanism = React.forwardRef<
 
     const animationInterval = setInterval(checkCollision, 50);
     return () => clearInterval(animationInterval);
-  }, [cycleCollisionDetected, containerRef, parentRef]);
+  }, [cycleCollisionDetected, containerRef, parentRef, reduced]);
 
   useEffect(() => {
     if (collision.detected && collision.coordinates) {
@@ -167,12 +172,16 @@ const CollisionMechanism = React.forwardRef<
       <motion.div
         key={beamKey}
         ref={beamRef}
-        animate="animate"
-        initial={{
-          translateY: beamOptions.initialY || "-200px",
-          translateX: beamOptions.initialX || "0px",
-          rotate: beamOptions.rotate || 0,
-        }}
+        animate={reduced ? undefined : "animate"}
+        initial={
+          reduced
+            ? false
+            : {
+                translateY: beamOptions.initialY || "-200px",
+                translateX: beamOptions.initialX || "0px",
+                rotate: beamOptions.rotate || 0,
+              }
+        }
         variants={{
           animate: {
             translateY: beamOptions.translateY || "1800px",
@@ -180,19 +189,37 @@ const CollisionMechanism = React.forwardRef<
             rotate: beamOptions.rotate || 0,
           },
         }}
-        transition={{
-          duration: beamOptions.duration || 8,
-          repeat: Infinity,
-          repeatType: "loop",
-          ease: "linear",
-          delay: beamOptions.delay || 0,
-          repeatDelay: beamOptions.repeatDelay || 0,
-        }}
+        transition={
+          reduced
+            ? undefined
+            : {
+                duration: beamOptions.duration || 8,
+                repeat: Infinity,
+                repeatType: "loop",
+                ease: "linear",
+                delay: beamOptions.delay || 0,
+                repeatDelay: beamOptions.repeatDelay || 0,
+              }
+        }
         className={cn(
           "absolute left-0 top-20 m-auto h-14 w-px rounded-full",
           beamOptions.className,
         )}
         style={{
+          opacity: 1,
+          ...(reduced
+            ? {
+                transform: `translateX(${
+                  typeof beamOptions.translateX === "number"
+                    ? `${beamOptions.translateX}px`
+                    : beamOptions.translateX || "0px"
+                }) translateY(${
+                  typeof beamOptions.translateY === "number"
+                    ? `${beamOptions.translateY}px`
+                    : beamOptions.translateY || "1800px"
+                }) rotate(${beamOptions.rotate || 0}deg)`,
+              }
+            : null),
           background:
             "linear-gradient(180deg, transparent, #2457ff 60%, #12b998)",
         }}

@@ -1,6 +1,7 @@
 "use client";
 
 import createGlobe, { type COBEOptions } from "cobe";
+import { useReducedMotion } from "motion/react";
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,9 @@ export const Globe = ({ markers, config, className }: GlobeProps) => {
   const pointerInteractionMovement = useRef(0);
   const phiRef = useRef(0);
   const widthRef = useRef(0);
+  const reduced = useReducedMotion();
+  const reducedRef = useRef(reduced);
+  reducedRef.current = reduced;
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -72,7 +76,8 @@ export const Globe = ({ markers, config, className }: GlobeProps) => {
       glowColor: [36 / 255 + 0.4, 87 / 255 + 0.4, 1],
       markers: resolvedMarkers,
       onRender: (state: Record<string, number>) => {
-        if (pointerInteracting.current === null) {
+        // Auto-rotate only when not dragging and reduced-motion is off.
+        if (pointerInteracting.current === null && !reducedRef.current) {
           phiRef.current += 0.003;
         }
         state.phi = phiRef.current + pointerInteractionMovement.current / 200;

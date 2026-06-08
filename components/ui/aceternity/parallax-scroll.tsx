@@ -6,10 +6,12 @@ import { cn } from "@/lib/utils";
 
 export interface ParallaxScrollProps {
   images: string[];
+  /** Optional alt text per image (indexed by position in `images`). */
+  alts?: string[];
   className?: string;
 }
 
-export function ParallaxScroll({ images, className }: ParallaxScrollProps) {
+export function ParallaxScroll({ images, alts, className }: ParallaxScrollProps) {
   const gridRef = useRef<HTMLDivElement>(null);
   const { scrollYProgress } = useScroll({
     container: gridRef,
@@ -25,10 +27,14 @@ export function ParallaxScroll({ images, className }: ParallaxScrollProps) {
   const second = images.slice(third, 2 * third);
   const last = images.slice(2 * third);
 
-  const columns: Array<{ items: string[]; y: typeof translateFirst }> = [
-    { items: first, y: translateFirst },
-    { items: second, y: translateSecond },
-    { items: last, y: translateThird },
+  const columns: Array<{
+    items: string[];
+    y: typeof translateFirst;
+    base: number;
+  }> = [
+    { items: first, y: translateFirst, base: 0 },
+    { items: second, y: translateSecond, base: third },
+    { items: last, y: translateThird, base: 2 * third },
   ];
 
   return (
@@ -47,7 +53,7 @@ export function ParallaxScroll({ images, className }: ParallaxScrollProps) {
               >
                 <img
                   src={src}
-                  alt="gallery"
+                  alt={alts?.[col.base + idx] ?? "Product illustration"}
                   className="!m-0 h-80 w-full gap-10 rounded-2xl object-cover object-left-top shadow-sm !p-0"
                   height={400}
                   width={400}

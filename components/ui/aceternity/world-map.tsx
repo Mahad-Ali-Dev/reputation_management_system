@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import React, { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
@@ -78,6 +78,7 @@ export const WorldMap = ({
   className,
 }: WorldMapProps) => {
   const [mounted, setMounted] = useState(false);
+  const reduced = useReducedMotion();
   const gradientId = useRef(
     `world-map-arc-${Math.random().toString(36).slice(2, 9)}`,
   );
@@ -133,37 +134,47 @@ export const WorldMap = ({
                 stroke={`url(#${gradientId.current})`}
                 strokeWidth={1.4}
                 strokeLinecap="round"
-                initial={{ pathLength: 0 }}
+                initial={reduced ? { pathLength: 1 } : { pathLength: 0 }}
                 animate={{ pathLength: 1 }}
-                transition={{
-                  duration: 1.4,
-                  delay: 0.3 * i,
-                  ease: "easeOut",
-                  repeat: Infinity,
-                  repeatType: "loop",
-                  repeatDelay: 1.2,
-                }}
+                transition={
+                  reduced
+                    ? { duration: 0 }
+                    : {
+                        duration: 1.4,
+                        delay: 0.3 * i,
+                        ease: "easeOut",
+                        repeat: Infinity,
+                        repeatType: "loop",
+                        repeatDelay: 1.2,
+                      }
+                }
               />
               {[start, end].map((p, j) => (
                 <g key={`endpoint-${i}-${j}`}>
                   <circle cx={p.x} cy={p.y} r={2.2} fill={arcColorFrom} />
+                  {/* Ripple uses native SMIL <animate>, which ignores
+                      prefers-reduced-motion. Render a static dot instead. */}
                   <circle cx={p.x} cy={p.y} r={2.2} fill={arcColorFrom} opacity={0.5}>
-                    <animate
-                      attributeName="r"
-                      from="2.2"
-                      to="9"
-                      dur="1.5s"
-                      begin={`${0.3 * i}s`}
-                      repeatCount="indefinite"
-                    />
-                    <animate
-                      attributeName="opacity"
-                      from="0.5"
-                      to="0"
-                      dur="1.5s"
-                      begin={`${0.3 * i}s`}
-                      repeatCount="indefinite"
-                    />
+                    {!reduced && (
+                      <>
+                        <animate
+                          attributeName="r"
+                          from="2.2"
+                          to="9"
+                          dur="1.5s"
+                          begin={`${0.3 * i}s`}
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          from="0.5"
+                          to="0"
+                          dur="1.5s"
+                          begin={`${0.3 * i}s`}
+                          repeatCount="indefinite"
+                        />
+                      </>
+                    )}
                   </circle>
                 </g>
               ))}

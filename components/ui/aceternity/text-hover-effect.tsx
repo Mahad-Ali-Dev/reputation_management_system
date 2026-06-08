@@ -1,6 +1,6 @@
 "use client";
 
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { type MouseEvent, useEffect, useRef, useState } from "react";
 
 export interface TextHoverEffectProps {
@@ -20,6 +20,8 @@ export function TextHoverEffect({
   const [cursor, setCursor] = useState({ x: 0, y: 0 });
   const [hovered, setHovered] = useState(false);
   const [maskPosition, setMaskPosition] = useState({ cx: "50%", cy: "50%" });
+  const reduced = useReducedMotion();
+  const lastMoveRef = useRef(0);
 
   useEffect(() => {
     if (svgRef.current && cursor.x !== null && cursor.y !== null) {
@@ -31,6 +33,10 @@ export function TextHoverEffect({
   }, [cursor]);
 
   function handleMove(e: MouseEvent<SVGSVGElement>) {
+    // Throttle to ~60fps to avoid per-mousemove re-render churn.
+    const now = performance.now();
+    if (now - lastMoveRef.current < 16) return;
+    lastMoveRef.current = now;
     setCursor({ x: e.clientX, y: e.clientY });
   }
 
@@ -41,9 +47,9 @@ export function TextHoverEffect({
       height="100%"
       viewBox="0 0 300 100"
       xmlns="http://www.w3.org/2000/svg"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      onMouseMove={handleMove}
+      onMouseEnter={reduced ? undefined : () => setHovered(true)}
+      onMouseLeave={reduced ? undefined : () => setHovered(false)}
+      onMouseMove={reduced ? undefined : handleMove}
       className="select-none"
       aria-label={text}
       role="img"
@@ -56,7 +62,7 @@ export function TextHoverEffect({
           cy="50%"
           r="25%"
         >
-          {(hovered || automatic) && (
+          {(hovered || automatic || reduced) && (
             <>
               <stop offset="0%" stopColor="#2457ff" />
               <stop offset="50%" stopColor="#1b3fd1" />
@@ -70,8 +76,8 @@ export function TextHoverEffect({
           gradientUnits="userSpaceOnUse"
           r="20%"
           initial={{ cx: "50%", cy: "50%" }}
-          animate={maskPosition}
-          transition={{ duration, ease: "easeOut" }}
+          animate={reduced ? { cx: "50%", cy: "50%" } : maskPosition}
+          transition={reduced ? { duration: 0 } : { duration, ease: "easeOut" }}
         >
           <stop offset="0%" stopColor="white" />
           <stop offset="100%" stopColor="black" />
@@ -106,9 +112,13 @@ export function TextHoverEffect({
         dominantBaseline="middle"
         strokeWidth="0.6"
         className="fill-transparent stroke-[#cbd5e1] font-[helvetica] text-7xl font-bold"
-        initial={{ strokeDashoffset: 1000, strokeDasharray: 1000 }}
+        initial={
+          reduced
+            ? { strokeDashoffset: 0, strokeDasharray: 1000 }
+            : { strokeDashoffset: 1000, strokeDasharray: 1000 }
+        }
         animate={{ strokeDashoffset: 0, strokeDasharray: 1000 }}
-        transition={{ duration: 4, ease: "easeInOut" }}
+        transition={reduced ? { duration: 0 } : { duration: 4, ease: "easeInOut" }}
       >
         {text}
       </motion.text>
@@ -120,7 +130,7 @@ export function TextHoverEffect({
         dominantBaseline="middle"
         stroke="url(#textGradient)"
         strokeWidth="0.6"
-        mask="url(#textMask)"
+        mask={reduced ? undefined : "url(#textMask)"}
         className="fill-transparent font-[helvetica] text-7xl font-bold"
       >
         {text}
