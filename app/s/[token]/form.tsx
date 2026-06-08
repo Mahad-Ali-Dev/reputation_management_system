@@ -95,8 +95,8 @@ export default function SurveyForm({
     return (
       <div className="text-center space-y-4">
         <div className="text-5xl">{submitted.route === "review_request" ? "🌟" : "🙏"}</div>
-        <h2 className="text-xl font-bold">Thanks!</h2>
-        <p className="text-muted-foreground">{thankYouMessage || submitted.thankYou}</p>
+        <h2 className="text-xl font-bold" style={{ color: "#0f172a", letterSpacing: "-0.02em" }}>Thanks!</h2>
+        <p style={{ color: "#64748b" }}>{thankYouMessage || submitted.thankYou}</p>
         {submitted.coupon && (
           <div className="mx-auto max-w-xs rounded-lg border-2 border-dashed border-emerald-500 bg-emerald-50 p-4">
             <div className="text-xs uppercase tracking-wide text-emerald-700 font-semibold">Your coupon</div>
@@ -145,7 +145,7 @@ function Question({
 }) {
   return (
     <fieldset className="space-y-3">
-      <legend className="text-sm font-medium">
+      <legend className="text-sm font-medium" style={{ color: "#1e293b" }}>
         {q.prompt}
         {q.required && <span className="text-red-500"> *</span>}
       </legend>
@@ -172,7 +172,7 @@ function Question({
               );
             })}
           </div>
-          <div className="flex justify-between text-xs text-muted-foreground">
+          <div className="flex justify-between text-xs" style={{ color: "#64748b" }}>
             <span>Not at all likely</span>
             <span>Extremely likely</span>
           </div>

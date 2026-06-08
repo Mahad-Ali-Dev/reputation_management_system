@@ -2,13 +2,18 @@ import Link from "next/link";
 import Script from "next/script";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
+import { Icon } from "@/components/shell/icon";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Test page for the embedded chatbot.
+ * Test page for the embedded chatbot — repulabs v3 (cool-slate + blue).
  * Renders the widget loader script with the given public key so the founder
  * can interact with the AI without setting up an external host.
+ *
+ * Standalone chrome (its own slim header, NOT the dashboard app shell) but
+ * styled with the v3 design-system classes / tokens since it lives inside the
+ * authenticated app.
  *
  * Auth-gated: the key must belong to the current org. We don't want anonymous
  * users browsing arbitrary keys here (even though the widget endpoint itself
@@ -25,15 +30,17 @@ export default async function AiTestPage({
 
   if (!key) {
     return (
-      <main className="container py-12 max-w-2xl">
-        <h1 className="text-2xl font-bold">Test the chatbot</h1>
-        <p className="mt-2 text-muted-foreground">
-          Missing <code>?key=...</code> query parameter.{" "}
-          <Link href="/ai" className="text-primary hover:underline">
+      <TestShell>
+        <h1 className="ph__title" style={{ fontSize: 24 }}>
+          Test the chatbot
+        </h1>
+        <p className="dim" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
+          Missing <code style={codeStyle}>?key=…</code> query parameter.{" "}
+          <Link href="/ai" style={linkStyle}>
             Go to AI settings →
           </Link>
         </p>
-      </main>
+      </TestShell>
     );
   }
 
@@ -48,71 +55,164 @@ export default async function AiTestPage({
 
   if (!widget) {
     return (
-      <main className="container py-12 max-w-2xl">
-        <h1 className="text-2xl font-bold">Key not found</h1>
-        <p className="mt-2 text-muted-foreground">
-          That widget key isn't active for your organization.{" "}
-          <Link href="/ai" className="text-primary hover:underline">
+      <TestShell>
+        <h1 className="ph__title" style={{ fontSize: 24 }}>
+          Key not found
+        </h1>
+        <p className="dim" style={{ marginTop: 8, fontSize: 14, lineHeight: 1.6 }}>
+          That widget key isn&apos;t active for your organization.{" "}
+          <Link href="/ai" style={linkStyle}>
             Manage keys →
           </Link>
         </p>
-      </main>
+      </TestShell>
     );
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const snippet = `<script src="${appUrl}/widget?key=${widget.publicKey}" async></script>`;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      <header className="border-b bg-white/80 backdrop-blur">
-        <div className="container flex h-16 items-center justify-between">
-          <Link href="/ai" className="text-xl font-bold">Repulabs · Chatbot test</Link>
-          <Link href="/ai" className="text-sm text-muted-foreground hover:underline">
-            ← AI settings
-          </Link>
-        </div>
-      </header>
-
-      <section className="container py-12 max-w-2xl space-y-6">
+    <TestShell>
+      <div className="col" style={{ gap: 18 }}>
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Try the chatbot</h1>
-          <p className="text-muted-foreground">
+          <div className="ph__kicker">Chatbot tester</div>
+          <h1 className="ph__title" style={{ fontSize: 28 }}>
+            Try the chatbot
+          </h1>
+          <p className="ph__sub">
             The widget loaded in the bottom-right corner is exactly what your website
             visitors see. Ask it anything that your knowledge base should know.
           </p>
         </div>
 
-        <div className="rounded-lg border bg-white p-6 text-sm space-y-3">
-          <h2 className="font-semibold">Suggested test queries</h2>
-          <ul className="list-disc pl-5 space-y-1 text-muted-foreground">
-            <li>"What are your hours?"</li>
-            <li>"How much does a haircut cost?"</li>
-            <li>"Where are you located?"</li>
-            <li>
-              A question your knowledge base <strong>doesn't</strong> cover — the AI should
-              gracefully say it doesn't know and offer to escalate.
-            </li>
-          </ul>
-          <p className="text-xs">
-            Prefer the in-app tester (with answer ratings that feed your Learning Monitor)?{" "}
-            <Link href="/ai/training#test" className="text-primary hover:underline">
-              Open the Test AI tab →
-            </Link>
-          </p>
-        </div>
+        <section className="ds-card">
+          <div className="ds-card__head">
+            <h2 className="ds-card__title">Suggested test queries</h2>
+          </div>
+          <div className="ds-card__body" style={{ fontSize: 13.5, lineHeight: 1.6 }}>
+            <ul
+              style={{
+                margin: 0,
+                paddingLeft: 18,
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                color: "var(--ink-2)",
+              }}
+            >
+              <li>&ldquo;What are your hours?&rdquo;</li>
+              <li>&ldquo;How much does a haircut cost?&rdquo;</li>
+              <li>&ldquo;Where are you located?&rdquo;</li>
+              <li>
+                A question your knowledge base <strong>doesn&apos;t</strong> cover — the AI should
+                gracefully say it doesn&apos;t know and offer to escalate.
+              </li>
+            </ul>
+            <p className="dim" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
+              Prefer the in-app tester (with answer ratings that feed your Learning Monitor)?{" "}
+              <Link href="/ai/training#test" style={linkStyle}>
+                Open the Test AI tab →
+              </Link>
+            </p>
+          </div>
+        </section>
 
-        <div className="rounded-lg border bg-slate-900 text-slate-100 p-4 text-xs font-mono overflow-x-auto">
-          {`<script src="${appUrl}/widget?key=${widget.publicKey}" async></script>`}
-        </div>
-
-        <p className="text-xs text-muted-foreground">
-          When you embed this script tag on any HTML page, the chatbot button
-          appears in the bottom-right corner.
-        </p>
-      </section>
+        <section className="ds-card">
+          <div className="ds-card__head">
+            <h2 className="ds-card__title">Embed snippet</h2>
+            <span className="chip chip--pri">Copy to your site</span>
+          </div>
+          <div className="ds-card__body">
+            <pre
+              style={{
+                margin: 0,
+                padding: "14px 16px",
+                background: "var(--ink)",
+                color: "#e2e8f0",
+                borderRadius: "var(--r-sm)",
+                fontFamily: "var(--f-mono)",
+                fontSize: 12,
+                lineHeight: 1.6,
+                overflowX: "auto",
+                whiteSpace: "pre",
+              }}
+            >
+              <code>{snippet}</code>
+            </pre>
+            <p className="dim" style={{ fontSize: 12, marginTop: 12, marginBottom: 0 }}>
+              When you embed this script tag on any HTML page, the chatbot button appears in the
+              bottom-right corner.
+            </p>
+          </div>
+        </section>
+      </div>
 
       {/* Load the widget exactly as a customer would */}
       <Script src={`${appUrl}/widget?key=${widget.publicKey}`} strategy="afterInteractive" />
-    </main>
+    </TestShell>
   );
 }
+
+function TestShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)" }}>
+      <header
+        style={{
+          background: "var(--surface)",
+          borderBottom: "1px solid var(--line)",
+          position: "sticky",
+          top: 0,
+          zIndex: 40,
+        }}
+      >
+        <div
+          className="row"
+          style={{
+            maxWidth: 720,
+            margin: "0 auto",
+            height: "var(--h-tb)",
+            padding: "0 24px",
+            justifyContent: "space-between",
+          }}
+        >
+          <Link
+            href="/ai"
+            className="row"
+            style={{ gap: 10, textDecoration: "none", color: "inherit" }}
+          >
+            <span className="sb__mark" aria-hidden style={{ width: 30, height: 30, fontSize: 15 }}>
+              R
+            </span>
+            <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.015em" }}>
+              Chatbot test
+            </span>
+          </Link>
+          <Link href="/ai" className="btn btn--sm">
+            <Icon name="chevL" size={12} />
+            AI settings
+          </Link>
+        </div>
+      </header>
+
+      <main style={{ maxWidth: 720, margin: "0 auto", padding: "36px 24px 64px" }}>
+        {children}
+      </main>
+    </div>
+  );
+}
+
+const linkStyle: React.CSSProperties = {
+  color: "var(--pri)",
+  textDecoration: "none",
+  fontWeight: 500,
+};
+
+const codeStyle: React.CSSProperties = {
+  fontFamily: "var(--f-mono)",
+  fontSize: 12.5,
+  background: "var(--surface-3)",
+  border: "1px solid var(--line)",
+  borderRadius: 6,
+  padding: "1px 6px",
+};

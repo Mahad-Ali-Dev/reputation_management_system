@@ -34,7 +34,7 @@ export function PickerForm({
         style={{
           padding: 18,
           background: "#fff",
-          border: "1px solid #eceeea",
+          border: "1px solid #eef1f6",
           borderRadius: 12,
           fontSize: 13.5,
           color: "#475569",
@@ -113,7 +113,7 @@ export function PickerForm({
             marginTop: 18,
             padding: 14,
             background: "#fff",
-            border: "1px solid #eceeea",
+            border: "1px solid #eef1f6",
             borderRadius: 12,
           }}
         >
@@ -122,7 +122,7 @@ export function PickerForm({
             style={{
               fontSize: 12,
               fontWeight: 600,
-              color: "#0b0d0e",
+              color: "#0f172a",
               display: "block",
               marginBottom: 6,
             }}
@@ -140,7 +140,7 @@ export function PickerForm({
               width: "100%",
               height: 38,
               padding: "0 12px",
-              border: "1px solid #cbd5e1",
+              border: "1px solid #e2e8f0",
               borderRadius: 8,
               fontSize: 13.5,
               outline: "none",

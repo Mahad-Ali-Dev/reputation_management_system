@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { MODELS, anthropic } from "@/lib/ai/client";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { checkBudget } from "@/lib/ai/budget";
@@ -8,20 +9,21 @@ import { logger } from "@/lib/logger";
  * Daily-briefing generator for the dashboard's AI Intelligence Center.
  *
  * DESIGN — never a live paid AI call on render. The dashboard renders by reading
- * {@link getCachedBriefing}, which computes a deterministic 1–2 sentence summary
- * from the org's last-24h data (a synchronous template — zero AI spend, zero
- * latency). The cron (`/api/cron/daily-briefing`) calls {@link buildBriefingForOrg}
- * which can optionally upgrade that text with an AI-written version when
- * `ANTHROPIC_API_KEY` is set AND the org is entitled AND within budget;
- * otherwise it returns the same deterministic template (graceful no-op).
+ * {@link getCachedBriefing}, which now reads the day's cached row from
+ * `DashboardBriefing` (populated by the cron) and, only if absent, computes a
+ * deterministic 1–2 sentence summary from the org's last-24h data (a
+ * synchronous template — zero AI spend, zero latency). The cron
+ * (`/api/cron/daily-briefing`) calls {@link buildBriefingForOrg}, which can
+ * optionally upgrade that text with an AI-written version when
+ * `ANTHROPIC_API_KEY` is set AND the org is entitled AND within budget
+ * (otherwise it returns the same deterministic template — a graceful no-op),
+ * then UPSERTS it into the cache keyed on (organizationId, day).
  *
- * NOTE ON PERSISTENCE: the planned `DashboardBriefing` cache table is NOT part
- * of the frozen Wave-0 schema, so there is no Prisma model to write to in this
- * wave. The briefing is therefore recomputed deterministically per render
- * (cheap) and the cron computes + logs the (optionally AI-enhanced) text. When
- * the `DashboardBriefing` model is added in a later schema pass, persisting the
- * cron output and reading it here becomes a drop-in change — the public surface
- * of this module does not change. (See `issues` in the build report.)
+ * PERSISTENCE: the `DashboardBriefing` cache table (migration
+ * 20260608010000_dashboard_briefing) is upserted by the cron and read back on
+ * render. FAIL-SOFT: if the table isn't migrated yet (Postgres 42P01) the read
+ * silently recomputes the deterministic briefing and the write is skipped, so
+ * the dashboard is identical to the pre-cache behavior on an un-migrated DB.
  *
  * FAIL-SOFT: every path degrades to a friendly deterministic sentence; this
  * module never throws to the page.
@@ -46,6 +48,21 @@ export type Briefing = {
 };
 
 const DAY = 864e5;
+
+/**
+ * Postgres 42P01 (undefined_table) / 42703 (undefined_column) → the
+ * `dashboard_briefings` table isn't migrated yet. We degrade to a fresh compute
+ * (read) or skip the write, rather than throwing to the page.
+ */
+function isMissingRelation(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  return code === "42P01" || code === "42703";
+}
+
+/** Truncate a Date to UTC midnight — the cache key matches the `@db.Date` column. */
+function dayKey(d: Date): Date {
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
+}
 
 const EMPTY_SIGNALS: BriefingSignals = {
   newReviews24h: 0,
@@ -111,6 +128,77 @@ async function readBriefingSignals(orgId: string): Promise<BriefingSignals> {
 }
 
 /**
+ * Persist a computed briefing into the per-day cache (upsert by org+day).
+ * Tenant-scoped (RLS applies). FAIL-SOFT: a not-yet-migrated table (42P01) or
+ * any transient error is logged and swallowed — persistence is best-effort and
+ * never fatal to the cron.
+ */
+async function persistBriefing(orgId: string, day: Date, b: Briefing): Promise<void> {
+  const d = dayKey(day);
+  try {
+    await withTenant(orgId, async (tx) => {
+      await tx.dashboardBriefing.upsert({
+        where: { organizationId_day: { organizationId: orgId, day: d } },
+        create: {
+          organizationId: orgId,
+          day: d,
+          body: b.body,
+          model: b.model,
+          signals: b.signals as unknown as Prisma.InputJsonValue,
+        },
+        update: {
+          body: b.body,
+          model: b.model,
+          signals: b.signals as unknown as Prisma.InputJsonValue,
+        },
+      });
+    });
+  } catch (err) {
+    if (isMissingRelation(err)) return; // table not migrated yet — silent no-op.
+    logger.warn({
+      orgId,
+      error: err instanceof Error ? err.message : String(err),
+      event: "dashboard.briefing.persist_failed",
+    });
+  }
+}
+
+/**
+ * Read today's cached briefing row, or null when absent / not-yet-migrated.
+ * Tenant-scoped. FAIL-SOFT: 42P01 (table missing) and any error → null so the
+ * caller recomputes the deterministic briefing.
+ */
+async function readCachedRow(
+  orgId: string,
+  day: Date,
+): Promise<{ body: string; model: string | null; signals: BriefingSignals } | null> {
+  const d = dayKey(day);
+  try {
+    return await withTenant(orgId, async (tx) => {
+      const row = await tx.dashboardBriefing.findUnique({
+        where: { organizationId_day: { organizationId: orgId, day: d } },
+        select: { body: true, model: true, signals: true },
+      });
+      if (!row) return null;
+      return {
+        body: row.body,
+        model: row.model ?? null,
+        signals: (row.signals as unknown as BriefingSignals) ?? EMPTY_SIGNALS,
+      };
+    });
+  } catch (err) {
+    if (!isMissingRelation(err)) {
+      logger.warn({
+        orgId,
+        error: err instanceof Error ? err.message : String(err),
+        event: "dashboard.briefing.cache_read_failed",
+      });
+    }
+    return null;
+  }
+}
+
+/**
  * The deterministic (no-AI) briefing. Always safe to show, used both as the
  * on-render briefing and as the fallback when AI is unavailable.
  */
@@ -162,15 +250,26 @@ export function templateBriefing(firstName: string, s: BriefingSignals): string 
  * deterministic template to an AI-written sentence when creds + entitlement +
  * budget allow; otherwise returns the template (graceful no-op, NO paid call).
  *
- * `day` is accepted for forward-compatibility (per-day idempotency once the
- * cache table exists) but the current implementation summarizes the rolling
- * last-24h window.
+ * The computed briefing is UPSERTED into the per-day cache (keyed on org+`day`)
+ * as a best-effort, fail-soft write — so the dashboard can read it back without
+ * recomputing. Persistence never affects the returned value or throws.
  */
 export async function buildBriefingForOrg(
   orgId: string,
-  _day: Date,
+  day: Date,
   firstName = "there",
 ): Promise<Briefing> {
+  const briefing = await computeBriefingForOrg(orgId, firstName);
+  await persistBriefing(orgId, day, briefing);
+  return briefing;
+}
+
+/**
+ * Pure compute path for {@link buildBriefingForOrg} (no persistence). Kept
+ * separate so persistence is a single, fail-soft step around every branch's
+ * result rather than scattered across each early return.
+ */
+async function computeBriefingForOrg(orgId: string, firstName: string): Promise<Briefing> {
   const signals = await readBriefingSignals(orgId);
   const fallback = templateBriefing(firstName, signals);
 
@@ -239,11 +338,22 @@ export async function buildBriefingForOrg(
 }
 
 /**
- * The briefing the dashboard renders. Deterministic + synchronous-cost only
- * (one tenant read, no AI call) so a page load never incurs paid spend or AI
- * latency. Always returns a friendly sentence (welcome variant for empty orgs).
+ * The briefing the dashboard renders. Reads today's CACHED row first (the cron
+ * precomputes it — possibly AI-written) and, only when there's no cached row,
+ * computes the deterministic template (one tenant read, no AI call) so a page
+ * load never incurs paid spend or AI latency. FAIL-SOFT: a not-yet-migrated
+ * cache table (42P01) transparently falls through to the deterministic compute,
+ * preserving the prior behavior. Always returns a friendly sentence (welcome
+ * variant for empty orgs).
  */
 export async function getCachedBriefing(orgId: string, firstName = "there"): Promise<Briefing> {
+  // 1) Cached row (today, UTC). Present once the cron has run + table exists.
+  const cached = await readCachedRow(orgId, new Date());
+  if (cached) {
+    return { body: cached.body, model: cached.model, signals: cached.signals };
+  }
+
+  // 2) No cache (first load of the day, or table not migrated) → deterministic.
   const signals = await readBriefingSignals(orgId);
   return { body: templateBriefing(firstName, signals), model: null, signals };
 }

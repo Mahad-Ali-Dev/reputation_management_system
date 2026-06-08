@@ -11,6 +11,7 @@
  */
 
 import { splitCsvLine } from "@/lib/outreach/bulk";
+import { validateCsvHeader } from "@/lib/connections/csv-validate";
 
 export const MAX_IMPORT_ROWS = 10_000;
 
@@ -268,4 +269,22 @@ export function dedupeAgainstExisting(
     else toCreate.push(r);
   }
   return { toCreate, duplicates };
+}
+
+/**
+ * Additive header guard for the import path. Runs the shared, pure
+ * {@link validateCsvHeader} against a parsed header row and throws a stable,
+ * client-readable error when the file can't possibly produce an importable
+ * contact (no Name, or no Email/Phone column). This does NOT change
+ * {@link parseImportCsv} / {@link applyMapping} — it's a cheap prerequisite
+ * check the server action can run before mapping, mirroring the client
+ * pre-flight panel. Safe to skip in callers that don't need it.
+ *
+ * @throws Error("invalid_csv_header: <joined reasons>") when the header fails.
+ */
+export function assertImportableHeader(headers: string[]): void {
+  const result = validateCsvHeader(headers);
+  if (!result.ok) {
+    throw new Error(`invalid_csv_header: ${result.errors.join(" ")}`);
+  }
 }

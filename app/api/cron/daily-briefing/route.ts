@@ -18,17 +18,13 @@ export const maxDuration = 300; // 5 min — generates a briefing per active org
  * fresh.)
  *
  * For each active org (plan in [trial, pro], not deleted) it computes the AI
- * daily briefing from the org's last-24h review data. Generation is env-gated:
- * without ANTHROPIC_API_KEY (or for un-entitled / over-budget orgs) it produces
- * the deterministic template — no paid call. Per-org errors are logged, never
- * fatal to the loop.
- *
- * NOTE: the `DashboardBriefing` cache table is not part of the frozen Wave-0
- * schema, so this cron computes + logs the briefing rather than persisting it.
- * The dashboard renders a freshly-computed deterministic briefing on each load
- * (no paid call on render), so the absence of the cache is invisible to users.
- * When the model is added later, persisting `result.body`/`result.model` here
- * is a drop-in change. (Tracked in the build report `issues`.)
+ * daily briefing from the org's last-24h review data and UPSERTS it into the
+ * `dashboard_briefings` cache (keyed on org+day) so the dashboard reads it back
+ * without recomputing. Generation is env-gated: without ANTHROPIC_API_KEY (or
+ * for un-entitled / over-budget orgs) it produces the deterministic template —
+ * no paid call. Persistence is fail-soft inside `buildBriefingForOrg` (a
+ * not-yet-migrated table is a silent no-op), and per-org errors are logged,
+ * never fatal to the loop.
  */
 export async function GET(req: NextRequest) {
   if (!verifyCronRequest(req.headers.get("authorization"))) {

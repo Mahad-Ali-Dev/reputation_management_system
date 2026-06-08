@@ -1138,6 +1138,43 @@
   font-weight: 500;
 }
 
+/* ---------- tabbar (TabBar primitive) — blue-tint pill ----------
+   The <TabBar> component renders `.tabbar > .tabs > .tabs__t`. Inside a
+   `.tabbar`, the active tab reads as a blue-tint pill (matching
+   `.sb__item.is-active`) instead of the default ink underline. Scoped to
+   `.tabbar` so bare `.tabs` usages elsewhere keep the underline style. */
+.tabbar .tabs {
+  border-bottom: 0;
+  padding: 0;
+  gap: 6px;
+}
+.tabbar .tabs__t {
+  border: 1px solid transparent;
+  border-radius: var(--r-sm);
+  margin-bottom: 0;
+  padding: 7px 12px;
+  font-weight: 450;
+}
+.tabbar .tabs__t:hover {
+  background: rgba(37, 99, 235, 0.05);
+  color: var(--ink);
+}
+.tabbar .tabs__t.is-active {
+  background: var(--pri-50);
+  color: var(--pri);
+  border-color: transparent;
+  font-weight: 600;
+}
+.tabbar .tabs__t.is-active svg {
+  color: var(--pri);
+}
+.tabbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
 /* ---------- segmented ---------- */
 .seg {
   display: inline-flex;

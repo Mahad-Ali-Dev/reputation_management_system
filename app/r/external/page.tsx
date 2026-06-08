@@ -56,7 +56,7 @@ export default async function ExternalRedirectInterstitial({
           fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         }}
       >
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 12 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.025em", marginBottom: 12, color: "#0f172a" }}>
           That destination isn&rsquo;t valid
         </h1>
         <p style={{ fontSize: 14, lineHeight: 1.55, color: "#475569" }}>
@@ -106,7 +106,7 @@ export default async function ExternalRedirectInterstitial({
         destination &mdash; verify the URL below before continuing.
       </div>
 
-      <h1 style={{ fontSize: 22, fontWeight: 700, margin: "0 0 6px" }}>
+      <h1 style={{ fontSize: 24, fontWeight: 600, letterSpacing: "-0.025em", margin: "0 0 6px", color: "#0f172a" }}>
         Continue to external site?
       </h1>
       <p style={{ fontSize: 13, color: "#475569", margin: 0 }}>Destination host:</p>
@@ -114,9 +114,10 @@ export default async function ExternalRedirectInterstitial({
         style={{
           fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
           fontSize: 15,
-          background: "#f1f5f9",
+          background: "#f3f5f9",
+          border: "1px solid #eef1f6",
           padding: "8px 12px",
-          borderRadius: 6,
+          borderRadius: 8,
           margin: "6px 0 14px",
           wordBreak: "break-all",
         }}

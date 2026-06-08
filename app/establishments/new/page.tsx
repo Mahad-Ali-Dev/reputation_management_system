@@ -1,63 +1,83 @@
 import Link from "next/link";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { createEstablishment } from "@/lib/establishments/actions";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { AppShellServer } from "@/components/app-shell-server";
 import { TopBar } from "@/components/topbar";
 import { PageHeader } from "@/components/page-header";
+import { Icon } from "@/components/shell/icon";
+
+export const dynamic = "force-dynamic";
+
+export const metadata = {
+  title: "Add New Business · Repulabs",
+};
 
 export default async function NewEstablishmentPage() {
   await getOrgContext();
 
   return (
-    <AppShellServer topBar={<TopBar title="Add Listing" />}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Establishments"]}>
       <PageHeader
-        title="Add listing"
-        breadcrumb={[
-          { label: "Listings", href: "/establishments" },
-          { label: "New" },
-        ]}
+        kicker="New business"
+        title="Add New Business"
+        description="A business you want to manage reviews for. You'll connect Google Business Profile in the next step."
+        actions={
+          <Link href="/establishments" className="btn">
+            <Icon name="chevL" size={12} />
+            Back to establishments
+          </Link>
+        }
       />
 
-      <div className="space-y-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Add listing</CardTitle>
-            <CardDescription>
-              A listing you want to manage reviews for. You'll connect Google Business Profile in
-              the next step.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={createEstablishment} className="space-y-5">
-              <Field label="Name" name="name" required placeholder="Acme Coffee Downtown" />
-              <Field label="Category" name="category" placeholder="cafe / dental / salon / ..." />
-              <Field label="Timezone" name="timezone" defaultValue="UTC" placeholder="America/New_York" />
+      <section className="ds-card" style={{ maxWidth: 640 }}>
+        <div className="ds-card__head">
+          <div>
+            <h3 className="ds-card__title">Business details</h3>
+            <p className="ds-card__sub">Tell us about the place you manage.</p>
+          </div>
+        </div>
+        <div className="ds-card__body">
+          <form action={createEstablishment} className="col" style={{ gap: 16 }}>
+            <Field label="Name" name="name" required placeholder="Acme Coffee Downtown" />
+            <Field label="Category" name="category" placeholder="cafe / dental / salon / …" />
+            <Field
+              label="Timezone"
+              name="timezone"
+              defaultValue="UTC"
+              placeholder="America/New_York"
+            />
 
-              <fieldset className="space-y-3">
-                <legend className="text-sm font-medium text-muted-foreground">Address</legend>
-                <Field label="Street" name="address_line1" placeholder="123 Main St" />
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="City" name="address_city" />
-                  <Field label="Region / State" name="address_region" />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Postal code" name="address_postal" />
-                  <Field label="Country" name="address_country" placeholder="US or United States" />
-                </div>
-              </fieldset>
-
-              <div className="flex gap-2 pt-2">
-                <Button type="submit">Create</Button>
-                <Button type="button" asChild variant="outline">
-                  <Link href="/establishments">Cancel</Link>
-                </Button>
+            <fieldset className="col" style={{ gap: 12, border: 0, padding: 0, margin: 0 }}>
+              <legend className="lbl-mono" style={{ marginBottom: 2 }}>
+                Address
+              </legend>
+              <Field label="Street" name="address_line1" placeholder="123 Main St" />
+              <div className="grid-2">
+                <Field label="City" name="address_city" />
+                <Field label="Region / State" name="address_region" />
               </div>
-            </form>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="grid-2">
+                <Field label="Postal code" name="address_postal" />
+                <Field
+                  label="Country"
+                  name="address_country"
+                  placeholder="US or United States"
+                />
+              </div>
+            </fieldset>
+
+            <div className="row" style={{ gap: 10, paddingTop: 4 }}>
+              <button type="submit" className="btn btn--pri">
+                <Icon name="plus" size={12} />
+                Create
+              </button>
+              <Link href="/establishments" className="btn">
+                Cancel
+              </Link>
+            </div>
+          </form>
+        </div>
+      </section>
     </AppShellServer>
   );
 }
@@ -76,10 +96,10 @@ function Field({
   defaultValue?: string;
 }) {
   return (
-    <label className="block space-y-1">
-      <span className="text-sm font-medium">
+    <label className="block">
+      <span className="lbl">
         {label}
-        {required && <span className="text-destructive"> *</span>}
+        {required && <span style={{ color: "var(--bad)" }}> *</span>}
       </span>
       <input
         type="text"
@@ -87,7 +107,7 @@ function Field({
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className="w-full rounded-md border border-input px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+        className="ds-input"
       />
     </label>
   );

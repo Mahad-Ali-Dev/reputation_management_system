@@ -87,6 +87,7 @@ model Organization {
   autopilotActions     AutopilotAction[]
   roiSettings          RoiSettings[]
   autopilotDigestRuns  AutopilotDigestRun[]
+  dashboardBriefings   DashboardBriefing[]
 
   @@index([plan])
   @@index([stripeCustomerId])
@@ -1495,6 +1496,33 @@ model DigestRun {
   @@unique([organizationId, day], map: "digest_runs_uniq")
   @@index([organizationId, day(sort: Desc)], map: "idx_digest_runs_org")
   @@map("digest_runs")
+}
+
+/// Per-day cache of the dashboard's AI "daily briefing".
+///
+/// The dashboard renders by reading this cached row (one tenant read, no AI
+/// call, no latency); the `/api/cron/daily-briefing` job precomputes + upserts
+/// it once a day. `body` is the 1–2 sentence text; `model` is the model id when
+/// AI-written (NULL for the deterministic template); `signals` is the JSON
+/// snapshot the text was derived from (useful for debugging / future UI).
+///
+/// FAIL-SOFT: this table is part of the Wave-0+ delta. Reads degrade to a fresh
+/// deterministic compute on Postgres 42P01 (undefined_table) until the
+/// migration is applied, so the dashboard never errors on a not-yet-migrated DB.
+model DashboardBriefing {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  day            DateTime  @db.Date
+  body           String
+  model          String?
+  signals        Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, day], map: "dashboard_briefings_uniq")
+  @@index([organizationId, day(sort: Desc)], map: "idx_dashboard_briefings_org")
+  @@map("dashboard_briefings")
 }
 
 // ============================================================

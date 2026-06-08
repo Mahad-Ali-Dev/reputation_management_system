@@ -8,11 +8,13 @@ import { softInbox } from "@/lib/inbox/fail-soft";
 import { commentStatusCounts, listComments } from "@/lib/inbox/comments";
 import { getModerationConfig } from "@/lib/moderation/rules";
 import { listModerationQueue, moderationQueueCounts } from "@/lib/moderation/queue";
+import { listAutomationRules } from "@/lib/chat/automation-actions";
 import { InboxTabsBar } from "./inbox-tabs-bar";
 import { ConversationsPanel } from "./conversations-panel";
 import { CommentsPanel, type CommentRowView } from "./comments-panel";
 import { ModerationPanel, type QueueItemView } from "./moderation-panel";
 import { LiveChatPanel } from "./livechat-panel";
+import { AutomationsPanel } from "./automations-panel";
 import type {
   KeywordRuleView,
   ModerationConfigView,
@@ -100,12 +102,9 @@ export async function InboxShell({
       )}
 
       {tab === "automation" && (
-        <StubPanel
-          icon="bolt"
-          title="Automations"
-          body="Auto-reply and AI-handoff rules for your channels. The full rule builder is being assembled; manage existing presets in the meantime."
-          ctas={[{ label: "Open automations", href: "/support/chat-automation", primary: true }]}
-        />
+        <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
+          <AutomationTab orgId={orgId} />
+        </Suspense>
       )}
 
       {tab === "analytics" && (
@@ -252,6 +251,18 @@ async function ModerationTab({
       config={configView}
     />
   );
+}
+
+/**
+ * Automation tab (server) — reads the org's ChatAutomationRule rows (fail-soft →
+ * [] pre-migration) and feeds the <AutomationsPanel/> client island, which owns
+ * the list + create/edit form. Writes are RBAC-gated inside the server actions.
+ */
+async function AutomationTab({ orgId: _orgId }: { orgId: string }) {
+  // `listAutomationRules` derives the org from the session internally (it is a
+  // client-callable "use server" action and must not accept a client orgId).
+  const rules = await listAutomationRules();
+  return <AutomationsPanel rules={rules} />;
 }
 
 /**

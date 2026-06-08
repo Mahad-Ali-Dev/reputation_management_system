@@ -15,6 +15,7 @@ import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { disconnectConnection, resyncConnection } from "./_components/actions";
 import { ConnectionsAccordion } from "./_components/connections-accordion";
+import { CsvImportPanel } from "./_components/csv-import-panel";
 import { type ConnectedRow, ConnectedSystemsTable } from "./_components/connected-systems-table";
 import { GetStartedCard } from "./_components/get-started-card";
 import {
@@ -179,8 +180,14 @@ function resolveProvider(id: string): ProviderEntry | null {
   return PROVIDERS[id] ?? null;
 }
 
-export default async function ConnectionsPage() {
+export default async function ConnectionsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ import?: string }>;
+}) {
   const { orgId } = await getOrgContext();
+  const sp = (await searchParams) ?? {};
+  const showImport = sp.import === "1";
 
   const [connections, providerApps] = await Promise.all([
     loadConnections(orgId),
@@ -305,7 +312,7 @@ export default async function ConnectionsPage() {
         description="Pull customer data from your CRM and POS, listen on social, and let repulabs ship review requests at the moment of truth."
         actions={
           <>
-            <Link href="/contacts?import=1" className="btn">
+            <Link href="/connections?import=1#csv-import" className="btn">
               <Icon name="upload" size={13} />
               Import CSV
             </Link>
@@ -348,6 +355,12 @@ export default async function ConnectionsPage() {
       {connectedCount === 0 && (
         <div style={{ marginBottom: 18 }}>
           <GetStartedCard />
+        </div>
+      )}
+
+      {showImport && (
+        <div id="csv-import" style={{ marginBottom: 18, scrollMarginTop: 24 }}>
+          <CsvImportPanel />
         </div>
       )}
 
