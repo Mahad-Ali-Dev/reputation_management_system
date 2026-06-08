@@ -232,7 +232,7 @@ function Hero() {
             }}
           >
             <Sparkles size={11} />
-            The reputation OS
+            Reputation command center
           </span>
           <h1
             className="mt-6"

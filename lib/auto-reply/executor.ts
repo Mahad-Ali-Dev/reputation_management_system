@@ -37,7 +37,13 @@ import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import type { Prisma } from "@prisma/client";
 import { pickRule } from "./match";
+import {
+  fixedScheduledPublishAt,
+  nextScheduledPublishAt,
+  usesRandomizedWindow,
+} from "./schedule";
 
 type BrandVoiceJson = {
   tone?: string[];
@@ -197,8 +203,13 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
   // pending_review regardless — they go through the same approve gate as
   // human-triggered drafts.
   const willAutoPublish = rule.action === "auto_publish_after_delay" && !blocked;
+  // Durable post time. Rules opting into the randomized window (the managed 5★
+  // toggle, delayMinutes = sentinel) spread across 2–4h so the cadence reads as
+  // human; legacy fixed-delay rules keep their exact `delayMinutes` offset.
   const autoPublishAt = willAutoPublish
-    ? new Date(Date.now() + Math.max(0, rule.delayMinutes) * 60_000)
+    ? usesRandomizedWindow(rule.delayMinutes)
+      ? nextScheduledPublishAt()
+      : fixedScheduledPublishAt(rule.delayMinutes)
     : null;
 
   // `reviewId` from the input is the same as ctx.review.id (we looked it
@@ -219,22 +230,25 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
     if (existing) {
       return { replyId: existing.id, raceLost: true };
     }
-    const reply = await tx.reviewReply.create({
-      data: {
-        reviewId,
-        organizationId,
-        body: gen.body,
-        // Always pending_review — even auto-publish flow lands here first.
-        // The publish cron promotes to `published` after `autoPublishAt`.
-        status: "pending_review",
-        // Durably record a safety-classifier block with a prefix the publish
-        // cron's `startsWith("auto_reply:")` filter EXCLUDES. Without this the
-        // block was only logged, so the cron would still auto-publish a flagged
-        // reply after the delay. A blocked draft can now go live ONLY via
-        // manual human approval (which publishes by reviewId, prefix-agnostic).
-        generatedBy: blocked ? `auto_reply_blocked:${rule.id}` : `auto_reply:${rule.id}`,
-      },
-    });
+    const baseData = {
+      reviewId,
+      organizationId,
+      body: gen.body,
+      // Always pending_review — even auto-publish flow lands here first.
+      // The publish cron promotes to `published` after `scheduledPublishAt`.
+      status: "pending_review",
+      // Durably record a safety-classifier block with a prefix the publish
+      // cron's `startsWith("auto_reply:")` filter EXCLUDES. Without this the
+      // block was only logged, so the cron would still auto-publish a flagged
+      // reply after the delay. A blocked draft can now go live ONLY via
+      // manual human approval (which publishes by reviewId, prefix-agnostic).
+      generatedBy: blocked ? `auto_reply_blocked:${rule.id}` : `auto_reply:${rule.id}`,
+    };
+    // The durable randomized/fixed post time lives in `scheduledPublishAt`; the
+    // publish cron drains by it. Pre-migration safety: if the live DB hasn't
+    // gained the column yet (42703), retry without it — the cron's derived-
+    // window fallback still picks the reply up. NULL for draft-only rules.
+    const reply = await createReplyWithSchedule(tx, baseData, autoPublishAt);
     // Bump rule audit counters in the same tx. Cheap, and useful for the
     // "this rule has fired 27 times this month" line in the UI.
     await tx.autoReplyRule.update({
@@ -244,9 +258,6 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
         lastFiredAt: new Date(),
       },
     });
-    // We don't have a `scheduled_publish_at` column on review_replies yet,
-    // so for now the publish-cron infers the window from generatedBy + an
-    // auto_reply_rules look-up. Wiring is in lib/auto-reply/publish-due.ts.
     await tx.auditLog.create({
       data: {
         organizationId,
@@ -348,74 +359,66 @@ function applyToneOverride(bv: BrandVoiceJson, toneKey: string): BrandVoiceJson 
 }
 
 /**
- * The publish-due sweep. Called by an hourly cron. Picks up any
- * auto-publish ReviewReply rows whose window has elapsed and publishes
- * them. We deliberately keep the lookup window narrow (last 7 days) so
- * a stale rule from a month ago can't get auto-published if the host
- * re-enables it.
+ * The publish-due sweep. Called by the `auto-reply-publish` cron (every 5
+ * minutes). Column-driven: it drains every reply whose durable
+ * `scheduledPublishAt` has elapsed, regardless of HOW it got scheduled
+ * (executor auto-publish OR a human-approved-then-scheduled reply from
+ * `publishReply(..., postNow=false)`). Both converge here uniformly.
  *
- * Exported separately so the cron handler doesn't need to know about
- * the rule machinery — it just calls `publishDueAutoReplies()`.
+ * Safety: the `auto_reply_blocked:` prefix is still EXCLUDED so a
+ * safety-flagged draft never auto-posts (it can only go live via explicit
+ * human approval). We confirm the reply is still `pending_review` and unposted
+ * inside `publishReplyFromCron`.
+ *
+ * Pre-migration fallback: until the live DB gains `scheduled_publish_at`, the
+ * column select throws Postgres 42703; we catch it and fall back to the legacy
+ * derived-window drain (`createdAt + rule.delayMinutes`). Remove the fallback
+ * once the migration has run.
+ *
+ * Exported separately so the cron handler just calls `publishDueAutoReplies()`.
  */
 export async function publishDueAutoReplies(): Promise<{ promoted: number; skipped: number }> {
-  // Stage 1: get candidate replies. We hit the unscoped prisma client
-  // because the cron runs across all tenants. Each downstream write is
-  // gated by withTenant(orgId).
-  const cutoffEarliest = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-  const cutoffLatest = new Date(Date.now()); // anything created up to now
+  try {
+    return await drainByScheduledColumn();
+  } catch (err) {
+    if (isUndefinedColumn(err)) {
+      logger.warn(
+        { event: "auto_reply.cron.column_missing_fallback" },
+        "scheduled_publish_at column not present yet; using derived-window drain",
+      );
+      return await drainByDerivedWindow();
+    }
+    throw err;
+  }
+}
 
+/**
+ * Column-driven drain. Selects replies whose randomized/fixed
+ * `scheduledPublishAt` is due and hands each to the standard publish flow.
+ */
+async function drainByScheduledColumn(): Promise<{ promoted: number; skipped: number }> {
+  const now = new Date();
   const candidates = await prisma.reviewReply.findMany({
     where: {
       status: "pending_review",
-      generatedBy: { startsWith: "auto_reply:" },
-      createdAt: { gte: cutoffEarliest, lte: cutoffLatest },
       publishedAt: null,
+      scheduledPublishAt: { not: null, lte: now },
+      // Exclude safety-blocked auto-drafts (prefix the executor set). Human
+      // drafts (generatedBy = a model id), clean auto-drafts, and any NULL-
+      // generatedBy scheduled reply all pass. The OR keeps NULLs included
+      // (a bare `NOT startsWith` would drop them via SQL three-valued logic).
+      OR: [
+        { generatedBy: null },
+        { generatedBy: { not: { startsWith: "auto_reply_blocked:" } } },
+      ],
     },
-    select: {
-      id: true,
-      organizationId: true,
-      reviewId: true,
-      generatedBy: true,
-      createdAt: true,
-    },
+    select: { id: true, organizationId: true, reviewId: true },
     take: 500,
   });
 
   let promoted = 0;
   let skipped = 0;
   for (const c of candidates) {
-    // generatedBy format: "auto_reply:<rule_uuid>"
-    const ruleId = c.generatedBy?.replace(/^auto_reply:/, "") ?? null;
-    if (!ruleId) {
-      skipped++;
-      continue;
-    }
-    const rule = await prisma.autoReplyRule.findUnique({
-      where: { id: ruleId },
-      select: {
-        action: true,
-        delayMinutes: true,
-        organizationId: true,
-        enabled: true,
-      },
-    });
-    if (!rule || !rule.enabled || rule.action !== "auto_publish_after_delay") {
-      skipped++;
-      continue;
-    }
-    // Defense-in-depth: only publish if rule still belongs to the org on
-    // the reply. Prevents a rule's organizationId getting orphaned and the
-    // publish leaking cross-tenant.
-    if (rule.organizationId !== c.organizationId) {
-      skipped++;
-      continue;
-    }
-    const dueAt = new Date(c.createdAt.getTime() + rule.delayMinutes * 60_000);
-    if (dueAt > new Date()) {
-      skipped++;
-      continue;
-    }
-    // It's due — hand off to the standard publish flow.
     try {
       const { publishReplyFromCron } = await import("@/lib/reviews/actions-cron");
       const ok = await publishReplyFromCron(c.organizationId, c.reviewId);
@@ -436,7 +439,114 @@ export async function publishDueAutoReplies(): Promise<{ promoted: number; skipp
 
   logger.info(
     { promoted, skipped, candidates: candidates.length, event: "auto_reply.cron.batch" },
-    "auto-publish cron batch complete",
+    "auto-publish cron batch complete (column drain)",
   );
   return { promoted, skipped };
+}
+
+/**
+ * Legacy derived-window drain (pre-migration fallback ONLY). Re-derives the
+ * due time from `createdAt + rule.delayMinutes` via a per-row rule lookup.
+ * Kept verbatim from the original implementation so behavior is unchanged for
+ * orgs still on the un-migrated DB. Randomized-window rules (sentinel
+ * delayMinutes) can't be expressed here, so they post immediately under the
+ * fallback — acceptable for the brief migration window.
+ */
+async function drainByDerivedWindow(): Promise<{ promoted: number; skipped: number }> {
+  const cutoffEarliest = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+  const cutoffLatest = new Date(Date.now());
+
+  const candidates = await prisma.reviewReply.findMany({
+    where: {
+      status: "pending_review",
+      generatedBy: { startsWith: "auto_reply:" },
+      createdAt: { gte: cutoffEarliest, lte: cutoffLatest },
+      publishedAt: null,
+    },
+    select: { id: true, organizationId: true, reviewId: true, generatedBy: true, createdAt: true },
+    take: 500,
+  });
+
+  let promoted = 0;
+  let skipped = 0;
+  for (const c of candidates) {
+    const ruleId = c.generatedBy?.replace(/^auto_reply:/, "") ?? null;
+    if (!ruleId) {
+      skipped++;
+      continue;
+    }
+    const rule = await prisma.autoReplyRule.findUnique({
+      where: { id: ruleId },
+      select: { action: true, delayMinutes: true, organizationId: true, enabled: true },
+    });
+    if (!rule || !rule.enabled || rule.action !== "auto_publish_after_delay") {
+      skipped++;
+      continue;
+    }
+    if (rule.organizationId !== c.organizationId) {
+      skipped++;
+      continue;
+    }
+    // Sentinel (randomized) rules have no fixed offset; treat as due-now.
+    const offsetMs = Math.max(0, rule.delayMinutes) * 60_000;
+    const dueAt = new Date(c.createdAt.getTime() + offsetMs);
+    if (dueAt > new Date()) {
+      skipped++;
+      continue;
+    }
+    try {
+      const { publishReplyFromCron } = await import("@/lib/reviews/actions-cron");
+      const ok = await publishReplyFromCron(c.organizationId, c.reviewId);
+      if (ok) promoted++;
+      else skipped++;
+    } catch (err) {
+      skipped++;
+      logger.error(
+        {
+          err: err instanceof Error ? err.message : String(err),
+          replyId: c.id,
+          event: "auto_reply.cron.publish_failed",
+        },
+        "auto-publish cron failed for one reply (derived-window fallback)",
+      );
+    }
+  }
+
+  logger.info(
+    { promoted, skipped, candidates: candidates.length, event: "auto_reply.cron.batch_fallback" },
+    "auto-publish cron batch complete (derived-window fallback)",
+  );
+  return { promoted, skipped };
+}
+
+/**
+ * Insert a ReviewReply, including `scheduledPublishAt` when set. Pre-migration
+ * safety: if the column doesn't exist yet (42703), retry without it so the
+ * executor never crashes the ingest path against an un-migrated DB.
+ */
+async function createReplyWithSchedule(
+  tx: Prisma.TransactionClient,
+  baseData: Prisma.ReviewReplyUncheckedCreateInput,
+  scheduledPublishAt: Date | null,
+): Promise<{ id: string }> {
+  try {
+    return await tx.reviewReply.create({
+      data: { ...baseData, scheduledPublishAt },
+      select: { id: true },
+    });
+  } catch (err) {
+    if (isUndefinedColumn(err)) {
+      logger.warn(
+        { event: "auto_reply.persist.column_missing" },
+        "scheduled_publish_at column not present yet; persisting reply without it",
+      );
+      return tx.reviewReply.create({ data: baseData, select: { id: true } });
+    }
+    throw err;
+  }
+}
+
+/** Postgres `undefined_column` (42703) — the un-migrated `scheduled_publish_at`. */
+function isUndefinedColumn(err: unknown): boolean {
+  return (err as { code?: string } | null)?.code === "42703";
 }

@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth/config";
 import { assertEntitled } from "@/lib/billing/entitlements";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { withTenant } from "@/lib/db/with-tenant";
 import { generateSlug } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
@@ -125,6 +126,26 @@ export async function commitBulkReviewRequests(form: FormData): Promise<void> {
         source: "imported_with_attestation",
       });
     }
+  }
+
+  // Auto-capture each bulk recipient into the Contact directory. Fire-and-forget
+  // + fail-soft (the hook never throws and dedupes internally) so it can't break
+  // / slow the bulk commit. Sourced as "csv" — a weak source that the hook will
+  // upgrade later if the same person leaves a real review. The (org, channel,
+  // recipient) externalRef keeps re-uploads idempotent.
+  for (const r of preview.valid) {
+    captureContactInBackground({
+      orgId,
+      source: "csv",
+      email: channel === "email" ? r.recipient : null,
+      phone: channel === "sms" ? r.recipient : null,
+      name: r.recipientName,
+      establishmentId,
+      activity: {
+        title: "Imported via bulk review-request CSV",
+        externalRef: `outreach-csv:${channel}:${r.recipient}`,
+      },
+    });
   }
 
   logger.info(

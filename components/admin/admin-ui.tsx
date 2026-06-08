@@ -31,12 +31,14 @@ export function KpiCard({
 
 type BadgeTone = "ok" | "warn" | "bad" | "info" | "neutral";
 
+// Aligned to the v3 chip palette (globals.css state tokens) so admin badges
+// read identically to the rest of the product.
 const BADGE_PALETTE: Record<BadgeTone, { bg: string; fg: string }> = {
-  ok: { bg: "#dcfce7", fg: "#15803d" },
-  warn: { bg: "#fef3c7", fg: "#a16207" },
-  bad: { bg: "#fee2e2", fg: "#b91c1c" },
-  info: { bg: "#dbeafe", fg: "#1d4ed8" },
-  neutral: { bg: "#f1f5f9", fg: "#475569" },
+  ok: { bg: "var(--ok-soft, #dcfce7)", fg: "#047857" },
+  warn: { bg: "var(--warn-soft, #fef3c7)", fg: "#b45309" },
+  bad: { bg: "var(--bad-soft, #fee2e2)", fg: "#b91c1c" },
+  info: { bg: "var(--pri-50, #eff6ff)", fg: "var(--pri, #2563eb)" },
+  neutral: { bg: "var(--surface-3, #f1f5f9)", fg: "var(--ink-3, #475569)" },
 };
 
 export function Badge({

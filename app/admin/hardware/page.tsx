@@ -2,62 +2,110 @@ import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { ActionLink, Badge, KpiCard, THead, TableCard, Td, Th } from "@/components/admin/admin-ui";
 import { Icon } from "@/components/shell/icon";
 import { prisma } from "@/lib/db/client";
-import Link from "next/link";
 
 /**
- * Admin hardware page — bulk QR generation for factory production runs.
+ * Admin hardware page — bulk QR/NFC generation for factory production runs.
  *
  * Workflow:
- *   1. Pick product SKU (e.g., "plaque-brass" or "stand-acrylic")
- *   2. Pick quantity (1-500 per batch)
- *   3. Submit form → /api/admin/hardware/batch generates devices + streams CSV
- *   4. Admin downloads CSV with (slug, activation_code, qr_url, serial) per row
- *   5. CSV goes to the factory; factory prints QR + activation code on each plaque
+ *   1. Pick product SKU + kind (QR plaque or NFC card) + quantity (1-500)
+ *   2. Submit form → /api/admin/hardware/batch mints devices, persists an
+ *      envelope-encrypted batch row, and STREAMS a ZIP back (incrementally, so
+ *      nginx never trips its read timeout — the old 502-on-500 bug).
+ *   3. Admin saves the ZIP (manifest + QR/NFC encode assets per unit).
  *
- * The activation codes are SHA-256-hashed at generation — the plaintext only
- * exists in the CSV response. If the admin loses the CSV, the batch is wasted
- * inventory because nobody can activate those plaques. The page warns about
- * this explicitly.
+ * The activation codes are SHA-256-hashed on the device row — the plaintext only
+ * exists in the ZIP. To survive a lost download, the batch row keeps the codes
+ * ENVELOPE-ENCRYPTED for a one-time re-download (see the "Recent batches" list
+ * below). After the first re-download (or the TTL) the blob is purged and the
+ * codes are gone for good.
  */
 
 export const dynamic = "force-dynamic";
 
+type BatchRow = {
+  id: string;
+  createdAt: Date;
+  productSku: string;
+  productKind: string;
+  quantity: number;
+  status: string;
+  downloadCount: number;
+  notes: string | null;
+  createdByAdminId: string | null;
+  expiresAt: Date | null;
+  canRedownload: boolean;
+};
+
+/**
+ * Load recent batches from hardware_batches. Fails soft to an empty list if the
+ * table isn't migrated yet (build rule: no `prisma migrate` — the founder runs
+ * the SQL manually post-deploy), so the page still renders + generates batches.
+ */
+async function loadRecentBatches(): Promise<{ rows: BatchRow[]; tableMissing: boolean }> {
+  try {
+    const batches = await prisma.hardwareBatch.findMany({
+      orderBy: { createdAt: "desc" },
+      take: 15,
+      select: {
+        id: true,
+        createdAt: true,
+        productSku: true,
+        productKind: true,
+        quantity: true,
+        status: true,
+        downloadCount: true,
+        notes: true,
+        createdByAdminId: true,
+        expiresAt: true,
+        // We don't select encryptedCodes (sensitive + large) — derive
+        // re-downloadability from status + expiresAt instead.
+      },
+    });
+    const now = Date.now();
+    return {
+      tableMissing: false,
+      rows: batches.map((b) => ({
+        ...b,
+        canRedownload:
+          b.status === "ready" && (!b.expiresAt || b.expiresAt.getTime() > now),
+      })),
+    };
+  } catch (err) {
+    if (isMissingRelation(err)) return { rows: [], tableMissing: true };
+    throw err;
+  }
+}
+
+function isMissingRelation(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "42P01" || code === "42703") return true;
+  const metaCode = (err as { meta?: { code?: string } } | null)?.meta?.code;
+  return metaCode === "42P01" || metaCode === "42703";
+}
+
 export default async function AdminHardwarePage() {
-  const [products, unactivated, activeCount, retiredCount, recentBatches] = await Promise.all([
+  const [products, unactivated, activeCount, retiredCount, recent] = await Promise.all([
     prisma.hardwareProduct.findMany({
       where: { isActive: true },
       select: {
         sku: true,
         name: true,
-        description: true,
         priceCents: true,
         currency: true,
-        unitsPerPack: true,
       },
       orderBy: { sortOrder: "asc" },
     }),
     prisma.device.count({ where: { status: "unactivated" } }),
     prisma.device.count({ where: { status: "active" } }),
     prisma.device.count({ where: { status: "retired" } }),
-    // Pull recent hardware.batch.generated audit rows to list past batches.
-    prisma.auditLog.findMany({
-      where: { action: "hardware.batch.generated" },
-      orderBy: { createdAt: "desc" },
-      take: 10,
-      select: {
-        id: true,
-        createdAt: true,
-        actorId: true,
-        afterData: true,
-      },
-    }),
+    loadRecentBatches(),
   ]);
 
   return (
     <>
       <AdminPageHeader
         title="Hardware batches"
-        description="Generate QR codes + activation codes in bulk for factory production. Downloads as a single ZIP with the manifest CSV and a high-res PNG + scalable SVG of each QR — ready to send straight to the factory."
+        description="Generate QR + NFC activation codes in bulk for factory production. Downloads as a single ZIP — streamed incrementally so even 500-unit runs never time out — with the manifest and per-unit QR/NFC assets ready for the factory."
         actions={
           <ActionLink href="/admin/audit?action=hardware.batch" icon="lock">
             View batch audit log
@@ -70,10 +118,10 @@ export default async function AdminHardwarePage() {
         <KpiCard
           l="Unactivated inventory"
           v={unactivated.toLocaleString()}
-          d="QRs generated, not yet redeemed"
+          d="QRs/NFC generated, not yet redeemed"
         />
         <KpiCard
-          l="Active QRs"
+          l="Active units"
           v={activeCount.toLocaleString()}
           d="redeemed + redirecting"
           up={activeCount > 0}
@@ -81,8 +129,8 @@ export default async function AdminHardwarePage() {
         <KpiCard l="Retired" v={retiredCount.toLocaleString()} d="soft-deleted by tenants" />
         <KpiCard
           l="Batches generated"
-          v={recentBatches.length.toLocaleString()}
-          d="last 10 shown below"
+          v={recent.rows.length.toLocaleString()}
+          d="last 15 shown below"
         />
       </div>
 
@@ -99,11 +147,10 @@ export default async function AdminHardwarePage() {
           lineHeight: 1.55,
         }}
       >
-        <strong>⚠ Activation codes are one-time-view.</strong> They're SHA-256 hashed on insert —
-        the plaintext only exists in the ZIP that downloads right after you click Generate.{" "}
-        <strong>Save that ZIP immediately.</strong> Once the tab closes, the codes are unrecoverable
-        and the whole batch is wasted hardware (no plaque can be activated without its printed
-        code).
+        <strong>⚠ Save the ZIP immediately.</strong> Activation codes are SHA-256 hashed on the
+        device row — the plaintext only lives in the ZIP. The batch keeps an encrypted copy so you
+        can re-download <strong>once</strong> from the list below if the original download is lost;
+        after that re-download (or after 7 days) the codes are purged and unrecoverable.
       </div>
 
       {/* Generation form + product list */}
@@ -126,7 +173,7 @@ export default async function AdminHardwarePage() {
               lineHeight: 1.55,
             }}
           >
-            Pick a product SKU + quantity. We'll mint that many{" "}
+            Pick a product SKU, the unit kind, and quantity. We'll mint that many{" "}
             <code className="mono" style={chipStyle}>
               Device
             </code>{" "}
@@ -134,8 +181,8 @@ export default async function AdminHardwarePage() {
             <code className="mono" style={chipStyle}>
               unactivated
             </code>
-            , generate unique slugs + activation codes for each, stream a CSV back to your browser,
-            and audit-log the batch.
+            , persist an encrypted batch record for re-download, then stream a ZIP back to your
+            browser.
           </p>
 
           {/* Native HTML form: browser-native download on submit; no JS needed. */}
@@ -173,6 +220,22 @@ export default async function AdminHardwarePage() {
               ) : null}
             </FormField>
 
+            <FormField label="Product kind">
+              <select name="productKind" required style={inputStyle} defaultValue="qr">
+                <option value="qr">QR plaque — print-ready PNG + SVG per unit</option>
+                <option value="nfc">NFC card — encode URL manifest + small QR companion</option>
+                <option value="wifi">WiFi NFC card — same encode kit as NFC</option>
+                <option value="multi_platform">
+                  Multi-platform QR — picker QR with the multi glyph
+                </option>
+              </select>
+              <span style={hintStyle}>
+                <strong>QR</strong> emits 1024px print PNGs + vector SVGs. <strong>NFC/WiFi</strong>{" "}
+                emit a manifest with the per-card encode URL (write it to the chip) plus a small QR
+                companion — no heavy PNGs.
+              </span>
+            </FormField>
+
             <FormField label="Quantity">
               <input
                 type="number"
@@ -184,7 +247,7 @@ export default async function AdminHardwarePage() {
                 style={inputStyle}
               />
               <span style={hintStyle}>
-                Each unit = one Device row + one QR + one activation code. Max 500 per batch.
+                Each unit = one Device row + one activation code. Max 500 per batch.
               </span>
             </FormField>
 
@@ -197,7 +260,7 @@ export default async function AdminHardwarePage() {
                 style={inputStyle}
               />
               <span style={hintStyle}>
-                Recorded on the audit log only — not printed on the plaque or shared with the
+                Recorded on the batch + audit log only — not printed on the unit or shared with the
                 factory.
               </span>
             </FormField>
@@ -223,8 +286,8 @@ export default async function AdminHardwarePage() {
                 Generate batch + download ZIP
               </button>
               <span style={{ alignSelf: "center", fontSize: 11.5, color: "var(--rl-muted)" }}>
-                Browser saves the ZIP automatically. Large batches (500+) take 10-20s — wait for the
-                download.
+                The ZIP streams as it builds — the download starts immediately even for 500-unit
+                runs.
               </span>
             </div>
           </form>
@@ -242,34 +305,35 @@ export default async function AdminHardwarePage() {
               lineHeight: 1.7,
             }}
           >
-            <li>Generate the batch — save the ZIP file.</li>
+            <li>Generate the batch — the ZIP streams down. Save it.</li>
             <li>
               Send the ZIP to your factory. Inside they'll find:
               <ul style={{ marginTop: 4, paddingLeft: 16, lineHeight: 1.55 }}>
                 <li>
-                  <strong>README.txt</strong> — print instructions
+                  <strong>README.txt</strong> — print / encode instructions
                 </li>
                 <li>
-                  <strong>manifest.csv</strong> — slug ↔ code ↔ serial table
+                  <strong>manifest.csv</strong> — slug ↔ code ↔ serial table (NFC adds an{" "}
+                  <strong>encode_url</strong> column)
                 </li>
                 <li>
-                  <strong>qr-png/&lt;slug&gt;.png</strong> — 1024×1024 print-ready PNG per plaque
+                  <strong>qr-png/&lt;slug&gt;.png</strong> — 1024×1024 print PNG (QR kind only)
                 </li>
                 <li>
-                  <strong>qr-svg/&lt;slug&gt;.svg</strong> — vector QR for huge prints
+                  <strong>qr-svg/&lt;slug&gt;.svg</strong> — vector QR with centered logo
                 </li>
               </ul>
             </li>
             <li>
-              Factory prints each plaque with its QR image + the matching{" "}
-              <strong>activation_code</strong> (5-character code) printed below or beside the QR.
+              QR: print the QR image + the matching <strong>activation_code</strong>. NFC: write the{" "}
+              <strong>encode_url</strong> to each chip + print the activation code.
             </li>
             <li>
               Customer redeems via{" "}
               <code className="mono" style={chipStyle}>
                 /activate
               </code>{" "}
-              — verifies activation_code, picks business, pastes Google review URL. QR goes live.
+              — the unit goes live.
             </li>
           </ol>
         </div>
@@ -280,51 +344,78 @@ export default async function AdminHardwarePage() {
         <div className="ds-card__head">
           <h3 className="ds-card__title">Recent batches</h3>
           <span className="mono dim" style={{ fontSize: 10.5 }}>
-            10 MOST RECENT
+            15 MOST RECENT
           </span>
         </div>
         <TableCard
-          empty={recentBatches.length === 0}
-          emptyText="No batches generated yet. Generate one above to start."
+          empty={recent.rows.length === 0}
+          emptyText={
+            recent.tableMissing
+              ? "Batch history table not migrated yet. Run the hardware_batches migration to enable re-download."
+              : "No batches generated yet. Generate one above to start."
+          }
         >
           <THead>
             <Th>When</Th>
             <Th>Generated by</Th>
             <Th>Product</Th>
+            <Th>Kind</Th>
             <Th align="right">Qty</Th>
+            <Th>Status</Th>
             <Th>Notes</Th>
+            <Th align="right">Re-download</Th>
           </THead>
           <tbody>
-            {recentBatches.map((row) => {
-              const data = (row.afterData ?? {}) as {
-                productSku?: string;
-                productName?: string;
-                quantity?: number;
-                notes?: string | null;
-              };
-              return (
-                <tr key={row.id} style={{ borderTop: "1px solid var(--line)" }}>
-                  <Td mono>{row.createdAt.toISOString().replace("T", " ").slice(0, 19)}</Td>
-                  <Td mono>admin:{row.actorId.slice(0, 8)}</Td>
-                  <Td>
-                    {data.productSku ? <Badge tone="info">{data.productSku}</Badge> : "—"}
-                    {data.productName && (
-                      <div style={{ fontSize: 11, color: "var(--rl-muted)", marginTop: 2 }}>
-                        {data.productName}
-                      </div>
-                    )}
-                  </Td>
-                  <Td align="right">
-                    <strong>{data.quantity ?? "—"}</strong>
-                  </Td>
-                  <Td>
-                    <span style={{ fontSize: 12, color: "var(--rl-muted)" }}>
-                      {data.notes || "—"}
+            {recent.rows.map((row) => (
+              <tr key={row.id} style={{ borderTop: "1px solid var(--line)" }}>
+                <Td mono>{row.createdAt.toISOString().replace("T", " ").slice(0, 19)}</Td>
+                <Td mono>{row.createdByAdminId ? `admin:${row.createdByAdminId.slice(0, 8)}` : "—"}</Td>
+                <Td>
+                  <Badge tone="info">{row.productSku}</Badge>
+                </Td>
+                <Td>
+                  <Badge tone={row.productKind === "qr" ? "neutral" : "warn"}>
+                    {row.productKind}
+                  </Badge>
+                </Td>
+                <Td align="right">
+                  <strong>{row.quantity}</strong>
+                </Td>
+                <Td>
+                  <Badge tone={statusTone(row.status)}>{row.status}</Badge>
+                  {row.downloadCount > 0 && (
+                    <span style={{ fontSize: 10.5, color: "var(--rl-muted)", marginLeft: 6 }}>
+                      ×{row.downloadCount}
                     </span>
-                  </Td>
-                </tr>
-              );
-            })}
+                  )}
+                </Td>
+                <Td>
+                  <span style={{ fontSize: 12, color: "var(--rl-muted)" }}>{row.notes || "—"}</span>
+                </Td>
+                <Td align="right">
+                  {row.canRedownload ? (
+                    <form
+                      method="post"
+                      action={`/api/admin/hardware/batch/${row.id}/download`}
+                      style={{ display: "inline" }}
+                    >
+                      <button
+                        type="submit"
+                        title="One-time recovery download. Purges the stored codes afterward."
+                        style={redownloadBtnStyle}
+                      >
+                        <Icon name="download" size={11} />
+                        Re-download
+                      </button>
+                    </form>
+                  ) : (
+                    <span style={{ fontSize: 11.5, color: "var(--rl-muted)" }}>
+                      {row.status === "expired" ? "purged" : "unavailable"}
+                    </span>
+                  )}
+                </Td>
+              </tr>
+            ))}
           </tbody>
         </TableCard>
         <p
@@ -336,13 +427,21 @@ export default async function AdminHardwarePage() {
             borderTop: "1px solid var(--line)",
           }}
         >
-          ⚠ The ZIP for each past batch is NOT recoverable. If you need to re-export, you'd have to
-          generate a fresh batch — the old plaques are stuck with their original (now-lost)
-          activation codes. Always save the ZIP at generation time.
+          Re-download is a <strong>one-time recovery</strong>: it rebuilds the exact ZIP from the
+          encrypted codes, then purges them (status → <code className="mono">expired</code>). Codes
+          also expire automatically 7 days after generation. Save your ZIP at generation time
+          whenever possible.
         </p>
       </div>
     </>
   );
+}
+
+function statusTone(status: string): "ok" | "warn" | "bad" | "info" | "neutral" {
+  if (status === "ready") return "ok";
+  if (status === "downloaded") return "info";
+  if (status === "expired") return "neutral";
+  return "neutral";
 }
 
 const inputStyle: React.CSSProperties = {
@@ -367,6 +466,20 @@ const chipStyle: React.CSSProperties = {
   padding: "1px 6px",
   borderRadius: 4,
   fontSize: 11.5,
+};
+
+const redownloadBtnStyle: React.CSSProperties = {
+  padding: "5px 10px",
+  borderRadius: 7,
+  border: "1px solid var(--line)",
+  background: "var(--surface)",
+  color: "var(--pri, #2563eb)",
+  fontSize: 11.5,
+  fontWeight: 600,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 6,
 };
 
 function FormField({

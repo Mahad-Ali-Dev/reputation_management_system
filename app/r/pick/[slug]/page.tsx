@@ -98,7 +98,7 @@ export default async function PickerPage({ params, searchParams }: PageProps) {
           <h1 style={titleStyle}>Loved your stay?</h1>
           <p style={bodyStyle}>
             Pick where to leave a review for{" "}
-            <strong style={{ color: "#0b0d0e" }}>{device.establishment?.name}</strong>.
+            <strong style={{ color: "#0f172a" }}>{device.establishment?.name}</strong>.
           </p>
         </div>
 
@@ -235,13 +235,13 @@ const shellStyle: React.CSSProperties = {
   minHeight: "100vh",
   background:
     "radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0%, transparent 40%), " +
-    "radial-gradient(at 100% 100%, rgba(94, 234, 212, 0.08) 0%, transparent 50%), " +
-    "linear-gradient(180deg, #f6f7f4 0%, #ecf1ec 100%)",
+    "radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.07) 0%, transparent 50%), " +
+    "linear-gradient(180deg, #f7f8fb 0%, #eef1f6 100%)",
   display: "grid",
   placeItems: "center",
   padding: "32px 20px",
   fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  color: "#0b0d0e",
+  color: "#0f172a",
 };
 
 const panelStyle: React.CSSProperties = {
@@ -255,6 +255,7 @@ const titleStyle: React.CSSProperties = {
   letterSpacing: "-0.025em",
   margin: 0,
   lineHeight: 1.18,
+  color: "#0f172a",
 };
 
 const bodyStyle: React.CSSProperties = {

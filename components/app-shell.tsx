@@ -26,8 +26,8 @@ export function AppShell({
   topBar,
   orgName,
   planLabel,
-  crumbs,
   biz,
+  dateLabel,
 }: {
   children: React.ReactNode;
   topBar?: React.ReactNode;
@@ -35,6 +35,7 @@ export function AppShell({
   planLabel: string;
   crumbs?: string[];
   biz?: string;
+  dateLabel?: string;
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -90,32 +91,24 @@ export function AppShell({
             <Icon name="menu" size={18} />
           </button>
 
-          {crumbs && crumbs.length > 0 && (
-            <>
-              <div className="tb__crumbs">
-                {crumbs.map((c, i) =>
-                  i === crumbs.length - 1 ? (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: stable position in short breadcrumb
-                    <b key={`${c}-${i}`}>{c}</b>
-                  ) : (
-                    // biome-ignore lint/suspicious/noArrayIndexKey: stable position in short breadcrumb
-                    <span key={`${c}-${i}`} className="row" style={{ gap: 8 }}>
-                      <span className="dim">{c}</span>
-                      <i className="crumb-sep">/</i>
-                    </span>
-                  ),
-                )}
-              </div>
-              {biz && <div className="tb__divider" />}
-            </>
-          )}
-
           {biz && (
             <button type="button" className="tb__loc">
-              <Icon name="pin" size={11} style={{ color: "var(--pri)" }} />
-              <span style={{ color: "var(--rl-muted)" }}>Viewing</span>
-              <b style={{ fontWeight: 500 }}>{biz}</b>
-              <Icon name="chevD" size={10} style={{ color: "var(--rl-muted)" }} />
+              <Icon name="building" size={13} style={{ color: "var(--pri)" }} />
+              <b style={{ fontWeight: 600 }}>{biz}</b>
+              <Icon name="chevD" size={11} style={{ color: "var(--rl-muted)" }} />
+            </button>
+          )}
+
+          <label className="tb__search">
+            <Icon name="search" size={14} />
+            <input placeholder="Search reviews, customers, topics…" aria-label="Search" />
+          </label>
+
+          {dateLabel && (
+            <button type="button" className="tb__date">
+              <Icon name="cal" size={13} style={{ color: "var(--rl-muted)" }} />
+              <span>{dateLabel}</span>
+              <Icon name="chevD" size={11} style={{ color: "var(--rl-muted)" }} />
             </button>
           )}
 

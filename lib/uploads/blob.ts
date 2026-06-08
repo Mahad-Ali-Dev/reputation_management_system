@@ -31,6 +31,10 @@ const UPLOAD_CONTEXTS = {
   org_logo:               { maxBytes: 5 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
   establishment_image:    { maxBytes: 5 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
   social_post_media:      { maxBytes: 50 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/quicktime"] },
+  // Content Library accepts the same image+video set as a social media upload.
+  content_library:        { maxBytes: 50 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/quicktime"] },
+  // AI-generated creatives are images only, smaller cap.
+  ai_creative:            { maxBytes: 10 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp"] },
   email_template_logo:    { maxBytes: 2 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
   survey_template_logo:   { maxBytes: 2 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
 } as const;

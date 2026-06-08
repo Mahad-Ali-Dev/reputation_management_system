@@ -26,6 +26,13 @@ export async function AppShellServer({
 }) {
   const { org } = await getOrgContext();
 
+  // Last-30-days label for the topbar date pill (computed server-side to avoid
+  // a hydration mismatch). e.g. "May 8 – Jun 7, 2026".
+  const now = new Date();
+  const start = new Date(now.getTime() - 30 * 864e5);
+  const fmt = (dt: Date) => dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const dateLabel = `${fmt(start)} – ${fmt(now)}, ${now.getFullYear()}`;
+
   return (
     <AppShell
       orgName={org.name}
@@ -33,6 +40,7 @@ export async function AppShellServer({
       topBar={topBar}
       crumbs={crumbs}
       biz={biz ?? org.name}
+      dateLabel={dateLabel}
     >
       {children}
     </AppShell>

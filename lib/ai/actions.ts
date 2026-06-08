@@ -3,6 +3,7 @@
 import { createHash, randomBytes } from "node:crypto";
 import { crawlUrl } from "@/lib/ai/crawl";
 import { ingestDocument } from "@/lib/ai/ingest";
+import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { auth } from "@/lib/auth/config";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -11,6 +12,9 @@ import { assertRateLimit } from "@/lib/ratelimit";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
+
+/** 8 MB cap on uploaded PDFs (text extraction happens server-side). */
+const MAX_PDF_BYTES = 8 * 1024 * 1024;
 
 async function requireOrg() {
   const session = await auth();
@@ -26,22 +30,71 @@ const DocSchema = z.object({
   establishmentId: z.string().uuid().optional(),
 });
 
+const DocMetaSchema = z.object({
+  title: z.string().min(1).max(120).optional(),
+  establishmentId: z.string().uuid().optional(),
+});
+
+function isPdf(file: File): boolean {
+  return file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+}
+
 /**
- * Upload (or replace) the FAQ document for the chatbot.
- * v1: one doc per establishment (manual paste). Day 10+: multi-doc + URL crawl + PDF.
+ * Upload (or replace) a knowledge-base document for the chatbot.
+ * Accepts manual paste (the `content` field) OR a `.pdf` file (text-extracted
+ * server-side via lib/ai/pdf-extract). Both feed the same chunk→embed pipeline.
  */
 export async function uploadAiDocument(form: FormData): Promise<void> {
   const { orgId, userId } = await requireOrg();
+  // Indexing is a paid AI feature — match the URL-crawl path's gating.
+  await assertEntitled(orgId);
 
-  const parsed = DocSchema.safeParse({
-    title: form.get("title"),
-    content: form.get("content"),
-    establishmentId: form.get("establishmentId") || undefined,
-  });
-  if (!parsed.success) {
-    throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+  const fileEntry = form.get("file");
+  const hasPdf = fileEntry instanceof File && fileEntry.size > 0 && isPdf(fileEntry);
+
+  let title: string;
+  let content: string;
+  let establishmentId: string | undefined;
+  let sourceType: "manual" | "pdf";
+
+  if (hasPdf) {
+    const file = fileEntry as File;
+    if (file.size > MAX_PDF_BYTES) {
+      throw new Error(`PDF too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).`);
+    }
+    const meta = DocMetaSchema.safeParse({
+      title: (form.get("title") as string) || undefined,
+      establishmentId: form.get("establishmentId") || undefined,
+    });
+    if (!meta.success) {
+      throw new Error(`Validation: ${meta.error.issues.map((i) => i.message).join("; ")}`);
+    }
+    const buf = Buffer.from(await file.arrayBuffer());
+    const extracted = await extractPdfText(buf);
+    if (extracted.trim().length < 20) {
+      throw new Error(
+        "We couldn't extract readable text from that PDF (it may be scanned/image-only). Paste the text instead.",
+      );
+    }
+    title = (meta.data.title ?? file.name.replace(/\.pdf$/i, "")).slice(0, 120) || "PDF document";
+    content = extracted;
+    establishmentId = meta.data.establishmentId;
+    sourceType = "pdf";
+  } else {
+    const parsed = DocSchema.safeParse({
+      title: form.get("title"),
+      content: form.get("content"),
+      establishmentId: form.get("establishmentId") || undefined,
+    });
+    if (!parsed.success) {
+      throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+    }
+    title = parsed.data.title;
+    content = parsed.data.content;
+    establishmentId = parsed.data.establishmentId;
+    sourceType = "manual";
   }
-  const { title, content, establishmentId } = parsed.data;
+
   const contentHash = createHash("sha256").update(content).digest("hex");
 
   // Create the doc (or replace existing one for the same establishment+title)
@@ -56,7 +109,7 @@ export async function uploadAiDocument(form: FormData): Promise<void> {
     if (existing) {
       return tx.aiDocument.update({
         where: { id: existing.id },
-        data: { content, contentHash, sourceType: "manual", status: "indexing" },
+        data: { content, contentHash, sourceType, status: "indexing" },
       });
     }
     return tx.aiDocument.create({
@@ -66,7 +119,7 @@ export async function uploadAiDocument(form: FormData): Promise<void> {
         title,
         content,
         contentHash,
-        sourceType: "manual",
+        sourceType,
         status: "indexing",
       },
     });

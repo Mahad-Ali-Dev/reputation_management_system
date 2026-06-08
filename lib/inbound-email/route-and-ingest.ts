@@ -25,6 +25,7 @@
 
 import { maybeFireBadReviewAlert } from "@/lib/alerts/bad-review-sms";
 import { executeAutoReplyRules } from "@/lib/auto-reply/executor";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { type ParseResult, parseAirbnbReviewEmail } from "./parse-airbnb";
@@ -297,6 +298,26 @@ export async function ingestInboundEmail(payload: InboundPayload): Promise<Inges
     },
     "airbnb review ingested",
   );
+
+  // Auto-capture the review author into the Contact directory. Fire-and-
+  // forget + fail-soft (the hook never throws and dedupes internally) so it
+  // can't break / slow ingest. Airbnb's `from` is an automated no-reply
+  // address (not the guest), so we capture the guest by name + dedupe on
+  // (org, "review", externalId).
+  if (parsed.reviewerName) {
+    captureContactInBackground({
+      orgId: organizationId,
+      source: "review",
+      externalId: parsed.externalReviewId,
+      name: parsed.reviewerName,
+      establishmentId: establishment.id,
+      occurredAt: parsed.postedAt,
+      activity: {
+        title: "Left an Airbnb review",
+        externalRef: `review:${parsed.externalReviewId}`,
+      },
+    });
+  }
 
   // Bad-review SMS early-warning — fire-and-forget so a Twilio outage
   // can't bottleneck ingest. The alert module short-circuits cheaply

@@ -42,6 +42,11 @@ model Organization {
   updatedAt       DateTime  @updatedAt @map("updated_at")
   deletedAt       DateTime? @map("deleted_at")
 
+  // Master delta (Wave 0) — SEO onboarding scalars (owner 13_reports).
+  seoOnboardingStep          Int       @default(0) @map("seo_onboarding_step")
+  seoFirstReportRequestedAt  DateTime? @map("seo_first_report_requested_at")
+  seoFirstReportReadyAt      DateTime? @map("seo_first_report_ready_at")
+
   memberships    Membership[]
   invitations    Invitation[]
   subscription   Subscription?
@@ -53,6 +58,36 @@ model Organization {
   reviewRequests ReviewRequest[]
   inboundEmails  InboundEmail[]
   autoReplyRules AutoReplyRule[]
+
+  // Master delta (Wave 0) back-relations.
+  // The delta's §C documents a subset as "back-relations only"; Prisma
+  // additionally requires an opposite field for EVERY new model that carries
+  // an `organization` relation, so all 23 are enumerated here. Pure
+  // back-relations are client-only (no SQL).
+  knowledgeGaps        KnowledgeGap[]
+  scheduledJobs        ScheduledJob[]
+  automationRules      AutomationRule[]
+  contentLibraryAssets ContentLibraryAsset[]
+  socialPostMetrics    SocialPostMetric[]
+  moderationItems      ModerationItem[]
+  widgetConfigs        WidgetConfig[]
+  contactTags          ContactTag[]
+  contactCustomFields  ContactCustomField[]
+  contactActivities    ContactActivity[]
+  surveyInsights       SurveyInsight[]
+  surveyAutomations    SurveyAutomation[]
+  seoSnapshots         SeoSnapshot[]
+  keywordRanks         KeywordRank[]
+  competitors          Competitor[]
+  citationAudits       CitationAudit[]
+  geoGridSnapshots     GeoGridSnapshot[]
+  ga4Connections       Ga4Connection[]
+  connectionSyncLogs   ConnectionSyncLog[]
+  autopilotConfig      AutopilotConfig?
+  autopilotActions     AutopilotAction[]
+  roiSettings          RoiSettings[]
+  autopilotDigestRuns  AutopilotDigestRun[]
+  dashboardBriefings   DashboardBriefing[]
 
   @@index([plan])
   @@index([stripeCustomerId])
@@ -109,6 +144,21 @@ model Establishment {
   surveyCampaigns SurveyCampaign[] @relation("EstablishmentSurveys")
   platformChoices ReviewPlatformChoice[]
   autoReplyRules  AutoReplyRule[]
+
+  // Master delta (Wave 0) back-relations.
+  // NOTE: ga4Connections is modeled one-to-many because Ga4Connection's
+  // uniqueness is the composite @@unique([organizationId, establishmentId])
+  // (establishmentId alone is nullable, not unique), which Prisma cannot use
+  // as a one-to-one defining side. The "one GA4 link per establishment"
+  // intent is enforced by that composite unique + the action layer.
+  contentLibraryAssets ContentLibraryAsset[]
+  automationRules      AutomationRule[]
+  seoSnapshots         SeoSnapshot[]
+  keywordRanks         KeywordRank[]
+  competitors          Competitor[]
+  citationAudits       CitationAudit[]
+  geoGridSnapshots     GeoGridSnapshot[]
+  ga4Connections       Ga4Connection[]
 
   @@index([organizationId])
   @@index([googlePlaceId])
@@ -261,6 +311,8 @@ model SurveyCampaign {
   questions     SurveyQuestion[]
   responses     SurveyResponse[]
   tokens        SurveyResponseToken[]
+  // Master delta (Wave 0) back-relation (owner 11_surveys)
+  automations   SurveyAutomation[]
 
   @@index([organizationId, status])
   @@map("survey_campaigns")
@@ -408,6 +460,9 @@ model WidgetKey {
   rateLimitWindowSec     Int      @default(300) @map("rate_limit_window_sec")
   rateLimitMaxMsgs       Int      @default(20) @map("rate_limit_max_msgs")
   status                 String   @default("active")
+  // Master delta (Wave 0, owner 09_inbox): widget AI behaviour mode. Default
+  // preserves current always-on behaviour.
+  aiMode                 String   @default("always_on") @map("ai_mode")  // always_on | after_hours | ai_human_handoff
   createdAt              DateTime @default(now()) @map("created_at")
 
   @@index([organizationId])
@@ -529,6 +584,41 @@ model DeviceScan {
   @@map("device_scans")
 }
 
+/// Admin-initiated factory production run (bulk QR/NFC generation).
+///
+/// GLOBAL / ADMIN-ONLY table — there is intentionally NO `organizationId` and
+/// NO RLS policy on `hardware_batches`. It is only ever touched by the admin
+/// API path (getAdminSession + role guard), which uses the direct `prisma`
+/// client (the BYPASSRLS owner role). The tenant role `app_tenant_user` is
+/// NOT granted on it — mirroring how `admin_users`/`audit_log` admin paths work.
+///
+/// `encryptedCodes` holds the envelope-encrypted JSON of the plaintext
+/// activation codes (see lib/hardware/batch.ts encryptCodes), persisted ONLY
+/// so the admin can re-download the ZIP once if the original download is lost
+/// (the 502-on-500 bug). It is purged (set null + status='expired') after the
+/// first successful re-download or once `expiresAt` passes. NEVER logged.
+model HardwareBatch {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productSku        String    @map("product_sku")
+  productKind       String    @default("qr") @map("product_kind")
+  quantity          Int
+  status            String    @default("ready") // ready | downloaded | expired
+  notes             String?
+  createdByAdminId  String?   @map("created_by_admin_id")
+  downloadCount     Int       @default(0) @map("download_count")
+  // Envelope-encrypted JSON [{slug,activationCode,serial,qrUrl}] for re-download.
+  // iv is packed in front of the ciphertext (see lib/hardware/batch.ts); the
+  // encryption context is fixed (orgId="__admin__", provider="hardware_batch",
+  // purpose="general") so no per-row context column is needed.
+  encryptedCodes    Bytes?    @map("encrypted_codes")
+  blobUrl           String?   @map("blob_url")
+  expiresAt         DateTime? @map("expires_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("hardware_batches")
+}
+
 model Review {
   id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   organizationId         String    @map("organization_id") @db.Uuid
@@ -568,11 +658,15 @@ model ReviewReply {
   approvedBy      String?   @map("approved_by") @db.Uuid
   publishedAt     DateTime? @map("published_at")
   publishError    String?   @map("publish_error")
+  // Master delta (Wave 0, owner 06_review_feed): durable randomized 2–4h
+  // auto-publish window. NULL = publish immediately on manual approval.
+  scheduledPublishAt DateTime? @map("scheduled_publish_at")
   createdAt       DateTime  @default(now()) @map("created_at")
 
   review Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   @@index([organizationId, status])
+  @@index([status, scheduledPublishAt])
   @@map("review_replies")
 }
 
@@ -665,10 +759,15 @@ model Connection {
   scopes           String[]
   status           String   @default("active") // active | revoked | expired | error
   lastSyncedAt     DateTime? @map("last_synced_at")
+  // Master delta (Wave 0, owner 14_connections): live sync state surfaced in
+  // the Connected Systems table without a join. idle | syncing | error.
+  syncStatus       String?  @map("sync_status")
+  syncError        String?  @map("sync_error")
   createdAt        DateTime @default(now()) @map("created_at")
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
   establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  syncLogs      ConnectionSyncLog[]
 
   @@index([organizationId, provider, status])
   @@map("connections")
@@ -875,11 +974,16 @@ model ReviewDispute {
   organizationId           String    @map("organization_id") @db.Uuid
   reason                   String                                       // fake | offensive | conflict_of_interest | wrong_business | other
   details                  String?
-  status                   String    @default("submitted")              // submitted | submitted_to_google | accepted | rejected | withdrawn
+  status                   String    @default("submitted")              // submitted | submitted_to_google | accepted | rejected | withdrawn | removed
   submittedBy              String    @map("submitted_by") @db.Uuid
   submittedToProviderAt    DateTime? @map("submitted_to_provider_at")
   providerResponse         Json?     @map("provider_response")
   resolvedAt               DateTime? @map("resolved_at")
+  // Master delta (Wave 0, owner 08_dispute): structured violation category +
+  // filing/decision timestamps for the dispute wizard.
+  violationType            String?   @map("violation_type")
+  filedAt                  DateTime? @map("filed_at")
+  decisionAt               DateTime? @map("decision_at")
   createdAt                DateTime  @default(now()) @map("created_at")
   updatedAt                DateTime  @default(now()) @updatedAt @map("updated_at")
 
@@ -961,6 +1065,9 @@ model OutreachTemplate {
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
+  // Master delta (Wave 0) back-relation (owner 07_review_requests)
+  automationRules AutomationRule[]
+
   @@index([organizationId, channel])
   @@map("outreach_templates")
 }
@@ -995,6 +1102,12 @@ model AiTrainingProfile {
   satisfactionAvg       Decimal? @map("satisfaction_avg") @db.Decimal(3, 2)
   unsureTopics          String[] @map("unsure_topics")
   confidentTopics       String[] @map("confident_topics")
+  // Master delta (Wave 0, owner 05_ai_kb): auto-setup + weekly updater +
+  // taught-facts overflow store (near the 3000-char customPrompt cap).
+  sourceUrl             String?  @map("source_url")
+  lastAutoUpdatedAt     DateTime? @map("last_auto_updated_at")
+  locations             String?
+  taughtFacts           Json?    @map("taught_facts")
   updatedAt             DateTime @default(now()) @updatedAt @map("updated_at")
 
   @@map("ai_training_profiles")
@@ -1026,10 +1139,30 @@ model Contact {
   tags            String[]
   metadata        Json?
   lastContactedAt DateTime? @map("last_contacted_at")
+  // Master delta (Wave 0, owner 12_contacts): enriched contact profile.
+  firstName       String?   @map("first_name")
+  lastName        String?   @map("last_name")
+  companyName     String?   @map("company_name")
+  notes           String?
+  vip             Boolean   @default(false)
+  consentStatus   String?   @map("consent_status")
+  socialIds       Json?     @map("social_ids")
+  lastActivityAt  DateTime? @map("last_activity_at")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
+  // Master delta (Wave 0) back-relations (owner 12_contacts)
+  tagLinks     ContactTag[]
+  customFields ContactCustomField[]
+  activities   ContactActivity[]
+
   @@index([organizationId, createdAt(sort: Desc)])
+  // Master delta (Wave 0): activity recency + source lookup (owner 12_contacts).
+  @@index([organizationId, lastActivityAt(sort: Desc)])
+  @@index([organizationId, source])
+  // Master delta (Wave 0): auto-capture dedupe (owner 14_connections).
+  // Materialized in SQL as a PARTIAL unique index WHERE external_id IS NOT NULL.
+  @@unique([organizationId, source, externalId])
   @@map("contacts")
 }
 
@@ -1049,8 +1182,14 @@ model SocialPost {
   error           String?
   isAiCaption     Boolean   @default(false) @map("is_ai_caption")
   bulkBatchId     String?   @map("bulk_batch_id") @db.Uuid
+  // Master delta (Wave 0, owner 10_post_creator): approved carousel creatives
+  // (ordered) + best-time-to-post applied marker.
+  approvedCreativeUrls String[] @default([]) @map("approved_creative_urls")
+  bestTimeApplied      Boolean  @default(false) @map("best_time_applied")
   createdAt       DateTime  @default(now()) @map("created_at")
   updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  metrics SocialPostMetric[]
 
   @@index([organizationId, status, scheduledFor])
   @@map("social_posts")
@@ -1107,6 +1246,14 @@ model ChatAutomationRule {
   trigger         String                                                    // on_open | after_seconds | on_inactivity | on_leave_intent
   delaySeconds    Int      @default(0) @map("delay_seconds")
   isActive        Boolean  @default(false) @map("is_active")
+  // Master delta (Wave 0, owner 09_inbox): channel-aware AI moderation/reply
+  // behaviour. `trigger` stays free-text (new string values, no enum migration).
+  channels                  String[] @default([])
+  triggerKeyword            String?  @map("trigger_keyword")
+  aiBehaviour               String   @default("kb_reply") @map("ai_behaviour")     // kb_reply | fixed_template | kb_then_escalate
+  fixedTemplate             String?  @map("fixed_template")
+  maxRepliesPerConversation Int      @default(3) @map("max_replies_per_conversation")
+  escalateAfterTurns        Int      @default(0) @map("escalate_after_turns")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
 
@@ -1351,6 +1498,33 @@ model DigestRun {
   @@map("digest_runs")
 }
 
+/// Per-day cache of the dashboard's AI "daily briefing".
+///
+/// The dashboard renders by reading this cached row (one tenant read, no AI
+/// call, no latency); the `/api/cron/daily-briefing` job precomputes + upserts
+/// it once a day. `body` is the 1–2 sentence text; `model` is the model id when
+/// AI-written (NULL for the deterministic template); `signals` is the JSON
+/// snapshot the text was derived from (useful for debugging / future UI).
+///
+/// FAIL-SOFT: this table is part of the Wave-0+ delta. Reads degrade to a fresh
+/// deterministic compute on Postgres 42P01 (undefined_table) until the
+/// migration is applied, so the dashboard never errors on a not-yet-migrated DB.
+model DashboardBriefing {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  day            DateTime  @db.Date
+  body           String
+  model          String?
+  signals        Json?
+  createdAt      DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, day], map: "dashboard_briefings_uniq")
+  @@index([organizationId, day(sort: Desc)], map: "idx_dashboard_briefings_org")
+  @@map("dashboard_briefings")
+}
+
 // ============================================================
 // PHASE 2 — AIRBNB / SHORT-TERM RENTAL REVIEW MANAGEMENT
 // ============================================================
@@ -1467,4 +1641,509 @@ model AutoReplyRule {
   @@index([organizationId, enabled])
   @@index([establishmentId])
   @@map("auto_reply_rules")
+}
+
+// ============================================================
+// MASTER DELTA (Wave 0) — 23 new models for the repulabs build.
+// Single-owner schema change; applied with `prisma generate` only.
+// The hand-written migration lives at
+// prisma/migrations/20260607020000_master_delta/migration.sql
+// (written, NOT executed during the build). Every table below is
+// multi-tenant via the canonical tenant_isolation RLS policy +
+// GRANT to app_tenant_user (see the SQL file).
+// ============================================================
+
+/// Owner: 00_foundation (field set adopted from 05_ai_kb superset).
+/// Written by AiAssist when best confidence < ~0.7; consumed by the Step 5
+/// learning monitor + Step 9 inbox handoff. Deduped on `questionNorm`.
+model KnowledgeGap {
+  id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String    @map("organization_id") @db.Uuid
+  establishmentId String?   @map("establishment_id") @db.Uuid
+  question        String
+  questionNorm    String    @map("question_norm")          // normalized for dedup
+  source          String                                   // widget | review_reply | inbox | chat | owner_test
+  purpose         String?
+  confidence      Decimal?  @db.Decimal(3, 2)
+  aiMessageId     String?   @map("ai_message_id") @db.Uuid
+  hitCount        Int       @default(1) @map("hit_count")
+  status          String    @default("open")               // open | answered | dismissed
+  answerText      String?   @map("answer_text")
+  answeredAt      DateTime? @map("answered_at")
+  answeredBy      String?   @map("answered_by") @db.Uuid
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status, hitCount(sort: Desc)])
+  @@index([organizationId, questionNorm])
+  @@map("knowledge_gaps")
+}
+
+/// Owner: 00_foundation. Backs the consolidated `dispatch-scheduled`
+/// per-minute cron (replaces 3 separately-planned minute jobs).
+model ScheduledJob {
+  id             String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String    @map("organization_id") @db.Uuid
+  kind           String                                    // scheduled_post | scheduled_request | scheduled_reply
+  status         String    @default("pending")             // pending | running | done | failed | canceled
+  runAt          DateTime  @map("run_at")
+  payload        Json
+  dedupeKey      String?   @map("dedupe_key")
+  attempts       Int       @default(0)
+  maxAttempts    Int       @default(5) @map("max_attempts")
+  lockedAt       DateTime? @map("locked_at")
+  ranAt          DateTime? @map("ran_at")
+  lastError      String?   @map("last_error")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, kind, dedupeKey])
+  @@index([status, runAt])
+  @@index([organizationId, kind, status])
+  @@map("scheduled_jobs")
+}
+
+/// Owner: 07_review_requests. Review-request automation rules.
+model AutomationRule {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  enabled         Boolean  @default(false)
+  trigger         String                                    // free-text; CHECK in SQL
+  provider        String?
+  delayHours      Int      @default(72) @map("delay_hours")
+  frequencyCapPerCustomer Int @default(1) @map("frequency_cap_per_customer")
+  frequencyCapWindowDays  Int @default(30) @map("frequency_cap_window_days")
+  templateId      String?  @map("template_id") @db.Uuid
+  aiPersonalize   Boolean  @default(false) @map("ai_personalize")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization  Organization      @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment?    @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+  template      OutreachTemplate? @relation(fields: [templateId], references: [id], onDelete: SetNull)
+
+  @@unique([organizationId, establishmentId, trigger])
+  @@index([organizationId, enabled])
+  @@map("automation_rules")
+}
+
+/// Owner: 10_post_creator. Uploaded / AI-generated creative assets.
+model ContentLibraryAsset {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  url             String
+  pathname        String
+  kind            String                                    // image | video
+  mimeType        String?  @map("mime_type")
+  sizeBytes       Int?     @map("size_bytes")
+  width           Int?
+  height          Int?
+  folder          String?
+  source          String   @default("upload")               // upload | ai_creative
+  caption         String?
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, folder, createdAt(sort: Desc)])
+  @@map("content_library_assets")
+}
+
+/// Owner: 10_post_creator. Per-platform engagement metrics for a post.
+model SocialPostMetric {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  socialPostId   String   @map("social_post_id") @db.Uuid
+  platform       String
+  likes          Int      @default(0)
+  comments       Int      @default(0)
+  shares         Int      @default(0)
+  reach          Int      @default(0)
+  impressions    Int      @default(0)
+  fetchedAt      DateTime @default(now()) @map("fetched_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  socialPost   SocialPost   @relation(fields: [socialPostId], references: [id], onDelete: Cascade)
+
+  @@unique([socialPostId, platform])
+  @@index([organizationId, socialPostId])
+  @@map("social_post_metrics")
+}
+
+/// Owner: 09_inbox. Social/webchat moderation queue. NEVER google
+/// (CHECK enforces source exclusion in SQL).
+model ModerationItem {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  source           String                                   // facebook | instagram | webchat (never google)
+  sourceType       String    @map("source_type")            // comment | dm | chat_message
+  sourceId         String    @map("source_id")
+  externalId       String?   @map("external_id")
+  authorName       String?   @map("author_name")
+  body             String
+  reason           String                                   // keyword | profanity | negativity | spam
+  matchedKeyword   String?   @map("matched_keyword")
+  aiConfidence     Decimal?  @db.Decimal(3, 2) @map("ai_confidence")
+  suggestedAction  String    @default("review") @map("suggested_action")
+  status           String    @default("pending")
+  resolvedByUserId String?   @map("resolved_by_user_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at")
+  resolvedAt       DateTime? @map("resolved_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, status, createdAt(sort: Desc)])
+  @@map("moderation_items")
+}
+
+/// Owner: 09_inbox (org-singleton). Live-chat widget appearance/behaviour.
+model WidgetConfig {
+  organizationId      String   @id @map("organization_id") @db.Uuid
+  brandColor          String   @default("#4f46e5") @map("brand_color")
+  headerText          String   @default("Chat with us") @map("header_text")
+  greeting            String
+  avatarUrl           String?  @map("avatar_url")
+  position            String   @default("bottom-right")
+  agentPresence       String   @default("online") @map("agent_presence")  // online | away
+  escalateAfterTurns  Int      @default(6) @map("escalate_after_turns")
+  businessHours       Json?    @map("business_hours")
+  smsHandoffEnabled   Boolean  @default(false) @map("sms_handoff_enabled")
+  updatedAt           DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("widget_configs")
+}
+
+/// Owner: 12_contacts. Source of truth for tags, mirrored to Contact.tags[].
+model ContactTag {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  contactId      String   @map("contact_id") @db.Uuid
+  tag            String
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, tag])
+  @@index([organizationId, tag])
+  @@map("contact_tags")
+}
+
+/// Owner: 12_contacts. Arbitrary key/value custom fields per contact.
+model ContactCustomField {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  contactId      String   @map("contact_id") @db.Uuid
+  key            String
+  value          String
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, key])
+  @@index([organizationId])
+  @@map("contact_custom_fields")
+}
+
+/// Owner: 12_contacts. Contact timeline (the only table written for it).
+/// Idempotent auto-capture via @@unique([contactId, source, externalRef]).
+model ContactActivity {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  contactId      String   @map("contact_id") @db.Uuid
+  kind           String                                    // captured | tag_added | tag_removed | note_added | imported | merged | manual
+  source         String?                                   // google_review | live_chat | survey | social_dm | review_request | shopify
+  title          String?
+  body           String?
+  externalRef    String?  @map("external_ref")
+  actorUserId    String?  @map("actor_user_id") @db.Uuid
+  occurredAt     DateTime @default(now()) @map("occurred_at")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  contact      Contact      @relation(fields: [contactId], references: [id], onDelete: Cascade)
+
+  @@unique([contactId, source, externalRef])
+  @@index([organizationId, contactId, occurredAt(sort: Desc)])
+  @@map("contact_activities")
+}
+
+/// Owner: 11_surveys. AI-generated survey insights. Replace-all per run.
+model SurveyInsight {
+  id                    String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId        String   @map("organization_id") @db.Uuid
+  type                  String
+  priority              String                                  // red | orange | green | blue
+  headline              String
+  description           String
+  recommendation        String
+  evidenceCount         Int      @map("evidence_count")
+  generatedAt           DateTime @map("generated_at")
+  basedOnResponseCount  Int      @map("based_on_response_count")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, generatedAt(sort: Desc)])
+  @@map("survey_insights")
+}
+
+/// Owner: 11_surveys (replaces the spec's non-existent SurveyTrigger).
+model SurveyAutomation {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  campaignId     String?  @map("campaign_id") @db.Uuid
+  triggerEvent   String   @map("trigger_event")               // post_purchase | post_visit | shopify_order | square_sale | manual
+  delayMinutes   Int      @default(0) @map("delay_minutes")
+  status         String   @default("paused")                  // active | paused
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  campaign     SurveyCampaign? @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, status])
+  @@map("survey_automations")
+}
+
+/// Owner: 13_reports. Periodic reputation/SEO snapshot for the report.
+model SeoSnapshot {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  establishmentId  String?  @map("establishment_id") @db.Uuid
+  periodStart      DateTime @map("period_start")
+  periodEnd        DateTime @map("period_end")
+  reputationScore  Int      @map("reputation_score")
+  scoreFactors     Json     @map("score_factors")
+  localPackPosition Int?    @map("local_pack_position")
+  websiteSessions  Int?     @map("website_sessions")
+  execSummary      String?  @map("exec_summary")
+  generatedAt      DateTime @map("generated_at")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, establishmentId, generatedAt(sort: Desc)])
+  @@map("seo_snapshots")
+}
+
+/// Owner: 13_reports. Keyword rank tracking.
+model KeywordRank {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  keyword         String
+  position        Int?
+  inLocalPack     Boolean  @default(false) @map("in_local_pack")
+  searchVolume    Int?     @map("search_volume")
+  geo             String?
+  provider        String
+  checkedAt       DateTime @map("checked_at")
+  raw             Json?
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, establishmentId, keyword, checkedAt(sort: Desc)])
+  @@map("keyword_ranks")
+}
+
+/// Owner: 13_reports. Tracked competitors (cap of 3 enforced in the action).
+model Competitor {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  name            String
+  googlePlaceId   String?  @map("google_place_id")
+  websiteUrl      String?  @map("website_url")
+  rating          Decimal? @db.Decimal(3, 2)
+  reviewCount     Int?     @map("review_count")
+  shareOfVoice    Decimal? @db.Decimal(5, 2) @map("share_of_voice")
+  metrics         Json?
+  keywordGap      String[] @map("keyword_gap")
+  addedById       String?  @map("added_by_id") @db.Uuid
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, establishmentId])
+  @@map("competitors")
+}
+
+/// Owner: 13_reports. NAP citation audit across directories.
+model CitationAudit {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  directory       String                                    // google | yelp | facebook | apple_maps
+  nameMatch       Boolean? @map("name_match")
+  addressMatch    Boolean? @map("address_match")
+  phoneMatch      Boolean? @map("phone_match")
+  listedName      String?  @map("listed_name")
+  listedAddress   String?  @map("listed_address")
+  listedPhone     String?  @map("listed_phone")
+  status          String   @default("unknown")
+  checkedAt       DateTime @map("checked_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, establishmentId, directory])
+  @@map("citation_audits")
+}
+
+/// Owner: 13_reports. Geo-grid local rank snapshot (NxN cells).
+model GeoGridSnapshot {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  establishmentId String?  @map("establishment_id") @db.Uuid
+  keyword         String
+  centerLat       Decimal  @db.Decimal(9, 6) @map("center_lat")
+  centerLng       Decimal  @db.Decimal(9, 6) @map("center_lng")
+  radiusMiles     Decimal  @default(5) @db.Decimal(4, 1) @map("radius_miles")
+  gridSize        Int      @default(5) @map("grid_size")
+  cells           Json                                      // NxN {lat,lng,position}
+  avgPosition     Decimal? @db.Decimal(5, 2) @map("avg_position")
+  provider        String
+  checkedAt       DateTime @map("checked_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, establishmentId, checkedAt(sort: Desc)])
+  @@map("geo_grid_snapshots")
+}
+
+/// Owner: 13_reports. GA4 link. Deliberately separate from Connection so a
+/// GA4 link can't corrupt the review OAuth row.
+model Ga4Connection {
+  id                       String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId           String    @map("organization_id") @db.Uuid
+  establishmentId          String?   @map("establishment_id") @db.Uuid
+  propertyId               String    @map("property_id")
+  measurementId            String?   @map("measurement_id")
+  trackingSnippetInstalled Boolean   @default(false) @map("tracking_snippet_installed")
+  status                   String    @default("pending")
+  lastSyncedAt             DateTime? @map("last_synced_at")
+  createdAt                DateTime  @default(now()) @map("created_at")
+  updatedAt                DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  establishment Establishment? @relation(fields: [establishmentId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, establishmentId])
+  @@index([organizationId])
+  @@map("ga4_connections")
+}
+
+/// Owner: 14_connections. Append-only per-connection sync log.
+model ConnectionSyncLog {
+  id              String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId  String   @map("organization_id") @db.Uuid
+  connectionId    String   @map("connection_id") @db.Uuid
+  provider        String
+  status          String                                    // ok | error | skipped
+  contactsCreated Int      @default(0) @map("contacts_created")
+  contactsUpdated Int      @default(0) @map("contacts_updated")
+  error           String?
+  durationMs      Int?     @map("duration_ms")
+  startedAt       DateTime @default(now()) @map("started_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+  connection   Connection   @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, connectionId, startedAt(sort: Desc)])
+  @@map("connection_sync_logs")
+}
+
+/// Owner: 15_differentiators (org-singleton). Autopilot master config.
+model AutopilotConfig {
+  organizationId       String    @id @map("organization_id") @db.Uuid
+  enabled              Boolean   @default(false)
+  riskTolerance        String    @default("balanced") @map("risk_tolerance")  // conservative | balanced | aggressive
+  autoReply5Star       Boolean   @default(true) @map("auto_reply_5_star")
+  draftLowStar         Boolean   @default(true) @map("draft_low_star")
+  sendReviewRequests   Boolean   @default(true) @map("send_review_requests")
+  voiceToReviewEnabled Boolean   @default(true) @map("voice_to_review_enabled")
+  draftDisputes        Boolean   @default(false) @map("draft_disputes")
+  geoPosts             Boolean   @default(false) @map("geo_posts")
+  inboxAutoReply       Boolean   @default(false) @map("inbox_auto_reply")
+  escalateToHuman      Boolean   @default(true) @map("escalate_to_human")
+  weeklyDigestEnabled  Boolean   @default(true) @map("weekly_digest_enabled")
+  enabledAt            DateTime? @map("enabled_at")
+  updatedAt            DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("autopilot_configs")
+}
+
+/// Owner: 15_differentiators. Autopilot action ledger.
+model AutopilotAction {
+  id             String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId String   @map("organization_id") @db.Uuid
+  loop           String                                    // auto_reply | low_star_draft | review_request | voice_review | dispute | geo_post | inbox_reply | escalation
+  action         String                                    // published | drafted | scheduled_request | escalated
+  resourceType   String?  @map("resource_type")
+  resourceId     String?  @map("resource_id") @db.Uuid
+  status         String   @default("done")
+  requiresHuman  Boolean  @default(false) @map("requires_human")
+  detail         Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@index([organizationId, requiresHuman, status])
+  @@map("autopilot_actions")
+}
+
+/// Owner: 15_differentiators. Per-establishment ROI assumptions.
+model RoiSettings {
+  id               String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String   @map("organization_id") @db.Uuid
+  establishmentId  String   @map("establishment_id") @db.Uuid
+  averageJobValue  Decimal? @db.Decimal(10, 2) @map("average_job_value")
+  bookingToJobRate Decimal  @default(0.6) @db.Decimal(3, 2) @map("booking_to_job_rate")
+  reviewToCallRate Decimal? @db.Decimal(3, 2) @map("review_to_call_rate")
+  currency         String   @default("USD")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, establishmentId])
+  @@index([organizationId])
+  @@map("roi_settings")
+}
+
+/// Owner: 15_differentiators. Weekly autopilot digest run (race-safe claim).
+/// Mirrors the existing DigestRun.
+model AutopilotDigestRun {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  weekStart        DateTime  @map("week_start")
+  recipientsSent   Int       @default(0) @map("recipients_sent")
+  recipientsFailed Int       @default(0) @map("recipients_failed")
+  errorSummary     String?   @map("error_summary")
+  completedAt      DateTime? @map("completed_at")
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
+
+  @@unique([organizationId, weekStart])
+  @@index([organizationId])
+  @@map("autopilot_digest_runs")
 }

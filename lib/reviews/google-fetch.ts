@@ -1,4 +1,5 @@
 import type { Connection, Establishment, Prisma } from "@prisma/client";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { decrypt, type EncryptionContext } from "@/lib/crypto/envelope";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -136,6 +137,27 @@ export async function fetchReviewsForConnection(
         },
       });
       if (result.fetchedAt.getTime() >= Date.now() - 2000) inserted++;
+
+      // Auto-capture the review author into the Contact directory. Fire-and-
+      // forget + fail-soft: the hook never throws and dedupes internally, so a
+      // capture failure can never break / slow review ingest. Google reviews
+      // carry no email/phone, so we dedupe on (org, "review", externalId) and
+      // record the reviewer's display name.
+      const reviewerName = r.reviewer?.displayName ?? null;
+      if (reviewerName) {
+        captureContactInBackground({
+          orgId: conn.organizationId,
+          source: "review",
+          externalId: r.name,
+          name: reviewerName,
+          establishmentId,
+          occurredAt: postedAt,
+          activity: {
+            title: "Left a Google review",
+            externalRef: `review:${r.name}`,
+          },
+        });
+      }
     }
   });
 

@@ -7,22 +7,30 @@ import { useState } from "react";
 import { googleSignIn } from "./actions";
 
 /**
- * Login — repulabs v2 design, side-by-side 2-pane layout.
+ * Login — repulabs v3 design, side-by-side 2-pane layout.
  *
  * Layout:
  *   ┌──────────────────┬──────────────────┐
- *   │ Teal hero panel  │  Login card      │
- *   │ (brand, kicker,  │  (Google,        │
- *   │  headline, copy, │   magic link,    │
- *   │  stats, footer)  │   trial CTA)     │
+ *   │ Dark-navy hero   │  Login card      │
+ *   │ (brand, kicker,  │  (WELCOME BACK,  │
+ *   │  headline, copy, │   email link,    │
+ *   │  stats, footer)  │   Google, trial) │
  *   └──────────────────┴──────────────────┘
+ *
+ * Re-skinned to match tasks/premium-ui-redesign/02_auth.png:
+ *   - Hero panel is deep slate (--ink) with a cool teal/blue spotlight glow
+ *   - Card uses the "WELCOME BACK" blue eyebrow + "Log in to Repulabs" heading
+ *   - v3 .ds-input / .lbl-mono / .btn--pri primitives (no bespoke inline inputs)
  *
  * Below 960px the hero collapses to the top and the form sits below.
  *
  * Auth logic unchanged:
- *   - "resend" → magic link (15-min expiry)
+ *   - "resend" → magic link (15-min expiry). The artboard's password field is
+ *     illustrative; the backend is passwordless, so we keep the email-link form.
  *   - "google" → OAuth, callbackUrl=/dashboard
  */
+const HERO_BG = "#0f172a"; // --ink (deep slate navy, matches artboard #101820)
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -45,18 +53,20 @@ export default function LoginPage() {
 
   return (
     <main className="login-shell">
-      {/* LEFT — teal hero */}
-      <aside className="login-hero spot">
+      {/* LEFT — deep-slate hero */}
+      <aside className="login-hero" style={{ background: HERO_BG, color: "#fff" }}>
+        {/* Cool teal/blue spotlight glows */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
-            right: -120,
-            top: -120,
-            width: 480,
-            height: 480,
+            right: -140,
+            top: -160,
+            width: 520,
+            height: 520,
             borderRadius: "50%",
-            background: "rgba(255,255,255,.12)",
+            background: "radial-gradient(circle, rgba(37,99,235,.45) 0%, transparent 70%)",
+            filter: "blur(20px)",
           }}
         />
         <div
@@ -65,34 +75,35 @@ export default function LoginPage() {
             position: "absolute",
             left: -180,
             bottom: -180,
-            width: 480,
-            height: 480,
+            width: 460,
+            height: 460,
             borderRadius: "50%",
-            background: "rgba(255,255,255,.06)",
+            background: "radial-gradient(circle, rgba(94,234,212,.28) 0%, transparent 70%)",
+            filter: "blur(20px)",
           }}
         />
 
-        <div className="row" style={{ position: "relative", marginBottom: "auto", gap: 10 }}>
+        <div className="row" style={{ position: "relative", marginBottom: "auto", gap: 11 }}>
           <Image
             src="/favicon.png?v=2"
             alt=""
-            width={36}
-            height={36}
+            width={38}
+            height={38}
             priority
             style={{
-              borderRadius: 9,
+              borderRadius: 10,
               objectFit: "contain",
-              background: "rgba(255,255,255,.15)",
-              padding: 3,
+              background: "#fff",
+              padding: 4,
             }}
           />
           <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em" }}>
-            repu<span style={{ opacity: 0.8 }}>labs</span>
+            repu<span style={{ color: "#5eead4" }}>labs</span>
           </div>
         </div>
 
         <div style={{ position: "relative" }}>
-          <div className="lbl-mono" style={{ color: "rgba(255,255,255,.7)", marginBottom: 18 }}>
+          <div className="lbl-mono" style={{ color: "rgba(255,255,255,.6)", marginBottom: 18 }}>
             <span
               aria-hidden="true"
               style={{
@@ -100,8 +111,8 @@ export default function LoginPage() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "#fff",
-                boxShadow: "0 0 0 3px rgba(255,255,255,.25)",
+                background: "#5eead4",
+                boxShadow: "0 0 0 3px rgba(94,234,212,.25)",
                 marginRight: 8,
                 verticalAlign: 1,
               }}
@@ -110,20 +121,20 @@ export default function LoginPage() {
           </div>
           <h1
             style={{
-              fontSize: "clamp(32px, 4vw, 48px)",
+              fontSize: "clamp(32px, 4vw, 50px)",
               fontWeight: 600,
               margin: 0,
               lineHeight: 1.05,
-              letterSpacing: "-0.025em",
-              maxWidth: 480,
+              letterSpacing: "-0.03em",
+              maxWidth: 500,
             }}
           >
-            Run your reputation like you run your business.
+            Sign in to the workspace that protects your local brand.
           </h1>
           <p
             style={{
               fontSize: 15,
-              opacity: 0.88,
+              color: "rgba(255,255,255,.72)",
               marginTop: 18,
               maxWidth: 440,
               lineHeight: 1.55,
@@ -134,18 +145,23 @@ export default function LoginPage() {
           </p>
 
           <div
+            className="ds-card"
             style={{
               marginTop: 36,
+              maxWidth: 480,
+              background: "rgba(255,255,255,.05)",
+              border: "1px solid rgba(255,255,255,.10)",
+              boxShadow: "none",
+              borderRadius: "var(--r-md)",
+              padding: "20px 22px",
               display: "grid",
-              gridTemplateColumns: "1fr 1fr",
+              gridTemplateColumns: "1fr 1fr 1fr",
               gap: 18,
-              maxWidth: 460,
             }}
           >
             {[
               { v: "1,284+", l: "reviews collected this month" },
               { v: "92%", l: "AI reply approval rate" },
-              { v: "9.2d", l: "avg time-to-dispute outcome" },
               { v: "4.7★", l: "median customer rating" },
             ].map((s) => (
               <div key={s.l}>
@@ -153,12 +169,14 @@ export default function LoginPage() {
                   style={{
                     fontSize: 26,
                     fontWeight: 600,
-                    letterSpacing: "-0.02em",
+                    letterSpacing: "-0.025em",
                   }}
                 >
                   {s.v}
                 </div>
-                <div style={{ fontSize: 11.5, opacity: 0.78 }}>{s.l}</div>
+                <div style={{ fontSize: 11.5, color: "rgba(255,255,255,.6)", marginTop: 3 }}>
+                  {s.l}
+                </div>
               </div>
             ))}
           </div>
@@ -170,7 +188,7 @@ export default function LoginPage() {
             position: "relative",
             marginTop: "auto",
             fontSize: 11.5,
-            opacity: 0.7,
+            color: "rgba(255,255,255,.55)",
             gap: 12,
             flexWrap: "wrap",
           }}
@@ -189,7 +207,7 @@ export default function LoginPage() {
 
       {/* RIGHT — login card */}
       <section className="login-form-wrap">
-        <div className="login-card">
+        <div className="login-card ds-card" style={{ padding: 32 }}>
           {/* Mobile-only inline brand */}
           <div className="login-mobile-brand row" style={{ marginBottom: 24, gap: 10 }}>
             <Image
@@ -205,15 +223,22 @@ export default function LoginPage() {
             </div>
           </div>
 
+          <div
+            className="lbl-mono"
+            style={{ color: "var(--pri)", marginBottom: 10, fontWeight: 600 }}
+          >
+            {sent ? "CHECK YOUR INBOX" : "WELCOME BACK"}
+          </div>
           <h2
             style={{
               fontSize: 26,
               fontWeight: 600,
               margin: 0,
-              letterSpacing: "-0.02em",
+              letterSpacing: "-0.025em",
+              color: "var(--ink)",
             }}
           >
-            {sent ? "Check your inbox" : "Welcome back"}
+            {sent ? "Check your inbox" : "Log in to Repulabs"}
           </h2>
           <p className="dim" style={{ fontSize: 13.5, marginTop: 6, lineHeight: 1.55 }}>
             {sent ? (
@@ -222,7 +247,7 @@ export default function LoginPage() {
                 The link expires in 15 minutes.
               </>
             ) : (
-              "Sign in to your repulabs workspace."
+              "Use your work email to continue."
             )}
           </p>
 
@@ -253,44 +278,13 @@ export default function LoginPage() {
             </div>
           ) : (
             <>
-              <div style={{ marginTop: 24 }}>
-                {/* Server action — NextAuth v5 requires POST for /api/auth/signin/*.
-                    A bare <a> GET produces "UnknownAction: Unsupported action".
-                    Using a <form> with a server action handles CSRF automatically
-                    and runs signIn() server-side, where process.env.AUTH_URL is
-                    correctly set. Bypasses the broken next-auth/react client
-                    helper (which bakes localhost into the bundle in v5 beta.25). */}
-                <form action={googleSignIn}>
-                  <button
-                    type="submit"
-                    className="btn btn--lg"
-                    style={{ width: "100%", justifyContent: "center" }}
-                  >
-                    <Icon name="google" size={14} />
-                    Continue with Google
-                  </button>
-                </form>
-              </div>
-
-              <div className="row" style={{ margin: "20px 0" }}>
-                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
-                <span
-                  className="dim mono"
-                  style={{
-                    fontSize: 10,
-                    padding: "0 12px",
-                    letterSpacing: ".08em",
-                  }}
-                >
-                  OR EMAIL
-                </span>
-                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
-              </div>
-
-              <form onSubmit={onMagicLink} className="col" style={{ gap: 12 }}>
-                <label className="col" style={{ gap: 6 }}>
-                  <span className="lbl">Work email</span>
+              <form onSubmit={onMagicLink} className="col" style={{ gap: 14, marginTop: 24 }}>
+                <div>
+                  <label htmlFor="login-email" className="lbl-mono">
+                    Email
+                  </label>
                   <input
+                    id="login-email"
                     type="email"
                     required
                     autoComplete="email"
@@ -299,20 +293,11 @@ export default function LoginPage() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@business.com"
                     aria-label="Work email"
-                    style={{
-                      width: "100%",
-                      height: 42,
-                      padding: "0 14px",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--line)",
-                      background: "var(--surface)",
-                      color: "var(--ink)",
-                      fontFamily: "var(--f-mono)",
-                      fontSize: 13,
-                      outline: "none",
-                    }}
+                    className="ds-input"
+                    style={{ height: 44 }}
                   />
-                </label>
+                </div>
+                {/* Primary CTA — dark "Continue"-style button (passwordless: emails a link). */}
                 <button
                   type="submit"
                   disabled={submitting || !email}
@@ -327,17 +312,49 @@ export default function LoginPage() {
                     "Sending…"
                   ) : (
                     <>
-                      Email me a sign-in link
+                      Continue with email
                       <Icon name="arrowR" size={13} />
                     </>
                   )}
                 </button>
               </form>
 
+              <div className="row" style={{ margin: "18px 0" }}>
+                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+                <span
+                  className="dim mono"
+                  style={{
+                    fontSize: 10,
+                    padding: "0 12px",
+                    letterSpacing: ".08em",
+                  }}
+                >
+                  OR
+                </span>
+                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+              </div>
+
+              {/* Server action — NextAuth v5 requires POST for /api/auth/signin/*.
+                  A bare <a> GET produces "UnknownAction: Unsupported action".
+                  Using a <form> with a server action handles CSRF automatically
+                  and runs signIn() server-side, where process.env.AUTH_URL is
+                  correctly set. Bypasses the broken next-auth/react client
+                  helper (which bakes localhost into the bundle in v5 beta.25). */}
+              <form action={googleSignIn}>
+                <button
+                  type="submit"
+                  className="btn btn--lg"
+                  style={{ width: "100%", justifyContent: "center" }}
+                >
+                  <Icon name="google" size={14} />
+                  Continue with Google
+                </button>
+              </form>
+
               <div className="dim" style={{ fontSize: 12.5, marginTop: 22, textAlign: "center" }}>
                 New here?{" "}
                 <a
-                  href="/"
+                  href="/signup"
                   style={{
                     color: "var(--pri)",
                     fontWeight: 500,

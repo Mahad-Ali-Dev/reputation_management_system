@@ -3,6 +3,7 @@ import { anthropic, MODELS, PRICING } from "./client";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { recordConfidence } from "./confidence";
 import { retrieveChunks } from "./ingest";
 import { rerankCandidates, type RerankCandidate } from "./rerank";
 
@@ -228,6 +229,26 @@ export async function chatbotTurn(args: {
       },
     });
   });
+
+  // Route the model's confidence into the per-tenant knowledge-gap queue.
+  // Non-blocking + fully fail-soft (recordConfidence never throws) so a gap
+  // write — or the un-migrated knowledge_gaps table — can't break a chat turn.
+  try {
+    await recordConfidence({
+      orgId: args.orgId,
+      purpose: "chatbot",
+      question: userMessage,
+      answer,
+      confidence: parsed.confidence,
+      aiMessageId: stored.id,
+      establishmentId: args.establishmentId,
+      source: "widget",
+    });
+  } catch (err) {
+    logger.warn(
+      { event: "chatbot.gap_route_failed", error: err instanceof Error ? err.message : String(err) },
+    );
+  }
 
   return {
     answer,

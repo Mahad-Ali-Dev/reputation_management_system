@@ -1,27 +1,22 @@
+import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
-import { signOut } from "@/lib/auth/config";
+import { auth, signOut } from "@/lib/auth/config";
+import Link from "next/link";
 import { NotificationsBell } from "./notifications-bell";
 
 /**
- * Right side of the AppShell topbar — repulabs v2 style.
+ * Right side of the AppShell topbar — repulabs v3.
  *
- * Renders help, notifications, and an "Ask AI" pill button.
- * Sign-out is exposed via the user profile in the sidebar; we keep a tiny
- * ghost button here as a fallback while session management UI is built out.
- *
- * Slot into <AppShell topBar={<TopBar />}>.
+ * Help · notifications · user identity (avatar + name + role) · sign-out.
+ * `title` kept optional for backward-compat with older callers.
  */
-export function TopBar({
-  title,
-  subtitle: _subtitle,
-}: {
-  title?: string;
-  subtitle?: string;
-} = {}) {
-  // title kept in API for backward-compat with existing callers; the new shell
-  // renders the page title via PageHeader + crumbs in the AppShell topbar.
-  // We surface a small mobile-only label using `title` so existing pages still
-  // show something useful before they're updated to pass crumbs.
+export async function TopBar({ title }: { title?: string } = {}) {
+  const session = await auth();
+  const name =
+    session?.user?.name ?? session?.user?.email?.split("@")[0] ?? "Account";
+  const role = (session as { role?: string } | null)?.role ?? "Member";
+  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+
   return (
     <>
       {title && (
@@ -34,22 +29,30 @@ export function TopBar({
       )}
 
       <button type="button" className="tb__iconbtn" aria-label="Help">
-        <Icon name="help" size={15} />
+        <Icon name="help" size={16} />
       </button>
 
       <div className="tb__iconbtn" aria-label="Notifications">
         <NotificationsBell />
       </div>
 
+      <Link href="/settings/account" className="tb__user">
+        <Avatar name={name} size={32} tone={4} />
+        <span className="tb__user-meta">
+          <span className="tb__user-name">{name}</span>
+          <span className="tb__user-role">{roleLabel}</span>
+        </span>
+        <Icon name="chevD" size={11} style={{ color: "var(--rl-muted)" }} />
+      </Link>
+
       <form
         action={async () => {
           "use server";
           await signOut({ redirectTo: "/" });
         }}
-        style={{ marginLeft: 4 }}
       >
-        <button type="submit" className="btn btn--xs btn--ghost" aria-label="Sign out">
-          Sign out
+        <button type="submit" className="tb__iconbtn" aria-label="Sign out">
+          <Icon name="ext" size={15} />
         </button>
       </form>
     </>

@@ -220,4 +220,88 @@ describe("RLS cross-tenant isolation", () => {
       }),
     ).rejects.toThrow(/append-only/);
   });
+
+  // ── Module 15 (differentiators) tenant tables ──
+  // autopilot_configs · autopilot_actions · roi_settings · autopilot_digest_runs.
+  // Deny-by-default: no org context → 0 rows; cross-tenant INSERT is blocked by
+  // the tenant_isolation WITH CHECK.
+
+  it("autopilot_configs: with no org context, SELECT returns 0 rows", async () => {
+    const rows = await prisma.$transaction(async (tx) => {
+      await setOrg(tx, null);
+      return tx.$queryRawUnsafe<unknown[]>("SELECT * FROM autopilot_configs");
+    });
+    expect(rows).toEqual([]);
+  });
+
+  it("autopilot_configs: INSERT with cross-tenant org_id from A is BLOCKED", async () => {
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await setOrg(tx, ORG_A);
+        await tx.$executeRawUnsafe(`
+          INSERT INTO autopilot_configs (organization_id) VALUES ('${ORG_B}')
+        `);
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("autopilot_actions: with no org context, SELECT returns 0 rows", async () => {
+    const rows = await prisma.$transaction(async (tx) => {
+      await setOrg(tx, null);
+      return tx.$queryRawUnsafe<unknown[]>("SELECT * FROM autopilot_actions");
+    });
+    expect(rows).toEqual([]);
+  });
+
+  it("autopilot_actions: INSERT with cross-tenant org_id from A is BLOCKED", async () => {
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await setOrg(tx, ORG_A);
+        await tx.$executeRawUnsafe(`
+          INSERT INTO autopilot_actions (organization_id, loop, action)
+          VALUES ('${ORG_B}', 'auto_reply', 'published')
+        `);
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("roi_settings: with no org context, SELECT returns 0 rows", async () => {
+    const rows = await prisma.$transaction(async (tx) => {
+      await setOrg(tx, null);
+      return tx.$queryRawUnsafe<unknown[]>("SELECT * FROM roi_settings");
+    });
+    expect(rows).toEqual([]);
+  });
+
+  it("roi_settings: INSERT with cross-tenant org_id from A is BLOCKED", async () => {
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await setOrg(tx, ORG_A);
+        await tx.$executeRawUnsafe(`
+          INSERT INTO roi_settings (organization_id, establishment_id)
+          VALUES ('${ORG_B}', '${ORG_B}')
+        `);
+      }),
+    ).rejects.toThrow();
+  });
+
+  it("autopilot_digest_runs: with no org context, SELECT returns 0 rows", async () => {
+    const rows = await prisma.$transaction(async (tx) => {
+      await setOrg(tx, null);
+      return tx.$queryRawUnsafe<unknown[]>("SELECT * FROM autopilot_digest_runs");
+    });
+    expect(rows).toEqual([]);
+  });
+
+  it("autopilot_digest_runs: INSERT with cross-tenant org_id from A is BLOCKED", async () => {
+    await expect(
+      prisma.$transaction(async (tx) => {
+        await setOrg(tx, ORG_A);
+        await tx.$executeRawUnsafe(`
+          INSERT INTO autopilot_digest_runs (organization_id, week_start)
+          VALUES ('${ORG_B}', now())
+        `);
+      }),
+    ).rejects.toThrow();
+  });
 });

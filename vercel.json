@@ -24,6 +24,62 @@
     {
       "path": "/api/cron/auto-reply-publish",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/dispatch-scheduled",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/daily-briefing",
+      "schedule": "0 12 * * *"
+    },
+    {
+      "path": "/api/cron/ai-kb-refresh",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/dispatch-review-requests",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/dispute-status",
+      "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/cron/refresh-survey-insights",
+      "schedule": "0 4 * * 0"
+    },
+    {
+      "path": "/api/cron/sync-connections",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/contacts-rollup",
+      "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/moderation-rescan",
+      "schedule": "*/15 * * * *"
+    },
+    {
+      "path": "/api/cron/livechat-stale-sweep",
+      "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/dispatch-social-posts",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/refresh-social-metrics",
+      "schedule": "0 7 * * *"
+    },
+    {
+      "path": "/api/cron/seo-refresh",
+      "schedule": "0 6 * * 1"
+    },
+    {
+      "path": "/api/cron/autopilot-weekly",
+      "schedule": "0 14 * * 1"
     }
   ]
 }

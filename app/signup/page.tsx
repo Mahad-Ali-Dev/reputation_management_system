@@ -15,6 +15,9 @@ import { Suspense, useState } from "react";
  * all need a clear `/signup` URL to point at. This page provides one without
  * forking the auth backend.
  *
+ * Re-skinned to match tasks/premium-ui-redesign/02_auth.png (v3): deep-slate
+ * hero, blue eyebrow + heading, v3 .ds-input / .btn--pri primitives.
+ *
  * Behavior:
  *   - Magic-link via `signIn("resend")` — same flow as login.
  *   - `?next=<path>` query is honored as the callback URL after verification.
@@ -22,6 +25,8 @@ import { Suspense, useState } from "react";
  *   - If the user has already signed up, the link still works — Auth.js just
  *     logs them in. We don't add an awkward "this email already exists" gate.
  */
+const HERO_BG = "#0f172a"; // --ink (deep slate navy, matches artboard #101820)
+
 export default function SignupPage() {
   return (
     <Suspense fallback={null}>
@@ -65,18 +70,20 @@ function SignupInner() {
 
   return (
     <main className="login-shell">
-      {/* LEFT — teal hero */}
-      <aside className="login-hero spot">
+      {/* LEFT — deep-slate hero */}
+      <aside className="login-hero" style={{ background: HERO_BG, color: "#fff" }}>
+        {/* Cool teal/blue spotlight glows */}
         <div
           aria-hidden="true"
           style={{
             position: "absolute",
-            right: -120,
-            top: -120,
-            width: 480,
-            height: 480,
+            right: -140,
+            top: -160,
+            width: 520,
+            height: 520,
             borderRadius: "50%",
-            background: "rgba(255,255,255,.12)",
+            background: "radial-gradient(circle, rgba(37,99,235,.45) 0%, transparent 70%)",
+            filter: "blur(20px)",
           }}
         />
         <div
@@ -85,32 +92,35 @@ function SignupInner() {
             position: "absolute",
             left: -180,
             bottom: -180,
-            width: 480,
-            height: 480,
+            width: 460,
+            height: 460,
             borderRadius: "50%",
-            background: "rgba(255,255,255,.06)",
+            background: "radial-gradient(circle, rgba(94,234,212,.28) 0%, transparent 70%)",
+            filter: "blur(20px)",
           }}
         />
 
-        <div className="row" style={{ position: "relative", marginBottom: "auto", gap: 10 }}>
+        <div className="row" style={{ position: "relative", marginBottom: "auto", gap: 11 }}>
           <Image
-            src="/favicon.png"
+            src="/favicon.png?v=2"
             alt=""
-            width={36}
-            height={36}
+            width={38}
+            height={38}
             priority
             style={{
-              borderRadius: 9,
-              objectFit: "cover",
-              background: "rgba(255,255,255,.15)",
-              padding: 3,
+              borderRadius: 10,
+              objectFit: "contain",
+              background: "#fff",
+              padding: 4,
             }}
           />
-          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em" }}>repulabs</div>
+          <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.02em" }}>
+            repu<span style={{ color: "#5eead4" }}>labs</span>
+          </div>
         </div>
 
         <div style={{ position: "relative" }}>
-          <div className="lbl-mono" style={{ color: "rgba(255,255,255,.7)", marginBottom: 18 }}>
+          <div className="lbl-mono" style={{ color: "rgba(255,255,255,.6)", marginBottom: 18 }}>
             <span
               aria-hidden="true"
               style={{
@@ -118,8 +128,8 @@ function SignupInner() {
                 width: 6,
                 height: 6,
                 borderRadius: "50%",
-                background: "#fff",
-                boxShadow: "0 0 0 3px rgba(255,255,255,.25)",
+                background: "#5eead4",
+                boxShadow: "0 0 0 3px rgba(94,234,212,.25)",
                 marginRight: 8,
                 verticalAlign: 1,
               }}
@@ -128,12 +138,12 @@ function SignupInner() {
           </div>
           <h1
             style={{
-              fontSize: "clamp(32px, 4vw, 48px)",
+              fontSize: "clamp(32px, 4vw, 50px)",
               fontWeight: 600,
               margin: 0,
               lineHeight: 1.05,
-              letterSpacing: "-0.025em",
-              maxWidth: 480,
+              letterSpacing: "-0.03em",
+              maxWidth: 500,
             }}
           >
             Start running reputation like a system in 90 seconds.
@@ -141,7 +151,7 @@ function SignupInner() {
           <p
             style={{
               fontSize: 15,
-              opacity: 0.88,
+              color: "rgba(255,255,255,.72)",
               marginTop: 18,
               maxWidth: 440,
               lineHeight: 1.55,
@@ -181,13 +191,14 @@ function SignupInner() {
                     width: 18,
                     height: 18,
                     borderRadius: 999,
-                    background: "rgba(255,255,255,.18)",
+                    background: "rgba(94,234,212,.18)",
+                    color: "#5eead4",
                     marginTop: 1,
                   }}
                 >
                   <Icon name="check" size={10} />
                 </span>
-                <span style={{ opacity: 0.92 }}>{l}</span>
+                <span style={{ color: "rgba(255,255,255,.85)" }}>{l}</span>
               </li>
             ))}
           </ul>
@@ -199,7 +210,7 @@ function SignupInner() {
             position: "relative",
             marginTop: "auto",
             fontSize: 11.5,
-            opacity: 0.7,
+            color: "rgba(255,255,255,.55)",
             gap: 12,
             flexWrap: "wrap",
           }}
@@ -218,16 +229,16 @@ function SignupInner() {
 
       {/* RIGHT — sign-up card */}
       <section className="login-form-wrap">
-        <div className="login-card">
+        <div className="login-card ds-card" style={{ padding: 32 }}>
           {/* Mobile-only inline brand */}
           <div className="login-mobile-brand row" style={{ marginBottom: 24, gap: 10 }}>
             <Image
-              src="/favicon.png"
+              src="/favicon.png?v=2"
               alt=""
               width={36}
               height={36}
               priority
-              style={{ borderRadius: 9, objectFit: "cover" }}
+              style={{ borderRadius: 9, objectFit: "contain" }}
             />
             <div style={{ fontSize: 18, fontWeight: 600, letterSpacing: "-0.025em" }}>
               repu<span style={{ color: "var(--pri)" }}>labs</span>
@@ -253,7 +264,21 @@ function SignupInner() {
             </div>
           )}
 
-          <h2 style={{ fontSize: 26, fontWeight: 600, margin: 0, letterSpacing: "-0.02em" }}>
+          <div
+            className="lbl-mono"
+            style={{ color: "var(--pri)", marginBottom: 10, fontWeight: 600 }}
+          >
+            {sent ? "CHECK YOUR INBOX" : "GET STARTED"}
+          </div>
+          <h2
+            style={{
+              fontSize: 26,
+              fontWeight: 600,
+              margin: 0,
+              letterSpacing: "-0.025em",
+              color: "var(--ink)",
+            }}
+          >
             {sent ? "Check your inbox" : "Create your workspace"}
           </h2>
           <p className="dim" style={{ fontSize: 13.5, marginTop: 6, lineHeight: 1.55 }}>
@@ -295,33 +320,13 @@ function SignupInner() {
             </div>
           ) : (
             <>
-              <div style={{ marginTop: 24 }}>
-                <button
-                  type="button"
-                  className="btn btn--lg"
-                  style={{ width: "100%", justifyContent: "center" }}
-                  onClick={() => signIn("google", { callbackUrl: next })}
-                >
-                  <Icon name="google" size={14} />
-                  Continue with Google
-                </button>
-              </div>
-
-              <div className="row" style={{ margin: "20px 0" }}>
-                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
-                <span
-                  className="dim mono"
-                  style={{ fontSize: 10, padding: "0 12px", letterSpacing: ".08em" }}
-                >
-                  OR EMAIL
-                </span>
-                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
-              </div>
-
-              <form onSubmit={onMagicLink} className="col" style={{ gap: 12 }}>
-                <label className="col" style={{ gap: 6 }}>
-                  <span className="lbl">Work email</span>
+              <form onSubmit={onMagicLink} className="col" style={{ gap: 14, marginTop: 24 }}>
+                <div>
+                  <label htmlFor="signup-email" className="lbl-mono">
+                    Email
+                  </label>
                   <input
+                    id="signup-email"
                     type="email"
                     required
                     autoComplete="email"
@@ -330,20 +335,10 @@ function SignupInner() {
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="you@business.com"
                     aria-label="Work email"
-                    style={{
-                      width: "100%",
-                      height: 42,
-                      padding: "0 14px",
-                      borderRadius: "var(--r)",
-                      border: "1px solid var(--line)",
-                      background: "var(--surface)",
-                      color: "var(--ink)",
-                      fontFamily: "var(--f-mono)",
-                      fontSize: 13,
-                      outline: "none",
-                    }}
+                    className="ds-input"
+                    style={{ height: 44 }}
                   />
-                </label>
+                </div>
                 <button
                   type="submit"
                   disabled={submitting || !email}
@@ -365,11 +360,32 @@ function SignupInner() {
                 </button>
               </form>
 
+              <div className="row" style={{ margin: "18px 0" }}>
+                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+                <span
+                  className="dim mono"
+                  style={{ fontSize: 10, padding: "0 12px", letterSpacing: ".08em" }}
+                >
+                  OR
+                </span>
+                <div style={{ flex: 1, height: 1, background: "var(--line)" }} />
+              </div>
+
+              <button
+                type="button"
+                className="btn btn--lg"
+                style={{ width: "100%", justifyContent: "center" }}
+                onClick={() => signIn("google", { callbackUrl: next })}
+              >
+                <Icon name="google" size={14} />
+                Continue with Google
+              </button>
+
               <p
                 className="dim"
                 style={{
                   fontSize: 11.5,
-                  marginTop: 14,
+                  marginTop: 16,
                   lineHeight: 1.55,
                   textAlign: "center",
                 }}

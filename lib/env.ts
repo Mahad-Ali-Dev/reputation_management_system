@@ -118,6 +118,17 @@ const schema = z.object({
   TWILIO_AUTH_TOKEN: optionalString,
   TWILIO_FROM_NUMBER: optionalString,
 
+  // Reputation Autopilot + Voice→Review (Module 15). Both optional with sensible
+  // defaults when unset, so the build stays green and behavior is deterministic
+  // without configuration.
+  /** Default risk tolerance for a brand-new AutopilotConfig: conservative | balanced | aggressive. */
+  AUTOPILOT_DEFAULT_RISK: z
+    .enum(["conservative", "balanced", "aggressive"])
+    .optional()
+    .default("balanced"),
+  /** Hours to wait after a resolved call before the Voice→Review request is sent. */
+  VOICE_REVIEW_DELAY_HOURS: z.coerce.number().int().min(0).max(168).optional().default(3),
+
   // Encryption (32-byte base64 keys)
   ENCRYPTION_MASTER_KEY: prodRequired("ENCRYPTION_MASTER_KEY"),
   SLUG_HMAC_SECRET: prodRequired("SLUG_HMAC_SECRET"),
@@ -147,6 +158,34 @@ const schema = z.object({
 
   // Vercel Blob (or alternative blob storage)
   BLOB_READ_WRITE_TOKEN: optionalString,
+
+  // Social publishing + metrics (Module 10). ALL optional — publishing/metrics
+  // are OFF by default and no-op without these (no live paid call). `META_APP_*`
+  // (read directly in lib/connections/adapters/meta) gate Meta OAuth; the two
+  // below additionally gate live publish/metrics calls.
+  META_GRAPH_ENABLED: optionalString, // "true" to enable live Meta publish/metrics
+  META_GRAPH_TOKEN: optionalString,
+  // AI Image Creatives (Module 10) — Pro + env gated, ships disabled by default.
+  // Unset IMAGE_GEN_PROVIDER ⇒ feature is "not enabled" (no paid call ever).
+  IMAGE_GEN_PROVIDER: optionalString, // "openai" | "stability" | "" (disabled)
+  IMAGE_GEN_MODEL: optionalString,
+  OPENAI_API_KEY: optionalString,
+  STABILITY_API_KEY: optionalString,
+
+  // SEO & Visibility (Module 13). ALL optional — each adapter no-ops and
+  // returns { available:false } with ZERO network calls when its creds are
+  // unset, so the build + default code paths never make a live/paid call.
+  // GA4 (Google Analytics Data API) — service-account creds; per-org property
+  // id lives on `Ga4Connection`, these are the global fallback + auth.
+  GA4_CLIENT_EMAIL: optionalString,
+  GA4_PRIVATE_KEY: optionalString,
+  GA4_PROPERTY_ID: optionalString,
+  // PageSpeed Insights (Core Web Vitals) — Google API key.
+  PAGESPEED_API_KEY: optionalString,
+  // Rank tracking + geo grid + competitor data (the PAID tier). Unset provider
+  // ⇒ keyword ranks / geo grid / competitor suggest all no-op (no paid call).
+  RANK_TRACKER_PROVIDER: optionalString, // "dataforseo" | "brightlocal" | "" (disabled)
+  RANK_TRACKER_API_KEY: optionalString,
 
   // AWS / S3 (when deploying to AWS or using S3-compatible blob storage)
   AWS_REGION: optionalString,

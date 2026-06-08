@@ -15,29 +15,53 @@ export const REVIEW_SOURCES = [
 ] as const;
 export type ReviewSource = (typeof REVIEW_SOURCES)[number];
 
+/**
+ * Reply-status discriminator for the feed's status filter pills.
+ *   - needs_reply → no reply row at all (the red "Needs Reply" pill)
+ *   - replied     → a published reply exists
+ *   - draft_ready → a reply is staged (draft | pending_review) awaiting approval
+ * `hasReply` is kept for back-compat with the `/reviews/[id]` detail callers.
+ */
+export type ReplyStatusFilter = "needs_reply" | "replied" | "draft_ready";
+
 export type ReviewFilter = {
   establishmentId?: string;
   rating?: number;
   hasReply?: boolean;
+  replyStatus?: ReplyStatusFilter;
   search?: string;
   source?: ReviewSource;
   limit?: number;
 };
 
+/**
+ * Translate the high-level filter knobs into the Prisma `where` on `reply`.
+ * Shared by `listReviews` and `replyStatusCounts` so the list and its pill
+ * badges always agree on what "Replied" / "Needs Reply" mean.
+ */
+function reviewWhere(filter: ReviewFilter) {
+  return {
+    ...(filter.establishmentId && { establishmentId: filter.establishmentId }),
+    ...(filter.rating && { rating: filter.rating }),
+    ...(filter.source && { source: filter.source }),
+    ...(filter.hasReply === true && { reply: { isNot: null } }),
+    ...(filter.hasReply === false && { reply: null }),
+    ...(filter.replyStatus === "needs_reply" && { reply: null }),
+    ...(filter.replyStatus === "replied" && { reply: { status: "published" } }),
+    ...(filter.replyStatus === "draft_ready" && {
+      reply: { status: { in: ["draft", "pending_review"] } },
+    }),
+    ...(filter.search && {
+      body: { contains: filter.search, mode: "insensitive" as const },
+    }),
+  };
+}
+
 export async function listReviews(orgId: string, filter: ReviewFilter = {}) {
   const limit = Math.min(filter.limit ?? 50, 100);
   return withTenant(orgId, async (tx) => {
     return tx.review.findMany({
-      where: {
-        ...(filter.establishmentId && { establishmentId: filter.establishmentId }),
-        ...(filter.rating && { rating: filter.rating }),
-        ...(filter.source && { source: filter.source }),
-        ...(filter.hasReply === true && { reply: { isNot: null } }),
-        ...(filter.hasReply === false && { reply: null }),
-        ...(filter.search && {
-          body: { contains: filter.search, mode: "insensitive" },
-        }),
-      },
+      where: reviewWhere(filter),
       orderBy: { postedAt: "desc" },
       take: limit,
       include: {
@@ -58,11 +82,52 @@ export async function listReviews(orgId: string, filter: ReviewFilter = {}) {
             status: true,
             generatedBy: true,
             publishedAt: true,
+            scheduledPublishAt: true,
           },
         },
       },
     });
   });
+}
+
+export type ReplyStatusCounts = {
+  all: number;
+  needsReply: number;
+  replied: number;
+  draftReady: number;
+};
+
+/**
+ * Counts that drive the status filter pills (esp. the red "Needs Reply"
+ * badge). Each count honors the SAME active rating/source/search filters as
+ * the list — pass the base filter (without `replyStatus`) so the pills reflect
+ * "within what you're currently looking at". Runs the four counts in parallel.
+ *
+ * Fail-soft: a missing `scheduled_publish_at` column / un-migrated DB never
+ * touches these counts (they only read `reply.status`), but we still guard the
+ * whole thing so the page renders zeros rather than 500-ing.
+ */
+export async function replyStatusCounts(
+  orgId: string,
+  baseFilter: Omit<ReviewFilter, "replyStatus" | "hasReply" | "limit"> = {},
+): Promise<ReplyStatusCounts> {
+  try {
+    return await withTenant(orgId, async (tx) => {
+      const [all, needsReply, replied, draftReady] = await Promise.all([
+        tx.review.count({ where: reviewWhere(baseFilter) }),
+        tx.review.count({ where: reviewWhere({ ...baseFilter, replyStatus: "needs_reply" }) }),
+        tx.review.count({ where: reviewWhere({ ...baseFilter, replyStatus: "replied" }) }),
+        tx.review.count({ where: reviewWhere({ ...baseFilter, replyStatus: "draft_ready" }) }),
+      ]);
+      return { all, needsReply, replied, draftReady };
+    });
+  } catch (err) {
+    const code = (err as { code?: string } | null)?.code;
+    if (code === "42P01" || code === "42703") {
+      return { all: 0, needsReply: 0, replied: 0, draftReady: 0 };
+    }
+    throw err;
+  }
 }
 
 /**

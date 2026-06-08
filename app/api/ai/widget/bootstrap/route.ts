@@ -4,6 +4,12 @@ import { prisma } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
 import { signVisitorJwt } from "@/lib/ai/widget-jwt";
 import { checkRateLimit } from "@/lib/ratelimit";
+import {
+  getWidgetConfig,
+  resolveWidgetMode,
+  toAppearance,
+  type WidgetAiMode,
+} from "@/lib/inbox/widget";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,16 +36,43 @@ export async function GET(req: NextRequest) {
     return jsonWithCors({ error: "rate_limited", retryAfterSeconds: rl.retryAfterSeconds }, 429, null);
   }
 
-  const widget = await prisma.widgetKey.findUnique({
-    where: { publicKey },
-    select: {
-      organizationId: true,
-      establishmentId: true,
-      hmacSecret: true,
-      originAllowlist: true,
-      status: true,
-    },
-  });
+  // `aiMode` ships via the Wave-0 delta but may not be migrated yet; select it
+  // fail-soft so the deployed widget bootstrap can never 500 on a missing column.
+  let widget:
+    | {
+        organizationId: string;
+        establishmentId: string | null;
+        hmacSecret: string;
+        originAllowlist: string[];
+        status: string;
+        aiMode?: string;
+      }
+    | null = null;
+  try {
+    widget = await prisma.widgetKey.findUnique({
+      where: { publicKey },
+      select: {
+        organizationId: true,
+        establishmentId: true,
+        hmacSecret: true,
+        originAllowlist: true,
+        status: true,
+        aiMode: true,
+      },
+    });
+  } catch {
+    // Column not migrated → re-read without it (preserves today's behaviour).
+    widget = await prisma.widgetKey.findUnique({
+      where: { publicKey },
+      select: {
+        organizationId: true,
+        establishmentId: true,
+        hmacSecret: true,
+        originAllowlist: true,
+        status: true,
+      },
+    });
+  }
   if (!widget || widget.status !== "active") {
     return jsonWithCors({ error: "invalid_key" }, 404, null);
   }
@@ -59,13 +92,34 @@ export async function GET(req: NextRequest) {
     visitorId,
   });
 
+  // Real appearance + AI-mode signal (additive; fail-soft to defaults). The
+  // widget renders colors/header from `config` and shows the SMS phone-capture
+  // when `config.captureMode === "capture"`. Defaults preserve today's behaviour:
+  // greeting present, brand color, AI always answers.
+  const cfg = await getWidgetConfig(widget.organizationId);
+  const appearance = toAppearance(cfg);
+  const aiMode = (widget.aiMode as WidgetAiMode | undefined) ?? "always_on";
+  const mode = resolveWidgetMode({
+    aiMode,
+    config: { businessHours: cfg.businessHours, smsHandoffEnabled: cfg.smsHandoffEnabled },
+  });
+
   return jsonWithCors(
     {
       token: jwt,
       visitorId,
-      // Widget UI config (caller can render the right colors/avatar from here)
+      // Widget UI config. `greeting` is preserved for byte-compat with the
+      // existing widget; the rest is additive (older widget bundles ignore it).
       config: {
-        greeting: "Hi! How can I help you today?",
+        greeting: appearance.greeting,
+        brandColor: appearance.brandColor,
+        headerText: appearance.headerText,
+        avatarUrl: appearance.avatarUrl,
+        position: appearance.position,
+        agentPresence: appearance.agentPresence,
+        // "ai" → bot answers; "capture" → ask for a phone (after-hours/handoff).
+        captureMode: mode.decision,
+        offerSmsHandoff: mode.offerSmsHandoff,
       },
     },
     200,

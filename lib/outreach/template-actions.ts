@@ -99,7 +99,46 @@ export async function upsertOutreachTemplate(form: FormData): Promise<void> {
     });
   });
 
+  revalidatePath("/outreach");
   revalidatePath("/outreach/templates");
+}
+
+export async function duplicateOutreachTemplate(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireOrg();
+  const id = z.string().uuid().parse(form.get("id"));
+  await withTenant(orgId, async (tx) => {
+    const src = await tx.outreachTemplate.findUnique({ where: { id } });
+    if (!src) throw new Error("template_not_found");
+    await tx.outreachTemplate.create({
+      data: {
+        organizationId: orgId,
+        establishmentId: src.establishmentId,
+        channel: src.channel,
+        name: `${src.name} (copy)`,
+        subject: src.subject,
+        body: src.body,
+        bodyHtml: src.bodyHtml,
+        logoUrl: src.logoUrl,
+        backgroundColor: src.backgroundColor,
+        // A duplicate is never the default — only one default per channel.
+        isDefault: false,
+        isAiGenerated: src.isAiGenerated,
+        aiTone: src.aiTone,
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "outreach_template.duplicated",
+        resourceType: "outreach_template",
+        resourceId: id,
+        afterData: { name: `${src.name} (copy)` },
+      },
+    });
+  });
+  revalidatePath("/outreach");
 }
 
 export async function deleteOutreachTemplate(form: FormData): Promise<void> {
@@ -118,5 +157,6 @@ export async function deleteOutreachTemplate(form: FormData): Promise<void> {
       },
     });
   });
+  revalidatePath("/outreach");
   revalidatePath("/outreach/templates");
 }

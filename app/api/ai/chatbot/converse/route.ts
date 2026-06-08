@@ -3,10 +3,27 @@ import { z } from "zod";
 import { checkBudget } from "@/lib/ai/budget";
 import { chatbotTurn } from "@/lib/ai/chatbot";
 import { verifyVisitorJwt } from "@/lib/ai/widget-jwt";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
+import { getWidgetConfig, resolveWidgetMode, type WidgetAiMode } from "@/lib/inbox/widget";
+import { mirrorWebchatTurn } from "@/lib/inbox/livechat";
+
+// Lightweight detectors for a contact identifier the visitor typed into chat
+// (e.g. on the "leave your email and we'll follow up" handoff). Best-effort —
+// the auto-capture hook re-normalizes/validates, so a false positive here is
+// harmless (the hook drops anything implausible).
+const CHAT_EMAIL_RE = /[^\s@<>()[\]]+@[^\s@<>()[\]]+\.[^\s@<>()[\]]+/;
+const CHAT_PHONE_RE = /\+?[0-9][0-9\s\-().]{7,17}[0-9]/;
+
+function extractContactFromMessage(message: string): { email: string | null; phone: string | null } {
+  const email = message.match(CHAT_EMAIL_RE)?.[0] ?? null;
+  // Avoid matching the digits inside an email's domain/local-part as a phone.
+  const phone = email ? null : (message.match(CHAT_PHONE_RE)?.[0] ?? null);
+  return { email, phone };
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -40,18 +57,48 @@ export async function POST(req: NextRequest) {
   }
   if (!publicKey) return cors({ error: "bad_token" }, 401, req);
 
-  const widget = await prisma.widgetKey.findUnique({
-    where: { publicKey },
-    select: {
-      organizationId: true,
-      establishmentId: true,
-      hmacSecret: true,
-      originAllowlist: true,
-      rateLimitWindowSec: true,
-      rateLimitMaxMsgs: true,
-      status: true,
-    },
-  });
+  // `aiMode` ships via the Wave-0 delta; select it fail-soft so a not-yet-migrated
+  // column can never break the deployed converse path (falls back to always_on).
+  let widget:
+    | {
+        organizationId: string;
+        establishmentId: string | null;
+        hmacSecret: string;
+        originAllowlist: string[];
+        rateLimitWindowSec: number;
+        rateLimitMaxMsgs: number;
+        status: string;
+        aiMode?: string;
+      }
+    | null = null;
+  try {
+    widget = await prisma.widgetKey.findUnique({
+      where: { publicKey },
+      select: {
+        organizationId: true,
+        establishmentId: true,
+        hmacSecret: true,
+        originAllowlist: true,
+        rateLimitWindowSec: true,
+        rateLimitMaxMsgs: true,
+        status: true,
+        aiMode: true,
+      },
+    });
+  } catch {
+    widget = await prisma.widgetKey.findUnique({
+      where: { publicKey },
+      select: {
+        organizationId: true,
+        establishmentId: true,
+        hmacSecret: true,
+        originAllowlist: true,
+        rateLimitWindowSec: true,
+        rateLimitMaxMsgs: true,
+        status: true,
+      },
+    });
+  }
   if (!widget || widget.status !== "active") {
     return cors({ error: "widget_revoked" }, 401, req);
   }
@@ -171,12 +218,98 @@ export async function POST(req: NextRequest) {
       conversationId,
       userMessage: parsed.data.message,
     });
+
+    // Auto-capture a lead into the Contact directory when the visitor leaves an
+    // email/phone in chat. Fire-and-forget + fail-soft (the hook never throws
+    // and dedupes internally) so it can't break / slow the converse response.
+    // Keyed on the conversation id so repeat turns collapse to one contact.
+    const captured = extractContactFromMessage(parsed.data.message);
+    if (captured.email || captured.phone) {
+      captureContactInBackground({
+        orgId: claims.orgId,
+        source: "chat",
+        email: captured.email,
+        phone: captured.phone,
+        establishmentId: claims.establishmentId ?? null,
+        activity: {
+          title: "Shared contact info in chat",
+          externalRef: `chat:${conversationId}`,
+        },
+      });
+    }
+
+    // ---- ADDITIVE (Wave 3c-B): aiMode + escalation + InboxThread mirror ----
+    // All best-effort + fail-soft: a failure here must NOT change the byte-compat
+    // core response ({conversationId, answer, confidence, fallback}). Older widget
+    // bundles ignore the extra fields.
+    const aiMode = (widget.aiMode as WidgetAiMode | undefined) ?? "always_on";
+    let handoff: { decision: "ai" | "capture"; offerSmsHandoff: boolean; reason: string } = {
+      decision: "ai",
+      offerSmsHandoff: false,
+      reason: "always_on",
+    };
+    try {
+      const cfg = await getWidgetConfig(claims.orgId);
+      const mode = resolveWidgetMode({
+        aiMode,
+        config: { businessHours: cfg.businessHours, smsHandoffEnabled: cfg.smsHandoffEnabled },
+      });
+
+      // Escalate after N AI turns even in always_on/after_hours mode, if a
+      // threshold is set. Count this visitor's user turns in the conversation.
+      const userTurns = await withTenant(claims.orgId, async (tx) =>
+        tx.aiMessage.count({
+          where: { organizationId: claims.orgId, conversationId, purpose: "chatbot", role: "user" },
+        }),
+      ).catch(() => 0);
+      const turnEscalate =
+        cfg.escalateAfterTurns > 0 && userTurns >= cfg.escalateAfterTurns;
+
+      const needsHuman = mode.decision === "capture" || turnEscalate;
+      handoff = {
+        decision: needsHuman ? "capture" : "ai",
+        offerSmsHandoff: needsHuman && cfg.smsHandoffEnabled,
+        reason: turnEscalate ? "turn_limit" : mode.reason,
+      };
+
+      // Mirror this turn into a webchat InboxThread so agents see it. Marks the
+      // thread for a human when escalating. Never throws.
+      await mirrorWebchatTurn({
+        orgId: claims.orgId,
+        establishmentId: claims.establishmentId ?? null,
+        conversationId,
+        visitorId: claims.visitorId,
+        inbound: { body: parsed.data.message },
+        outbound: { body: result.answer },
+        needsHuman,
+      });
+
+      // Flag the AiConversation for handoff when escalating (fail-soft).
+      if (needsHuman) {
+        await withTenant(claims.orgId, async (tx) => {
+          await tx.aiConversation.updateMany({
+            where: { id: conversationId, handedOffAt: null },
+            data: { handedOffAt: new Date() },
+          });
+        }).catch(() => {});
+      }
+    } catch (mirrorErr) {
+      logger.warn({
+        orgId: claims.orgId,
+        event: "chatbot.mirror_failed",
+        error: mirrorErr instanceof Error ? mirrorErr.message : String(mirrorErr),
+      });
+    }
+
     return cors(
       {
         conversationId,
         answer: result.answer,
         confidence: result.confidence,
         fallback: result.fallback,
+        // Additive handoff signal — the widget shows the phone-capture when
+        // `handoff.offerSmsHandoff` is true. Absent in older clients = no-op.
+        handoff,
       },
       200,
       req,

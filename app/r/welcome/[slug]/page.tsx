@@ -183,7 +183,7 @@ export default async function WelcomePage({ params }: PageProps) {
                   style={{
                     padding: "10px 0",
                     borderBottom:
-                      i < Math.min(recs.length, 8) - 1 ? "1px solid #eceeea" : "none",
+                      i < Math.min(recs.length, 8) - 1 ? "1px solid #eef1f6" : "none",
                   }}
                 >
                   {r.category && (
@@ -287,12 +287,12 @@ const shellStyle: React.CSSProperties = {
   minHeight: "100vh",
   background:
     "radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0%, transparent 40%), " +
-    "radial-gradient(at 100% 100%, rgba(94, 234, 212, 0.08) 0%, transparent 50%), " +
-    "linear-gradient(180deg, #f6f7f4 0%, #ecf1ec 100%)",
+    "radial-gradient(at 100% 100%, rgba(79, 70, 229, 0.07) 0%, transparent 50%), " +
+    "linear-gradient(180deg, #f7f8fb 0%, #eef1f6 100%)",
   padding: "28px 18px 40px",
   fontFamily:
     "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-  color: "#0b0d0e",
+  color: "#0f172a",
 };
 
 const panelStyle: React.CSSProperties = {
@@ -317,10 +317,11 @@ const subtitleStyle: React.CSSProperties = {
 
 const cardStyle: React.CSSProperties = {
   background: "#ffffff",
-  border: "1px solid #eceeea",
-  borderRadius: 14,
+  border: "1px solid #eef1f6",
+  borderRadius: 16,
   padding: 18,
   marginBottom: 14,
+  boxShadow: "0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.04)",
 };
 
 const cardTitleStyle: React.CSSProperties = {
@@ -336,7 +337,7 @@ const kvRowStyle: React.CSSProperties = {
   alignItems: "center",
   gap: 12,
   padding: "10px 0",
-  borderBottom: "1px solid #f1f5f9",
+  borderBottom: "1px solid #f3f5f9",
 };
 
 const kvLabelStyle: React.CSSProperties = {
