@@ -229,8 +229,10 @@ async function finalize(
 ): Promise<SendOutcome> {
   if (ok) {
     await withTenant(orgId, (tx) =>
-      tx.reviewRequest.update({
-        where: { id },
+      // Conditional on status='sending' so a DB blip / retry can't strand the row
+      // or overwrite a concurrent state change; updateMany no-ops if already moved.
+      tx.reviewRequest.updateMany({
+        where: { id, status: "sending" },
         data: {
           status: "sent",
           sentAt: new Date(),
@@ -246,7 +248,7 @@ async function finalize(
 
 async function markFailed(orgId: string, id: string, error: string): Promise<void> {
   await withTenant(orgId, (tx) =>
-    tx.reviewRequest.update({ where: { id }, data: { status: "failed", error } }),
+    tx.reviewRequest.updateMany({ where: { id, status: "sending" }, data: { status: "failed", error } }),
   );
   logger.warn({ orgId, reviewRequestId: id, error, event: "review_request.send_failed" });
 }

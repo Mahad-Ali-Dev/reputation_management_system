@@ -120,16 +120,27 @@ export async function GET(req: NextRequest) {
         totalDispatched++;
       } catch (err) {
         const msg = err instanceof Error ? err.message : String(err);
-        await withTenant(campaign.organizationId, async (tx) => {
-          await tx.phoneCampaignTarget.update({
-            where: { id: target.id },
-            data: { status: "failed", failureReason: msg },
+        // Guard the mark-failed write: if IT throws (DB blip), the cron must keep
+        // going for the other targets rather than 500 and strand rows in 'calling'.
+        try {
+          await withTenant(campaign.organizationId, async (tx) => {
+            await tx.phoneCampaignTarget.update({
+              where: { id: target.id },
+              data: { status: "failed", failureReason: msg },
+            });
+            await tx.phoneCampaign.update({
+              where: { id: campaign.id },
+              data: { failedTargets: { increment: 1 } },
+            });
           });
-          await tx.phoneCampaign.update({
-            where: { id: campaign.id },
-            data: { failedTargets: { increment: 1 } },
+        } catch (markErr) {
+          logger.error({
+            event: "phone.outbound.mark_failed_failed",
+            campaignId: campaign.id,
+            targetId: target.id,
+            error: markErr instanceof Error ? markErr.message : String(markErr),
           });
-        });
+        }
         totalFailed++;
         logger.error({ event: "phone.outbound.dispatch_failed", campaignId: campaign.id, targetId: target.id, error: msg });
       }

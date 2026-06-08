@@ -1,6 +1,8 @@
 import { createHash } from "node:crypto";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/db/client";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { submitSurveyResponse } from "@/lib/surveys/actions";
 import { brandingFromIncentive } from "@/lib/surveys/templates";
 import SurveyForm, { type PublicQuestion } from "./form";
@@ -35,6 +37,20 @@ export default async function SurveyResponsePage({
   const { token } = await params;
 
   if (!token || token.length < 20 || token.length > 120) notFound();
+
+  // Rate-limit the unauthenticated token lookup (per IP) to blunt enumeration / DoS
+  // against this public endpoint. Token entropy already makes guessing infeasible.
+  const hdrs = await headers();
+  const ip =
+    hdrs.get("x-forwarded-for")?.split(",")[0]?.trim() ?? hdrs.get("x-real-ip") ?? "unknown";
+  const rl = await checkRateLimit("survey_token", ip);
+  if (!rl.success) {
+    return (
+      <main style={{ minHeight: "100dvh", display: "grid", placeItems: "center", padding: 24, fontFamily: "system-ui" }}>
+        <p style={{ color: "#475569" }}>Too many requests — please slow down and try again in a minute.</p>
+      </main>
+    );
+  }
 
   const tokenHash = createHash("sha256").update(token).digest("hex");
 

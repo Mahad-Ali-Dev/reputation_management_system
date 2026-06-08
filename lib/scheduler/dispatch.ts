@@ -202,8 +202,10 @@ export async function drainDueScheduledJobs(opts?: {
     try {
       if (ok) {
         await withTenant(orgId, async (tx) => {
-          await tx.scheduledJob.update({
-            where: { id },
+          // Conditional on status='running' so a concurrent/retried tick can't
+          // double-finalize, and a stuck row is recoverable rather than silently lost.
+          await tx.scheduledJob.updateMany({
+            where: { id, status: "running" },
             data: { status: "done", ranAt: new Date(), lastError: null },
           });
         });
@@ -215,8 +217,8 @@ export async function drainDueScheduledJobs(opts?: {
       } else {
         const exhausted = attemptsAfterClaim >= maxAttempts;
         await withTenant(orgId, async (tx) => {
-          await tx.scheduledJob.update({
-            where: { id },
+          await tx.scheduledJob.updateMany({
+            where: { id, status: "running" },
             data: {
               // Retry: drop back to pending so a later tick re-claims it. Give
               // up after maxAttempts → failed (terminal).

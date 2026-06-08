@@ -13,6 +13,10 @@ const REDACT_PATHS = [
   // Auth / session
   "req.headers.authorization",
   "req.headers.cookie",
+  // Top-level PII — Pino paths are exact; "body.email" does NOT match a top-level
+  // `email` field, so log {email} at the root must be redacted explicitly.
+  "email",
+  "phone",
   "*.password",
   "*.password_hash",
   "*.passwordHash",
