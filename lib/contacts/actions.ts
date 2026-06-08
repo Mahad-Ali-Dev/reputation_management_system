@@ -16,6 +16,7 @@ import { buildContactsExport, toDataUrl, type ContactExportFormat } from "./expo
 import { isMissingRelation } from "./fail-soft";
 import {
   applyMapping,
+  assertImportableHeader,
   dedupeAgainstExisting,
   parseImportCsv,
   type ColumnMapping,
@@ -501,6 +502,9 @@ export async function importContactsMapped(form: FormData): Promise<{
   }
 
   const parsed = parseImportCsv(csvText);
+  // Server-side guard (defense-in-depth; the import panel also validates client-side):
+  // reject a CSV whose header lacks Name + (Email OR Phone) before any mapping/insert.
+  assertImportableHeader(parsed.headers);
   const mapped = applyMapping(parsed, mapping);
   if (mapped.records.length === 0) {
     return { created: 0, duplicates: mapped.duplicatesInFile, invalid: mapped.invalid.length, truncated: parsed.truncated };
