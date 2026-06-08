@@ -53,6 +53,7 @@ const isGroup = (x: NavItem): x is NavGroup => "group" in x;
  */
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
+  { href: "/autopilot", label: "Autopilot", icon: "bolt", badge: "AI" },
 
   { group: "Device Setup" },
   { href: "/establishments", label: "My Establishments", icon: "pin" },
@@ -76,7 +77,7 @@ const NAV: NavItem[] = [
   { href: "/contacts", label: "Contact Directory", icon: "users" },
 
   { group: "Intelligence" },
-  { href: "/analytics", label: "Business Reports", icon: "bars", pro: "competitor_intel" },
+  { href: "/analytics", label: "Business Reports", icon: "bars" },
 
   { group: "Settings" },
   { href: "/connections", label: "Connections", icon: "plug" },

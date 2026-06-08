@@ -39,6 +39,10 @@ export default async function PhoneDashboardPage() {
     ]),
   );
 
+  // Voice → Review funnel status (Module 15). Fail-soft: autopilot_configs may
+  // not be migrated yet, and review_requests is long-existing but guard anyway.
+  const voiceReview = await getVoiceReviewStatus(orgId, since30d);
+
   const totalCalls = stats._count._all ?? 0;
   const totalCost = ((stats._sum.aiCostMicros ?? 0) / 1_000_000).toFixed(2);
   const totalMinutes = Math.round((stats._sum.durationSeconds ?? 0) / 60);
@@ -89,6 +93,51 @@ export default async function PhoneDashboardPage() {
           d={`${phoneNumbers.filter((p) => p.forwardToE164).length} with handoff`}
         />
       </div>
+
+      {/* Voice → Review funnel card (Module 15) */}
+      <Link
+        href="/autopilot"
+        className="ds-card"
+        style={{
+          display: "block",
+          marginBottom: 18,
+          padding: 16,
+          textDecoration: "none",
+          color: "inherit",
+          borderColor: voiceReview.enabled ? "var(--pri)" : "var(--line)",
+        }}
+      >
+        <div className="row" style={{ gap: 14, alignItems: "center" }}>
+          <span
+            style={{
+              width: 38,
+              height: 38,
+              borderRadius: 10,
+              background: voiceReview.enabled ? "var(--pri)" : "var(--pri-50)",
+              color: voiceReview.enabled ? "#fff" : "var(--pri)",
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="star" size={18} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div className="row" style={{ gap: 8 }}>
+              <strong style={{ fontSize: 14 }}>Voice → Review</strong>
+              <span className={`chip ${voiceReview.enabled ? "chip--ok" : "chip--info"}`}>
+                {voiceReview.enabled ? "On" : "Off"}
+              </span>
+            </div>
+            <div className="dim" style={{ fontSize: 12, marginTop: 2 }}>
+              {voiceReview.enabled
+                ? `Resolved calls become Google review requests automatically — ${voiceReview.last30d} sent in the last 30 days.`
+                : "Turn resolved phone calls into Google reviews automatically. Manage in Autopilot."}
+            </div>
+          </div>
+          <Icon name="chevR" size={14} style={{ color: "var(--rl-muted-2)" }} />
+        </div>
+      </Link>
 
       <div
         style={{
@@ -292,4 +341,41 @@ function relativeTime(d: Date): string {
   if (h < 24) return `${h}h ago`;
   const days = Math.floor(h / 24);
   return `${days}d ago`;
+}
+
+/**
+ * Voice→Review funnel status for the phone dashboard card (Module 15). Reads the
+ * AutopilotConfig toggle (default ON when no row) + a 30-day count of
+ * voice-originated review requests. Fully fail-soft (unmigrated tables → off/0).
+ */
+async function getVoiceReviewStatus(
+  orgId: string,
+  since: Date,
+): Promise<{ enabled: boolean; last30d: number }> {
+  try {
+    return await withTenant(orgId, async (tx) => {
+      let enabled = true;
+      try {
+        const cfg = await tx.autopilotConfig.findUnique({
+          where: { organizationId: orgId },
+          select: { enabled: true, voiceToReviewEnabled: true },
+        });
+        // Surfaced as "on" only when Autopilot is on AND the loop is enabled.
+        enabled = cfg ? cfg.enabled && cfg.voiceToReviewEnabled : false;
+      } catch {
+        enabled = false;
+      }
+      let last30d = 0;
+      try {
+        last30d = await tx.reviewRequest.count({
+          where: { triggerSource: "voice_call", createdAt: { gte: since } },
+        });
+      } catch {
+        last30d = 0;
+      }
+      return { enabled, last30d };
+    });
+  } catch {
+    return { enabled: false, last30d: 0 };
+  }
 }

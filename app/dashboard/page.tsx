@@ -6,10 +6,13 @@ import { ScoreRing } from "@/components/shell/score-ring";
 import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { orgHasFeature } from "@/lib/billing/feature-access";
 import { buildOnboardingChecklist, getOnboardingFacts } from "@/lib/onboarding/facts";
 import { computeHealthScore } from "@/lib/dashboard/health-score";
 import { getCachedBriefing } from "@/lib/dashboard/briefing";
 import { getDashboardData, getSetupState, type SetupState } from "@/lib/dashboard/queries";
+import { getAutopilotOverview } from "@/lib/autopilot/queries";
+import { getRoiHeadline } from "@/lib/roi/summary";
 import Link from "next/link";
 import { AiIntelligenceCenter } from "./_components/ai-intelligence-center";
 import { DashboardHero, type HeroKpi } from "./_components/dashboard-hero";
@@ -46,10 +49,14 @@ export default async function DashboardPage({
 }) {
   const { orgId, userName, userEmail, org } = await getOrgContext();
 
-  const [d, setup, facts] = await Promise.all([
+  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const [d, setup, facts, autopilot, roiHeadline, hasAutopilot] = await Promise.all([
     getDashboardData(orgId),
     getSetupState(orgId),
     getOnboardingFacts(orgId),
+    getAutopilotOverview(orgId),
+    getRoiHeadline(orgId, { start: since30d, end: new Date() }),
+    orgHasFeature(orgId, "ai_autopilot"),
   ]);
 
   const total = d.total;
@@ -192,6 +199,14 @@ export default async function DashboardPage({
 
               <div className="col" style={{ gap: 14 }}>
                 <SetupProgress setup={setup} />
+                <AutopilotCard
+                  enabled={autopilot.enabled}
+                  thisWeek={autopilot.thisWeek.total}
+                  needsYou={autopilot.requiresHuman}
+                  estimatedRevenue={roiHeadline.estimatedRevenue}
+                  currency={roiHeadline.currency}
+                  showRevenue={hasAutopilot}
+                />
                 <AiIntelligenceCenter briefing={briefing.body} isEmpty={isEmpty} />
                 {!setup.dismissed && onboardingSteps.some((s) => !s.done) && (
                   <GettingStarted
@@ -238,6 +253,90 @@ function QuickAction({ icon, title, href }: { icon: IconName; title: string; hre
       <span className="qa__icon"><Icon name={icon} size={16} /></span>
       <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{title}</span>
       <Icon name="chevR" size={14} style={{ color: "var(--rl-muted-2)" }} />
+    </Link>
+  );
+}
+
+/**
+ * Reputation Autopilot summary card (Module 15). Status + this-week action count
+ * + the "needs you" count, plus the estimated-revenue line (gated behind the
+ * ai_autopilot feature — the activity counts are a fine teaser for everyone).
+ */
+function AutopilotCard({
+  enabled,
+  thisWeek,
+  needsYou,
+  estimatedRevenue,
+  currency,
+  showRevenue,
+}: {
+  enabled: boolean;
+  thisWeek: number;
+  needsYou: number;
+  estimatedRevenue: number;
+  currency: string;
+  showRevenue: boolean;
+}) {
+  return (
+    <Link
+      href="/autopilot"
+      className="ds-card ds-card--hover"
+      style={{ display: "block", textDecoration: "none", color: "inherit", padding: 16 }}
+    >
+      <div className="row" style={{ gap: 10, marginBottom: 10 }}>
+        <span
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: enabled ? "var(--pri)" : "var(--pri-50)",
+            color: enabled ? "#fff" : "var(--pri)",
+            display: "grid",
+            placeItems: "center",
+          }}
+        >
+          <Icon name="bolt" size={16} />
+        </span>
+        <div style={{ flex: 1 }}>
+          <div className="row" style={{ gap: 8 }}>
+            <h3 className="ds-card__title" style={{ margin: 0 }}>
+              Autopilot
+            </h3>
+            <span className={`chip ${enabled ? "chip--ok" : "chip--info"}`}>
+              {enabled ? "On" : "Off"}
+            </span>
+          </div>
+        </div>
+        <Icon name="chevR" size={14} style={{ color: "var(--rl-muted-2)" }} />
+      </div>
+
+      {enabled ? (
+        <div className="row" style={{ gap: 18 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>{thisWeek}</div>
+            <div className="dim" style={{ fontSize: 11 }}>actions this week</div>
+          </div>
+          {needsYou > 0 && (
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--warn)" }}>{needsYou}</div>
+              <div className="dim" style={{ fontSize: 11 }}>need you</div>
+            </div>
+          )}
+          {showRevenue && (
+            <div>
+              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--pri)" }}>
+                {currency} {estimatedRevenue.toLocaleString()}
+              </div>
+              <div className="dim" style={{ fontSize: 11 }}>est. revenue · 30d</div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <p className="dim" style={{ fontSize: 12.5, margin: 0, lineHeight: 1.5 }}>
+          Turn on self-driving reputation — one switch runs replies, review requests, and
+          Voice→Review, then sends you a weekly digest.
+        </p>
+      )}
     </Link>
   );
 }

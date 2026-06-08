@@ -54,6 +54,7 @@ export type JobTopic =
   | "topic-extract"         // run topic extraction for one review
   | "social-post"           // publish one social post to its platforms
   | "digest-org"            // build + send digest for one org
+  | "autopilot-digest-org"  // build + send the weekly Autopilot digest for one org
   | "url-crawl"             // crawl + index one URL into chatbot KB
   | "chat-automation-tick"; // run automation rules for active widget visitors
 

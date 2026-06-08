@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { parseAndVerifyTwilio } from "@/lib/phone/twilio-verify";
+import { maybeEnqueueVoiceReview } from "@/lib/phone/voice-review";
 import { logger } from "@/lib/logger";
 
 export const runtime = "nodejs";
@@ -52,5 +53,21 @@ export async function POST(req: NextRequest) {
   });
 
   logger.info({ event: "voice.status.updated", callSid, status, duration });
+
+  // Voice→Review funnel (Module 15): on a terminal SUCCESS, maybe enqueue a
+  // review request to the caller a few hours later. STRICTLY best-effort — the
+  // hook is fully self-guarding and `.catch`-wrapped so it can NEVER throw or
+  // delay the 200 Twilio expects (a non-200 makes Twilio retry → double work).
+  if ((status ?? "completed") === "completed") {
+    logger.info({ event: "voice.review.enqueue.attempt", callSid });
+    await maybeEnqueueVoiceReview({ orgId: call.organizationId, callId: call.id }).catch((err) => {
+      logger.error({
+        event: "voice.review.enqueue.unhandled",
+        callSid,
+        error: err instanceof Error ? err.message : String(err),
+      });
+    });
+  }
+
   return NextResponse.json({ ok: true });
 }

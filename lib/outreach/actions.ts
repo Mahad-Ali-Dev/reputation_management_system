@@ -1,19 +1,14 @@
 "use server";
 
-import { createHmac } from "node:crypto";
 import { auth } from "@/lib/auth/config";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
-import { generateSlug, googleReviewUrl } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
-import { getHmacSecret } from "@/lib/secrets";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { dispatchReviewRequest } from "./dispatch";
+import { enqueueReviewRequest } from "./enqueue";
 import { hasSmsConsent, isUnsubscribed, recordSmsConsent } from "./suppression";
-
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
 const PHONE_RE = /^\+[1-9][0-9]{1,14}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -100,86 +95,58 @@ export async function createReviewRequest(form: FormData): Promise<void> {
     }
   }
 
-  // Load establishment for Google place + name
-  const estab = await withTenant(orgId, async (tx) => {
-    return tx.establishment.findFirst({
-      where: { id: data.establishmentId, deletedAt: null },
-      select: { id: true, name: true, googlePlaceId: true },
-    });
+  // Delegate the insert + (optional inline) dispatch to the shared programmatic
+  // seam — the SAME single send path the Voice→Review funnel + cron use. The
+  // session/entitlement/consent-attestation concerns above stay here; the
+  // reusable mechanics (tracked link, row insert, dispatch-or-schedule) live in
+  // `enqueueReviewRequest`. Consent was just recorded above for SMS, so the
+  // seam's consent re-check passes; unsubscribe is re-checked (idempotent).
+  const enq = await enqueueReviewRequest({
+    orgId,
+    establishmentId: data.establishmentId,
+    channel: data.channel,
+    recipient,
+    recipientName: data.recipientName ?? null,
+    triggerSource: "manual",
+    delayHours: data.scheduleHours,
+    customBody: data.customBody,
+    outreachTemplateId: data.outreachTemplateId,
   });
-  if (!estab) throw new Error("Establishment not found");
 
-  // Build tracked review link (uses our /r/{slug} edge redirect for attribution)
-  const trackingSlug = generateSlug();
-  const reviewLink = `${APP_URL}/r/${trackingSlug}`;
-  const reviewTarget = googleReviewUrl(estab.googlePlaceId, estab.name);
+  if (!enq.ok) {
+    // Map the seam's structured reasons back to the UI's thrown-error contract.
+    switch (enq.reason) {
+      case "establishment_not_found":
+        throw new Error("Establishment not found");
+      case "unsubscribed":
+        throw new Error(`This recipient has unsubscribed from ${data.channel}`);
+      case "no_sms_consent":
+        throw new Error("TCPA consent required for this SMS recipient.");
+      default:
+        throw new Error(`Could not create review request: ${enq.reason}`);
+    }
+  }
 
-  // Note: we don't currently auto-provision a Device row for review-request slugs. For Day 6 v1
-  // we just point /r/{slug} at the Google review URL by stashing it in raw redirect storage.
-  // Day 7+: unify with the device redirect or use a separate review_request_links table.
-  // For now, fall back to direct google URL in the email/SMS body and skip the wrapped link.
-  const effectiveLink = reviewTarget;
-
-  const scheduledFor = new Date(Date.now() + data.scheduleHours * 60 * 60 * 1000);
-  const unsubscribeUrl = `${APP_URL}/u?${buildUnsubToken(orgId, data.channel, recipient)}`;
-
-  // Insert review_request row
-  const rr = await withTenant(orgId, async (tx) => {
-    const created = await tx.reviewRequest.create({
-      data: {
-        organizationId: orgId,
-        establishmentId: estab.id,
-        channel: data.channel,
-        recipient,
-        recipientName: data.recipientName ?? null,
-        shortSlug: trackingSlug,
-        scheduledFor,
-        // Scheduled = future-dated, picked up by the cron at scheduledFor.
-        // Queued (zero delay) = ready for immediate dispatch by the worker.
-        status: data.scheduleHours > 0 ? "scheduled" : "queued",
-        triggerSource: "manual",
-      },
-    });
-    await tx.auditLog.create({
+  // Audit with the acting user (the seam runs sessionless, so the actor-attributed
+  // audit row is written here where we know `userId`).
+  await withTenant(orgId, (tx) =>
+    tx.auditLog.create({
       data: {
         organizationId: orgId,
         actorType: "user",
         actorId: userId,
         action: "review_request.created",
         resourceType: "review_request",
-        resourceId: created.id,
-        afterData: { channel: data.channel, recipient, scheduledFor: scheduledFor.toISOString() },
+        resourceId: enq.reviewRequestId,
+        afterData: {
+          channel: data.channel,
+          recipient,
+          scheduleHours: data.scheduleHours,
+          status: enq.status,
+        },
       },
-    });
-    return created;
-  });
-
-  // Send now if no delay
-  if (data.scheduleHours === 0) {
-    // Race-safe claim (queued → sending) BEFORE dispatching, identical to the
-    // dispatch cron. Without this, a cron tick firing between row creation and
-    // the inline send could claim the same queued row and double-send.
-    const claimed = await withTenant(orgId, (tx) =>
-      tx.reviewRequest.updateMany({
-        where: { id: rr.id, status: "queued" },
-        data: { status: "sending" },
-      }),
-    );
-    if (claimed.count > 0) {
-      await dispatchReviewRequest(rr.id, orgId, {
-        reviewLink: effectiveLink,
-        unsubscribeUrl,
-        businessName: estab.name,
-        customBody: data.customBody,
-        outreachTemplateId: data.outreachTemplateId,
-      });
-    }
-  } else {
-    logger.info(
-      { orgId, reviewRequestId: rr.id, scheduledFor, event: "review_request.scheduled" },
-      "review request scheduled — worker will dispatch",
-    );
-  }
+    }),
+  );
 
   revalidatePath("/outreach");
 }
@@ -220,16 +187,4 @@ export async function resendReviewRequest(form: FormData): Promise<void> {
 
   logger.info({ orgId, reviewRequestId: id, event: "review_request.resend_queued" });
   revalidatePath("/outreach");
-}
-
-/**
- * Build a signed unsubscribe token. Used in email List-Unsubscribe header.
- * Format: orgId.channel.recipient.signature (base64url)
- */
-function buildUnsubToken(orgId: string, channel: string, recipient: string): string {
-  // Fail-closed in production via lib/secrets.ts — never use a public fallback.
-  const secret = getHmacSecret();
-  const payload = `${orgId}|${channel}|${recipient}`;
-  const sig = createHmac("sha256", secret).update(payload).digest("base64url");
-  return `t=${Buffer.from(payload).toString("base64url")}&s=${sig}`;
 }

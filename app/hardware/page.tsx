@@ -14,6 +14,7 @@ import {
   listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
+import { getDeviceRoi } from "@/lib/roi/summary";
 import Link from "next/link";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import { DeviceCard } from "./_components/device-card";
@@ -120,12 +121,17 @@ export default async function QrCodesPage({
   for (const d of activeDevices) reviewsByDeviceId.set(d.id, d.reviewCount);
 
   const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const selectedScans = await withTenant(orgId, (tx) =>
-    tx.deviceScan.findMany({
-      where: { deviceId: selectedDevice.id, scannedAt: { gte: since30d } },
-      select: { scannedAt: true },
-    }),
-  );
+  const [selectedScans, deviceRoi] = await Promise.all([
+    withTenant(orgId, (tx) =>
+      tx.deviceScan.findMany({
+        where: { deviceId: selectedDevice.id, scannedAt: { gte: since30d } },
+        select: { scannedAt: true },
+      }),
+    ),
+    // Per-device scan-to-revenue line (Module 15): "this plaque generated N
+    // reviews and an estimated $X". Fail-soft → zeros.
+    getDeviceRoi(orgId, selectedDevice.id),
+  ]);
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
@@ -326,6 +332,9 @@ export default async function QrCodesPage({
           scanCount={selectedDevice.scanCount}
           scans={selectedScans}
           reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
+          estimatedRevenue={deviceRoi.estimatedRevenue}
+          currency={deviceRoi.currency}
+          isPro={isPro}
         />
       </div>
     </AppShellServer>
@@ -501,10 +510,16 @@ function ScanAnalytics({
   scanCount,
   scans,
   reviews,
+  estimatedRevenue,
+  currency,
+  isPro,
 }: {
   scanCount: number;
   scans: Array<{ scannedAt: Date }>;
   reviews: number;
+  estimatedRevenue: number;
+  currency: string;
+  isPro: boolean;
 }) {
   // Bucket real DeviceScan entries by day/hour/dow over the last 30 days.
   const monthlyScans = Array<number>(30).fill(0);
@@ -552,6 +567,40 @@ function ScanAnalytics({
           <Mini l="TODAY" v={String(todayScans)} />
           <Mini l="REVIEWS" v={String(reviews)} />
         </div>
+
+        {/* Scan-to-revenue line (Module 15) — the tangible ROI story. */}
+        <Link
+          href="/autopilot?tab=roi"
+          className="row"
+          style={{
+            gap: 10,
+            padding: "10px 12px",
+            marginBottom: 16,
+            background: "var(--pri-50)",
+            borderRadius: 8,
+            textDecoration: "none",
+            color: "inherit",
+          }}
+        >
+          <Icon name="trend" size={16} style={{ color: "var(--pri)", flexShrink: 0 }} />
+          <span style={{ fontSize: 12.5, flex: 1, lineHeight: 1.5 }}>
+            This device generated <strong>{reviews}</strong> review{reviews === 1 ? "" : "s"}
+            {isPro ? (
+              <>
+                {" "}
+                and an estimated{" "}
+                <strong>
+                  {currency} {estimatedRevenue.toLocaleString()}
+                </strong>{" "}
+                in booked revenue.
+              </>
+            ) : (
+              <>. Upgrade to see the estimated revenue it drove.</>
+            )}
+          </span>
+          <Icon name="chevR" size={13} style={{ color: "var(--rl-muted-2)" }} />
+        </Link>
+
         <div style={{ height: 120, display: "flex", alignItems: "flex-end", gap: 2 }}>
           {monthlyScans.map((v, i) => (
             <div
