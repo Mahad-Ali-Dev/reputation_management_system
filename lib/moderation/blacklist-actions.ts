@@ -26,7 +26,7 @@ async function requireOrg() {
 }
 
 export async function addBlacklistKeyword(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId } = await requireRole("manager");
   const parsed = Schema.safeParse({
     keyword: form.get("keyword"),
     matchMode: form.get("matchMode") ?? "contains",
@@ -53,7 +53,7 @@ export async function addBlacklistKeyword(form: FormData): Promise<void> {
 }
 
 export async function removeBlacklistKeyword(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId } = await requireRole("manager");
   const id = z.string().uuid().parse(form.get("id"));
   await withTenant(orgId, async (tx) => {
     await tx.commentBlacklist.delete({ where: { id } });
@@ -62,7 +62,7 @@ export async function removeBlacklistKeyword(form: FormData): Promise<void> {
 }
 
 export async function toggleBlacklistKeyword(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId } = await requireRole("manager");
   const id = z.string().uuid().parse(form.get("id"));
   await withTenant(orgId, async (tx) => {
     const cur = await tx.commentBlacklist.findUnique({ where: { id } });

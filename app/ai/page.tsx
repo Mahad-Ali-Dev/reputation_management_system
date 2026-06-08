@@ -19,22 +19,33 @@ export const dynamic = "force-dynamic";
 export default async function AiSettingsPage() {
   const { orgId } = await getOrgContext();
 
-  const [establishments, documents, widgets] = await withTenant(orgId, async (tx) =>
-    Promise.all([
-      tx.establishment.findMany({
-        where: { deletedAt: null },
-        select: { id: true, name: true },
-        orderBy: { createdAt: "asc" },
-      }),
-      tx.aiDocument.findMany({
-        orderBy: { createdAt: "desc" },
-      }),
-      tx.widgetKey.findMany({
-        where: { status: "active" },
-        orderBy: { createdAt: "desc" },
-      }),
-    ]),
-  );
+  const loadAi = () =>
+    withTenant(orgId, async (tx) =>
+      Promise.all([
+        tx.establishment.findMany({
+          where: { deletedAt: null },
+          select: { id: true, name: true },
+          orderBy: { createdAt: "asc" },
+        }),
+        tx.aiDocument.findMany({
+          orderBy: { createdAt: "desc" },
+        }),
+        tx.widgetKey.findMany({
+          where: { status: "active" },
+          orderBy: { createdAt: "desc" },
+        }),
+      ]),
+    );
+  type AiData = Awaited<ReturnType<typeof loadAi>>;
+  // Fail-soft: render empty rather than 500 on a transient DB error.
+  let establishments: AiData[0] = [];
+  let documents: AiData[1] = [];
+  let widgets: AiData[2] = [];
+  try {
+    [establishments, documents, widgets] = await loadAi();
+  } catch {
+    /* render empty */
+  }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 

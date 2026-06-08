@@ -13,15 +13,25 @@ export const dynamic = "force-dynamic";
 export default async function FaqsPage() {
   const { orgId } = await getOrgContext();
 
-  const [faqs, establishments] = await withTenant(orgId, async (tx) =>
-    Promise.all([
-      tx.faq.findMany({ orderBy: [{ position: "asc" }, { createdAt: "desc" }] }),
-      tx.establishment.findMany({
-        where: { deletedAt: null },
-        select: { id: true, name: true },
-      }),
-    ]),
-  );
+  const loadFaqs = () =>
+    withTenant(orgId, async (tx) =>
+      Promise.all([
+        tx.faq.findMany({ orderBy: [{ position: "asc" }, { createdAt: "desc" }] }),
+        tx.establishment.findMany({
+          where: { deletedAt: null },
+          select: { id: true, name: true },
+        }),
+      ]),
+    );
+  type FaqData = Awaited<ReturnType<typeof loadFaqs>>;
+  // Fail-soft: render empty rather than 500 on a transient DB error.
+  let faqs: FaqData[0] = [];
+  let establishments: FaqData[1] = [];
+  try {
+    [faqs, establishments] = await loadFaqs();
+  } catch {
+    /* render empty */
+  }
 
   return (
     <AppShellServer topBar={<TopBar title="FAQs" />}>

@@ -75,7 +75,12 @@ export async function POST() {
     update: data,
   });
 
-  const orgPlan = active.status === "active" || active.status === "trialing" ? "pro" : "free";
+  const orgPlan: "pro" | "free" | "past_due" =
+    active.status === "active" || active.status === "trialing"
+      ? "pro"
+      : active.status === "past_due" || active.status === "unpaid"
+        ? "past_due"
+        : "free";
   await prisma.organization.update({
     where: { id: orgId },
     data: { plan: orgPlan },

@@ -20,24 +20,36 @@ export default async function PhoneDashboardPage() {
   const { orgId } = await getOrgContext();
 
   const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const [phoneNumbers, recentCalls, stats, assistant] = await withTenant(orgId, async (tx) =>
-    Promise.all([
-      tx.phoneNumber.findMany({
-        where: { status: "active" },
-        orderBy: { createdAt: "desc" },
-      }),
-      tx.phoneCall.findMany({
-        orderBy: { startedAt: "desc" },
-        take: 12,
-      }),
-      tx.phoneCall.aggregate({
-        where: { startedAt: { gte: since30d } },
-        _count: { _all: true },
-        _sum: { aiCostMicros: true, durationSeconds: true },
-      }),
-      tx.phoneAssistant.findUnique({ where: { organizationId: orgId } }),
-    ]),
-  );
+  const loadPhone = () =>
+    withTenant(orgId, async (tx) =>
+      Promise.all([
+        tx.phoneNumber.findMany({
+          where: { status: "active" },
+          orderBy: { createdAt: "desc" },
+        }),
+        tx.phoneCall.findMany({
+          orderBy: { startedAt: "desc" },
+          take: 12,
+        }),
+        tx.phoneCall.aggregate({
+          where: { startedAt: { gte: since30d } },
+          _count: { _all: true },
+          _sum: { aiCostMicros: true, durationSeconds: true },
+        }),
+        tx.phoneAssistant.findUnique({ where: { organizationId: orgId } }),
+      ]),
+    );
+  type PhoneData = Awaited<ReturnType<typeof loadPhone>>;
+  // Fail-soft: a transient DB error / pre-migration window must not 500 the page.
+  let phoneNumbers: PhoneData[0] = [];
+  let recentCalls: PhoneData[1] = [];
+  let stats: PhoneData[2] = { _count: { _all: 0 }, _sum: { aiCostMicros: null, durationSeconds: null } };
+  let assistant: PhoneData[3] = null;
+  try {
+    [phoneNumbers, recentCalls, stats, assistant] = await loadPhone();
+  } catch {
+    /* render empty/zero */
+  }
 
   // Voice → Review funnel status (Module 15). Fail-soft: autopilot_configs may
   // not be migrated yet, and review_requests is long-existing but guard anyway.
