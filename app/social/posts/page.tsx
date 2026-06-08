@@ -1,61 +1,108 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
-import { Icon, type IconName } from "@/components/shell/icon";
+import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
+import {
+  ALL_PLATFORMS,
+  getConnectedPlatforms,
+  type SocialPlatform,
+} from "@/lib/social/connections";
+import { imageGenAvailability } from "@/lib/social/image-gen";
+import { listLibraryAssets } from "@/lib/social/library";
 import Link from "next/link";
-import { CreatePostForm } from "./form";
+import { Composer, type InitialPost } from "./_components/composer";
+import {
+  generateCaptionsForComposer,
+  generateCreativesForComposer,
+  recommendTimesForComposer,
+} from "./_components/composer-actions";
+import { HistoryTab } from "./_components/history-tab";
+import { HubTabs } from "./_components/hub-tabs";
+import { LibraryTab } from "./_components/library-tab";
+import type { LibraryAsset as PickerAsset } from "./_components/library-modal";
 
 /**
- * Social posts — repulabs v2 design.
+ * Social Studio (Module 10) — the 4-tab hub on `/social/posts`.
  *
- * Compose form + recent posts list. Real data: SocialPost model.
+ *   ?tab=create   (default) → 3-column <Composer>
+ *   ?tab=history            → <HistoryTab>
+ *   ?tab=library            → <LibraryTab>
+ *   Calendar is its own route (/social/calendar) linked from the tabs.
+ *
+ * Stays a SERVER component: it computes connection state + entitlement + loads
+ * tab data, then mounts the client islands and passes the backend `lib/social/*`
+ * services in as bound server-action props (so the client islands never import a
+ * server-only module directly and orgId never reaches the client).
+ *
+ * `?post=<id>` hydrates the composer for the calendar's edit deep-link;
+ * `?media=<url>` preselects a library asset (the Library tab's "Use in post").
  */
 
 export const dynamic = "force-dynamic";
 
-const STATUS_TONE: Record<string, string> = {
-  draft: "chip--out",
-  scheduled: "chip--warn",
-  publishing: "chip--info",
-  published: "chip--ok",
-  failed: "chip--bad",
-};
+type TabKey = "create" | "history" | "library";
 
-const PLATFORM_ICON: Record<string, IconName> = {
-  facebook: "fb",
-  instagram: "insta",
-  linkedin: "linkedin",
-  twitter: "twitter",
-};
+function parseTab(raw?: string): TabKey {
+  return raw === "history" || raw === "library" ? raw : "create";
+}
 
-export default async function SocialPostsPage() {
-  const { orgId } = await getOrgContext();
+/** Best-effort brand colors from establishment.brandVoice.colors → hex list. */
+function extractBrandColors(brandVoice: unknown): string[] {
+  if (brandVoice && typeof brandVoice === "object" && "colors" in brandVoice) {
+    const colors = (brandVoice as { colors?: unknown }).colors;
+    if (Array.isArray(colors)) {
+      return colors
+        .filter((c): c is string => typeof c === "string" && /^#?[0-9a-fA-F]{3,8}$/.test(c))
+        .map((c) => (c.startsWith("#") ? c : `#${c}`))
+        .slice(0, 4);
+    }
+  }
+  return [];
+}
 
-  const [posts, establishments] = await withTenant(orgId, async (tx) =>
-    Promise.all([
-      tx.socialPost.findMany({ orderBy: { createdAt: "desc" }, take: 30 }),
-      tx.establishment.findMany({
-        where: { deletedAt: null },
-        select: { id: true, name: true },
-      }),
-    ]),
-  );
+export default async function SocialPostsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    tab?: string;
+    post?: string;
+    media?: string;
+    hpage?: string;
+    folder?: string;
+  }>;
+}) {
+  const { orgId, org } = await getOrgContext();
+  const sp = await searchParams;
+  const tab = parseTab(sp.tab);
 
-  const scheduled = posts.filter((p) => p.status === "scheduled").length;
-  const published = posts.filter((p) => p.status === "published").length;
+  // Connection state — drives platform gating + the empty state.
+  const connectedSet = await getConnectedPlatforms(orgId);
+  const connectedPlatforms = ALL_PLATFORMS.filter((p) => connectedSet.has(p)) as SocialPlatform[];
+
+  // KPI counts (cheap aggregate, always shown).
+  const counts = await withTenant(orgId, async (tx) => {
+    const grouped = await tx.socialPost.groupBy({ by: ["status"], _count: { _all: true } });
+    const map: Record<string, number> = {};
+    for (const g of grouped) map[g.status] = g._count._all;
+    return map;
+  }).catch(() => ({}) as Record<string, number>);
+
+  const scheduled = counts.scheduled ?? 0;
+  const published = counts.published ?? 0;
+  const drafts = counts.draft ?? 0;
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Engagement", "Social Studio"]}>
       <PageHeader
         kicker="Cross-channel scheduler"
-        title="Social post studio"
-        description="Compose once. Schedule across Facebook, Instagram, LinkedIn and X. AI can draft a caption + hashtags from a one-line topic."
+        title="Social studio"
+        description="Compose once, preview per platform, and schedule across Facebook, Instagram, LinkedIn and X — with AI captions and creatives."
         actions={
-          <Link href="/social/calendar" className="btn">
-            <Icon name="cal" size={12} />
-            Calendar view
+          <Link href="/social/posts/bulk" className="btn">
+            <Icon name="bars" size={12} />
+            Bulk schedule
           </Link>
         }
       />
@@ -63,97 +110,137 @@ export default async function SocialPostsPage() {
       <div className="grid-3" style={{ gap: 12, marginBottom: 18 }}>
         <Kpi l="Scheduled" v={String(scheduled)} d="Queued to publish" />
         <Kpi l="Published · all time" v={String(published)} d="Across all channels" />
-        <Kpi
-          l="Draft"
-          v={String(Math.max(0, posts.length - scheduled - published))}
-          d="Not yet sent"
+        <Kpi l="Drafts" v={String(drafts)} d="Not yet sent" />
+      </div>
+
+      <HubTabs active={tab} />
+
+      {tab === "create" && (
+        <CreatePanel
+          orgId={orgId}
+          orgName={org.name}
+          orgLogoUrl={org.logoUrl}
+          connectedPlatforms={connectedPlatforms}
+          postId={sp.post}
+          presetMedia={sp.media}
         />
-      </div>
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-          gap: 14,
-        }}
-      >
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Create a post</h3>
-            <div className="ds-card__sub">
-              AI can draft caption + hashtags from a one-line topic
-            </div>
-          </div>
-          <div className="ds-card__body">
-            <CreatePostForm establishments={establishments} />
-          </div>
-        </div>
-
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Recent posts</h3>
-            <span className="mono dim" style={{ fontSize: 10.5 }}>
-              LAST {posts.length}
-            </span>
-          </div>
-          {posts.length === 0 ? (
-            <div className="ds-card__body dim" style={{ textAlign: "center", padding: 32 }}>
-              <Icon name="share" size={28} style={{ color: "var(--pri)" }} />
-              <p style={{ marginTop: 10, fontSize: 13 }}>
-                No posts yet. Compose your first on the left.
-              </p>
-            </div>
-          ) : (
-            <div style={{ padding: 4 }}>
-              {posts.map((p, i) => (
-                <div
-                  key={p.id}
-                  className="row"
-                  style={{
-                    padding: 12,
-                    borderTop: i ? "1px solid var(--line)" : "none",
-                  }}
-                >
-                  <span
-                    style={{
-                      width: 28,
-                      height: 28,
-                      borderRadius: 6,
-                      background: "var(--pri-50)",
-                      color: "var(--pri)",
-                      display: "grid",
-                      placeItems: "center",
-                      flexShrink: 0,
-                    }}
-                  >
-                    <Icon name={PLATFORM_ICON[p.platforms?.[0] ?? ""] ?? "share"} size={13} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
-                      style={{
-                        fontSize: 12.5,
-                        fontWeight: 500,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
-                      {p.caption
-                        ? p.caption.slice(0, 80) + (p.caption.length > 80 ? "…" : "")
-                        : "(no caption)"}
-                    </div>
-                    <div className="dim mono" style={{ fontSize: 10.5 }}>
-                      {(p.platforms ?? []).join(" · ")} · {relativeTime(p.createdAt)}
-                    </div>
-                  </div>
-                  <span className={`chip ${STATUS_TONE[p.status] ?? "chip--out"}`}>{p.status}</span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
+      )}
+      {tab === "history" && <HistoryTab orgId={orgId} page={Number(sp.hpage) || 1} />}
+      {tab === "library" && <LibraryTab orgId={orgId} folder={sp.folder ?? null} />}
     </AppShellServer>
+  );
+}
+
+/** Server panel that gathers the composer's data + mounts the client island. */
+async function CreatePanel({
+  orgId,
+  orgName,
+  orgLogoUrl,
+  connectedPlatforms,
+  postId,
+  presetMedia,
+}: {
+  orgId: string;
+  orgName: string;
+  orgLogoUrl: string | null;
+  connectedPlatforms: SocialPlatform[];
+  postId?: string;
+  presetMedia?: string;
+}) {
+  const isUuid = (s?: string) =>
+    !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+
+  const [establishments, libraryAssetsRaw, imageGen, initialPostRow] = await Promise.all([
+    withTenant(orgId, async (tx) =>
+      tx.establishment.findMany({
+        where: { deletedAt: null },
+        select: { id: true, name: true, brandVoice: true },
+        orderBy: { createdAt: "asc" },
+      }),
+    ).catch(() => []),
+    listLibraryAssets(orgId, { take: 60 }),
+    imageGenAvailability(orgId).catch(() => ({ available: false, reason: "not_configured" as const })),
+    isUuid(postId)
+      ? withTenant(orgId, async (tx) =>
+          tx.socialPost.findFirst({
+            where: { id: postId },
+            select: {
+              id: true,
+              caption: true,
+              hashtags: true,
+              platforms: true,
+              mediaUrl: true,
+              approvedCreativeUrls: true,
+              scheduledFor: true,
+              establishmentId: true,
+              status: true,
+            },
+          }),
+        ).catch(() => null)
+      : Promise.resolve(null),
+  ]);
+
+  // Brand colors: first establishment with a brandVoice.colors wins.
+  let brandColors: string[] = [];
+  for (const e of establishments) {
+    const colors = extractBrandColors(e.brandVoice);
+    if (colors.length) {
+      brandColors = colors;
+      break;
+    }
+  }
+
+  const libraryAssets: PickerAsset[] = libraryAssetsRaw.map((a) => ({
+    id: a.id,
+    url: a.url,
+    kind: a.kind === "video" ? "video" : "image",
+    folder: a.folder,
+    caption: a.caption,
+    sizeBytes: a.sizeBytes,
+  }));
+
+  // Build the InitialPost for an edit deep-link, OR seed media from ?media=.
+  let initialPost: InitialPost | null = null;
+  if (initialPostRow) {
+    initialPost = {
+      id: initialPostRow.id,
+      caption: initialPostRow.caption,
+      hashtags: initialPostRow.hashtags ?? [],
+      platforms: initialPostRow.platforms ?? [],
+      mediaUrl: initialPostRow.mediaUrl,
+      approvedCreativeUrls: initialPostRow.approvedCreativeUrls ?? [],
+      scheduledFor: initialPostRow.scheduledFor?.toISOString() ?? null,
+      establishmentId: initialPostRow.establishmentId,
+      status: initialPostRow.status,
+    };
+  } else if (presetMedia && /^https?:\/\//.test(presetMedia)) {
+    initialPost = {
+      id: "",
+      caption: null,
+      hashtags: [],
+      platforms: [],
+      mediaUrl: presetMedia,
+      approvedCreativeUrls: [presetMedia],
+      scheduledFor: null,
+      establishmentId: null,
+      status: "draft",
+    };
+  }
+
+  return (
+    <Composer
+      connectedPlatforms={connectedPlatforms}
+      establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
+      orgName={orgName}
+      orgLogoUrl={orgLogoUrl}
+      brandColors={brandColors}
+      libraryAssets={libraryAssets}
+      imageGen={imageGen}
+      generateCaptions={generateCaptionsForComposer}
+      generateCreatives={generateCreativesForComposer}
+      recommendTimes={recommendTimesForComposer}
+      initialPost={initialPost}
+    />
   );
 }
 
@@ -169,15 +256,4 @@ function Kpi({ l, v, d }: { l: string; v: string; d: string }) {
       </div>
     </div>
   );
-}
-
-function relativeTime(d: Date): string {
-  const ms = Date.now() - d.getTime();
-  const min = Math.floor(ms / 60000);
-  if (min < 60) return `${min}m ago`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.floor(h / 24);
-  if (days < 7) return `${days}d ago`;
-  return d.toLocaleDateString();
 }

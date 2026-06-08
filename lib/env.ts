@@ -148,6 +148,19 @@ const schema = z.object({
   // Vercel Blob (or alternative blob storage)
   BLOB_READ_WRITE_TOKEN: optionalString,
 
+  // Social publishing + metrics (Module 10). ALL optional — publishing/metrics
+  // are OFF by default and no-op without these (no live paid call). `META_APP_*`
+  // (read directly in lib/connections/adapters/meta) gate Meta OAuth; the two
+  // below additionally gate live publish/metrics calls.
+  META_GRAPH_ENABLED: optionalString, // "true" to enable live Meta publish/metrics
+  META_GRAPH_TOKEN: optionalString,
+  // AI Image Creatives (Module 10) — Pro + env gated, ships disabled by default.
+  // Unset IMAGE_GEN_PROVIDER ⇒ feature is "not enabled" (no paid call ever).
+  IMAGE_GEN_PROVIDER: optionalString, // "openai" | "stability" | "" (disabled)
+  IMAGE_GEN_MODEL: optionalString,
+  OPENAI_API_KEY: optionalString,
+  STABILITY_API_KEY: optionalString,
+
   // AWS / S3 (when deploying to AWS or using S3-compatible blob storage)
   AWS_REGION: optionalString,
   AWS_S3_BUCKET_UPLOADS: optionalString,

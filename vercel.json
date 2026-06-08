@@ -64,6 +64,14 @@
     {
       "path": "/api/cron/livechat-stale-sweep",
       "schedule": "*/5 * * * *"
+    },
+    {
+      "path": "/api/cron/dispatch-social-posts",
+      "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/refresh-social-metrics",
+      "schedule": "0 7 * * *"
     }
   ]
 }
