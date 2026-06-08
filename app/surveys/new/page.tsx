@@ -15,8 +15,20 @@ import { CreateWizard, type WizardContact, type WizardTemplate } from "../_compo
 
 export const dynamic = "force-dynamic";
 
-export default async function NewSurveyPage() {
+export default async function NewSurveyPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ contacts?: string }>;
+}) {
   const { orgId } = await getOrgContext();
+  const sp = await searchParams;
+
+  // Deep-linked pre-selection from /contacts (?contacts=id,id,…).
+  const preselectedIds = (sp.contacts ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s) => /^[0-9a-f-]{36}$/i.test(s))
+    .slice(0, 500);
 
   const [contacts, campaigns, establishments] = await Promise.all([
     loadContacts(orgId),
@@ -30,6 +42,11 @@ export default async function NewSurveyPage() {
       }),
     ).catch(() => [] as { id: string }[]),
   ]);
+
+  // Ensure any pre-selected contact (with an email) is present in the list even
+  // if it falls outside the default page — so the checkbox can be pre-checked.
+  const mergedContacts =
+    preselectedIds.length > 0 ? await mergePreselected(orgId, contacts, preselectedIds) : contacts;
 
   const templates: WizardTemplate[] = campaigns.map((c) => ({
     id: c.id,
@@ -45,9 +62,39 @@ export default async function NewSurveyPage() {
         description="Pick who to ask, choose a template, then send or schedule. Promoters auto-route to leave a Google review; detractors land in your private inbox."
         breadcrumb={[{ label: "Surveys", href: "/surveys" }, { label: "New" }]}
       />
-      <CreateWizard contacts={contacts} templates={templates} defaultEstablishmentId={establishments[0]?.id} />
+      <CreateWizard
+        contacts={mergedContacts}
+        templates={templates}
+        defaultEstablishmentId={establishments[0]?.id}
+        preselectedContactIds={preselectedIds}
+      />
     </AppShellServer>
   );
+}
+
+/** Fetch any pre-selected contacts (with email) missing from the loaded list. */
+async function mergePreselected(
+  orgId: string,
+  contacts: WizardContact[],
+  ids: string[],
+): Promise<WizardContact[]> {
+  const have = new Set(contacts.map((c) => c.id));
+  const missing = ids.filter((id) => !have.has(id));
+  if (missing.length === 0) return contacts;
+  try {
+    const rows = await withTenant(orgId, async (tx) =>
+      tx.contact.findMany({
+        where: { id: { in: missing }, email: { not: null } },
+        select: { id: true, name: true, email: true },
+      }),
+    );
+    const extra: WizardContact[] = rows
+      .filter((c): c is { id: string; name: string | null; email: string } => !!c.email)
+      .map((c) => ({ id: c.id, name: c.name, email: c.email }));
+    return [...extra, ...contacts];
+  } catch {
+    return contacts;
+  }
 }
 
 /** Contacts with a valid email for recipient selection. Fail-soft → []. */

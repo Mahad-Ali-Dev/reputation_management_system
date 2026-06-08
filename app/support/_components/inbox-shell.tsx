@@ -12,6 +12,7 @@ import { InboxTabsBar } from "./inbox-tabs-bar";
 import { ConversationsPanel } from "./conversations-panel";
 import { CommentsPanel, type CommentRowView } from "./comments-panel";
 import { ModerationPanel, type QueueItemView } from "./moderation-panel";
+import { LiveChatPanel } from "./livechat-panel";
 import type {
   KeywordRuleView,
   ModerationConfigView,
@@ -39,6 +40,8 @@ export type InboxSearchParams = {
   status?: string;
   q?: string;
   thread?: string;
+  /** Live Chat tab: the selected webchat session (AiConversation id). */
+  session?: string;
 };
 
 const VALID_TABS = new Set([
@@ -87,15 +90,13 @@ export async function InboxShell({
       )}
 
       {tab === "live-chat" && (
-        <StubPanel
-          icon="bot"
-          title="Live Chat"
-          body="Live website-chat conversations are the webchat channel of the unified queue. Open them inside Conversations, or manage the legacy live-chat view while the full real-time widget lands in a later phase."
-          ctas={[
-            { label: "Open in Conversations", href: "/support?tab=conversations&channel=webchat", primary: true },
-            { label: "Legacy live chat", href: "/support/live-chat" },
-          ]}
-        />
+        <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
+          <LiveChatPanel
+            orgId={orgId}
+            sub={searchParams.sub}
+            sessionId={searchParams.session}
+          />
+        </Suspense>
       )}
 
       {tab === "automation" && (

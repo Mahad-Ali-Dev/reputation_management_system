@@ -24,16 +24,24 @@ export function CreateWizard({
   contacts,
   templates,
   defaultEstablishmentId,
+  preselectedContactIds,
 }: {
   contacts: WizardContact[];
   templates: WizardTemplate[];
   defaultEstablishmentId?: string;
+  /** Contact ids to pre-check on mount (e.g. deep-linked from /contacts). */
+  preselectedContactIds?: string[];
 }) {
   const router = useRouter();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Step 1 — recipients
-  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(new Set());
+  // Step 1 — recipients. Seed from any deep-linked pre-selection (intersected
+  // with the loaded contacts so a stale id can't select a phantom recipient).
+  const [selectedContactIds, setSelectedContactIds] = useState<Set<string>>(() => {
+    if (!preselectedContactIds || preselectedContactIds.length === 0) return new Set();
+    const valid = new Set(contacts.map((c) => c.id));
+    return new Set(preselectedContactIds.filter((id) => valid.has(id)));
+  });
   const [manualInput, setManualInput] = useState("");
   const [manualRecipients, setManualRecipients] = useState<Recipient[]>([]);
   const [search, setSearch] = useState("");

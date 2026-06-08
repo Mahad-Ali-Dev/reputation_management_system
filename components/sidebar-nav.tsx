@@ -68,7 +68,7 @@ const NAV: NavItem[] = [
   { href: "/reviews/dispute", label: "Dispute Center", icon: "flag" },
 
   { group: "Social & Messaging" },
-  { href: "/support/comments", label: "Unified Inbox", icon: "chat", pro: "advanced_inbox" },
+  { href: "/support", label: "Unified Inbox", icon: "chat", pro: "advanced_inbox" },
   { href: "/social/posts", label: "Post Creator", icon: "share", pro: "image_creatives" },
 
   { group: "Engagement & CRM" },
