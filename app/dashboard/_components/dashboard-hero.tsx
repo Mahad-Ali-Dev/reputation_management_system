@@ -4,12 +4,14 @@ import Link from "next/link";
 /**
  * Dashboard hero + KPI strip — matches `tasks/premium-ui-redesign/02_hero-kpis.png`.
  *
- * A clean white header: a blue eyebrow (date · time), a large greeting, a
- * one-line briefing subtext, a "New request" primary action + a health chip
- * top-right, and a 5-up row of primary KPI cards each with a colored delta chip.
+ * A premium white header washed with a faint cool gradient: a blue eyebrow
+ * (date · time), an oversized greeting, a one-line briefing subtext, a dark
+ * "New request" primary action + a soft health chip top-right, and a 5-up row
+ * of near-flat KPI tiles each with tabular numbers + a colored trend chip.
  *
  * Server component — pure presentation. Uses existing v3 classes (`.ds-card`,
- * `.chip`, `.btn`) + tokens; no new CSS.
+ * `.chip`, `.btn`) + tokens; the KPI tiles sit borderless directly on the hero
+ * wash, separated by faint dividers (artboard 03) — no card-in-card chrome.
  */
 
 export type HeroKpi = {
@@ -50,14 +52,24 @@ export function DashboardHero({
         : { text: "Needs attention", cls: "chip--warn" };
 
   return (
-    <div className="ds-card" style={{ padding: "22px 26px 24px", marginBottom: 14 }}>
+    <div
+      className="ds-card"
+      style={{
+        position: "relative",
+        overflow: "hidden",
+        padding: "26px 30px 28px",
+        marginBottom: 14,
+        backgroundImage:
+          "radial-gradient(120% 130% at 100% -10%, rgba(37,99,235,0.06) 0%, transparent 46%), radial-gradient(90% 90% at 0% 0%, rgba(79,70,229,0.045) 0%, transparent 40%)",
+      }}
+    >
       <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
         <div style={{ minWidth: 0 }}>
           <div
             style={{
               fontSize: 11.5,
               fontWeight: 700,
-              letterSpacing: "0.06em",
+              letterSpacing: "0.07em",
               color: "var(--pri)",
             }}
           >
@@ -65,16 +77,17 @@ export function DashboardHero({
           </div>
           <h1
             style={{
-              fontSize: 30,
-              fontWeight: 700,
-              letterSpacing: "-0.03em",
-              lineHeight: 1.1,
-              margin: "8px 0 0",
+              fontSize: 34,
+              fontWeight: 750,
+              letterSpacing: "-0.035em",
+              lineHeight: 1.06,
+              margin: "10px 0 0",
+              color: "var(--ink)",
             }}
           >
             Good {dayPart()}, {firstName}.
           </h1>
-          <p className="dim" style={{ fontSize: 13.5, lineHeight: 1.5, margin: "8px 0 0", maxWidth: 620 }}>
+          <p className="dim" style={{ fontSize: 13.5, lineHeight: 1.5, margin: "9px 0 0", maxWidth: 620 }}>
             {subtext}
           </p>
         </div>
@@ -86,32 +99,35 @@ export function DashboardHero({
         </div>
       </div>
 
-      {/* KPI strip */}
+      {/* KPI strip — near-flat borderless tiles on the hero wash, separated by
+          faint vertical dividers (artboard 03). No nested card chrome. */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(150px, 1fr))",
-          gap: 12,
-          marginTop: 22,
+          gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
+          gap: 0,
+          marginTop: 24,
+          borderTop: "1px solid var(--line)",
         }}
       >
-        {kpis.map((k) => (
+        {kpis.map((k, i) => (
           <div
             key={k.label}
-            className="ds-card"
-            style={{ padding: "14px 16px", background: "var(--surface-2)", boxShadow: "none" }}
+            style={{
+              padding: "16px 20px",
+              borderLeft: i > 0 ? "1px solid var(--line)" : undefined,
+            }}
           >
-            <div className="dim" style={{ fontSize: 12, fontWeight: 600 }}>
-              {k.label}
-            </div>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink-3)" }}>{k.label}</div>
             <div
               style={{
-                fontSize: 30,
-                fontWeight: 700,
-                letterSpacing: "-0.03em",
-                margin: "4px 0 8px",
+                fontSize: 32,
+                fontWeight: 750,
+                letterSpacing: "-0.035em",
+                margin: "6px 0 9px",
                 fontVariantNumeric: "tabular-nums",
                 lineHeight: 1,
+                color: "var(--ink)",
               }}
             >
               {k.value}
@@ -126,8 +142,14 @@ export function DashboardHero({
 
 function KpiChip({ text, tone }: { text: string; tone: "ok" | "info" | "warn" | "muted" }) {
   const cls =
-    tone === "ok" ? "chip--ok" : tone === "info" ? "chip--info" : tone === "warn" ? "chip--warn" : "chip--out";
-  return <span className={`chip ${cls}`} style={{ fontSize: 11 }}>{text}</span>;
+    tone === "ok"
+      ? "ds-delta ds-delta--up"
+      : tone === "info"
+        ? "ds-delta ds-delta--info"
+        : tone === "warn"
+          ? "ds-delta ds-delta--warn"
+          : "ds-delta";
+  return <span className={cls}>{text}</span>;
 }
 
 function dayPart(): string {

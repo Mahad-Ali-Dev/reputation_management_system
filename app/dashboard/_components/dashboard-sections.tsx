@@ -1,5 +1,4 @@
 import { Icon, type IconName } from "@/components/shell/icon";
-import { ScoreRing } from "@/components/shell/score-ring";
 import { Stars } from "@/components/shell/stars";
 import Link from "next/link";
 import type {
@@ -11,14 +10,17 @@ import type {
 
 /**
  * Dashboard insight sections — match the premium artboards
- * (`tasks/premium-ui-redesign/dashboard-sections/03..06`):
+ * (`tasks/premium-ui-redesign/dashboard-sections/03..06` + 09):
  *   - ReviewChartQueue      → 03_chart-queue
  *   - BusinessInsightsBand  → 04_business-insights (listings · sentiment · latest)
  *   - AiChannelFunnel       → 05_ai-channel-funnel
  *   - RecentActivity        → 06_recent-activity
  *
  * All server components, pure presentation. Existing v3 classes (`.ds-card`,
- * `.chip`, `.gauge`, `.btn`) + tokens only — no new CSS.
+ * `.chip`, `.gauge`, `.btn`) + tokens only — depth/finish elevated to the
+ * artboards (rounded gradient chart bars on faint gridlines, queue icon-tiles
+ * with outlined actions, a teal sentiment donut, the blue→teal AI card, and a
+ * denser audit-style activity timeline).
  */
 
 // ============================================================
@@ -43,35 +45,12 @@ export function ReviewChartQueue({
           <div>
             <h3 className="ds-card__title">Reviews collected · last 12 weeks</h3>
             <div className="dim" style={{ fontSize: 11.5, marginTop: 2 }}>
-              All channels
+              By channel · all locations
             </div>
           </div>
         </div>
         <div className="ds-card__body">
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-end",
-              gap: 8,
-              height: 180,
-              paddingTop: 8,
-            }}
-          >
-            {weeklyReviews.map((n, i) => (
-              <div
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed 12-week series
-                key={`wk-${i}`}
-                title={`${n} review${n === 1 ? "" : "s"}`}
-                style={{
-                  flex: 1,
-                  height: `${Math.max(6, Math.round((n / max) * 100))}%`,
-                  borderRadius: "6px 6px 4px 4px",
-                  background: "linear-gradient(180deg, var(--pri) 0%, #14b8a6 100%)",
-                  minHeight: 6,
-                }}
-              />
-            ))}
-          </div>
+          <ReviewBars weeklyReviews={weeklyReviews} max={max} />
         </div>
       </div>
 
@@ -80,49 +59,87 @@ export function ReviewChartQueue({
           <h3 className="ds-card__title">Today's queue</h3>
           {urgent > 0 && <span className="chip chip--bad" style={{ fontSize: 11 }}>{urgent} urgent</span>}
         </div>
-        <div style={{ padding: "4px 4px 8px" }}>
+        <div style={{ padding: "6px 10px 10px" }}>
           {queue.length === 0 ? (
-            <p className="dim" style={{ fontSize: 12.5, padding: "20px 14px", textAlign: "center", margin: 0 }}>
+            <p className="dim" style={{ fontSize: 12.5, padding: "22px 14px", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
               You're all caught up. Nothing needs attention right now.
             </p>
           ) : (
-            queue.map((q) => (
+            queue.map((q, i) => (
               <div
                 key={q.label}
                 className="row"
                 style={{
-                  gap: 10,
-                  padding: "11px 14px",
-                  borderBottom: "1px solid var(--line)",
+                  gap: 12,
+                  padding: "12px 8px",
+                  borderBottom: i < queue.length - 1 ? "1px solid var(--line)" : "none",
                 }}
               >
                 <span
                   style={{
-                    width: 30,
-                    height: 30,
-                    borderRadius: 9,
-                    background: q.tone === "ai" ? "var(--pri-50)" : "var(--surface-2)",
+                    width: 34,
+                    height: 34,
+                    borderRadius: 10,
+                    background: q.tone === "ai" ? "var(--pri-50)" : "var(--surface-3)",
                     color: q.tone === "ai" ? "var(--pri)" : "var(--rl-muted)",
                     display: "grid",
                     placeItems: "center",
                     flexShrink: 0,
-                    fontSize: 10,
+                    fontSize: 10.5,
                     fontWeight: 700,
+                    letterSpacing: "0.02em",
                   }}
                 >
-                  {q.tone === "ai" ? "AI" : <Icon name={q.icon} size={14} />}
+                  {q.tone === "ai" ? "AI" : <Icon name={q.icon} size={15} />}
                 </span>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 600 }}>{q.label}</div>
-                  <div className="dim" style={{ fontSize: 11 }}>{q.sub}</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 650, color: "var(--ink)", letterSpacing: "-0.01em" }}>
+                    {q.label}
+                  </div>
+                  <div className="dim" style={{ fontSize: 11, marginTop: 1 }}>{q.sub}</div>
                 </div>
-                <Link href={q.href} className="btn btn--xs">
+                <Link href={q.href} className="btn btn--sm" style={{ flexShrink: 0 }}>
                   {q.action}
                 </Link>
               </div>
             ))
           )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Weekly review bar chart — rounded blue→teal gradient bars over three faint
+ * horizontal gridlines (artboard 03). Bars carry a soft drop so they read as
+ * lifted off the plot, with a value label that fades in on hover via title.
+ */
+function ReviewBars({ weeklyReviews, max }: { weeklyReviews: number[]; max: number }) {
+  return (
+    <div style={{ position: "relative", height: 188, paddingTop: 6 }}>
+      {/* faint gridlines */}
+      <div style={{ position: "absolute", top: 6, right: 0, bottom: 0, left: 0, display: "flex", flexDirection: "column", justifyContent: "space-between", pointerEvents: "none" }}>
+        {[0, 1, 2, 3].map((g) => (
+          <div key={`grid-${g}`} style={{ height: 1, background: "var(--line)" }} />
+        ))}
+      </div>
+      <div style={{ position: "relative", display: "flex", alignItems: "flex-end", gap: 9, height: "100%" }}>
+        {weeklyReviews.map((n, i) => (
+          <div
+            // biome-ignore lint/suspicious/noArrayIndexKey: fixed 12-week series
+            key={`wk-${i}`}
+            title={`${n} review${n === 1 ? "" : "s"}`}
+            style={{
+              flex: 1,
+              height: `${Math.max(5, Math.round((n / max) * 100))}%`,
+              borderRadius: "7px 7px 3px 3px",
+              background: "linear-gradient(180deg, var(--pri) 0%, #2dd4bf 100%)",
+              minHeight: 5,
+              boxShadow: "0 4px 10px -4px rgba(37,99,235,0.35)",
+            }}
+          />
+        ))}
       </div>
     </div>
   );
@@ -159,7 +176,7 @@ export function BusinessInsightsBand({
       <div className="ds-card">
         <div className="ds-card__head">
           <h3 className="ds-card__title">Listings</h3>
-          <Link href="/establishments" style={{ fontSize: 12, color: "var(--pri)", textDecoration: "none" }}>
+          <Link href="/establishments" className="btn btn--xs btn--ghost" style={{ color: "var(--pri)" }}>
             View all
           </Link>
         </div>
@@ -171,18 +188,18 @@ export function BusinessInsightsBand({
               <div
                 key={l.id}
                 style={{
-                  paddingBottom: i < Math.min(3, listings.length) - 1 ? 12 : 0,
-                  marginBottom: i < Math.min(3, listings.length) - 1 ? 12 : 0,
+                  paddingBottom: i < Math.min(3, listings.length) - 1 ? 13 : 0,
+                  marginBottom: i < Math.min(3, listings.length) - 1 ? 13 : 0,
                   borderBottom: i < Math.min(3, listings.length) - 1 ? "1px solid var(--line)" : "none",
                 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 600 }}>{l.name}</div>
-                <div className="dim" style={{ fontSize: 11.5, margin: "2px 0 6px" }}>
+                <div style={{ fontSize: 13, fontWeight: 650, letterSpacing: "-0.01em" }}>{l.name}</div>
+                <div className="dim" style={{ fontSize: 11.5, margin: "3px 0 7px" }}>
                   {l.locality ? `${l.locality} · ` : ""}
                   {l.reviewCount} review{l.reviewCount === 1 ? "" : "s"}
                 </div>
                 <div className="row" style={{ gap: 6 }}>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: "var(--gold)" }}>
+                  <span style={{ fontSize: 13.5, fontWeight: 700, color: "var(--gold)", fontVariantNumeric: "tabular-nums" }}>
                     {l.avgRating > 0 ? l.avgRating.toFixed(1) : "—"}
                   </span>
                   <Stars value={Math.round(l.avgRating)} size={13} />
@@ -205,23 +222,16 @@ export function BusinessInsightsBand({
             <>
               <div className="row" style={{ gap: 16, alignItems: "center" }}>
                 <div>
-                  <div style={{ fontSize: 32, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1 }}>
+                  <div style={{ fontSize: 34, fontWeight: 750, letterSpacing: "-0.035em", lineHeight: 1, color: "var(--ink)" }}>
                     {sentiment.positivePct}%
                   </div>
-                  <div className="dim" style={{ fontSize: 12, marginTop: 4 }}>Net positive</div>
+                  <div className="dim" style={{ fontSize: 12, marginTop: 5 }}>Net positive</div>
                 </div>
                 <div style={{ marginLeft: "auto" }}>
-                  <ScoreRing
-                    value={sentiment.positivePct}
-                    suffix="%"
-                    size={84}
-                    stroke={9}
-                    hideMax
-                    color="#10b981"
-                  />
+                  <DonutRing value={sentiment.positivePct} size={92} stroke={11} />
                 </div>
               </div>
-              <div style={{ marginTop: 16 }}>
+              <div style={{ marginTop: 18 }}>
                 <SentimentBar label="Positive" pct={sentiment.positivePct} color="#10b981" />
                 <SentimentBar label="Neutral" pct={sentiment.neutralPct} color="var(--rl-muted-3)" />
                 {sentiment.negativePct > 0 && (
@@ -237,7 +247,11 @@ export function BusinessInsightsBand({
       <div className="ds-card">
         <div className="ds-card__head">
           <h3 className="ds-card__title">Latest reviews</h3>
-          {hasData && <span className="chip chip--ok" style={{ fontSize: 11 }}>Live</span>}
+          {hasData && (
+            <span className="chip chip--ok" style={{ fontSize: 11 }}>
+              <span className="dot" aria-hidden /> Live
+            </span>
+          )}
         </div>
         <div className="ds-card__body">
           {latestReviews.length === 0 ? (
@@ -247,21 +261,21 @@ export function BusinessInsightsBand({
               <div
                 key={r.id}
                 style={{
-                  paddingBottom: i < Math.min(2, latestReviews.length) - 1 ? 12 : 0,
-                  marginBottom: i < Math.min(2, latestReviews.length) - 1 ? 12 : 0,
+                  paddingBottom: i < Math.min(2, latestReviews.length) - 1 ? 13 : 0,
+                  marginBottom: i < Math.min(2, latestReviews.length) - 1 ? 13 : 0,
                   borderBottom: i < Math.min(2, latestReviews.length) - 1 ? "1px solid var(--line)" : "none",
                 }}
               >
                 <div className="row" style={{ justifyContent: "space-between", gap: 8 }}>
-                  <span style={{ fontSize: 13, fontWeight: 600 }}>{r.reviewerName ?? "Anonymous"}</span>
+                  <span style={{ fontSize: 13, fontWeight: 650, letterSpacing: "-0.01em" }}>{r.reviewerName ?? "Anonymous"}</span>
                   <Stars value={r.rating} size={13} />
                 </div>
                 <p
                   style={{
-                    margin: "5px 0 0",
+                    margin: "6px 0 0",
                     fontSize: 12.5,
                     color: "var(--ink-2)",
-                    lineHeight: 1.5,
+                    lineHeight: 1.55,
                     overflow: "hidden",
                     display: "-webkit-box",
                     WebkitLineClamp: 2,
@@ -279,9 +293,36 @@ export function BusinessInsightsBand({
   );
 }
 
+/**
+ * Teal sentiment donut — net-positive share drawn as a rounded-cap arc on a
+ * faint track (artboard 04). Inline SVG (server-renderable); the % already
+ * reads large beside it, so the ring itself stays clean (no center number).
+ */
+function DonutRing({ value, size = 92, stroke = 11 }: { value: number; size?: number; stroke?: number }) {
+  const r = (size - stroke) / 2;
+  const c = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(1, value / 100));
+  const dash = c * pct;
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }} aria-hidden>
+      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-3)" strokeWidth={stroke} />
+      <circle
+        cx={size / 2}
+        cy={size / 2}
+        r={r}
+        fill="none"
+        stroke="#10b981"
+        strokeWidth={stroke}
+        strokeLinecap="round"
+        strokeDasharray={`${dash} ${c}`}
+      />
+    </svg>
+  );
+}
+
 function SentimentBar({ label, pct, color }: { label: string; pct: number; color: string }) {
   return (
-    <div className="row" style={{ gap: 10, marginBottom: 8 }}>
+    <div className="row" style={{ gap: 10, marginBottom: 9 }}>
       <span className="dim" style={{ fontSize: 11.5, width: 64 }}>{label}</span>
       <div className="gauge" style={{ flex: 1 }}>
         <i style={{ width: `${pct}%`, background: color }} />
@@ -308,18 +349,18 @@ export function AiChannelFunnel({
     <div className="grid-3" style={{ gap: 14 }}>
       {/* AI insight gradient card */}
       <div
-        className="ds-card"
+        className="viz-banner"
         style={{
-          background: "linear-gradient(140deg, var(--pri) 0%, #14b8a6 100%)",
           color: "#fff",
           border: "none",
-          padding: 22,
+          padding: 24,
           display: "flex",
           flexDirection: "column",
+          background: "linear-gradient(150deg, var(--pri) 0%, #1d4ed8 48%, #0d9488 100%)",
         }}
       >
-        <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: "0.08em", opacity: 0.9 }}>AI INSIGHT</div>
-        <h3 style={{ fontSize: 19, fontWeight: 700, letterSpacing: "-0.02em", lineHeight: 1.25, margin: "14px 0 18px" }}>
+        <div className="viz-banner__kicker">AI INSIGHT</div>
+        <h3 style={{ fontSize: 20, fontWeight: 750, letterSpacing: "-0.025em", lineHeight: 1.22, margin: "14px 0 18px" }}>
           {pendingReplies > 0
             ? `You have ${pendingReplies} AI-drafted repl${pendingReplies === 1 ? "y" : "ies"} waiting for approval.`
             : "Your reply queue is clear. Keep the momentum with more review requests."}
@@ -327,16 +368,11 @@ export function AiChannelFunnel({
         <div className="col" style={{ gap: 8, marginTop: "auto" }}>
           <Link
             href={pendingReplies > 0 ? "/reviews" : "/outreach/send"}
-            className="btn"
-            style={{ background: "rgba(255,255,255,.18)", color: "#fff", border: "none", justifyContent: "flex-start" }}
+            className="viz-banner__btn"
           >
             {pendingReplies > 0 ? "Review and approve pending drafts" : "Send review requests"}
           </Link>
-          <Link
-            href="/connections"
-            className="btn"
-            style={{ background: "rgba(255,255,255,.12)", color: "#fff", border: "none", justifyContent: "flex-start" }}
-          >
+          <Link href="/connections" className="viz-banner__btn viz-banner__btn--ghost">
             Connect more channels
           </Link>
         </div>
@@ -389,18 +425,18 @@ export function AiChannelFunnel({
 
 function BarRow({ label, pct, color }: { label: string; pct: number; color: string }) {
   return (
-    <div className="row" style={{ gap: 10, marginBottom: 12 }}>
-      <span style={{ fontSize: 12.5, fontWeight: 500, width: 78 }}>{label}</span>
-      <div className="gauge" style={{ flex: 1 }}>
+    <div className="row" style={{ gap: 12, marginBottom: 14 }}>
+      <span style={{ fontSize: 12.5, fontWeight: 550, width: 78, color: "var(--ink-2)" }}>{label}</span>
+      <div className="gauge gauge--lg" style={{ flex: 1 }}>
         <i style={{ width: `${Math.max(2, pct)}%`, background: color }} />
       </div>
-      <span className="mono dim" style={{ fontSize: 11.5, width: 38, textAlign: "right" }}>{pct}%</span>
+      <span className="mono dim" style={{ fontSize: 11.5, width: 40, textAlign: "right", fontWeight: 600 }}>{pct}%</span>
     </div>
   );
 }
 
 // ============================================================
-// 06 — Recent activity feed
+// 06 — Recent activity feed (audit-style timeline)
 // ============================================================
 
 export function RecentActivity({ items }: { items: RecentActivityItem[] }) {
@@ -411,31 +447,34 @@ export function RecentActivity({ items }: { items: RecentActivityItem[] }) {
           <h3 className="ds-card__title">Recent activity</h3>
           <div className="dim" style={{ fontSize: 11.5, marginTop: 2 }}>Last 24 hours · all locations</div>
         </div>
-        <Link href="/analytics" style={{ fontSize: 12, color: "var(--pri)", textDecoration: "none" }}>
-          View all
-        </Link>
+        {/* Static segmented filter pills (artboard 06) — visual band header */}
+        <div className="row" style={{ gap: 6 }}>
+          <span className="chip" style={{ fontSize: 11 }}>All</span>
+          <span className="chip chip--pri" style={{ fontSize: 11 }}>Reviews</span>
+          <span className="chip chip--out" style={{ fontSize: 11 }}>Requests</span>
+        </div>
       </div>
-      <div style={{ padding: "2px 0 6px" }}>
+      <div style={{ padding: "2px 0 4px" }}>
         {items.length === 0 ? (
-          <p className="dim" style={{ fontSize: 12.5, padding: "28px 18px", textAlign: "center", margin: 0 }}>
+          <p className="dim" style={{ fontSize: 12.5, padding: "30px 18px", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
             No activity in the last 24 hours yet. Send a review request to get started.
           </p>
         ) : (
-          items.map((it) => (
+          items.map((it, i) => (
             <div
               key={it.id}
               className="row"
-              style={{ gap: 14, padding: "12px 18px", borderBottom: "1px solid var(--line)" }}
+              style={{ gap: 16, padding: "13px 22px", borderBottom: i < items.length - 1 ? "1px solid var(--line)" : "none" }}
             >
-              <span className="mono dim" style={{ fontSize: 11.5, width: 64, flexShrink: 0 }}>
+              <span className="mono dim" style={{ fontSize: 11.5, width: 60, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>
                 {formatTime(it.at)}
               </span>
               <span
                 style={{
-                  width: 26,
-                  height: 26,
+                  width: 28,
+                  height: 28,
                   borderRadius: 8,
-                  background: it.kind === "reply" ? "var(--pri-50)" : "var(--surface-2)",
+                  background: it.kind === "reply" ? "var(--pri-50)" : "var(--surface-3)",
                   color: it.kind === "reply" ? "var(--pri)" : "var(--rl-muted)",
                   display: "grid",
                   placeItems: "center",
@@ -444,10 +483,17 @@ export function RecentActivity({ items }: { items: RecentActivityItem[] }) {
                   fontWeight: 700,
                 }}
               >
-                {it.kind === "reply" ? "AI" : <Icon name={activityIcon(it.kind)} size={12} />}
+                {it.kind === "reply" ? "AI" : <Icon name={activityIcon(it.kind)} size={13} />}
               </span>
-              <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 500 }}>{it.title}</span>
-              <span className="dim" style={{ fontSize: 11.5, flexShrink: 0 }}>{it.status}</span>
+              <span style={{ flex: 1, minWidth: 0, fontSize: 12.5, fontWeight: 600, color: "var(--ink)", letterSpacing: "-0.005em" }}>
+                {it.title}
+              </span>
+              <span
+                className="dim"
+                style={{ fontSize: 11.5, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}
+              >
+                {it.status}
+              </span>
             </div>
           ))
         )}
@@ -470,24 +516,24 @@ function EmptyHint({
   cta?: string;
 }) {
   return (
-    <div style={{ textAlign: "center", padding: "20px 8px" }}>
+    <div style={{ textAlign: "center", padding: "22px 8px" }}>
       <span
         style={{
-          width: 34,
-          height: 34,
-          borderRadius: 10,
-          background: "var(--surface-2)",
+          width: 36,
+          height: 36,
+          borderRadius: 11,
+          background: "var(--surface-3)",
           color: "var(--rl-muted-2)",
           display: "grid",
           placeItems: "center",
-          margin: "0 auto 10px",
+          margin: "0 auto 11px",
         }}
       >
-        <Icon name={icon} size={15} />
+        <Icon name={icon} size={16} />
       </span>
       <p className="dim" style={{ fontSize: 12, lineHeight: 1.5, margin: 0 }}>{text}</p>
       {href && cta && (
-        <Link href={href} className="btn btn--xs btn--ghost" style={{ marginTop: 10, display: "inline-flex" }}>
+        <Link href={href} className="btn btn--xs btn--ghost" style={{ marginTop: 11, display: "inline-flex", color: "var(--pri)" }}>
           {cta}
         </Link>
       )}

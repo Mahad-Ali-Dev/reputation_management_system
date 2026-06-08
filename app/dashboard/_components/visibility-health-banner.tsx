@@ -43,17 +43,16 @@ export function VisibilityHealthBanner({
 }) {
   return (
     <div
-      className="ds-card viz-banner"
+      className="viz-banner"
       style={{
-        background: "linear-gradient(135deg, var(--pri) 0%, #4f46e5 100%)",
         color: "#fff",
         border: "none",
-        padding: "22px 26px",
+        padding: "24px 28px",
         marginBottom: 14,
         display: "flex",
         flexWrap: "wrap",
         alignItems: "center",
-        gap: 24,
+        gap: 26,
       }}
     >
       {/* Left — score ring (white, drawn inline so the number is visible) */}
@@ -61,41 +60,32 @@ export function VisibilityHealthBanner({
 
       {/* Center — heading + summary */}
       <div style={{ flex: "1 1 240px", minWidth: 200 }}>
-        <div
-          style={{
-            fontSize: 11.5,
-            fontWeight: 700,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            opacity: 0.85,
-          }}
-        >
-          Online Visibility Health Score
-        </div>
+        <div className="viz-banner__kicker">Online Visibility Health Score</div>
         <h2
           style={{
-            fontSize: 26,
-            fontWeight: 700,
-            letterSpacing: "-0.02em",
-            lineHeight: 1.15,
-            margin: "6px 0 0",
+            fontSize: 28,
+            fontWeight: 750,
+            letterSpacing: "-0.025em",
+            lineHeight: 1.12,
+            margin: "8px 0 0",
           }}
         >
           {score}
-          <span style={{ fontSize: 16, fontWeight: 600, opacity: 0.7 }}> / 100</span>
+          <span style={{ fontSize: 16, fontWeight: 600, opacity: 0.68 }}> / 100</span>
         </h2>
-        <p style={{ fontSize: 13, lineHeight: 1.5, margin: "6px 0 0", opacity: 0.92, maxWidth: 460 }}>
+        <p style={{ fontSize: 13, lineHeight: 1.5, margin: "7px 0 0", opacity: 0.92, maxWidth: 460 }}>
           {summary}
         </p>
         <Link
           href="/analytics"
           className="btn"
           style={{
-            marginTop: 14,
+            marginTop: 16,
             background: "#fff",
             color: "var(--pri)",
-            fontWeight: 600,
+            fontWeight: 650,
             border: "none",
+            boxShadow: "0 2px 8px -2px rgba(15,23,42,0.25)",
           }}
         >
           View Full Report <Icon name="arrowR" size={13} />
@@ -108,11 +98,13 @@ export function VisibilityHealthBanner({
           flex: "0 0 auto",
           display: "flex",
           flexDirection: "column",
-          gap: 10,
-          minWidth: 190,
-          padding: "14px 16px",
+          gap: 11,
+          minWidth: 198,
+          padding: "16px 18px",
           background: "rgba(255,255,255,0.12)",
-          borderRadius: 12,
+          border: "1px solid rgba(255,255,255,0.18)",
+          borderRadius: 14,
+          backdropFilter: "blur(4px)",
         }}
       >
         {metrics.map((m) => (

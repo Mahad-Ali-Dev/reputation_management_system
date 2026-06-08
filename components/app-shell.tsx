@@ -55,7 +55,7 @@ export function AppShell({
   }, [drawerOpen]);
 
   return (
-    <div className="app app--responsive">
+    <div className="app app--responsive app--canvas">
       {/* Desktop sidebar */}
       <div className="app__sb-desktop">
         <SidebarNav orgName={orgName} planLabel={planLabel} />

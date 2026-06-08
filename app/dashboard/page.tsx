@@ -260,7 +260,7 @@ function QuickAction({ icon, title, href }: { icon: IconName; title: string; hre
   return (
     <Link href={href} className="ds-card ds-card--hover qa">
       <span className="qa__icon"><Icon name={icon} size={16} /></span>
-      <span style={{ fontSize: 13, fontWeight: 600, flex: 1 }}>{title}</span>
+      <span style={{ fontSize: 13, fontWeight: 650, flex: 1, letterSpacing: "-0.01em" }}>{title}</span>
       <Icon name="chevR" size={14} style={{ color: "var(--rl-muted-2)" }} />
     </Link>
   );
@@ -320,23 +320,23 @@ function AutopilotCard({
       </div>
 
       {enabled ? (
-        <div className="row" style={{ gap: 18 }}>
+        <div className="row" style={{ gap: 20 }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>{thisWeek}</div>
-            <div className="dim" style={{ fontSize: 11 }}>actions this week</div>
+            <div style={{ fontSize: 22, fontWeight: 750, letterSpacing: "-0.03em", fontVariantNumeric: "tabular-nums" }}>{thisWeek}</div>
+            <div className="dim" style={{ fontSize: 11, marginTop: 2 }}>actions this week</div>
           </div>
           {needsYou > 0 && (
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--warn)" }}>{needsYou}</div>
-              <div className="dim" style={{ fontSize: 11 }}>need you</div>
+              <div style={{ fontSize: 22, fontWeight: 750, letterSpacing: "-0.03em", color: "var(--warn)", fontVariantNumeric: "tabular-nums" }}>{needsYou}</div>
+              <div className="dim" style={{ fontSize: 11, marginTop: 2 }}>need you</div>
             </div>
           )}
           {showRevenue && (
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700, color: "var(--pri)" }}>
+              <div style={{ fontSize: 22, fontWeight: 750, letterSpacing: "-0.03em", color: "var(--pri)", fontVariantNumeric: "tabular-nums" }}>
                 {currency} {estimatedRevenue.toLocaleString()}
               </div>
-              <div className="dim" style={{ fontSize: 11 }}>est. revenue · 30d</div>
+              <div className="dim" style={{ fontSize: 11, marginTop: 2 }}>est. revenue · 30d</div>
             </div>
           )}
         </div>
@@ -382,7 +382,7 @@ function GoogleReviewsFeed({ avg, total, dist, reviews, hasGoogle }: {
       ) : (
         <div className="feed">
           <div className="feed__summary">
-            <div style={{ fontSize: 40, fontWeight: 700, letterSpacing: "-0.03em", lineHeight: 1 }}>{avg.toFixed(1)}</div>
+            <div style={{ fontSize: 42, fontWeight: 750, letterSpacing: "-0.04em", lineHeight: 1, color: "var(--ink)", fontVariantNumeric: "tabular-nums" }}>{avg.toFixed(1)}</div>
             <Stars value={Math.round(avg)} size={15} />
             <div className="dim" style={{ fontSize: 11.5, marginTop: 4 }}>Based on {total} reviews</div>
             <div style={{ marginTop: 14, width: "100%" }}>

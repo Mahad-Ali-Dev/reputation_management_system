@@ -24,13 +24,13 @@
     --ring: 244 75% 59%;
     --radius: 0.5rem;
 
-    /* repulabs v3 design system — clean, cool-slate + blue (reference redesign) */
-    /* surfaces */
-    --bg: #f7f8fb;
-    --bg-2: #eef1f6;
+    /* repulabs premium design system — warm paper canvas + royal-blue/teal (artboard-locked) */
+    /* surfaces — warm paper neutrals (artboard: --paper #fbfaf6, white panels) */
+    --bg: #fbfaf6;
+    --bg-2: #f4f8f5;
     --surface: #ffffff;
-    --surface-2: #fafbfd;
-    --surface-3: #f3f5f9;
+    --surface-2: #faf9f4;
+    --surface-3: #f3f5f0;
 
     /* ink — softened to slate for a cleaner, less harsh feel */
     --ink: #0f172a;
@@ -42,32 +42,36 @@
     --rl-muted-2: #94a3b8;
     --rl-muted-3: #cbd5e1;
 
-    /* line — cool, light hairlines */
-    --line: #eef1f6;
-    --line-2: #e2e8f0;
-    --line-3: #cbd5e1;
+    /* line — warm, light hairlines (artboard: #dfe7e6) */
+    --line: #e8ede9;
+    --line-2: #dfe7e6;
+    --line-3: #c9d4cf;
 
-    /* signature blue + indigo accent */
-    --pri: #2563eb;
+    /* signature royal blue + violet accent (artboard: Signal #2457ff) */
+    --pri: #2457ff;
     --pri-50: #eff6ff;
     --pri-100: #dbeafe;
     --pri-300: #93c5fd;
-    --pri-700: #1d4ed8;
-    --pri-900: #1e3a8a;
-    --indigo: #4f46e5;
+    --pri-700: #1b3fd1;
+    --pri-900: #1a347f;
+    --indigo: #6f5cff;
     --indigo-50: #eef2ff;
     --indigo-soft: #e0e7ff;
 
-    /* state */
-    --ok: #16a34a;
-    --ok-soft: #dcfce7;
-    --warn: #d97706;
-    --warn-soft: #fef3c7;
-    --bad: #dc2626;
-    --bad-soft: #fee2e2;
-    --info: #0284c7;
-    --info-soft: #e0f2fe;
-    --gold: #f59e0b;
+    /* teal "Trust" accent (artboard: Trust #12b998) — pairs with royal blue */
+    --trust: #12b998;
+    --trust-soft: #dff8ed;
+
+    /* state — warmed to artboard swatches */
+    --ok: #0b8f6d;
+    --ok-soft: #dff8ed;
+    --warn: #d6a63a;
+    --warn-soft: #fff1cc;
+    --bad: #e14d62;
+    --bad-soft: #ffe4e8;
+    --info: #2457ff;
+    --info-soft: #e8eeff;
+    --gold: #d6a63a;
 
     /* type */
     --f-ui: var(--font-geist), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
@@ -83,13 +87,32 @@
     --r-xl: 26px;
     --r-pill: 999px;
 
-    /* shadow — soft, cool, layered */
-    --sh: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.04);
-    --sh-1: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
-    --sh-2: 0 10px 28px -12px rgba(15, 23, 42, 0.12), 0 2px 8px -3px rgba(15, 23, 42, 0.06);
-    --sh-pop: 0 20px 48px -16px rgba(15, 23, 42, 0.22), 0 6px 16px -6px rgba(15, 23, 42, 0.10);
+    /* shadow — soft, cool, layered (premium: hairline + a real, diffuse drop) */
+    --sh: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.045);
+    --sh-1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -16px rgba(15, 23, 42, 0.10);
+    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -12px rgba(15, 23, 42, 0.08);
+    --sh-2: 0 1px 2px rgba(15, 23, 42, 0.05), 0 14px 34px -14px rgba(15, 23, 42, 0.14),
+      0 4px 12px -6px rgba(15, 23, 42, 0.07);
+    --sh-pop: 0 24px 56px -18px rgba(15, 23, 42, 0.24), 0 8px 18px -8px rgba(15, 23, 42, 0.12);
     --sh-inset: inset 0 0 0 1px var(--line);
-    --sh-glow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+    --sh-glow: 0 0 0 4px rgba(36, 87, 255, 0.14);
+    /* premium primary-button shadow: soft royal-blue glow + crisp seat */
+    --sh-pri: 0 1px 2px rgba(15, 23, 42, 0.12), 0 8px 18px -6px rgba(36, 87, 255, 0.42),
+      inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    --sh-pri-hover: 0 1px 2px rgba(15, 23, 42, 0.14), 0 12px 24px -6px rgba(36, 87, 255, 0.5),
+      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    --sh-ink: 0 1px 2px rgba(15, 23, 42, 0.2), 0 8px 18px -6px rgba(15, 23, 42, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+
+    /* premium gradients — reusable accents (artboard-locked: royal blue + teal) */
+    --grad-pri: linear-gradient(180deg, #2457ff 0%, #1b3fd1 100%);
+    --grad-pri-hover: linear-gradient(180deg, #1b3fd1 0%, #1a347f 100%);
+    --grad-viz: linear-gradient(135deg, #2457ff 0%, #6f5cff 52%, #1b3fd1 100%);
+    --grad-ink: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+    /* warm paper → teal-mist wash with a soft radial teal glow top-right
+       (artboard .artboard recipe) */
+    --grad-canvas: radial-gradient(circle at 72% 8%, rgba(18, 185, 152, 0.15), transparent 32%),
+      linear-gradient(135deg, #fbfaf6 0%, #f4f8f5 56%, #eef7f4 100%);
 
     /* shell numeric */
     --h-tb: 64px;
@@ -155,10 +178,10 @@
   opacity: 0.5;
 }
 .lp-spot--teal {
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.55) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(36, 87, 255, 0.55) 0%, transparent 70%);
 }
 .lp-spot--mint {
-  background: radial-gradient(circle, rgba(94, 234, 212, 0.45) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(18, 185, 152, 0.45) 0%, transparent 70%);
 }
 
 /* Marquee — infinite logo strip. */
@@ -189,7 +212,7 @@
   }
 }
 .lp-shine {
-  background: linear-gradient(110deg, transparent 30%, rgba(37, 99, 235, 0.55) 50%, transparent 70%);
+  background: linear-gradient(110deg, transparent 30%, rgba(36, 87, 255, 0.55) 50%, transparent 70%);
   background-size: 200% 100%;
   animation: lp-shine 3s linear infinite;
 }
@@ -209,8 +232,8 @@
   padding: 1px;
   background: linear-gradient(
     140deg,
-    rgba(37, 99, 235, 0.6),
-    rgba(94, 234, 212, 0.25) 40%,
+    rgba(36, 87, 255, 0.6),
+    rgba(18, 185, 152, 0.25) 40%,
     rgba(11, 13, 14, 0.08) 70%
   );
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
@@ -293,7 +316,7 @@
 
 /* Text gradient — for headline accents. */
 .lp-text-gradient {
-  background: linear-gradient(135deg, #2563eb 0%, #6366f1 45%, #5eead4 100%);
+  background: linear-gradient(135deg, #2457ff 0%, #6f5cff 45%, #12b998 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -303,4 +326,179 @@
 /* Number stat card hover ring. */
 .lp-stat:hover .lp-stat__ring {
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
+}
+
+/* ============================================================
+   Premium polish — additive helpers (matches 00_design-system
+   + dashboard artboards). All net-new classes; no existing
+   class is overridden here so layouts are untouched.
+   ============================================================ */
+
+/* Subtle gradient canvas wash — drop on a page/section wrapper to get the
+   soft white→cool-tint depth from the artboards. Pairs with var(--bg). */
+.ds-canvas {
+  background-color: var(--bg);
+  background-image: var(--grad-canvas);
+  background-attachment: fixed;
+}
+.ds-section-tint {
+  background-image: linear-gradient(180deg, var(--surface-2) 0%, var(--surface) 100%);
+}
+
+/* Elevated surface helper — a white panel that floats with the premium
+   layered shadow + hairline + larger radius. Use where .ds-card isn't present. */
+.surface-elevated {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  box-shadow: var(--sh-card);
+}
+
+/* Viz banner — the blue→indigo gradient hero card (e.g. "8 AI-drafted
+   replies waiting"). White ink; translucent inset controls read crisply. */
+.viz-banner {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  color: #fff;
+  border-radius: var(--r-md);
+  background: var(--grad-viz);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1), 0 16px 36px -16px rgba(36, 87, 255, 0.45);
+}
+.viz-banner::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(120% 120% at 100% 0%, rgba(255, 255, 255, 0.18) 0%, transparent 55%),
+    radial-gradient(90% 90% at 0% 100%, rgba(15, 23, 42, 0.18) 0%, transparent 60%);
+  pointer-events: none;
+}
+.viz-banner__kicker {
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+}
+.viz-banner__title {
+  font-size: 22px;
+  line-height: 1.18;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  margin: 8px 0 0;
+}
+.viz-banner__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  width: 100%;
+  height: 38px;
+  border-radius: var(--r-sm);
+  font: 600 12.5px var(--f-ui);
+  color: #fff;
+  text-decoration: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.16);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  backdrop-filter: blur(4px);
+  transition: background 0.15s, border-color 0.15s;
+}
+.viz-banner__btn:hover {
+  background: rgba(255, 255, 255, 0.26);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+.viz-banner__btn--ghost {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.16);
+}
+
+/* Display heading — the oversized, heavy, tight hero type from the artboards. */
+.ds-display {
+  font-size: clamp(34px, 4.4vw, 52px);
+  line-height: 1.04;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--ink);
+}
+.ds-eyebrow {
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--pri);
+}
+
+/* Section header — eyebrow + heading + sub, matching dashboard-sections. */
+.ds-secthead {
+  margin-bottom: 18px;
+}
+.ds-secthead__eyebrow {
+  font-family: var(--f-mono);
+  text-transform: uppercase;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--pri);
+}
+.ds-secthead__title {
+  font-size: clamp(22px, 2.4vw, 30px);
+  line-height: 1.12;
+  font-weight: 750;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+  margin: 8px 0 0;
+}
+.ds-secthead__sub {
+  font-size: 14px;
+  color: var(--rl-muted);
+  margin-top: 7px;
+  line-height: 1.55;
+  max-width: 640px;
+}
+
+/* Pill stat-delta helpers — soft tinted badges used under KPI values
+   (additive aliases; .stat__delta variants still work). */
+.ds-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  padding: 3px 9px;
+  border-radius: var(--r-pill);
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-3);
+  color: var(--ink-2);
+}
+.ds-delta--up {
+  background: var(--ok-soft);
+  color: #15803d;
+}
+.ds-delta--down {
+  background: var(--bad-soft);
+  color: #b91c1c;
+}
+.ds-delta--info {
+  background: var(--pri-50);
+  color: var(--pri-700);
+}
+.ds-delta--warn {
+  background: var(--warn-soft);
+  color: #b45309;
+}
+
+/* Respect reduced-motion across the premium hover/lift transitions. */
+@media (prefers-reduced-motion: reduce) {
+  .ds-card,
+  .ds-card--hover,
+  .btn,
+  .lp-bento,
+  .surface-elevated {
+    transition: none !important;
+  }
 }
