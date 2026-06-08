@@ -56,6 +56,10 @@
     {
       "path": "/api/cron/contacts-rollup",
       "schedule": "*/30 * * * *"
+    },
+    {
+      "path": "/api/cron/moderation-rescan",
+      "schedule": "*/15 * * * *"
     }
   ]
 }
