@@ -1,4 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import { EmptyIllustration } from "@/components/empty-state";
 import { GettingStarted } from "@/components/getting-started";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon, type IconName } from "@/components/shell/icon";
@@ -466,7 +467,7 @@ function WelcomeState({ firstName, setup }: { firstName: string; setup: SetupSta
   return (
     <>
       <div className="ds-card welcome" style={{ marginBottom: 14 }}>
-        <div className="welcome__art"><Icon name="presentation" size={40} style={{ color: "var(--pri)" }} /></div>
+        <EmptyIllustration name="dashboard-welcome" size={180} style={{ marginBottom: 16 }} />
         <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Welcome to your reputation dashboard, {firstName}!</h2>
         <p className="dim" style={{ fontSize: 13.5, maxWidth: 460, margin: "0 auto 20px", lineHeight: 1.5 }}>
           Let's get your data connected so we can show you insights that help you grow.

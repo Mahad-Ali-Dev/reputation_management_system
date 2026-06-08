@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 import { CalendarClient, type CalendarPost } from "./_components/calendar-client";
@@ -68,6 +69,9 @@ export default async function ContentCalendarPage({
   const gridEnd = new Date(gridStart);
   gridEnd.setDate(gridStart.getDate() + 42);
 
+  // FAIL-SOFT: degrade to an empty calendar when the `social_posts` relation /
+  // a selected column isn't migrated yet (Postgres 42P01 / 42703 → the empty
+  // state below renders) rather than 500-ing the page; re-throw real errors.
   const posts = await withTenant(orgId, async (tx) =>
     tx.socialPost.findMany({
       where: {
@@ -86,7 +90,10 @@ export default async function ContentCalendarPage({
         postedAt: true,
       },
     }),
-  );
+  ).catch((err: unknown) => {
+    if (isMissingRelation(err)) return [];
+    throw err;
+  });
 
   // Flatten to the serializable shape the client island consumes.
   const calendarPosts: CalendarPost[] = posts

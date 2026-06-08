@@ -1,7 +1,7 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import { EmptyIllustration } from "@/components/empty-state";
 import { GettingStarted, type ChecklistStep } from "@/components/getting-started";
 import { PageHeader } from "@/components/page-header";
-import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { orgHasFeature } from "@/lib/billing/feature-access";
@@ -149,8 +149,8 @@ async function listEstablishments(orgId: string): Promise<{ id: string; name: st
 function UpsellTeaser() {
   return (
     <div className="ds-card" style={{ marginTop: 18, padding: 28, textAlign: "center" }}>
-      <Icon name="bolt" size={30} style={{ color: "var(--pri)" }} />
-      <h3 style={{ margin: "12px 0 6px", fontSize: 17 }}>Self-driving reputation is a Pro feature</h3>
+      <EmptyIllustration name="upgrade" size={150} />
+      <h3 style={{ margin: "14px 0 6px", fontSize: 17 }}>Self-driving reputation is a Pro feature</h3>
       <p className="dim" style={{ fontSize: 13, maxWidth: 460, margin: "0 auto 16px", lineHeight: 1.6 }}>
         Upgrade to let Autopilot reply to reviews, send review requests, turn phone calls into Google
         reviews, and show you the revenue — all on one toggle, with a weekly digest.

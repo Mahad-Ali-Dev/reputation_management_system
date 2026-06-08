@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
 import { exportResponsesCsv } from "@/lib/surveys/export-actions";
 import type { DetailedResponse } from "@/lib/surveys/queries";
@@ -72,7 +73,8 @@ export function ResponsesTable({
 
       {responses.length === 0 ? (
         <div style={{ padding: 40, textAlign: "center", color: "var(--rl-muted-2)", fontSize: 13 }}>
-          No responses yet.
+          <EmptyIllustration name="responses-empty" />
+          <p style={{ marginTop: 12, marginBottom: 0 }}>No responses yet.</p>
         </div>
       ) : (
         <div style={{ overflowX: "auto" }}>

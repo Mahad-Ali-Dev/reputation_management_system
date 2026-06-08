@@ -6,6 +6,7 @@ import { Sparkline } from "@/components/shell/sparkline";
 import { StackedBars } from "@/components/shell/stacked-bars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 
@@ -37,6 +38,11 @@ export default async function SupportAnalyticsPage() {
   const since12weeks = new Date(Date.now() - 12 * 7 * 24 * 60 * 60 * 1000);
   const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
 
+  // FAIL SOFT: `SocialComment` ships via the Wave-0 delta and may not be migrated
+  // on a given deploy. On a Postgres 42P01 (undefined_table) / 42703
+  // (undefined_column) degrade to an all-empty shape so the page renders its
+  // empty states (KPIs at 0 / "—", "no volume yet" chart) instead of 500-ing;
+  // re-throw anything that isn't a missing-relation so real bugs surface.
   const data = await withTenant(orgId, async (tx) => {
     const [
       totalComments,
@@ -84,6 +90,17 @@ export default async function SupportAnalyticsPage() {
       commentsByPlatform,
       commentsForChart,
       recentReplied,
+    };
+  }).catch((err: unknown) => {
+    if (!isMissingRelation(err)) throw err;
+    return {
+      totalComments: 0,
+      openComments: 0,
+      repliedLast24h: 0,
+      commentsByStatus: [] as { status: string; _count: { status: number } }[],
+      commentsByPlatform: [] as { platform: string; _count: { platform: number } }[],
+      commentsForChart: [] as { postedAt: Date; platform: string }[],
+      recentReplied: [] as { id: string; postedAt: Date; respondedAt: Date | null }[],
     };
   });
 

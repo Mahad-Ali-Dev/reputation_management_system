@@ -1,3 +1,4 @@
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
 import type { SeoSnapshotView } from "@/lib/seo/queries";
 import type { ScoreFactor } from "@/lib/seo/reputation-score";
@@ -41,10 +42,8 @@ export function WeeklyReportsPanel({
       {snapshots.length === 0 ? (
         <div className="ds-card">
           <div className="ds-card__body" style={{ textAlign: "center", padding: "32px 16px" }}>
-            <div style={{ color: "var(--rl-muted-3)", display: "inline-flex" }}>
-              <Icon name="presentation" size={28} />
-            </div>
-            <p style={{ fontSize: 14, color: "var(--ink)", margin: "10px 0 2px", fontWeight: 600 }}>
+            <EmptyIllustration name="insights-empty" />
+            <p style={{ fontSize: 14, color: "var(--ink)", margin: "12px 0 2px", fontWeight: 600 }}>
               No reports yet
             </p>
             <p style={{ fontSize: 13, color: "var(--rl-muted)", margin: 0 }}>

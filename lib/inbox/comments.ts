@@ -1,4 +1,5 @@
 import { withTenant } from "@/lib/db/with-tenant";
+import { softInbox } from "./fail-soft";
 
 /**
  * Comments tab — pure helpers + types + RSC-only READ queries (Module 09 —
@@ -10,6 +11,12 @@ import { withTenant } from "@/lib/db/with-tenant";
  * `comments-actions.ts` (top-level "use server") because the client island
  * imports them directly — Next.js forbids a Client Component from importing a
  * module that mixes sync helper/type exports with Server Actions.
+ *
+ * FAIL-SOFT: `SocialComment` ships via the Wave-0 delta and may not be migrated
+ * on a given deploy. The READ helpers wrap their query in `softInbox` so a
+ * not-yet-migrated relation (Postgres 42P01 / 42703) degrades to empty rather
+ * than 500-ing the inbox — the guard is centralized HERE so every caller is
+ * protected, not only the inbox shell.
  *
  * CRITICAL DISTINCTION (guardrail): FB/IG comments are SOCIAL comments — they
  * are hideable via the platform APIs. Google ("google_qa") rows are NOT
@@ -72,33 +79,46 @@ export async function listComments(args: {
   if (status && status !== "all") where.status = status;
   if (platform && platform !== "all") where.platform = platform;
 
-  const rows = await withTenant(orgId, async (tx) =>
-    tx.socialComment.findMany({ where, orderBy: { postedAt: "desc" }, take }),
+  return softInbox(
+    () =>
+      withTenant(orgId, async (tx) => {
+        const rows = await tx.socialComment.findMany({
+          where,
+          orderBy: { postedAt: "desc" },
+          take,
+        });
+        return rows.map((c) => ({
+          id: c.id,
+          platform: c.platform,
+          isHideable: canHide(c.platform),
+          isSocial: c.platform !== "google_qa",
+          authorName: c.authorName,
+          authorAvatarUrl: c.authorAvatarUrl,
+          body: c.body,
+          status: c.status,
+          aiSuggested: c.aiSuggested,
+          assignedTo: c.assignedTo,
+          externalPostId: c.externalPostId,
+          postedAt: c.postedAt,
+          respondedAt: c.respondedAt,
+        }));
+      }),
+    [],
+    { event: "inbox.comments.list_failed", swallowAll: true, context: { orgId } },
   );
-
-  return rows.map((c) => ({
-    id: c.id,
-    platform: c.platform,
-    isHideable: canHide(c.platform),
-    isSocial: c.platform !== "google_qa",
-    authorName: c.authorName,
-    authorAvatarUrl: c.authorAvatarUrl,
-    body: c.body,
-    status: c.status,
-    aiSuggested: c.aiSuggested,
-    assignedTo: c.assignedTo,
-    externalPostId: c.externalPostId,
-    postedAt: c.postedAt,
-    respondedAt: c.respondedAt,
-  }));
 }
 
-/** Status counts for the Comments filter chips. (RSC-only caller.) */
+/** Status counts for the Comments filter chips. Fail-soft → {}. (RSC-only caller.) */
 export async function commentStatusCounts(orgId: string): Promise<Record<string, number>> {
-  const grouped = await withTenant(orgId, async (tx) =>
-    tx.socialComment.groupBy({ by: ["status"], _count: true }),
+  return softInbox(
+    () =>
+      withTenant(orgId, async (tx) => {
+        const grouped = await tx.socialComment.groupBy({ by: ["status"], _count: true });
+        const out: Record<string, number> = {};
+        for (const g of grouped) out[g.status] = g._count;
+        return out;
+      }),
+    {},
+    { event: "inbox.comments.counts_failed", swallowAll: true, context: { orgId } },
   );
-  const out: Record<string, number> = {};
-  for (const g of grouped) out[g.status] = g._count;
-  return out;
 }

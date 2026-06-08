@@ -6,6 +6,7 @@
  * client state — pure markup + links, so the server page renders it directly.
  */
 
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon, type IconName } from "@/components/shell/icon";
 import Link from "next/link";
 
@@ -44,9 +45,7 @@ export function GetStartedCard() {
         className="welcome"
         style={{ padding: "36px 28px 30px", borderBottom: "1px solid var(--line)" }}
       >
-        <div className="welcome__art" aria-hidden="true">
-          <Icon name="plug" size={34} />
-        </div>
+        <EmptyIllustration name="integrations-empty" size={160} style={{ marginBottom: 14 }} />
         <h2
           style={{
             fontSize: 22,

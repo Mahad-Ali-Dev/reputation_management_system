@@ -1,3 +1,4 @@
+import { EmptyIllustration } from "@/components/empty-state";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { resendReviewRequest } from "@/lib/outreach/actions";
@@ -45,7 +46,7 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
       <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
         {requests.length === 0 ? (
           <div style={{ padding: 48, textAlign: "center" }}>
-            <Icon name="send" size={28} style={{ color: "var(--pri)", marginBottom: 10 }} />
+            <EmptyIllustration name="requests-empty" style={{ marginBottom: 12 }} />
             <div style={{ fontSize: 15, fontWeight: 500, color: "var(--ink)" }}>
               No review requests sent yet
             </div>

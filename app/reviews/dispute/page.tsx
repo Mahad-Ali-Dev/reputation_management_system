@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { AppShellServer } from "@/components/app-shell-server";
+import { EmptyIllustration } from "@/components/empty-state";
 import { TopBar } from "@/components/topbar";
 import { PageHeader } from "@/components/page-header";
 import {
@@ -195,6 +196,7 @@ function EmptyState({ tab }: { tab: "active" | "resolved" }) {
   }
   return (
     <div className="ds-card" style={{ padding: "40px 24px", textAlign: "center" }}>
+      <EmptyIllustration name="disputes-empty" style={{ marginBottom: 12 }} />
       <h3 className="text-base font-semibold text-[var(--ink)]">No disputes yet</h3>
       <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
         When a review is fake, off-topic, or violates Google&apos;s policies, file a dispute to

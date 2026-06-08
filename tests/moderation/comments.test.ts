@@ -1,16 +1,22 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 /**
- * Comments tab — Google-exclusion contract (Module 09 — Inbox, Wave 3c-A).
+ * Comments tab — Google-exclusion contract + fail-soft reads (Module 09 — Inbox,
+ * Wave 3c-A).
  *
  * The single most important inbox guarantee for this surface: FB/IG comments are
  * hideable SOCIAL comments; Google ("google_qa") content is REPLY-ONLY and must
  * NEVER be reported as hideable. `canHide` encodes that and both the UI and the
  * hide action gate on it.
  *
+ * We ALSO pin the fail-soft contract on the READ helpers: `SocialComment` ships
+ * via the Wave-0 delta and may be unmigrated on a deploy. `listComments` /
+ * `commentStatusCounts` must degrade to empty (never 500 the inbox) on a Postgres
+ * 42P01 (undefined_table) / 42703 (undefined_column).
+ *
  * The module is a `'use server'` file, so its heavy action-only deps (auth,
  * AiAssist, cache, moderation queue) are mocked — we only exercise the pure
- * platform helpers here.
+ * platform helpers + the fail-soft read paths here.
  */
 
 vi.mock("@/lib/logger", () => ({ logger: { warn: vi.fn(), info: vi.fn(), error: vi.fn() } }));
@@ -18,10 +24,21 @@ vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 vi.mock("@/lib/auth/rbac", () => ({ requireRole: vi.fn() }));
 vi.mock("@/lib/auth/org-context", () => ({ getOrgContext: vi.fn() }));
 vi.mock("@/lib/ai/assist", () => ({ assist: vi.fn() }));
-vi.mock("@/lib/db/with-tenant", () => ({ withTenant: vi.fn() }));
+
+// Programmable withTenant: the fail-soft tests make it reject with a coded error.
+const withTenantMock = vi.fn();
+vi.mock("@/lib/db/with-tenant", () => ({
+  withTenant: (orgId: string, fn: (tx: unknown) => unknown) => withTenantMock(orgId, fn),
+}));
 vi.mock("@/lib/moderation/queue", () => ({ evaluateInbound: vi.fn() }));
 
-import { canHide, platformLabel } from "@/lib/inbox/comments";
+import { canHide, commentStatusCounts, listComments, platformLabel } from "@/lib/inbox/comments";
+
+const ORG = "11111111-1111-4111-8111-111111111111";
+
+beforeEach(() => {
+  withTenantMock.mockReset();
+});
 
 describe("canHide — Google is never hideable", () => {
   it("allows hide for Facebook and Instagram", () => {
@@ -46,5 +63,54 @@ describe("platformLabel", () => {
 
   it("passes through an unknown platform unchanged", () => {
     expect(platformLabel("tiktok")).toBe("tiktok");
+  });
+});
+
+describe("listComments — fail-soft on unmigrated SocialComment", () => {
+  it("returns [] (no throw) when the table is missing (42P01)", async () => {
+    withTenantMock.mockRejectedValue(Object.assign(new Error("no relation"), { code: "42P01" }));
+    await expect(listComments({ orgId: ORG })).resolves.toEqual([]);
+  });
+
+  it("returns [] (no throw) when a column is missing (42703)", async () => {
+    withTenantMock.mockRejectedValue(Object.assign(new Error("no column"), { code: "42703" }));
+    await expect(listComments({ orgId: ORG, status: "needs_reply" })).resolves.toEqual([]);
+  });
+
+  it("maps rows + precomputes hide flags on the happy path", async () => {
+    // withTenant just runs the callback against a fake tx.
+    withTenantMock.mockImplementation(async (_org: string, fn: (tx: unknown) => unknown) =>
+      fn({
+        socialComment: {
+          findMany: vi.fn().mockResolvedValue([
+            {
+              id: "c1",
+              platform: "google_qa",
+              authorName: "Ann",
+              authorAvatarUrl: null,
+              body: "hi",
+              status: "needs_reply",
+              aiSuggested: null,
+              assignedTo: null,
+              externalPostId: null,
+              postedAt: new Date(0),
+              respondedAt: null,
+            },
+          ]),
+        },
+      }),
+    );
+    const rows = await listComments({ orgId: ORG });
+    expect(rows).toHaveLength(1);
+    // Google Q&A is never hideable, and is flagged as not-social.
+    expect(rows[0]!.isHideable).toBe(false);
+    expect(rows[0]!.isSocial).toBe(false);
+  });
+});
+
+describe("commentStatusCounts — fail-soft on unmigrated SocialComment", () => {
+  it("returns {} (no throw) when the table is missing (42P01)", async () => {
+    withTenantMock.mockRejectedValue(Object.assign(new Error("no relation"), { code: "42P01" }));
+    await expect(commentStatusCounts(ORG)).resolves.toEqual({});
   });
 });

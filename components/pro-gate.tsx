@@ -123,21 +123,21 @@ export function UpgradeCard({
         padding: compact ? "20px 22px" : "28px 26px",
       }}
     >
-      <div
-        aria-hidden
+      {/* biome-ignore lint/performance/noImgElement: static brand SVG illustration */}
+      <img
+        src="/assets/repulabs/illustrations/upgrade.svg"
+        alt=""
+        aria-hidden="true"
+        width={compact ? 96 : 128}
+        height={compact ? 64 : 85}
         style={{
-          display: "inline-flex",
-          alignItems: "center",
-          justifyContent: "center",
-          width: 44,
-          height: 44,
-          borderRadius: 999,
-          background: "var(--warn-soft)",
-          marginBottom: 12,
+          display: "block",
+          width: "100%",
+          maxWidth: compact ? 96 : 128,
+          height: "auto",
+          margin: "0 auto 12px",
         }}
-      >
-        <Icon name="lock" size={22} style={{ color: "var(--gold)" }} />
-      </div>
+      />
       <div style={{ display: "flex", justifyContent: "center", marginBottom: 8 }}>
         <FreePlanBadge />
       </div>

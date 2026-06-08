@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
 import { withTenant } from "@/lib/db/with-tenant";
 import { getThreadWithMessages, listThreads, type ThreadListItem } from "@/lib/inbox/queries";
@@ -96,7 +97,7 @@ function ConversationsEmpty() {
   return (
     <div className="ds-card">
       <div className="ds-card__body dim" style={{ textAlign: "center", padding: 56 }}>
-        <Icon name="chat" size={30} style={{ color: "var(--pri)" }} />
+        <EmptyIllustration name="messages-empty" />
         <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14, color: "var(--ink)" }}>
           No conversations yet
         </h3>

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { EmptyIllustration } from "@/components/empty-state";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import {
@@ -406,7 +407,7 @@ function EmptyComments({ connected, activeStatus }: { connected: boolean; active
   return (
     <div className="ds-card">
       <div className="ds-card__body dim" style={{ textAlign: "center", padding: 48 }}>
-        <Icon name="chat" size={28} style={{ color: "var(--pri)" }} />
+        <EmptyIllustration name="social-empty" />
         <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
           {connected
             ? activeStatus === "all"

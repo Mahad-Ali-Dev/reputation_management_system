@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyIllustration } from "@/components/empty-state";
 import { TabBar, type TabItem } from "@/components/tab-bar";
 import { Icon } from "@/components/shell/icon";
 import type { SurveyAutomationRow } from "@/lib/surveys/automations";
@@ -139,21 +140,7 @@ function SurveysPanel({ data }: { data: SurveysTabsData }) {
       <StatCards overview={data.overview} />
       {data.campaigns.length === 0 ? (
         <div className="ds-card" style={{ padding: 48, textAlign: "center", maxWidth: 520, marginInline: "auto" }}>
-          <div
-            aria-hidden
-            style={{
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              margin: "0 auto 16px",
-              background: "var(--pri-50, rgba(37,99,235,0.08))",
-              color: "var(--pri)",
-              display: "grid",
-              placeItems: "center",
-            }}
-          >
-            <Icon name="survey" size={24} />
-          </div>
+          <EmptyIllustration name="surveys-empty" style={{ marginBottom: 16 }} />
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>No surveys yet</h3>
           <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
             Create a 1-question NPS survey. Promoters auto-route to leave a Google review; detractors

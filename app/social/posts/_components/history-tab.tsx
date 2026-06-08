@@ -1,3 +1,4 @@
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon, type IconName } from "@/components/shell/icon";
 import { retrySocialPost } from "@/lib/social/post-actions";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -77,6 +78,9 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
   const safePage = Math.max(1, page);
   const skip = (safePage - 1) * PAGE_SIZE;
 
+  // FAIL SOFT: degrade to an empty history (which renders the empty state) when
+  // `social_posts` / a selected column isn't migrated yet (42P01 / 42703) rather
+  // than 500-ing the hub; re-throw real errors so genuine bugs still surface.
   const [posts, total] = await withTenant(orgId, async (tx) =>
     Promise.all([
       tx.socialPost.findMany({
@@ -97,7 +101,10 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
       }),
       tx.socialPost.count(),
     ]),
-  );
+  ).catch((err: unknown) => {
+    if (isMissingRelation(err)) return [[], 0] as const;
+    throw err;
+  });
 
   const metrics = await loadMetrics(
     orgId,
@@ -109,8 +116,8 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
   if (total === 0) {
     return (
       <div className="ds-card" style={{ padding: 40, textAlign: "center", color: "var(--rl-muted)" }}>
-        <Icon name="clock" size={28} style={{ color: "var(--pri)" }} />
-        <p style={{ marginTop: 10, fontSize: 13 }}>
+        <EmptyIllustration name="social-empty" />
+        <p style={{ marginTop: 12, fontSize: 13 }}>
           No posts yet. Head to <Link href="/social/posts?tab=create" style={{ color: "var(--pri)" }}>Create post</Link> to compose your first.
         </p>
       </div>

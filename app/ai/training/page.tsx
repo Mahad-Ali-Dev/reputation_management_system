@@ -4,6 +4,7 @@ import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { listKnowledgeGaps, learningStats } from "@/lib/ai/knowledge-gaps";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
 import { KbTabs } from "./_components/kb-tabs";
 import { readiness, relativeTime, type TrainingProfile } from "./_components/shared";
@@ -47,9 +48,18 @@ function buildSuggestions(profile: { servicesProducts: string | null } | null, u
 export default async function AiTrainingPage() {
   const { orgId } = await getOrgContext();
 
+  // FAIL-SOFT: the profile read selects Wave-0 columns (sourceUrl /
+  // lastAutoUpdatedAt / locations / taughtFacts). On a deploy where the SQL
+  // hasn't been applied yet those columns/table are absent — Postgres raises
+  // 42703 (undefined_column) / 42P01 (undefined_table) (Prisma P2022 / P2021).
+  // Degrade to `null` so the page shows Auto-Setup instead of 500-ing; re-throw
+  // anything that isn't a missing-relation (a real bug must still surface).
   const profile = await withTenant(orgId, async (tx) =>
     tx.aiTrainingProfile.findUnique({ where: { organizationId: orgId } }),
-  );
+  ).catch((err: unknown) => {
+    if (isMissingRelation(err)) return null;
+    throw err;
+  });
 
   // Gap queue + learning stats are fail-soft (return empty/zero if the
   // knowledge_gaps table isn't migrated yet).

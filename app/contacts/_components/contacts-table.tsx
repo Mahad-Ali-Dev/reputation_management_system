@@ -1,5 +1,6 @@
 "use client";
 
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
 import { getContactSourceMeta } from "@/lib/contacts/source-meta";
 import { updateContactTags } from "@/lib/contacts/actions";
@@ -255,9 +256,13 @@ export function ContactsTable({
       {/* Table */}
       {rows.length === 0 ? (
         <div className="ds-card__body" style={{ textAlign: "center", padding: 56 }}>
-          <span style={{ color: "var(--pri)", display: "inline-flex" }}>
-            <Icon name="users" size={30} />
-          </span>
+          {hasFilters ? (
+            <span style={{ color: "var(--pri)", display: "inline-flex" }}>
+              <Icon name="users" size={30} />
+            </span>
+          ) : (
+            <EmptyIllustration name="contacts-empty" />
+          )}
           <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
             {hasFilters ? "No contacts match these filters" : "No contacts yet"}
           </h3>

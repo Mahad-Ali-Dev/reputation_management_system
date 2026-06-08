@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
 import { scanAndBuild, type ScanResult } from "@/lib/ai/auto-setup-actions";
 
@@ -40,21 +41,7 @@ export function AutoSetup({ onSkip }: { onSkip: () => void }) {
   return (
     <div className="ds-card" style={{ maxWidth: 640, margin: "0 auto" }}>
       <div className="ds-card__body" style={{ padding: 28, textAlign: "center" }}>
-        <div
-          aria-hidden="true"
-          style={{
-            width: 64,
-            height: 64,
-            borderRadius: 18,
-            background: "var(--pri-50)",
-            border: "1px solid var(--pri-100)",
-            display: "grid",
-            placeItems: "center",
-            margin: "0 auto 18px",
-          }}
-        >
-          <Icon name="sparkle" size={30} style={{ color: "var(--pri)" }} />
-        </div>
+        <EmptyIllustration name="ai-assistant" size={168} style={{ marginBottom: 18 }} />
         <h2 style={{ fontSize: 22, fontWeight: 600, margin: "0 0 8px", letterSpacing: "-0.02em" }}>
           Build your AI in one step
         </h2>

@@ -1,4 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import { EmptyIllustration } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
@@ -106,10 +107,8 @@ export default async function AutoReplyRulesPage() {
 function EmptyState() {
   return (
     <div className="ds-card" style={{ padding: 40, textAlign: "center", borderStyle: "dashed" }}>
-      <div style={{ fontSize: 28 }} aria-hidden>
-        ⚡
-      </div>
-      <h3 style={{ fontSize: 16, fontWeight: 600, margin: "10px 0 4px" }}>
+      <EmptyIllustration name="reviews-empty" />
+      <h3 style={{ fontSize: 16, fontWeight: 600, margin: "12px 0 4px" }}>
         No auto-reply rules yet
       </h3>
       <p className="dim" style={{ fontSize: 13, marginBottom: 16 }}>
