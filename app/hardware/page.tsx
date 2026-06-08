@@ -19,7 +19,16 @@ import Link from "next/link";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import { DeviceCard } from "./_components/device-card";
 import { NextStepBanner } from "./_components/next-step-banner";
+import { recordNfcUid } from "./_components/nfc-actions";
+import { NfcConfigCard } from "./_components/nfc-config-card";
 import { SummaryStats } from "./_components/summary-stats";
+
+/** Product kinds that are programmed as NFC chips rather than printed QR. */
+const NFC_KINDS = new Set(["nfc", "wifi", "multi_platform"]);
+
+function isNfcKind(productKind: string | null | undefined): boolean {
+  return NFC_KINDS.has(productKind ?? "qr");
+}
 
 /**
  * QR Codes — per repulabs v2 design, adapted: physical-product commerce
@@ -59,6 +68,44 @@ function subtitleFromSku(sku: string): string {
   return sku;
 }
 
+type NfcStatus = "saved" | "duplicate" | "bad_uid" | "not_found" | "unavailable" | "error";
+const NFC_STATUSES = new Set<NfcStatus>([
+  "saved",
+  "duplicate",
+  "bad_uid",
+  "not_found",
+  "unavailable",
+  "error",
+]);
+
+/** Narrow the raw ?nfc= query value to a known NfcStatus, else null. */
+function normalizeNfcStatus(raw: string | undefined): NfcStatus | null {
+  return raw && NFC_STATUSES.has(raw as NfcStatus) ? (raw as NfcStatus) : null;
+}
+
+/**
+ * Map a device's review destination + kind to a platform glyph key for the QR
+ * download links. Mirrors the server-side default in /api/devices/[id]/qr so the
+ * downloaded image's centered glyph matches what the user expects. Returns null
+ * → plain QR (no glyph).
+ */
+function platformForDevice(redirectUrl: string | null, productKind: string): string | null {
+  if (productKind === "multi_platform") return "multi";
+  if (!redirectUrl) return null;
+  let host = "";
+  try {
+    host = new URL(redirectUrl).host.toLowerCase();
+  } catch {
+    return null;
+  }
+  if (host.includes("google.") || host.endsWith("g.page") || host.includes("goo.gl")) {
+    return "google";
+  }
+  if (host.includes("facebook.") || host.includes("fb.")) return "facebook";
+  if (host.includes("instagram.")) return "instagram";
+  return null;
+}
+
 export default async function QrCodesPage({
   searchParams,
 }: {
@@ -74,6 +121,8 @@ export default async function QrCodesPage({
     view?: string;
     /** Set after restore to show a success banner. */
     restored?: string;
+    /** Result of an NFC-UID save (see recordNfcUid): saved|duplicate|bad_uid|… */
+    nfc?: string;
   }>;
 }) {
   const { orgId } = await getOrgContext();
@@ -264,6 +313,8 @@ export default async function QrCodesPage({
             scans={d.scanCount}
             reviews={d.reviewCount}
             shortSlug={d.shortSlug}
+            productKind={d.productKind}
+            nfcUid={d.nfcUid ?? null}
           />
         ))}
         <div
@@ -317,17 +368,32 @@ export default async function QrCodesPage({
         id="qr-panel"
         style={{
           display: "grid",
-          gridTemplateColumns: "320px minmax(0, 1fr)",
+          gridTemplateColumns: "minmax(320px, 360px) minmax(0, 1fr)",
           gap: 16,
           scrollMarginTop: 80,
         }}
       >
-        <DeviceQrPanel
-          deviceId={selectedDevice.id}
-          code={selectedDevice.shortSlug}
-          name={titleFromSku(selectedDevice.productSku)}
-          location={selectedDevice.establishment?.name ?? "Unassigned"}
-        />
+        {isNfcKind(selectedDevice.productKind) ? (
+          <NfcConfigCard
+            deviceId={selectedDevice.id}
+            productKind={selectedDevice.productKind}
+            encodeUrl={publicQrUrl(selectedDevice.shortSlug)}
+            slug={selectedDevice.shortSlug}
+            currentNfcUid={selectedDevice.nfcUid ?? null}
+            deviceTitle={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
+            recordNfcUidAction={recordNfcUid}
+            saveStatus={normalizeNfcStatus(sp.nfc)}
+          />
+        ) : (
+          <DeviceQrPanel
+            deviceId={selectedDevice.id}
+            code={selectedDevice.shortSlug}
+            name={titleFromSku(selectedDevice.productSku)}
+            location={selectedDevice.establishment?.name ?? "Unassigned"}
+            redirectUrl={selectedDevice.redirectUrl ?? null}
+            productKind={selectedDevice.productKind}
+          />
+        )}
         <ScanAnalytics
           scanCount={selectedDevice.scanCount}
           scans={selectedScans}
@@ -432,18 +498,27 @@ function DeviceQrPanel({
   code,
   name,
   location,
+  redirectUrl,
+  productKind,
 }: {
   deviceId: string;
   code: string;
   name: string;
   location: string;
+  redirectUrl: string | null;
+  productKind: string;
 }) {
   const url = publicQrUrl(code);
+  // Center a platform glyph (Google / Facebook / Instagram / multi) in the
+  // downloaded QR when we can infer one from the destination — matches the
+  // server-side default in /api/devices/[id]/qr. null → plain QR.
+  const platform = platformForDevice(redirectUrl, productKind);
   // The /api/devices/[id]/qr route streams PNG/SVG with the right Content-Type
   // + Content-Disposition headers — the browser triggers a download via the
   // `download` attribute on the anchor. PDF intentionally omitted for now; the
   // PNG prints well or can be "Save as PDF" via the browser print dialog.
-  const downloadHref = (format: "png" | "svg") => `/api/devices/${deviceId}/qr?format=${format}`;
+  const downloadHref = (format: "png" | "svg") =>
+    `/api/devices/${deviceId}/qr?format=${format}${platform ? `&platform=${platform}` : ""}`;
   const downloadName = (format: "png" | "svg") => `repulabs-${code}.${format}`;
 
   const linkStyle: React.CSSProperties = {
@@ -496,6 +571,15 @@ function DeviceQrPanel({
           SVG (vector)
         </a>
       </div>
+      {platform && (
+        <div
+          className="dim row"
+          style={{ fontSize: 10.5, marginTop: 8, gap: 5, justifyContent: "center" }}
+        >
+          <Icon name={platform === "facebook" ? "fb" : platform === "google" ? "google" : "star"} size={11} />
+          Downloads embed the {platformLabel(platform)} glyph in the center.
+        </div>
+      )}
       <div
         className="mono dim"
         style={{ fontSize: 10, marginTop: 12, textAlign: "center", wordBreak: "break-all" }}
@@ -504,6 +588,14 @@ function DeviceQrPanel({
       </div>
     </div>
   );
+}
+
+function platformLabel(p: string): string {
+  if (p === "google") return "Google";
+  if (p === "facebook") return "Facebook";
+  if (p === "instagram") return "Instagram";
+  if (p === "multi") return "multi-platform";
+  return "Repulabs";
 }
 
 function ScanAnalytics({

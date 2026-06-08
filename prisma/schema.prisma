@@ -583,6 +583,41 @@ model DeviceScan {
   @@map("device_scans")
 }
 
+/// Admin-initiated factory production run (bulk QR/NFC generation).
+///
+/// GLOBAL / ADMIN-ONLY table — there is intentionally NO `organizationId` and
+/// NO RLS policy on `hardware_batches`. It is only ever touched by the admin
+/// API path (getAdminSession + role guard), which uses the direct `prisma`
+/// client (the BYPASSRLS owner role). The tenant role `app_tenant_user` is
+/// NOT granted on it — mirroring how `admin_users`/`audit_log` admin paths work.
+///
+/// `encryptedCodes` holds the envelope-encrypted JSON of the plaintext
+/// activation codes (see lib/hardware/batch.ts encryptCodes), persisted ONLY
+/// so the admin can re-download the ZIP once if the original download is lost
+/// (the 502-on-500 bug). It is purged (set null + status='expired') after the
+/// first successful re-download or once `expiresAt` passes. NEVER logged.
+model HardwareBatch {
+  id                String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  productSku        String    @map("product_sku")
+  productKind       String    @default("qr") @map("product_kind")
+  quantity          Int
+  status            String    @default("ready") // ready | downloaded | expired
+  notes             String?
+  createdByAdminId  String?   @map("created_by_admin_id")
+  downloadCount     Int       @default(0) @map("download_count")
+  // Envelope-encrypted JSON [{slug,activationCode,serial,qrUrl}] for re-download.
+  // iv is packed in front of the ciphertext (see lib/hardware/batch.ts); the
+  // encryption context is fixed (orgId="__admin__", provider="hardware_batch",
+  // purpose="general") so no per-row context column is needed.
+  encryptedCodes    Bytes?    @map("encrypted_codes")
+  blobUrl           String?   @map("blob_url")
+  expiresAt         DateTime? @map("expires_at")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  @@index([status, createdAt(sort: Desc)])
+  @@map("hardware_batches")
+}
+
 model Review {
   id                     String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   organizationId         String    @map("organization_id") @db.Uuid

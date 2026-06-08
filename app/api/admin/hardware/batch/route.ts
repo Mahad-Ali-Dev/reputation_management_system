@@ -1,61 +1,81 @@
+import { Readable } from "node:stream";
 import { getAdminSession } from "@/lib/admin/session";
 import { prisma } from "@/lib/db/client";
 import {
-  generateActivationCode,
-  generateSerial,
-  generateSlug,
-  signSlug,
-} from "@/lib/hardware/codes";
+  type BatchProduct,
+  type BatchRow,
+  buildBatchZipStream,
+  csvCell,
+  encryptCodes,
+  generateBatchRows,
+  rowsToStoredCodes,
+  safeFilenameSegment,
+} from "@/lib/hardware/batch";
+import { signSlug } from "@/lib/hardware/codes";
+import { qrSvgWithLogo, resolvePlatform } from "@/lib/hardware/qr";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
-// archiver is a CommonJS module (`module.exports = factory`). To get both the
-// default export AND the type imports working without webpack mangling the
-// runtime value into something non-callable, `archiver` is declared in
-// `serverExternalPackages` in next.config.mjs — Next.js skips bundling and
-// Node `require`s it normally at runtime.
+// archiver is a CommonJS module (`module.exports = factory`). It is declared in
+// `serverExternalPackages` in next.config.mjs so Next.js skips bundling and Node
+// `require`s it normally at runtime. Used here for the NFC ZIP variant (the QR
+// variant streams via lib/hardware/batch#buildBatchZipStream).
 import archiver from "archiver";
 import { type NextRequest, NextResponse } from "next/server";
-import QRCode from "qrcode";
 import { z } from "zod";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-// Generating + PNG-encoding 500 QRs can take 10-20 seconds; default 10s
-// timeout is too tight.
-export const maxDuration = 60;
+// A 500-device run streams its ZIP incrementally, but the whole generation
+// (QR rasterization + compression) can still take a few minutes. 300s matches
+// the dedicated nginx location (proxy_read_timeout 300s) so neither layer cuts
+// the connection mid-stream.
+export const maxDuration = 300;
 
 /**
  * POST /api/admin/hardware/batch
  *
- * Admin-initiated bulk QR generation for factory production runs. Returns a
- * single ZIP file containing everything the factory needs to print:
+ * Admin-initiated bulk QR/NFC generation for factory production runs. Returns a
+ * single ZIP, STREAMED incrementally so nginx never trips proxy_read_timeout.
  *
- *   - README.txt       — workflow instructions
- *   - manifest.csv     — table of (slug, activation_code, serial, qr_url, ...)
- *   - qr-png/<slug>.png  — 1024x1024 PNG QR per device (high-res, print-ready)
- *   - qr-svg/<slug>.svg  — vector QR per device (scale to any size)
+ * THE BUG THIS FIXES
+ * ------------------
+ * The previous version committed 500 devices + an audit row, THEN synchronously
+ * generated 500x1024 QR PNGs and buffered the ENTIRE ZIP in memory before
+ * sending a single byte. Behind nginx (proxy_read_timeout 60s) a 500-device run
+ * blew the timeout → 502 → the buffered ZIP (the ONLY place plaintext activation
+ * codes ever existed — the DB stores SHA-256 hashes only) was lost → bricked
+ * devices.
  *
- * Critical UX rule: activation codes are SHA-256 hashed on insert. The plaintext
- * exists only in memory during this request — once the response stream ends,
- * there is NO WAY to recover it from the DB. The CSV in this ZIP is the only
- * place the codes appear in plaintext. Lose the ZIP → batch is bricked.
+ * THE FIX
+ * -------
+ *   1. Generate rows (slug/serial/code/qrUrl) in memory — pure, no DB.
+ *   2. Persist a `hardware_batches` row with the activation codes ENVELOPE-
+ *      ENCRYPTED (AES-256-GCM, see lib/crypto/envelope.ts) + commit the devices
+ *      in ONE transaction. This happens BEFORE we stream a single ZIP byte, so
+ *      even if the client drops mid-download the codes survive and the batch can
+ *      be re-downloaded from /admin/hardware (the encrypted blob is purged after
+ *      the first re-download or a short TTL).
+ *   3. RETURN A STREAMING ZIP — `Readable.toWeb(stream)` hands nginx bytes
+ *      incrementally (README + manifest flush first, then one device at a time),
+ *      so the connection stays alive past 60s and the 502 never happens.
  *
- * The endpoint is form-encoded so a regular <form action="/api/..." method="post">
- * triggers a native browser download — no JS / fetch needed.
+ * productKind:
+ *   - 'qr'  (default) → full print kit: README + manifest.csv + qr-png/<slug>.png
+ *                       (1024px, print-ready) + qr-svg/<slug>.svg (vector, logo).
+ *   - 'nfc' / 'wifi'  → NFC encode kit: README + manifest.csv with the encode URL
+ *                       per card + an OPTIONAL small qr-svg/<slug>.svg companion
+ *                       (no 1024px PNGs — NFC cards are written, not printed).
+ *   - 'multi_platform'→ treated as 'qr' artifacts with the multi-platform glyph.
  *
- * Auth: requires admin session with role super_admin or engineering.
+ * Auth: requires admin session with role super_admin or engineering. Mirrors the
+ * CSRF/origin + role + rate-limit guards of the original route.
  *
- * Body (form-urlencoded):
- *   - productSku   (required, must exist + is_active=true in hardware_products)
- *   - quantity     (1-500)
- *   - notes        (optional, free text — recorded on the audit log only)
- *
- * Response: 200 application/zip with Content-Disposition: attachment
+ * Body (form-urlencoded): productSku, quantity (1-500), productKind (optional),
+ * notes (optional).
  */
 
 // Restrict SKU character class to defeat CSV-formula injection (=, @, +, -)
 // AND filename-injection via `Content-Disposition` (quotes, slashes, CR/LF).
-// Real SKUs are kebab-case alphanumerics like "plaque-brass" or "stand-acrylic".
 const BatchSchema = z.object({
   productSku: z
     .string()
@@ -66,43 +86,24 @@ const BatchSchema = z.object({
       "productSku must be alphanumeric with hyphens/underscores",
     ),
   quantity: z.coerce.number().int().min(1).max(500),
+  // Physical kind. Defaults to 'qr' so existing forms (no productKind field)
+  // keep working unchanged.
+  productKind: z.enum(["qr", "nfc", "wifi", "multi_platform"]).default("qr"),
   notes: z.string().max(500).optional(),
 });
 
 const ALLOWED_ROLES = new Set(["super_admin", "engineering"] as const);
 
-/**
- * Neutralize CSV formula-injection: prefix cells starting with =, +, -, @,
- * \t, \r with a single quote so spreadsheet engines treat them as text. Also
- * quote cells containing , " \n \r and escape internal quotes by doubling.
- * Reference: OWASP "CSV Injection" / CWE-1236.
- */
-function csvCell(v: string): string {
-  let s = String(v);
-  if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;
-  if (/[",\n\r]/.test(s)) s = `"${s.replace(/"/g, '""')}"`;
-  return s;
-}
-
-/**
- * Strip anything that could break a Content-Disposition filename token.
- * RFC 6266 allows only token characters in the unquoted form, and quoted
- * form still can't contain CR/LF or unescaped `"`. We slugify defensively.
- */
-function safeFilenameSegment(s: string): string {
-  return s.replace(/[^A-Za-z0-9._-]/g, "_").slice(0, 64);
-}
+// Re-download window for the encrypted-codes blob. After this the row is treated
+// as expired and the blob is unusable even if not yet purged.
+const REDOWNLOAD_TTL_MS = 1000 * 60 * 60 * 24 * 7; // 7 days
 
 export async function POST(req: NextRequest) {
-  // ---- M-1: CSRF defense — same-origin Origin check ----
-  // The cookie is SameSite=strict (see /api/admin/login), so a cross-site form
-  // POST already can't carry the session. The Origin check is belt-and-
-  // suspenders against older browsers that don't fully honor SameSite.
-  //
-  // IMPORTANT: behind Nginx, `req.nextUrl.host` is the internal binding host
-  // (e.g. `localhost:3000`) — NOT the public host the browser sees. Compare
-  // against the forwarded `Host` / `X-Forwarded-Host` header instead, falling
-  // back to nextUrl.host for local dev where there's no proxy.
+  // ---- CSRF defense — same-origin Origin check ----
+  // The cookie is SameSite=strict, so a cross-site form POST already can't carry
+  // the session; the Origin check is belt-and-suspenders for older browsers.
+  // Behind nginx, compare against the forwarded Host, not nextUrl.host (which is
+  // the internal binding host like localhost:3000).
   const origin = req.headers.get("origin");
   if (origin) {
     try {
@@ -111,10 +112,7 @@ export async function POST(req: NextRequest) {
         req.headers.get("x-forwarded-host") ?? req.headers.get("host") ?? req.nextUrl.host;
       if (originHost !== requestHost) {
         return NextResponse.json(
-          {
-            error: "origin_mismatch",
-            message: "cross-site requests not allowed",
-          },
+          { error: "origin_mismatch", message: "cross-site requests not allowed" },
           { status: 403 },
         );
       }
@@ -134,9 +132,8 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  // ---- L-1: Rate limit — 3 batches/hour/admin. Bounds the DoS surface where
-  // a compromised admin token could spam 500-device generations (each holds
-  // ~15 MB of PNG buffers in memory).
+  // ---- Rate limit — 3 batches/hour/admin. Bounds the DoS surface where a
+  // compromised admin token could spam 500-device generations.
   const rl = await checkRateLimit("hardware_batch", session.adminId);
   if (!rl.success) {
     return NextResponse.json(
@@ -145,10 +142,7 @@ export async function POST(req: NextRequest) {
         message: `Batch generation is limited to 3/hour/admin. Try again in ${rl.retryAfterSeconds}s.`,
         retryAfterSeconds: rl.retryAfterSeconds,
       },
-      {
-        status: 429,
-        headers: { "retry-after": String(rl.retryAfterSeconds) },
-      },
+      { status: 429, headers: { "retry-after": String(rl.retryAfterSeconds) } },
     );
   }
 
@@ -156,6 +150,7 @@ export async function POST(req: NextRequest) {
   const parsed = BatchSchema.safeParse({
     productSku: formData.get("productSku"),
     quantity: formData.get("quantity"),
+    productKind: formData.get("productKind") || undefined,
     notes: formData.get("notes") || undefined,
   });
   if (!parsed.success) {
@@ -167,7 +162,7 @@ export async function POST(req: NextRequest) {
       { status: 400 },
     );
   }
-  const { productSku, quantity, notes } = parsed.data;
+  const { productSku, quantity, productKind, notes } = parsed.data;
 
   const product = await prisma.hardwareProduct.findUnique({
     where: { sku: productSku },
@@ -180,132 +175,243 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "product_inactive" }, { status: 400 });
   }
 
-  // Pre-generate everything in memory so we have one transactional commit
-  // and the ZIP build is straightforward.
+  // ---- 1. Generate rows in memory (pure, no DB) ----
+  const rows = generateBatchRows(quantity);
+
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com";
   const placeholderRedirect = `${appUrl}/not-activated`;
   const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5;
+  const redownloadExpiresAt = new Date(Date.now() + REDOWNLOAD_TTL_MS);
 
-  type Row = {
-    slug: string;
-    activationCodePlaintext: string;
-    activationCodeDisplay: string;
-    activationCodeHash: string;
-    serial: string;
-    qrUrl: string;
-  };
-
-  const rows: Row[] = [];
-  for (let i = 0; i < quantity; i++) {
-    const slug = generateSlug();
-    const serial = generateSerial();
-    const { plaintext, hash, display } = generateActivationCode();
-    rows.push({
-      slug,
-      activationCodePlaintext: plaintext,
-      activationCodeDisplay: display,
-      activationCodeHash: hash,
-      serial,
-      qrUrl: `${appUrl}/r/${slug}`,
-    });
+  // ---- 2. Persist BEFORE streaming: devices + envelope-encrypted batch + audit ----
+  // Critical ordering: the encrypted-codes blob is written here, so if the
+  // streamed download is lost (client drop / proxy hiccup) the admin can still
+  // re-download from /admin/hardware. encryptCodes NEVER logs the plaintext.
+  let encrypted: Buffer;
+  try {
+    encrypted = encryptCodes(rowsToStoredCodes(rows));
+  } catch {
+    // ENCRYPTION_MASTER_KEY missing/invalid — fail loudly BEFORE minting devices,
+    // since without the blob a lost download = bricked batch.
+    logger.error(
+      { event: "hardware.batch.encrypt_failed", adminId: session.adminId },
+      "failed to envelope-encrypt batch codes; aborting before device insert",
+    );
+    return NextResponse.json(
+      {
+        error: "encryption_unavailable",
+        message:
+          "Server encryption key not configured; refusing to mint a batch whose codes can't be re-downloaded.",
+      },
+      { status: 500 },
+    );
   }
 
-  // Single transaction: insert all devices + one batch-level audit row.
-  await prisma.$transaction(async (tx) => {
-    for (const row of rows) {
-      const slugSignature = signSlug(row.slug, placeholderRedirect, expiresAtUnix);
-      await tx.device.create({
+  let batchId: string | null = null;
+  try {
+    batchId = await prisma.$transaction(async (tx) => {
+      for (const row of rows) {
+        const slugSignature = signSlug(row.slug, placeholderRedirect, expiresAtUnix);
+        await tx.device.create({
+          data: {
+            organizationId: null,
+            establishmentId: null,
+            orderId: null,
+            productSku,
+            productKind,
+            serial: row.serial,
+            shortSlug: row.slug,
+            slugSignature,
+            activationCodeHash: row.activationCodeHash,
+            // redirect_url stays null while status="unactivated" (CHECK allows).
+            status: "unactivated",
+          },
+        });
+      }
+
+      // Persist the batch row with the encrypted codes for re-download. Wrapped
+      // in a try so a missing hardware_batches table (42P01 — migration not yet
+      // run) doesn't brick the whole batch: the devices + audit still commit and
+      // the ZIP still streams; only re-download is unavailable until migrated.
+      let createdBatchId: string | null = null;
+      try {
+        const batch = await tx.hardwareBatch.create({
+          data: {
+            productSku,
+            productKind,
+            quantity,
+            status: "ready",
+            notes: notes ?? null,
+            createdByAdminId: session.adminId,
+            downloadCount: 0,
+            encryptedCodes: new Uint8Array(encrypted),
+            expiresAt: redownloadExpiresAt,
+          },
+          select: { id: true },
+        });
+        createdBatchId = batch.id;
+      } catch (err) {
+        if (!isMissingRelation(err)) throw err;
+        logger.warn(
+          { event: "hardware.batch.table_missing", adminId: session.adminId },
+          "hardware_batches table absent (migration pending) — re-download disabled for this batch",
+        );
+      }
+
+      await tx.auditLog.create({
         data: {
           organizationId: null,
-          establishmentId: null,
-          orderId: null,
-          productSku,
-          serial: row.serial,
-          shortSlug: row.slug,
-          slugSignature,
-          activationCodeHash: row.activationCodeHash,
-          // redirect_url stays null while status="unactivated" (CHECK constraint allows).
-          status: "unactivated",
+          actorType: "admin_user",
+          actorId: session.adminId,
+          action: "hardware.batch.generated",
+          resourceType: "hardware_batch",
+          resourceId: createdBatchId,
+          afterData: {
+            batchId: createdBatchId,
+            productSku,
+            productKind,
+            productName: product.name,
+            quantity,
+            notes: notes ?? null,
+            slugs: rows.map((r) => r.slug),
+          },
         },
       });
-    }
-    await tx.auditLog.create({
-      data: {
-        organizationId: null,
-        actorType: "admin_user",
-        actorId: session.adminId,
-        action: "hardware.batch.generated",
-        resourceType: "hardware_batch",
-        afterData: {
-          productSku,
-          productName: product.name,
-          quantity,
-          notes: notes ?? null,
-          slugs: rows.map((r) => r.slug),
-        },
-      },
+
+      return createdBatchId;
     });
-  });
+  } catch (err) {
+    logger.error(
+      { event: "hardware.batch.persist_failed", adminId: session.adminId, err: String(err) },
+      "failed to persist hardware batch; no devices committed",
+    );
+    return NextResponse.json(
+      { error: "persist_failed", message: "Could not commit the batch. Nothing was generated." },
+      { status: 500 },
+    );
+  }
 
   logger.info(
     {
       event: "hardware.batch.generated",
       adminId: session.adminId,
+      batchId,
       productSku,
+      productKind,
       quantity,
     },
     "admin generated hardware batch",
   );
 
-  // ===== Build the ZIP =====
+  // ---- 3. Stream the ZIP ----
   const ts = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-  // M-2: sanitize SKU before interpolation into Content-Disposition filename.
-  // Even though BatchSchema restricts the character class, defense in depth.
   const safeSku = safeFilenameSegment(product.sku);
-  const zipFilename = `repulabs-batch-${safeSku}-${quantity}x-${ts}.zip`;
+  const zipFilename = `repulabs-batch-${productKind}-${safeSku}-${quantity}x-${ts}.zip`;
+
+  const batchProduct: BatchProduct = { sku: product.sku, name: product.name };
+  const stream =
+    productKind === "nfc" || productKind === "wifi"
+      ? buildNfcZipStream(rows, batchProduct, { productKind, notes }).stream
+      : buildBatchZipStream(rows, batchProduct, { productKind, notes }).stream;
+
+  // Readable.toWeb gives nginx bytes incrementally. Without this the response
+  // would buffer the whole ZIP and re-introduce the 502.
+  const webStream = Readable.toWeb(stream) as unknown as ReadableStream<Uint8Array>;
+
+  return new NextResponse(webStream, {
+    status: 200,
+    headers: {
+      "content-type": "application/zip",
+      "content-disposition": `attachment; filename="${zipFilename}"`,
+      // No content-length — the body is chunked/streamed.
+      "cache-control": "no-store, must-revalidate",
+      "x-batch-count": String(quantity),
+      "x-batch-product": productSku,
+      "x-batch-kind": productKind,
+      ...(batchId ? { "x-batch-id": batchId } : {}),
+    },
+  });
+}
+
+/**
+ * Postgres "undefined table" (42P01) / "undefined column" (42703) detection, so
+ * a not-yet-migrated hardware_batches table fails soft (per the build's
+ * no-prisma-migrate rule) instead of bricking the batch.
+ */
+function isMissingRelation(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "42P01" || code === "42703") return true;
+  // Prisma wraps the PG code in meta.code on P2010 raw-query errors.
+  const metaCode = (err as { meta?: { code?: string } } | null)?.meta?.code;
+  return metaCode === "42P01" || metaCode === "42703";
+}
+
+/**
+ * NFC/WiFi-card encode kit. Unlike the QR variant, NFC cards are WRITTEN (the
+ * encode URL goes on the chip), not printed — so we skip the 1024px PNGs and
+ * emit a manifest with the per-card encode URL + an OPTIONAL small SVG QR
+ * companion (handy for a printed fallback sticker). Streams incrementally with
+ * the same backpressure discipline as buildBatchZipStream.
+ */
+function buildNfcZipStream(
+  rows: BatchRow[],
+  product: BatchProduct,
+  opts: { productKind: string; notes?: string | null },
+): { stream: Readable; done: Promise<void> } {
+  const platform = resolvePlatform(opts.productKind);
   const generatedAt = new Date().toISOString();
+  const archive = archiver("zip", { zlib: { level: 6 } });
 
-  // CSV manifest. Every cell passes through csvCell() to defeat formula
-  // injection — productSku is the highest-risk field (admin-supplied via
-  // hardware_products row) but we escape everything for consistency.
-  const csvHeader = [
-    "slug",
-    "activation_code",
-    "activation_code_display",
-    "serial",
-    "product_sku",
-    "qr_url",
-    "qr_png_filename",
-    "qr_svg_filename",
-    "generated_at",
-  ]
-    .map(csvCell)
-    .join(",");
-  const csvRows = rows.map((r) =>
-    [
-      r.slug,
-      r.activationCodePlaintext,
-      r.activationCodeDisplay,
-      r.serial,
-      productSku,
-      r.qrUrl,
-      `qr-png/${r.slug}.png`,
-      `qr-svg/${r.slug}.svg`,
-      generatedAt,
-    ]
-      .map(csvCell)
-      .join(","),
-  );
-  // Excel reads CRLF more reliably and treats it as the canonical CSV line
-  // ending. UTF-8 BOM up front helps Excel autodetect encoding.
-  const csv = `﻿${[csvHeader, ...csvRows].join("\r\n")}\r\n`;
+  archive.on("warning", (err: unknown) => {
+    logger.warn({ event: "hardware.batch.nfc_archiver_warning", err: String(err) });
+  });
 
-  // README for the factory
-  const readme = [
-    "Repulabs hardware batch",
-    "=======================",
+  archive.append(buildNfcReadme(product, rows.length, generatedAt, opts.productKind, opts.notes), {
+    name: "README.txt",
+  });
+  archive.append(buildNfcManifestCsv(rows, product.sku, generatedAt), { name: "manifest.csv" });
+
+  const done = (async () => {
+    for (const r of rows) {
+      // Small companion QR (256px) so the same card can be printed with a
+      // fallback sticker. NO 1024px PNG — NFC is written, not printed.
+      const svg = await qrSvgWithLogo(r.qrUrl, platform, { width: 256 });
+      archive.append(svg, { name: `qr-svg/${r.slug}.svg` });
+      if (archive.writableNeedDrain) {
+        await new Promise<void>((resolve) => archive.once("drain", () => resolve()));
+      }
+    }
+    await archive.finalize();
+  })();
+
+  done.catch((err) => {
+    logger.error(
+      { event: "hardware.batch.nfc_zip_failed", err: String(err) },
+      "nfc batch zip generation failed",
+    );
+    try {
+      archive.abort();
+    } catch {
+      // already destroyed
+    }
+  });
+
+  return { stream: archive, done };
+}
+
+function buildNfcReadme(
+  product: BatchProduct,
+  quantity: number,
+  generatedAt: string,
+  productKind: string,
+  notes?: string | null,
+): string {
+  return [
+    "Repulabs NFC batch",
+    "==================",
     "",
     `Product:    ${product.name} (SKU: ${product.sku})`,
+    `Kind:       ${productKind}`,
     `Quantity:   ${quantity}`,
     `Generated:  ${generatedAt}`,
     notes ? `Notes:      ${notes}` : "",
@@ -313,96 +419,60 @@ export async function POST(req: NextRequest) {
     "What's inside",
     "-------------",
     "  README.txt         — this file",
-    "  manifest.csv       — table mapping each plaque to its slug + activation code",
-    "  qr-png/<slug>.png  — 1024x1024 PNG QR code (recommended for printing)",
-    "  qr-svg/<slug>.svg  — scalable vector QR (use for huge prints or signage)",
+    "  manifest.csv       — table mapping each card to its slug, encode URL + activation code",
+    "  qr-svg/<slug>.svg  — OPTIONAL small QR companion (printed fallback sticker)",
     "",
-    "What to print on each plaque",
-    "----------------------------",
-    "  1. The QR image (PNG or SVG) — encodes the scan URL.",
-    "  2. The activation_code (e.g. A3M9K) printed BELOW or BESIDE the QR, in a",
-    "     clearly legible font (recommend 10-12pt, monospace).",
-    "  3. Optional: the serial number, very small, for inventory tracking.",
+    "How to encode each NFC card",
+    "---------------------------",
+    "  1. Write the `encode_url` value (column in manifest.csv) to the NFC chip as",
+    "     an NDEF URI record. That URL is the public scan endpoint for the card.",
+    "  2. The `activation_code` (5-char code) is what the customer types on the",
+    "     activation page to claim the card — print it on the card or its packaging.",
+    "  3. Optional: write the serial number to the chip's user memory / print it",
+    "     small for inventory tracking.",
     "",
-    "The activation_code is 5 characters — that exact string is what the",
-    "customer types on the activation page (it's case-insensitive).",
+    "The encode_url and the QR companion encode the SAME URL, so a phone that taps",
+    "the chip OR scans the printed QR lands in the same place.",
     "",
-    "After the customer redeems the activation code on repulabs.com/activate,",
-    "the QR begins routing scans to that customer's Google review form.",
+    "KEEP THIS ZIP SAFE: the activation codes are stored ONLY here (the database",
+    "keeps a one-way hash). If you lose it, an admin can re-download ONCE from the",
+    "batch history before it expires; after that the codes are unrecoverable.",
     "",
     "Questions: ops@repulabs.com",
     "",
   ]
     .filter(Boolean)
     .join("\n");
+}
 
-  // Build the archive in memory. `archiver` is loaded at module scope via
-  // createRequire (see top of file).
-  const chunks: Buffer[] = [];
-  const archive = archiver("zip", {
-    zlib: { level: 9 }, // max compression (PNG already compressed, but CSV/SVG benefit)
-  });
-
-  archive.on("data", (chunk: Buffer) => chunks.push(chunk));
-  archive.on("warning", (err) => {
-    logger.warn({ event: "archiver.warning", err: String(err) });
-  });
-
-  const done = new Promise<void>((resolve, reject) => {
-    archive.on("end", () => resolve());
-    archive.on("error", (err) => reject(err));
-  });
-
-  archive.append(readme, { name: "README.txt" });
-  archive.append(csv, { name: "manifest.csv" });
-
-  // One PNG + one SVG per device.
-  // Done in parallel via Promise.all — qrcode.toBuffer/toString are async
-  // but CPU-bound; Node's libuv handles them fine in a thread pool.
-  const pngs = await Promise.all(
-    rows.map(async (r) => ({
-      slug: r.slug,
-      buf: await QRCode.toBuffer(r.qrUrl, {
-        type: "png",
-        width: 1024,
-        margin: 4,
-        errorCorrectionLevel: "M",
-      }),
-    })),
+function buildNfcManifestCsv(rows: BatchRow[], productSku: string, generatedAt: string): string {
+  const header = [
+    "slug",
+    "encode_url",
+    "activation_code",
+    "activation_code_display",
+    "serial",
+    "product_sku",
+    "qr_svg_filename",
+    "generated_at",
+  ]
+    .map(csvCell)
+    .join(",");
+  const lines = rows.map((r) =>
+    [
+      r.slug,
+      // encode_url is the URL written to the NFC chip — identical to qrUrl.
+      r.qrUrl,
+      r.activationCodePlaintext,
+      r.activationCodeDisplay,
+      r.serial,
+      productSku,
+      `qr-svg/${r.slug}.svg`,
+      generatedAt,
+    ]
+      .map(csvCell)
+      .join(","),
   );
-  for (const p of pngs) {
-    archive.append(p.buf, { name: `qr-png/${p.slug}.png` });
-  }
-
-  const svgs = await Promise.all(
-    rows.map(async (r) => ({
-      slug: r.slug,
-      svg: await QRCode.toString(r.qrUrl, {
-        type: "svg",
-        width: 256,
-        margin: 4,
-        errorCorrectionLevel: "M",
-      }),
-    })),
-  );
-  for (const s of svgs) {
-    archive.append(s.svg, { name: `qr-svg/${s.slug}.svg` });
-  }
-
-  await archive.finalize();
-  await done;
-
-  const zipBuffer = Buffer.concat(chunks);
-
-  return new NextResponse(zipBuffer, {
-    status: 200,
-    headers: {
-      "content-type": "application/zip",
-      "content-disposition": `attachment; filename="${zipFilename}"`,
-      "content-length": String(zipBuffer.length),
-      "cache-control": "no-store, must-revalidate",
-      "x-batch-count": String(quantity),
-      "x-batch-product": productSku,
-    },
-  });
+  // UTF-8 BOM + CRLF for Excel autodetect.
+  return `﻿${[header, ...lines].join("\r\n")}\r\n`;
 }

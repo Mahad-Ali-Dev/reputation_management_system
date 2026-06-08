@@ -1,16 +1,26 @@
 import { Icon, type IconName } from "@/components/shell/icon";
-import { Logo } from "@/components/shell/logo";
+import Image from "next/image";
 import Link from "next/link";
 
 /**
- * Admin shell — sidebar + topbar in the v2 light design system, matching the
- * tenant-facing app. The "Admin" identity is signalled with:
- *   - Indigo accent strip on the active nav row
- *   - "ADMIN" pill in the brand area
- *   - A subtle indigo top border on the page surface
+ * Admin shell — v3 "internal command center" chrome (matches
+ * tasks/premium-ui-redesign/07_admin-console.png).
  *
- * Layout is identical to the tenant <AppShell> so muscle memory transfers.
+ * The internal console gets a distinct, premium identity:
+ *   - Deep-slate (navy) sidebar with a white brand lockup + "Admin" pill
+ *   - Active nav row = subtle white-tint fill + white text
+ *   - Cool light page surface; topbar/banners stay v3
+ *
+ * Layout mirrors the tenant <AppShell> grid so muscle memory transfers; only
+ * the palette differs (dark rail vs. white rail) to flag "you are in admin".
  */
+
+// Deep slate navy rail (matches artboard #101820; sits a touch darker than --ink).
+const RAIL = "#0f172a";
+const RAIL_LINE = "rgba(255,255,255,.08)";
+const RAIL_MUTED = "#94a3b8";
+const RAIL_TEXT = "#cbd5e1";
+const RAIL_ACTIVE_BG = "rgba(255,255,255,.10)";
 
 type NavItem = { href: string; label: string; icon: IconName };
 
@@ -63,36 +73,44 @@ export function AdminShell({
         fontFamily: "var(--f-ui)",
       }}
     >
-      {/* ---- Sidebar ---- */}
+      {/* ---- Sidebar (deep-slate rail) ---- */}
       <aside
         style={{
-          borderRight: "1px solid var(--line, #eceeea)",
-          background: "var(--surface, #fff)",
-          padding: "18px 14px",
+          borderRight: `1px solid ${RAIL_LINE}`,
+          background: RAIL,
+          color: RAIL_TEXT,
+          padding: "20px 14px",
           display: "flex",
           flexDirection: "column",
-          gap: 18,
+          gap: 20,
           position: "sticky",
           top: 0,
           height: "100vh",
           overflowY: "auto",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <Logo mode="mark" size={32} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            <span style={{ fontSize: 14, fontWeight: 600, letterSpacing: "-0.02em" }}>
-              repulabs
+        <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
+          <Image
+            src="/favicon.png?v=2"
+            alt=""
+            width={34}
+            height={34}
+            priority
+            style={{ borderRadius: 9, objectFit: "contain", background: "#fff", padding: 3 }}
+          />
+          <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", color: "#fff" }}>
+              repu<span style={{ color: "#5eead4" }}>labs</span>
             </span>
             <span
               style={{
                 fontSize: 9,
                 fontWeight: 700,
                 letterSpacing: "0.12em",
-                color: "#6366f1",
-                background: "#eef2ff",
-                padding: "1px 6px",
-                borderRadius: 4,
+                color: "#93c5fd",
+                background: "rgba(37,99,235,.22)",
+                padding: "1px 7px",
+                borderRadius: 999,
                 width: "fit-content",
               }}
             >
@@ -108,15 +126,15 @@ export function AdminShell({
                 style={{
                   fontSize: 10,
                   fontWeight: 600,
-                  letterSpacing: "0.1em",
-                  color: "var(--rl-muted, #94a3b8)",
+                  letterSpacing: "0.12em",
+                  color: RAIL_MUTED,
                   textTransform: "uppercase",
-                  padding: "0 8px 6px",
+                  padding: "0 8px 7px",
                 }}
               >
                 {group.group}
               </div>
-              <div style={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
                 {group.items.map((item) => {
                   const active =
                     pathname === item.href ||
@@ -125,21 +143,26 @@ export function AdminShell({
                     <Link
                       key={item.href}
                       href={item.href}
+                      aria-current={active ? "page" : undefined}
                       style={{
                         display: "flex",
                         alignItems: "center",
                         gap: 9,
-                        padding: "7px 8px",
-                        borderRadius: 7,
+                        padding: "8px 10px",
+                        borderRadius: 8,
                         fontSize: 13,
-                        color: active ? "#4f46e5" : "var(--ink-2, #334155)",
-                        background: active ? "#eef2ff" : "transparent",
+                        color: active ? "#fff" : RAIL_TEXT,
+                        background: active ? RAIL_ACTIVE_BG : "transparent",
                         fontWeight: active ? 600 : 500,
                         textDecoration: "none",
-                        transition: "background 120ms ease",
+                        transition: "background 120ms ease, color 120ms ease",
                       }}
                     >
-                      <Icon name={item.icon} size={14} />
+                      <Icon
+                        name={item.icon}
+                        size={14}
+                        style={{ color: active ? "#5eead4" : RAIL_MUTED }}
+                      />
                       {item.label}
                     </Link>
                   );
@@ -152,21 +175,19 @@ export function AdminShell({
         <div
           style={{
             marginTop: "auto",
-            padding: "12px 8px",
-            borderTop: "1px solid var(--line)",
+            padding: "14px 8px 4px",
+            borderTop: `1px solid ${RAIL_LINE}`,
             display: "flex",
             flexDirection: "column",
-            gap: 8,
+            gap: 10,
           }}
         >
           <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            <span style={{ fontSize: 12, color: "var(--ink-2)", fontWeight: 500 }}>
-              {session.email}
-            </span>
+            <span style={{ fontSize: 12, color: "#e2e8f0", fontWeight: 500 }}>{session.email}</span>
             <span
               style={{
                 fontSize: 10,
-                color: "var(--rl-muted)",
+                color: RAIL_MUTED,
                 textTransform: "capitalize",
               }}
             >
@@ -178,12 +199,13 @@ export function AdminShell({
               type="submit"
               style={{
                 width: "100%",
-                padding: "6px 10px",
+                padding: "7px 10px",
                 fontSize: 11.5,
-                border: "1px solid var(--line)",
-                background: "var(--surface-2, #fafbf8)",
-                borderRadius: 6,
-                color: "var(--ink-2)",
+                fontWeight: 500,
+                border: `1px solid ${RAIL_LINE}`,
+                background: "rgba(255,255,255,.05)",
+                borderRadius: 8,
+                color: RAIL_TEXT,
                 cursor: "pointer",
                 textAlign: "left",
                 display: "flex",
@@ -204,7 +226,6 @@ export function AdminShell({
           display: "flex",
           flexDirection: "column",
           minWidth: 0,
-          borderTop: "3px solid #6366f1",
         }}
       >
         {topBar && (

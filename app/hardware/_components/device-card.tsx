@@ -16,6 +16,16 @@ import { DeviceCardMenu } from "./device-card-menu";
  * Pure server component with serializable props computed by the page — the only
  * client island is the kebab menu.
  */
+/** Product kinds that are programmed as NFC chips rather than printed QR. */
+const NFC_KINDS = new Set(["nfc", "wifi", "multi_platform"]);
+
+const KIND_LABEL: Record<string, string> = {
+  nfc: "NFC",
+  wifi: "WiFi + NFC",
+  multi_platform: "Multi-NFC",
+  qr: "QR",
+};
+
 export function DeviceCard({
   deviceId,
   productImageUrl,
@@ -25,6 +35,8 @@ export function DeviceCard({
   scans,
   reviews,
   shortSlug,
+  productKind = "qr",
+  nfcUid = null,
 }: {
   deviceId: string;
   productImageUrl: string | null;
@@ -37,11 +49,17 @@ export function DeviceCard({
   scans: number;
   reviews: number;
   shortSlug: string;
+  /** 'qr' | 'nfc' | 'wifi' | 'multi_platform' — drives the type chip + icon. */
+  productKind?: string;
+  /** Recorded NFC chip UID, shown on NFC-kind cards when present. */
+  nfcUid?: string | null;
 }) {
+  const isNfc = NFC_KINDS.has(productKind);
+  const kindLabel = KIND_LABEL[productKind] ?? "QR";
   return (
     <div className="ds-card ds-card--hover" style={{ padding: 16 }}>
       <div className="row" style={{ gap: 16, alignItems: "center", flexWrap: "wrap" }}>
-        <ProductThumb imageUrl={productImageUrl} title={productTitle} />
+        <ProductThumb imageUrl={productImageUrl} title={productTitle} isNfc={isNfc} />
 
         {/* Identity column */}
         <div style={{ minWidth: 0, flex: 1 }}>
@@ -65,6 +83,14 @@ export function DeviceCard({
               <span className="live" />
               Active
             </span>
+            <span
+              className="chip"
+              style={{ height: 20, fontSize: 10.5 }}
+              title={isNfc ? "NFC tap-to-review chip" : "Printed QR code"}
+            >
+              <Icon name={isNfc ? "smartphone" : "qr"} size={11} />
+              {kindLabel}
+            </span>
           </div>
           <div className="dim" style={{ fontSize: 11.5, marginTop: 3 }}>
             {productSubtitle}
@@ -81,6 +107,7 @@ export function DeviceCard({
           </div>
           <div className="mono dim" style={{ fontSize: 10, marginTop: 6, letterSpacing: ".08em" }}>
             CODE · {shortSlug}
+            {isNfc && nfcUid ? <> · UID · {nfcUid}</> : null}
           </div>
         </div>
 
@@ -105,7 +132,15 @@ export function DeviceCard({
   );
 }
 
-function ProductThumb({ imageUrl, title }: { imageUrl: string | null; title: string }) {
+function ProductThumb({
+  imageUrl,
+  title,
+  isNfc = false,
+}: {
+  imageUrl: string | null;
+  title: string;
+  isNfc?: boolean;
+}) {
   if (imageUrl) {
     return (
       // Catalog thumbnails are remote/static product photos — a plain <img>
@@ -144,7 +179,7 @@ function ProductThumb({ imageUrl, title }: { imageUrl: string | null; title: str
         color: "var(--pri)",
       }}
     >
-      <Icon name="qr" size={34} />
+      <Icon name={isNfc ? "smartphone" : "qr"} size={34} />
     </span>
   );
 }
