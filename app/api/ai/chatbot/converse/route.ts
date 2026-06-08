@@ -3,12 +3,27 @@ import { z } from "zod";
 import { checkBudget } from "@/lib/ai/budget";
 import { chatbotTurn } from "@/lib/ai/chatbot";
 import { verifyVisitorJwt } from "@/lib/ai/widget-jwt";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { getWidgetConfig, resolveWidgetMode, type WidgetAiMode } from "@/lib/inbox/widget";
 import { mirrorWebchatTurn } from "@/lib/inbox/livechat";
+
+// Lightweight detectors for a contact identifier the visitor typed into chat
+// (e.g. on the "leave your email and we'll follow up" handoff). Best-effort —
+// the auto-capture hook re-normalizes/validates, so a false positive here is
+// harmless (the hook drops anything implausible).
+const CHAT_EMAIL_RE = /[^\s@<>()[\]]+@[^\s@<>()[\]]+\.[^\s@<>()[\]]+/;
+const CHAT_PHONE_RE = /\+?[0-9][0-9\s\-().]{7,17}[0-9]/;
+
+function extractContactFromMessage(message: string): { email: string | null; phone: string | null } {
+  const email = message.match(CHAT_EMAIL_RE)?.[0] ?? null;
+  // Avoid matching the digits inside an email's domain/local-part as a phone.
+  const phone = email ? null : (message.match(CHAT_PHONE_RE)?.[0] ?? null);
+  return { email, phone };
+}
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -203,6 +218,25 @@ export async function POST(req: NextRequest) {
       conversationId,
       userMessage: parsed.data.message,
     });
+
+    // Auto-capture a lead into the Contact directory when the visitor leaves an
+    // email/phone in chat. Fire-and-forget + fail-soft (the hook never throws
+    // and dedupes internally) so it can't break / slow the converse response.
+    // Keyed on the conversation id so repeat turns collapse to one contact.
+    const captured = extractContactFromMessage(parsed.data.message);
+    if (captured.email || captured.phone) {
+      captureContactInBackground({
+        orgId: claims.orgId,
+        source: "chat",
+        email: captured.email,
+        phone: captured.phone,
+        establishmentId: claims.establishmentId ?? null,
+        activity: {
+          title: "Shared contact info in chat",
+          externalRef: `chat:${conversationId}`,
+        },
+      });
+    }
 
     // ---- ADDITIVE (Wave 3c-B): aiMode + escalation + InboxThread mirror ----
     // All best-effort + fail-soft: a failure here must NOT change the byte-compat

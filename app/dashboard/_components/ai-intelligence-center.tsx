@@ -17,9 +17,10 @@ import { type JSX, useCallback, useRef, useState } from "react";
  * Graceful degradation: 402 (plan inactive) → upgrade nudge; 429 (rate/budget)
  * → "try again shortly"; 401/500 → friendly retry message.
  *
- * NOTE: this posts the existing `{ messages }` contract the route accepts today
- * (help mode). The planned org-scoped `mode: "dashboard"` enhancement to the
- * route is out of this module's file ownership and is tracked as an issue.
+ * Posts `{ mode: "dashboard", messages }` so the route prepends an org-scoped
+ * context block (recent review snippets + KB doc titles) — the operator's
+ * "ask anything about your business" answers reference THEIR data. The route
+ * applies the same entitlement / rate / budget gates regardless of mode.
  */
 
 type ChatMsg = { role: "user" | "assistant"; content: string };
@@ -54,7 +55,7 @@ export function AiIntelligenceCenter({
         const res = await fetch("/api/ai/assistant", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ messages: next }),
+          body: JSON.stringify({ mode: "dashboard", messages: next }),
         });
         if (res.status === 402) {
           setError("AI insights are a Pro feature. Upgrade in Settings → Subscription.");

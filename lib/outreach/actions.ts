@@ -2,6 +2,7 @@
 
 import { auth } from "@/lib/auth/config";
 import { assertEntitled } from "@/lib/billing/entitlements";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
@@ -126,6 +127,23 @@ export async function createReviewRequest(form: FormData): Promise<void> {
         throw new Error(`Could not create review request: ${enq.reason}`);
     }
   }
+
+  // Auto-capture the recipient into the Contact directory. Fire-and-forget +
+  // fail-soft (the hook never throws and dedupes internally) so it can't break
+  // / slow the send. Recipient is an email or an E.164 phone depending on the
+  // channel; the review-request id makes the marker idempotent.
+  captureContactInBackground({
+    orgId,
+    source: "outreach",
+    email: data.channel === "email" ? recipient : null,
+    phone: data.channel === "sms" ? recipient : null,
+    name: data.recipientName ?? null,
+    establishmentId: data.establishmentId,
+    activity: {
+      title: "Sent a review request",
+      externalRef: `review-request:${enq.reviewRequestId}`,
+    },
+  });
 
   // Audit with the acting user (the seam runs sessionless, so the actor-attributed
   // audit row is written here where we know `userId`).

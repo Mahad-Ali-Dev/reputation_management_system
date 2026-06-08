@@ -16,6 +16,7 @@ import { getRoiHeadline } from "@/lib/roi/summary";
 import Link from "next/link";
 import { AiIntelligenceCenter } from "./_components/ai-intelligence-center";
 import { DashboardHero, type HeroKpi } from "./_components/dashboard-hero";
+import { VisibilityHealthBanner } from "./_components/visibility-health-banner";
 import {
   AiChannelFunnel,
   BusinessInsightsBand,
@@ -171,6 +172,13 @@ export default async function DashboardPage({
             subtext={health.summary}
             healthBand={health.band}
             kpis={kpis}
+          />
+
+          {/* Online Visibility Health Score banner (above the feed) */}
+          <VisibilityHealthBanner
+            score={health.score}
+            metrics={health.metrics}
+            summary={health.summary}
           />
 
           <div className="col" style={{ gap: 14 }}>

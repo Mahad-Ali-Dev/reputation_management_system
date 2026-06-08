@@ -2,6 +2,7 @@ import { checkBudget } from "@/lib/ai/budget";
 import { MODELS, anthropic } from "@/lib/ai/client";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
+import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { type NextRequest, NextResponse } from "next/server";
@@ -21,8 +22,16 @@ export const dynamic = "force-dynamic";
  * Rate limit: 20 turns / 5 min / user.
  * Budget: rolls up into the org's daily AI cap.
  *
- * Body: { messages: [{role, content}, ...] }
+ * Body: { messages: [{role, content}, ...], mode?: "help" | "dashboard" }
  * Returns: { answer: string }
+ *
+ * Modes:
+ *   - "help" (default): generic in-app product help. Byte-identical to the
+ *     original behavior — back-compat for `components/ask-ai.tsx`.
+ *   - "dashboard": the dashboard's "ask anything about your business" surface.
+ *     Prepends an org-scoped context block (recent review snippets + KB doc
+ *     titles, read via `withTenant`) so answers reference the operator's own
+ *     data. Same entitlement / rate / budget gates as help mode.
  */
 
 const Body = z.object({
@@ -35,6 +44,7 @@ const Body = z.object({
     )
     .min(1)
     .max(20),
+  mode: z.enum(["help", "dashboard"]).default("help"),
 });
 
 const SYSTEM_PROMPT = `You are "repulabs Assistant", an in-app help bot for repulabs — a reputation-management SaaS for local businesses.
@@ -77,6 +87,66 @@ STYLE
 - If asked something you don't know, say "I'm not sure — try the docs or support@repulabs.com" instead of making it up.
 - If the user asks how to do something, give the EXACT menu path (e.g. "Settings → Subscription → Cancel").
 - Don't repeat the product description unless the user asks "what is repulabs".`;
+
+/**
+ * Build an org-scoped context block for `mode: "dashboard"`. Reads a compact
+ * snapshot of THIS org's data — a few recent review snippets and the titles of
+ * indexed AI knowledge-base docs — via `withTenant` so the assistant can answer
+ * about the operator's own business, not just generic product help.
+ *
+ * Fail-soft: any query error (incl. a missing table — 42P01/42703 on an org that
+ * predates these models) degrades to an empty string, so the dashboard assistant
+ * simply falls back to generic help rather than erroring.
+ */
+async function buildOrgContext(orgId: string): Promise<string> {
+  try {
+    const { reviews, docs } = await withTenant(orgId, async (tx) => {
+      const [reviews, docs] = await Promise.all([
+        tx.review.findMany({
+          where: { body: { not: null } },
+          select: { rating: true, reviewerName: true, body: true, source: true },
+          orderBy: { postedAt: "desc" },
+          take: 6,
+        }),
+        tx.aiDocument.findMany({
+          where: { status: "indexed" },
+          select: { title: true },
+          orderBy: { createdAt: "desc" },
+          take: 12,
+        }),
+      ]);
+      return { reviews, docs };
+    });
+
+    const lines: string[] = [];
+
+    if (reviews.length > 0) {
+      lines.push("RECENT REVIEWS (most recent first):");
+      for (const r of reviews) {
+        const who = r.reviewerName?.trim() || "Anonymous";
+        const snippet = (r.body ?? "").replace(/\s+/g, " ").trim().slice(0, 180);
+        lines.push(`- ${r.rating}★ (${r.source}) ${who}: "${snippet}"`);
+      }
+    }
+
+    if (docs.length > 0) {
+      if (lines.length > 0) lines.push("");
+      lines.push("KNOWLEDGE BASE DOCUMENTS (titles only):");
+      for (const d of docs) lines.push(`- ${d.title}`);
+    }
+
+    if (lines.length === 0) return "";
+
+    return `\n\nBUSINESS CONTEXT — the operator is asking about THEIR OWN business. Ground answers in the data below; cite specifics (a reviewer, a rating, a recurring topic) where relevant. If the question needs data not shown here, say what you can see and point them to the right page. Do NOT fabricate reviews or numbers.\n\n${lines.join("\n")}`;
+  } catch (err) {
+    logger.warn({
+      orgId,
+      error: err instanceof Error ? err.message : String(err),
+      event: "ai.assistant.org_context_failed",
+    });
+    return "";
+  }
+}
 
 export async function POST(req: NextRequest) {
   const { orgId, userId } = await getOrgContext();
@@ -122,11 +192,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid_body" }, { status: 400 });
   }
 
+  // Dashboard mode mixes in an org-scoped context block; help mode is unchanged.
+  const system =
+    parsed.data.mode === "dashboard"
+      ? `${SYSTEM_PROMPT}${await buildOrgContext(orgId)}`
+      : SYSTEM_PROMPT;
+
   try {
     const result = await anthropic.messages.create({
       model: MODELS.HAIKU,
       max_tokens: 600,
-      system: SYSTEM_PROMPT,
+      system,
       messages: parsed.data.messages.map((m) => ({
         role: m.role,
         content: m.content,

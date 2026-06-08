@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
 import { auth } from "@/lib/auth/config";
+import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
@@ -592,6 +593,24 @@ export async function submitSurveyResponse(form: FormData): Promise<{
     }
     return response.id;
   });
+
+  // Auto-capture the respondent into the Contact directory. Fire-and-forget +
+  // fail-soft (the hook never throws and dedupes internally) so it can't break
+  // / slow the public submission. Dedupes by email; the response id makes the
+  // "captured via survey" marker idempotent if the same response is replayed.
+  if (token.recipient) {
+    captureContactInBackground({
+      orgId: token.organizationId,
+      source: "survey",
+      email: token.recipient,
+      name: token.recipientName,
+      establishmentId: token.campaign.establishment?.id ?? null,
+      activity: {
+        title: "Responded to a survey",
+        externalRef: `survey-response:${responseId}`,
+      },
+    });
+  }
 
   // Fire-and-forget: nudge an insights refresh if the corpus is now stale. This
   // must NOT block (or fail) the customer's submission, so it is fully detached
