@@ -97,12 +97,13 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "WhatsApp Business",
     category: "social",
     description: "Read + reply to WhatsApp Business messages in the Unified Inbox.",
-    ready: false,
-    blockerNote:
-      "Requires Meta App Review + a WhatsApp Business (Cloud API) number. We've built the webhook + send path; submit your app at developers.facebook.com, then paste the App ID/Secret.",
+    // Connectable TODAY via the manager-gated paste form (Phone Number ID +
+    // permanent/system-user access token) on /connections/whatsapp — no Meta
+    // App Review required for the operator, because they bring their own
+    // WhatsApp Business (Cloud API) number + token. The full embedded-signup
+    // OAuth flow is a later upgrade.
+    ready: true,
     scopes: ["whatsapp_business_messaging", "whatsapp_business_management"],
-    oauthUrl: "https://www.facebook.com/v21.0/dialog/oauth",
-    tokenUrl: "https://graph.facebook.com/v21.0/oauth/access_token",
     logoEmoji: "💬",
     docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api",
   },

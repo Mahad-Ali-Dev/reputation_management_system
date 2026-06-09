@@ -147,7 +147,7 @@ const SECTION_DEFS: SectionDef[] = [
     label: "Social — Meta",
     subline: "One connection for Facebook Pages + Instagram: comments, DMs, and posts.",
     icon: "share",
-    providerIds: ["meta", "linkedin"],
+    providerIds: ["meta", "whatsapp", "linkedin"],
   },
   {
     key: "pos",

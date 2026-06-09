@@ -97,6 +97,17 @@ function RowAction({
     );
   }
 
+  // API-key (paste-credentials) providers connect on their Manage detail page
+  // where the secure form lives — not via an OAuth redirect.
+  if (provider.connType === "api_key" && provider.ready) {
+    return (
+      <Link href={`/connections/${provider.id}`} className="btn btn--xs btn--pri">
+        Connect
+        <Icon name="arrowR" size={11} />
+      </Link>
+    );
+  }
+
   // Ready + admin pasted creds → one-click connect.
   if (provider.ready && provider.configured) {
     return (

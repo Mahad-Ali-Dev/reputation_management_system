@@ -20,7 +20,9 @@
  */
 
 import { requireRole } from "@/lib/auth/rbac";
+import { saveConnectionSoft } from "@/lib/connections/adapters/route-helpers";
 import { syncConnectionContacts } from "@/lib/connections/sync";
+import { WHATSAPP_GRAPH_VERSION } from "@/lib/inbox/whatsapp-send";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
@@ -128,4 +130,134 @@ export async function resyncConnection(form: FormData): Promise<void> {
 
   revalidatePath("/connections");
   redirect("/connections?resynced=1");
+}
+
+// ===========================================================================
+// WhatsApp connect — manager-gated paste form (Module 09)
+// ===========================================================================
+
+/** WhatsApp Cloud API Phone Number IDs are numeric strings (15–17 digits). */
+const WA_PHONE_NUMBER_ID_RE = /^\d{6,20}$/;
+
+/**
+ * Best-effort verify that the pasted token can read the given phone number id.
+ * Hits Graph `GET /{phone_number_id}?fields=display_phone_number` with the
+ * token. Returns the human display number on success (used as the account
+ * label), or null when the probe can't be made / fails — we DON'T block the
+ * connect on a failed probe (network blips, restricted token scopes), exactly
+ * like the Meta callback treats its Page probe as a label nicety, not a gate.
+ * Fail-soft: never throws.
+ */
+async function probeWhatsAppNumber(
+  phoneNumberId: string,
+  accessToken: string,
+): Promise<{ ok: boolean; displayNumber?: string; error?: string }> {
+  try {
+    const url = `https://graph.facebook.com/${WHATSAPP_GRAPH_VERSION}/${encodeURIComponent(
+      phoneNumberId,
+    )}?fields=display_phone_number,verified_name`;
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 10_000);
+    let res: Response;
+    try {
+      res = await fetch(url, {
+        headers: { Authorization: `Bearer ${accessToken}`, accept: "application/json" },
+        signal: ctrl.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
+    const json = (await res.json().catch(() => null)) as {
+      display_phone_number?: string;
+      verified_name?: string;
+      error?: { message?: string };
+    } | null;
+    if (!res.ok || json?.error) {
+      return { ok: false, error: json?.error?.message ?? `http_${res.status}` };
+    }
+    const displayNumber = json?.verified_name
+      ? `${json.verified_name} (${json.display_phone_number ?? phoneNumberId})`
+      : json?.display_phone_number;
+    return { ok: true, displayNumber };
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+}
+
+/**
+ * Connect a WhatsApp Business (Cloud API) number by pasting its Phone Number ID
+ * + a permanent / system-user access token.
+ *
+ * This is the operator-side connect that makes the already-built WhatsApp
+ * webhook (app/api/webhooks/whatsapp) + send path (lib/inbox/whatsapp-send)
+ * live: it persists exactly the row they look up —
+ * `Connection(provider:"whatsapp", externalId=phone_number_id)` with the access
+ * token envelope-encrypted — via the shared `saveConnection` helper.
+ *
+ *   - RBAC-gated to manager+ (same as disconnect/re-sync; a token is a secret).
+ *   - tenant-scoped through `saveConnection` → `withTenant` (RLS isolation).
+ *   - idempotent on (org, provider, externalId): re-pasting a token for the same
+ *     number updates the row in place (rotates the stored token).
+ *   - FAIL-SOFT on the stale provider CHECK (23514 / not-migrated) via
+ *     `saveConnectionSoft` → redirects to `?error=whatsapp_not_configured`
+ *     instead of 500-ing (matches every other callback's posture).
+ *
+ * Token material is written ONLY through the envelope-encrypting helper; it is
+ * never logged.
+ */
+export async function connectWhatsApp(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireRole("manager");
+
+  const phoneNumberId = String(form.get("phoneNumberId") ?? "").trim();
+  const accessToken = String(form.get("accessToken") ?? "").trim();
+
+  if (!WA_PHONE_NUMBER_ID_RE.test(phoneNumberId)) {
+    redirect("/connections/whatsapp?error=invalid_phone_number_id");
+  }
+  if (accessToken.length < 20) {
+    redirect("/connections/whatsapp?error=invalid_token");
+  }
+
+  // Best-effort probe for a friendly label — never blocks the connect.
+  const probe = await probeWhatsAppNumber(phoneNumberId, accessToken);
+  const accountLabel = probe.displayNumber ?? `WhatsApp ${phoneNumberId}`;
+
+  const saved = await saveConnectionSoft({
+    orgId,
+    establishmentId: null,
+    provider: "whatsapp",
+    accountLabel,
+    externalId: phoneNumberId, // the natural key the webhook + send path resolve by
+    accessToken,
+    scopes: ["whatsapp_business_messaging", "whatsapp_business_management"],
+  });
+
+  if (!saved.ok) {
+    logger.warn({ orgId, event: "connection.whatsapp.not_configured" });
+    redirect("/connections/whatsapp?error=whatsapp_not_configured");
+  }
+
+  try {
+    await withTenant(orgId, async (tx) => {
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "connection.created",
+          resourceType: "connection",
+          resourceId: saved.id,
+          // Never persist the token; the phone number id is not secret.
+          afterData: { provider: "whatsapp", phoneNumberId, probed: probe.ok },
+        },
+      });
+    });
+  } catch {
+    // Audit is best-effort — a missing audit table must not fail the connect.
+  }
+
+  logger.info({ orgId, event: "connection.created" }, "whatsapp number connected");
+  revalidatePath("/connections");
+  revalidatePath("/connections/whatsapp");
+  redirect("/connections/whatsapp?connected=1");
 }

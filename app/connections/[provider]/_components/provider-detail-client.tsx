@@ -90,6 +90,11 @@ export function ProviderDetailClient({
   // The authorize route the Connect / Reconnect anchors hit.
   const authorizeHref = `/api/connections/${provider.id}/authorize`;
 
+  // API-key providers (e.g. WhatsApp) connect via a paste form rendered by the
+  // server page, NOT an OAuth redirect — so the hero must not show OAuth
+  // Connect / Reconnect / Set-up-in-admin anchors for them.
+  const isApiKey = provider.connType === "api_key";
+
   return (
     <div className="col" style={{ gap: 16 }}>
       {/* ── Status hero ─────────────────────────────────────────────────── */}
@@ -126,7 +131,7 @@ export function ProviderDetailClient({
 
               {connected ? (
                 <>
-                  {provider.ready && (
+                  {provider.ready && !isApiKey && (
                     <Link href={authorizeHref} className="btn btn--sm" prefetch={false}>
                       <Icon name="refresh" size={12} />
                       Reconnect
@@ -142,6 +147,9 @@ export function ProviderDetailClient({
                     />
                   )}
                 </>
+              ) : isApiKey ? (
+                // The paste form below is the connect affordance — no hero CTA.
+                null
               ) : provider.ready ? (
                 <Link href={authorizeHref} className="btn btn--sm btn--pri" prefetch={false}>
                   Connect

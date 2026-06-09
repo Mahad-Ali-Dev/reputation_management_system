@@ -77,7 +77,10 @@ export const PROVIDER_META: Record<string, ProviderMeta> = {
   google_business: { connType: "oauth", syncs: "reviews" },
   // ── Social (combined Meta) ──────────────────────────────────────────────
   meta: { connType: "oauth", syncs: "social" },
-  whatsapp: { connType: "oauth", syncs: "social" },
+  // WhatsApp connects via the manager-gated paste form (Phone Number ID +
+  // permanent access token), not OAuth — `api_key` makes the UI route the
+  // Connect action to /connections/whatsapp where that form lives.
+  whatsapp: { connType: "api_key", syncs: "social" },
   linkedin: { connType: "oauth", syncs: "social" },
   // ── Embed / import ──────────────────────────────────────────────────────
   website_widget: { connType: "embed", syncs: null },

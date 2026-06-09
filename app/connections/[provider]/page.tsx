@@ -18,9 +18,10 @@ import {
 import { PROVIDERS, type ProviderEntry } from "@/lib/providers/registry";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { disconnectConnection, resyncConnection } from "../_components/actions";
+import { connectWhatsApp, disconnectConnection, resyncConnection } from "../_components/actions";
 import { type SerializedConnection, connTypeLabel, syncsLabel } from "../_lib/format";
 import { ProviderDetailClient } from "./_components/provider-detail-client";
+import { WhatsAppConnectPanel } from "./_components/whatsapp-connect-panel";
 import { type SerializedSyncLog, WidgetEmbedPanel } from "./_components/widget-embed-panel";
 import { generateWidgetKeyForConnections } from "./_components/widget-key-action";
 
@@ -179,10 +180,13 @@ async function loadRecentSyncLogs(
 
 export default async function ConnectionProviderPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ provider: string }>;
+  searchParams?: Promise<{ error?: string; connected?: string }>;
 }) {
   const { provider } = await params;
+  const sp = (await searchParams) ?? {};
 
   // Unknown or legacy (superseded) providers 404 — the accordion never links to
   // a legacy id, but guard anyway so a stale bookmark doesn't render a shell.
@@ -280,6 +284,16 @@ export default async function ConnectionProviderPage({
           ) : undefined
         }
       />
+
+      {provider === "whatsapp" && (
+        <div style={{ marginBottom: 16 }}>
+          <WhatsAppConnectPanel
+            action={connectWhatsApp}
+            connected={serializedConns.some((c) => c.status === "active")}
+            errorCode={sp.error ?? null}
+          />
+        </div>
+      )}
 
       <ProviderDetailClient
         provider={{
