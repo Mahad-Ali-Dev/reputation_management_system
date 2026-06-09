@@ -16,11 +16,15 @@ import { hubspotAdapter } from "./hubspot";
 import { metaAdapter } from "./meta";
 import { makeNoopAdapter } from "./noop";
 import { quickbooksAdapter } from "./quickbooks";
+import { salesforceAdapter } from "./salesforce";
 import { shopifyAdapter } from "./shopify";
 import { squareAdapter } from "./square";
 import { toastAdapter } from "./toast";
 import type { ConnectionAdapter } from "./types";
+import { wixAdapter } from "./wix";
+import { woocommerceAdapter } from "./woocommerce";
 import { xeroAdapter } from "./xero";
+import { zohoAdapter } from "./zoho";
 
 /**
  * Explicit adapter table. Keys are the provider strings used either by the
@@ -30,7 +34,11 @@ import { xeroAdapter } from "./xero";
  */
 const ADAPTERS: Record<string, ConnectionAdapter> = {
   hubspot: hubspotAdapter,
+  salesforce: salesforceAdapter,
+  zoho: zohoAdapter,
   shopify: shopifyAdapter,
+  wix: wixAdapter,
+  woocommerce: woocommerceAdapter,
   quickbooks: quickbooksAdapter,
   xero: xeroAdapter,
   square: squareAdapter,
