@@ -32,6 +32,7 @@ const CHANNEL_OPTIONS: {
   { key: "webchat", label: "Live chat", icon: "chat" },
   { key: "facebook_msg", label: "Facebook", icon: "fb" },
   { key: "instagram_dm", label: "Instagram", icon: "insta" },
+  { key: "whatsapp", label: "WhatsApp", icon: "chat" },
   { key: "email", label: "Email", icon: "mail" },
   { key: "sms", label: "SMS", icon: "phone" },
   { key: "gbp_qa", label: "Google Q&A", icon: "google" },

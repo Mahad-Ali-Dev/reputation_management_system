@@ -25,6 +25,7 @@ const CHANNEL_LABELS: Record<string, { label: string; icon: IconName }> = {
   webchat: { label: "Live chat", icon: "chat" },
   facebook_msg: { label: "Facebook", icon: "fb" },
   instagram_dm: { label: "Instagram", icon: "insta" },
+  whatsapp: { label: "WhatsApp", icon: "chat" },
   email: { label: "Email", icon: "mail" },
   sms: { label: "SMS", icon: "phone" },
   gbp_qa: { label: "Google Q&A", icon: "google" },

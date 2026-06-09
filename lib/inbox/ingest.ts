@@ -84,7 +84,14 @@ async function softIngest<T>(
 // ---------------------------------------------------------------------------
 
 /** Canonical InboxThread.channel values an inbound message can map to. */
-export type InboxChannel = "email" | "facebook_msg" | "instagram_dm" | "gbp_qa" | "webchat" | "sms";
+export type InboxChannel =
+  | "email"
+  | "facebook_msg"
+  | "instagram_dm"
+  | "whatsapp"
+  | "gbp_qa"
+  | "webchat"
+  | "sms";
 
 /** The normalised shape a DM / message webhook produces (one per message). */
 export interface InboundNormalized {
@@ -143,6 +150,8 @@ function channelToSource(channel: InboxChannel): string {
       return "facebook";
     case "instagram_dm":
       return "instagram";
+    case "whatsapp":
+      return "whatsapp";
     case "webchat":
       return "live_chat";
     case "gbp_qa":
@@ -164,6 +173,7 @@ function socialIdFor(
   if (!externalAuthorId) return null;
   if (channel === "facebook_msg") return `facebook:${externalAuthorId}`;
   if (channel === "instagram_dm") return `instagram:${externalAuthorId}`;
+  if (channel === "whatsapp") return `whatsapp:${externalAuthorId}`;
   return null;
 }
 

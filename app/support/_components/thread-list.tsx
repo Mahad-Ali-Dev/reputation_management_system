@@ -16,6 +16,7 @@ const CHANNEL_LABEL: Record<string, string> = {
   email: "Email",
   facebook_msg: "Facebook",
   instagram_dm: "Instagram",
+  whatsapp: "WhatsApp",
   gbp_qa: "Google",
   webchat: "Live Chat",
   sms: "SMS",
@@ -27,6 +28,8 @@ function channelChip(channel: string): string {
     case "facebook_msg":
     case "instagram_dm":
       return "chip--info";
+    case "whatsapp":
+      return "chip--ok";
     case "webchat":
       return "chip--pri";
     case "sms":

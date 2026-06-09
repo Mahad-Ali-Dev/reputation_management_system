@@ -19,6 +19,7 @@ const CHANNEL_LABEL: Record<string, string> = {
   email: "Email",
   facebook_msg: "Facebook",
   instagram_dm: "Instagram",
+  whatsapp: "WhatsApp",
   gbp_qa: "Google Business",
   webchat: "Website chat",
   sms: "SMS",

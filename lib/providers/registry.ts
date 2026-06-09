@@ -92,6 +92,20 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     logoEmoji: "📷",
     docsUrl: "https://developers.facebook.com/docs/instagram-api",
   },
+  whatsapp: {
+    id: "whatsapp",
+    displayName: "WhatsApp Business",
+    category: "social",
+    description: "Read + reply to WhatsApp Business messages in the Unified Inbox.",
+    ready: false,
+    blockerNote:
+      "Requires Meta App Review + a WhatsApp Business (Cloud API) number. We've built the webhook + send path; submit your app at developers.facebook.com, then paste the App ID/Secret.",
+    scopes: ["whatsapp_business_messaging", "whatsapp_business_management"],
+    oauthUrl: "https://www.facebook.com/v21.0/dialog/oauth",
+    tokenUrl: "https://graph.facebook.com/v21.0/oauth/access_token",
+    logoEmoji: "💬",
+    docsUrl: "https://developers.facebook.com/docs/whatsapp/cloud-api",
+  },
   twitter: {
     id: "twitter",
     displayName: "X (Twitter)",

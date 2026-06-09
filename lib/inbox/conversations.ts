@@ -21,6 +21,7 @@ import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { softInbox } from "./fail-soft";
+import { dispatchWhatsAppReply } from "./whatsapp-send";
 
 /** Map an InboxThread.channel → the canonical Contact `source` key. */
 function channelToSource(channel: string): string {
@@ -29,6 +30,8 @@ function channelToSource(channel: string): string {
       return "facebook";
     case "instagram_dm":
       return "instagram";
+    case "whatsapp":
+      return "whatsapp";
     case "webchat":
       return "live_chat";
     case "gbp_qa":
@@ -64,6 +67,7 @@ function identityFromParticipant(
   if (externalAuthorId) {
     if (channel === "facebook_msg") socialId = `facebook:${externalAuthorId}`;
     else if (channel === "instagram_dm") socialId = `instagram:${externalAuthorId}`;
+    else if (channel === "whatsapp") socialId = `whatsapp:${externalAuthorId}`;
   }
   return { email, phone, socialId, name };
 }
@@ -107,7 +111,13 @@ export async function sendMessage(input: SendMessageInput): Promise<SentMessage 
         // but we need its channel/participant for the capture + status reset).
         const thread = await tx.inboxThread.findUnique({
           where: { id: input.threadId },
-          select: { id: true, channel: true, participant: true, status: true },
+          select: {
+            id: true,
+            channel: true,
+            participant: true,
+            status: true,
+            externalThreadId: true,
+          },
         });
         if (!thread) return null;
 
@@ -145,7 +155,12 @@ export async function sendMessage(input: SendMessageInput): Promise<SentMessage 
           },
         });
 
-        return { msg, channel: thread.channel, participant: thread.participant };
+        return {
+          msg,
+          channel: thread.channel,
+          participant: thread.participant,
+          externalThreadId: thread.externalThreadId,
+        };
       }),
     null,
     { event: "inbox.sendMessage.failed", context: { orgId: input.orgId } },
@@ -167,6 +182,19 @@ export async function sendMessage(input: SendMessageInput): Promise<SentMessage 
         title: "Replied in Unified Inbox",
         externalRef: `inbox-reply:${result.msg.id}`,
       },
+    });
+  }
+
+  // Per-channel outbound dispatch (mirrors how a FB/IG reply would transmit):
+  // store-first (above), then best-effort delivery. Fire-and-forget so a delivery
+  // failure never blocks or rolls back the persisted reply.
+  if (result.channel === "whatsapp" && result.externalThreadId) {
+    void dispatchWhatsAppReply({
+      orgId: input.orgId,
+      to: result.externalThreadId,
+      body,
+    }).catch(() => {
+      /* dispatchWhatsAppReply is already fail-soft; this guards the void promise */
     });
   }
 

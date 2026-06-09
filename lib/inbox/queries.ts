@@ -19,6 +19,7 @@ export const INBOX_CHANNELS = [
   "email",
   "facebook_msg",
   "instagram_dm",
+  "whatsapp",
   "gbp_qa",
   "webchat",
   "sms",

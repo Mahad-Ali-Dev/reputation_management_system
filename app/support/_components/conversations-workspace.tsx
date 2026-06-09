@@ -61,6 +61,7 @@ const CHANNEL_PILLS: { key: string; label: string }[] = [
   { key: "gbp_qa", label: "Google" },
   { key: "facebook_msg", label: "Facebook" },
   { key: "instagram_dm", label: "Instagram" },
+  { key: "whatsapp", label: "WhatsApp" },
   { key: "email", label: "Email" },
   { key: "sms", label: "SMS" },
   { key: "webchat", label: "Live Chat" },

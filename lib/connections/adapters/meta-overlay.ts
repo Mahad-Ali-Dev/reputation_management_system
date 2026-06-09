@@ -77,6 +77,7 @@ export const PROVIDER_META: Record<string, ProviderMeta> = {
   google_business: { connType: "oauth", syncs: "reviews" },
   // ── Social (combined Meta) ──────────────────────────────────────────────
   meta: { connType: "oauth", syncs: "social" },
+  whatsapp: { connType: "oauth", syncs: "social" },
   linkedin: { connType: "oauth", syncs: "social" },
   // ── Embed / import ──────────────────────────────────────────────────────
   website_widget: { connType: "embed", syncs: null },
