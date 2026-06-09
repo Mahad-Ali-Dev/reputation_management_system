@@ -604,6 +604,28 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
   // ─────────────────────────────────────────────────────────────────────────
   // Email Marketing
   // ─────────────────────────────────────────────────────────────────────────
+  gmail: {
+    id: "gmail",
+    displayName: "Gmail",
+    category: "email_marketing",
+    description:
+      "Two-way mailbox sync — customer emails appear in the Unified Inbox and replies send from your Gmail.",
+    ready: true,
+    // Reuses the existing Google OAuth app (AUTH_GOOGLE_ID/SECRET) — just adds
+    // the Gmail read + send scopes. Connect/callback live under
+    // /api/connections/gmail/*.
+    scopes: [
+      "openid",
+      "email",
+      "profile",
+      "https://www.googleapis.com/auth/gmail.readonly",
+      "https://www.googleapis.com/auth/gmail.send",
+    ],
+    oauthUrl: "https://accounts.google.com/o/oauth2/v2/auth",
+    tokenUrl: "https://oauth2.googleapis.com/token",
+    logoEmoji: "📧",
+    docsUrl: "https://developers.google.com/gmail/api",
+  },
   mailchimp: {
     id: "mailchimp",
     displayName: "Mailchimp",

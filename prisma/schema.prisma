@@ -764,6 +764,11 @@ model Connection {
   // the Connected Systems table without a join. idle | syncing | error.
   syncStatus       String?  @map("sync_status")
   syncError        String?  @map("sync_error")
+  // Generic per-connection sync cursor. For the gmail provider this holds the
+  // last processed Gmail message internalDate (epoch ms, as a string) so the
+  // poller only fetches newer messages each run. Nullable + free-text so other
+  // providers can reuse it without another schema change.
+  syncCursor       String?  @map("sync_cursor")
   createdAt        DateTime @default(now()) @map("created_at")
 
   organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Restrict)

@@ -20,6 +20,7 @@ import type { Prisma } from "@prisma/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
+import { dispatchGmailReply } from "@/lib/gmail/send";
 import { softInbox } from "./fail-soft";
 import { dispatchWhatsAppReply } from "./whatsapp-send";
 
@@ -72,6 +73,19 @@ function identityFromParticipant(
   return { email, phone, socialId, name };
 }
 
+/**
+ * Pull the original RFC822 `Message-Id` an email ingest stashed on the inbound
+ * message's `attachments` JSON (see `gmailMessageToInbound`). Used to thread a
+ * Gmail reply via In-Reply-To/References. Returns null when absent.
+ */
+function rfc822MessageIdOf(attachments: unknown): string | null {
+  if (attachments && typeof attachments === "object") {
+    const v = (attachments as Record<string, unknown>).rfc822MessageId;
+    if (typeof v === "string" && v) return v;
+  }
+  return null;
+}
+
 export type SendMessageInput = {
   orgId: string;
   threadId: string;
@@ -117,6 +131,15 @@ export async function sendMessage(input: SendMessageInput): Promise<SentMessage 
             participant: true,
             status: true,
             externalThreadId: true,
+            subject: true,
+            // Newest inbound message — used by the email/Gmail dispatch to pull
+            // the original RFC822 Message-Id for In-Reply-To/References threading.
+            messages: {
+              where: { direction: "inbound" },
+              orderBy: { sentAt: "desc" },
+              take: 1,
+              select: { externalId: true, attachments: true },
+            },
           },
         });
         if (!thread) return null;
@@ -160,6 +183,8 @@ export async function sendMessage(input: SendMessageInput): Promise<SentMessage 
           channel: thread.channel,
           participant: thread.participant,
           externalThreadId: thread.externalThreadId,
+          subject: thread.subject,
+          lastInbound: thread.messages?.[0] ?? null,
         };
       }),
     null,
@@ -195,6 +220,25 @@ export async function sendMessage(input: SendMessageInput): Promise<SentMessage 
       body,
     }).catch(() => {
       /* dispatchWhatsAppReply is already fail-soft; this guards the void promise */
+    });
+  }
+
+  // Email replies originating from a connected Gmail mailbox transmit via the
+  // Gmail API. The recipient is the inbound participant's address; threading
+  // uses the Gmail thread id (externalThreadId) + the original RFC822
+  // Message-Id stashed on the last inbound message's attachments at ingest.
+  if (result.channel === "email" && ident.email) {
+    const rfc822 = rfc822MessageIdOf(result.lastInbound?.attachments);
+    void dispatchGmailReply({
+      orgId: input.orgId,
+      to: ident.email,
+      subject: result.subject,
+      body,
+      threadId: result.externalThreadId,
+      inReplyTo: rfc822,
+      references: rfc822,
+    }).catch(() => {
+      /* dispatchGmailReply is already fail-soft; this guards the void promise */
     });
   }
 
