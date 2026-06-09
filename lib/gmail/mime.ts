@@ -39,20 +39,38 @@ export function ensureReplySubject(subject: string | null | undefined): string {
 /** Normalize a Message-Id to be angle-bracketed (`<id>`), as RFC822 requires. */
 export function bracketMessageId(id: string | null | undefined): string | null {
   if (!id) return null;
-  const trimmed = id.trim();
+  // Strip CR/LF/control chars first — a Message-Id is echoed into the
+  // In-Reply-To/References headers, so an attacker-controlled inbound id could
+  // otherwise inject a header break.
+  const trimmed = sanitizeHeaderValue(id).trim();
   if (!trimmed) return null;
   if (trimmed.startsWith("<") && trimmed.endsWith(">")) return trimmed;
   return `<${trimmed.replace(/^<|>$/g, "")}>`;
 }
 
 /**
+ * Strip CR/LF (and other control chars) from a single-line header value to
+ * prevent header injection — a `\r\n` smuggled through a subject/recipient could
+ * otherwise inject extra headers (Bcc:, …) or split the body. RFC5322 unstructured
+ * header values are single-line; we collapse any folding/control chars to spaces.
+ */
+export function sanitizeHeaderValue(value: string): string {
+  // Strip CR/LF and all other C0 control chars + DEL, collapse runs, trim. This
+  // neutralises header injection while leaving printable characters intact.
+  // eslint-disable-next-line no-control-regex
+  return value.replace(/[\x00-\x1F\x7F]+/g, " ").replace(/ {2,}/g, " ").trim();
+}
+
+/**
  * Encode a header value that may contain non-ASCII as an RFC2047 "encoded-word"
- * (UTF-8, base64). ASCII-only values pass through unchanged.
+ * (UTF-8, base64). ASCII-only values pass through unchanged. CR/LF/control chars
+ * are stripped first so an ASCII value can never inject a header break.
  */
 export function encodeHeaderValue(value: string): string {
+  const safe = sanitizeHeaderValue(value);
   // eslint-disable-next-line no-control-regex
-  if (/^[\x00-\x7F]*$/.test(value)) return value;
-  const b64 = Buffer.from(value, "utf8").toString("base64");
+  if (/^[\x00-\x7F]*$/.test(safe)) return safe;
+  const b64 = Buffer.from(safe, "utf8").toString("base64");
   return `=?UTF-8?B?${b64}?=`;
 }
 
@@ -65,8 +83,10 @@ export function buildReplyMime(args: BuildReplyMimeArgs): string {
   const references = buildReferences(args.references, inReplyTo);
 
   const headers: string[] = [
-    `From: ${args.from}`,
-    `To: ${args.to}`,
+    // Sanitize address headers too: a CR/LF smuggled through `to`/`from` would
+    // otherwise inject arbitrary headers (Bcc:, …) or split the body.
+    `From: ${sanitizeHeaderValue(args.from)}`,
+    `To: ${sanitizeHeaderValue(args.to)}`,
     `Subject: ${encodeHeaderValue(args.subject)}`,
     "MIME-Version: 1.0",
     'Content-Type: text/plain; charset="UTF-8"',
