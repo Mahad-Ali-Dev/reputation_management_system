@@ -88,6 +88,7 @@ model Organization {
   roiSettings          RoiSettings[]
   autopilotDigestRuns  AutopilotDigestRun[]
   dashboardBriefings   DashboardBriefing[]
+  meetingRequests      MeetingRequest[]
 
   @@index([plan])
   @@index([stripeCustomerId])
@@ -1819,6 +1820,39 @@ model WidgetConfig {
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@map("widget_configs")
+}
+
+/// Owner: 09_inbox. Meeting/appointment requests captured by the public chat
+/// widget (ReviewBoost parity). A website visitor asks to book a meeting; the
+/// row lands in the operator queue at /support/meetings where a manager moves it
+/// through new → contacted → scheduled/declined.
+///
+/// TENANT table: org-scoped + RLS + GRANT to app_tenant_user. The public capture
+/// endpoint inserts via an org-scoped `withTenant` write (org derived from the
+/// widget's verified JWT, never raw input); the queue UI reads/updates under RLS.
+///
+/// FAIL-SOFT: part of the meeting_requests delta — the public endpoint + queue
+/// degrade gracefully (Postgres 42P01) until the migration is applied.
+model MeetingRequest {
+  id               String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId   String    @map("organization_id") @db.Uuid
+  establishmentId  String?   @map("establishment_id") @db.Uuid
+  name             String
+  email            String?
+  phone            String?
+  message          String?
+  preferredTime    String?   @map("preferred_time")
+  source           String    @default("chat")
+  status           String    @default("new") // new | contacted | scheduled | declined
+  handledByUserId  String?   @map("handled_by_user_id") @db.Uuid
+  createdAt        DateTime  @default(now()) @map("created_at")
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("meeting_requests")
 }
 
 /// Owner: 12_contacts. Source of truth for tags, mirrored to Contact.tags[].

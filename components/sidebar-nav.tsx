@@ -70,6 +70,7 @@ const NAV: NavItem[] = [
 
   { group: "Social & Messaging" },
   { href: "/support", label: "Unified Inbox", icon: "chat", pro: "advanced_inbox" },
+  { href: "/support/meetings", label: "Meeting Requests", icon: "cal" },
   { href: "/social/posts", label: "Post Creator", icon: "share", pro: "image_creatives" },
 
   { group: "Engagement & CRM" },
@@ -89,6 +90,10 @@ function pathMatches(pathname: string, href: string): boolean {
   if (href === "/reviews") {
     // keep Review Feed from swallowing /reviews/dispute (its own item)
     return pathname === "/reviews" || /^\/reviews\/(?!dispute)[^/]+$/.test(pathname);
+  }
+  if (href === "/support") {
+    // keep Unified Inbox from swallowing /support/meetings (its own item)
+    return pathname === "/support" || /^\/support\/(?!meetings)[^/]+/.test(pathname);
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

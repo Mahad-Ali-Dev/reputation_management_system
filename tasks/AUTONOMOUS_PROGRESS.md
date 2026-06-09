@@ -46,6 +46,17 @@ Triaged findings → fix batches:
 
 ## Log
 (Newest first — updated as batches land.)
+- **Parity Wave A COMMITTED + pushed** — verified green (tsc 0, next build 45/45, tests pass).
+  Built: secure `/accept-invite` flow (token validation + atomic single-use consume +
+  callbackUrl login, 8 unit tests) and the chat **meeting-request queue** (MeetingRequest
+  model + migration + RLS, public widget capture endpoint, /support/meetings queue UI +
+  nav). Fixed two build-breakers the agents introduced: null-narrowing in acceptInvite, and
+  a `"use server"` non-function export (MEETING_STATUSES → constants.ts). NOTE: the
+  meeting_requests migration must be applied in prod (`prisma migrate deploy`).
+- Parity Wave A launched: /accept-invite flow + chat meeting-request queue (build-gated).
+- **Batch 1 COMMITTED + pushed** (`705248a`) — verified green (tsc 0, next build 45/45,
+  918 tests). Fixed: /reviews onClick crash, 4 broken links, RBAC role-gating on 7 action
+  files, SSRF DNS-rebind, dead SQLi component deleted, email-attr escaping, inbox assignee check.
 - Batch 1 launched: reviews crash + broken links + RBAC + security hardening (build-gated).
 - Discovery sweep complete (7 agents). Baseline green. Findings triaged above.
 - Run start: discovery workflow launched.

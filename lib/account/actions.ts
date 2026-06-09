@@ -1,10 +1,13 @@
 "use server";
 
 import { createHash, randomBytes } from "node:crypto";
-import { signOut } from "@/lib/auth/config";
+import { auth, signOut } from "@/lib/auth/config";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
+import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { redirect } from "next/navigation";
+import { evaluateInvite } from "./invite-validation";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
@@ -149,6 +152,164 @@ export async function inviteTeammate(form: FormData): Promise<void> {
   );
 
   revalidatePath("/settings/account");
+}
+
+// ============================================================
+// Accept invite — pre-membership flow for an invited teammate
+// ============================================================
+
+/**
+ * Shape returned by `lookupInvite` — a read-only validation result the
+ * /accept-invite page renders without consuming the invitation.
+ */
+export type InviteLookup =
+  | { ok: true; orgName: string; role: string; email: string }
+  | { ok: false; reason: "not_found" | "expired" | "used" | "wrong_email" };
+
+/**
+ * Read-only validation of an invite token for the currently authenticated user.
+ *
+ * The lookup is by tokenHash on the base (BYPASSRLS) client — same pattern as
+ * the public survey-token page — because the accepting user is NOT yet a member
+ * of the inviting org, so the tenant-scoped RLS context can't find the row. The
+ * token hash is a 24-byte secret, so a direct hash lookup is safe and the read
+ * never exposes cross-tenant data beyond the org name the invite is for.
+ *
+ * Does NOT consume the invitation — that only happens in `acceptInvite`.
+ */
+export async function lookupInvite(token: string): Promise<InviteLookup> {
+  const session = await auth();
+  const sessionEmail = session?.user?.email?.toLowerCase();
+  if (!sessionEmail) return { ok: false, reason: "not_found" };
+
+  if (!token || token.length < 8 || token.length > 200) {
+    return { ok: false, reason: "not_found" };
+  }
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+
+  const invite = await prisma.invitation.findFirst({
+    where: { tokenHash },
+    select: {
+      email: true,
+      role: true,
+      expiresAt: true,
+      acceptedAt: true,
+      organization: { select: { name: true } },
+    },
+  });
+  // The invited email must match the signed-in user (citext column, but we also
+  // compare case-insensitively in app code so behaviour is independent of
+  // collation). evaluateInvite is the single source of accept/reject rules.
+  const verdict = evaluateInvite(invite, sessionEmail);
+  if (!verdict.ok) return { ok: false, reason: verdict.reason };
+  // verdict.ok already implies invite !== null (evaluateInvite returns not_found
+  // for null); this guard makes that explicit for the type checker.
+  if (!invite) return { ok: false, reason: "not_found" };
+
+  return {
+    ok: true,
+    orgName: invite.organization.name,
+    role: invite.role,
+    email: invite.email,
+  };
+}
+
+/**
+ * Accept a team invitation. Idempotently creates the membership and atomically
+ * marks the invitation accepted (single-use). The created membership's role is
+ * ALWAYS the role stored on the invitation — never anything the client supplies.
+ *
+ * Security properties:
+ *   - Requires an authenticated session; the signed-in email MUST equal the
+ *     invitation email (case-insensitive) or the request is rejected.
+ *   - Rejects expired / already-accepted invitations.
+ *   - The `updateMany(... acceptedAt: null)` guard makes acceptance a single
+ *     atomic compare-and-set: two concurrent accepts can't both consume it.
+ */
+export async function acceptInvite(form: FormData): Promise<void> {
+  const session = await auth();
+  const userId = session?.user?.id;
+  const sessionEmail = session?.user?.email?.toLowerCase();
+  if (!userId || !sessionEmail) redirect("/login");
+
+  const token = ((form.get("token") as string) || "").trim();
+  if (!token || token.length < 8 || token.length > 200) {
+    throw new Error("Invalid invitation token.");
+  }
+  const tokenHash = createHash("sha256").update(token).digest("hex");
+
+  // Base-client lookup (see lookupInvite) — the user isn't a member yet.
+  const invite = await prisma.invitation.findFirst({
+    where: { tokenHash },
+    select: {
+      id: true,
+      organizationId: true,
+      email: true,
+      role: true,
+      expiresAt: true,
+      acceptedAt: true,
+    },
+  });
+  const verdict = evaluateInvite(invite, sessionEmail);
+  if (!verdict.ok) {
+    const messages: Record<string, string> = {
+      not_found: "Invitation not found.",
+      used: "This invitation has already been used.",
+      expired: "This invitation has expired.",
+      wrong_email: "This invitation was sent to a different email address.",
+    };
+    throw new Error(messages[verdict.reason] ?? "Invitation could not be accepted.");
+  }
+  // verdict.ok implies invite !== null — make it explicit for the type checker.
+  if (!invite) throw new Error("Invitation not found.");
+
+  // The stored role is the source of truth — never user-supplied.
+  const role = invite.role;
+  const orgId = invite.organizationId;
+
+  await withTenant(orgId, async (tx) => {
+    // Atomic single-use consume: only succeeds if it's still unaccepted.
+    const consumed = await tx.invitation.updateMany({
+      where: { id: invite.id, acceptedAt: null },
+      data: { acceptedAt: new Date() },
+    });
+    if (consumed.count === 0) {
+      // Lost the race (already accepted between our read and this write).
+      throw new Error("This invitation has already been used.");
+    }
+
+    // Idempotently create the membership. The unique (organizationId, userId)
+    // constraint means a re-run (or an already-a-member user) is a no-op.
+    const existing = await tx.membership.findFirst({
+      where: { organizationId: orgId, userId },
+      select: { id: true },
+    });
+    if (!existing) {
+      await tx.membership.create({
+        data: { organizationId: orgId, userId, role },
+      });
+    }
+
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "team.invite.accepted",
+        resourceType: "invitation",
+        resourceId: invite.id,
+        afterData: { role, email: invite.email, alreadyMember: !!existing },
+      },
+    });
+  });
+
+  logger.info(
+    { event: "team.invite.accepted", orgId, userId, role },
+    "team invitation accepted",
+  );
+
+  // New membership exists; send them into the app.
+  redirect("/dashboard");
 }
 
 const RemoveMemberSchema = z.object({

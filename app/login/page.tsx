@@ -3,7 +3,8 @@
 import { Icon } from "@/components/shell/icon";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useState } from "react";
 import { googleSignIn } from "./actions";
 
 /**
@@ -32,6 +33,23 @@ import { googleSignIn } from "./actions";
 const HERO_BG = "#0f172a"; // --ink (deep slate navy, matches artboard #101820)
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <LoginInner />
+    </Suspense>
+  );
+}
+
+function LoginInner() {
+  const sp = useSearchParams();
+  // Honor a post-login return path (e.g. the /accept-invite flow sends invitees
+  // here as /login?callbackUrl=/accept-invite?token=...). Only allow same-site
+  // relative paths to avoid an open-redirect.
+  const rawCallback = sp.get("callbackUrl") || "/dashboard";
+  const callbackUrl = rawCallback.startsWith("/") && !rawCallback.startsWith("//")
+    ? rawCallback
+    : "/dashboard";
+
   const [email, setEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [sent, setSent] = useState(false);
@@ -43,7 +61,7 @@ export default function LoginPage() {
       await signIn("resend", {
         email,
         redirect: false,
-        callbackUrl: "/dashboard",
+        callbackUrl,
       });
       setSent(true);
     } finally {
@@ -341,6 +359,7 @@ export default function LoginPage() {
                   correctly set. Bypasses the broken next-auth/react client
                   helper (which bakes localhost into the bundle in v5 beta.25). */}
               <form action={googleSignIn}>
+                <input type="hidden" name="callbackUrl" value={callbackUrl} />
                 <button
                   type="submit"
                   className="btn btn--lg"

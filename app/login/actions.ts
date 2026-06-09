@@ -13,6 +13,9 @@ import { signIn } from "@/lib/auth/config";
  * so the redirect_uri sent to Google was wrong. Server actions avoid the
  * client SDK entirely.
  */
-export async function googleSignIn() {
-  await signIn("google", { redirectTo: "/dashboard" });
+export async function googleSignIn(form?: FormData) {
+  const raw = (form?.get("callbackUrl") as string) || "/dashboard";
+  // Only allow same-site relative paths to avoid an open-redirect.
+  const redirectTo = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/dashboard";
+  await signIn("google", { redirectTo });
 }

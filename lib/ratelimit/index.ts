@@ -48,6 +48,7 @@ const LIMITER_CONFIGS = {
   bulk_csv: { max: 5, windowSec: 3600, prefix: "rl:bulk_csv" }, // 5/hour per org
   chatbot_turn: { max: 60, windowSec: 60, prefix: "rl:chatbot" }, // 60/min per visitor
   widget_bootstrap: { max: 30, windowSec: 60, prefix: "rl:widget_bs" }, // 30/min per IP
+  widget_meeting: { max: 5, windowSec: 300, prefix: "rl:widget_meeting" }, // 5/5min per visitor — public meeting-request capture
   login_attempt: { max: 10, windowSec: 300, prefix: "rl:login" }, // 10/5min per email
   signup_attempt: { max: 3, windowSec: 3600, prefix: "rl:signup" }, // 3/hour per IP
   scan_redirect: { max: 60, windowSec: 60, prefix: "rl:scan" }, // 60/min per IP per slug
