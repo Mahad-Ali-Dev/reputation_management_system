@@ -42,10 +42,10 @@
     --rl-muted-2: #94a3b8;
     --rl-muted-3: #cbd5e1;
 
-    /* line — warm, light hairlines (artboard: #dfe7e6) */
-    --line: #e8ede9;
-    --line-2: #dfe7e6;
-    --line-3: #c9d4cf;
+    /* line — calmer, softer hairlines for a gentler card edge */
+    --line: #edf1ee;
+    --line-2: #e3eae6;
+    --line-3: #cfd9d4;
 
     /* signature royal blue + violet accent (artboard: Signal #2457ff) */
     --pri: #2457ff;
@@ -78,31 +78,31 @@
       sans-serif;
     --f-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-    /* radii — rounder, more modern cards */
-    --r-xs: 6px;
-    --r-sm: 8px;
-    --r: 10px;
-    --r-md: 16px;
-    --r-lg: 20px;
-    --r-xl: 26px;
+    /* radii — softer, rounder cards for a modern, friendly feel */
+    --r-xs: 8px;
+    --r-sm: 10px;
+    --r: 12px;
+    --r-md: 18px;
+    --r-lg: 24px;
+    --r-xl: 30px;
     --r-pill: 999px;
 
-    /* shadow — soft, cool, layered (premium: hairline + a real, diffuse drop) */
-    --sh: 0 1px 2px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(15, 23, 42, 0.045);
-    --sh-1: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -16px rgba(15, 23, 42, 0.10);
-    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.05), 0 8px 24px -12px rgba(15, 23, 42, 0.08);
-    --sh-2: 0 1px 2px rgba(15, 23, 42, 0.05), 0 14px 34px -14px rgba(15, 23, 42, 0.14),
-      0 4px 12px -6px rgba(15, 23, 42, 0.07);
-    --sh-pop: 0 24px 56px -18px rgba(15, 23, 42, 0.24), 0 8px 18px -8px rgba(15, 23, 42, 0.12);
+    /* shadow — soft, cool, layered (lower opacity + larger blur = airy depth) */
+    --sh: 0 1px 2px rgba(15, 23, 42, 0.03), 0 0 0 1px rgba(15, 23, 42, 0.04);
+    --sh-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.09);
+    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.035), 0 12px 32px -16px rgba(15, 23, 42, 0.07);
+    --sh-2: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 44px -18px rgba(15, 23, 42, 0.12), 0 6px 16px
+      -8px rgba(15, 23, 42, 0.06);
+    --sh-pop: 0 30px 66px -22px rgba(15, 23, 42, 0.22), 0 10px 22px -10px rgba(15, 23, 42, 0.1);
     --sh-inset: inset 0 0 0 1px var(--line);
     --sh-glow: 0 0 0 4px rgba(36, 87, 255, 0.14);
     /* premium primary-button shadow: soft royal-blue glow + crisp seat */
-    --sh-pri: 0 1px 2px rgba(15, 23, 42, 0.12), 0 8px 18px -6px rgba(36, 87, 255, 0.42),
-      inset 0 1px 0 rgba(255, 255, 255, 0.16);
-    --sh-pri-hover: 0 1px 2px rgba(15, 23, 42, 0.14), 0 12px 24px -6px rgba(36, 87, 255, 0.5),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
-    --sh-ink: 0 1px 2px rgba(15, 23, 42, 0.2), 0 8px 18px -6px rgba(15, 23, 42, 0.38),
-      inset 0 1px 0 rgba(255, 255, 255, 0.08);
+    --sh-pri: 0 1px 2px rgba(15, 23, 42, 0.12), 0 8px 18px -6px rgba(36, 87, 255, 0.42), inset 0 1px
+      0 rgba(255, 255, 255, 0.16);
+    --sh-pri-hover: 0 1px 2px rgba(15, 23, 42, 0.14), 0 12px 24px -6px rgba(36, 87, 255, 0.5), inset
+      0 1px 0 rgba(255, 255, 255, 0.2);
+    --sh-ink: 0 1px 2px rgba(15, 23, 42, 0.2), 0 8px 18px -6px rgba(15, 23, 42, 0.38), inset 0 1px 0
+      rgba(255, 255, 255, 0.08);
 
     /* premium gradients — reusable accents (artboard-locked: royal blue + teal) */
     --grad-pri: linear-gradient(180deg, #2457ff 0%, #1b3fd1 100%);
@@ -117,6 +117,12 @@
     /* shell numeric */
     --h-tb: 64px;
     --w-sb: 248px;
+
+    /* spacing — generous, airy rhythm for cards + sections (soft-UI refresh).
+       Shared tokens so card padding + section gaps propagate everywhere. */
+    --pad-card: 24px;
+    --pad-card-head: 18px 24px;
+    --gap-section: 20px;
   }
 
   .dark {
@@ -147,6 +153,182 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer base {
+  .rl-theme {
+    --bg: #fbfaf6;
+    --bg-2: #f4f8f5;
+    --surface: #ffffff;
+    --surface-2: #faf9f4;
+    --surface-3: #f3f5f0;
+    --pri: #2457ff;
+    --pri-50: #eff6ff;
+    --pri-100: #dbeafe;
+    --pri-700: #1b3fd1;
+    --pri-900: #1a347f;
+    --text: #1a1f2e;
+    --text-muted: #5b6472;
+    --text-subtle: #8a929e;
+    --text-on-pri: #ffffff;
+    --border: rgba(16, 24, 40, 0.08);
+    --border-strong: rgba(16, 24, 40, 0.14);
+    --success: #16a34a;
+    --success-bg: #ecfdf3;
+    --success-border: #abefc6;
+    --warning: #d97706;
+    --warning-bg: #fffaeb;
+    --warning-border: #fde68a;
+    --danger: #dc2626;
+    --danger-bg: #fef3f2;
+    --danger-border: #fecdca;
+    --info: var(--pri);
+    --info-bg: var(--pri-50);
+    --rating-filled: #f5a623;
+    --rating-empty: #e6e8eb;
+    --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.04);
+    --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.04), 0 8px 24px rgba(16, 24, 40, 0.06);
+    --shadow-lg: 0 1px 2px rgba(16, 24, 40, 0.04), 0 16px 40px rgba(16, 24, 40, 0.08);
+    --backdrop: rgba(16, 24, 40, 0.4);
+    --ease-out: cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--f-ui);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: geometricPrecision;
+  }
+}
+
+@layer components {
+  .rl-display {
+    color: var(--text);
+    font-size: 44px;
+    font-weight: 700;
+    letter-spacing: -0.03em;
+    line-height: 48px;
+  }
+
+  .rl-h1 {
+    color: var(--text);
+    font-size: 30px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 36px;
+  }
+
+  .rl-h2 {
+    color: var(--text);
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 30px;
+  }
+
+  .rl-h3 {
+    color: var(--text);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    line-height: 26px;
+  }
+
+  .rl-body-lg {
+    color: var(--text-muted);
+    font-size: 16px;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 24px;
+  }
+
+  .rl-body {
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 21px;
+  }
+
+  .rl-body-strong {
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 21px;
+  }
+
+  .rl-label {
+    color: var(--text);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0;
+    line-height: 16px;
+  }
+
+  .rl-overline {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 16px;
+    text-transform: uppercase;
+  }
+
+  .rl-caption {
+    color: var(--text-subtle);
+    font-size: 12px;
+    font-weight: 400;
+    letter-spacing: 0;
+    line-height: 16px;
+  }
+}
+
+@layer utilities {
+  .rl-tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .rl-focus-ring {
+    outline: none;
+  }
+
+  .rl-focus-ring:focus-visible {
+    box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--pri);
+  }
+}
+
+@keyframes rl-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (max-width: 639px) {
+  .rl-theme .rl-display {
+    font-size: 32px;
+    line-height: 36px;
+  }
+
+  .rl-theme .rl-h1 {
+    font-size: 24px;
+    line-height: 30px;
+  }
+
+  .rl-theme .rl-h2 {
+    font-size: 20px;
+    line-height: 26px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rl-theme *,
+  .rl-theme *::before,
+  .rl-theme *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
   }
 }
 

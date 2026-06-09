@@ -18,12 +18,17 @@
  */
 
 import { Resend } from "resend";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
   if (_resend) return _resend;
   const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error("RESEND_API_KEY not set");
+  if (!key) {
+    assertSendableEmailConfig(process.env.EMAIL_FROM);
+    throw new Error("RESEND_API_KEY not set");
+  }
+  assertSendableEmailConfig(process.env.EMAIL_FROM);
   _resend = new Resend(key);
   return _resend;
 }

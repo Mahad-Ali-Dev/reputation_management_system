@@ -171,7 +171,7 @@ export function BusinessInsightsBand({
   hasData: boolean;
 }) {
   return (
-    <div className="grid-3" style={{ gap: 14 }}>
+    <div className="grid-3">
       {/* Listings */}
       <div className="ds-card">
         <div className="ds-card__head">
@@ -346,7 +346,7 @@ export function AiChannelFunnel({
   funnel: FunnelStage[];
 }) {
   return (
-    <div className="grid-3" style={{ gap: 14 }}>
+    <div className="grid-3">
       {/* AI insight gradient card */}
       <div
         className="viz-banner"

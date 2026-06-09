@@ -1,3 +1,4 @@
+import { planForStatus, syncSubscriptionFromStripe } from "@/lib/billing/sync";
 import { prisma } from "@/lib/db/client";
 import { provisionDevicesForOrder } from "@/lib/hardware/provision";
 import { logger } from "@/lib/logger";
@@ -130,66 +131,23 @@ async function syncSubscription(event: Stripe.Event) {
 
   const eventCreatedAt = new Date(event.created * 1000);
 
-  // Newer Stripe API versions moved current_period_end onto items; fall back if missing.
-  const periodEndUnix =
-    (sub as unknown as { current_period_end?: number }).current_period_end ??
-    (sub.items?.data?.[0] as unknown as { current_period_end?: number } | undefined)
-      ?.current_period_end ??
-    null;
-
-  const data = {
-    organizationId: orgId,
-    stripeSubscriptionId: sub.id,
-    plan: sub.items.data[0]?.price.id ?? "unknown",
-    status: sub.status,
-    currentPeriodEnd: periodEndUnix ? new Date(periodEndUnix * 1000) : null,
-    cancelAtPeriodEnd: sub.cancel_at_period_end,
-    trialEndsAt: sub.trial_end ? new Date(sub.trial_end * 1000) : null,
-    stripeEventCreatedAt: eventCreatedAt,
-  };
-
-  // Mirror Stripe status onto the org's plan column for fast access checks.
-  // Both writes happen in one transaction so the subscription row and org plan
-  // are never observed in an inconsistent state. The ordering check happens
-  // INSIDE the transaction too so we don't race a sibling webhook.
-  const orgPlan: "pro" | "free" | "past_due" =
-    sub.status === "active" || sub.status === "trialing"
-      ? "pro"
-      : sub.status === "past_due" || sub.status === "unpaid"
-        ? "past_due"
-        : "free";
-
   try {
-    await prisma.$transaction(async (tx) => {
-      const stored = await tx.subscription.findUnique({
-        where: { organizationId: orgId },
-        select: { stripeEventCreatedAt: true },
-      });
-      if (stored?.stripeEventCreatedAt && eventCreatedAt < stored.stripeEventCreatedAt) {
-        logger.info(
-          { orgId, eventId: event.id, event: "webhook.stripe.stale_event" },
-          "skipping out-of-order event",
-        );
-        return;
-      }
-      await tx.subscription.upsert({
-        where: { organizationId: orgId },
-        create: data,
-        update: data,
-      });
-      await tx.organization.update({
-        where: { id: orgId },
-        data: { plan: orgPlan },
-      });
-    });
-    logger.info(
-      { orgId, status: sub.status, orgPlan, event: "subscription.synced" },
-      "subscription synced",
-    );
+    const applied = await syncSubscriptionFromStripe(orgId, sub, eventCreatedAt);
+    if (applied) {
+      logger.info(
+        { orgId, status: sub.status, orgPlan: planForStatus(sub.status), event: "subscription.synced" },
+        "subscription synced",
+      );
+    } else {
+      logger.info(
+        { orgId, eventId: event.id, event: "webhook.stripe.stale_event" },
+        "skipping out-of-order event",
+      );
+    }
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     logger.error(
-      { orgId, error, event: "subscription.sync_failed", data },
+      { orgId, error, event: "subscription.sync_failed", subId: sub.id },
       "subscription upsert failed",
     );
     throw err;

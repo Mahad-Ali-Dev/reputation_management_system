@@ -52,7 +52,9 @@ describe("crawlSite (mocked fetch + DNS)", () => {
 
   function htmlPage(title: string, links: string[]): string {
     const anchors = links.map((l) => `<a href="${l}">link</a>`).join("");
-    return `<html><body><h1>${title}</h1><p>${"content ".repeat(10)}</p>${anchors}</body></html>`;
+    // Enough body text per page to clear crawlSite's MIN_CORPUS_CHARS guard,
+    // mirroring a real content page (not just nav boilerplate).
+    return `<html><body><h1>${title}</h1><p>${"meaningful business content ".repeat(30)}</p>${anchors}</body></html>`;
   }
 
   it("follows same-origin links to maxDepth and concatenates with path separators", async () => {
@@ -98,6 +100,25 @@ describe("crawlSite (mocked fetch + DNS)", () => {
     const result = await crawlSite("https://example.com/", { maxDepth: 3, maxPages: 3 });
     if ("error" in result) throw new Error(`unexpected error: ${result.error}`);
     expect(result.result.pagesCrawled).toBeLessThanOrEqual(3);
+  });
+
+  it("returns too_little_text when the crawl yields almost no readable text", async () => {
+    // Simulates a JS-rendered site served via plain fetch: a tiny shell with
+    // only nav/footer boilerplate, well under MIN_CORPUS_CHARS.
+    // ~120 chars of boilerplate: clears crawlUrl's per-page empty check (>20)
+    // but stays under crawlSite's MIN_CORPUS_CHARS (400) corpus guard.
+    const thin =
+      "<html><body><nav>Home About Services Contact Login</nav><footer>Copyright 2026. All rights reserved. Cookie settings.</footer><div id=app></div></body></html>";
+    globalThis.fetch = (async (input: unknown) => {
+      const url = typeof input === "string" ? input : (input as URL).toString();
+      if (url.endsWith("/robots.txt")) return new Response("", { status: 404 });
+      const stream = new Response(thin).body;
+      return new Response(stream, { status: 200, headers: { "content-type": "text/html" } });
+    }) as typeof fetch;
+
+    const { crawlSite } = await import("@/lib/ai/crawl");
+    const result = await crawlSite("https://example.com/", { maxDepth: 0, maxPages: 1 });
+    expect("error" in result && result.error).toBe("too_little_text");
   });
 
   it("returns an error when the root page can't be fetched", async () => {

@@ -8,6 +8,8 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { orgHasFeature } from "@/lib/billing/feature-access";
+import { syncSubscriptionOnReturn } from "@/lib/billing/sync";
+import { prisma } from "@/lib/db/client";
 import { buildOnboardingChecklist, getOnboardingFacts } from "@/lib/onboarding/facts";
 import { computeHealthScore } from "@/lib/dashboard/health-score";
 import { getCachedBriefing } from "@/lib/dashboard/briefing";
@@ -47,9 +49,26 @@ export const dynamic = "force-dynamic";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string }>;
+  searchParams: Promise<{ checkout?: string; session_id?: string }>;
 }) {
   const { orgId, userName, userEmail, org } = await getOrgContext();
+
+  const params = await searchParams;
+
+  // Sync-on-return after Stripe Checkout. Idempotent with the webhook, scoped
+  // strictly to THIS org's stripeCustomerId (never trusts session_id blindly),
+  // and fail-soft. After it runs we re-read the plan so the success banner only
+  // shows when the org actually reflects pro/active.
+  let checkoutPlan = org.plan;
+  if (params.checkout === "success") {
+    await syncSubscriptionOnReturn(orgId, org.stripeCustomerId, params.session_id ?? null);
+    const refreshed = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { plan: true },
+    });
+    checkoutPlan = refreshed?.plan ?? checkoutPlan;
+  }
+  const checkoutActive = params.checkout === "success" && checkoutPlan === "pro";
 
   const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const [d, setup, facts, autopilot, roiHeadline, hasAutopilot] = await Promise.all([
@@ -77,7 +96,6 @@ export default async function DashboardPage({
   });
 
   const firstName = userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
-  const params = await searchParams;
   const isEmpty = total === 0 && !hasGoogle;
 
   const briefing = await getCachedBriefing(orgId, firstName);
@@ -157,7 +175,7 @@ export default async function DashboardPage({
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]} biz={org.name}>
-      {params.checkout === "success" && (
+      {checkoutActive && (
         <div className="ds-card ds-card--pri" style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}>
           <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
           Subscription active. Welcome to Pro.
@@ -182,15 +200,15 @@ export default async function DashboardPage({
             summary={health.summary}
           />
 
-          <div className="col" style={{ gap: 14 }}>
+          <div className="col" style={{ gap: 20 }}>
             {/* Chart + operational queue */}
             <ReviewChartQueue weeklyReviews={d.weeklyReviews} queue={queue} />
 
             {/* Main feed + right rail */}
             <div className="dash-grid">
-              <div className="col" style={{ gap: 14 }}>
+              <div className="col" style={{ gap: 20 }}>
                 {/* quick actions */}
-                <div className="grid-4" style={{ gap: 12 }}>
+                <div className="grid-4">
                   <QuickAction icon="send" title="Send Review Request" href="/outreach/send" />
                   <QuickAction icon="reply" title="Reply to Reviews" href="/reviews" />
                   <QuickAction icon="share" title="Create Social Post" href="/social/posts" />
@@ -206,7 +224,7 @@ export default async function DashboardPage({
                 />
               </div>
 
-              <div className="col" style={{ gap: 14 }}>
+              <div className="col" style={{ gap: 20 }}>
                 <SetupProgress setup={setup} />
                 <AutopilotCard
                   enabled={autopilot.enabled}
@@ -466,10 +484,10 @@ function SetupProgress({ setup }: { setup: SetupState }) {
 function WelcomeState({ firstName, setup }: { firstName: string; setup: SetupState }) {
   return (
     <>
-      <div className="ds-card welcome" style={{ marginBottom: 14 }}>
-        <EmptyIllustration name="dashboard-welcome" size={180} style={{ marginBottom: 16 }} />
-        <h2 style={{ fontSize: 22, fontWeight: 700, letterSpacing: "-0.02em", margin: "0 0 6px" }}>Welcome to your reputation dashboard, {firstName}!</h2>
-        <p className="dim" style={{ fontSize: 13.5, maxWidth: 460, margin: "0 auto 20px", lineHeight: 1.5 }}>
+      <div className="ds-card welcome" style={{ marginBottom: 20 }}>
+        <EmptyIllustration name="dashboard-welcome" size={340} style={{ marginBottom: 24 }} />
+        <h2 style={{ fontSize: 26, fontWeight: 750, letterSpacing: "-0.025em", margin: "0 0 8px" }}>Welcome to your reputation dashboard, {firstName}!</h2>
+        <p className="dim" style={{ fontSize: 14, maxWidth: 480, margin: "0 auto 24px", lineHeight: 1.6 }}>
           Let's get your data connected so we can show you insights that help you grow.
         </p>
         <div className="row" style={{ gap: 10, justifyContent: "center" }}>
@@ -490,7 +508,7 @@ function WelcomeState({ firstName, setup }: { firstName: string; setup: SetupSta
         </div>
       </div>
 
-      <div className="grid-3" style={{ gap: 14 }}>
+      <div className="grid-3">
         <div className="ds-card">
           <div className="ds-card__head"><div className="row" style={{ gap: 8 }}><Icon name="google" size={15} /><h3 className="ds-card__title">Google Reviews Live Feed</h3></div></div>
           <div style={{ padding: 40, textAlign: "center" }}>

@@ -21,6 +21,15 @@ import { isIP } from "node:net";
 
 const MAX_BYTES = 2 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 10_000;
+/**
+ * Minimum readable text (across the whole crawl) we need before handing a corpus
+ * to the extractor. JS-rendered marketing sites served via plain `fetch` (no
+ * headless browser) often return only nav/footer boilerplate — a few hundred
+ * chars that pass the per-page "not empty" check but yield an empty profile.
+ * Below this we fail with a clear, actionable message instead of silently
+ * building an empty profile.
+ */
+const MIN_CORPUS_CHARS = 400;
 const ALLOWED_CONTENT_TYPES = ["text/html", "text/plain", "application/xhtml+xml"];
 
 export type CrawlError =
@@ -33,7 +42,8 @@ export type CrawlError =
   | "content_too_large"
   | "unsupported_content_type"
   | "too_many_redirects"
-  | "empty_after_strip";
+  | "empty_after_strip"
+  | "too_little_text";
 
 export type CrawlResult = {
   url: string;
@@ -424,11 +434,19 @@ export async function crawlSite(
     return rootError ?? { error: "fetch_failed", details: "no pages crawled" };
   }
 
+  const text = parts.join("\n\n");
+  // Strip the per-page "# /path" headers we added before measuring real content,
+  // so a multi-page crawl of near-empty pages can't pass on header bytes alone.
+  const contentChars = text.replace(/^#\s.*$/gm, "").replace(/\s+/g, " ").trim().length;
+  if (contentChars < MIN_CORPUS_CHARS) {
+    return { error: "too_little_text", details: `${contentChars} chars across ${pagesCrawled} page(s)` };
+  }
+
   return {
     result: {
       rootUrl,
       pagesCrawled,
-      text: parts.join("\n\n"),
+      text,
       fetchedAt: new Date(),
     },
   };

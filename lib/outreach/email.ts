@@ -1,4 +1,5 @@
 import { Resend } from "resend";
+import { assertSendableEmailConfig } from "./email-guard";
 
 /**
  * Resend email sender for review requests.
@@ -13,7 +14,11 @@ let _resend: Resend | null = null;
 function getResend(): Resend {
   if (_resend) return _resend;
   const key = process.env.RESEND_API_KEY;
-  if (!key) throw new Error("RESEND_API_KEY not set");
+  if (!key) {
+    // LOUD warning so the silent failure shows up in logs, then throw as before.
+    assertSendableEmailConfig(process.env.EMAIL_FROM);
+    throw new Error("RESEND_API_KEY not set");
+  }
   _resend = new Resend(key);
   return _resend;
 }
@@ -30,7 +35,12 @@ export async function sendReviewRequestEmail(args: {
   unsubscribeUrl: string;
   fromOverride?: string;
 }): Promise<EmailSendResult> {
-  const from = args.fromOverride ?? process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  // NOTE: the fallback is a VERIFIED address, not the resend.dev sandbox. If
+  // EMAIL_FROM is misconfigured (unset → fallback, or a *.resend.dev sandbox
+  // address), assertSendableEmailConfig emits a loud, deduped warning so the
+  // otherwise-silent sandbox delivery failure is visible in logs.
+  const from = args.fromOverride ?? process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  assertSendableEmailConfig(from);
 
   try {
     const { data, error } = await getResend().emails.send({

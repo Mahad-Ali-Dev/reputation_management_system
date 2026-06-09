@@ -47,4 +47,32 @@ describe("coerceProfile", () => {
     expect(() => coerceProfile(null)).not.toThrow();
     expect(() => coerceProfile(undefined)).not.toThrow();
   });
+
+  it("normalizes hours to HH:MM and drops malformed times", () => {
+    const p = coerceProfile({
+      operating_hours: {
+        monday: { open: "9:00", close: "17:30" }, // single-digit hour -> padded
+        tuesday: { open: "09:00:00", close: "5:00" }, // seconds stripped
+        wednesday: { open: "25:00", close: "10:00" }, // out-of-range open dropped
+        thursday: { open: "noon", close: "" }, // non-time fully dropped
+      },
+    });
+    expect(p.operatingHours.monday).toEqual({ open: "09:00", close: "17:30" });
+    expect(p.operatingHours.tuesday).toEqual({ open: "09:00", close: "05:00" });
+    expect(p.operatingHours.wednesday).toEqual({ open: undefined, close: "10:00" });
+    // Thursday had no valid time at all -> day omitted.
+    expect(p.operatingHours.thursday).toBeUndefined();
+  });
+
+  it("scrubs placeholder text and stray tags from free-text fields", () => {
+    const p = coerceProfile({
+      business_overview: "N/A",
+      pricing: "Contact us",
+      locations: ["Unknown", "123 Main St", "</answer>"],
+    });
+    expect(p.businessOverview).toBe("");
+    expect(p.pricingDetails).toBe("");
+    // Placeholder + tag-only entries dropped; real address kept.
+    expect(p.locations).toBe("123 Main St");
+  });
 });

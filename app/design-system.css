@@ -547,7 +547,7 @@
 }
 .scroll {
   flex: 1;
-  padding: 32px 36px 40px;
+  padding: 36px 40px 48px;
 }
 /* Mobile: trim the chunky horizontal padding so card-grids actually have
    room to breathe. 36px on each side eats ~20% of a 360px viewport. */
@@ -863,7 +863,7 @@
   border-color: var(--pri-100);
 }
 .ds-card__head {
-  padding: 16px 20px;
+  padding: var(--pad-card-head);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -883,7 +883,7 @@
   margin-top: 3px;
 }
 .ds-card__body {
-  padding: 18px 20px;
+  padding: var(--pad-card);
 }
 
 /* ---------- chips ---------- */
@@ -941,7 +941,7 @@
 
 /* ---------- stat ---------- */
 .stat {
-  padding: 20px 20px 18px;
+  padding: 24px 24px 22px;
 }
 .stat__label {
   font-size: 12px;
@@ -1126,22 +1126,22 @@
 .grid-2 {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 16px;
+  gap: var(--gap-section);
 }
 .grid-3 {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px;
+  gap: var(--gap-section);
 }
 .grid-4 {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
+  gap: var(--gap-section);
 }
 .grid-5 {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
-  gap: 16px;
+  gap: var(--gap-section);
 }
 
 /* ---------- Mobile/tablet collapse for fixed-column grids ----------
@@ -1431,7 +1431,7 @@
 .dash-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 332px;
-  gap: 14px;
+  gap: 20px;
   align-items: start;
 }
 @media (max-width: 1180px) {
@@ -1479,7 +1479,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 16px;
+  padding: 18px 20px;
   text-decoration: none;
   color: var(--ink);
 }
@@ -1549,11 +1549,11 @@
   flex: 1;
 }
 
-/* welcome / empty state */
+/* welcome / empty state — airy hero with a large, prominent illustration */
 .welcome {
   text-align: center;
-  padding: 44px 32px 36px;
-  background: radial-gradient(120% 120% at 50% 0%, var(--pri-50) 0%, var(--surface) 55%);
+  padding: 56px 40px 48px;
+  background: radial-gradient(120% 120% at 50% 0%, var(--pri-50) 0%, var(--surface) 58%);
 }
 .welcome__art {
   width: 84px;

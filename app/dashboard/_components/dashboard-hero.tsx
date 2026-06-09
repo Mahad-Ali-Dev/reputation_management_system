@@ -57,8 +57,8 @@ export function DashboardHero({
       style={{
         position: "relative",
         overflow: "hidden",
-        padding: "26px 30px 28px",
-        marginBottom: 14,
+        padding: "32px 36px 34px",
+        marginBottom: 20,
         backgroundImage:
           "radial-gradient(120% 130% at 100% -10%, rgba(37,99,235,0.06) 0%, transparent 46%), radial-gradient(90% 90% at 0% 0%, rgba(79,70,229,0.045) 0%, transparent 40%)",
       }}
@@ -106,7 +106,7 @@ export function DashboardHero({
           display: "grid",
           gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))",
           gap: 0,
-          marginTop: 24,
+          marginTop: 28,
           borderTop: "1px solid var(--line)",
         }}
       >
@@ -114,7 +114,7 @@ export function DashboardHero({
           <div
             key={k.label}
             style={{
-              padding: "16px 20px",
+              padding: "20px 24px",
               borderLeft: i > 0 ? "1px solid var(--line)" : undefined,
             }}
           >

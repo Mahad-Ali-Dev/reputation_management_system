@@ -58,6 +58,8 @@ const CRAWL_ERROR_MESSAGES: Record<CrawlError, string> = {
   unsupported_content_type: "That URL didn't return a web page we can read.",
   too_many_redirects: "That URL redirected too many times. Try the final URL directly.",
   empty_after_strip: "We couldn't find any readable text on that page.",
+  too_little_text:
+    "We couldn't read enough text from that site to build your AI. This often happens with sites that render their content with JavaScript. Try linking a specific page with more text (like an About or Services page), or fill in your details manually below.",
 };
 
 export type ScanResult =
@@ -165,7 +167,11 @@ export async function scanAndBuild(form: FormData): Promise<ScanResult> {
   }
 
   if (!extracted.businessOverview && !extracted.servicesProducts) {
-    return { ok: false, error: "We scanned your site but couldn't find enough business detail. Try a page with more text, or fill it in manually." };
+    return {
+      ok: false,
+      error:
+        "We read your site but couldn't pull out enough business detail to build your AI. Try linking a page with more text (like an About or Services page), or fill in your details manually below.",
+    };
   }
 
   // 3. Merge-upsert profile + create/replace the source doc (transactional read,

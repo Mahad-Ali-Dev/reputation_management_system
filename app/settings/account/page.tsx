@@ -4,13 +4,21 @@ import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import {
+  NEW_API_KEY_COOKIE,
+  NOTIFICATION_EVENTS,
+  deleteAccount,
   inviteTeammate,
   removeMember,
+  rotateApiKey,
+  saveWebhook,
   updateAccountSettings,
+  updateNotificationPrefs,
   updateSecurityPrefs,
 } from "@/lib/account/actions";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/db/client";
+import { cookies } from "next/headers";
+import { SettingsSectionNav } from "./_components/section-nav";
 
 /**
  * Account settings — repulabs v2 design.
@@ -100,12 +108,23 @@ export default async function AccountSettingsPage() {
     createdAt: orgWithCreated?.createdAt ?? new Date(),
   };
 
-  // Saved security preferences (settings.security) — default to a 30-min
-  // timeout when the org has never saved any.
-  const savedSecurity =
-    (orgWithCreated?.settings as { security?: { sessionTimeoutMinutes?: number } } | null)
-      ?.security ?? {};
-  const sessionTimeoutMinutes = savedSecurity.sessionTimeoutMinutes ?? 30;
+  // Saved settings groups (settings JSON blob on the org row).
+  const settingsObj =
+    (orgWithCreated?.settings as {
+      security?: { sessionTimeoutMinutes?: number };
+      notifications?: Record<string, { email?: boolean; inApp?: boolean }>;
+      api?: {
+        keyPrefix?: string;
+        keyCreatedAt?: string;
+        webhookUrl?: string | null;
+        webhookSecret?: string | null;
+      };
+    } | null) ?? {};
+  const sessionTimeoutMinutes = settingsObj.security?.sessionTimeoutMinutes ?? 30;
+  const savedNotifications = settingsObj.notifications ?? {};
+  const apiSettings = settingsObj.api ?? {};
+  // A freshly generated API key is surfaced exactly once via a short-lived cookie.
+  const newApiKey = (await cookies()).get(NEW_API_KEY_COOKIE)?.value ?? null;
 
   const ownerDisplayName =
     org.ownerName ?? sessionUser.name ?? sessionUser.email?.split("@")[0] ?? "Owner";
@@ -126,30 +145,7 @@ export default async function AccountSettingsPage() {
           alignItems: "flex-start",
         }}
       >
-        <nav className="ds-card" style={{ padding: 6 }} aria-label="Account sections">
-          {SECTIONS.map((s) => {
-            const active = s.id === "profile";
-            return (
-              <a
-                key={s.id}
-                href={`#${s.id}`}
-                className="row"
-                style={{
-                  padding: "6px 10px",
-                  borderRadius: 6,
-                  fontSize: 12.5,
-                  cursor: "pointer",
-                  textDecoration: "none",
-                  background: active ? "var(--pri-50)" : "transparent",
-                  color: s.danger ? "var(--bad)" : active ? "var(--pri)" : "var(--ink-2)",
-                }}
-              >
-                <Icon name={s.icon} size={13} />
-                <span style={{ flex: 1, fontWeight: active ? 500 : 400 }}>{s.t}</span>
-              </a>
-            );
-          })}
-        </nav>
+        <SettingsSectionNav sections={SECTIONS} />
 
         <div className="col" style={{ gap: 16 }}>
           {/* Profile */}
@@ -484,6 +480,232 @@ export default async function AccountSettingsPage() {
                 <DisplayRow l="Plan" v={prettyPlan(org.plan)} />
                 <DisplayRow l="Team size" v={String(members.length)} />
               </div>
+            </div>
+          </section>
+
+          {/* Notifications */}
+          <section id="notifications" className="ds-card">
+            <div className="ds-card__head">
+              <div>
+                <h3 className="ds-card__title">Notifications</h3>
+                <div className="ds-card__sub">Choose what we tell you about, and where</div>
+              </div>
+            </div>
+            <div className="ds-card__body">
+              <form action={updateNotificationPrefs}>
+                <table className="tbl tbl--compact">
+                  <thead>
+                    <tr>
+                      <th style={{ paddingLeft: 4 }}>Event</th>
+                      <th style={{ textAlign: "center", width: 90 }}>Email</th>
+                      <th style={{ textAlign: "center", width: 90 }}>In-app</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {NOTIFICATION_EVENTS.map((ev) => {
+                      const pref = savedNotifications[ev.key] ?? {};
+                      return (
+                        <tr key={ev.key}>
+                          <td style={{ paddingLeft: 4 }}>
+                            <div style={{ fontWeight: 500 }}>{ev.label}</div>
+                            <div className="dim" style={{ fontSize: 11 }}>
+                              {ev.sub}
+                            </div>
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              name={`${ev.key}_email`}
+                              defaultChecked={pref.email ?? true}
+                              aria-label={`${ev.label} — email`}
+                              style={{ width: 16, height: 16, accentColor: "var(--pri)" }}
+                            />
+                          </td>
+                          <td style={{ textAlign: "center" }}>
+                            <input
+                              type="checkbox"
+                              name={`${ev.key}_inApp`}
+                              defaultChecked={pref.inApp ?? true}
+                              aria-label={`${ev.label} — in-app`}
+                              style={{ width: 16, height: 16, accentColor: "var(--pri)" }}
+                            />
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+                <div className="row" style={{ marginTop: 14, justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn btn--pri">
+                    <Icon name="check" size={12} />
+                    Save notifications
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          {/* API & webhooks */}
+          <section id="api" className="ds-card">
+            <div className="ds-card__head">
+              <div>
+                <h3 className="ds-card__title">API &amp; webhooks</h3>
+                <div className="ds-card__sub">Programmatic access to your workspace</div>
+              </div>
+            </div>
+            <div className="ds-card__body">
+              {newApiKey && (
+                <div
+                  style={{
+                    padding: 12,
+                    borderRadius: 8,
+                    background: "var(--ok-soft)",
+                    border: "1px solid var(--ok)",
+                    marginBottom: 14,
+                  }}
+                >
+                  <div style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ok)" }}>
+                    New API key — copy it now. It won&apos;t be shown again.
+                  </div>
+                  <code
+                    style={{
+                      display: "block",
+                      marginTop: 8,
+                      padding: "8px 10px",
+                      borderRadius: 6,
+                      background: "var(--surface)",
+                      border: "1px solid var(--line)",
+                      fontFamily: "var(--f-mono)",
+                      fontSize: 12,
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {newApiKey}
+                  </code>
+                </div>
+              )}
+
+              <div className="lbl-mono">API key</div>
+              <div
+                className="row"
+                style={{ justifyContent: "space-between", gap: 12, marginTop: 6 }}
+              >
+                <div>
+                  {apiSettings.keyPrefix ? (
+                    <>
+                      <span className="mono" style={{ fontSize: 13 }}>
+                        {apiSettings.keyPrefix}
+                        {"••••••••••••"}
+                      </span>
+                      <div className="dim" style={{ fontSize: 11, marginTop: 2 }}>
+                        Created{" "}
+                        {apiSettings.keyCreatedAt
+                          ? new Date(apiSettings.keyCreatedAt).toLocaleDateString()
+                          : "—"}
+                      </div>
+                    </>
+                  ) : (
+                    <span className="dim" style={{ fontSize: 12.5 }}>
+                      No API key generated yet.
+                    </span>
+                  )}
+                </div>
+                <form action={rotateApiKey}>
+                  <button type="submit" className="btn btn--sm">
+                    <Icon name="bolt" size={11} />
+                    {apiSettings.keyPrefix ? "Rotate key" : "Generate key"}
+                  </button>
+                </form>
+              </div>
+
+              <div className="divider" />
+
+              <form action={saveWebhook}>
+                <FormField
+                  label="Webhook endpoint URL"
+                  name="webhookUrl"
+                  type="url"
+                  defaultValue={apiSettings.webhookUrl ?? ""}
+                  placeholder="https://your-server.com/webhooks/repulabs"
+                />
+                {apiSettings.webhookSecret && (
+                  <div style={{ marginTop: 8 }}>
+                    <div className="lbl-mono">Signing secret</div>
+                    <code
+                      style={{
+                        display: "block",
+                        marginTop: 4,
+                        padding: "8px 10px",
+                        borderRadius: 6,
+                        background: "var(--surface-2)",
+                        border: "1px solid var(--line)",
+                        fontFamily: "var(--f-mono)",
+                        fontSize: 12,
+                        wordBreak: "break-all",
+                      }}
+                    >
+                      {apiSettings.webhookSecret}
+                    </code>
+                    <div className="dim" style={{ fontSize: 11, marginTop: 4 }}>
+                      We sign every webhook payload with this secret (header{" "}
+                      <span className="mono">X-Repulabs-Signature</span>).
+                    </div>
+                  </div>
+                )}
+                <div className="row" style={{ marginTop: 14, justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn btn--pri">
+                    <Icon name="check" size={12} />
+                    Save webhook
+                  </button>
+                </div>
+              </form>
+            </div>
+          </section>
+
+          {/* Delete account (danger zone) */}
+          <section id="danger" className="ds-card" style={{ borderColor: "var(--bad)" }}>
+            <div className="ds-card__head">
+              <h3 className="ds-card__title" style={{ color: "var(--bad)" }}>
+                Delete account
+              </h3>
+            </div>
+            <div className="ds-card__body">
+              <p className="dim" style={{ fontSize: 12.5, marginTop: 0 }}>
+                Deleting <strong>{org.name}</strong> schedules the workspace for removal and
+                immediately revokes access for all {members.length}{" "}
+                {members.length === 1 ? "member" : "members"}. This cannot be undone from here —
+                contact support within 30 days to recover.
+              </p>
+              <form action={deleteAccount} style={{ marginTop: 8 }}>
+                <label htmlFor="confirm" className="lbl">
+                  Type <strong>{org.name}</strong> to confirm
+                </label>
+                <input
+                  id="confirm"
+                  name="confirm"
+                  required
+                  placeholder={org.name}
+                  autoComplete="off"
+                  style={{
+                    width: "100%",
+                    height: 38,
+                    padding: "0 14px",
+                    borderRadius: "var(--r)",
+                    border: "1px solid var(--bad)",
+                    background: "var(--surface)",
+                    color: "var(--ink)",
+                    fontSize: 13,
+                    outline: "none",
+                    marginTop: 4,
+                  }}
+                />
+                <div className="row" style={{ marginTop: 14, justifyContent: "flex-end" }}>
+                  <button type="submit" className="btn btn--danger">
+                    <Icon name="trash" size={12} />
+                    Delete this workspace
+                  </button>
+                </div>
+              </form>
             </div>
           </section>
         </div>

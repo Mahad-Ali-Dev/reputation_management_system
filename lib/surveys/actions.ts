@@ -10,6 +10,7 @@ import { captureContactInBackground } from "@/lib/contacts/upsert-from-interacti
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { dispatchWebhookInBackground } from "@/lib/notifications/webhook";
 import {
   defaultReviewRequestHtml,
   sendReviewRequestEmail,
@@ -592,6 +593,16 @@ export async function submitSurveyResponse(form: FormData): Promise<{
       throw new Error("token_already_used");
     }
     return response.id;
+  });
+
+  // Notify any configured webhook endpoint. Fire-and-forget + fail-soft.
+  dispatchWebhookInBackground(token.organizationId, "survey.response_received", {
+    responseId,
+    campaignId: token.campaignId,
+    recipient: token.recipient ?? null,
+    ratingSummary: normalized,
+    npsScore,
+    smartRouteTo,
   });
 
   // Auto-capture the respondent into the Contact directory. Fire-and-forget +

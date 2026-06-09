@@ -47,8 +47,8 @@ export function VisibilityHealthBanner({
       style={{
         color: "#fff",
         border: "none",
-        padding: "24px 28px",
-        marginBottom: 14,
+        padding: "26px 30px",
+        marginBottom: 20,
         display: "flex",
         flexWrap: "wrap",
         alignItems: "center",

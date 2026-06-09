@@ -3,6 +3,8 @@ import { Resend } from "resend";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { notificationEnabled } from "@/lib/notifications/prefs";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getUnsubscribeSecret } from "@/lib/secrets";
 
 /**
@@ -274,6 +276,15 @@ export async function sendDigestForOrg(orgId: string, day: Date): Promise<{
   skipped: number;
   errors: string[];
 }> {
+  // Honor the Account → Notifications "Weekly summary" toggle (opt-out model).
+  if (!(await notificationEnabled(orgId, "weekly_report", "email"))) {
+    logger.info(
+      { event: "digest.skip.disabled_pref", orgId },
+      "weekly summary disabled in notification settings, skipping",
+    );
+    return { sent: 0, skipped: 1, errors: [] };
+  }
+
   // IDEMPOTENCY: try to claim this (org, day) in digest_runs. If a previous run
   // already claimed it, bail out with skipped=1 — we never re-send a digest.
   // The unique (organization_id, day) constraint makes this race-safe across
@@ -307,7 +318,8 @@ export async function sendDigestForOrg(orgId: string, day: Date): Promise<{
     return { sent: 0, skipped: stats ? 1 : 0, errors: [] };
   }
 
-  const from = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const from = process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  assertSendableEmailConfig(from);
   let sent = 0;
   const errors: string[] = [];
 

@@ -65,3 +65,16 @@ desktop.ini
 # Deploy state files written on the VPS by scripts/deploy.sh
 .deploy-current-sha
 .deploy-previous-sha
+
+# --- generated local artifacts (do not commit) ---
+/.pdf-build/
+/tasks/current-ui/
+/tasks/redesigned-ui/
+/tasks/before-after/
+/tasks/redesign-preview/
+/tasks/redesign-progress/
+/tasks/premium-ui-redesign/
+/public/assets/repulabs/design-mockups/
+/offer-letter-preview*.png
+/_logo.png
+/evolut-icon-192.png

@@ -1,11 +1,13 @@
 "use server";
 
 import { createHash, randomBytes } from "node:crypto";
+import { signOut } from "@/lib/auth/config";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import { z } from "zod";
 
 const ProfileSchema = z.object({
@@ -263,4 +265,226 @@ export async function updateSecurityPrefs(form: FormData): Promise<void> {
   });
 
   revalidatePath("/settings/account");
+}
+
+// ============================================================
+// Notifications — per-event email / in-app preferences
+// ============================================================
+
+/** Notification events the user can opt in/out of. Shared with the settings page. */
+export const NOTIFICATION_EVENTS = [
+  {
+    key: "new_review",
+    label: "New review",
+    sub: "When a new review lands on any connected platform",
+  },
+  { key: "negative_review", label: "Negative review", sub: "When a review is 3 stars or lower" },
+  { key: "weekly_report", label: "Weekly summary", sub: "Your reputation digest, every Monday" },
+  {
+    key: "campaign_completed",
+    label: "Campaign completed",
+    sub: "When a review-request campaign finishes sending",
+  },
+  {
+    key: "survey_response",
+    label: "New survey response",
+    sub: "When a customer completes one of your surveys",
+  },
+  { key: "teammate_joined", label: "Teammate joined", sub: "When someone accepts a team invite" },
+] as const;
+
+export async function updateNotificationPrefs(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireRole("admin");
+
+  const prefs: Record<string, { email: boolean; inApp: boolean }> = {};
+  for (const ev of NOTIFICATION_EVENTS) {
+    prefs[ev.key] = {
+      email: form.get(`${ev.key}_email`) === "on",
+      inApp: form.get(`${ev.key}_inApp`) === "on",
+    };
+  }
+
+  await withTenant(orgId, async (tx) => {
+    const current = await tx.organization.findUnique({
+      where: { id: orgId },
+      select: { settings: true },
+    });
+    const existing = asJsonObject(current?.settings);
+    const next = { ...existing, notifications: prefs };
+    await tx.organization.update({
+      where: { id: orgId },
+      data: { settings: next as Prisma.InputJsonValue },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "notifications.prefs.updated",
+        resourceType: "organization",
+        resourceId: orgId,
+        afterData: prefs,
+      },
+    });
+  });
+
+  revalidatePath("/settings/account");
+}
+
+// ============================================================
+// API & webhooks — workspace API key + outbound webhook endpoint
+// ============================================================
+
+/** Cookie used to surface a freshly generated API key exactly once (then it expires). */
+export const NEW_API_KEY_COOKIE = "rl_new_api_key";
+
+/**
+ * Generate (or rotate) the workspace API key. We persist only a sha256 hash + a
+ * non-secret prefix; the plaintext is surfaced once via a short-lived, path-scoped
+ * httpOnly cookie that the settings page reads on its next render and never again.
+ */
+export async function rotateApiKey(): Promise<void> {
+  const { orgId, userId } = await requireRole("admin");
+
+  const plaintext = `rl_live_${randomBytes(24).toString("base64url")}`;
+  const keyHash = createHash("sha256").update(plaintext).digest("hex");
+  const keyPrefix = plaintext.slice(0, 16); // e.g. rl_live_AbC123 — safe to display
+
+  await withTenant(orgId, async (tx) => {
+    const current = await tx.organization.findUnique({
+      where: { id: orgId },
+      select: { settings: true },
+    });
+    const existing = asJsonObject(current?.settings);
+    const api = asJsonObject(existing.api);
+    const next = {
+      ...existing,
+      api: { ...api, keyHash, keyPrefix, keyCreatedAt: new Date().toISOString() },
+    };
+    await tx.organization.update({
+      where: { id: orgId },
+      data: { settings: next as Prisma.InputJsonValue },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "api.key.rotated",
+        resourceType: "organization",
+        resourceId: orgId,
+        afterData: { keyPrefix },
+      },
+    });
+  });
+
+  const jar = await cookies();
+  jar.set(NEW_API_KEY_COOKIE, plaintext, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/settings/account",
+    maxAge: 120,
+  });
+
+  revalidatePath("/settings/account");
+}
+
+const WebhookSchema = z.object({
+  webhookUrl: z.string().url().max(500).or(z.literal("")).optional(),
+});
+
+/** Save the outbound webhook endpoint; mint a signing secret when one is first set. */
+export async function saveWebhook(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireRole("admin");
+  const parsed = WebhookSchema.safeParse({
+    webhookUrl: (form.get("webhookUrl") as string) || "",
+  });
+  if (!parsed.success) {
+    throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+  }
+  const webhookUrl = parsed.data.webhookUrl || "";
+
+  await withTenant(orgId, async (tx) => {
+    const current = await tx.organization.findUnique({
+      where: { id: orgId },
+      select: { settings: true },
+    });
+    const existing = asJsonObject(current?.settings);
+    const api = asJsonObject(existing.api);
+    let webhookSecret = typeof api.webhookSecret === "string" ? api.webhookSecret : undefined;
+    if (webhookUrl && !webhookSecret) {
+      webhookSecret = `whsec_${randomBytes(20).toString("base64url")}`;
+    }
+    const next = {
+      ...existing,
+      api: {
+        ...api,
+        webhookUrl: webhookUrl || null,
+        webhookSecret: webhookUrl ? webhookSecret : null,
+      },
+    };
+    await tx.organization.update({
+      where: { id: orgId },
+      data: { settings: next as Prisma.InputJsonValue },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "api.webhook.updated",
+        resourceType: "organization",
+        resourceId: orgId,
+        afterData: { hasWebhook: !!webhookUrl },
+      },
+    });
+  });
+
+  revalidatePath("/settings/account");
+}
+
+// ============================================================
+// Danger zone — delete (soft-delete) the workspace
+// ============================================================
+
+/**
+ * Soft-delete the workspace: requires owner role + typing the exact business name
+ * to confirm. We set `deletedAt` (reversible by support) + suspend the plan, write
+ * an audit record, then sign the user out. Hard purge is a separate retention job.
+ */
+export async function deleteAccount(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireRole("owner");
+  const confirm = ((form.get("confirm") as string) || "").trim();
+
+  await withTenant(orgId, async (tx) => {
+    const org = await tx.organization.findUnique({
+      where: { id: orgId },
+      select: { name: true },
+    });
+    if (!org) throw new Error("Workspace not found");
+    if (confirm.toLowerCase() !== org.name.trim().toLowerCase()) {
+      throw new Error("Confirmation text does not match the business name.");
+    }
+    await tx.organization.update({
+      where: { id: orgId },
+      data: { deletedAt: new Date(), plan: "suspended" },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "account.deleted",
+        resourceType: "organization",
+        resourceId: orgId,
+        beforeData: { name: org.name },
+      },
+    });
+  });
+
+  logger.warn({ event: "account.deleted", orgId, userId }, "workspace soft-deleted by owner");
+
+  // Ends the session and redirects to /login (throws NEXT_REDIRECT).
+  await signOut({ redirectTo: "/login" });
 }

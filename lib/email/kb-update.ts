@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { logger } from "@/lib/logger";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 
 /**
  * Auto-updater email (Module 05). Sent by the weekly cron when the AI re-scans
@@ -59,7 +60,8 @@ export async function sendKbUpdateEmail(args: {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const from = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const from = process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  assertSendableEmailConfig(from);
   const fieldsPhrase = humanizeFields(args.changedFields);
   const subject = `Your AI noticed your ${fieldsPhrase} changed and updated itself`;
   const trainingUrl = `${appUrl}/ai/training`;

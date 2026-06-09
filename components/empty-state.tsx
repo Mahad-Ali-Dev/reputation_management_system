@@ -42,12 +42,13 @@ export function illustrationSrc(name: IllustrationName | (string & {})): string 
  * it drops into any inline empty state that currently renders a bare `<Icon>`.
  *
  * Sizing matches the kit's ~3:2 artboards: width is fluid up to `size` (default
- * 148px ≈ the 120-160px spec) and the height auto-scales so nothing is squashed.
+ * 320px — large + prominent, responsive down via `width:100%`) and the height
+ * auto-scales so nothing is squashed.
  * `alt=""` because the adjacent heading already names the state (decorative).
  */
 export function EmptyIllustration({
   name,
-  size = 148,
+  size = 320,
   className,
   style,
 }: {
@@ -111,9 +112,9 @@ export function EmptyState({
   secondaryAction?: { label: string; href: string };
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-white py-16 px-6 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white py-20 px-8 text-center">
       {illustration ? (
-        <EmptyIllustration name={illustration} style={{ marginBottom: 4 }} />
+        <EmptyIllustration name={illustration} style={{ marginBottom: 12 }} />
       ) : (
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-50 to-violet-50 text-4xl">
           {icon}

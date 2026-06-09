@@ -15,6 +15,7 @@
 
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { dispatchWebhookInBackground } from "@/lib/notifications/webhook";
 import { publishReplyToGoogle } from "./google-publish";
 
 /**
@@ -143,6 +144,12 @@ export async function publishReplyFromCron(
     );
     return false;
   }
+  dispatchWebhookInBackground(organizationId, "review.reply_posted", {
+    reviewId: review.id,
+    replyId,
+    source: review.source,
+    publishedAt: publishedAt?.toISOString() ?? null,
+  });
   logger.info(
     { organizationId, reviewId, event: "cron_publish.ok" },
     "auto-publish cron published reply",

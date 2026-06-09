@@ -209,25 +209,31 @@ export async function POST(req: NextRequest) {
 
   let batchId: string | null = null;
   try {
-    batchId = await prisma.$transaction(async (tx) => {
-      for (const row of rows) {
-        const slugSignature = signSlug(row.slug, placeholderRedirect, expiresAtUnix);
-        await tx.device.create({
-          data: {
-            organizationId: null,
-            establishmentId: null,
-            orderId: null,
-            productSku,
-            productKind,
-            serial: row.serial,
-            shortSlug: row.slug,
-            slugSignature,
-            activationCodeHash: row.activationCodeHash,
-            // redirect_url stays null while status="unactivated" (CHECK allows).
-            status: "unactivated",
-          },
-        });
-      }
+    batchId = await prisma.$transaction(
+      async (tx) => {
+        // Build the full device payload in memory (pure CPU — signSlug is local),
+        // then bulk-insert in chunks. The previous version issued ~500 individual
+        // `tx.device.create()` round-trips inside the interactive transaction,
+        // which blew Prisma's default 5s timeout on a 500-device run. `createMany`
+        // collapses each chunk into a single multi-row INSERT.
+        const deviceData = rows.map((row) => ({
+          organizationId: null,
+          establishmentId: null,
+          orderId: null,
+          productSku,
+          productKind,
+          serial: row.serial,
+          shortSlug: row.slug,
+          slugSignature: signSlug(row.slug, placeholderRedirect, expiresAtUnix),
+          activationCodeHash: row.activationCodeHash,
+          // redirect_url stays null while status="unactivated" (CHECK allows).
+          status: "unactivated",
+        }));
+
+        const CHUNK_SIZE = 100;
+        for (let i = 0; i < deviceData.length; i += CHUNK_SIZE) {
+          await tx.device.createMany({ data: deviceData.slice(i, i + CHUNK_SIZE) });
+        }
 
       // Persist the batch row with the encrypted codes for re-download. Wrapped
       // in a try so a missing hardware_batches table (42P01 — migration not yet
@@ -279,7 +285,13 @@ export async function POST(req: NextRequest) {
       });
 
       return createdBatchId;
-    });
+      },
+      // A 500-device run does real work inside the transaction (createMany chunks
+      // + encrypted-batch insert + audit row). The default interactive-transaction
+      // timeout (5s) is far too tight; raise it generously. maxWait bounds how long
+      // we'll block waiting for a pool connection before starting.
+      { timeout: 120_000, maxWait: 20_000 },
+    );
   } catch (err) {
     logger.error(
       { event: "hardware.batch.persist_failed", adminId: session.adminId, err: String(err) },

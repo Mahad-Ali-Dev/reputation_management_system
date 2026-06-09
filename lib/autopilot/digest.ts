@@ -27,6 +27,7 @@ import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getUnsubscribeSecret } from "@/lib/secrets";
 import { getRoiHeadline, type RoiHeadline } from "@/lib/roi/summary";
 import { summarizeAutopilotActions, listAutopilotActions } from "./ledger";
@@ -370,7 +371,8 @@ export async function sendAutopilotDigestForOrg(
     return { sent: 0, skipped: 1, errors: [] };
   }
 
-  const from = process.env.EMAIL_FROM ?? "onboarding@resend.dev";
+  const from = process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  assertSendableEmailConfig(from);
   let sent = 0;
   const errors: string[] = [];
 

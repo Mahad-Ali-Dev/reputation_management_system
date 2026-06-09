@@ -96,11 +96,24 @@ export const authConfig: NextAuthConfig = {
 
     async session({ session, user }) {
       if (user?.id) {
-        const membership = await prisma.membership.findFirst({
+        let membership = await prisma.membership.findFirst({
           where: { userId: user.id },
           orderBy: { createdAt: "asc" },
           select: { organizationId: true, role: true },
         });
+        // Self-heal: if a user somehow has no workspace (e.g. the createUser
+        // event failed mid-signup), create one now so they're never stuck in a
+        // login → no-org → login redirect loop.
+        if (!membership && user.email) {
+          try {
+            membership = await ensureOrgForUser(user.id, user.email, user.name);
+          } catch (err) {
+            logger.error(
+              { event: "tenant.ensure_failed", userId: user.id, err: String(err) },
+              "failed to ensure tenant in session callback",
+            );
+          }
+        }
         if (membership) {
           (session as { orgId?: string; role?: string }).orgId = membership.organizationId;
           (session as { orgId?: string; role?: string }).role = membership.role;
@@ -110,31 +123,73 @@ export const authConfig: NextAuthConfig = {
     },
   },
 
-  events: {
-    async createUser({ user }) {
-      if (!user.id || !user.email) return;
-      const slug = await uniqueSlug(user.email);
-      const org = await prisma.organization.create({
-        data: {
-          name: user.name ?? user.email.split("@")[0] ?? "My Workspace",
-          slug,
-          plan: "trial",
-          trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-          memberships: {
-            create: {
-              userId: user.id,
-              role: "owner",
-            },
-          },
+  // Surface the real cause of any auth failure. Auth.js otherwise collapses
+  // every server-side error into a generic `?error=Configuration` redirect;
+  // this prints the underlying name/message/cause to our logs.
+  logger: {
+    error(error) {
+      logger.error(
+        {
+          event: "authjs.error",
+          name: error?.name,
+          message: error?.message,
+          cause: error?.cause ? String(error.cause) : undefined,
         },
-      });
-      logger.info(
-        { orgId: org.id, userId: user.id, event: "tenant.created" },
-        "tenant + owner created on first sign-in",
+        "Auth.js error",
       );
     },
   },
+
+  events: {
+    async createUser({ user }) {
+      if (!user.id || !user.email) return;
+      // Wrapped + swallowed on purpose: if this throws, Auth.js surfaces the
+      // ENTIRE sign-in as `?error=Configuration`. The session callback re-creates
+      // the org on the user's first authed request, so we log loudly and let
+      // sign-in succeed instead of hard-failing brand-new signups.
+      try {
+        await ensureOrgForUser(user.id, user.email, user.name);
+      } catch (err) {
+        logger.error(
+          { event: "tenant.create_failed", userId: user.id, err: String(err) },
+          "failed to create tenant on signup (will retry on first request)",
+        );
+      }
+    },
+  },
 };
+
+/**
+ * Idempotently ensure a user has a workspace + owner membership, returning their
+ * primary membership. Safe to call from both the `createUser` event and the
+ * `session` callback — if a membership already exists it's returned as-is.
+ */
+async function ensureOrgForUser(
+  userId: string,
+  email: string,
+  name?: string | null,
+): Promise<{ organizationId: string; role: string }> {
+  const existing = await prisma.membership.findFirst({
+    where: { userId },
+    orderBy: { createdAt: "asc" },
+    select: { organizationId: true, role: true },
+  });
+  if (existing) return existing;
+
+  const slug = await uniqueSlug(email);
+  const org = await prisma.organization.create({
+    data: {
+      name: name ?? email.split("@")[0] ?? "My Workspace",
+      slug,
+      plan: "trial",
+      trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      memberships: { create: { userId, role: "owner" } },
+    },
+    select: { id: true },
+  });
+  logger.info({ orgId: org.id, userId, event: "tenant.created" }, "tenant + owner created");
+  return { organizationId: org.id, role: "owner" };
+}
 
 async function uniqueSlug(email: string): Promise<string> {
   const base =

@@ -4,6 +4,7 @@ import { decrypt, type EncryptionContext } from "@/lib/crypto/envelope";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { dispatchWebhookInBackground } from "@/lib/notifications/webhook";
 
 /**
  * Google Business Profile review fetcher.
@@ -136,7 +137,20 @@ export async function fetchReviewsForConnection(
           // posted_at and rating shouldn't change, but we update other fields
         },
       });
-      if (result.fetchedAt.getTime() >= Date.now() - 2000) inserted++;
+      if (result.fetchedAt.getTime() >= Date.now() - 2000) {
+        inserted++;
+        // Fire the review.created webhook for genuinely new reviews. Fire-and-
+        // forget + fail-soft so a customer endpoint can never slow/break ingest.
+        dispatchWebhookInBackground(conn.organizationId, "review.created", {
+          reviewId: result.id,
+          establishmentId,
+          source: "google",
+          rating,
+          reviewerName: r.reviewer?.displayName ?? null,
+          body: r.comment ?? null,
+          postedAt: postedAt.toISOString(),
+        });
+      }
 
       // Auto-capture the review author into the Contact directory. Fire-and-
       // forget + fail-soft: the hook never throws and dedupes internally, so a

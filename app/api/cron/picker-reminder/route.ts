@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { prisma } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getCronSecret, verifyCronRequest } from "@/lib/secrets";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -105,6 +106,7 @@ async function sendDueReminders(): Promise<SendSummary> {
   }
   const resend = new Resend(resendKey);
   const fromAddress = process.env.EMAIL_FROM ?? "bookings@repulabs.com";
+  assertSendableEmailConfig(fromAddress);
 
   for (const c of candidates) {
     // Defensive: skip rows where the establishment has gone missing or
