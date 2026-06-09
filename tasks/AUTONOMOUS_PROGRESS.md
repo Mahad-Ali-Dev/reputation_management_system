@@ -14,12 +14,30 @@ UI changes where needed, and ReviewBoost feature parity per the `tasks/` specs.
 4. Prioritize: build/runtime bugs → security/tenant-isolation → broken links/tabs →
    feature parity (ReviewBoost + tasks specs) → UI polish.
 
-## Status
-- [x] Launched discovery sweep (7 read-only agents): routes/links, RSC/build risks,
-      app-sec, authz/tenant-isolation, ReviewBoost parity, tasks/ spec gaps, build baseline.
-- [ ] Triage findings → fix batches (in progress as results land).
-- [ ] Per-batch: fix → `tsc` + `next build` + tests → commit.
-- [ ] Loop until dry / user returns.
+## Status — RUN COMPLETE (paused for your direction)
+12 commits on `fix/auth-billing-email-qr-redesign`, each verified `tsc` + `next build` + full
+test suite green. Tests 918 → 995. Heavy autonomous spawning stopped here: the high-value,
+verifiable work is done; remaining items are credential-dependent or low-priority (below).
+
+### Commits this run
+705248a bugs/links/RBAC/security · 3500245 invite+meeting-requests · 1191a0c CRM adapters ·
+8a827ac WhatsApp channel · 8ee1011 Gmail 2-way · c9f65b8 MIME header-injection fix ·
+16ef860 QA links+a11y · cfd0872 functional dead-ends · 78326b0 WhatsApp connect + honest status
+
+### NEW migrations to apply in prod (`prisma migrate deploy` applies all pending)
+- 20260609000000_meeting_requests
+- 20260609010000_gmail_sync
+- 20260609020000_connections_provider_whatsapp  (ALSO fixes a latent gmail CHECK-constraint
+  blocker — without it the Gmail connect would 23514 in prod)
+
+### Remaining (intentionally left for your call)
+- Facebook ad/promoted-post comment moderation (Meta Ads API — needs an approved app).
+- WhatsApp embedded-signup OAuth (connect today is a manager paste-form for phone_number_id +
+  token, which works; OAuth needs Meta App Review).
+- `scheduled_request` scheduler stub (module 07 — confirm nothing relies on it).
+- UI redesign visual review (compiles + token-driven, never eyeballed — run screenshot tooling).
+- New integrations (CRM/WhatsApp/Gmail) are code-complete + unit-tested but need each provider's
+  app credentials configured before they go live.
 
 ## Discovery results (7-agent sweep)
 **Build baseline: GREEN locally** — `tsc` 0 errors, `pnpm build` 45/45 pages, 918 tests pass
@@ -46,6 +64,37 @@ Triaged findings → fix batches:
 
 ## Log
 (Newest first — updated as batches land.)
+- WhatsApp connect flow + honest status page launched (build-gated). Final substantive wave.
+- **Functional dead-end fixes COMMITTED + pushed** (`cfd0872`) — verified green. autopilot/
+  connections deep-links fixed; geo-post now creates a real reviewable Social DRAFT instead of
+  faking "scheduled" into a no-op queue; low-NPS internal alert now actually notifies (in-app +
+  owner email). 11 commits ahead of main, all green.
+- Functional dead-end fixes launched: autopilot/connections deep-links, geo-post "fake success"
+  publish dead-end, low-NPS internal alert that never notifies (build-gated).
+- **Final QA fixes COMMITTED + pushed** (`16ef860`) — verified green. 7 safe fixes: broken
+  /settings→/settings/account link + 6 a11y aria-labels on unlabeled form controls. QA also
+  surfaced real functional bugs (now being fixed) + low-priority notes (status-page fake data,
+  scheduled_request stub) left for follow-up.
+- Final QA sweep launched: full-app broken-link/tab + a11y + dead-code audit → safe fixes (build-gated).
+- **Hardening pass COMMITTED + pushed** (`c9f65b8`) — verified green. Security audit of all 5 new
+  surfaces (WhatsApp webhook, Gmail OAuth, cron, public meeting-request, accept-invite) = clean;
+  correctness audit caught + fixed a real HIGH-sev MIME header-injection (CRLF) bug in
+  lib/gmail/mime.ts. tsc 0, next build, 995 tests.
+- Hardening pass launched: security + correctness audit-and-fix of this session's NEW
+  webhooks / OAuth callbacks / public endpoint / integration libs (build-gated).
+- **Gmail 2-way sync COMMITTED + pushed** (`8ee1011`) — verified green (prisma generate, tsc 0,
+  next build, 995 tests). Connect + cron-poll sync + MIME reply send; fixed a post-connect
+  redirect 404 (/settings/connections → /connections). Needs Gmail API + scopes on the Google
+  app + the syncCursor migration in prod.
+- Gmail 2-way mailbox sync launched (connect + cron-poll sync + send, build-gated).
+- **WhatsApp Business channel COMMITTED + pushed** (`8a827ac`) — verified green (tsc 0, next
+  build, 967 tests). Webhook + ingest + outbound send mirroring Meta. Follow-up: WhatsApp
+  OAuth connect callback (to persist Connection externalId=phone_number_id) before live.
+- WhatsApp Business inbox channel launched (webhook + ingest + outbound send, build-gated).
+- **CRM adapters COMMITTED + pushed** (`1191a0c`) — verified green (tsc 0, next build, 954
+  tests). Salesforce/Zoho/Wix/WooCommerce contact-sync adapters vs the existing contract,
+  registered in adapters/index.ts (ready stays runtime-gated like hubspot). Live OAuth needs
+  each provider's app credentials configured.
 - **Parity Wave A COMMITTED + pushed** — verified green (tsc 0, next build 45/45, tests pass).
   Built: secure `/accept-invite` flow (token validation + atomic single-use consume +
   callbackUrl login, 8 unit tests) and the chat **meeting-request queue** (MeetingRequest
