@@ -4,8 +4,6 @@ import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import {
-  NEW_API_KEY_COOKIE,
-  NOTIFICATION_EVENTS,
   deleteAccount,
   inviteTeammate,
   removeMember,
@@ -15,6 +13,7 @@ import {
   updateNotificationPrefs,
   updateSecurityPrefs,
 } from "@/lib/account/actions";
+import { NEW_API_KEY_COOKIE, NOTIFICATION_EVENTS } from "@/lib/account/constants";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { prisma } from "@/lib/db/client";
 import { cookies } from "next/headers";

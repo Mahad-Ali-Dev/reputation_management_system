@@ -9,6 +9,7 @@ import type { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { cookies } from "next/headers";
 import { z } from "zod";
+import { NEW_API_KEY_COOKIE, NOTIFICATION_EVENTS } from "./constants";
 
 const ProfileSchema = z.object({
   ownerName: z.string().max(120).optional(),
@@ -269,29 +270,8 @@ export async function updateSecurityPrefs(form: FormData): Promise<void> {
 
 // ============================================================
 // Notifications — per-event email / in-app preferences
+// (event catalog lives in ./constants — "use server" can't export non-functions)
 // ============================================================
-
-/** Notification events the user can opt in/out of. Shared with the settings page. */
-export const NOTIFICATION_EVENTS = [
-  {
-    key: "new_review",
-    label: "New review",
-    sub: "When a new review lands on any connected platform",
-  },
-  { key: "negative_review", label: "Negative review", sub: "When a review is 3 stars or lower" },
-  { key: "weekly_report", label: "Weekly summary", sub: "Your reputation digest, every Monday" },
-  {
-    key: "campaign_completed",
-    label: "Campaign completed",
-    sub: "When a review-request campaign finishes sending",
-  },
-  {
-    key: "survey_response",
-    label: "New survey response",
-    sub: "When a customer completes one of your surveys",
-  },
-  { key: "teammate_joined", label: "Teammate joined", sub: "When someone accepts a team invite" },
-] as const;
 
 export async function updateNotificationPrefs(form: FormData): Promise<void> {
   const { orgId, userId } = await requireRole("admin");
@@ -334,9 +314,6 @@ export async function updateNotificationPrefs(form: FormData): Promise<void> {
 // ============================================================
 // API & webhooks — workspace API key + outbound webhook endpoint
 // ============================================================
-
-/** Cookie used to surface a freshly generated API key exactly once (then it expires). */
-export const NEW_API_KEY_COOKIE = "rl_new_api_key";
 
 /**
  * Generate (or rotate) the workspace API key. We persist only a sha256 hash + a
