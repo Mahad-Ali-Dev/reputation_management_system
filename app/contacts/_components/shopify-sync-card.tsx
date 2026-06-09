@@ -61,7 +61,7 @@ export function ShopifySyncCard({ connected }: { connected: boolean }) {
             <span className="dim" style={{ fontSize: 13 }}>
               Shopify isn’t connected. Link your store to sync customers automatically.
             </span>
-            <Link href="/connections#shopify" className="btn btn--pri btn--sm">
+            <Link href="/connections#connection-sources" className="btn btn--pri btn--sm">
               <Icon name="plug" size={13} />
               Connect Shopify
             </Link>

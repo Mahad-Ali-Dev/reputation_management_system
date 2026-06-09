@@ -3,7 +3,6 @@
 import { requireRole } from "@/lib/auth/rbac";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
-import { schedule, SchedulerUnavailableError } from "@/lib/scheduler";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
@@ -35,6 +34,15 @@ function isMissingRelation(err: unknown): boolean {
 export type ActionResult<T = unknown> =
   | { ok: true; data?: T }
   | { ok: false; reason: "unmigrated" | "cap_reached" | "invalid_input" | "scheduler_unavailable" | "error" };
+
+/**
+ * Result of `scheduleGeoPost`. `status:"draft"` is the ONLY success shape — geo
+ * posts are saved into the Social composer as a draft for review, NOT
+ * auto-published. The UI must tell the user this honestly.
+ */
+export type GeoPostResult =
+  | { ok: true; status: "draft"; data: { id: string } }
+  | { ok: false; reason: "unmigrated" | "invalid_input" | "error" };
 
 // ─────────────────────────── Onboarding step ───────────────────────────
 
@@ -326,11 +334,22 @@ const GeoPostSchema = z.object({
 });
 
 /**
- * Schedule a geo-tagged GBP post from a grid cell. Enqueues a `scheduled_post`
- * job via the shared Scheduler — Step 10 owns the handler that injects the EXIF
- * coordinates. We only enqueue work; we do not reimplement Post Creator. PAID.
+ * Save a geo-tagged GBP post from a grid cell as a **Social composer draft**. PAID.
+ *
+ * HONESTY NOTE: this used to enqueue a generic `scheduled_post` job and report
+ * "Scheduled" — but that job's handler is a foundation no-op stub, so the post
+ * was NEVER published (silent dead-end). The geo payload carries only coords +
+ * keyword (no caption / platforms / media), so there is nothing the real social
+ * dispatch path (`lib/social/dispatch.ts`, which acts on an existing
+ * `SocialPost` row) could publish without reimplementing Post Creator.
+ *
+ * So instead we create a real, reviewable `SocialPost` **draft** — the actual
+ * entity the working social queue drains — pre-seeded with the geo context, and
+ * return `status:"draft"`. The post does NOT auto-publish; the user finishes and
+ * publishes/schedules it in the Social composer. The flow no longer claims
+ * something that doesn't happen.
  */
-export async function scheduleGeoPost(form: FormData): Promise<ActionResult<{ id: string }>> {
+export async function scheduleGeoPost(form: FormData): Promise<GeoPostResult> {
   const { orgId, userId } = await requireRole("manager");
   await assertEntitled(orgId);
   const parsed = GeoPostSchema.safeParse({
@@ -343,38 +362,51 @@ export async function scheduleGeoPost(form: FormData): Promise<ActionResult<{ id
   });
   if (!parsed.success) return { ok: false, reason: "invalid_input" };
 
-  const runAt = parsed.data.runAt ? new Date(parsed.data.runAt) : new Date(Date.now() + 60 * 60 * 1000);
+  const { lat, lng, area, keyword, establishmentId } = parsed.data;
+  const locationLabel = area ?? `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+  const captionSeed = [
+    keyword
+      ? `Post idea for "${keyword}" near ${locationLabel}.`
+      : `Local geo-post idea near ${locationLabel}.`,
+    "",
+    "Drafted from your SEO geo-grid to help you rank in this area. Add your copy and photo, pick platforms, then publish or schedule.",
+  ].join("\n");
 
   try {
-    const job = await schedule({
-      orgId,
-      kind: "scheduled_post",
-      runAt,
-      payload: {
-        source: "seo_geo_strategy",
-        geo: { lat: parsed.data.lat, lng: parsed.data.lng, area: parsed.data.area ?? null },
-        keyword: parsed.data.keyword ?? null,
-        establishmentId: parsed.data.establishmentId ?? null,
-      },
-      dedupeKey: `geo:${parsed.data.lat.toFixed(4)}:${parsed.data.lng.toFixed(4)}:${runAt.toISOString().slice(0, 10)}`,
-    });
-    await withTenant(orgId, async (tx) => {
+    const id = await withTenant(orgId, async (tx) => {
+      const created = await tx.socialPost.create({
+        data: {
+          organizationId: orgId,
+          establishmentId: establishmentId ?? null,
+          // No platforms pre-selected — the user chooses in the composer. A draft
+          // with no platforms can never be picked up by the dispatch cron.
+          platforms: [],
+          caption: captionSeed,
+          hashtags: keyword ? [`#${keyword.replace(/\s+/g, "")}`] : [],
+          status: "draft",
+          // Explicitly NOT scheduled: never set scheduledFor, so the
+          // dispatch-social-posts cron will never auto-fire this row.
+        },
+        select: { id: true },
+      });
       await tx.auditLog.create({
         data: {
           organizationId: orgId,
           actorType: "user",
           actorId: userId,
-          action: "seo.geo_post.scheduled",
-          resourceType: "scheduled_job",
-          resourceId: job.id,
-          afterData: { lat: parsed.data.lat, lng: parsed.data.lng, runAt: runAt.toISOString() },
+          action: "seo.geo_post.drafted",
+          resourceType: "social_post",
+          resourceId: created.id,
+          afterData: { lat, lng, area: area ?? null, keyword: keyword ?? null },
         },
       });
-    }).catch(() => {});
+      return created.id;
+    });
     revalidatePath(REVALIDATE);
-    return { ok: true, data: { id: job.id } };
+    revalidatePath("/social/posts");
+    return { ok: true, status: "draft", data: { id } };
   } catch (err) {
-    if (err instanceof SchedulerUnavailableError) return { ok: false, reason: "scheduler_unavailable" };
+    if (isMissingRelation(err)) return { ok: false, reason: "unmigrated" };
     logger.error({ orgId, event: "seo.action.geo_post_failed", error: String(err) });
     return { ok: false, reason: "error" };
   }

@@ -29,8 +29,19 @@ import type { RoiPanelData } from "./_components/roi-panel";
 
 export const dynamic = "force-dynamic";
 
-export default async function AutopilotPage() {
+const VALID_TABS = ["activity", "controls", "roi"] as const;
+type TabKey = (typeof VALID_TABS)[number];
+
+export default async function AutopilotPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>;
+}) {
   const { orgId } = await getOrgContext();
+  const { tab: tabParam } = await searchParams;
+  const initialTab: TabKey = (VALID_TABS as readonly string[]).includes(tabParam ?? "")
+    ? (tabParam as TabKey)
+    : "activity";
   const hasAccess = await orgHasFeature(orgId, "ai_autopilot");
 
   // 30-day window for the ROI funnel; this-week for the digest/overview.
@@ -121,7 +132,7 @@ export default async function AutopilotPage() {
       />
 
       {hasAccess ? (
-        <AutopilotShell config={config} feed={feed} needsYou={needsYou} roi={roiData} />
+        <AutopilotShell config={config} feed={feed} needsYou={needsYou} roi={roiData} initialTab={initialTab} />
       ) : (
         <UpsellTeaser />
       )}

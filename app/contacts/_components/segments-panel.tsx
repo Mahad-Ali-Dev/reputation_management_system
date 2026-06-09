@@ -87,7 +87,7 @@ export async function SegmentsPanel({ orgId }: { orgId: string }) {
                 style={{ borderTop: "1px solid var(--line)", borderBottom: "none", padding: "12px 20px" }}
               >
                 {needsConnect ? (
-                  <Link href="/connections#shopify" className="btn btn--sm" style={{ width: "100%", justifyContent: "center" }}>
+                  <Link href="/connections#connection-sources" className="btn btn--sm" style={{ width: "100%", justifyContent: "center" }}>
                     <Icon name="plug" size={13} />
                     Connect Shopify
                   </Link>

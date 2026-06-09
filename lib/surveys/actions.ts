@@ -10,6 +10,8 @@ import { captureContactInBackground } from "@/lib/contacts/upsert-from-interacti
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { createNotification } from "@/lib/notifications/actions";
+import { notificationEnabled } from "@/lib/notifications/prefs";
 import { dispatchWebhookInBackground } from "@/lib/notifications/webhook";
 import {
   defaultReviewRequestHtml,
@@ -403,6 +405,93 @@ const SubmitSchema = z.object({
   followUp: z.string().max(2000).optional(),
 });
 
+/**
+ * Notify the org's team when a survey response is routed to `internal_alert`
+ * (a detractor / low-NPS response). Creates an in-app notification (bell) and,
+ * when the org owner has an email on file, sends them a heads-up email. Both
+ * channels are gated by the org's notification prefs (closest existing event
+ * key: "negative_review") and are individually fail-soft — a failure in one
+ * never blocks the other, and the whole function never throws into its caller,
+ * so the public survey submission can never break because of it.
+ */
+async function notifyInternalAlert(args: {
+  orgId: string;
+  responseId: string;
+  campaignId: string;
+  recipient: string | null;
+  npsScore: number | null;
+  ratingSummary: number | null;
+  businessName: string | null;
+}): Promise<void> {
+  const { orgId, responseId, campaignId, recipient, npsScore, businessName } = args;
+  const scoreLabel =
+    npsScore !== null
+      ? `NPS ${npsScore}/10`
+      : args.ratingSummary !== null
+        ? `${args.ratingSummary}/5`
+        : "low score";
+  const who = recipient ? recipient : "A customer";
+  const title = `Unhappy survey response (${scoreLabel})`;
+  const body = `${who} left a low score${businessName ? ` for ${businessName}` : ""} and asked for follow-up. Review their feedback and reach out.`;
+  const href = `/surveys/${campaignId}`;
+
+  // In-app bell notification (org-wide; userId omitted = visible to all members).
+  try {
+    if (await notificationEnabled(orgId, "negative_review", "inApp")) {
+      await createNotification(orgId, {
+        type: "survey.internal_alert",
+        title,
+        body,
+        resourceType: "survey_response",
+        resourceId: responseId,
+        href,
+      });
+    }
+  } catch (err) {
+    logger.warn(
+      { event: "survey.smart_route.alert.inapp_failed", orgId, error: String(err) },
+      "internal-alert in-app notification failed (ignored)",
+    );
+  }
+
+  // Email the org owner (best-effort; only when an owner email is on file and
+  // email notifications are enabled for this event).
+  try {
+    if (await notificationEnabled(orgId, "negative_review", "email")) {
+      const org = await prisma.organization.findUnique({
+        where: { id: orgId },
+        select: { ownerEmail: true, name: true },
+      });
+      const ownerEmail = org?.ownerEmail ?? null;
+      if (ownerEmail) {
+        const dashUrl = `${APP_URL}${href}`;
+        const text = `${who} just left an unhappy survey response (${scoreLabel})${businessName ? ` for ${businessName}` : ""}.\n\nThey were told someone from your team would follow up. Review the response and reach out:\n\n${dashUrl}`;
+        const safeWho = who.replace(/[<>"]/g, "");
+        const safeBiz = (businessName ?? "").replace(/[<>"]/g, "");
+        const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;"><h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Unhappy survey response (${scoreLabel})</h1><p style="color:#475569;">${safeWho} just left a low score${safeBiz ? ` for <strong>${safeBiz}</strong>` : ""} and was told someone from your team would follow up.</p><p style="margin:24px 0;"><a href="${dashUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Review the response →</a></p><p style="color:#94a3b8;font-size:13px;">Reaching out quickly is the best way to turn a detractor around.</p></div></body></html>`;
+        const result = await sendReviewRequestEmail({
+          to: ownerEmail,
+          subject: `Action needed — unhappy survey response${businessName ? ` (${businessName})` : ""}`,
+          bodyText: text,
+          bodyHtml: html,
+          unsubscribeUrl: `${APP_URL}/u?t=&s=`, // internal alert is transactional; placeholder
+        });
+        if (!result.ok) {
+          logger.warn(
+            { event: "survey.smart_route.alert.email_failed", orgId, error: result.error },
+            "internal-alert owner email failed (ignored)",
+          );
+        }
+      }
+    }
+  } catch (err) {
+    logger.warn(
+      { event: "survey.smart_route.alert.email_failed", orgId, error: String(err) },
+      "internal-alert owner email errored (ignored)",
+    );
+  }
+}
+
 export async function submitSurveyResponse(form: FormData): Promise<{
   thankYou: string;
   route: string | null;
@@ -691,9 +780,24 @@ export async function submitSurveyResponse(form: FormData): Promise<{
       );
     }
   } else if (smartRouteTo === "internal_alert") {
+    // Detractor (low NPS / low rating). Actually notify the org's team so the
+    // promise we make the customer ("someone will follow up") is real. We treat
+    // a low-NPS detractor as the survey analogue of a negative review and gate
+    // on the closest existing prefs key, "negative_review". Both channels are
+    // independently fail-soft and fully detached so they can NEVER break or slow
+    // the public survey submission.
+    void notifyInternalAlert({
+      orgId: token.organizationId,
+      responseId,
+      campaignId: token.campaignId,
+      recipient: token.recipient ?? null,
+      npsScore,
+      ratingSummary: normalized,
+      businessName: establishment?.name ?? null,
+    });
     logger.info(
       { orgId: token.organizationId, recipient: token.recipient, npsScore, event: "survey.smart_route.alert" },
-      "detractor — internal alert (TODO: email owner)",
+      "detractor — internal alert dispatched",
     );
   }
 

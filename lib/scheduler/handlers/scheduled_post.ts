@@ -5,16 +5,28 @@
  * time. The payload carries the post id (and any per-tick options the composer
  * stored when it called `schedule(...)`).
  *
- * FOUNDATION STUB: returns `{ok:true, detail:"noop"}` so the consolidated
- * dispatch cron stays green before Step 10 lands. Step 10 replaces the body with
- * the real publish call:
+ * FOUNDATION STUB — DOES NOT PUBLISH. This generic-queue handler was never
+ * wired to a real publish path. The actual, working social publish path is the
+ * SEPARATE `SocialPost` queue: a row with `status:"scheduled"` + `scheduledFor`,
+ * drained by the per-minute `dispatch-social-posts` cron via
+ * `dispatchDuePost(postId, orgId)` (`lib/social/dispatch.ts`). That path acts on
+ * a concrete `SocialPost` row — which a generic `scheduled_post` job payload
+ * does not carry — so it cannot be reused here without a `postId`.
  *
- *   TODO(10_post_creator): inside `withTenant(orgId)`, load the SocialPost by
- *   `payload.postId`, resolve its provider connection via
- *   `lib/social/connections.ts`, push via the env-gated platform adapter
- *   (no-op without creds), then mark the post `posted` / store `externalIds`.
- *   Must be idempotent on the post row (re-running a claimed job must not
- *   double-publish) and fail-soft on 42P01/42703 pre-migration.
+ * The former geo-grid "Schedule geo-post" flow used to enqueue jobs here and
+ * report SUCCESS to the user, even though this handler never published anything
+ * (silent dead-end). That flow was changed to save a real `SocialPost` DRAFT
+ * instead (see `lib/seo/actions.ts#scheduleGeoPost`), so nothing enqueues this
+ * kind in production anymore.
+ *
+ * We therefore WARN (not info) if a job ever reaches here: it means something
+ * re-introduced a `scheduled_post` enqueue against an unwired handler, and that
+ * job will NOT be published. `ok:false` surfaces it in `lastError` rather than
+ * silently reporting green success for work that never happens.
+ *
+ *   TODO(10_post_creator): if/when this queue is adopted, the payload must carry
+ *   `postId`; load the SocialPost, claim it (`status:"publishing"`), and call
+ *   `dispatchDuePost(postId, orgId)` — idempotent + fail-soft already.
  */
 
 import { logger } from "@/lib/logger";
@@ -23,13 +35,13 @@ import type { ScheduledHandlerJob } from "./index";
 export async function handleScheduledPost(
   job: ScheduledHandlerJob,
 ): Promise<{ ok: boolean; detail?: string }> {
-  logger.info(
+  logger.warn(
     {
       orgId: job.orgId,
       jobId: job.id,
-      event: "scheduler.handler.scheduled_post.noop",
+      event: "scheduler.handler.scheduled_post.unwired",
     },
-    "scheduled_post handler stub — module 10 not yet wired",
+    "scheduled_post handler is not wired to a real publish path — this job will NOT be published",
   );
-  return { ok: true, detail: "noop" };
+  return { ok: false, detail: "scheduled_post handler not wired — not published" };
 }

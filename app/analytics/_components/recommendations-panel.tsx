@@ -177,6 +177,7 @@ function GeoDoItButton({
   onDone: () => void;
 }) {
   const [pending, startTransition] = useTransition();
+  const [drafted, setDrafted] = useState(false);
   // Lazy import to avoid a server-action import cost on every card mount.
   function onClick() {
     startTransition(async () => {
@@ -186,13 +187,22 @@ function GeoDoItButton({
       fd.set("lng", String(rec.payload.lng ?? 0));
       if (rec.payload.keyword) fd.set("keyword", String(rec.payload.keyword));
       if (establishmentId) fd.set("establishmentId", establishmentId);
-      await scheduleGeoPost(fd);
+      const res = await scheduleGeoPost(fd);
+      if (res.ok) setDrafted(true);
       onDone();
     });
   }
+  if (drafted) {
+    // Honest: a draft was saved for review — it is NOT auto-published.
+    return (
+      <Link href="/social/posts" className="btn btn--sm">
+        <Icon name="check" size={12} /> Draft saved — review in Social →
+      </Link>
+    );
+  }
   return (
     <button type="button" className="btn btn--sm btn--pri" onClick={onClick} disabled={pending}>
-      {pending ? "Scheduling…" : "Schedule post →"}
+      {pending ? "Saving draft…" : "Draft post in Social →"}
     </button>
   );
 }
@@ -202,7 +212,7 @@ function GeoView({ geoGrid }: { geoGrid: GeoGridProps | null }) {
     <div className="ds-card">
       <div className="ds-card__head">
         <div className="ds-card__title">Geo-location strategy</div>
-        <div className="ds-card__sub">Your 5-mile ranking heatmap. Click a weak cell to schedule a geo-tagged post from there.</div>
+        <div className="ds-card__sub">Your 5-mile ranking heatmap. Click a weak cell to draft a geo-tagged post — it’s saved to Social for you to review and publish.</div>
       </div>
       <div className="ds-card__body">
         {geoGrid ? (

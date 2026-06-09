@@ -129,7 +129,7 @@ function Metric({ label, value, small }: { label: string; value: string; small?:
 }
 
 function ConnectPrompt({ what, note, provider }: { what: string; note: string; provider?: string }) {
-  const href = provider ? `/connections#${provider}` : "/connections";
+  const href = provider ? "/connections#connection-sources" : "/connections";
   return (
     <div
       style={{

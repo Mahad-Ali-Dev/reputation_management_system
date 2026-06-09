@@ -8,10 +8,11 @@ import { useState, useTransition } from "react";
  * `<GeoGrid>` (Module 13) — the 5-mile ranking heatmap.
  *
  * Renders `GeoGridSnapshot.cells` as a colored NxN grid (green = ranking well,
- * red = poor). Clicking a cell opens a small "Schedule geo-post from here"
+ * red = poor). Clicking a cell opens a small "Draft geo-post for this area"
  * affordance that posts the cell's lat/lng to the `scheduleGeoPost` server
- * action (which enqueues a `scheduled_post` via the shared Scheduler — Step 10
- * owns the handler). Presentational over props; does NOT fetch data.
+ * action, which saves a DRAFT into the Social composer (it does NOT auto-publish
+ * — the user finishes and publishes it in Social). Presentational over props;
+ * does NOT fetch data.
  */
 
 export type GeoGridProps = {
@@ -19,7 +20,7 @@ export type GeoGridProps = {
   gridSize: number;
   cells: { lat: number; lng: number; position: number | null }[];
   establishmentId?: string | null;
-  /** Disable scheduling (e.g. not entitled) — cells still render, click is a no-op note. */
+  /** Disable drafting (e.g. not entitled) — cells still render, click is a no-op note. */
   canSchedule?: boolean;
 };
 
@@ -68,11 +69,9 @@ export function GeoGrid({
         setSelected(null);
       } else {
         setError(
-          res.reason === "scheduler_unavailable"
-            ? "Scheduling isn't available yet."
-            : res.reason === "unmigrated"
-              ? "Reporting isn't set up yet."
-              : "Couldn't schedule — try again.",
+          res.reason === "unmigrated"
+            ? "Reporting isn't set up yet."
+            : "Couldn't save the draft — try again.",
         );
       }
     });
@@ -132,6 +131,17 @@ export function GeoGrid({
         <Legend color="var(--bad)" label="16+ / none" />
       </div>
 
+      {/* Honest confirmation: drafts are saved, not auto-published. */}
+      {done.size > 0 && (
+        <p style={{ marginTop: 10, fontSize: 12, color: "var(--ok)" }}>
+          {done.size === 1 ? "Draft saved" : `${done.size} drafts saved`} to{" "}
+          <a href="/social/posts" style={{ color: "inherit", textDecoration: "underline" }}>
+            Social
+          </a>
+          . Review, then publish or schedule there — geo-posts aren’t published automatically.
+        </p>
+      )}
+
       {/* Schedule affordance for the selected cell */}
       {selected != null && cells[selected] && (
         <div
@@ -157,10 +167,10 @@ export function GeoGrid({
                 onClick={() => onSchedule(selected, cells[selected]!)}
               >
                 <Icon name="pin" size={13} />
-                {pending ? "Scheduling…" : "Schedule geo-post here"}
+                {pending ? "Saving draft…" : "Draft geo-post in Social"}
               </button>
             ) : (
-              <span style={{ fontSize: 12, color: "var(--rl-muted-2)" }}>Upgrade to schedule geo-posts</span>
+              <span style={{ fontSize: 12, color: "var(--rl-muted-2)" }}>Upgrade to draft geo-posts</span>
             )}
           </div>
           {error && (
