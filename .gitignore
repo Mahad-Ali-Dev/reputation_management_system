@@ -78,3 +78,9 @@ desktop.ini
 /offer-letter-preview*.png
 /_logo.png
 /evolut-icon-192.png
+
+# agent scratch + stray local docs
+/_scratch/
+/offer-letter-*.html
+/probation-offer-letter.html
+/send-offer.*

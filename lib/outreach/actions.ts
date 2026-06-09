@@ -1,12 +1,11 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 import { enqueueReviewRequest } from "./enqueue";
 import { hasSmsConsent, isUnsubscribed, recordSmsConsent } from "./suppression";
@@ -29,21 +28,13 @@ const Body = z.object({
   outreachTemplateId: z.string().uuid().optional(),
 });
 
-async function requireOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
-}
-
 /**
  * Server action: create + dispatch a review request.
  * - SMS: requires TCPA consent + checks unsubscribe list + sends via Twilio
  * - Email: uses Resend, adds List-Unsubscribe header
  */
 export async function createReviewRequest(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   // Outreach sends incur SMS/email cost — gate on an active plan.
   await assertEntitled(orgId);
 
@@ -179,7 +170,7 @@ export async function createReviewRequest(form: FormData): Promise<void> {
  * hard-block here if the recipient has since unsubscribed.
  */
 export async function resendReviewRequest(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId } = await requireRole("manager");
   await assertEntitled(orgId);
   const id = z.string().uuid().parse(form.get("id"));
 

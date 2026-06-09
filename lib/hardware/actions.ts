@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth/config";
+import { ForbiddenError, roleAtLeast } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import {
@@ -25,12 +26,21 @@ const QuantitySchema = z.object({
   establishmentId: z.string().uuid().optional(),
 });
 
-async function requireOrg() {
+/**
+ * Hardware actions are all mutating (paid checkout, device activation/edit/
+ * delete) — gate them at `manager` like the rest of Group B. We keep a local
+ * helper rather than `requireRole` directly because these actions also need the
+ * session `email` (for Stripe customer creation), which `requireRole` doesn't
+ * surface. The role check mirrors `requireRole("manager")` exactly.
+ */
+async function requireManagerOrg() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   const email = session?.user?.email;
+  const role = (session as { role?: string } | null)?.role ?? null;
   if (!session || !orgId || !userId || !email) redirect("/login");
+  if (!roleAtLeast(role, "manager")) throw new ForbiddenError("manager", role);
   return { orgId, userId, email };
 }
 
@@ -42,7 +52,7 @@ async function requireOrg() {
  * provisions device rows and marks the order paid.
  */
 export async function startHardwareCheckout(form: FormData): Promise<void> {
-  const { orgId, email } = await requireOrg();
+  const { orgId, email } = await requireManagerOrg();
 
   const parsed = QuantitySchema.safeParse({
     productSku: form.get("productSku"),
@@ -195,7 +205,7 @@ export type ActivateDeviceState = {
  * Signature: takes the previous state (unused, but `useActionState` passes
  * it) and the form. Returns `{ error: "..." }` on user-facing failures so
  * the form can render an inline message. Throws only for genuinely
- * exceptional cases (auth failure -> redirect handled by requireOrg).
+ * exceptional cases (auth failure -> redirect handled by requireManagerOrg).
  *
  * Rate limiting + Turnstile happens at the API layer (Day 4 finalization).
  */
@@ -203,7 +213,7 @@ export async function activateDevice(
   _prev: ActivateDeviceState,
   form: FormData,
 ): Promise<ActivateDeviceState> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireManagerOrg();
   const codeRaw = form.get("activationCode");
   const establishmentId = form.get("establishmentId");
   const reviewUrlRaw = form.get("reviewUrl");
@@ -381,7 +391,7 @@ const SelfServiceSchema = z.object({
 });
 
 export async function generateSelfServiceQr(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireManagerOrg();
 
   const parsed = SelfServiceSchema.safeParse({
     establishmentId: form.get("establishmentId"),
@@ -493,7 +503,7 @@ const UpdateRedirectSchema = z.object({
 });
 
 export async function updateDeviceRedirectUrl(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireManagerOrg();
   const parsed = UpdateRedirectSchema.safeParse({
     deviceId: form.get("deviceId"),
     redirectUrl: (form.get("redirectUrl") as string | null)?.trim() ?? "",
@@ -589,7 +599,7 @@ const DeleteDeviceSchema = z.object({
 });
 
 export async function deleteDevice(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireManagerOrg();
   const parsed = DeleteDeviceSchema.safeParse({
     deviceId: form.get("deviceId"),
   });
@@ -670,7 +680,7 @@ const RestoreDeviceSchema = z.object({
 });
 
 export async function restoreDevice(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireManagerOrg();
   const parsed = RestoreDeviceSchema.safeParse({ deviceId: form.get("deviceId") });
   if (!parsed.success) throw new Error("invalid_device_id");
 
@@ -736,7 +746,7 @@ export async function restoreDevice(form: FormData): Promise<void> {
  * Re-target a device (e.g., establishment changes Google Place ID).
  */
 export async function refreshDeviceRedirect(deviceId: string): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireManagerOrg();
 
   await withTenant(orgId, async (tx) => {
     const device = await tx.device.findFirst({

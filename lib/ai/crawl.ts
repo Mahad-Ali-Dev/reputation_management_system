@@ -86,11 +86,25 @@ function isPrivateIPv6(ip: string): boolean {
   return false;
 }
 
+/** True if a resolved address (either family) lands in a blocked range. */
+function isBlockedAddress(family: number, address: string): boolean {
+  if (family === 4) return isPrivateIPv4(address);
+  if (family === 6) return isPrivateIPv6(address);
+  return true; // unknown family → fail closed
+}
+
 /**
  * Validate URL syntactically + resolve host + block private IPs.
- * Returns null on success, or an error code.
+ *
+ * Returns the parsed URL plus the *pinned* set of resolved IPs (the exact
+ * addresses we vetted). Callers use `pinnedIps` to detect DNS rebinding: if a
+ * later resolution returns a different/private address than what we vetted here,
+ * the connection must be refused. (`fetch` re-resolves DNS itself between this
+ * check and the socket connect — the rebind window this guards against.)
  */
-async function validateUrlForFetch(rawUrl: string): Promise<{ url: URL } | { error: CrawlError }> {
+async function validateUrlForFetch(
+  rawUrl: string,
+): Promise<{ url: URL; pinnedIps: string[] } | { error: CrawlError }> {
   let url: URL;
   try {
     url = new URL(rawUrl);
@@ -107,20 +121,48 @@ async function validateUrlForFetch(rawUrl: string): Promise<{ url: URL } | { err
   const literal = isIP(url.hostname);
   if (literal === 4) {
     if (isPrivateIPv4(url.hostname)) return { error: "private_ip_blocked" };
-  } else if (literal === 6) {
-    if (isPrivateIPv6(url.hostname)) return { error: "private_ip_blocked" };
-  } else {
-    try {
-      const resolved = await lookup(url.hostname, { all: true });
-      for (const r of resolved) {
-        if (r.family === 4 && isPrivateIPv4(r.address)) return { error: "private_ip_blocked" };
-        if (r.family === 6 && isPrivateIPv6(r.address)) return { error: "private_ip_blocked" };
-      }
-    } catch {
-      return { error: "invalid_url" };
-    }
+    return { url, pinnedIps: [url.hostname] };
   }
-  return { url };
+  if (literal === 6) {
+    if (isPrivateIPv6(url.hostname)) return { error: "private_ip_blocked" };
+    return { url, pinnedIps: [url.hostname] };
+  }
+  try {
+    const resolved = await lookup(url.hostname, { all: true });
+    if (resolved.length === 0) return { error: "invalid_url" };
+    for (const r of resolved) {
+      if (isBlockedAddress(r.family, r.address)) return { error: "private_ip_blocked" };
+    }
+    return { url, pinnedIps: resolved.map((r) => r.address) };
+  } catch {
+    return { error: "invalid_url" };
+  }
+}
+
+/**
+ * Re-resolve the host right before connecting and confirm DNS still maps it to
+ * the SAME, still-public addresses we vetted in `validateUrlForFetch`. This
+ * closes the rebind TOCTOU: an attacker-controlled DNS that flips from a public
+ * IP (at validation time) to 169.254.169.254 / 127.0.0.1 (at fetch time) is
+ * caught because the freshly-resolved address either is private or isn't in the
+ * pinned set. Literal-IP hosts (no DNS) are trivially stable and pass through.
+ */
+async function assertDnsStable(url: URL, pinnedIps: string[]): Promise<CrawlError | null> {
+  if (isIP(url.hostname)) return null; // literal IP — nothing to rebind
+  const pinned = new Set(pinnedIps);
+  let resolved: Array<{ address: string; family: number }>;
+  try {
+    resolved = await lookup(url.hostname, { all: true });
+  } catch {
+    return "fetch_failed";
+  }
+  if (resolved.length === 0) return "fetch_failed";
+  for (const r of resolved) {
+    if (isBlockedAddress(r.family, r.address)) return "private_ip_blocked";
+    // A previously-unseen public address appearing now is the rebind signature.
+    if (!pinned.has(r.address)) return "private_ip_blocked";
+  }
+  return null;
 }
 
 /**
@@ -219,6 +261,7 @@ export async function crawlUrl(
   const validated = await validateUrlForFetch(rawUrl);
   if ("error" in validated) return { error: validated.error };
   const url = validated.url;
+  let pinnedIps = validated.pinnedIps;
 
   const robots = await checkRobots(url);
   if (!robots.allowed) return { error: "robots_disallowed" };
@@ -227,8 +270,12 @@ export async function crawlUrl(
   // private-IP / scheme / credentials rules. With redirect:"follow" a public
   // URL could 30x to http://169.254.169.254/… (cloud metadata) and we'd fetch
   // it blindly — the SSRF the up-front validation was meant to stop.
-  // (Residual: DNS rebinding between validate and fetch is not covered here;
-  // that needs resolved-IP pinning and is tracked separately.)
+  //
+  // DNS-rebind TOCTOU: `fetch` re-resolves the hostname itself, so a malicious
+  // resolver can return a public IP at validation time and a private one at
+  // connect time. We close that window by re-resolving and asserting the host
+  // STILL maps only to the pinned, public addresses immediately before each
+  // fetch (see assertDnsStable). Literal-IP hosts have no DNS and pass through.
   const MAX_REDIRECTS = 5;
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
@@ -237,6 +284,11 @@ export async function crawlUrl(
   try {
     let hop = 0;
     while (true) {
+      const rebind = await assertDnsStable(currentUrl, pinnedIps);
+      if (rebind) {
+        clearTimeout(timer);
+        return { error: rebind, details: `dns_rebind_guard:${currentUrl.hostname}` };
+      }
       res = await fetch(currentUrl.toString(), {
         signal: ctrl.signal,
         redirect: "manual",
@@ -261,6 +313,7 @@ export async function crawlUrl(
         return { error: revalidated.error, details: `blocked redirect to ${nextRaw}` };
       }
       currentUrl = revalidated.url;
+      pinnedIps = revalidated.pinnedIps;
     }
   } catch (err) {
     clearTimeout(timer);

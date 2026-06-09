@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { encrypt } from "@/lib/crypto/envelope";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
@@ -64,15 +64,6 @@ function extractAirbnbListingId(url: string): string | null {
 
 // ─── Helpers ──────────────────────────────────────────────────
 
-async function requireOrg(): Promise<{ orgId: string; userId: string; email: string }> {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  const email = session?.user?.email;
-  if (!session || !orgId || !userId || !email) redirect("/login");
-  return { orgId, userId, email };
-}
-
 function fd(form: FormData, key: string): string | undefined {
   const v = form.get(key);
   return typeof v === "string" && v.length > 0 ? v : undefined;
@@ -81,7 +72,7 @@ function fd(form: FormData, key: string): string | undefined {
 // ─── Actions ──────────────────────────────────────────────────
 
 export async function createEstablishment(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
 
   const parsed = CreateSchema.safeParse({
     name: fd(form, "name"),
@@ -134,7 +125,7 @@ export async function createEstablishment(form: FormData): Promise<void> {
 }
 
 export async function updateEstablishment(id: string, form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
 
   const parsed = CreateSchema.partial().safeParse({
     name: fd(form, "name"),
@@ -185,7 +176,7 @@ export async function updateEstablishment(id: string, form: FormData): Promise<v
 }
 
 export async function deleteEstablishment(id: string) {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
 
   await withTenant(orgId, async (tx) => {
     const before = await tx.establishment.findFirst({ where: { id, deletedAt: null } });
@@ -227,7 +218,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-
  * rows and never throws or leaks.
  */
 export async function disconnectGoogle(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
 
   const establishmentId = fd(form, "establishmentId");
   // Bail quietly on a missing/malformed id — no throw, no leak.
@@ -267,7 +258,7 @@ export async function disconnectGoogle(form: FormData): Promise<void> {
 }
 
 export async function setGooglePlaceId(establishmentId: string, placeId: string): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   if (!/^[a-zA-Z0-9_-]{1,200}$/.test(placeId)) {
     throw new Error("invalid_place_id");
   }
@@ -324,7 +315,7 @@ export async function createAirbnbListing(
   _prev: CreateAirbnbListingState,
   form: FormData,
 ): Promise<CreateAirbnbListingState> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("admin");
 
   const parsed = CreateAirbnbSchema.safeParse({
     name: fd(form, "name"),

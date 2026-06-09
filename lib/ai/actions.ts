@@ -4,25 +4,16 @@ import { createHash, randomBytes } from "node:crypto";
 import { crawlUrl } from "@/lib/ai/crawl";
 import { ingestDocument } from "@/lib/ai/ingest";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
-import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { assertRateLimit } from "@/lib/ratelimit";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
 
 /** 8 MB cap on uploaded PDFs (text extraction happens server-side). */
 const MAX_PDF_BYTES = 8 * 1024 * 1024;
-
-async function requireOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
-}
 
 const DocSchema = z.object({
   title: z.string().min(1).max(120),
@@ -45,7 +36,7 @@ function isPdf(file: File): boolean {
  * server-side via lib/ai/pdf-extract). Both feed the same chunk→embed pipeline.
  */
 export async function uploadAiDocument(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   // Indexing is a paid AI feature — match the URL-crawl path's gating.
   await assertEntitled(orgId);
 
@@ -169,7 +160,7 @@ const UrlIngestSchema = z.object({
  * SSRF protections live in lib/ai/crawl.ts (private-IP blocks, size cap, robots.txt).
  */
 export async function ingestAiDocumentFromUrl(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   // URL crawl + embedding is a paid AI feature.
   await assertEntitled(orgId);
 
@@ -280,7 +271,7 @@ export async function ingestAiDocumentFromUrl(form: FormData): Promise<void> {
 }
 
 export async function deleteAiDocument(documentId: string): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   await withTenant(orgId, async (tx) => {
     await tx.aiDocument.delete({ where: { id: documentId } });
     await tx.auditLog.create({
@@ -307,7 +298,7 @@ const WidgetSchema = z.object({
 });
 
 export async function createWidgetKey(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
 
   const parsed = WidgetSchema.safeParse({
     establishmentId: form.get("establishmentId") || undefined,
@@ -352,7 +343,7 @@ export async function createWidgetKey(form: FormData): Promise<void> {
 }
 
 export async function revokeWidgetKey(keyId: string): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   await withTenant(orgId, async (tx) => {
     await tx.widgetKey.update({
       where: { id: keyId },

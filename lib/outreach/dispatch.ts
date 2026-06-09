@@ -253,6 +253,36 @@ async function markFailed(orgId: string, id: string, error: string): Promise<voi
   logger.warn({ orgId, reviewRequestId: id, error, event: "review_request.send_failed" });
 }
 
+/** Escape a string for the HTML attribute (double-quoted) context. */
+function escapeAttr(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+/**
+ * Validate + escape a URL for safe interpolation into an href/src attribute.
+ * Even though these values are org-controlled (logo / tracked review link /
+ * signed unsubscribe), defense-in-depth: reject anything that isn't a valid
+ * http(s) URL (drops javascript:/data: and malformed input), then escape for
+ * the attribute context so quotes can't break out of the attribute. Returns
+ * null when there's no safe URL to emit (caller omits the element/href).
+ */
+function safeAttrUrl(value: string | null | undefined): string | null {
+  if (!value) return null;
+  let parsed: URL;
+  try {
+    parsed = new URL(value);
+  } catch {
+    return null;
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") return null;
+  return escapeAttr(parsed.toString());
+}
+
 /** Wrap a rendered body in the branded email shell (logo + CTA + unsubscribe). */
 function renderEmailHtml(args: {
   body: string;
@@ -265,10 +295,17 @@ function renderEmailHtml(args: {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/\n/g, "<br>");
-  const logoBlock = args.logoUrl
-    ? `<img src="${args.logoUrl}" alt="" style="max-height:48px;margin-bottom:16px;display:block;" />`
+  const safeLogo = safeAttrUrl(args.logoUrl);
+  const safeReviewLink = safeAttrUrl(args.reviewLink);
+  const safeUnsubscribe = safeAttrUrl(args.unsubscribeUrl);
+  const logoBlock = safeLogo
+    ? `<img src="${safeLogo}" alt="" style="max-height:48px;margin-bottom:16px;display:block;" />`
     : "";
-  return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">${logoBlock}<div style="color:#0f172a;font-size:14px;line-height:1.6;">${escaped}</div><p style="margin:24px 0;"><a href="${args.reviewLink}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a></p><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:12px;margin:0;">Don't want these? <a href="${args.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a></p></div></body></html>`;
+  // The CTA / unsubscribe anchors are core to the email; if a link somehow fails
+  // validation, fall back to a non-clickable "#" rather than emitting raw input.
+  const reviewHref = safeReviewLink ?? "#";
+  const unsubscribeHref = safeUnsubscribe ?? "#";
+  return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">${logoBlock}<div style="color:#0f172a;font-size:14px;line-height:1.6;">${escaped}</div><p style="margin:24px 0;"><a href="${reviewHref}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a></p><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:12px;margin:0;">Don't want these? <a href="${unsubscribeHref}" style="color:#94a3b8;">Unsubscribe</a></p></div></body></html>`;
 }
 
 /**

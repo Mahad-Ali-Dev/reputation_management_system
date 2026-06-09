@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { REVIEW_SOURCES, type ReviewSource } from "@/lib/reviews/queries";
@@ -20,9 +20,10 @@ import type { AutoReplyRuleFormState } from "./form-state";
  * submits redirect to the rules list (createXyz) or back to the edit
  * page (updateXyz).
  *
- * Auth: every action calls `requireOrg()` first. If the session is
- * missing we 302 to /login — never silently ignore. Org isolation is
- * enforced by withTenant.
+ * Auth: every mutating action calls `requireRole("manager")` first. If the
+ * session is missing we 302 to /login; an insufficient role throws
+ * ForbiddenError — never silently ignore. Org isolation is enforced by
+ * withTenant.
  */
 
 // ----- schema -----
@@ -77,14 +78,6 @@ const RuleSchema = z
 
 // ----- helpers -----
 
-async function requireOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
-}
-
 /**
  * Pull array values from FormData (selects render as one field-name per
  * picked option). Zod's `z.array(z.string())` doesn't auto-coerce, so we
@@ -120,7 +113,7 @@ export async function createAutoReplyRule(
   _prev: AutoReplyRuleFormState,
   form: FormData,
 ): Promise<AutoReplyRuleFormState> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   const parsed = RuleSchema.safeParse(toShape(form));
   if (!parsed.success) {
     return {
@@ -200,7 +193,7 @@ export async function updateAutoReplyRule(
   _prev: AutoReplyRuleFormState,
   form: FormData,
 ): Promise<AutoReplyRuleFormState> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   const id = String(form.get("id") ?? "");
   if (!isUuid(id)) return { error: "Invalid rule id." };
 
@@ -283,7 +276,7 @@ export async function updateAutoReplyRule(
  * pipeline (no other fields are touched) so it's cheap and predictable.
  */
 export async function toggleAutoReplyRule(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   const id = String(form.get("id") ?? "");
   const enable = form.get("enable") === "true";
   if (!isUuid(id)) return;
@@ -317,7 +310,7 @@ export async function toggleAutoReplyRule(form: FormData): Promise<void> {
 // ----- delete -----
 
 export async function deleteAutoReplyRule(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   const id = String(form.get("id") ?? "");
   if (!isUuid(id)) return;
 

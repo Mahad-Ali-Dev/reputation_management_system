@@ -1,8 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { generateReply } from "@/lib/ai/generate-reply";
 import { classifyReplySafety } from "@/lib/ai/safety-classify";
 import { getAutoReply5StarState } from "@/lib/auto-reply/managed-rule";
@@ -21,14 +20,6 @@ type BrandVoiceJson = {
   language?: string;
 } | null;
 
-async function requireOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
-}
-
 /**
  * Server action: generate an AI reply draft for a review.
  * Runs:
@@ -39,7 +30,7 @@ async function requireOrg() {
  *        - 'draft' otherwise (auto-publish gate handled separately)
  */
 export async function generateReplyForReview(reviewId: string): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   // Generating a reply spends AI budget — a paid feature. Gate here so a
   // lapsed plan gets a clean PlanInactiveError (surfaced as an upgrade prompt
   // by the feed draft box) instead of a silent paid call. Mirrors the
@@ -174,7 +165,7 @@ export async function publishReply(
   editedBody?: string,
   postNow = false,
 ): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
 
   const review = await withTenant(orgId, async (tx) => {
     return tx.review.findFirst({

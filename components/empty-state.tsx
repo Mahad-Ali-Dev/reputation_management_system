@@ -108,7 +108,7 @@ export function EmptyState({
   icon: React.ReactNode;
   title: string;
   description: string;
-  primaryAction?: { label: string; href: string } | { label: string; onClick: () => void };
+  primaryAction?: { label: string; href: string };
   secondaryAction?: { label: string; href: string };
 }) {
   return (
@@ -124,13 +124,11 @@ export function EmptyState({
       <p className="mt-2 max-w-md text-sm text-slate-600">{description}</p>
       {(primaryAction || secondaryAction) && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-          {primaryAction && ("href" in primaryAction ? (
+          {primaryAction && (
             <Button asChild>
               <Link href={primaryAction.href}>{primaryAction.label}</Link>
             </Button>
-          ) : (
-            <Button onClick={primaryAction.onClick}>{primaryAction.label}</Button>
-          ))}
+          )}
           {secondaryAction && (
             <Button asChild variant="ghost">
               <Link href={secondaryAction.href}>{secondaryAction.label}</Link>

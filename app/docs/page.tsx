@@ -73,7 +73,7 @@ export default function DocsPage() {
         description="Practical, copy-pasteable, no fluff. Every guide has a working code sample at the bottom."
         actions={
           <Link
-            href="/docs/quickstart"
+            href="/docs/api"
             className="inline-flex items-center gap-2 rounded-full px-5 py-3 text-[14px] font-medium"
             style={{ background: C.ink, color: "#fff" }}
           >

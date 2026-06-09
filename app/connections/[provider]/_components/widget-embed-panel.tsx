@@ -126,7 +126,7 @@ export function WidgetEmbedPanel({
               <div className="ds-card__sub">Appearance and AI behaviour for {displayName}.</div>
             </div>
           </div>
-          <Link href="/support?tab=livechat" className="btn btn--xs">
+          <Link href="/support?tab=live-chat" className="btn btn--xs">
             <Icon name="edit" size={11} />
             Customize
           </Link>

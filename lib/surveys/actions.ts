@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createHash, randomBytes } from "node:crypto";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
+import { requireRole } from "@/lib/auth/rbac";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -20,14 +20,6 @@ import { issueCouponForResponse } from "./coupons";
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 const TOKEN_TTL_DAYS = 14;
 
-async function requireOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
-}
-
 // ─── Create campaign ─────────────────────────────────────────
 
 const CreateSchema = z.object({
@@ -39,7 +31,7 @@ const CreateSchema = z.object({
 });
 
 export async function createSurveyCampaign(form: FormData): Promise<void> {
-  const { orgId } = await requireOrg();
+  const { orgId } = await requireRole("manager");
 
   const parsed = CreateSchema.safeParse({
     name: form.get("name"),
@@ -123,7 +115,7 @@ export async function createSurveyCampaignReturningId(input: {
   establishmentId?: string;
   templateId?: string;
 }): Promise<{ ok: true; id: string } | { ok: false; error: string }> {
-  const { orgId } = await requireOrg();
+  const { orgId } = await requireRole("manager");
   const parsed = CreateSchema.safeParse({
     name: input.name,
     establishmentId: input.establishmentId || undefined,
@@ -204,7 +196,7 @@ const SendSchema = z.object({
 });
 
 export async function sendSurveyInvite(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   const parsed = SendSchema.safeParse({
     campaignId: form.get("campaignId"),
     email: form.get("email"),
@@ -305,16 +297,16 @@ const BatchSendSchema = z.object({
  * Issue survey tokens for many recipients of one campaign and email each a
  * single-use link (or schedule it `scheduleHours` ahead by setting a future
  * token `createdAt` window — v1 sends immediately; scheduling is a soft flag).
- * Reuses the same token + email path as `sendSurveyInvite`. Manager-gated would
- * be ideal, but to match the existing surveys auth surface we keep `requireOrg`
- * (sending is the core action the existing single-invite uses).
+ * Reuses the same token + email path as `sendSurveyInvite`. Manager-gated
+ * (sending email is a privileged, cost-incurring action) — matches the
+ * `requireRole("manager")` boundary on `sendSurveyInvite`.
  */
 export async function sendSurveyBatch(input: {
   campaignId: string;
   recipients: { email: string; name?: string }[];
   scheduleHours?: number;
 }): Promise<{ ok: true; sent: number; failed: number } | { ok: false; error: string }> {
-  const { orgId, userId } = await requireOrg();
+  const { orgId, userId } = await requireRole("manager");
   const parsed = BatchSendSchema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues.map((i) => i.message).join("; ") };

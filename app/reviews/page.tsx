@@ -20,6 +20,7 @@ import { buildReplyDeepLink, getReviewSourceMeta } from "@/lib/reviews/source-me
 import Link from "next/link";
 import { AutoReplyToggle } from "./_components/auto-reply-toggle";
 import { ConnectGoogleEmpty } from "./_components/connect-google-empty";
+import { PlatformDeepLink } from "./_components/platform-deep-link";
 import { ReplyDraftBox } from "./_components/reply-draft-box";
 
 /**
@@ -423,15 +424,11 @@ function ReviewCard({ review: r, tone }: { review: ReviewRow; tone: 1 | 2 | 3 | 
           }}
         >
           <span style={{ color: "var(--rl-muted)" }}>Reply on platform:</span>
-          <a
+          <PlatformDeepLink
             href={replyDeepLink}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={(e) => e.stopPropagation()}
-            style={{ color: sourceMeta.fg, textDecoration: "none", fontWeight: 500 }}
-          >
-            Open in {sourceMeta.label} →
-          </a>
+            label={sourceMeta.label}
+            color={sourceMeta.fg}
+          />
         </div>
       )}
     </Link>

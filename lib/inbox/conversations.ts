@@ -277,6 +277,16 @@ export async function assignThread(input: {
   return softInbox(
     () =>
       withTenant(input.orgId, async (tx) => {
+        // Integrity: only assign to someone who is an active member of THIS org.
+        // Without this an arbitrary userId (e.g. a member of another tenant) could
+        // be written to assigneeId. Unassign (null) is always allowed.
+        if (input.assigneeId !== null) {
+          const member = await tx.membership.findFirst({
+            where: { userId: input.assigneeId, organizationId: input.orgId },
+            select: { id: true },
+          });
+          if (!member) return false;
+        }
         const r = await tx.inboxThread.updateMany({
           where: { id: input.threadId },
           data: { assigneeId: input.assigneeId },

@@ -11,7 +11,7 @@ import { suggestKeywordsAction, suggestCompetitorsAction } from "@/lib/seo/onboa
 /**
  * SEO onboarding wizard (Module 13). Shown FIRST while the report tabs are
  * locked, until the org completes the 5 steps. Steps:
- *   1. Connect Google (links to the existing google_business authorize route)
+ *   1. Connect Google (links to the existing google authorize route)
  *   2. Add website (+ GA4 / tracking snippet)
  *   3. Set keywords (AI/provider suggest, seeded from category + address)
  *   4. Add competitors (AI suggest up to 3)
@@ -133,7 +133,7 @@ function StepConnectGoogle({ connected, pending, onNext }: { connected: boolean;
           <Icon name="checkCircle" size={16} /> Google is connected
         </div>
       ) : (
-        <Link href="/api/connections/google_business/authorize" className="btn btn--sm btn--pri">
+        <Link href="/api/connections/google/authorize" className="btn btn--sm btn--pri">
           <Icon name="google" size={14} /> Connect Google Business
         </Link>
       )}
