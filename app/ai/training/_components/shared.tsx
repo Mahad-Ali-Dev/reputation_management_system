@@ -1,100 +1,17 @@
 "use client";
 
-import type { CSSProperties } from "react";
+import { textareaStyle } from "./shared-utils";
 
 /**
- * Shared field primitives + helpers for the AI Knowledge Base tabs.
- * Lifted out of the original app/ai/training/page.tsx so the server page and
- * the client tab panels share one source of truth for styling + readiness.
+ * Client field primitives for the AI Knowledge Base tabs.
+ *
+ * Pure helpers, types, and style constants live in ./shared-utils (server-safe)
+ * and are re-exported here so the client tab panels can keep importing
+ * everything from "./shared". The SERVER page imports directly from
+ * ./shared-utils (importing them through this "use client" module would make
+ * them client references and crash when called during server render).
  */
-
-export const DAYS = [
-  { key: "monday", label: "Mo" },
-  { key: "tuesday", label: "Tu" },
-  { key: "wednesday", label: "We" },
-  { key: "thursday", label: "Th" },
-  { key: "friday", label: "Fr" },
-  { key: "saturday", label: "Sa" },
-  { key: "sunday", label: "Su" },
-] as const;
-
-export type OperatingHours = Record<string, { open?: string; close?: string }>;
-
-export type TrainingProfile = {
-  businessOverview: string | null;
-  servicesProducts: string | null;
-  pricingDetails: string | null;
-  locations: string | null;
-  customPrompt: string | null;
-  operatingHours: unknown;
-  aiPersonalityStyle: string | null;
-  customerInquiryStyle: string | null;
-  bookingStyle: string | null;
-  complaintStyle: string | null;
-  supportStyle: string | null;
-  sourceUrl: string | null;
-  lastAutoUpdatedAt: Date | string | null;
-  updatedAt: Date | string;
-};
-
-export const inputStyle: CSSProperties = {
-  height: 32,
-  padding: "0 10px",
-  borderRadius: "var(--r-sm)",
-  border: "1px solid var(--line)",
-  background: "var(--surface)",
-  color: "var(--ink)",
-  fontFamily: "var(--f-mono)",
-  fontSize: 12,
-  outline: "none",
-};
-
-export const textareaStyle: CSSProperties = {
-  width: "100%",
-  padding: "10px 14px",
-  borderRadius: "var(--r)",
-  border: "1px solid var(--line)",
-  background: "var(--surface)",
-  color: "var(--ink)",
-  fontFamily: "var(--f-ui)",
-  fontSize: 13,
-  lineHeight: 1.6,
-  outline: "none",
-  resize: "vertical",
-};
-
-export function readiness(
-  profile: {
-    businessOverview: string | null;
-    servicesProducts: string | null;
-    pricingDetails: string | null;
-    customPrompt: string | null;
-    operatingHours: unknown;
-  } | null,
-): number {
-  if (!profile) return 0;
-  let score = 0;
-  if (profile.businessOverview && profile.businessOverview.length > 40) score += 25;
-  if (profile.servicesProducts && profile.servicesProducts.length > 30) score += 20;
-  if (profile.pricingDetails && profile.pricingDetails.length > 30) score += 20;
-  if (profile.customPrompt && profile.customPrompt.length > 100) score += 15;
-  const hours = (profile.operatingHours as OperatingHours | null) ?? {};
-  const open = Object.values(hours).filter((d) => d?.open && d?.close).length;
-  score += Math.min(20, open * 3);
-  return Math.min(100, score);
-}
-
-export function relativeTime(d: Date | string): string {
-  const date = typeof d === "string" ? new Date(d) : d;
-  const ms = Date.now() - date.getTime();
-  const min = Math.floor(ms / 60000);
-  if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
-  const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ago`;
-  const days = Math.floor(h / 24);
-  return `${days}d ago`;
-}
+export * from "./shared-utils";
 
 export function TextareaField({
   label,

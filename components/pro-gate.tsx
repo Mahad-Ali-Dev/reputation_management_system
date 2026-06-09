@@ -4,6 +4,12 @@ import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import type { FeatureKey } from "@/lib/billing/feature-access";
+import { upgradeHref } from "@/lib/billing/upgrade-href";
+
+// Re-exported so existing `@/components/pro-gate` consumers keep working. The
+// implementation lives in the non-client module above so SERVER components can
+// call it (see lib/billing/upgrade-href.ts).
+export { upgradeHref };
 
 /**
  * `<ProGate>` + the shared padlock / upgrade-CTA UI (A3).
@@ -20,11 +26,6 @@ import type { FeatureKey } from "@/lib/billing/feature-access";
  * leaking gated data). Every paid server action / API route behind the feature
  * must still call `assertEntitled(orgId)`.
  */
-
-/** Canonical upgrade route for any locked affordance. */
-export function upgradeHref(feature?: FeatureKey | string): string {
-  return feature ? `/subscription?feature=${encodeURIComponent(feature)}` : "/subscription";
-}
 
 /** Per-feature default copy for the lock card heading + blurb. */
 const FEATURE_COPY: Record<FeatureKey, { title: string; description: string }> = {

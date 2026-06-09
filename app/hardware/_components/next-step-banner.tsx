@@ -1,5 +1,5 @@
 import { Icon, type IconName } from "@/components/shell/icon";
-import { upgradeHref } from "@/components/pro-gate";
+import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { pickBannerVariant } from "@/lib/hardware/queries";
 import Link from "next/link";
 

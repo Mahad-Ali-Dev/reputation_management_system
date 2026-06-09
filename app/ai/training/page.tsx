@@ -7,7 +7,7 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
 import { KbTabs } from "./_components/kb-tabs";
-import { readiness, relativeTime, type TrainingProfile } from "./_components/shared";
+import { readiness, relativeTime, type TrainingProfile } from "./_components/shared-utils";
 
 /**
  * AI Knowledge Base — the 4-tab hub (Module 05).
