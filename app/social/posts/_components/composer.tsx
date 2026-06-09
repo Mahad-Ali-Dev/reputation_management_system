@@ -419,6 +419,7 @@ export function Composer({
                   <input
                     type="datetime-local"
                     className="ds-input"
+                    aria-label="Schedule date and time"
                     value={scheduledFor}
                     onChange={(e) => setScheduledFor(e.target.value)}
                   />
@@ -640,6 +641,7 @@ export function Composer({
             <h3 className="ds-card__title">Preview</h3>
             <select
               className="ds-select"
+              aria-label="Preview platform"
               value={previewPlatform}
               onChange={(e) => setPreviewPlatform(e.target.value as PreviewPlatform)}
               style={{ width: 130, height: 30, fontSize: 12 }}
@@ -845,6 +847,7 @@ function HashtagEditor({
         </span>
       ))}
       <input
+        aria-label="Add hashtag"
         value={draft}
         onChange={(e) => setDraft(e.target.value)}
         onKeyDown={(e) => {

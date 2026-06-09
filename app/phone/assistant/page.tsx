@@ -166,6 +166,7 @@ export default async function AssistantConfigPage() {
             <CardContent>
               <textarea
                 name="customInstructions"
+                aria-label="Custom instructions"
                 rows={6}
                 maxLength={3000}
                 defaultValue={assistant?.customInstructions ?? ""}

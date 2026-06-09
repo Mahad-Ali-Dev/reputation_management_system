@@ -348,6 +348,7 @@ function ChoicesEditor({ choices, onChange }: { choices: string[]; onChange: (ch
         <div key={i} className="row" style={{ gap: 6 }}>
           <input
             className="ds-textarea"
+            aria-label={`Choice ${i + 1}`}
             value={c}
             onChange={(e) => {
               const next = [...choices];

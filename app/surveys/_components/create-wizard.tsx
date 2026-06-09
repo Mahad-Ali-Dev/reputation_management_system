@@ -191,6 +191,7 @@ export function CreateWizard({
             <div className="row" style={{ gap: 8 }}>
               <input
                 className="ds-textarea"
+                aria-label="Add emails manually"
                 value={manualInput}
                 onChange={(e) => setManualInput(e.target.value)}
                 onKeyDown={(e) => {

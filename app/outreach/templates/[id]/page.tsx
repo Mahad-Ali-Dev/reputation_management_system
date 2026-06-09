@@ -76,7 +76,7 @@ export default async function TemplateEditorPage({
         initial={initial}
         businessName={org.name}
         sampleAddress={sampleAddress}
-        changeLogoHref={firstEstab ? `/establishments/${firstEstab.id}` : "/settings"}
+        changeLogoHref={firstEstab ? `/establishments/${firstEstab.id}` : "/settings/account"}
       />
     </AppShellServer>
   );
