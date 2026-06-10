@@ -1,6 +1,4 @@
 import { Suspense } from "react";
-import Link from "next/link";
-import { Icon, type IconName } from "@/components/shell/icon";
 import { withTenant } from "@/lib/db/with-tenant";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { channelCounts, countNeedsAttention, countOpenThreads } from "@/lib/inbox/queries";
@@ -15,6 +13,9 @@ import { CommentsPanel, type CommentRowView } from "./comments-panel";
 import { ModerationPanel, type QueueItemView } from "./moderation-panel";
 import { LiveChatPanel } from "./livechat-panel";
 import { AutomationsPanel } from "./automations-panel";
+import { MeetingsPanel } from "./meetings-panel";
+import { AnalyticsPanel } from "./analytics-panel";
+import { countNewMeetingRequests } from "@/lib/inbox/meetings";
 import type {
   KeywordRuleView,
   ModerationConfigView,
@@ -54,6 +55,7 @@ const VALID_TABS = new Set([
   "live-chat",
   "moderation",
   "automation",
+  "meetings",
   "analytics",
 ]);
 
@@ -66,14 +68,20 @@ export async function InboxShell({
 }) {
   const tab = searchParams.tab && VALID_TABS.has(searchParams.tab) ? searchParams.tab : "conversations";
 
-  const [openCount, needsAttention] = await Promise.all([
+  const [openCount, needsAttention, newMeetings] = await Promise.all([
     countOpenThreads(orgId),
     countNeedsAttention(orgId),
+    countNewMeetingRequests(orgId),
   ]);
 
   return (
     <>
-      <InboxTabsBar active={tab} needsAttention={needsAttention} openCount={openCount} />
+      <InboxTabsBar
+        active={tab}
+        needsAttention={needsAttention}
+        openCount={openCount}
+        newMeetings={newMeetings}
+      />
 
       {tab === "conversations" && (
         <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
@@ -109,13 +117,16 @@ export async function InboxShell({
         </Suspense>
       )}
 
+      {tab === "meetings" && (
+        <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
+          <MeetingsPanel orgId={orgId} status={searchParams.status} />
+        </Suspense>
+      )}
+
       {tab === "analytics" && (
-        <StubPanel
-          icon="pie"
-          title="Support analytics"
-          body="Volume, response time, SLA and sentiment across your support channels."
-          ctas={[{ label: "Open analytics", href: "/support/analytics", primary: true }]}
-        />
+        <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
+          <AnalyticsPanel orgId={orgId} />
+        </Suspense>
       )}
     </>
   );
@@ -316,44 +327,5 @@ async function loadKeywordRows(orgId: string): Promise<KeywordRuleView[]> {
       }),
     [],
     { event: "inbox.shell.keyword_rows_failed", swallowAll: true, context: { orgId } },
-  );
-}
-
-/**
- * A simple connected/deep-link placeholder for tabs whose full build is a later
- * phase. Keeps the shell honest (every tab renders something) without faking
- * functionality. Server component — pure links, no interactivity.
- */
-function StubPanel({
-  icon,
-  title,
-  body,
-  ctas,
-}: {
-  icon: IconName;
-  title: string;
-  body: string;
-  ctas: { label: string; href: string; primary?: boolean }[];
-}) {
-  return (
-    <div className="ds-card">
-      <div className="ds-card__body dim" style={{ textAlign: "center", padding: 48 }}>
-        <Icon name={icon} size={28} style={{ color: "var(--pri)" }} />
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>{title}</h3>
-        <p style={{ fontSize: 13, marginTop: 6, maxWidth: 460, marginInline: "auto" }}>{body}</p>
-        <div className="row" style={{ justifyContent: "center", gap: 8, marginTop: 16 }}>
-          {ctas.map((c) => (
-            <Link
-              key={c.href}
-              href={c.href}
-              className={c.primary ? "btn btn--pri" : "btn btn--sm"}
-              style={{ textDecoration: "none" }}
-            >
-              {c.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-    </div>
   );
 }

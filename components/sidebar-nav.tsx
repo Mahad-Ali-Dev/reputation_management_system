@@ -5,7 +5,7 @@ import { LockIcon, upgradeHref } from "@/components/pro-gate";
 import type { FeatureKey } from "@/lib/billing/feature-access";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 /**
  * Persistent sidebar nav — repulabs v3 (clean redesign), unified IA.
@@ -70,7 +70,7 @@ const NAV: NavItem[] = [
 
   { group: "Social & Messaging" },
   { href: "/support", label: "Unified Inbox", icon: "chat", pro: "advanced_inbox" },
-  { href: "/support/meetings", label: "Meeting Requests", icon: "cal" },
+  { href: "/support?tab=meetings", label: "Meeting Requests", icon: "cal" },
   { href: "/social/posts", label: "Post Creator", icon: "share", pro: "image_creatives" },
 
   { group: "Engagement & CRM" },
@@ -86,14 +86,21 @@ const NAV: NavItem[] = [
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
-function pathMatches(pathname: string, href: string): boolean {
+function pathMatches(pathname: string, href: string, activeTab: string | null): boolean {
   if (href === "/reviews") {
     // keep Review Feed from swallowing /reviews/dispute (its own item)
     return pathname === "/reviews" || /^\/reviews\/(?!dispute)[^/]+$/.test(pathname);
   }
+  // Unified Inbox + Meeting requests both live on /support now (the latter is the
+  // `?tab=meetings` view). Disambiguate the two sidebar entries by the active tab
+  // so only one lights up at a time. All other /support/* (legacy redirect) paths
+  // belong to Unified Inbox.
+  if (href === "/support?tab=meetings") {
+    return pathname === "/support" && activeTab === "meetings";
+  }
   if (href === "/support") {
-    // keep Unified Inbox from swallowing /support/meetings (its own item)
-    return pathname === "/support" || /^\/support\/(?!meetings)[^/]+/.test(pathname);
+    if (pathname === "/support") return activeTab !== "meetings";
+    return pathname.startsWith("/support/");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
@@ -108,6 +115,8 @@ export function SidebarNav({
   planLabel: string;
 }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeTab = searchParams?.get("tab") ?? null;
   const isPro = /pro|scale|business|enterprise/i.test(planLabel);
 
   return (
@@ -158,7 +167,7 @@ export function SidebarNav({
               key={n.href}
               href={href}
               onClick={onNavigate}
-              className={`sb__item${pathMatches(pathname, n.href) ? " is-active" : ""}`}
+              className={`sb__item${pathMatches(pathname, n.href, activeTab) ? " is-active" : ""}`}
               aria-label={locked ? `${n.label} (Pro)` : undefined}
               title={locked ? `${n.label} — upgrade to Pro` : undefined}
               style={locked ? { color: "var(--rl-muted-2)" } : undefined}

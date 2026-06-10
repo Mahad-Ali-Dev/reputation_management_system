@@ -44,5 +44,8 @@ export async function updateMeetingRequestStatus(form: FormData): Promise<void> 
     { event: "inbox.meeting_request.update_failed", context: { orgId, id, status } },
   );
 
+  // The queue now lives in the unified workspace ("Meeting requests" view);
+  // revalidate both the new home and the legacy path (kept as a redirect).
+  revalidatePath("/support");
   revalidatePath("/support/meetings");
 }

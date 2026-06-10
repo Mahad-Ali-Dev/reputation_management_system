@@ -19,10 +19,13 @@ export function InboxTabsBar({
   active,
   needsAttention,
   openCount,
+  newMeetings = 0,
 }: {
   active: string;
   needsAttention: number;
   openCount: number;
+  /** New (un-actioned) meeting requests — drives the "Meeting requests" badge. */
+  newMeetings?: number;
 }) {
   const tabs: TabItem[] = [
     {
@@ -35,6 +38,12 @@ export function InboxTabsBar({
     { key: "live-chat", label: "Live Chat", icon: "bot" },
     { key: "moderation", label: "Moderation", icon: "flag" },
     { key: "automation", label: "Automation", icon: "bolt" },
+    {
+      key: "meetings",
+      label: "Meeting requests",
+      icon: "cal",
+      badge: newMeetings > 0 ? newMeetings : undefined,
+    },
     { key: "analytics", label: "Analytics", icon: "pie" },
   ];
 
