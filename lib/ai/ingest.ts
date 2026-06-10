@@ -7,15 +7,26 @@ import { voyageEmbed } from "./voyage";
  * Document ingestion pipeline:
  *   text → chunker → Voyage embeddings → ai_embeddings rows (pgvector)
  *
- * Chunker (v1, header-aware sentence-window):
- *   - Split by ## headers → preserve sections
- *   - Within each section, sliding window of ~500 chars with 80-char overlap
- *   - Each chunk gets {section, position} metadata for citation rendering
+ * Chunker (v2, full header-aware sentence-window):
+ *   - Split on ANY markdown header (# / ## / ### / ####) — not just ## — so a
+ *     page's H1 title and H3 sub-sections each anchor their own section. The
+ *     crawler emits all four levels (see crawl.ts:htmlToText), so v1's H2-only
+ *     split was silently merging titled sections into one giant chunk.
+ *   - Each chunk carries the NEAREST preceding heading as {section}, so a deeper
+ *     heading inside a section refines the label rather than being lost.
+ *   - Within an over-long section, a sentence-aware sliding window of
+ *     ~CHUNK_TARGET_CHARS with CHUNK_OVERLAP_CHARS of overlap keeps context
+ *     across the cut; overlap snaps back to a sentence start so a chunk never
+ *     begins mid-word.
+ *   - {section, position} metadata is kept for citation rendering + retrieval.
  */
 
 const CHUNK_TARGET_CHARS = 500;
 const CHUNK_OVERLAP_CHARS = 80;
 const CHUNK_MAX_CHARS = 800;
+
+// A markdown ATX heading line: 1–4 leading '#', a space, then the title.
+const HEADING_RE = /^(#{1,4})\s+(.+?)\s*$/;
 
 type Chunk = {
   text: string;
@@ -23,20 +34,52 @@ type Chunk = {
   metadata: { section?: string };
 };
 
+/**
+ * Split the corpus into {title, body} sections on every markdown heading level.
+ * Lines before the first heading form an untitled lead section so a page with
+ * intro copy above its first header doesn't lose that text.
+ */
+function splitSections(normalized: string): Array<{ title?: string; body: string }> {
+  const lines = normalized.split("\n");
+  const sections: Array<{ title?: string; body: string[] }> = [];
+  let current: { title?: string; body: string[] } = { body: [] };
+
+  for (const line of lines) {
+    const m = line.match(HEADING_RE);
+    if (m) {
+      // Close the in-progress section (if it has any content) and open a new one.
+      if (current.title !== undefined || current.body.some((l) => l.trim())) {
+        sections.push(current);
+      }
+      current = { title: m[2]?.trim(), body: [] };
+    } else {
+      current.body.push(line);
+    }
+  }
+  if (current.title !== undefined || current.body.some((l) => l.trim())) {
+    sections.push(current);
+  }
+
+  return sections.map((s) => ({
+    title: s.title,
+    // Re-attach the heading line so the chunk text reads naturally + keeps the
+    // header words in the embedded text (they're strong retrieval signal).
+    body: (s.title ? `${s.title}\n` : "") + s.body.join("\n").trim(),
+  }));
+}
+
 export function chunkText(content: string): Chunk[] {
   // Normalize whitespace + line endings
   const normalized = content.replace(/\r\n/g, "\n").trim();
   if (!normalized) return [];
 
-  // Split by markdown H2 (## ) or double newline
-  const sections = normalized.split(/\n(?=##\s)/);
+  const sections = splitSections(normalized);
   const chunks: Chunk[] = [];
   let pos = 0;
 
   for (const section of sections) {
-    const m = section.match(/^##\s+(.+?)\n/);
-    const sectionTitle = m?.[1]?.trim() ?? undefined;
-    const body = section.trim();
+    const sectionTitle = section.title || undefined;
+    const body = section.body.trim();
     if (!body) continue;
 
     if (body.length <= CHUNK_MAX_CHARS) {
@@ -71,8 +114,19 @@ export function chunkText(content: string): Chunk[] {
         });
       }
       if (cutoff >= body.length) break;
-      i = cutoff - CHUNK_OVERLAP_CHARS;
-      if (i < 0) i = cutoff;
+      // Overlap back by CHUNK_OVERLAP_CHARS, then snap forward to the next
+      // sentence/word boundary so the overlapped chunk never starts mid-word.
+      let nextStart = cutoff - CHUNK_OVERLAP_CHARS;
+      if (nextStart <= i) {
+        // Section had no usable sentence break in the window — advance hard to
+        // guarantee forward progress (prevents an infinite loop).
+        nextStart = cutoff;
+      } else {
+        const overlap = body.slice(nextStart, cutoff);
+        const space = overlap.search(/\s/);
+        if (space > 0) nextStart += space + 1;
+      }
+      i = nextStart;
     }
   }
 

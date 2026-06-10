@@ -3,6 +3,10 @@ import { roleAtLeast } from "@/lib/auth/rbac";
 import { createPortalSession } from "@/lib/billing/actions";
 import { NextResponse } from "next/server";
 
+// Auth-dependent handler (reads the session cookie via `auth()`) — never
+// statically optimize.
+export const dynamic = "force-dynamic";
+
 export async function POST() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;

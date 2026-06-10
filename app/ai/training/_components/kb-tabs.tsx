@@ -5,17 +5,23 @@ import { TabBar, type TabItem } from "@/components/tab-bar";
 import { autosaveAiTraining } from "@/lib/ai/training-actions";
 import type { KnowledgeGapRow, LearningStats } from "@/lib/ai/knowledge-gaps";
 import { AutoSetup } from "./auto-setup";
-import { BusinessInfoTab, type BusinessFields } from "./business-info-tab";
-import { LearningMonitorTab } from "./learning-monitor-tab";
+import type { BusinessFields } from "./business-info-tab";
+import { KnowledgeTab } from "./knowledge-tab";
 import { PersonalityTab, type PersonalityFields } from "./personality-tab";
-import { SaveState, type OperatingHours, type TrainingProfile } from "./shared";
-import { TestAiTab } from "./test-ai-tab";
+import { SaveState, type KbSource, type OperatingHours, type TrainingProfile } from "./shared";
+import { TestTab } from "./test-tab";
 
 /**
- * 4-tab KB shell (Module 05). Switches Business Info / Personality / Test AI /
- * Learning Monitor WITHOUT a page reload (AC). Reuses the Wave-0 <TabBar> in
- * controlled mode and keeps all panels mounted (toggled with `hidden`) so per-
- * tab state survives a switch. Deep-links via URL hash (#business etc.).
+ * 3-tab KB workspace (Module 05, redesigned per OVERNIGHT_BLUEPRINT):
+ *   - Knowledge: sources (incl. auto-setup website doc) + re-scan + readiness,
+ *     plus the editable/autosaving business-profile fields.
+ *   - Behavior:  personality/voice + inquiry/booking/complaint/support style +
+ *     custom instructions.
+ *   - Test:      the chat tester + the knowledge-gaps / learning monitor.
+ *
+ * Switches WITHOUT a page reload (AC). Reuses the Wave-0 <TabBar> in controlled
+ * mode and keeps all panels mounted (toggled with `hidden`) so per-tab state
+ * survives a switch. Deep-links via URL hash (#knowledge etc.).
  *
  * Owns the editable profile state so the debounced autosave always POSTs the
  * COMPLETE profile to autosaveAiTraining — editing one field never clobbers
@@ -25,25 +31,35 @@ import { TestAiTab } from "./test-ai-tab";
  * first; "skip" reveals the tabs.
  */
 
-const TAB_KEYS = ["business", "personality", "test", "learning"] as const;
+const TAB_KEYS = ["knowledge", "behavior", "test"] as const;
 type TabKey = (typeof TAB_KEYS)[number];
+
+// Back-compat: the old 4-tab hashes deep-link into the new consolidated tabs.
+const HASH_ALIASES: Record<string, TabKey> = {
+  business: "knowledge",
+  personality: "behavior",
+  learning: "test",
+};
 
 const AUTOSAVE_DEBOUNCE_MS = 1200;
 
 function hashToTab(): TabKey {
-  if (typeof window === "undefined") return "business";
+  if (typeof window === "undefined") return "knowledge";
   const h = window.location.hash.replace("#", "");
-  return (TAB_KEYS as readonly string[]).includes(h) ? (h as TabKey) : "business";
+  if ((TAB_KEYS as readonly string[]).includes(h)) return h as TabKey;
+  return HASH_ALIASES[h] ?? "knowledge";
 }
 
 export function KbTabs({
   profile,
+  sources,
   gaps,
   answeredGaps,
   stats,
   suggestions,
 }: {
   profile: TrainingProfile;
+  sources: KbSource[];
   gaps: KnowledgeGapRow[];
   answeredGaps: KnowledgeGapRow[];
   stats: LearningStats;
@@ -51,7 +67,7 @@ export function KbTabs({
 }) {
   const profileEmpty = !profile.businessOverview && !profile.sourceUrl;
   const [showSetup, setShowSetup] = useState(profileEmpty);
-  const [tab, setTab] = useState<TabKey>("business");
+  const [tab, setTab] = useState<TabKey>("knowledge");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   // Editable field state (single source of truth for autosave).
@@ -131,10 +147,9 @@ export function KbTabs({
   }
 
   const tabs: TabItem[] = [
-    { key: "business", label: "Business Info", icon: "building" },
-    { key: "personality", label: "Personality", icon: "sparkle" },
-    { key: "test", label: "Test AI", icon: "bot" },
-    { key: "learning", label: "Learning Monitor", icon: "trend", badge: stats.open || undefined },
+    { key: "knowledge", label: "Knowledge", icon: "box" },
+    { key: "behavior", label: "Behavior", icon: "sparkle" },
+    { key: "test", label: "Test", icon: "bot", badge: stats.open || undefined },
   ];
 
   return (
@@ -144,17 +159,20 @@ export function KbTabs({
         <SaveState state={saveState} />
       </div>
 
-      <div role="tabpanel" id="panel-business" aria-labelledby="tab-business" hidden={tab !== "business"}>
-        <BusinessInfoTab fields={business} onChange={(patch) => setBusiness((b) => ({ ...b, ...patch }))} />
+      <div role="tabpanel" id="panel-knowledge" aria-labelledby="tab-knowledge" hidden={tab !== "knowledge"}>
+        <KnowledgeTab
+          fields={business}
+          onChange={(patch) => setBusiness((b) => ({ ...b, ...patch }))}
+          sources={sources}
+          sourceUrl={profile.sourceUrl}
+          lastAutoUpdatedAt={profile.lastAutoUpdatedAt}
+        />
       </div>
-      <div role="tabpanel" id="panel-personality" aria-labelledby="tab-personality" hidden={tab !== "personality"}>
+      <div role="tabpanel" id="panel-behavior" aria-labelledby="tab-behavior" hidden={tab !== "behavior"}>
         <PersonalityTab fields={personality} onChange={(patch) => setPersonality((p) => ({ ...p, ...patch }))} />
       </div>
       <div role="tabpanel" id="panel-test" aria-labelledby="tab-test" hidden={tab !== "test"}>
-        <TestAiTab suggestions={suggestions} />
-      </div>
-      <div role="tabpanel" id="panel-learning" aria-labelledby="tab-learning" hidden={tab !== "learning"}>
-        <LearningMonitorTab stats={stats} openGaps={gaps} answeredGaps={answeredGaps} />
+        <TestTab suggestions={suggestions} stats={stats} openGaps={gaps} answeredGaps={answeredGaps} />
       </div>
     </div>
   );

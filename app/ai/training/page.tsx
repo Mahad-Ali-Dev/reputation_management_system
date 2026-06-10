@@ -7,7 +7,7 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
 import { KbTabs } from "./_components/kb-tabs";
-import { readiness, relativeTime, type TrainingProfile } from "./_components/shared-utils";
+import { readiness, relativeTime, type KbSource, type TrainingProfile } from "./_components/shared-utils";
 
 /**
  * AI Knowledge Base — the 4-tab hub (Module 05).
@@ -68,6 +68,45 @@ export default async function AiTrainingPage() {
     listKnowledgeGaps(orgId, { status: "answered", limit: 30 }),
     learningStats(orgId),
   ]);
+
+  // Knowledge sources (the auto-setup website document + any manual/PDF docs).
+  // Fail-soft: the ai_documents table may not be migrated on an older deploy.
+  const sourcesRaw = await withTenant(orgId, async (tx) =>
+    tx.aiDocument.findMany({
+      where: { organizationId: orgId },
+      select: {
+        id: true,
+        title: true,
+        sourceType: true,
+        sourceUri: true,
+        status: true,
+        lastIndexedAt: true,
+        createdAt: true,
+        sourceMetadata: true,
+        _count: { select: { embeddings: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+    }),
+  ).catch((err: unknown) => {
+    if (isMissingRelation(err)) return [];
+    throw err;
+  });
+
+  const sources: KbSource[] = sourcesRaw.map((d) => {
+    const meta = (d.sourceMetadata ?? null) as { pagesCrawled?: number; auto?: boolean } | null;
+    return {
+      id: d.id,
+      title: d.title,
+      sourceType: d.sourceType,
+      sourceUri: d.sourceUri,
+      status: d.status,
+      chunks: d._count.embeddings,
+      pagesCrawled: meta?.pagesCrawled ?? null,
+      lastIndexedAt: d.lastIndexedAt,
+      createdAt: d.createdAt,
+    };
+  });
 
   const suggestions = buildSuggestions(profile, profile?.unsureTopics ?? []);
   const score = readiness(profile);
@@ -154,6 +193,7 @@ export default async function AiTrainingPage() {
 
       <KbTabs
         profile={tabProfile}
+        sources={sources}
         gaps={openGaps}
         answeredGaps={answeredGaps}
         stats={stats}

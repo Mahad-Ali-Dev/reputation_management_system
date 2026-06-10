@@ -4,6 +4,10 @@ import { createCheckoutSession } from "@/lib/billing/actions";
 import { logger } from "@/lib/logger";
 import { NextResponse } from "next/server";
 
+// Auth-dependent handler (reads the session cookie via `auth()`) — never
+// statically optimize.
+export const dynamic = "force-dynamic";
+
 /**
  * POST /api/billing/checkout
  *

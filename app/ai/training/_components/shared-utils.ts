@@ -21,6 +21,19 @@ export const DAYS = [
 
 export type OperatingHours = Record<string, { open?: string; close?: string }>;
 
+/** A knowledge source row (an AiDocument) shown in the Knowledge tab. */
+export type KbSource = {
+  id: string;
+  title: string;
+  sourceType: string; // manual | url | pdf | gbp_listing
+  sourceUri: string | null;
+  status: string; // indexing | indexed | failed
+  chunks: number;
+  pagesCrawled: number | null;
+  lastIndexedAt: Date | string | null;
+  createdAt: Date | string;
+};
+
 export type TrainingProfile = {
   businessOverview: string | null;
   servicesProducts: string | null;
