@@ -39,8 +39,11 @@ function Spinner({ className }: { className?: string }) {
   );
 }
 
+// M3 buttons are fully-rounded pills with a crisp label. rounded-rl-pill +
+// label tracking gives the Material filled/tonal/outlined look; the API is
+// unchanged (variants/sizes/props identical).
 const buttonBase =
-  "rl-focus-ring inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-rl-control rl-label shadow-rl-sm transition-[background,color,border-color,box-shadow,transform] duration-150 ease-rl active:translate-y-px disabled:pointer-events-none disabled:opacity-50";
+  "rl-focus-ring inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-rl-pill rl-label tracking-[0.01em] shadow-rl-sm transition-[background,color,border-color,box-shadow,transform] duration-150 ease-rl active:translate-y-px disabled:pointer-events-none disabled:opacity-50";
 
 const buttonVariants = {
   /* M3 filled — primary container, soft elevation, brighten on hover */
@@ -49,9 +52,9 @@ const buttonVariants = {
   /* M3 outlined — quiet, line-only neutral */
   secondary:
     "border border-rl-border-strong bg-rl-surface text-rl-text shadow-rl-sm hover:bg-rl-surface-3 hover:shadow-rl-md active:bg-rl-surface-3 active:shadow-rl-sm",
-  /* M3 tonal — soft primary container, the recommended secondary emphasis */
+  /* M3 tonal — filled primary CONTAINER, the recommended secondary emphasis */
   tonal:
-    "border border-transparent bg-rl-pri-50 text-rl-pri-700 shadow-none hover:bg-rl-pri-100 active:bg-rl-pri-100",
+    "border border-transparent bg-rl-pri-container text-rl-on-pri-container shadow-none hover:shadow-rl-sm hover:brightness-[0.97] active:brightness-95",
   /* M3 outlined-primary — primary line + primary text */
   outlined:
     "border border-rl-pri-100 bg-transparent text-rl-pri-700 shadow-none hover:border-rl-pri-300 active:bg-rl-pri-50",

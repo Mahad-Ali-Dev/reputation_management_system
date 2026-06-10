@@ -28,14 +28,16 @@ describe("TabBar active-pill — design-system.css contract", () => {
     expect(css).toMatch(/\.tabbar\s+\.tabs__t\.is-active\s*\{/);
   });
 
-  it("the pill uses the same blue-tint tokens as `.sb__item.is-active`", () => {
-    // Extract the .tabbar active-tab block and assert it sets the pri-50
-    // background + pri foreground that the sidebar active item uses.
+  it("fills with a Material tonal container (secondary-container, --pri-50 fallback)", () => {
+    // Material You: the active TabBar pill fills with the M3 SECONDARY tonal
+    // container (the sidebar nav-drawer item uses the PRIMARY container) — both
+    // fall back to the legacy --pri-50 blue tint, so it stays on-brand if the
+    // M3 tokens are ever absent.
     const block = css.match(/\.tabbar\s+\.tabs__t\.is-active\s*\{([^}]*)\}/);
     expect(block).not.toBeNull();
     const body = block?.[1] ?? "";
-    expect(body).toMatch(/background:\s*var\(--pri-50\)/);
-    expect(body).toMatch(/color:\s*var\(--pri\)/);
+    expect(body).toMatch(/background:\s*var\(--m3-secondary-container,\s*var\(--pri-50\)\)/);
+    expect(body).toMatch(/color:\s*var\(--m3-on-secondary-container/);
   });
 
   it("neutralizes the underline border + bottom margin inside `.tabbar`", () => {

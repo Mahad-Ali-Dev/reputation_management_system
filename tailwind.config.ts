@@ -71,6 +71,16 @@ const config: Config = {
           "info-bg": "var(--info-bg)",
           rating: "var(--rating-filled)",
           "rating-empty": "var(--rating-empty)",
+          /* M3 tonal roles — primary/secondary/tertiary + containers, so the
+             React component lib can use Material color roles directly. */
+          "pri-container": "var(--m3-primary-container)",
+          "on-pri-container": "var(--m3-on-primary-container)",
+          "secondary-container": "var(--m3-secondary-container)",
+          "on-secondary-container": "var(--m3-on-secondary-container)",
+          tertiary: "var(--m3-tertiary)",
+          "tertiary-container": "var(--m3-tertiary-container)",
+          "on-tertiary-container": "var(--m3-on-tertiary-container)",
+          tint: "var(--surface-tint)",
         },
       },
       boxShadow: {
@@ -93,9 +103,11 @@ const config: Config = {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        "rl-control": "8px",
-        "rl-card": "12px",
-        "rl-layer": "16px",
+        /* M3 shape scale — larger Material radii. Controls (buttons, inputs,
+           chips) at 12px, cards at 20px, layers (modals, sheets) at 24px. */
+        "rl-control": "12px",
+        "rl-card": "20px",
+        "rl-layer": "24px",
         "rl-pill": "9999px",
       },
       fontFamily: {

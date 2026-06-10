@@ -62,6 +62,49 @@
     --trust: #12b998;
     --trust-soft: #dff8ed;
 
+    /* ── M3 TONAL ROLES (additive) ──────────────────────────────────────
+       A full Material-You role set derived from the brand royal-blue +
+       teal. Each accent ships a paired container + on-container so chips,
+       FABs, tonal buttons and selected states all read Material. These do
+       NOT replace --pri / --trust — they sit alongside the existing palette
+       so brand recognition is preserved; the SYSTEM just reads M3. */
+    /* primary = brand royal blue */
+    --m3-primary: #2457ff;
+    --m3-on-primary: #ffffff;
+    --m3-primary-container: #dde6ff;
+    --m3-on-primary-container: #0a1f6e;
+    /* secondary = a calmer, desaturated blue-slate companion */
+    --m3-secondary: #4a5578;
+    --m3-on-secondary: #ffffff;
+    --m3-secondary-container: #e3e7f4;
+    --m3-on-secondary-container: #1a2240;
+    /* tertiary = teal "Trust" — the accent role for highlights + assist chips */
+    --m3-tertiary: #0e9c80;
+    --m3-on-tertiary: #ffffff;
+    --m3-tertiary-container: #c6f2e6;
+    --m3-on-tertiary-container: #00382c;
+    /* error role */
+    --m3-error: #c0344a;
+    --m3-on-error: #ffffff;
+    --m3-error-container: #ffdadf;
+    --m3-on-error-container: #5a0014;
+
+    /* ── M3 SURFACE TINT (additive) ─────────────────────────────────────
+       The Material elevation tint: raised surfaces pick up a hint of the
+       primary hue. --surface-tint is the hue; --surface-tint-1..5 are
+       ready-to-layer translucent washes for elevation levels 1→5. Applied
+       via .ds-surface-tint / Tailwind shadow-rl-* tints below. */
+    --surface-tint: #2457ff;
+    --surface-tint-1: rgba(36, 87, 255, 0.04);
+    --surface-tint-2: rgba(36, 87, 255, 0.06);
+    --surface-tint-3: rgba(36, 87, 255, 0.08);
+    --surface-tint-4: rgba(36, 87, 255, 0.1);
+    --surface-tint-5: rgba(36, 87, 255, 0.12);
+    /* tinted container surfaces — white panels with a primary-hued lift, so
+       cards read as Material tonal surfaces rather than flat white. */
+    --surface-container-tint: #f4f6ff;
+    --surface-container-tint-high: #eef2ff;
+
     /* state — warmed to artboard swatches */
     --ok: #0b8f6d;
     --ok-soft: #dff8ed;
@@ -78,14 +121,27 @@
       sans-serif;
     --f-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
-    /* radii — M3-grade: slightly larger, modern, friendly. (Names preserved.) */
+    /* radii — M3 shape scale: larger Material radii throughout. Cards land at
+       16–24px, controls at 12–16px, FAB at 16px. (Names preserved; values
+       pushed up toward the Material You shape ramp.) */
     --r-xs: 8px;
-    --r-sm: 10px;
-    --r: 12px;
-    --r-md: 18px;
+    --r-sm: 12px;
+    --r: 14px;
+    --r-md: 20px;
     --r-lg: 24px;
-    --r-xl: 30px;
+    --r-xl: 32px;
     --r-pill: 999px;
+    /* ── M3 SHAPE SCALE (additive, canonical names) ─────────────────────
+       The Material You corner ramp. Use --shape-* anywhere you want the
+       named scale; the legacy --r-* aliases above now track these sizes. */
+    --shape-none: 0px;
+    --shape-xs: 8px;
+    --shape-sm: 12px;
+    --shape-md: 16px;
+    --shape-lg: 20px;
+    --shape-xl: 28px;
+    --shape-2xl: 36px;
+    --shape-full: 999px;
     /* M3 named radius aliases (additive) — shape scale */
     --r-none: 0px;
     --r-2xl: 36px;
@@ -150,15 +206,17 @@
        low opacity for airy, premium depth. Existing names preserved. */
     --sh: 0 1px 2px rgba(15, 23, 42, 0.03), 0 0 0 1px rgba(15, 23, 42, 0.04);
     --sh-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.09);
-    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.035), 0 12px 32px -16px rgba(15, 23, 42, 0.07);
+    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.035), 0 12px 32px -16px rgba(36, 87, 255, 0.1);
     --sh-2: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 44px -18px rgba(15, 23, 42, 0.12), 0 6px 16px
       -8px rgba(15, 23, 42, 0.06);
     --sh-pop: 0 30px 66px -22px rgba(15, 23, 42, 0.22), 0 10px 22px -10px rgba(15, 23, 42, 0.1);
-    /* M3 elevation ramp (additive aliases) — level 1→5, contact + ambient */
+    /* M3 elevation ramp (additive aliases) — level 1→5, contact + ambient.
+       Raised levels carry the Material surface-tint (primary-hued ambient)
+       so cards/menus pick up the M3 elevation tint as they rise. */
     --sh-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
-    --sh-md: 0 1px 2px rgba(15, 23, 42, 0.045), 0 6px 16px -6px rgba(15, 23, 42, 0.1);
-    --sh-lg: 0 2px 4px -1px rgba(15, 23, 42, 0.05), 0 12px 28px -8px rgba(15, 23, 42, 0.13);
-    --sh-xl: 0 4px 8px -2px rgba(15, 23, 42, 0.06), 0 24px 48px -12px rgba(15, 23, 42, 0.18);
+    --sh-md: 0 1px 2px rgba(36, 87, 255, 0.05), 0 6px 16px -6px rgba(36, 87, 255, 0.12);
+    --sh-lg: 0 2px 4px -1px rgba(36, 87, 255, 0.06), 0 12px 28px -8px rgba(36, 87, 255, 0.16);
+    --sh-xl: 0 4px 8px -2px rgba(36, 87, 255, 0.07), 0 24px 48px -12px rgba(36, 87, 255, 0.2);
 
     /* Tailwind shadow-rl-* tokens — also declared at :root so PORTALED
        content (Dialog/Dropdown/Tooltip mounted outside .rl-theme) resolves
@@ -261,12 +319,31 @@
     --info-bg: var(--pri-50);
     --rating-filled: #f5a623;
     --rating-empty: #e6e8eb;
-    /* M3 tonal elevation — soft contact + diffuse ambient at low opacity.
-       Drives Tailwind shadow-rl-sm/md/lg across the component library. */
+    /* M3 tonal roles + surface tint, re-declared in-scope so the React
+       component library (.rl-theme) resolves the Material You palette. */
+    --m3-primary: #2457ff;
+    --m3-on-primary: #ffffff;
+    --m3-primary-container: #dde6ff;
+    --m3-on-primary-container: #0a1f6e;
+    --m3-secondary: #4a5578;
+    --m3-secondary-container: #e3e7f4;
+    --m3-on-secondary-container: #1a2240;
+    --m3-tertiary: #0e9c80;
+    --m3-tertiary-container: #c6f2e6;
+    --m3-on-tertiary-container: #00382c;
+    --surface-tint: #2457ff;
+    --surface-tint-1: rgba(36, 87, 255, 0.04);
+    --surface-tint-2: rgba(36, 87, 255, 0.06);
+    --surface-tint-3: rgba(36, 87, 255, 0.08);
+    --surface-container-tint: #f4f6ff;
+    --surface-container-tint-high: #eef2ff;
+    /* M3 tonal elevation — soft contact + diffuse ambient with the Material
+       surface-tint overlay baked into raised levels (the primary-hued lift
+       that defines M3 elevation). Drives Tailwind shadow-rl-* across the lib. */
     --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.04);
-    --shadow-md: 0 1px 2px rgba(16, 24, 40, 0.045), 0 8px 20px -6px rgba(16, 24, 40, 0.1);
-    --shadow-lg: 0 2px 4px -1px rgba(16, 24, 40, 0.05), 0 16px 36px -10px rgba(16, 24, 40, 0.14);
-    --shadow-xl: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 28px 56px -14px rgba(16, 24, 40, 0.2);
+    --shadow-md: 0 1px 2px rgba(36, 87, 255, 0.05), 0 8px 20px -6px rgba(36, 87, 255, 0.12);
+    --shadow-lg: 0 2px 4px -1px rgba(36, 87, 255, 0.06), 0 16px 36px -10px rgba(36, 87, 255, 0.16);
+    --shadow-xl: 0 4px 8px -2px rgba(36, 87, 255, 0.07), 0 28px 56px -14px rgba(36, 87, 255, 0.22);
     --backdrop: rgba(16, 24, 40, 0.32);
     /* M3 standard easing — drives Tailwind ease-rl across components */
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
@@ -425,18 +502,20 @@
     letter-spacing: 0;
     color: var(--ink-2);
   }
+  /* M3 label tracking — Material buttons/chips use a touch of positive
+     tracking at medium weight for a crisp, legible label feel. */
   .ds-type-label {
-    font-size: 13px;
-    line-height: 18px;
+    font-size: 14px;
+    line-height: 20px;
     font-weight: 550;
-    letter-spacing: 0.005em;
+    letter-spacing: 0.01em;
     color: var(--ink);
   }
   .ds-type-label-sm {
     font-size: 11px;
     line-height: 16px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.05em;
     color: var(--ink-2);
   }
 }
@@ -920,13 +999,255 @@
   color: #b45309;
 }
 
+/* ============================================================
+   Material You — additive component helpers. All net-new classes;
+   nothing here overrides an existing class, so every layout is
+   untouched. These give pages opt-in Material surfaces, FABs,
+   chips and selection controls that read distinctly M3.
+   ============================================================ */
+
+/* ── M3 SURFACE TINT ─────────────────────────────────────────────────
+   A white/tonal panel that picks up the Material elevation tint — the
+   primary-hued lift on raised surfaces. Five levels mirror M3 elevation. */
+.ds-surface-tint {
+  position: relative;
+  background-color: var(--surface);
+  background-image: linear-gradient(var(--surface-tint-2), var(--surface-tint-2));
+  border: 1px solid var(--outline-variant);
+  border-radius: var(--shape-lg);
+  box-shadow: var(--sh-md);
+}
+.ds-surface-tint-1 {
+  background-image: linear-gradient(var(--surface-tint-1), var(--surface-tint-1));
+}
+.ds-surface-tint-3 {
+  background-image: linear-gradient(var(--surface-tint-3), var(--surface-tint-3));
+}
+.ds-surface-tint-4 {
+  background-image: linear-gradient(var(--surface-tint-4), var(--surface-tint-4));
+}
+.ds-surface-tint-5 {
+  background-image: linear-gradient(var(--surface-tint-5), var(--surface-tint-5));
+}
+
+/* ── M3 FAB (Floating Action Button) ─────────────────────────────────
+   Round, elevated, primary. Available for a page's primary action. The
+   --extended modifier widens it into a pill with a label, per M3. */
+.ds-fab {
+  position: relative;
+  isolation: isolate;
+  display: inline-grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border: 0;
+  border-radius: var(--shape-md);
+  background: var(--m3-primary-container);
+  color: var(--m3-on-primary-container);
+  box-shadow: var(--sh-lg);
+  cursor: pointer;
+  transition: box-shadow var(--dur-2) var(--ease-standard),
+    transform var(--dur-2) var(--ease-standard);
+}
+.ds-fab::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--m3-on-primary-container);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-1) var(--ease-standard);
+}
+.ds-fab:hover {
+  box-shadow: var(--sh-xl);
+  transform: translateY(-1px);
+}
+.ds-fab:hover::after {
+  opacity: var(--state-hover);
+}
+.ds-fab:active::after {
+  opacity: var(--state-pressed);
+}
+.ds-fab:focus-visible {
+  outline: none;
+  box-shadow: var(--sh-lg), 0 0 0 3px var(--surface), 0 0 0 5px var(--m3-primary);
+}
+.ds-fab svg {
+  width: 24px;
+  height: 24px;
+}
+/* primary (high-emphasis) FAB — filled primary */
+.ds-fab--primary {
+  background: var(--m3-primary);
+  color: var(--m3-on-primary);
+}
+.ds-fab--primary::after {
+  background: #fff;
+}
+/* tertiary FAB — teal "Trust" accent */
+.ds-fab--tertiary {
+  background: var(--m3-tertiary-container);
+  color: var(--m3-on-tertiary-container);
+}
+/* extended FAB — widens into a labelled pill */
+.ds-fab--extended {
+  width: auto;
+  height: 56px;
+  grid-auto-flow: column;
+  gap: 12px;
+  padding: 0 20px;
+  border-radius: var(--shape-md);
+  font: 600 15px var(--f-ui);
+  letter-spacing: 0.01em;
+}
+.ds-fab--sm {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--shape-sm);
+}
+.ds-fab--sm svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* ── M3 CHIPS (assist / filter / input / suggestion) ─────────────────
+   Material chips: 32px tall, 8px corner, outline by default, state layer
+   on hover/press. Selected filter chips fill with the secondary container
+   and show a leading check. Distinct from the small status `.chip` pills. */
+.ds-chip {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: var(--shape-xs);
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  color: var(--on-surface-variant);
+  font: 550 13px var(--f-ui);
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard);
+}
+.ds-chip::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(var(--state-on-surface));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-1) var(--ease-standard);
+}
+.ds-chip:hover::after {
+  opacity: var(--state-hover);
+}
+.ds-chip:active::after {
+  opacity: var(--state-pressed);
+}
+.ds-chip:focus-visible {
+  outline: none;
+  border-color: var(--m3-primary);
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--m3-primary);
+}
+.ds-chip svg {
+  width: 18px;
+  height: 18px;
+}
+.ds-chip--icon {
+  padding-left: 10px;
+}
+/* assist chip — tertiary (teal) leading accent for AI/assist actions */
+.ds-chip--assist svg {
+  color: var(--m3-tertiary);
+}
+/* filter / input selected — secondary container fill, no outline */
+.ds-chip.is-selected,
+.ds-chip--selected {
+  background: var(--m3-secondary-container);
+  border-color: transparent;
+  color: var(--m3-on-secondary-container);
+}
+.ds-chip.is-selected::after,
+.ds-chip--selected::after {
+  background: var(--m3-on-secondary-container);
+}
+/* primary-toned selected variant (e.g. active filter set) */
+.ds-chip--pri.is-selected,
+.ds-chip--pri.ds-chip--selected {
+  background: var(--m3-primary-container);
+  color: var(--m3-on-primary-container);
+}
+
+/* ── M3 SELECTION CONTROLS ───────────────────────────────────────────
+   A Material switch (track + thumb that grows when on) and a checkbox
+   accent. Opt-in via .ds-switch / .ds-checkbox; the legacy `.tg` toggle
+   is untouched. */
+.ds-switch {
+  appearance: none;
+  position: relative;
+  width: 52px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: var(--shape-full);
+  background: var(--surface-container-highest);
+  border: 2px solid var(--outline);
+  cursor: pointer;
+  transition: background var(--dur-2) var(--ease-standard),
+    border-color var(--dur-2) var(--ease-standard);
+}
+.ds-switch::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 8px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--outline);
+  transform: translateY(-50%);
+  transition: left var(--dur-2) var(--ease-emphasized),
+    width var(--dur-2) var(--ease-emphasized), height var(--dur-2) var(--ease-emphasized),
+    background var(--dur-2) var(--ease-standard);
+}
+.ds-switch:checked {
+  background: var(--m3-primary);
+  border-color: var(--m3-primary);
+}
+.ds-switch:checked::before {
+  left: 26px;
+  width: 22px;
+  height: 22px;
+  background: var(--m3-on-primary);
+}
+.ds-switch:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--m3-primary);
+}
+.ds-checkbox {
+  accent-color: var(--m3-primary);
+  width: 18px;
+  height: 18px;
+  border-radius: var(--shape-xs);
+}
+
 /* Respect reduced-motion across the premium hover/lift transitions. */
 @media (prefers-reduced-motion: reduce) {
   .ds-card,
   .ds-card--hover,
   .btn,
   .lp-bento,
-  .surface-elevated {
+  .surface-elevated,
+  .ds-fab,
+  .ds-chip,
+  .ds-switch,
+  .ds-switch::before {
     transition: none !important;
   }
 }

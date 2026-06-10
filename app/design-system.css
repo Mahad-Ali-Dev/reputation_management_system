@@ -170,28 +170,35 @@
   color: var(--rl-muted-2);
   padding: 14px 10px 4px;
 }
+/* M3 navigation-drawer item — a full-height pill. Active items fill with
+   the Material primary-container and read as a Material nav pill. */
 .sb__item {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 8px 12px;
-  border-radius: var(--r-sm);
+  gap: 12px;
+  padding: 9px 14px;
+  border-radius: var(--r-pill);
   color: var(--ink-3);
   cursor: pointer;
   font-size: 13px;
   font-weight: 450;
+  letter-spacing: 0.005em;
   position: relative;
   text-decoration: none;
-  transition: background 0.12s, color 0.12s;
+  transition: background var(--dur-1, 150ms) var(--ease-standard, cubic-bezier(0.2, 0, 0, 1)),
+    color var(--dur-1, 150ms) var(--ease-standard, cubic-bezier(0.2, 0, 0, 1));
 }
 .sb__item:hover {
-  background: rgba(37, 99, 235, 0.05);
+  background: rgba(37, 99, 235, 0.06);
   color: var(--ink);
 }
 .sb__item.is-active {
-  background: var(--pri-50);
-  color: var(--pri);
+  background: var(--m3-primary-container, var(--pri-50));
+  color: var(--m3-on-primary-container, var(--pri));
   font-weight: 600;
+}
+.sb__item.is-active svg {
+  color: var(--m3-on-primary-container, var(--pri));
 }
 .sb__item svg {
   width: 16px;
@@ -200,7 +207,7 @@
   color: var(--rl-muted);
 }
 .sb__item.is-active svg {
-  color: var(--pri);
+  color: var(--m3-on-primary-container, var(--pri));
 }
 .sb__badge {
   margin-left: auto;
@@ -838,14 +845,49 @@
   box-shadow: var(--sh);
 }
 .btn--lg {
-  height: 42px;
-  padding: 0 18px;
+  height: 44px;
+  padding: 0 22px;
   font-size: 14px;
-  border-radius: var(--r);
+  border-radius: var(--r-md);
+}
+/* M3 PILL — fully-rounded Material button shape. Compose with any variant
+   (e.g. `.btn .btn--accent .btn--pill`) to get the Material filled/tonal
+   pill look. Additive; the default 14px-radius button is unchanged. */
+.btn--pill {
+  border-radius: var(--r-pill);
+  padding: 0 20px;
+}
+.btn--pill.btn--lg {
+  padding: 0 26px;
 }
 .btn svg {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
+}
+
+/* ── M3 FAB in the legacy class system ───────────────────────────────
+   A round elevated primary action button, so `.btn`-based pages can drop
+   a Material FAB without the React component. Mirrors .ds-fab. */
+.btn--fab {
+  width: 56px;
+  height: 56px;
+  padding: 0;
+  border-radius: var(--r-md);
+  background: var(--grad-pri);
+  color: #fff;
+  border-color: transparent;
+  box-shadow: var(--sh-lg);
+}
+.btn--fab::before {
+  background: #fff;
+}
+.btn--fab:hover {
+  box-shadow: var(--sh-xl);
+  transform: translateY(-1px);
+}
+.btn--fab svg {
+  width: 24px;
+  height: 24px;
 }
 
 /* ---------- inputs ---------- */
@@ -1324,9 +1366,16 @@
   background: rgba(37, 99, 235, 0.05);
   color: var(--ink);
 }
+.tabbar .tabs {
+  gap: 6px;
+}
+.tabbar .tabs__t {
+  border-radius: var(--r-pill);
+  padding: 7px 14px;
+}
 .tabbar .tabs__t.is-active {
-  background: var(--pri-50);
-  color: var(--pri);
+  background: var(--m3-secondary-container, var(--pri-50));
+  color: var(--m3-on-secondary-container, var(--pri));
   border-color: transparent;
   font-weight: 600;
 }
