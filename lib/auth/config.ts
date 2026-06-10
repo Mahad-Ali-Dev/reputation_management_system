@@ -76,10 +76,53 @@ if (providers.length === 0) {
   );
 }
 
+/**
+ * Cookie domain shared across all repulabs subdomains, derived from AUTH_URL.
+ * The app uses subdomain routing (app./admin./r.) behind nginx; without a shared
+ * domain, the OAuth PKCE/state cookie set during sign-in can be absent on the
+ * callback → "pkceCodeVerifier cookie was missing" → ?error=Configuration.
+ * Returns undefined for localhost / IP / no URL (so local dev is unaffected).
+ */
+function authCookieDomain(): string | undefined {
+  const raw = process.env.AUTH_URL || process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL;
+  if (!raw) return undefined;
+  try {
+    const host = new URL(raw).hostname;
+    if (host === "localhost" || /^[\d.]+$/.test(host)) return undefined;
+    return `.${host.replace(/^www\./, "")}`; // e.g. .repulabs.com
+  } catch {
+    return undefined;
+  }
+}
+
+const USE_SECURE_COOKIES = process.env.NODE_ENV === "production";
+const COOKIE_DOMAIN = authCookieDomain();
+const COOKIE_PREFIX = USE_SECURE_COOKIES ? "__Secure-" : "";
+const sharedCookie = {
+  httpOnly: true,
+  sameSite: "lax" as const,
+  path: "/",
+  secure: USE_SECURE_COOKIES,
+  domain: COOKIE_DOMAIN,
+};
+
 export const authConfig: NextAuthConfig = {
   adapter: PrismaAdapter(prisma),
   session: { strategy: "database", maxAge: 30 * 24 * 60 * 60 }, // 30 days
   trustHost: true,
+  useSecureCookies: USE_SECURE_COOKIES,
+  // Pin cookies for the reverse-proxy + multi-subdomain setup. The PKCE/state
+  // cookies in particular must survive the sign-in → Google → callback round-trip.
+  cookies: {
+    sessionToken: { name: `${COOKIE_PREFIX}authjs.session-token`, options: sharedCookie },
+    callbackUrl: { name: `${COOKIE_PREFIX}authjs.callback-url`, options: sharedCookie },
+    pkceCodeVerifier: {
+      name: `${COOKIE_PREFIX}authjs.pkce.code_verifier`,
+      options: { ...sharedCookie, maxAge: 900 },
+    },
+    state: { name: `${COOKIE_PREFIX}authjs.state`, options: { ...sharedCookie, maxAge: 900 } },
+    nonce: { name: `${COOKIE_PREFIX}authjs.nonce`, options: sharedCookie },
+  },
   providers,
 
   pages: {
