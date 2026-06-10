@@ -137,6 +137,31 @@ export const authConfig: NextAuthConfig = {
       return true;
     },
 
+    /**
+     * Post-auth landing. By default Auth.js sends users to the base URL (the
+     * marketing home). Send them into the app /dashboard instead, while still
+     * honoring an explicit same-site callbackUrl (invite links, deep links).
+     */
+    async redirect({ url, baseUrl }) {
+      try {
+        const target = url.startsWith("/") ? new URL(url, baseUrl) : new URL(url);
+        const base = new URL(baseUrl);
+        const apex = base.hostname.replace(/^www\./, "");
+        const sameSite =
+          target.hostname === base.hostname ||
+          target.hostname === apex ||
+          target.hostname.endsWith(`.${apex}`);
+        if (!sameSite) return `${baseUrl}/dashboard`;
+        // Bare root → app dashboard; otherwise honor the requested path.
+        if (target.pathname === "/" || target.pathname === "") {
+          return `${target.origin}/dashboard`;
+        }
+        return target.toString();
+      } catch {
+        return `${baseUrl}/dashboard`;
+      }
+    },
+
     async session({ session, user }) {
       if (user?.id) {
         let membership = await prisma.membership.findFirst({
