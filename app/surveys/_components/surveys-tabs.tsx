@@ -4,6 +4,7 @@ import { EmptyIllustration } from "@/components/empty-state";
 import { TabBar, type TabItem } from "@/components/tab-bar";
 import { Icon } from "@/components/shell/icon";
 import type { SurveyAutomationRow } from "@/lib/surveys/automations";
+import type { IncentiveCoupon, IncentiveStats } from "@/lib/surveys/coupon-queries";
 import type { SurveyInsight } from "@/lib/surveys/insights-types";
 import type {
   DetailedResponse,
@@ -16,18 +17,23 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { AiInsightsPanel } from "./ai-insights-panel";
 import { AutomationsPanel } from "./automations-panel";
+import { IncentivesPanel } from "./incentives-panel";
 import { ResponsesCharts } from "./responses-charts";
 import { ResponsesTable } from "./responses-table";
 import { StatCards } from "./stat-cards";
 
 /**
- * The 5-tab Surveys hub controller (Module 11).
+ * The Surveys workspace controller (Module 11) — laid out as the survey
+ * lifecycle: Campaigns → Templates (Builder picker) → Automations → Results →
+ * AI Insights → Incentives. The old standalone `/surveys/coupons` page now lives
+ * here as the Incentives tab.
  *
  * Uses the Wave-0 `TabBar` in CONTROLLED mode so ALL panels stay mounted
  * (per-tab client state — an in-progress automation form, scroll position —
- * survives a switch; the AC "5 persistent tabs"). On top of controlled state we
- * keep `?tab=<key>` in the URL (shallow `router.replace`) so tabs are linkable
- * and reload-stable. The active tab is seeded from the URL by the server parent.
+ * survives a switch). On top of controlled state we keep `?tab=<key>` in the URL
+ * (shallow `router.replace`) so tabs are linkable and reload-stable. The active
+ * tab is seeded from the URL by the server parent. Legacy `?tab=responses` keys
+ * still resolve to the Results tab.
  *
  * Inactive panels are hidden with the native `hidden` attribute — never
  * conditionally rendered (that is the one mistake TabBar is shaped to prevent).
@@ -56,9 +62,18 @@ export type SurveysTabsData = {
   insightsGeneratedAt: string | null;
   responseCount: number;
   hasInsightsAccess: boolean;
+  couponStats: IncentiveStats;
+  coupons: IncentiveCoupon[];
 };
 
-const TAB_KEYS = ["surveys", "templates", "automations", "responses", "insights"] as const;
+const TAB_KEYS = [
+  "surveys",
+  "templates",
+  "automations",
+  "responses",
+  "insights",
+  "incentives",
+] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
 const STATUS_TONE: Record<string, string> = {
@@ -86,11 +101,17 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
   );
 
   const tabs: TabItem[] = [
-    { key: "surveys", label: "Surveys", icon: "survey", badge: data.campaigns.length || undefined },
+    { key: "surveys", label: "Campaigns", icon: "survey", badge: data.campaigns.length || undefined },
     { key: "templates", label: "Templates", icon: "copy" },
     { key: "automations", label: "Automations", icon: "bolt", badge: data.automations.length || undefined },
-    { key: "responses", label: "Responses", icon: "pie", badge: data.responseCount || undefined },
+    { key: "responses", label: "Results", icon: "pie", badge: data.responseCount || undefined },
     { key: "insights", label: "AI Insights", icon: "brain" },
+    {
+      key: "incentives",
+      label: "Incentives",
+      icon: "star",
+      badge: data.couponStats.issued || undefined,
+    },
   ];
 
   return (
@@ -129,6 +150,9 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
           generatedAt={data.insightsGeneratedAt}
           hasAccess={data.hasInsightsAccess}
         />
+      </div>
+      <div hidden={tab !== "incentives"}>
+        <IncentivesPanel stats={data.couponStats} coupons={data.coupons} />
       </div>
     </div>
   );

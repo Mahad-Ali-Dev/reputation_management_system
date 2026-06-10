@@ -7,6 +7,7 @@ import { orgHasFeature } from "@/lib/billing/feature-access";
 import { getConnectedProviders } from "@/lib/connections/status";
 import { withTenant } from "@/lib/db/with-tenant";
 import { listSurveyAutomations } from "@/lib/surveys/automations";
+import { couponStats, listCoupons } from "@/lib/surveys/coupon-queries";
 import { getCachedInsights } from "@/lib/surveys/insights-queries";
 import {
   listCampaigns,
@@ -31,8 +32,22 @@ import { SurveysTabs, type SurveyCampaignCard, type SurveysTabsData } from "./_c
 
 export const dynamic = "force-dynamic";
 
-const VALID_TABS = ["surveys", "templates", "automations", "responses", "insights"] as const;
+const VALID_TABS = [
+  "surveys",
+  "templates",
+  "automations",
+  "responses",
+  "insights",
+  "incentives",
+] as const;
 type TabKey = (typeof VALID_TABS)[number];
+
+/** Back-compat aliases so old deep-links resolve to the lifecycle tabs. */
+const TAB_ALIASES: Record<string, TabKey> = {
+  campaigns: "surveys",
+  results: "responses",
+  coupons: "incentives",
+};
 
 export default async function SurveysPage({
   searchParams,
@@ -41,8 +56,9 @@ export default async function SurveysPage({
 }) {
   const { orgId } = await getOrgContext();
   const { tab: tabParam } = await searchParams;
-  const initialTab: TabKey = (VALID_TABS as readonly string[]).includes(tabParam ?? "")
-    ? (tabParam as TabKey)
+  const resolvedTab = TAB_ALIASES[tabParam ?? ""] ?? tabParam ?? "";
+  const initialTab: TabKey = (VALID_TABS as readonly string[]).includes(resolvedTab)
+    ? (resolvedTab as TabKey)
     : "surveys";
 
   // Fetch everything in parallel; the NEW-table reads (insights/automations)
@@ -57,6 +73,8 @@ export default async function SurveysPage({
     cachedInsights,
     connectedProviders,
     hasInsightsAccess,
+    couponStatsData,
+    coupons,
   ] = await Promise.all([
     listCampaigns(orgId),
     surveysOverview(orgId),
@@ -67,6 +85,8 @@ export default async function SurveysPage({
     getCachedInsights(orgId),
     getConnectedProviders(orgId),
     orgHasFeature(orgId, "surveys_insights"),
+    couponStats(orgId),
+    listCoupons(orgId, 50),
   ]);
 
   const campaigns: SurveyCampaignCard[] = campaignsRaw.map((c) => ({
@@ -97,14 +117,16 @@ export default async function SurveysPage({
     insightsGeneratedAt: cachedInsights.generatedAt ? cachedInsights.generatedAt.toISOString() : null,
     responseCount,
     hasInsightsAccess,
+    couponStats: couponStatsData,
+    coupons,
   };
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Surveys"]}>
       <PageHeader
-        kicker="NPS · CSAT · custom flows"
+        kicker="Campaigns · Builder · Results · Incentives"
         title="Surveys"
-        description="Send surveys after every interaction. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
+        description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters — all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
         actions={
           <a href="/surveys/new" className="btn btn--pri">
             <Icon name="plus" size={12} />

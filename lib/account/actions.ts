@@ -78,7 +78,7 @@ export async function updateAccountSettings(form: FormData): Promise<void> {
     });
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
   revalidatePath("/dashboard");
 }
 
@@ -151,7 +151,7 @@ export async function inviteTeammate(form: FormData): Promise<void> {
     "team invitation created — share the accept URL with the invitee",
   );
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
 }
 
 // ============================================================
@@ -354,7 +354,7 @@ export async function removeMember(form: FormData): Promise<void> {
     });
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
 }
 
 // ============================================================
@@ -426,7 +426,7 @@ export async function updateSecurityPrefs(form: FormData): Promise<void> {
     });
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
 }
 
 // ============================================================
@@ -469,7 +469,7 @@ export async function updateNotificationPrefs(form: FormData): Promise<void> {
     });
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
 }
 
 // ============================================================
@@ -521,11 +521,11 @@ export async function rotateApiKey(): Promise<void> {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",
-    path: "/settings/account",
+    path: "/settings",
     maxAge: 120,
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
 }
 
 const WebhookSchema = z.object({
@@ -579,7 +579,7 @@ export async function saveWebhook(form: FormData): Promise<void> {
     });
   });
 
-  revalidatePath("/settings/account");
+  revalidatePath("/settings", "layout");
 }
 
 // ============================================================

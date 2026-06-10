@@ -36,7 +36,7 @@ export async function TopBar({ title }: { title?: string } = {}) {
         <NotificationsBell />
       </div>
 
-      <Link href="/settings/account" className="tb__user">
+      <Link href="/settings" className="tb__user">
         <Avatar name={name} size={32} tone={4} />
         <span className="tb__user-meta">
           <span className="tb__user-name">{name}</span>

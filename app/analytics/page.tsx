@@ -9,7 +9,6 @@ import { UpgradeCard } from "@/components/pro-gate";
 import { buildOverviewMetrics, normalizeRange } from "@/lib/seo/overview";
 import { generateExecSummary } from "@/lib/seo/exec-summary";
 import {
-  getSeoOnboardingState,
   getPrimaryEstablishmentId,
   listSeoSnapshots,
   listKeywordRanks,
@@ -24,15 +23,14 @@ import { fetchCoreWebVitals } from "@/lib/seo/adapters/pagespeed";
 import { computeRecommendations } from "@/lib/seo/recommendations";
 import type { ScoreFactor } from "@/lib/seo/reputation-score";
 
-import { OnboardingWizard, type WizardState } from "./_components/onboarding-wizard";
 import { ReportsTabs, type ReportTabKey } from "./_components/reports-tabs";
+import { RangeSelector } from "./_components/range-selector";
 import { OverviewPanel } from "./_components/overview-panel";
 import { WeeklyReportsPanel } from "./_components/weekly-reports-panel";
 import { ReputationScorePanel } from "./_components/reputation-score-panel";
 import { SeoPanel } from "./_components/seo-panel";
 import { CompetitorsPanel } from "./_components/competitors-panel";
 import { RecommendationsPanel } from "./_components/recommendations-panel";
-import { getConnectedProviders } from "@/lib/connections/status";
 
 export const dynamic = "force-dynamic";
 
@@ -50,11 +48,12 @@ type SearchParams = { tab?: string; range?: string };
 /**
  * Business Reports — the intelligence hub (Module 13).
  *
- * Server host: resolves org context + entitlement + onboarding state. If
- * onboarding is incomplete, renders the 5-step `<OnboardingWizard>` (tabs
- * locked). Otherwise fetches all per-tab data (reputation FIRST, then the
- * Pro-gated SEO/competitor layer only when entitled) and renders the 6-tab
- * `<ReportsTabs>` shell. Every SEO read is fail-soft (the six tables aren't
+ * Server host: resolves org context + entitlement, then fetches all per-tab
+ * data (reputation FIRST, then the Pro-gated SEO/competitor layer only when
+ * entitled) and renders the date-ranged `<ReportsTabs>` shell. The standalone
+ * SEO onboarding wizard has been retired — global agentic onboarding
+ * (`/onboarding` + the orchestrator) now provisions setup, so this page always
+ * shows the report tabs. Every SEO read is fail-soft (the SEO tables aren't
  * migrated until the founder applies the SQL), so this never 500s.
  */
 export default async function AnalyticsPage({
@@ -68,8 +67,7 @@ export default async function AnalyticsPage({
   const requestedTab = (sp.tab ?? "overview") as ReportTabKey;
   const activeTab: ReportTabKey = VALID_TABS.has(requestedTab) ? requestedTab : "overview";
 
-  const [onboarding, entitled, establishmentId] = await Promise.all([
-    getSeoOnboardingState(orgId),
+  const [entitled, establishmentId] = await Promise.all([
     isOrgEntitled(orgId),
     getPrimaryEstablishmentId(orgId),
   ]);
@@ -79,26 +77,13 @@ export default async function AnalyticsPage({
       title="Business Reports"
       description="Your reputation + local-SEO intelligence hub — reviews, rankings, competitors, and what to do next."
       breadcrumb={[{ label: "Intelligence" }, { label: "Business Reports" }]}
+      actions={
+        <Suspense fallback={null}>
+          <RangeSelector current={rangeDays} />
+        </Suspense>
+      }
     />
   );
-
-  // ── Onboarding gate ──────────────────────────────────────────
-  if (!onboarding.complete) {
-    const wizardState: WizardState = {
-      step: onboarding.step,
-      googleConnected: (await getConnectedProviders(orgId)).has("google_business"),
-      hasWebsite: false,
-      keywordCount: (await listKeywordRanks(orgId, establishmentId)).length,
-      competitorCount: (await listCompetitors(orgId, establishmentId)).length,
-      establishmentId,
-    };
-    return (
-      <AppShellServer topBar={<TopBar title="Business Reports" />} crumbs={["Intelligence", "Business Reports"]}>
-        {header}
-        <OnboardingWizard state={wizardState} />
-      </AppShellServer>
-    );
-  }
 
   // ── Full hub ─────────────────────────────────────────────────
   // Reputation-first data (always available). SEO/competitor data only when

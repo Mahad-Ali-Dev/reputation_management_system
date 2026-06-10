@@ -83,7 +83,7 @@ const NAV: NavItem[] = [
   { group: "Settings" },
   { href: "/connections", label: "Connections", icon: "plug" },
   { href: "/subscription", label: "Account & Billing", icon: "card" },
-  { href: "/settings/account", label: "Settings", icon: "settings" },
+  { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
 function pathMatches(pathname: string, href: string): boolean {

@@ -2,7 +2,6 @@ import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import type { OverviewMetrics } from "@/lib/seo/overview";
 import { ExecSummaryCard } from "./exec-summary-card";
-import { RangeSelector } from "./range-selector";
 
 /**
  * Overview tab (Module 13) — the cross-functional hub.
@@ -27,13 +26,8 @@ export function OverviewPanel({
   const hasReviews = rep.reviewCount > 0;
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      {/* Range selector */}
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <RangeSelector current={metrics.rangeDays} />
-      </div>
-
-      {/* AI Executive Summary */}
+    <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
+      {/* AI Executive Summary (date range now lives in the report header) */}
       <ExecSummaryCard
         summary={execSummary.summary}
         generatedAt={execSummary.generatedAt}
@@ -45,7 +39,7 @@ export function OverviewPanel({
       <div
         style={{
           display: "grid",
-          gap: 12,
+          gap: 14,
           gridTemplateColumns: "repeat(auto-fill, minmax(190px, 1fr))",
         }}
       >

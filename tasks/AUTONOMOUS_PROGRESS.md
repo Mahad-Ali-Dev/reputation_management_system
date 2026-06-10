@@ -72,6 +72,11 @@ Plan: (1) design-system foundation → (2) app relayout → (3) marketing redesi
 
 ## Log
 (Newest first — updated as batches land.)
+- Relayout wave 8 launched: settings sectioned shell + analytics report-tabs + surveys lifecycle.
+- **Dashboard + connections relayout COMMITTED** (`f0452e0`) — verified green + screenshot-confirmed
+  (cleaner tiered dashboard with merged Today card + section headers; connections 3 bands + search).
+- **Integrations COMMITTED** (`62ae2af`) — Mailchimp/Klaviyo adapters, reusable api-key connect form
+  (every api_key provider connectable), Facebook ad-comment moderation. Live use needs provider creds.
 - Integrations wave launched: Mailchimp/Klaviyo adapters + reusable api-key connect form +
   Facebook ad-comment moderation (build-gated).
 - **AI Knowledge Base 3-tab + chunker + audit fix COMMITTED** (`56c73ef`) — verified green +

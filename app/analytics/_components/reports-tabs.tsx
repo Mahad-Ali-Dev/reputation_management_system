@@ -69,8 +69,10 @@ export function ReportsTabs({
 
   return (
     <div>
-      <TabBar tabs={tabs} activeKey={effectiveActive} onChange={setTab} />
-      <div style={{ marginTop: 16 }}>
+      <div style={{ borderBottom: "1px solid var(--line)", marginBottom: 24 }}>
+        <TabBar tabs={tabs} activeKey={effectiveActive} onChange={setTab} />
+      </div>
+      <div>
         {REPORT_TABS.map((t) => (
           <div key={t.key} hidden={t.key !== effectiveActive} id={`panel-${t.key}`} role="tabpanel" aria-labelledby={`tab-${t.key}`}>
             {panels[t.key]}

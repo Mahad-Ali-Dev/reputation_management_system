@@ -471,7 +471,7 @@ export async function getSetupState(orgId: string): Promise<SetupState> {
     { key: "requests", label: "Send your first review request", done: requestsSent > 0, href: "/outreach/send" },
     { key: "ai-reply", label: "Approve an AI-drafted reply", done: repliedCount > 0, href: "/reviews" },
     { key: "social", label: "Add a social account", done: activeConnections > 1, href: "/connections" },
-    { key: "team", label: "Invite a team member", done: hasTeam, href: "/settings/account" },
+    { key: "team", label: "Invite a team member", done: hasTeam, href: "/settings/team" },
   ];
   const completed = steps.filter((s) => s.done).length;
   const total = steps.length;
