@@ -25,12 +25,31 @@ import { softInbox } from "./fail-soft";
  * Google review/comment can be hidden.
  */
 
-/** Platforms whose comments CAN be hidden. Google is intentionally excluded. */
-const HIDEABLE_PLATFORMS = new Set(["facebook", "instagram"]);
+/**
+ * Platforms whose comments CAN be hidden. Google is intentionally excluded.
+ * Comments on BOOSTED / ad posts (`facebook_ad` / `instagram_ad`) are still
+ * ordinary FB/IG comments — they are equally hideable via the Graph API.
+ */
+const HIDEABLE_PLATFORMS = new Set(["facebook", "instagram", "facebook_ad", "instagram_ad"]);
 
-/** True if a comment on this platform may be hidden (FB/IG only). */
+/** Platform discriminators that denote a comment on a boosted / ad post. */
+const AD_PLATFORMS = new Set(["facebook_ad", "instagram_ad"]);
+
+/** True if a comment on this platform may be hidden (FB/IG, organic or ad). */
 export function canHide(platform: string): boolean {
   return HIDEABLE_PLATFORMS.has(platform);
+}
+
+/** True if this comment came from a boosted / promoted (ad) post. */
+export function isAdComment(platform: string): boolean {
+  return AD_PLATFORMS.has(platform);
+}
+
+/** Coarse source bucket for the Comments-panel "Ad comments" filter. */
+export function commentSource(platform: string): "organic" | "ad" | "google" {
+  if (AD_PLATFORMS.has(platform)) return "ad";
+  if (platform === "google_qa") return "google";
+  return "organic";
 }
 
 /** Human label for the platform badge. */
@@ -40,6 +59,10 @@ export function platformLabel(platform: string): string {
       return "Facebook";
     case "instagram":
       return "Instagram";
+    case "facebook_ad":
+      return "Facebook Ad";
+    case "instagram_ad":
+      return "Instagram Ad";
     case "google_qa":
       return "Google Q&A";
     default:
@@ -52,6 +75,7 @@ export type CommentRow = {
   platform: string;
   isHideable: boolean;
   isSocial: boolean;
+  isAd: boolean;
   authorName: string | null;
   authorAvatarUrl: string | null;
   body: string;
@@ -72,12 +96,26 @@ export async function listComments(args: {
   orgId: string;
   status?: string;
   platform?: string;
+  /**
+   * Coarse source filter for the Comments panel chips:
+   *   - "ad"      → only boosted/promoted-post comments (`*_ad` platforms)
+   *   - "organic" → only organic FB/IG + Google comments (exclude `*_ad`)
+   *   - "all"/undefined → everything
+   * Applied in addition to `status`. `platform` (exact) still wins if supplied.
+   */
+  source?: "all" | "ad" | "organic";
   take?: number;
 }): Promise<CommentRow[]> {
-  const { orgId, status, platform, take = 100 } = args;
+  const { orgId, status, platform, source, take = 100 } = args;
   const where: Record<string, unknown> = {};
   if (status && status !== "all") where.status = status;
-  if (platform && platform !== "all") where.platform = platform;
+  if (platform && platform !== "all") {
+    where.platform = platform;
+  } else if (source === "ad") {
+    where.platform = { in: ["facebook_ad", "instagram_ad"] };
+  } else if (source === "organic") {
+    where.platform = { notIn: ["facebook_ad", "instagram_ad"] };
+  }
 
   return softInbox(
     () =>
@@ -92,6 +130,7 @@ export async function listComments(args: {
           platform: c.platform,
           isHideable: canHide(c.platform),
           isSocial: c.platform !== "google_qa",
+          isAd: isAdComment(c.platform),
           authorName: c.authorName,
           authorAvatarUrl: c.authorAvatarUrl,
           body: c.body,

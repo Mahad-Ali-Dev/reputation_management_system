@@ -72,6 +72,12 @@ Plan: (1) design-system foundation → (2) app relayout → (3) marketing redesi
 
 ## Log
 (Newest first — updated as batches land.)
+- Integrations wave launched: Mailchimp/Klaviyo adapters + reusable api-key connect form +
+  Facebook ad-comment moderation (build-gated).
+- **AI Knowledge Base 3-tab + chunker + audit fix COMMITTED** (`56c73ef`) — verified green +
+  screenshot-confirmed (clean Knowledge/Behavior/Test layout, sources list, readiness ribbon).
+- **Marketing redesign COMMITTED** (`8f95e3e`) — hero screenshot-confirmed Google-launch grade
+  (gradient headline, big home-hero illustration, trust pill, agentic-onboarding story).
 - Marketing pages redesign launched (premium "Google launch" relayout, public → easy screenshot).
 - **Onboarding /onboarding 500 FIXED + COMMITTED** (`a2567a4`) — the run+screenshot loop caught a
   runtime crash the green build couldn't: fail-soft guard checked wrong Prisma code (P2021 missing).

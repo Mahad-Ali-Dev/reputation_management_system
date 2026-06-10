@@ -33,6 +33,7 @@ export type CommentRowView = {
   platform: string;
   isHideable: boolean;
   isSocial: boolean;
+  isAd: boolean;
   authorName: string | null;
   authorAvatarUrl: string | null;
   body: string;
@@ -50,15 +51,31 @@ const STATUS_FILTERS = [
   { key: "starred", label: "Starred" },
 ] as const;
 
+const SOURCE_FILTERS = [
+  { key: "all", label: "All sources" },
+  { key: "organic", label: "Organic" },
+  { key: "ad", label: "Ad comments" },
+] as const;
+
+/** Build a /support?tab=comments href preserving the other active filter. */
+function commentsHref(status: string, source: string): string {
+  const params = new URLSearchParams({ tab: "comments" });
+  if (status && status !== "all") params.set("status", status);
+  if (source && source !== "all") params.set("source", source);
+  return `/support?${params.toString()}`;
+}
+
 export function CommentsPanel({
   rows,
   counts,
   activeStatus = "all",
+  activeSource = "all",
   connected = true,
 }: {
   rows: CommentRowView[];
   counts: Record<string, number>;
   activeStatus?: string;
+  activeSource?: string;
   connected?: boolean;
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(rows[0]?.id ?? null);
@@ -88,7 +105,25 @@ export function CommentsPanel({
         </span>
       </div>
 
-      {/* Filter chips */}
+      {/* Source filter — Organic vs Ad (boosted-post) comments. */}
+      <div className="row" style={{ marginBottom: 8, gap: 6, flexWrap: "wrap" }}>
+        {SOURCE_FILTERS.map((f) => {
+          const active = activeSource === f.key;
+          return (
+            <Link
+              key={f.key}
+              href={commentsHref(activeStatus, f.key)}
+              className={`chip${active ? " chip--pri" : " chip--out"}`}
+              style={{ textDecoration: "none", gap: 4 }}
+            >
+              {f.key === "ad" && <Icon name="bolt" size={11} />}
+              {f.label}
+            </Link>
+          );
+        })}
+      </div>
+
+      {/* Status filter chips */}
       <div className="row" style={{ marginBottom: 14, gap: 6, flexWrap: "wrap" }}>
         {STATUS_FILTERS.map((f) => {
           const active = activeStatus === f.key;
@@ -96,7 +131,7 @@ export function CommentsPanel({
           return (
             <Link
               key={f.key}
-              href={f.key === "all" ? "/support?tab=comments" : `/support?tab=comments&status=${f.key}`}
+              href={commentsHref(f.key, activeSource)}
               className={`chip${active ? " chip--ink" : " chip--out"}`}
               style={{ textDecoration: "none" }}
             >
@@ -112,7 +147,7 @@ export function CommentsPanel({
       </div>
 
       {rows.length === 0 ? (
-        <EmptyComments connected={connected} activeStatus={activeStatus} />
+        <EmptyComments connected={connected} activeStatus={activeStatus} activeSource={activeSource} />
       ) : (
         <div
           style={{
@@ -403,21 +438,34 @@ function CommentDetail({ row }: { row: CommentRowView }) {
   );
 }
 
-function EmptyComments({ connected, activeStatus }: { connected: boolean; activeStatus: string }) {
+function EmptyComments({
+  connected,
+  activeStatus,
+  activeSource = "all",
+}: {
+  connected: boolean;
+  activeStatus: string;
+  activeSource?: string;
+}) {
+  const adView = activeSource === "ad";
   return (
     <div className="ds-card">
       <div className="ds-card__body dim" style={{ textAlign: "center", padding: 48 }}>
         <EmptyIllustration name="social-empty" />
         <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
           {connected
-            ? activeStatus === "all"
-              ? "No social comments yet"
-              : `No ${activeStatus.replace("_", " ")} comments`
+            ? adView
+              ? "No ad comments yet"
+              : activeStatus === "all"
+                ? "No social comments yet"
+                : `No ${activeStatus.replace("_", " ")} comments`
             : "Connect your social pages"}
         </h3>
         <p style={{ fontSize: 13, marginTop: 6 }}>
           {connected
-            ? "Comments on your Facebook and Instagram posts will appear here."
+            ? adView
+              ? "Comments on your boosted / promoted Facebook & Instagram posts will appear here once your ad account is connected with ads permissions."
+              : "Comments on your Facebook and Instagram posts will appear here."
             : "Connect Facebook and Instagram to sync and reply to comments in one place."}
         </p>
         <Link href="/connections" className="btn btn--pri" style={{ marginTop: 14 }}>
@@ -433,14 +481,29 @@ function PlatformBadge({ platform }: { platform: string }) {
   const map: Record<string, { icon: "fb" | "insta" | "google"; label: string; cls: string }> = {
     facebook: { icon: "fb", label: "Facebook", cls: "chip--info" },
     instagram: { icon: "insta", label: "Instagram", cls: "chip--pri" },
+    facebook_ad: { icon: "fb", label: "Facebook", cls: "chip--info" },
+    instagram_ad: { icon: "insta", label: "Instagram", cls: "chip--pri" },
     google_qa: { icon: "google", label: "Google", cls: "chip--warn" },
   };
   const m = map[platform] ?? { icon: "chat" as never, label: platform, cls: "chip--out" };
+  const isAd = platform === "facebook_ad" || platform === "instagram_ad";
   return (
-    <span className={`chip ${m.cls}`} style={{ gap: 4, fontSize: 10 }}>
-      <Icon name={m.icon} size={11} />
-      {m.label}
-    </span>
+    <>
+      <span className={`chip ${m.cls}`} style={{ gap: 4, fontSize: 10 }}>
+        <Icon name={m.icon} size={11} />
+        {m.label}
+      </span>
+      {isAd && (
+        <span
+          className="chip chip--warn"
+          style={{ gap: 3, fontSize: 10 }}
+          title="Comment on a boosted / promoted (ad) post"
+        >
+          <Icon name="bolt" size={10} />
+          Ad
+        </span>
+      )}
+    </>
   );
 }
 

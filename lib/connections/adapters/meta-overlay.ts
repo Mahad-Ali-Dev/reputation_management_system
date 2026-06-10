@@ -65,6 +65,8 @@ export const META_PROVIDER: ProviderEntry = {
 export const PROVIDER_META: Record<string, ProviderMeta> = {
   // ── Contact-syncing providers (the data spine) ──────────────────────────
   hubspot: { connType: "oauth", syncs: "contacts" },
+  mailchimp: { connType: "oauth", syncs: "contacts" },
+  klaviyo: { connType: "oauth", syncs: "contacts" },
   shopify: { connType: "oauth", syncs: "contacts" },
   quickbooks: { connType: "oauth", syncs: "contacts" },
   xero: { connType: "oauth", syncs: "contacts" },
@@ -82,6 +84,17 @@ export const PROVIDER_META: Record<string, ProviderMeta> = {
   // Connect action to /connections/whatsapp where that form lives.
   whatsapp: { connType: "api_key", syncs: "social" },
   linkedin: { connType: "oauth", syncs: "social" },
+  // ── API-key paste providers (no OAuth) ──────────────────────────────────
+  // These authenticate with a pasted API key (+ optional account/store id),
+  // not OAuth. `connType:"api_key"` routes their Connect → the manage-page
+  // paste form (the generic ApiKeyConnectPanel), exactly like WhatsApp. Their
+  // field specs live in app/connections/_lib/api-key-fields.ts.
+  activecampaign: { connType: "api_key", syncs: "contacts" },
+  convertkit: { connType: "api_key", syncs: "contacts" },
+  brevo: { connType: "api_key", syncs: "contacts" },
+  omnisend: { connType: "api_key", syncs: "contacts" },
+  getresponse: { connType: "api_key", syncs: "contacts" },
+  squarespace: { connType: "api_key", syncs: "contacts" },
   // ── Embed / import ──────────────────────────────────────────────────────
   website_widget: { connType: "embed", syncs: null },
   csv_import: { connType: "csv", syncs: null },

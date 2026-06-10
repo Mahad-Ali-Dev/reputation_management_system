@@ -13,6 +13,8 @@
 
 import { cloverAdapter } from "./clover";
 import { hubspotAdapter } from "./hubspot";
+import { klaviyoAdapter } from "./klaviyo";
+import { mailchimpAdapter } from "./mailchimp";
 import { metaAdapter } from "./meta";
 import { makeNoopAdapter } from "./noop";
 import { quickbooksAdapter } from "./quickbooks";
@@ -36,6 +38,8 @@ const ADAPTERS: Record<string, ConnectionAdapter> = {
   hubspot: hubspotAdapter,
   salesforce: salesforceAdapter,
   zoho: zohoAdapter,
+  mailchimp: mailchimpAdapter,
+  klaviyo: klaviyoAdapter,
   shopify: shopifyAdapter,
   wix: wixAdapter,
   woocommerce: woocommerceAdapter,

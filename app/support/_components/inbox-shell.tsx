@@ -44,6 +44,8 @@ export type InboxSearchParams = {
   thread?: string;
   /** Live Chat tab: the selected webchat session (AiConversation id). */
   session?: string;
+  /** Comments tab: source filter — "ad" (boosted-post comments) | "organic". */
+  source?: string;
 };
 
 const VALID_TABS = new Set([
@@ -81,7 +83,7 @@ export async function InboxShell({
 
       {tab === "comments" && (
         <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
-          <CommentsTab orgId={orgId} status={searchParams.status} />
+          <CommentsTab orgId={orgId} status={searchParams.status} source={searchParams.source} />
         </Suspense>
       )}
 
@@ -152,9 +154,18 @@ async function ConversationsTab({
   );
 }
 
-async function CommentsTab({ orgId, status }: { orgId: string; status?: string }) {
+async function CommentsTab({
+  orgId,
+  status,
+  source,
+}: {
+  orgId: string;
+  status?: string;
+  source?: string;
+}) {
+  const sourceFilter = source === "ad" || source === "organic" ? source : "all";
   const [rows, counts] = await Promise.all([
-    softInbox(() => listComments({ orgId, status }), [], {
+    softInbox(() => listComments({ orgId, status, source: sourceFilter }), [], {
       event: "inbox.shell.comments.list_failed",
       swallowAll: true,
       context: { orgId },
@@ -172,6 +183,7 @@ async function CommentsTab({ orgId, status }: { orgId: string; status?: string }
     platform: c.platform,
     isHideable: c.isHideable,
     isSocial: c.isSocial,
+    isAd: c.isAd,
     authorName: c.authorName,
     authorAvatarUrl: c.authorAvatarUrl,
     body: c.body,
@@ -181,7 +193,14 @@ async function CommentsTab({ orgId, status }: { orgId: string; status?: string }
     postedAt: c.postedAt.toISOString(),
   }));
 
-  return <CommentsPanel rows={view} counts={counts} activeStatus={status ?? "all"} />;
+  return (
+    <CommentsPanel
+      rows={view}
+      counts={counts}
+      activeStatus={status ?? "all"}
+      activeSource={sourceFilter}
+    />
+  );
 }
 
 async function ModerationTab({

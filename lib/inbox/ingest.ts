@@ -117,9 +117,20 @@ export interface InboundNormalized {
   subject?: string | null;
 }
 
-/** The normalised shape a comment webhook produces (FB/IG only). */
+/**
+ * The platform a normalised comment is stored under. Organic page/media comments
+ * use `facebook`/`instagram`; comments on BOOSTED / ad posts use the `_ad`
+ * variants so the Comments inbox can offer an "Ad comments" filter and so the
+ * `(platform, externalId)` idempotency key stays self-describing — all without a
+ * schema migration (the `platform` column already free-texts the discriminator).
+ */
+export type CommentPlatform = "facebook" | "instagram" | "facebook_ad" | "instagram_ad";
+
+/** The normalised shape a comment webhook / ad-comment poll produces (FB/IG). */
 export interface NormalizedComment {
-  platform: "facebook" | "instagram";
+  platform: CommentPlatform;
+  /** Semantic source of the comment. Defaults to "organic" when omitted. */
+  kind?: "organic" | "ad";
   /** Provider comment id — the idempotency key (unique with platform). */
   externalId: string;
   /** The post/media the comment is on (for "view in context"). */
@@ -437,14 +448,18 @@ export async function ingestComment(
   if (!result) return { ok: false, skipped: "ingest_failed" };
 
   if (result.inserted && comment.authorExternalId) {
+    // Ad comments share the same author identity space as organic ones — dedupe
+    // contacts on the BASE platform ("facebook"/"instagram"), not the `_ad`
+    // storage variant, so a commenter isn't split across two contact sources.
+    const basePlatform = comment.platform.startsWith("instagram") ? "instagram" : "facebook";
     captureContactInBackground({
       orgId,
-      source: comment.platform, // "facebook" | "instagram"
-      socialId: `${comment.platform}:${comment.authorExternalId}`,
+      source: basePlatform, // "facebook" | "instagram"
+      socialId: `${basePlatform}:${comment.authorExternalId}`,
       name: comment.authorName ?? null,
       occurredAt: comment.postedAt ?? new Date(),
       activity: {
-        title: `Commented on ${comment.platform}`,
+        title: comment.kind === "ad" ? `Commented on a ${basePlatform} ad` : `Commented on ${basePlatform}`,
         externalRef: `social-comment:${comment.externalId}`,
       },
     });

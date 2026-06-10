@@ -170,6 +170,13 @@ const SECTION_DEFS: SectionDef[] = [
       "xero",
       "mailchimp",
       "klaviyo",
+      // API-key paste providers — connectable today via the manage-page form.
+      "activecampaign",
+      "brevo",
+      "convertkit",
+      "getresponse",
+      "omnisend",
+      "squarespace",
     ],
   },
 ];

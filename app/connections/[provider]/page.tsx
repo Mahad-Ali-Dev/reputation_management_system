@@ -18,10 +18,15 @@ import {
 import { PROVIDERS, type ProviderEntry } from "@/lib/providers/registry";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { connectWhatsApp, disconnectConnection, resyncConnection } from "../_components/actions";
+import {
+  connectApiKeyProvider,
+  disconnectConnection,
+  resyncConnection,
+} from "../_components/actions";
+import { getApiKeySpec } from "../_lib/api-key-fields";
 import { type SerializedConnection, connTypeLabel, syncsLabel } from "../_lib/format";
+import { ApiKeyConnectPanel } from "./_components/api-key-connect-panel";
 import { ProviderDetailClient } from "./_components/provider-detail-client";
-import { WhatsAppConnectPanel } from "./_components/whatsapp-connect-panel";
 import { type SerializedSyncLog, WidgetEmbedPanel } from "./_components/widget-embed-panel";
 import { generateWidgetKeyForConnections } from "./_components/widget-key-action";
 
@@ -285,15 +290,28 @@ export default async function ConnectionProviderPage({
         }
       />
 
-      {provider === "whatsapp" && (
-        <div style={{ marginBottom: 16 }}>
-          <WhatsAppConnectPanel
-            action={connectWhatsApp}
-            connected={serializedConns.some((c) => c.status === "active")}
-            errorCode={sp.error ?? null}
-          />
-        </div>
-      )}
+      {meta.connType === "api_key" &&
+        (() => {
+          // Render the generic paste form for ANY api_key provider whose field
+          // spec exists (WhatsApp, ActiveCampaign, Brevo, Squarespace, …).
+          const spec = getApiKeySpec(entry.id);
+          if (!spec) return null;
+          return (
+            <div style={{ marginBottom: 16 }}>
+              <ApiKeyConnectPanel
+                spec={{
+                  provider: spec.provider,
+                  displayName: spec.displayName,
+                  blurb: spec.blurb,
+                  fields: spec.fields,
+                }}
+                action={connectApiKeyProvider}
+                connected={serializedConns.some((c) => c.status === "active")}
+                errorCode={sp.error ?? null}
+              />
+            </div>
+          );
+        })()}
 
       <ProviderDetailClient
         provider={{

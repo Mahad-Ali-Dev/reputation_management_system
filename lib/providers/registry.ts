@@ -230,8 +230,9 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "ActiveCampaign",
     category: "crm",
     description: "Marketing + sales automation triggers.",
-    ready: false,
-    blockerNote: "API key auth (no OAuth). Paste API key in connection setup.",
+    // Connectable TODAY via the manager-gated API-key paste form (account name +
+    // API key) on /connections/activecampaign — no OAuth/App Review needed.
+    ready: true,
     logoEmoji: "🔵",
     docsUrl: "https://developers.activecampaign.com",
   },
@@ -303,8 +304,9 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "Squarespace",
     category: "ecommerce",
     description: "Squarespace Commerce orders + customers.",
-    ready: false,
-    blockerNote: "API key required (no full OAuth).",
+    // Connectable TODAY via the manager-gated API-key paste form on
+    // /connections/squarespace — no full OAuth needed.
+    ready: true,
     logoEmoji: "⬛",
     docsUrl: "https://developers.squarespace.com",
   },
@@ -633,7 +635,8 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     category: "email_marketing",
     description: "Sync audiences + trigger campaigns.",
     ready: false,
-    blockerNote: "Mailchimp OAuth app registration.",
+    blockerNote:
+      "Free Mailchimp account required. OAuth flow + contact-sync adapter ready — register an app at admin.mailchimp.com and paste the client ID/secret.",
     oauthUrl: "https://login.mailchimp.com/oauth2/authorize",
     tokenUrl: "https://login.mailchimp.com/oauth2/token",
     logoEmoji: "🐵",
@@ -645,7 +648,8 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     category: "email_marketing",
     description: "E-commerce email + SMS.",
     ready: false,
-    blockerNote: "Klaviyo OAuth + API key.",
+    blockerNote:
+      "Klaviyo OAuth app required. OAuth flow + contact-sync adapter ready — create an app in your Klaviyo account and paste the client ID/secret.",
     oauthUrl: "https://www.klaviyo.com/oauth/authorize",
     tokenUrl: "https://a.klaviyo.com/oauth/token",
     logoEmoji: "🟣",
@@ -656,8 +660,9 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "ConvertKit",
     category: "email_marketing",
     description: "Creator email marketing.",
-    ready: false,
-    blockerNote: "API key authentication.",
+    // Connectable TODAY via the manager-gated API-key paste form on
+    // /connections/convertkit — no OAuth/App Review needed.
+    ready: true,
     logoEmoji: "🟢",
     docsUrl: "https://developers.convertkit.com",
   },
@@ -678,8 +683,9 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "GetResponse",
     category: "email_marketing",
     description: "Email + landing pages.",
-    ready: false,
-    blockerNote: "GetResponse API key.",
+    // Connectable TODAY via the manager-gated API-key paste form on
+    // /connections/getresponse — no OAuth/App Review needed.
+    ready: true,
     logoEmoji: "🟢",
     docsUrl: "https://apidocs.getresponse.com",
   },
@@ -712,8 +718,9 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "Brevo (Sendinblue)",
     category: "email_marketing",
     description: "Email + SMS + chat platform.",
-    ready: false,
-    blockerNote: "API v3 key authentication.",
+    // Connectable TODAY via the manager-gated API-key paste form (v3 key) on
+    // /connections/brevo — no OAuth/App Review needed.
+    ready: true,
     logoEmoji: "🟢",
     docsUrl: "https://developers.brevo.com",
   },
@@ -722,8 +729,9 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "Omnisend",
     category: "email_marketing",
     description: "E-commerce email + SMS.",
-    ready: false,
-    blockerNote: "API key authentication.",
+    // Connectable TODAY via the manager-gated API-key paste form on
+    // /connections/omnisend — no OAuth/App Review needed.
+    ready: true,
     logoEmoji: "🟣",
     docsUrl: "https://api-docs.omnisend.com",
   },
