@@ -25,12 +25,23 @@ const PG_UNDEFINED_TABLE = "42P01";
 const PG_UNDEFINED_COLUMN = "42703";
 
 export function isMissingRelation(err: unknown): boolean {
-  if (err instanceof Prisma.PrismaClientKnownRequestError) {
-    const metaCode = (err.meta as { code?: string } | undefined)?.code;
-    if (metaCode === PG_UNDEFINED_TABLE || metaCode === PG_UNDEFINED_COLUMN) return true;
+  // Prisma surfaces a missing table as P2021 / column as P2022 (top-level `code`),
+  // and raw paths can carry the Postgres 42P01/42703. Also match the message text.
+  const code = (err as { code?: string } | null)?.code;
+  if (
+    code === PG_UNDEFINED_TABLE ||
+    code === PG_UNDEFINED_COLUMN ||
+    code === "P2021" ||
+    code === "P2022"
+  ) {
+    return true;
   }
-  const msg = err instanceof Error ? err.message : String(err);
-  return msg.includes(PG_UNDEFINED_TABLE) || msg.includes(PG_UNDEFINED_COLUMN);
+  const msg = err instanceof Error ? err.message : String(err ?? "");
+  return (
+    /does not exist/i.test(msg) ||
+    msg.includes(PG_UNDEFINED_TABLE) ||
+    msg.includes(PG_UNDEFINED_COLUMN)
+  );
 }
 
 /** The fields callers read off a run (suggestions live inside `steps` JSON envelope). */

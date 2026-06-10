@@ -84,3 +84,8 @@ desktop.ini
 /offer-letter-*.html
 /probation-offer-letter.html
 /send-offer.*
+
+/nextbuild.log
+/.pdf-build/shoot-key.mjs
+/tasks/ui-after-m3/
+/tasks/ui-after-fix/
