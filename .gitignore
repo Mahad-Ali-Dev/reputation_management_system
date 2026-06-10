@@ -105,3 +105,8 @@ desktop.ini
 
 /.pdf-build/shoot-m3-verify.mjs
 /tasks/ui-m3-verify/
+
+/.pdf-build/shoot-polish.mjs
+/.pdf-build/shoot-wave1.mjs
+/.pdf-build/shoot-hero.mjs
+/tasks/ui-wave1/

@@ -1,0 +1,323 @@
+/* ============================================================
+   System states — 404 / error / loading surfaces.
+   Co-located styles for app/not-found.tsx, app/error.tsx,
+   app/loading.tsx and app/dashboard/loading.tsx.
+   All classes are prefixed .sys- to avoid collisions.
+   ============================================================ */
+
+/* ---------- Full-page centered state (404 / error) ---------- */
+
+.sys-wrap {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+  background:
+    radial-gradient(at 100% 0%, rgba(18, 185, 152, 0.08) 0%, transparent 46%),
+    radial-gradient(at 0% 100%, rgba(36, 87, 255, 0.05) 0%, transparent 44%),
+    linear-gradient(180deg, #fbfaf6 0%, #f4f8f5 60%, #eef7f4 100%);
+  color: var(--ink, #0f172a);
+}
+
+.sys-card {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border: 1px solid var(--line, #eef1f6);
+  border-radius: var(--r-lg, 20px);
+  padding: 44px 36px 40px;
+  text-align: center;
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.05),
+    0 12px 28px -14px rgba(15, 23, 42, 0.1),
+    0 30px 60px -30px rgba(36, 87, 255, 0.08);
+  animation: sys-rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes sys-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.sys-illo {
+  width: 176px;
+  height: auto;
+  max-width: 56%;
+  margin: 0 auto 18px;
+  display: block;
+}
+
+.sys-kicker {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--pri, #2457ff);
+  margin-bottom: 10px;
+}
+
+.sys-title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0;
+  color: var(--ink, #0f172a);
+}
+
+.sys-sub {
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: #475569;
+  max-width: 380px;
+  margin: 12px auto 0;
+}
+
+.sys-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 28px;
+}
+
+/* Pill buttons (self-contained so these screens never depend on
+   design-system.css load order) */
+.sys-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 42px;
+  padding: 0 22px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.sys-btn:active {
+  transform: translateY(1px);
+}
+
+.sys-btn:focus-visible {
+  outline: 2px solid var(--pri, #2457ff);
+  outline-offset: 2px;
+}
+
+.sys-btn--pri {
+  color: #fff;
+  background: linear-gradient(180deg, #2f63ff 0%, var(--pri, #2457ff) 55%, #1b3fd1 100%);
+  box-shadow:
+    0 1px 2px rgba(27, 63, 209, 0.4),
+    0 10px 22px -10px rgba(36, 87, 255, 0.55);
+}
+
+.sys-btn--pri:hover {
+  box-shadow:
+    0 1px 2px rgba(27, 63, 209, 0.4),
+    0 14px 28px -10px rgba(36, 87, 255, 0.65);
+  transform: translateY(-1px);
+}
+
+.sys-btn--ghost {
+  color: var(--ink, #0f172a);
+  background: #fff;
+  border-color: var(--line, #e2e8f0);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.05);
+}
+
+.sys-btn--ghost:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.sys-digest {
+  margin-top: 22px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+/* ---------- Skeleton shimmer ---------- */
+
+.sys-skel {
+  position: relative;
+  overflow: hidden;
+  background: #e8edf3;
+  border-radius: 8px;
+}
+
+.sys-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 100%
+  );
+  animation: sys-shimmer 1.6s ease-in-out infinite;
+}
+
+@keyframes sys-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sys-skel::after {
+    animation: none;
+  }
+  .sys-card {
+    animation: none;
+  }
+}
+
+/* ---------- Dashboard loading layout ---------- */
+
+.sys-load {
+  min-height: 100vh;
+  min-height: 100dvh;
+  background:
+    radial-gradient(at 100% 0%, rgba(18, 185, 152, 0.06) 0%, transparent 46%),
+    linear-gradient(180deg, #fbfaf6 0%, #f4f8f5 100%);
+  padding: 28px 24px 48px;
+}
+
+.sys-load__inner {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sys-load__panel {
+  background: #fff;
+  border: 1px solid var(--line, #eef1f6);
+  border-radius: var(--r-lg, 16px);
+  box-shadow:
+    0 1px 2px rgba(15, 23, 42, 0.04),
+    0 12px 28px -14px rgba(15, 23, 42, 0.07);
+  padding: 20px;
+}
+
+.sys-load__hero {
+  background: linear-gradient(135deg, #eff6ff 0%, #ffffff 55%, #f0fdf9 100%);
+  min-height: 116px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 12px;
+}
+
+.sys-load__kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.sys-load__split {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 16px;
+}
+
+.sys-load__chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  height: 150px;
+  margin-top: 16px;
+}
+
+.sys-load__bar {
+  flex: 1;
+  border-radius: 6px 6px 2px 2px;
+}
+
+@media (max-width: 900px) {
+  .sys-load__kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .sys-load__split {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .sys-load {
+    padding: 20px 14px 36px;
+  }
+  .sys-load__kpis {
+    grid-template-columns: 1fr;
+  }
+  .sys-card {
+    padding: 34px 22px 32px;
+  }
+}
+
+/* ---------- Generic route loading (root loading.tsx) ---------- */
+
+.sys-load-min {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(at 100% 0%, rgba(18, 185, 152, 0.06) 0%, transparent 46%),
+    linear-gradient(180deg, #fbfaf6 0%, #f4f8f5 100%);
+}
+
+.sys-load-min__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+.sys-spinner {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 3px solid #dbeafe;
+  border-top-color: var(--pri, #2457ff);
+  animation: sys-spin 0.8s linear infinite;
+}
+
+@keyframes sys-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sys-spinner {
+    animation-duration: 1.6s;
+  }
+}

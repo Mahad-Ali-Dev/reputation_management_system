@@ -11,13 +11,15 @@ export const metadata = {
 
 const C = {
   surface: "var(--surface, #ffffff)",
-  surface2: "var(--surface-2, #fafbf8)",
-  ink: "var(--ink, #0B0D0E)",
-  ink2: "var(--ink-2, #1e2225)",
-  mute: "var(--rl-muted, #61697a)",
-  line: "var(--line, #eceeea)",
-  pri: "var(--pri, #2563EB)",
-  pri50: "var(--pri-50, #ECFDF7)",
+  surface2: "var(--surface-2, #fafbfd)",
+  ink: "var(--ink, #0f172a)",
+  ink2: "var(--ink-2, #1e293b)",
+  mute: "var(--rl-muted, #64748b)",
+  line: "var(--line, #eef1f6)",
+  pri: "var(--pri, #2457ff)",
+  pri50: "var(--pri-50, #eff6ff)",
+  shadowCard:
+    "0 1px 2px rgba(15, 23, 42, 0.05), 0 12px 28px -14px rgba(15, 23, 42, 0.1)",
 };
 
 export default function AboutPage() {
@@ -102,7 +104,11 @@ export default function AboutPage() {
       <section className="mx-auto max-w-[1080px] px-6 py-20">
         <div
           className="flex flex-wrap items-center justify-between gap-3 rounded-2xl p-8 sm:p-12"
-          style={{ background: C.surface, border: `1px solid ${C.line}` }}
+          style={{
+            background: C.surface,
+            border: `1px solid ${C.line}`,
+            boxShadow: C.shadowCard,
+          }}
         >
           <div>
             <div
@@ -141,8 +147,12 @@ export default function AboutPage() {
           </div>
           <a
             href="mailto:hello@repulabs.com"
-            className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium"
-            style={{ background: C.ink, color: "#fff" }}
+            className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-semibold transition-transform hover:-translate-y-px"
+            style={{
+              background: "linear-gradient(135deg, var(--pri, #2457ff) 0%, #1b3fd1 100%)",
+              color: "#fff",
+              boxShadow: "0 10px 26px -10px rgba(36, 87, 255, 0.55)",
+            }}
           >
             Say hello → hello@repulabs.com
           </a>
@@ -164,7 +174,11 @@ function Pillar({
   return (
     <div
       className="rounded-2xl p-7"
-      style={{ background: C.surface, border: `1px solid ${C.line}` }}
+      style={{
+        background: C.surface,
+        border: `1px solid ${C.line}`,
+        boxShadow: C.shadowCard,
+      }}
     >
       <div
         className="grid h-10 w-10 place-items-center rounded-xl"
