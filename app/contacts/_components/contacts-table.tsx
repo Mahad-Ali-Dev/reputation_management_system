@@ -22,6 +22,8 @@ import { BulkActionBar } from "./bulk-action-bar";
  *  - reveals the sticky `<BulkActionBar/>` on selection
  *  - hosts the `<AddContactDialog/>` (also opened by the zero-state via a
  *    `contacts:add` window event)
+ *  - row name click sets `?contact=<id>` (server-rendered profile drawer in the
+ *    right column of the workspace) — pure <Link>, no client state
  *
  * The server parent re-renders the row set on each URL change; this island only
  * drives the URL + local selection/edit state.
@@ -149,6 +151,18 @@ export function ContactsTable({
 
   const hasFilters =
     !!filters.q || (filters.source && filters.source !== "all") || (filters.tag && filters.tag !== "all") || !!filters.seg;
+
+  // Profile drawer: the open contact comes from `?contact=` (server-rendered
+  // drawer); rows link to the same URL with `contact` swapped — no client state.
+  const openContactId = searchParams?.get("contact") ?? null;
+  const drawerHref = useCallback(
+    (id: string) => {
+      const params = new URLSearchParams(searchParams?.toString() ?? "");
+      params.set("contact", id);
+      return `${pathname}?${params.toString()}`;
+    },
+    [pathname, searchParams],
+  );
 
   function clearFilters() {
     setSearchValue("");
@@ -324,6 +338,8 @@ export function ContactsTable({
                   key={c.id}
                   contact={c}
                   selected={selected.has(c.id)}
+                  open={openContactId === c.id}
+                  href={drawerHref(c.id)}
                   onToggle={() => toggleRow(c.id)}
                 />
               ))}
@@ -429,10 +445,14 @@ function SortableTh({ label, active, onClick }: { label: string; active: boolean
 function ContactRow({
   contact,
   selected,
+  open,
+  href,
   onToggle,
 }: {
   contact: ContactListItem;
   selected: boolean;
+  open: boolean;
+  href: string;
   onToggle: () => void;
 }) {
   const meta = getContactSourceMeta(contact.source);
@@ -444,13 +464,17 @@ function ContactRow({
     "Unnamed";
 
   return (
-    <tr style={selected ? { background: "var(--pri-50)" } : undefined}>
+    <tr
+      className={open ? "crm-row--open" : undefined}
+      style={selected && !open ? { background: "var(--pri-50)" } : undefined}
+    >
       <td>
         <input type="checkbox" aria-label={`Select ${displayName}`} checked={selected} onChange={onToggle} />
       </td>
       <td>
         <Link
-          href={`/contacts/${contact.id}`}
+          href={href}
+          scroll={false}
           style={{ color: "var(--ink)", fontWeight: 500, textDecoration: "none" }}
         >
           {displayName}

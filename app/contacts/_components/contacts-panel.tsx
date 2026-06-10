@@ -3,16 +3,15 @@ import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { listContacts, type ContactSort } from "@/lib/contacts/queries";
 import { getSegment } from "@/lib/contacts/segments";
 import { softQuery } from "@/lib/contacts/fail-soft";
-import type { ContactStats } from "@/lib/contacts/queries";
-import { StatCards } from "./stat-cards";
 import { ContactsTable } from "./contacts-table";
 
 /**
- * Contacts tab (server). Reads stat counts (passed in) + the filtered / sorted /
- * paginated list via `lib/contacts/queries`, plus the supporting data the client
- * table needs (distinct tags for the tag filter, establishments for the bulk
- * review-request dialog, the Pro-entitlement flag for gating bulk paid actions).
- * All interactivity lives in `<ContactsTable/>` (client). RSC-safe.
+ * Contacts table column (server) — the center of the CRM workspace. Reads the
+ * filtered / sorted / paginated list via `lib/contacts/queries`, plus the
+ * supporting data the client table needs (distinct tags for the tag filter,
+ * establishments for the bulk review-request dialog, the Pro-entitlement flag
+ * for gating bulk paid actions). All interactivity lives in `<ContactsTable/>`
+ * (client). RSC-safe.
  */
 
 function toSort(v: string | undefined): ContactSort | undefined {
@@ -21,7 +20,6 @@ function toSort(v: string | undefined): ContactSort | undefined {
 
 export async function ContactsPanel({
   orgId,
-  stats,
   q,
   source,
   tag,
@@ -30,7 +28,6 @@ export async function ContactsPanel({
   page,
 }: {
   orgId: string;
-  stats: ContactStats;
   q?: string;
   source?: string;
   tag?: string;
@@ -52,7 +49,6 @@ export async function ContactsPanel({
 
   return (
     <div>
-      <StatCards stats={stats} />
       <ContactsTable
         rows={list.rows}
         total={list.total}

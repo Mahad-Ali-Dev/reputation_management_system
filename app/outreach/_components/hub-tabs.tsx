@@ -13,6 +13,7 @@ import { Suspense } from "react";
  */
 
 const TABS = [
+  { key: "overview", label: "Overview", icon: "grid" as const },
   { key: "send", label: "Send Request", icon: "send" as const },
   { key: "templates", label: "Templates", icon: "copy" as const },
   { key: "automation", label: "Automation Rules", icon: "bolt" as const },

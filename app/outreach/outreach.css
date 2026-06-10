@@ -1,0 +1,287 @@
+/*
+ * Outreach / Review-Requests hub — campaign-hub overview styles.
+ * All classes are .orc- prefixed (Outreach Request Campaign hub) and co-located
+ * with app/outreach/page.tsx. Reuses global tokens (--pri, --ink, --line, --bg,
+ * --r-*) — no new colors invented.
+ */
+
+/* ── Top 3-column workspace: Campaigns | Template studio | Deliverability ── */
+.orc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.35fr) minmax(0, 0.9fr);
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: stretch;
+}
+@media (max-width: 1100px) {
+  .orc-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Card header: small tinted icon tile + title/sub ── */
+.orc-cardhead {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.orc-cardicon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: color-mix(in srgb, var(--pri) 10%, transparent);
+  color: var(--pri);
+}
+.orc-cardicon--trust {
+  background: color-mix(in srgb, var(--trust) 12%, transparent);
+  color: var(--trust);
+}
+.orc-cardhead__title {
+  font-size: 14px;
+  font-weight: 650;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.orc-cardhead__sub {
+  font-size: 11.5px;
+  color: var(--rl-muted, #64748b);
+  margin-top: 2px;
+}
+.orc-cardhead__aside {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+/* ── Campaigns / programs list ── */
+.orc-programs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.orc-program {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px);
+  background: var(--bg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  min-width: 0;
+}
+.orc-program:hover {
+  border-color: color-mix(in srgb, var(--pri) 35%, var(--line));
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+}
+.orc-program__ava {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  background: color-mix(in srgb, var(--pri) 9%, transparent);
+  color: var(--pri);
+}
+.orc-program__meta {
+  min-width: 0;
+  flex: 1;
+}
+.orc-program__name {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.orc-program__sub {
+  font-size: 10.5px;
+  color: var(--rl-muted, #64748b);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 1px;
+}
+
+/* ── Template studio (client island) ── */
+.orc-pills {
+  display: inline-flex;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.orc-pill {
+  height: 26px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg);
+  color: var(--rl-muted, #64748b);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.15s ease;
+}
+.orc-pill:hover {
+  border-color: color-mix(in srgb, var(--pri) 35%, var(--line));
+  color: var(--ink);
+}
+.orc-pill.is-active {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: #fff;
+}
+.orc-tplpick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.orc-tplpick__t {
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--rl-muted, #64748b);
+  cursor: pointer;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.orc-tplpick__t.is-active {
+  border-color: color-mix(in srgb, var(--pri) 50%, var(--line));
+  background: color-mix(in srgb, var(--pri) 7%, transparent);
+  color: var(--pri);
+  font-weight: 600;
+}
+.orc-body {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px);
+  background: var(--bg);
+  padding: 12px 14px;
+  font-size: 12.5px;
+  line-height: 1.65;
+  color: var(--ink);
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 190px;
+  overflow-y: auto;
+}
+.orc-body__subject {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--rl-muted, #64748b);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+.orc-mergetag {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 6px;
+  margin: 0 1px;
+  border-radius: 5px;
+  background: color-mix(in srgb, var(--pri) 9%, transparent);
+  color: var(--pri);
+  font-family: var(--f-mono, monospace);
+  font-size: 10.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  vertical-align: baseline;
+}
+.orc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+.orc-studio__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 14px;
+  flex-wrap: wrap;
+}
+
+/* ── Deliverability stat tiles ── */
+.orc-tiles {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+@media (max-width: 480px) {
+  .orc-tiles {
+    grid-template-columns: 1fr;
+  }
+}
+.orc-tile {
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px);
+  background: var(--bg);
+  padding: 14px;
+}
+.orc-tile__label {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--rl-muted, #64748b);
+}
+.orc-tile__value {
+  font-size: 26px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin-top: 4px;
+  line-height: 1.1;
+}
+.orc-tile__sub {
+  font-size: 10.5px;
+  color: var(--trust, #0d9488);
+  font-weight: 600;
+  margin-top: 4px;
+}
+.orc-funnelrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 2px;
+  border-bottom: 1px dashed var(--line);
+  font-size: 12px;
+}
+.orc-funnelrow:last-child {
+  border-bottom: none;
+}
+.orc-funnelrow__label {
+  color: var(--rl-muted, #64748b);
+}
+.orc-funnelrow__val {
+  font-weight: 650;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Empty mini-state inside hub cards ── */
+.orc-mini-empty {
+  padding: 22px 12px;
+  text-align: center;
+  border: 1px dashed var(--line);
+  border-radius: var(--r-md, 12px);
+}
