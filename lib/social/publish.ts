@@ -24,6 +24,13 @@
 import { decryptAccessToken } from "@/lib/connections/adapters/refresh";
 import { GRAPH_VERSION } from "@/lib/connections/adapters/meta";
 import { platformToProvider, type SocialPlatform } from "@/lib/social/connections";
+import {
+  isInstagramPublishEnabled,
+  publishToInstagram,
+  resolveIgBusinessId,
+} from "@/lib/social/adapters/instagram";
+import { isTwitterPublishEnabled, postTweet } from "@/lib/social/adapters/twitter";
+import { isLinkedInPublishEnabled, postToLinkedIn } from "@/lib/social/adapters/linkedin";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 
@@ -133,19 +140,14 @@ async function publishToPlatform(
   post: PublishablePost,
   orgId: string,
 ): Promise<PlatformPublishResult> {
-  // Only Meta (facebook/instagram) has a live adapter. Everything else is
-  // explicitly "not configured" — no network call, ever.
-  if (platform !== "facebook" && platform !== "instagram") {
-    return { platform, ok: false, skipped: "not_configured" };
-  }
-
   // Env gate FIRST — proves no paid call in the default path even when a
-  // connection exists.
-  if (!isMetaPublishEnabled()) {
+  // connection exists. Each platform has its OWN explicit opt-in flag; absent it
+  // we never reach the connection lookup or any network call.
+  if (!isPlatformPublishEnabled(platform)) {
     return { platform, ok: false, skipped: "not_configured" };
   }
 
-  const provider = platformToProvider(platform); // "meta"
+  const provider = platformToProvider(platform); // meta | x | linkedin
   const conn = await loadActiveConnection(orgId, provider, post.establishmentId);
   if (!conn) {
     return { platform, ok: false, skipped: "not_configured" };
@@ -171,14 +173,14 @@ async function publishToPlatform(
     return { platform, ok: false, error: "token_decrypt_failed" };
   }
 
-  const targetId = conn.externalId; // Page id / IG business id captured at connect
+  const targetId = conn.externalId; // Page id (meta) / user id (x) / author URN (linkedin)
   if (!targetId) {
     return { platform, ok: false, error: "no_target_id" };
   }
 
   const media = pickMedia(post);
   try {
-    const externalId = await postToGraph({ platform, targetId, token, caption: post.caption, media });
+    const externalId = await publishOne({ platform, targetId, token, post, media });
     return { platform, ok: true, externalId };
   } catch (err) {
     return {
@@ -186,6 +188,50 @@ async function publishToPlatform(
       ok: false,
       error: (err instanceof Error ? err.message : String(err)).slice(0, 300),
     };
+  }
+}
+
+/**
+ * Per-platform live-publish gate. Each platform is OFF by default behind its own
+ * env flag (Meta: META_GRAPH_ENABLED; X: TWITTER_PUBLISH_ENABLED; LinkedIn:
+ * LINKEDIN_PUBLISH_ENABLED). IG shares the Meta gate.
+ */
+function isPlatformPublishEnabled(platform: SocialPlatform): boolean {
+  switch (platform) {
+    case "facebook":
+      return isMetaPublishEnabled();
+    case "instagram":
+      return isInstagramPublishEnabled();
+    case "twitter":
+      return isTwitterPublishEnabled();
+    case "linkedin":
+      return isLinkedInPublishEnabled();
+  }
+}
+
+/** Route one platform's publish to its adapter. Throws on failure (caught above). */
+async function publishOne(args: {
+  platform: SocialPlatform;
+  targetId: string;
+  token: string;
+  post: PublishablePost;
+  media: string | null;
+}): Promise<string> {
+  const { platform, targetId, token, post, media } = args;
+  switch (platform) {
+    case "facebook":
+      return postToFacebook({ targetId, token, caption: post.caption, media });
+    case "instagram": {
+      // The meta connection stores the Page id; resolve the IG business id from
+      // it at publish time. IG requires media.
+      const igUserId = await resolveIgBusinessId({ pageId: targetId, token });
+      if (!igUserId) throw new Error("no_ig_business_account");
+      return publishToInstagram({ igUserId, token, caption: post.caption, media });
+    }
+    case "twitter":
+      return postTweet({ token, caption: post.caption });
+    case "linkedin":
+      return postToLinkedIn({ token, authorUrn: targetId, caption: post.caption, mediaUrl: media });
   }
 }
 
@@ -197,12 +243,11 @@ function pickMedia(post: PublishablePost): string | null {
 }
 
 /**
- * The ONE function that makes a paid Graph call. Reached only behind
+ * Publish to a Facebook Page via the Graph API. Reached only behind
  * `isMetaPublishEnabled()` + a live connection. Image posts use `/photos`, plain
- * text uses `/feed`. IG requires media (the dispatch pre-check guarantees it).
+ * text uses `/feed`. (Instagram has its own container-based adapter.)
  */
-async function postToGraph(args: {
-  platform: SocialPlatform;
+async function postToFacebook(args: {
   targetId: string;
   token: string;
   caption: string | null;

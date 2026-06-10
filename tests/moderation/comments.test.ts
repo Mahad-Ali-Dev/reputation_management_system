@@ -32,7 +32,14 @@ vi.mock("@/lib/db/with-tenant", () => ({
 }));
 vi.mock("@/lib/moderation/queue", () => ({ evaluateInbound: vi.fn() }));
 
-import { canHide, commentStatusCounts, listComments, platformLabel } from "@/lib/inbox/comments";
+import {
+  canHide,
+  commentSource,
+  commentStatusCounts,
+  isAdComment,
+  listComments,
+  platformLabel,
+} from "@/lib/inbox/comments";
 
 const ORG = "11111111-1111-4111-8111-111111111111";
 
@@ -46,6 +53,11 @@ describe("canHide — Google is never hideable", () => {
     expect(canHide("instagram")).toBe(true);
   });
 
+  it("allows hide for FB/IG AD comments (boosted posts are still FB/IG)", () => {
+    expect(canHide("facebook_ad")).toBe(true);
+    expect(canHide("instagram_ad")).toBe(true);
+  });
+
   it("REFUSES hide for Google Q&A and anything unknown", () => {
     expect(canHide("google_qa")).toBe(false);
     expect(canHide("google")).toBe(false);
@@ -54,10 +66,30 @@ describe("canHide — Google is never hideable", () => {
   });
 });
 
+describe("ad-comment classification", () => {
+  it("isAdComment flags only the *_ad platforms", () => {
+    expect(isAdComment("facebook_ad")).toBe(true);
+    expect(isAdComment("instagram_ad")).toBe(true);
+    expect(isAdComment("facebook")).toBe(false);
+    expect(isAdComment("instagram")).toBe(false);
+    expect(isAdComment("google_qa")).toBe(false);
+  });
+
+  it("commentSource buckets platforms into organic | ad | google", () => {
+    expect(commentSource("facebook")).toBe("organic");
+    expect(commentSource("instagram")).toBe("organic");
+    expect(commentSource("facebook_ad")).toBe("ad");
+    expect(commentSource("instagram_ad")).toBe("ad");
+    expect(commentSource("google_qa")).toBe("google");
+  });
+});
+
 describe("platformLabel", () => {
   it("maps known platforms to friendly labels", () => {
     expect(platformLabel("facebook")).toBe("Facebook");
     expect(platformLabel("instagram")).toBe("Instagram");
+    expect(platformLabel("facebook_ad")).toBe("Facebook Ad");
+    expect(platformLabel("instagram_ad")).toBe("Instagram Ad");
     expect(platformLabel("google_qa")).toBe("Google Q&A");
   });
 

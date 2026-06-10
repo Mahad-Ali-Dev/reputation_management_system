@@ -165,6 +165,21 @@ const schema = z.object({
   // below additionally gate live publish/metrics calls.
   META_GRAPH_ENABLED: optionalString, // "true" to enable live Meta publish/metrics
   META_GRAPH_TOKEN: optionalString,
+  // Live X (Twitter) publishing/mentions. Requires the X API paid tier
+  // ($100+/mo) — OFF by default; no live call without this flag + a connection.
+  TWITTER_PUBLISH_ENABLED: optionalString, // "true" to enable live X publish/read
+  // Live LinkedIn publishing. OFF by default; no live call without this flag +
+  // a connection. Requires LinkedIn Marketing Developer Platform approval.
+  LINKEDIN_PUBLISH_ENABLED: optionalString, // "true" to enable live LinkedIn publish
+  // OAuth CONNECT creds for X (Twitter) + LinkedIn. Optional — the connect
+  // routes (app/api/connections/{twitter,linkedin}) fail SOFT to
+  // ?error=*_not_configured without them, and the registry only flips the tile
+  // "ready" once both id + secret exist. Distinct from the *_PUBLISH_ENABLED
+  // flags above, which additionally gate the live (paid) publish calls.
+  X_CLIENT_ID: optionalString,
+  X_CLIENT_SECRET: optionalString,
+  LINKEDIN_CLIENT_ID: optionalString,
+  LINKEDIN_CLIENT_SECRET: optionalString,
   // AI Image Creatives (Module 10) — Pro + env gated, ships disabled by default.
   // Unset IMAGE_GEN_PROVIDER ⇒ feature is "not enabled" (no paid call ever).
   IMAGE_GEN_PROVIDER: optionalString, // "openai" | "stability" | "" (disabled)

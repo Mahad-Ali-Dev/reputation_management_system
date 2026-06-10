@@ -112,9 +112,13 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "X (Twitter)",
     category: "social",
     description: "Post tweets + threads. Read mentions and DMs.",
-    ready: false,
-    blockerNote: "Requires X API paid tier ($100+/mo). OAuth flow is built.",
-    scopes: ["tweet.read", "tweet.write", "users.read", "dm.read", "dm.write"],
+    // Env-gated: the OAuth 2.0 + PKCE connect flow (app/api/connections/twitter)
+    // is live and only goes "ready" once X_CLIENT_ID/SECRET exist — same pattern
+    // as the other OAuth providers. Live publishing additionally needs the paid
+    // tier (TWITTER_PUBLISH_ENABLED), enforced in the publish adapter.
+    ready: Boolean(process.env.X_CLIENT_ID && process.env.X_CLIENT_SECRET),
+    blockerNote: "Set X_CLIENT_ID/X_CLIENT_SECRET to enable. Live publishing also needs the X API paid tier ($100+/mo).",
+    scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
     oauthUrl: "https://twitter.com/i/oauth2/authorize",
     tokenUrl: "https://api.twitter.com/2/oauth2/token",
     logoEmoji: "🐦",
@@ -125,9 +129,12 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     displayName: "LinkedIn Pages",
     category: "social",
     description: "Post to company pages + read engagement.",
-    ready: false,
-    blockerNote: "Requires LinkedIn Marketing Developer Platform (review takes 2-4 weeks).",
-    scopes: ["w_member_social", "r_organization_social", "w_organization_social"],
+    // Env-gated: the OAuth 2.0 connect flow (app/api/connections/linkedin) is
+    // live and only goes "ready" once LINKEDIN_CLIENT_ID/SECRET exist. Live
+    // publishing additionally needs LINKEDIN_PUBLISH_ENABLED (publish adapter).
+    ready: Boolean(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
+    blockerNote: "Set LINKEDIN_CLIENT_ID/LINKEDIN_CLIENT_SECRET to enable. Org-page posting needs LinkedIn Marketing Developer Platform approval (2-4 weeks).",
+    scopes: ["openid", "profile", "w_member_social"],
     oauthUrl: "https://www.linkedin.com/oauth/v2/authorization",
     tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
     logoEmoji: "💼",
