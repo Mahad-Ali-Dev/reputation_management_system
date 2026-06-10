@@ -11,6 +11,7 @@ import { orgHasFeature } from "@/lib/billing/feature-access";
 import { syncSubscriptionOnReturn } from "@/lib/billing/sync";
 import { prisma } from "@/lib/db/client";
 import { buildOnboardingChecklist, getOnboardingFacts } from "@/lib/onboarding/facts";
+import { redirect } from "next/navigation";
 import { computeHealthScore } from "@/lib/dashboard/health-score";
 import { getCachedBriefing } from "@/lib/dashboard/briefing";
 import { getDashboardData, getSetupState, type SetupState } from "@/lib/dashboard/queries";
@@ -79,6 +80,21 @@ export default async function DashboardPage({
     getRoiHeadline(orgId, { start: since30d, end: new Date() }),
     orgHasFeature(orgId, "ai_autopilot"),
   ]);
+
+  // First-run redirect to the agentic onboarding. A brand-new org (never started
+  // the wizard, onboardingStep === 0) with no establishment yet hasn't been set
+  // up at all — send it to /onboarding to kick off the auto-build. Anyone who
+  // started/skipped the wizard (step !== 0, incl. the 99 sentinel) or already has
+  // a listing skips this. Fail-soft: a missing org row never blocks the dashboard.
+  if (!facts.hasEstablishment) {
+    const orgRow = await prisma.organization.findUnique({
+      where: { id: orgId },
+      select: { onboardingStep: true },
+    });
+    if (orgRow?.onboardingStep === 0) {
+      redirect("/onboarding");
+    }
+  }
 
   const total = d.total;
   const avgRating = d.avgRating;

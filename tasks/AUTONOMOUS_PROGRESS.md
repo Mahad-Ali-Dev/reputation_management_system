@@ -72,6 +72,14 @@ Plan: (1) design-system foundation → (2) app relayout → (3) marketing redesi
 
 ## Log
 (Newest first — updated as batches land.)
+- Agentic onboarding wave launched (backend orchestrator + /onboarding UI, build-gated). HEADLINE.
+- **Design-system M3 foundation COMMITTED** (`14e9fe7`) — verified green + SCREENSHOTTED
+  (tasks/redesign-preview/*.png). Tonal surfaces, state layers, elevation ramp, motion, M3 type +
+  refined buttons/cards/inputs. Looks clean/professional; can push harder toward distinctly-Google later.
+- Wave 1 v2: blueprint saved (tasks/OVERNIGHT_BLUEPRINT.md) + deep audit (9 findings) landed;
+  design agent had failed on a bad agentType — re-ran successfully (above).
+- NOTE: overnight unattended run did NOT progress (background agents don't survive idle); re-ran
+  in the morning with session active. Nothing lost; yesterday's 13 commits live in prod.
 - Wave 1 (overnight) launched: Google/M3 design-system foundation + architecture blueprint
   (agentic onboarding + module layouts + integration gaps) + deep bug audit. Build-gated.
 - DEPLOY DONE by user: prod live (HTTP 200), all 25 migrations applied (schema up to date),

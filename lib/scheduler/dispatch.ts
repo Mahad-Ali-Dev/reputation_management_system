@@ -43,6 +43,7 @@ const KNOWN_KINDS: ReadonlySet<string> = new Set<ScheduledKind>([
   "scheduled_post",
   "scheduled_request",
   "scheduled_reply",
+  "onboarding_step",
 ]);
 
 export type DrainSummary = {

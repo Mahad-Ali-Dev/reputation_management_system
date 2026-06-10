@@ -19,7 +19,11 @@
  *     they want surfaced in `lastError` without exhausting retries differently.
  */
 
-export type ScheduledKind = "scheduled_post" | "scheduled_request" | "scheduled_reply";
+export type ScheduledKind =
+  | "scheduled_post"
+  | "scheduled_request"
+  | "scheduled_reply"
+  | "onboarding_step";
 
 export type ScheduledHandlerJob = {
   id: string;
@@ -32,6 +36,7 @@ export type ScheduledHandler = (
   job: ScheduledHandlerJob,
 ) => Promise<{ ok: boolean; detail?: string }>;
 
+import { handleOnboardingStep } from "./onboarding_step";
 import { handleScheduledPost } from "./scheduled_post";
 import { handleScheduledReply } from "./scheduled_reply";
 import { handleScheduledRequest } from "./scheduled_request";
@@ -45,4 +50,5 @@ export const HANDLERS: Record<ScheduledKind, ScheduledHandler> = {
   scheduled_post: handleScheduledPost,
   scheduled_request: handleScheduledRequest,
   scheduled_reply: handleScheduledReply,
+  onboarding_step: handleOnboardingStep,
 };

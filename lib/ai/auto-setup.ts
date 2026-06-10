@@ -126,8 +126,35 @@ export function mergeProfile(
   };
 }
 
+/**
+ * Server action — the "Scan & Build My AI" form handler. Resolves the session
+ * (requireOrg/redirect) + reads the URL from the FormData, then delegates to the
+ * pure {@link runAutoSetup} core. Kept as a thin wrapper so the AI page's form
+ * action contract is unchanged.
+ */
 export async function scanAndBuild(form: FormData): Promise<ScanResult> {
+  "use server";
   const { orgId, userId } = await requireOrg();
+  const rawUrl = typeof form.get("url") === "string" ? (form.get("url") as string) : "";
+  return runAutoSetup({ orgId, userId, url: rawUrl });
+}
+
+/**
+ * Pure pipeline core — the crawl → extract → seed-KB work WITHOUT any
+ * session/redirect coupling, so the onboarding orchestrator can drive it
+ * server-side (already inside `withTenant`-scoped step code). The exported
+ * `scanAndBuild` action wraps this after resolving the session.
+ *
+ * Gates the same way the action does — entitlement + rate-limit before any
+ * external fetch or model call — so a budget/plan failure short-circuits with a
+ * friendly `{ ok:false }` rather than spending. Never throws a raw crawl error.
+ */
+export async function runAutoSetup(args: {
+  orgId: string;
+  userId: string;
+  url: string;
+}): Promise<ScanResult> {
+  const { orgId, userId } = args;
 
   // Paid AI feature — gate before any external fetch or model call.
   try {
@@ -142,7 +169,7 @@ export async function scanAndBuild(form: FormData): Promise<ScanResult> {
     return { ok: false, error: "You've scanned a few sites recently. Please wait a couple of minutes and try again." };
   }
 
-  const parsed = ScanSchema.safeParse({ url: form.get("url") });
+  const parsed = ScanSchema.safeParse({ url: args.url });
   if (!parsed.success) {
     return { ok: false, error: "Enter a valid website URL (e.g. https://yourbusiness.com)." };
   }

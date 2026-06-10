@@ -89,6 +89,7 @@ model Organization {
   autopilotDigestRuns  AutopilotDigestRun[]
   dashboardBriefings   DashboardBriefing[]
   meetingRequests      MeetingRequest[]
+  onboardingRuns       OnboardingRun[]
 
   @@index([plan])
   @@index([stripeCustomerId])
@@ -1735,6 +1736,32 @@ model AutomationRule {
   @@unique([organizationId, establishmentId, trigger])
   @@index([organizationId, enabled])
   @@map("automation_rules")
+}
+
+/// Owner: onboarding orchestrator. One row per agentic-onboarding run. The
+/// orchestrator is a chained step-machine on `scheduled_jobs`
+/// (kind="onboarding_step"); this row tracks progress so `/onboarding` can poll
+/// it. `steps` is the JSON checklist (see lib/onboarding/constants.ts). At most
+/// ONE active run per org (status in running|needs_user) is enforced by a
+/// PARTIAL UNIQUE index materialized in the migration SQL (Prisma can't express
+/// a partial unique, so it lives in the SQL only).
+model OnboardingRun {
+  id                String   @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
+  organizationId    String   @map("organization_id") @db.Uuid
+  status            String   @default("running")            // running | needs_user | done | failed
+  websiteUrl        String?  @map("website_url")
+  businessName      String?  @map("business_name")
+  currentStep       Int      @default(0) @map("current_step")
+  steps             Json     @default("[]")
+  createdByUserId   String?  @map("created_by_user_id") @db.Uuid
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @default(now()) @updatedAt @map("updated_at")
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt(sort: Desc)])
+  @@map("onboarding_runs")
 }
 
 /// Owner: 10_post_creator. Uploaded / AI-generated creative assets.

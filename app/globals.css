@@ -528,6 +528,28 @@
   }
 }
 
+/* Onboarding entrance — a tasteful fade + rise for first-run surfaces. */
+@keyframes rl-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.rl-rise {
+  animation: rl-rise 0.45s var(--ease-out, cubic-bezier(0.2, 0, 0, 1)) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rl-rise {
+    animation: none;
+  }
+}
+
 @media (max-width: 639px) {
   .rl-theme .rl-display {
     font-size: 32px;
