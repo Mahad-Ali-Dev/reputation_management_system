@@ -21,31 +21,31 @@ const C = {
 export function SetupTimeline() {
   const data = [
     {
-      title: "Connect",
+      title: "Describe",
       content: (
         <StepCard
-          minutes="~2 min"
-          title="Connect your business"
-          desc="One-click OAuth to Google Business, Meta and your POS. We import historical reviews so the AI has context from day one."
+          minutes="~30 sec"
+          title="Tell us who you are"
+          desc="Type your business name and website — that's the whole form. The onboarding agent crawls your site to understand what you do, your tone and your policies."
           points={[
-            "Google Business + Meta",
-            "POS / CRM import",
-            "Historical reviews synced",
+            "Business name + website",
+            "Agent reads your site",
+            "No 40-field setup form",
           ]}
         />
       ),
     },
     {
-      title: "Train",
+      title: "Auto-connect",
       content: (
         <StepCard
-          minutes="~3 min"
-          title="Train the AI on your voice"
-          desc="Upload your service catalog, brand guide and refund policy. repulabs builds a voice model that matches your tone exactly."
+          minutes="~2 min"
+          title="The agent finds & links everything"
+          desc="repulabs locates your Google Business and social listings, imports your historical reviews and builds a voice model from your own content — all on its own."
           points={[
-            "Brand guide + policies",
-            "Tone calibration",
-            "Approve-to-learn loop",
+            "Finds your listings for you",
+            "Imports historical reviews",
+            "Learns your brand voice",
           ]}
         />
       ),
@@ -55,8 +55,8 @@ export function SetupTimeline() {
       content: (
         <StepCard
           minutes="~1 min"
-          title="Turn on autopilot"
-          desc="Switch on review requests, AI replies and the phone receptionist. Approve what matters; let the rest run itself."
+          title="Confirm, then it runs itself"
+          desc="Review what the agent set up, flip on review requests, AI replies and the phone receptionist. Approve what matters; let the rest run itself."
           points={[
             "Automated review requests",
             "AI replies in your voice",

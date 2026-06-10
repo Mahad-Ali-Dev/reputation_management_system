@@ -1,6 +1,6 @@
 import { BRAND_LOGOS } from "@/components/landing/brand-logos";
 import { EverythingGrid } from "@/components/landing/everything-grid";
-import { FeatureBento } from "@/components/landing/feature-bento";
+import { FeatureShowcase } from "@/components/landing/feature-showcase";
 import { FinalCtaBeams } from "@/components/landing/final-cta-beams";
 import { HeroContainer } from "@/components/landing/hero-container";
 import { LandingAnimations } from "@/components/landing/landing-animations";
@@ -61,18 +61,19 @@ export default function Landing() {
       <HeroContainer />
       <TrustStrip />
 
-      {/* Features — BentoGrid of the 7 surfaces */}
-      <section id="features" className="mx-auto max-w-[1200px] px-6 py-24">
+      {/* Features — large alternating illustration + copy showcase */}
+      <section id="features" className="mx-auto max-w-[1200px] px-6 py-24 sm:py-28">
         <SectionLabel>THE PLATFORM</SectionLabel>
         <SectionHeading>
-          Seven surfaces. <span style={{ color: C.ink }}>One workspace.</span>
+          One workspace for your{" "}
+          <span style={{ color: C.ink }}>whole reputation.</span>
         </SectionHeading>
         <SectionDescription>
           Stop duct-taping point tools together. repulabs runs the entire
           reputation stack in one place, with the same brand voice flowing
           through every reply.
         </SectionDescription>
-        <FeatureBento />
+        <FeatureShowcase />
       </section>
 
       {/* How it works — scroll-revealed Timeline */}
@@ -84,11 +85,13 @@ export default function Landing() {
         <div className="mx-auto max-w-[1200px] px-6 pt-24">
           <SectionLabel>HOW IT WORKS</SectionLabel>
           <SectionHeading>
-            Live in <span style={{ color: C.ink }}>under 10 minutes.</span>
+            Just your name and website.{" "}
+            <span style={{ color: C.ink }}>The agent does the rest.</span>
           </SectionHeading>
           <SectionDescription>
-            No engineer, no consultant. The setup wizard connects your first
-            integration, learns your brand voice, and turns on automation.
+            No engineer, no consultant, no 40-field setup form. Tell repulabs
+            who you are — it reads your website, finds your listings, learns
+            your brand voice and turns on automation for you.
           </SectionDescription>
         </div>
         <SetupTimeline />

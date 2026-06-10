@@ -127,7 +127,7 @@ function HeroTitle() {
               boxShadow: "0 12px 30px -10px rgba(15,23,42,.5)",
             }}
           >
-            Start free
+            Build my dashboard
             <ArrowRight size={15} />
           </Link>
           <Link
@@ -148,8 +148,28 @@ function HeroTitle() {
           </Link>
         </div>
 
+        {/* Trust signal — rating + operator count */}
+        <div className="mt-7 flex flex-wrap items-center justify-center gap-x-5 gap-y-3">
+          <span
+            className="inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5"
+            style={{ borderColor: C.line, background: C.surface }}
+          >
+            <span className="flex items-center gap-0.5" style={{ color: "#f59e0b" }}>
+              {[1, 2, 3, 4, 5].map((s) => (
+                <Star key={s} size={13} fill="currentColor" />
+              ))}
+            </span>
+            <span style={{ fontSize: 12.5, fontWeight: 600, color: C.ink }}>
+              4.8/5
+            </span>
+            <span style={{ fontSize: 12.5, color: C.mute }}>
+              from 1,200+ operators
+            </span>
+          </span>
+        </div>
+
         <div
-          className="mt-7 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
+          className="mt-5 flex flex-wrap items-center justify-center gap-x-6 gap-y-2"
           style={{ fontSize: 13, color: C.mute }}
         >
           {["No card required", "Live in 6 minutes", "Cancel anytime"].map(

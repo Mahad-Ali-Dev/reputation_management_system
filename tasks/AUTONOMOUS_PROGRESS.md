@@ -72,6 +72,13 @@ Plan: (1) design-system foundation → (2) app relayout → (3) marketing redesi
 
 ## Log
 (Newest first — updated as batches land.)
+- Marketing pages redesign launched (premium "Google launch" relayout, public → easy screenshot).
+- **Onboarding /onboarding 500 FIXED + COMMITTED** (`a2567a4`) — the run+screenshot loop caught a
+  runtime crash the green build couldn't: fail-soft guard checked wrong Prisma code (P2021 missing).
+  Re-shot → form renders premium ("Let's build your dashboard"). Real dashboard also verified clean in M3.
+- **Agentic onboarding COMMITTED** (`0489d66`) — backend orchestrator (ScheduledJob step-machine,
+  OnboardingRun model+migration, runAutoSetup refactor) + /onboarding UI. Needs prisma migrate deploy
+  (onboarding_runs) in prod to actually run; pre-migration it shows the form gracefully.
 - Agentic onboarding wave launched (backend orchestrator + /onboarding UI, build-gated). HEADLINE.
 - **Design-system M3 foundation COMMITTED** (`14e9fe7`) — verified green + SCREENSHOTTED
   (tasks/redesign-preview/*.png). Tonal surfaces, state layers, elevation ramp, motion, M3 type +
