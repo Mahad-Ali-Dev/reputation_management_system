@@ -19,6 +19,22 @@ UI changes where needed, and ReviewBoost feature parity per the `tasks/` specs.
 test suite green. Tests 918 → 995. Heavy autonomous spawning stopped here: the high-value,
 verifiable work is done; remaining items are credential-dependent or low-priority (below).
 
+### Design wave — Material You + visual verification (COMMITTED)
+- **`19af43f` Material You design pass** — re-skinned the design system to M3 tonal roles
+  (`--m3-primary-container` / `--m3-secondary-container` + on-* pairs, legacy `--pri-50/--pri`
+  fallbacks), surface-tint elevation, explicit shape scale, bumped radii, pill buttons,
+  `.ds-fab` / `.ds-chip`. Nav-drawer active item = PRIMARY container pill; TabBar active =
+  SECONDARY container pill. Updated the `ui-finish` source-contract test to the new token.
+- **`7a228a8` Social studio tabs → Material pill** — wrapped `<HubTabs>` in `.tabbar` so the
+  Create/Calendar/History/Library hub matches the inbox + every other tabbed surface. The
+  studio was already one continuous workspace (both /social/posts and /social/calendar render
+  HubTabs); this was the visual-consistency finish.
+- **Visual review DONE** (closes the "never eyeballed" remaining item): tsc 0, next build 43
+  routes, vitest ui-finish 14/14, and a screenshot sweep (kitchen-sink, dashboard, reviews,
+  unified inbox, social create+calendar, business reports, connections) — all coherent, the
+  nav/tab pills render correctly, clear upgrade. Shots in `tasks/ui-m3-verify/` (gitignored).
+  Excluded unrelated `tiktok-leads` tree pollution from every commit.
+
 ### Commits this run
 705248a bugs/links/RBAC/security · 3500245 invite+meeting-requests · 1191a0c CRM adapters ·
 8a827ac WhatsApp channel · 8ee1011 Gmail 2-way · c9f65b8 MIME header-injection fix ·
