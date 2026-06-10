@@ -311,6 +311,12 @@ function Section({
   );
 }
 
+/** Case-insensitive substring match over a provider's name + description. */
+function providerMatches(p: SerializedProviderRow, q: string): boolean {
+  const hay = `${p.displayName} ${p.description}`.toLowerCase();
+  return hay.includes(q);
+}
+
 export function ConnectionsAccordion({
   sections,
   disconnectAction,
@@ -324,18 +330,103 @@ export function ConnectionsAccordion({
   const [openKey, setOpenKey] = useState<string | null>(
     firstConnected?.key ?? sections[0]?.key ?? null,
   );
+  const [query, setQuery] = useState("");
+  const q = query.trim().toLowerCase();
+
+  // When searching, filter providers within each section and drop empty
+  // sections. Searching also force-expands every matching section so the user
+  // sees all hits at once (no hunting through collapsed groups).
+  const filtered = q
+    ? sections
+        .map((s) => ({ ...s, providers: s.providers.filter((p) => providerMatches(p, q)) }))
+        .filter((s) => s.providers.length > 0)
+    : sections;
+
+  const searching = q.length > 0;
+  const noResults = searching && filtered.length === 0;
 
   return (
-    <div className="col" style={{ gap: 12 }}>
-      {sections.map((section) => (
-        <Section
-          key={section.key}
-          section={section}
-          isOpen={openKey === section.key}
-          onToggle={() => setOpenKey((cur) => (cur === section.key ? null : section.key))}
-          disconnectAction={disconnectAction}
-        />
-      ))}
-    </div>
+    <section aria-labelledby="band-all" className="col" style={{ gap: 12 }}>
+      <div className="ds-card__head" style={{ paddingBottom: 4, borderBottom: "none" }}>
+        <div className="row" style={{ gap: 12, minWidth: 0 }}>
+          <span
+            aria-hidden="true"
+            style={{
+              width: 30,
+              height: 30,
+              borderRadius: 8,
+              background: "var(--pri-50)",
+              color: "var(--pri)",
+              display: "grid",
+              placeItems: "center",
+              flexShrink: 0,
+            }}
+          >
+            <Icon name="grid" size={15} />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <h3 id="band-all" className="ds-card__title">
+              All integrations
+            </h3>
+            <div className="ds-card__sub">
+              Browse every platform by category and connect the ones you use.
+            </div>
+          </div>
+        </div>
+        <label
+          className="row"
+          style={{
+            gap: 6,
+            flexShrink: 0,
+            border: "1px solid var(--line)",
+            borderRadius: 8,
+            background: "var(--surface)",
+            padding: "5px 10px",
+          }}
+        >
+          <Icon name="search" size={13} />
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search integrations…"
+            aria-label="Search integrations"
+            style={{
+              border: "none",
+              outline: "none",
+              background: "transparent",
+              fontSize: 12.5,
+              color: "var(--ink)",
+              width: 160,
+            }}
+          />
+        </label>
+      </div>
+
+      {noResults ? (
+        <div
+          className="ds-card"
+          style={{
+            padding: "28px 20px",
+            textAlign: "center",
+            color: "var(--rl-muted)",
+            fontSize: 13,
+          }}
+        >
+          No integrations match “{query.trim()}”. Try a different name, or{" "}
+          <a href="mailto:hello@repulabs.com?subject=Integration%20request">request it</a>.
+        </div>
+      ) : (
+        filtered.map((section) => (
+          <Section
+            key={section.key}
+            section={section}
+            isOpen={searching || openKey === section.key}
+            onToggle={() => setOpenKey((cur) => (cur === section.key ? null : section.key))}
+            disconnectAction={disconnectAction}
+          />
+        ))
+      )}
+    </section>
   );
 }

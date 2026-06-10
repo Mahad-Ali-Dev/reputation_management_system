@@ -13,11 +13,14 @@ import { withTenant } from "@/lib/db/with-tenant";
 import { PROVIDERS, type ProviderEntry } from "@/lib/providers/registry";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
+import { getLatestRun } from "@/lib/onboarding/run-store";
+import type { ConnectionSuggestion } from "@/lib/onboarding/constants";
 import { disconnectConnection, resyncConnection } from "./_components/actions";
 import { ConnectionsAccordion } from "./_components/connections-accordion";
 import { CsvImportPanel } from "./_components/csv-import-panel";
 import { type ConnectedRow, ConnectedSystemsTable } from "./_components/connected-systems-table";
 import { GetStartedCard } from "./_components/get-started-card";
+import { type SuggestedCard, SuggestedBand } from "./_components/suggested-band";
 import {
   type SerializedConnection,
   type SerializedProviderRow,
@@ -187,6 +190,51 @@ function resolveProvider(id: string): ProviderEntry | null {
   return PROVIDERS[id] ?? null;
 }
 
+/**
+ * Map a raw orchestrator suggestion `provider` string (google | yelp | facebook
+ * | …) to the catalog provider id the Connections UI connects through. The
+ * orchestrator emits short slugs; the UI tiles use fuller ids (`google` →
+ * `google_business`, `facebook`/`instagram` → the combined `meta` entry).
+ * Returns null for slugs we can't yet connect (the suggestion is then dropped).
+ */
+function suggestionToProviderId(raw: string): string | null {
+  const s = raw.trim().toLowerCase();
+  switch (s) {
+    case "google":
+    case "google_business":
+    case "gbp":
+      return "google_business";
+    case "facebook":
+    case "instagram":
+    case "meta":
+      return "meta";
+    default:
+      // Anything that already matches a catalog tile (e.g. linkedin) passes
+      // through; unknown slugs (yelp, tripadvisor — no tile yet) are dropped.
+      return resolveProvider(s) ? s : null;
+  }
+}
+
+/**
+ * Resolve the connect destination for a suggested provider, mirroring the
+ * accordion's RowAction precedence so a "Connect" click lands in the same flow:
+ *   - api-key / embed providers   → the manage detail page (secure form)
+ *   - configured OAuth providers  → the authorize route (no prefetch)
+ *   - everything else             → the manage detail page (admin/setup hint)
+ * `prefetch` is false for the authorize route since it redirects.
+ */
+function suggestionConnectHref(
+  providerId: string,
+  connType: string,
+  ready: boolean,
+  configured: boolean,
+): { href: string; prefetch: boolean } {
+  if (connType === "oauth" && ready && configured) {
+    return { href: `/api/connections/${providerId}/authorize`, prefetch: false };
+  }
+  return { href: `/connections/${providerId}`, prefetch: true };
+}
+
 export default async function ConnectionsPage({
   searchParams,
 }: {
@@ -196,9 +244,12 @@ export default async function ConnectionsPage({
   const sp = (await searchParams) ?? {};
   const showImport = sp.import === "1";
 
-  const [connections, providerApps] = await Promise.all([
+  const [connections, providerApps, latestRun] = await Promise.all([
     loadConnections(orgId),
     getProviderApps(),
+    // Band 1 source. FAIL-SOFT: getLatestRun already swallows the unmigrated
+    // onboarding_runs table (returns null) — Band 1 is then simply omitted.
+    getLatestRun(orgId).catch(() => null),
   ]);
 
   // ── Serialize connections (Date → ISO) and bucket by provider. ───────────
@@ -220,6 +271,38 @@ export default async function ConnectionsPage({
   const configuredSet = new Set(
     providerApps.filter((p) => p.status === "configured").map((p) => p.provider),
   );
+
+  // ── Band 1: "Suggested for you" — orchestrator-detected candidates. ───────
+  // Resolve each suggestion to a connectable catalog tile, de-dupe by provider
+  // id (a site may link both FB + IG → one Meta card), and drop unknown slugs.
+  const rawSuggestions: ConnectionSuggestion[] = latestRun?.suggestions ?? [];
+  const suggestedCards: SuggestedCard[] = [];
+  const seenSuggested = new Set<string>();
+  for (const sug of rawSuggestions) {
+    const providerId = suggestionToProviderId(sug.provider);
+    if (!providerId || seenSuggested.has(providerId)) continue;
+    const entry = resolveProvider(providerId);
+    if (!entry) continue;
+    seenSuggested.add(providerId);
+    const meta = getProviderMeta(providerId);
+    const configured = configuredSet.has(entry.id);
+    const conns = connByProvider.get(providerId) ?? connByProvider.get(entry.id) ?? [];
+    const { href, prefetch } = suggestionConnectHref(
+      providerId,
+      meta.connType,
+      entry.ready,
+      configured,
+    );
+    suggestedCards.push({
+      providerId,
+      displayName: entry.displayName,
+      source: sug.source ?? null,
+      detectedUrl: sug.url ?? null,
+      connectHref: href,
+      prefetch,
+      alreadyConnected: conns.some((c) => c.status === "active"),
+    });
+  }
 
   // A registry id may differ from the connection's provider string (the Square
   // POS tile is `square_pos`, the callback writes `square`). Surface both.
@@ -372,13 +455,18 @@ export default async function ConnectionsPage({
       )}
 
       <div id="connection-sources" className="col" style={{ gap: 18, scrollMarginTop: 24 }}>
-        <ConnectionsAccordion sections={sections} disconnectAction={disconnectConnection} />
+        {/* Band 1 — Suggested for you (hidden entirely when no suggestions). */}
+        {suggestedCards.length > 0 && <SuggestedBand cards={suggestedCards} />}
 
+        {/* Band 2 — Connected (the org's live connection rows). */}
         <ConnectedSystemsTable
           rows={tableRows}
           disconnectAction={disconnectConnection}
           resyncAction={resyncConnection}
         />
+
+        {/* Band 3 — All integrations (full catalog, by category + search). */}
+        <ConnectionsAccordion sections={sections} disconnectAction={disconnectConnection} />
       </div>
     </AppShellServer>
   );

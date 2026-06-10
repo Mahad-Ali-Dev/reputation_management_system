@@ -1,6 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { EmptyIllustration } from "@/components/empty-state";
-import { GettingStarted } from "@/components/getting-started";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon, type IconName } from "@/components/shell/icon";
 import { ScoreRing } from "@/components/shell/score-ring";
@@ -26,23 +25,28 @@ import {
   BusinessInsightsBand,
   type QueueItem,
   RecentActivity,
-  ReviewChartQueue,
+  SetupProgressMini,
+  TodayCommandCard,
+  WeeklyReviewChart,
 } from "./_components/dashboard-sections";
 
 /**
- * Dashboard — repulabs v3 command center.
+ * Dashboard — repulabs v3 command center (two-tier relayout).
  *
- * Layout matches the premium artboards (tasks/premium-ui-redesign/03 + 09 +
- * dashboard-sections/01..06): a clean white hero + 5-KPI strip, a weekly review
- * chart paired with the operational queue, the Google Reviews Live Feed, a
- * business-insights band (listings · sentiment · latest reviews), an AI-insight
- * + channel-mix + funnel row, the AI Intelligence Center, the Getting Started
- * checklist, and a recent-activity audit feed. A dedicated welcome state covers
- * brand-new accounts.
+ * A calm, generously-spaced "command center" in three deliberate tiers:
+ *   - TIER 1 — the hero KPI strip + ONE prioritized Today card that MERGES the
+ *     old SetupProgress + GettingStarted + needs-attention queue into a single
+ *     focused surface (finish-setup checklist while incomplete, else the action
+ *     queue), beside a slim workspace-setup ring.
+ *   - TIER 2 — Analytics: the weekly review chart, review-volume-by-source
+ *     (channel mix) + funnel, sentiment, and listings, in a clean grid.
+ *   - TIER 3 — Activity: the Google Reviews Live Feed, recent-activity audit
+ *     feed, the AI Intelligence Center, and the Autopilot card, secondary.
  *
+ * Every existing data source is preserved (nothing refetched differently) and
+ * the visibility banner + AI Intelligence Center are repositioned, not removed.
  * All numbers come from live tenant queries (`lib/dashboard/queries`), all
- * fail-soft. The Google Reviews Live Feed is preserved byte-for-byte from the
- * prior redesign.
+ * fail-soft. The Google Reviews Live Feed is preserved byte-for-byte.
  */
 
 export const dynamic = "force-dynamic";
@@ -175,6 +179,20 @@ export default async function DashboardPage({
       urgent: true,
     });
   }
+  // Low-sentiment alert — surface a meaningful negative share so unhappy
+  // customers get prioritized attention. Uses the already-computed sentiment
+  // split (no extra query).
+  if (total >= 5 && d.sentiment.negativePct >= 20) {
+    queue.push({
+      label: `${d.sentiment.negativePct}% of reviews are negative`,
+      sub: "Review and respond to unhappy customers",
+      action: "View",
+      href: "/reviews",
+      icon: "bell",
+      tone: "plain",
+      urgent: true,
+    });
+  }
   if (d.requestsSent30d === 0) {
     queue.push({
       label: "Send your first request",
@@ -201,36 +219,89 @@ export default async function DashboardPage({
       {isEmpty ? (
         <WelcomeState firstName={firstName} setup={setup} />
       ) : (
-        <>
-          <DashboardHero
-            firstName={firstName}
-            subtext={health.summary}
-            healthBand={health.band}
-            kpis={kpis}
-          />
+        <div className="dash-tiers">
+          {/* ============================================================
+              TIER 1 — Command center: hero KPIs + ONE prioritized Today card
+              ============================================================ */}
+          <div className="dash-tier">
+            <DashboardHero
+              firstName={firstName}
+              subtext={health.summary}
+              healthBand={health.band}
+              kpis={kpis}
+            />
 
-          {/* Online Visibility Health Score banner (above the feed) */}
-          <VisibilityHealthBanner
-            score={health.score}
-            metrics={health.metrics}
-            summary={health.summary}
-          />
+            {/* Online Visibility Health Score banner (condensed, above the fold) */}
+            <VisibilityHealthBanner
+              score={health.score}
+              metrics={health.metrics}
+              summary={health.summary}
+            />
 
-          <div className="col" style={{ gap: 20 }}>
-            {/* Chart + operational queue */}
-            <ReviewChartQueue weeklyReviews={d.weeklyReviews} queue={queue} />
+            {/* Merged Today card (queue ∪ setup checklist) + slim setup ring */}
+            <div className="dash-today">
+              <TodayCommandCard
+                queue={queue}
+                onboardingSteps={onboardingSteps}
+                setupComplete={setup.dismissed || setup.pct === 100}
+              />
+              <SetupProgressMini setup={setup} />
+            </div>
 
-            {/* Main feed + right rail */}
+            {/* Quick actions */}
+            <div className="grid-4">
+              <QuickAction icon="send" title="Send Review Request" href="/outreach/send" />
+              <QuickAction icon="reply" title="Reply to Reviews" href="/reviews" />
+              <QuickAction icon="share" title="Create Social Post" href="/social/posts" />
+              <QuickAction icon="sparkle" title="Train Your AI" href="/ai/training" />
+            </div>
+          </div>
+
+          {/* ============================================================
+              TIER 2 — Analytics: trend · volume-by-source · sentiment
+              ============================================================ */}
+          <div className="dash-tier">
+            <div className="dash-sec-head">
+              <div>
+                <h2 className="dash-sec-head__title">Analytics</h2>
+                <div className="dash-sec-head__sub">Trends, sentiment, and review funnel</div>
+              </div>
+              <Link href="/analytics" className="row" style={{ gap: 5, fontSize: 12.5, color: "var(--pri)", fontWeight: 500, textDecoration: "none" }}>
+                Full report <Icon name="arrowR" size={12} />
+              </Link>
+            </div>
+
+            <WeeklyReviewChart weeklyReviews={d.weeklyReviews} />
+
+            {/* Listings · sentiment · latest reviews */}
+            <BusinessInsightsBand
+              listings={d.listings}
+              sentiment={d.sentiment}
+              latestReviews={d.latestReviews}
+              hasData={hasInsightData}
+            />
+
+            {/* AI insight · channel mix (volume by source) · funnel */}
+            <AiChannelFunnel
+              pendingReplies={d.pendingReplyCount}
+              channelMix={d.channelMix}
+              funnel={d.funnel}
+            />
+          </div>
+
+          {/* ============================================================
+              TIER 3 — Activity: live feed + AI center + autopilot, secondary
+              ============================================================ */}
+          <div className="dash-tier">
+            <div className="dash-sec-head">
+              <div>
+                <h2 className="dash-sec-head__title">Activity & assistance</h2>
+                <div className="dash-sec-head__sub">Live reviews, your AI assistant, and autopilot</div>
+              </div>
+            </div>
+
             <div className="dash-grid">
               <div className="col" style={{ gap: 20 }}>
-                {/* quick actions */}
-                <div className="grid-4">
-                  <QuickAction icon="send" title="Send Review Request" href="/outreach/send" />
-                  <QuickAction icon="reply" title="Reply to Reviews" href="/reviews" />
-                  <QuickAction icon="share" title="Create Social Post" href="/social/posts" />
-                  <QuickAction icon="sparkle" title="Train Your AI" href="/ai/training" />
-                </div>
-
                 <GoogleReviewsFeed
                   avg={avgRating}
                   total={total}
@@ -238,10 +309,13 @@ export default async function DashboardPage({
                   reviews={d.liveReviews}
                   hasGoogle={hasGoogle}
                 />
+
+                {/* Recent activity audit feed */}
+                <RecentActivity items={d.recentActivity} />
               </div>
 
               <div className="col" style={{ gap: 20 }}>
-                <SetupProgress setup={setup} />
+                <AiIntelligenceCenter briefing={briefing.body} isEmpty={isEmpty} />
                 <AutopilotCard
                   enabled={autopilot.enabled}
                   thisWeek={autopilot.thisWeek.total}
@@ -250,37 +324,10 @@ export default async function DashboardPage({
                   currency={roiHeadline.currency}
                   showRevenue={hasAutopilot}
                 />
-                <AiIntelligenceCenter briefing={briefing.body} isEmpty={isEmpty} />
-                {!setup.dismissed && onboardingSteps.some((s) => !s.done) && (
-                  <GettingStarted
-                    checklistId="dashboard-setup"
-                    title="Getting started"
-                    steps={onboardingSteps}
-                    allowGlobalDismiss
-                  />
-                )}
               </div>
             </div>
-
-            {/* Business insights band */}
-            <BusinessInsightsBand
-              listings={d.listings}
-              sentiment={d.sentiment}
-              latestReviews={d.latestReviews}
-              hasData={hasInsightData}
-            />
-
-            {/* AI insight · channel mix · funnel */}
-            <AiChannelFunnel
-              pendingReplies={d.pendingReplyCount}
-              channelMix={d.channelMix}
-              funnel={d.funnel}
-            />
-
-            {/* Recent activity audit feed */}
-            <RecentActivity items={d.recentActivity} />
           </div>
-        </>
+        </div>
       )}
     </AppShellServer>
   );

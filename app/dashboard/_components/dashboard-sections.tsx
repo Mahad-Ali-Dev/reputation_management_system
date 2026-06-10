@@ -1,11 +1,14 @@
 import { Icon, type IconName } from "@/components/shell/icon";
+import { ScoreRing } from "@/components/shell/score-ring";
 import { Stars } from "@/components/shell/stars";
+import type { ChecklistStep } from "@/components/getting-started";
 import Link from "next/link";
 import type {
   ChannelSlice,
   DashboardListing,
   FunnelStage,
   RecentActivityItem,
+  SetupState,
 } from "@/lib/dashboard/queries";
 
 /**
@@ -24,91 +27,8 @@ import type {
  */
 
 // ============================================================
-// 03 — Review chart + Today's queue
+// 03 — Weekly review bar chart
 // ============================================================
-
-export function ReviewChartQueue({
-  weeklyReviews,
-  queue,
-}: {
-  weeklyReviews: number[];
-  queue: QueueItem[];
-}) {
-  const max = Math.max(...weeklyReviews, 1);
-  const urgent = queue.reduce((n, q) => n + (q.urgent ? 1 : 0), 0);
-  // Reuse `.dash-grid` (main + 332px rail; collapses to one column ≤1180px) so
-  // the chart/queue split matches the rest of the page and is responsive.
-  return (
-    <div className="dash-grid">
-      <div className="ds-card">
-        <div className="ds-card__head">
-          <div>
-            <h3 className="ds-card__title">Reviews collected · last 12 weeks</h3>
-            <div className="dim" style={{ fontSize: 11.5, marginTop: 2 }}>
-              By channel · all locations
-            </div>
-          </div>
-        </div>
-        <div className="ds-card__body">
-          <ReviewBars weeklyReviews={weeklyReviews} max={max} />
-        </div>
-      </div>
-
-      <div className="ds-card">
-        <div className="ds-card__head">
-          <h3 className="ds-card__title">Today's queue</h3>
-          {urgent > 0 && <span className="chip chip--bad" style={{ fontSize: 11 }}>{urgent} urgent</span>}
-        </div>
-        <div style={{ padding: "6px 10px 10px" }}>
-          {queue.length === 0 ? (
-            <p className="dim" style={{ fontSize: 12.5, padding: "22px 14px", textAlign: "center", margin: 0, lineHeight: 1.5 }}>
-              You're all caught up. Nothing needs attention right now.
-            </p>
-          ) : (
-            queue.map((q, i) => (
-              <div
-                key={q.label}
-                className="row"
-                style={{
-                  gap: 12,
-                  padding: "12px 8px",
-                  borderBottom: i < queue.length - 1 ? "1px solid var(--line)" : "none",
-                }}
-              >
-                <span
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 10,
-                    background: q.tone === "ai" ? "var(--pri-50)" : "var(--surface-3)",
-                    color: q.tone === "ai" ? "var(--pri)" : "var(--rl-muted)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                    fontSize: 10.5,
-                    fontWeight: 700,
-                    letterSpacing: "0.02em",
-                  }}
-                >
-                  {q.tone === "ai" ? "AI" : <Icon name={q.icon} size={15} />}
-                </span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 650, color: "var(--ink)", letterSpacing: "-0.01em" }}>
-                    {q.label}
-                  </div>
-                  <div className="dim" style={{ fontSize: 11, marginTop: 1 }}>{q.sub}</div>
-                </div>
-                <Link href={q.href} className="btn btn--sm" style={{ flexShrink: 0 }}>
-                  {q.action}
-                </Link>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
 
 /**
  * Weekly review bar chart — rounded blue→teal gradient bars over three faint
@@ -154,6 +74,232 @@ export type QueueItem = {
   tone: "ai" | "plain";
   urgent?: boolean;
 };
+
+// ============================================================
+// Tier 1 — "Today" command card + slim setup-progress rail
+// ============================================================
+
+/**
+ * `<TodayCommandCard>` — the single prioritized focus surface that MERGES the
+ * old SetupProgress + GettingStarted + needs-attention queue cards.
+ *
+ * Two modes, one card:
+ *  - Setup incomplete → a finish-setup checklist (the onboarding steps), so a
+ *    new operator sees exactly what to do next.
+ *  - Setup complete  → the operational action queue (pending replies, low-NPS
+ *    alerts, new reviews to respond to), or a calm "all caught up" state.
+ *
+ * Pure presentation; all data is pre-computed in `page.tsx`. The global
+ * "Skip onboarding" affordance stays where it lives (the right-rail
+ * `<GettingStarted>`/`<SetupProgressMini>`), so no server action moves here.
+ */
+export function TodayCommandCard({
+  queue,
+  onboardingSteps,
+  setupComplete,
+}: {
+  queue: QueueItem[];
+  onboardingSteps: ChecklistStep[];
+  setupComplete: boolean;
+}) {
+  const urgent = queue.reduce((n, q) => n + (q.urgent ? 1 : 0), 0);
+  // Show the finish-setup checklist while setup is incomplete; otherwise the
+  // operational queue takes over the same surface.
+  const showChecklist = !setupComplete && onboardingSteps.some((s) => !s.done);
+
+  return (
+    <div className="ds-card">
+      <div className="ds-card__head">
+        <div className="row" style={{ gap: 8 }}>
+          <Icon name={showChecklist ? "check" : "bolt"} size={15} style={{ color: "var(--pri)" }} />
+          <h3 className="ds-card__title">{showChecklist ? "Finish setting up" : "Today"}</h3>
+        </div>
+        {showChecklist ? (
+          <span className="dim" style={{ fontSize: 11.5 }}>
+            {onboardingSteps.filter((s) => s.done).length}/{onboardingSteps.length} done
+          </span>
+        ) : urgent > 0 ? (
+          <span className="chip chip--bad" style={{ fontSize: 11 }}>{urgent} urgent</span>
+        ) : (
+          <span className="chip chip--ok" style={{ fontSize: 11 }}>All clear</span>
+        )}
+      </div>
+
+      {showChecklist ? (
+        <div style={{ padding: "4px 10px 12px" }}>
+          {onboardingSteps.map((s, i) => {
+            const next = !s.done && onboardingSteps.findIndex((x) => !x.done) === i;
+            return (
+              <div
+                key={s.key}
+                className="row"
+                style={{
+                  gap: 12,
+                  padding: "11px 10px",
+                  borderRadius: next ? 10 : 0,
+                  background: next ? "var(--pri-50)" : "transparent",
+                  borderBottom: i < onboardingSteps.length - 1 && !next ? "1px solid var(--line)" : "none",
+                }}
+              >
+                <Icon
+                  name={s.done ? "checkCircle" : "round"}
+                  size={17}
+                  style={{ color: s.done ? "var(--ok)" : "var(--rl-muted-3)", flexShrink: 0 }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div
+                    style={{
+                      fontSize: 12.5,
+                      fontWeight: 650,
+                      letterSpacing: "-0.01em",
+                      color: s.done ? "var(--rl-muted)" : "var(--ink)",
+                      textDecoration: s.done ? "line-through" : "none",
+                    }}
+                  >
+                    {s.title}
+                  </div>
+                  {next && (
+                    <div className="dim" style={{ fontSize: 11, marginTop: 2, lineHeight: 1.45 }}>{s.body}</div>
+                  )}
+                </div>
+                {next && s.cta && (
+                  <Link href={s.cta.href} className="btn btn--sm btn--accent" style={{ flexShrink: 0 }}>
+                    {s.cta.label}
+                  </Link>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div style={{ padding: "6px 10px 10px" }}>
+          {queue.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "26px 14px" }}>
+              <span
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: 12,
+                  background: "var(--ok-soft, var(--surface-3))",
+                  color: "var(--ok)",
+                  display: "grid",
+                  placeItems: "center",
+                  margin: "0 auto 12px",
+                }}
+              >
+                <Icon name="checkCircle" size={18} />
+              </span>
+              <p className="dim" style={{ fontSize: 12.5, margin: 0, lineHeight: 1.5 }}>
+                You're all caught up. Nothing needs your attention right now.
+              </p>
+            </div>
+          ) : (
+            queue.map((q, i) => (
+              <div
+                key={q.label}
+                className="row"
+                style={{
+                  gap: 12,
+                  padding: "13px 8px",
+                  borderBottom: i < queue.length - 1 ? "1px solid var(--line)" : "none",
+                }}
+              >
+                <span
+                  style={{
+                    width: 36,
+                    height: 36,
+                    borderRadius: 11,
+                    background: q.tone === "ai" ? "var(--pri-50)" : "var(--surface-3)",
+                    color: q.tone === "ai" ? "var(--pri)" : "var(--rl-muted)",
+                    display: "grid",
+                    placeItems: "center",
+                    flexShrink: 0,
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    letterSpacing: "0.02em",
+                  }}
+                >
+                  {q.tone === "ai" ? "AI" : <Icon name={q.icon} size={15} />}
+                </span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="row" style={{ gap: 7 }}>
+                    <span style={{ fontSize: 12.5, fontWeight: 650, color: "var(--ink)", letterSpacing: "-0.01em" }}>
+                      {q.label}
+                    </span>
+                    {q.urgent && <span className="chip chip--bad" style={{ fontSize: 10 }}>Urgent</span>}
+                  </div>
+                  <div className="dim" style={{ fontSize: 11, marginTop: 1 }}>{q.sub}</div>
+                </div>
+                <Link href={q.href} className="btn btn--sm" style={{ flexShrink: 0 }}>
+                  {q.action}
+                </Link>
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * `<SetupProgressMini>` — slim companion to the Today card: a compact progress
+ * ring + a "continue setup" link. Replaces the verbose right-rail SetupProgress
+ * with a calmer summary (the step-by-step detail now lives in the Today card).
+ */
+export function SetupProgressMini({ setup }: { setup: SetupState }) {
+  const left = setup.total - setup.completed;
+  return (
+    <div className="ds-card">
+      <div className="ds-card__head">
+        <h3 className="ds-card__title">Workspace setup</h3>
+      </div>
+      <div className="ds-card__body">
+        <div className="row" style={{ gap: 14, alignItems: "center" }}>
+          <ScoreRing value={setup.pct} suffix="%" size={64} stroke={7} hideMax />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p className="dim" style={{ fontSize: 12, lineHeight: 1.5, margin: 0 }}>
+              {setup.pct === 100
+                ? "All set — your workspace is fully configured."
+                : `${left} step${left === 1 ? "" : "s"} left to maximize your results.`}
+            </p>
+          </div>
+        </div>
+        {setup.pct < 100 && (
+          <Link
+            href="/connections"
+            className="btn btn--accent"
+            style={{ width: "100%", justifyContent: "center", marginTop: 14 }}
+          >
+            Continue setup
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * `<WeeklyReviewChart>` — the standalone review-volume chart (artboard 03),
+ * lifted out of the old chart+queue split so it can headline the analytics
+ * tier on its own.
+ */
+export function WeeklyReviewChart({ weeklyReviews }: { weeklyReviews: number[] }) {
+  const max = Math.max(...weeklyReviews, 1);
+  return (
+    <div className="ds-card">
+      <div className="ds-card__head">
+        <div>
+          <h3 className="ds-card__title">Reviews collected · last 12 weeks</h3>
+          <div className="dim" style={{ fontSize: 11.5, marginTop: 2 }}>By channel · all locations</div>
+        </div>
+      </div>
+      <div className="ds-card__body">
+        <ReviewBars weeklyReviews={weeklyReviews} max={max} />
+      </div>
+    </div>
+  );
+}
 
 // ============================================================
 // 04 — Listings · Sentiment · Latest reviews

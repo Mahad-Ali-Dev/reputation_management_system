@@ -1538,6 +1538,54 @@
   }
 }
 
+/* ---------- Command-center tiers (two-tier dashboard) ----------
+   A calm, generously-spaced stack: each analytics/feed tier is introduced
+   by a small section header so the page reads as deliberate sections rather
+   than a wall of cards. Wider vertical rhythm than the default section gap. */
+.dash-tier {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.dash-tiers {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.dash-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 0 2px;
+}
+.dash-sec-head__title {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--ink);
+  margin: 0;
+}
+.dash-sec-head__sub {
+  font-size: 11.5px;
+  color: var(--rl-muted);
+  margin-top: 2px;
+}
+
+/* Tier-1 command row: the Today/action card sits beside a slim setup-progress
+   summary. Collapses to one column on narrower viewports. */
+.dash-today {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 332px;
+  gap: 20px;
+  align-items: start;
+}
+@media (max-width: 1180px) {
+  .dash-today {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* hero — reputation score */
 .hero {
   display: grid;
