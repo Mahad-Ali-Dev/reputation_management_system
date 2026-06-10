@@ -40,17 +40,27 @@ function Spinner({ className }: { className?: string }) {
 }
 
 const buttonBase =
-  "rl-focus-ring inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-rl-control rl-label transition-[background,color,border-color,box-shadow,transform] duration-150 ease-rl active:translate-y-px disabled:pointer-events-none disabled:opacity-50";
+  "rl-focus-ring inline-flex shrink-0 items-center justify-center whitespace-nowrap rounded-rl-control rl-label shadow-rl-sm transition-[background,color,border-color,box-shadow,transform] duration-150 ease-rl active:translate-y-px disabled:pointer-events-none disabled:opacity-50";
 
 const buttonVariants = {
+  /* M3 filled — primary container, soft elevation, brighten on hover */
   primary:
-    "border border-rl-pri bg-rl-pri text-rl-text-on-pri hover:bg-rl-pri-700 active:bg-rl-pri-700",
+    "border border-rl-pri bg-rl-pri text-rl-text-on-pri hover:bg-rl-pri-700 hover:shadow-rl-md active:bg-rl-pri-700 active:shadow-rl-sm",
+  /* M3 outlined — quiet, line-only neutral */
   secondary:
-    "border border-rl-border-strong bg-rl-surface text-rl-text hover:bg-rl-surface-3 active:bg-rl-surface-3",
+    "border border-rl-border-strong bg-rl-surface text-rl-text shadow-rl-sm hover:bg-rl-surface-3 hover:shadow-rl-md active:bg-rl-surface-3 active:shadow-rl-sm",
+  /* M3 tonal — soft primary container, the recommended secondary emphasis */
+  tonal:
+    "border border-transparent bg-rl-pri-50 text-rl-pri-700 shadow-none hover:bg-rl-pri-100 active:bg-rl-pri-100",
+  /* M3 outlined-primary — primary line + primary text */
+  outlined:
+    "border border-rl-pri-100 bg-transparent text-rl-pri-700 shadow-none hover:border-rl-pri-300 active:bg-rl-pri-50",
+  /* M3 text — lowest emphasis */
+  text: "border border-transparent bg-transparent text-rl-pri-700 shadow-none hover:bg-rl-pri-50 active:bg-rl-pri-100",
   ghost:
-    "border border-transparent bg-transparent text-rl-text-muted hover:bg-rl-surface-3 hover:text-rl-text",
+    "border border-transparent bg-transparent text-rl-text-muted shadow-none hover:bg-rl-surface-3 hover:text-rl-text",
   danger:
-    "border border-rl-danger bg-rl-danger text-white hover:brightness-95 active:brightness-90",
+    "border border-rl-danger bg-rl-danger text-white hover:brightness-95 hover:shadow-rl-md active:brightness-90 active:shadow-rl-sm",
 };
 
 const buttonSizes = {
@@ -676,10 +686,10 @@ export function Modal({
     <DialogPrimitive.Root>
       <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[var(--backdrop)] backdrop-blur-[2px]" />
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[var(--backdrop)] backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200" />
         <DialogPrimitive.Content
           className={cn(
-            "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 rounded-rl-layer border border-rl-border bg-rl-surface p-[24px] shadow-rl-lg",
+            "fixed left-1/2 top-1/2 z-50 w-[calc(100vw-32px)] -translate-x-1/2 -translate-y-1/2 rounded-rl-layer border border-rl-border bg-rl-surface p-[24px] shadow-rl-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=open]:slide-in-from-bottom-1 duration-200 ease-rl",
             sizes[size],
           )}
         >
@@ -719,8 +729,8 @@ export function Drawer({
     <DialogPrimitive.Root>
       <DialogPrimitive.Trigger asChild>{trigger}</DialogPrimitive.Trigger>
       <DialogPrimitive.Portal>
-        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[var(--backdrop)] backdrop-blur-[2px]" />
-        <DialogPrimitive.Content className="fixed bottom-0 right-0 top-auto z-50 flex h-[88vh] w-full flex-col rounded-t-rl-layer border border-rl-border bg-rl-surface p-[24px] shadow-rl-lg md:top-0 md:h-full md:max-w-[520px] md:rounded-none">
+        <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-[var(--backdrop)] backdrop-blur-[2px] data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 duration-200" />
+        <DialogPrimitive.Content className="fixed bottom-0 right-0 top-auto z-50 flex h-[88vh] w-full flex-col rounded-t-rl-layer border border-rl-border bg-rl-surface p-[24px] shadow-rl-xl data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom md:data-[state=closed]:slide-out-to-right md:data-[state=open]:slide-in-from-right duration-300 ease-rl-emphasized md:top-0 md:h-full md:max-w-[520px] md:rounded-none">
           <div className="flex items-start justify-between gap-[16px]">
             <DialogPrimitive.Title className="rl-h3">{title}</DialogPrimitive.Title>
             <DialogPrimitive.Close asChild>
@@ -760,7 +770,7 @@ export function DropdownMenu({
       <DropdownMenuPrimitive.Portal>
         <DropdownMenuPrimitive.Content
           align="end"
-          className="z-50 min-w-[180px] rounded-rl-control border border-rl-border bg-rl-surface p-1 shadow-rl-md"
+          className="z-50 min-w-[180px] rounded-rl-control border border-rl-border bg-rl-surface p-1 shadow-rl-lg data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-1 data-[side=top]:slide-in-from-bottom-1 duration-150 ease-rl"
           sideOffset={8}
         >
           {items.map((item) => {

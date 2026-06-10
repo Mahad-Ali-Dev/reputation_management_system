@@ -77,9 +77,17 @@ const config: Config = {
         "rl-sm": "var(--shadow-sm)",
         "rl-md": "var(--shadow-md)",
         "rl-lg": "var(--shadow-lg)",
+        "rl-xl": "var(--shadow-xl)",
       },
       transitionTimingFunction: {
         rl: "var(--ease-out)",
+        "rl-emphasized": "var(--ease-emphasized)",
+      },
+      transitionDuration: {
+        "rl-1": "150ms",
+        "rl-2": "200ms",
+        "rl-3": "280ms",
+        "rl-4": "400ms",
       },
       borderRadius: {
         lg: "var(--radius)",

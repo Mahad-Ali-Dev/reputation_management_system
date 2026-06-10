@@ -62,8 +62,20 @@ Triaged findings → fix batches:
 - **Ops note:** `vercel.json` has 20 crons but deploy is VPS — confirm the VPS scheduler
   actually hits the cron endpoints, or digests/auto-reply/sync won't run.
 
+## OVERNIGHT BUILD v2 (Google-grade UI + agentic onboarding + integrations)
+Mandate: Google-product-quality UI (app + marketing), Material-3 design system, fully agentic
+onboarding (business name + website → agent builds the dashboard), improve modules (AI KB etc.)
++ change layouts, add ALL missing integrations, continuous bug-fix. Skills: senior-fullstack,
+senior-backend, senior-frontend. Build-gated, commit green, loop till user returns.
+Plan: (1) design-system foundation → (2) app relayout → (3) marketing redesign →
+(4) agentic onboarding → (5) module improvements → (6) integrations → (7) bug sweeps.
+
 ## Log
 (Newest first — updated as batches land.)
+- Wave 1 (overnight) launched: Google/M3 design-system foundation + architecture blueprint
+  (agentic onboarding + module layouts + integration gaps) + deep bug audit. Build-gated.
+- DEPLOY DONE by user: prod live (HTTP 200), all 25 migrations applied (schema up to date),
+  all 13 commits running. Permission tug-of-war resolved (stale .prisma client + chown).
 - WhatsApp connect flow + honest status page launched (build-gated). Final substantive wave.
 - **Functional dead-end fixes COMMITTED + pushed** (`cfd0872`) — verified green. autopilot/
   connections deep-links fixed; geo-post now creates a real reviewable Social DRAFT instead of

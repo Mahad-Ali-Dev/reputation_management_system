@@ -636,41 +636,70 @@
 
 /* ---------- buttons ---------- */
 .btn {
+  position: relative;
+  isolation: isolate;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 34px;
-  padding: 0 14px;
+  padding: 0 16px;
   border-radius: var(--r);
-  font: 500 12.5px var(--f-ui);
-  letter-spacing: -0.005em;
+  font: 550 12.5px var(--f-ui);
+  letter-spacing: 0.005em;
   border: 1px solid var(--line);
   background: var(--surface);
   color: var(--ink);
   cursor: pointer;
   white-space: nowrap;
-  box-shadow: var(--sh);
-  transition: background 0.15s, border-color 0.15s, transform 0.1s, box-shadow 0.15s;
+  box-shadow: var(--sh-sm);
+  /* M3 standard easing across all interactive transitions */
+  transition: background var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard), transform var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard);
   text-decoration: none;
 }
+/* M3 state layer — a tonal overlay that fades in on hover/press without
+   recoloring the button's own surface. Sits under the label (z-index). */
+.btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgb(var(--state-on-surface));
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-1) var(--ease-standard);
+  z-index: -1;
+}
 .btn:hover {
-  background: var(--surface-3);
   border-color: var(--line-2);
-  box-shadow: var(--sh-1);
+  box-shadow: var(--sh-md);
+}
+.btn:hover::before {
+  opacity: var(--state-hover);
 }
 .btn:active {
   transform: translateY(0.5px);
+  box-shadow: var(--sh-sm);
+}
+.btn:active::before {
+  opacity: var(--state-pressed);
 }
 .btn:focus-visible {
   outline: none;
-  box-shadow: var(--sh-glow);
+  /* M3 focus: crisp 2px primary ring with a white gap for separation */
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--pri);
   border-color: var(--pri);
 }
+/* Filled-on-ink — white state layer for the dark filled buttons */
 .btn--pri {
   background: var(--grad-ink);
   color: #fff;
   border-color: transparent;
   box-shadow: var(--sh-ink);
+}
+.btn--pri::before {
+  background: #fff;
 }
 .btn--pri:hover {
   background: linear-gradient(180deg, #273449 0%, #0b1220 100%);
@@ -686,12 +715,16 @@
   box-shadow: var(--sh-glow), var(--sh-ink);
   border-color: transparent;
 }
-/* premium accent — subtle blue gradient + soft blue shadow */
+/* premium accent — M3 filled primary: blue gradient + soft blue elevation,
+   white state layer for crisp tonal hover/press */
 .btn--accent {
   background: var(--grad-pri);
   color: #fff;
   border-color: transparent;
   box-shadow: var(--sh-pri);
+}
+.btn--accent::before {
+  background: #fff;
 }
 .btn--accent:hover {
   background: var(--grad-pri-hover);
@@ -713,10 +746,67 @@
   border-color: transparent;
   box-shadow: var(--sh-ink);
 }
+.btn--dark::before {
+  background: #fff;
+}
 .btn--dark:hover {
   background: linear-gradient(180deg, #273449 0%, #0b1220 100%);
   box-shadow: var(--sh-ink);
   transform: translateY(-0.5px);
+}
+/* M3 TONAL button — soft primary container, primary-tone state layer.
+   The recommended "secondary emphasis" action. */
+.btn--tonal {
+  background: var(--pri-50);
+  color: var(--pri-700);
+  border-color: transparent;
+  box-shadow: none;
+}
+.btn--tonal::before {
+  background: rgb(var(--state-pri));
+}
+.btn--tonal:hover {
+  background: var(--pri-100);
+  border-color: transparent;
+  box-shadow: var(--sh-sm);
+}
+.btn--tonal:focus-visible {
+  box-shadow: var(--sh-glow);
+  border-color: transparent;
+}
+/* M3 OUTLINED button — quiet, line-only, primary-tone state layer */
+.btn--outlined {
+  background: transparent;
+  color: var(--pri-700);
+  border-color: var(--pri-100);
+  box-shadow: none;
+}
+.btn--outlined::before {
+  background: rgb(var(--state-pri));
+}
+.btn--outlined:hover {
+  background: transparent;
+  border-color: var(--pri-300);
+  box-shadow: none;
+}
+.btn--outlined:focus-visible {
+  box-shadow: var(--sh-glow);
+  border-color: var(--pri);
+}
+/* M3 TEXT button — lowest emphasis, primary-tone state layer */
+.btn--text {
+  background: transparent;
+  color: var(--pri-700);
+  border-color: transparent;
+  box-shadow: none;
+  padding: 0 12px;
+}
+.btn--text::before {
+  background: rgb(var(--state-pri));
+}
+.btn--text:hover {
+  background: transparent;
+  box-shadow: none;
 }
 .btn--ghost {
   background: transparent;
@@ -724,7 +814,7 @@
   box-shadow: none;
 }
 .btn--ghost:hover {
-  background: var(--surface-3);
+  background: transparent;
   box-shadow: none;
 }
 .btn--danger {
@@ -771,11 +861,12 @@
   height: 38px;
   padding: 0 14px;
   border-radius: var(--r);
-  border: 1px solid var(--line);
+  border: 1px solid var(--line-2);
   background: var(--surface);
   color: var(--ink);
   outline: 0;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition: border-color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard), background var(--dur-1) var(--ease-standard);
   width: 100%;
 }
 .ds-textarea {
@@ -800,7 +891,8 @@
 .ds-textarea:focus,
 .ds-select:focus {
   border-color: var(--pri);
-  box-shadow: var(--sh-glow);
+  /* M3 focus: crisp 2px primary ring, inset so layout doesn't shift */
+  box-shadow: 0 0 0 1px var(--pri), var(--sh-glow);
 }
 .input::placeholder,
 .ds-input::placeholder,
@@ -837,15 +929,16 @@
   background: var(--surface);
   border-radius: var(--r-md);
   border: 1px solid var(--line);
-  /* premium: crisp 1px hairline + soft, layered drop (1px seat + diffuse) */
+  /* M3 tonal elevation: crisp hairline + soft, layered low-spread drop */
   box-shadow: var(--sh-card);
-  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
+  transition: box-shadow var(--dur-3) var(--ease-standard),
+    transform var(--dur-3) var(--ease-standard), border-color var(--dur-3) var(--ease-standard);
 }
 .ds-card--hover {
   cursor: pointer;
 }
 .ds-card--hover:hover {
-  box-shadow: var(--sh-2);
+  box-shadow: var(--sh-lg);
   transform: translateY(-2px);
   border-color: var(--line-2);
 }
@@ -1180,6 +1273,7 @@
   padding: 0 4px;
 }
 .tabs__t {
+  position: relative;
   padding: 10px 14px;
   font-size: 13px;
   color: var(--rl-muted);
@@ -1190,7 +1284,9 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  transition: color 0.15s, border-color 0.15s;
+  border-radius: 8px 8px 0 0;
+  transition: color var(--dur-1) var(--ease-standard),
+    border-color var(--dur-1) var(--ease-standard), background var(--dur-1) var(--ease-standard);
   background: none;
   border-top: 0;
   border-left: 0;
@@ -1198,6 +1294,8 @@
 }
 .tabs__t:hover {
   color: var(--ink);
+  /* M3 state layer on the underline tab */
+  background: rgba(var(--state-on-surface), var(--state-hover));
 }
 .tabs__t.is-active {
   color: var(--pri);
