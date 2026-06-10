@@ -70,8 +70,23 @@ senior-backend, senior-frontend. Build-gated, commit green, loop till user retur
 Plan: (1) design-system foundation → (2) app relayout → (3) marketing redesign →
 (4) agentic onboarding → (5) module improvements → (6) integrations → (7) bug sweeps.
 
+## CHECKPOINT (9 waves shipped green this session — for your visual review)
+Screenshots to open: tasks/ui-after-fix/ (dashboard, onboarding, ai-training, settings…),
+tasks/ui-marketing/ (home-hero-view), tasks/ui-relayout/ (dashboard, connections),
+tasks/ui-relayout2/ (settings, analytics, surveys), tasks/ui-reviews/, tasks/redesign-preview/.
+DONE: M3 design system · agentic onboarding (+P2021 crash fix) · marketing redesign ·
+AI KB 3-tab · integrations (Mailchimp/Klaviyo/api-key form/FB ad-comments) · dashboard ·
+connections 3-band · settings sectioned shell · analytics tabs · surveys lifecycle · reviews two-pane.
+Tests 918→1045; build exit 0 throughout; every visible surface screenshot-verified.
+REMAINING (higher risk / unverifiable-live — good to direct): unified-inbox consolidation (9
+support sub-pages → one workspace), social workspace relayout, Instagram/X/LinkedIn OAuth,
+harder push toward distinctly-Material-You if wanted. Prod deploy still needs: prisma migrate
+deploy (onboarding_runs) + provider OAuth creds for the new integrations.
+
 ## Log
 (Newest first — updated as batches land.)
+- **Reviews two-pane + 3 stale-link fixes COMMITTED** (`60fa657`) — verified green + screenshot.
+- **Settings shell + analytics + surveys COMMITTED** (`1f38a18`) — verified + settings screenshot ✓.
 - Relayout wave 8 launched: settings sectioned shell + analytics report-tabs + surveys lifecycle.
 - **Dashboard + connections relayout COMMITTED** (`f0452e0`) — verified green + screenshot-confirmed
   (cleaner tiered dashboard with merged Today card + section headers; connections 3 bands + search).
