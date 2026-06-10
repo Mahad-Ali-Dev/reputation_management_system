@@ -64,7 +64,7 @@ export async function startOnboarding(form: FormData): Promise<StartOnboardingRe
   try {
     await assertEntitled(orgId);
   } catch {
-    return { ok: false, error: "Automated setup isn't included on your current plan. Upgrade in Settings → Subscription." };
+    return { ok: false, error: "Automated setup isn't included on your current plan. Upgrade on the Subscription page." };
   }
 
   // Rate-limit repeat starts (reuse the crawl limiter — same external-fetch cost).

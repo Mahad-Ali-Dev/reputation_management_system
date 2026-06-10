@@ -73,8 +73,8 @@ KEY UI LOCATIONS
 - /phone — AI receptionist, voicemails, campaigns.
 - /ai/training — feed business knowledge to the AI for better replies.
 - /analytics — trend charts, sentiment, channel mix.
-- /settings/account — profile, team, security, workspace info.
-- /settings/subscription — billing, plan, cancel.
+- /settings — profile, team, brand, notifications, security, API, data export.
+- /subscription — billing, plan, cancel.
 
 PLANS
 - Free: 1 location, 50 review requests/mo, basic features.
