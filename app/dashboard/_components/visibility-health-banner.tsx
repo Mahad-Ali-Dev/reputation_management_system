@@ -1,25 +1,26 @@
 import { Icon } from "@/components/shell/icon";
-import type { HealthMetric, MetricStatus } from "@/lib/dashboard/health-score";
+import { ScoreRing } from "@/components/shell/score-ring";
+import type { HealthMetric, HealthScoreResult, MetricStatus } from "@/lib/dashboard/health-score";
 import Link from "next/link";
 
 /**
  * `<VisibilityHealthBanner>` — the dashboard's flagship "Online Visibility
- * Health Score" banner (spec: `tasks/build-plan/modules/02_dashboard.md`).
+ * Health Score" banner (spec: `tasks/build-plan/modules/02_dashboard.md`,
+ * mockup: `public/assets/repulabs/design-mockups/dashboard-after.png`).
  *
- * A blue→indigo gradient card rendered ABOVE the feed: a left score ring
- * (overall 0–100), a center heading + one-line summary, a right column of
- * status-dot metrics (rating / response-rate / review-velocity + a locked
- * "connect to unlock SEO" stat), and a white "View Full Report" → /analytics
- * button.
+ * A blue→teal gradient card (styles in `../dashboard-hero.css`, `.dbh-` prefix):
+ * left — a "Live visibility health" pill, a multi-location framing headline
+ * ("Strong and improving across N locations", keyed STRICTLY to the real score
+ * band + real 7d review-velocity delta — it never claims "improving" unless the
+ * delta is actually positive), the one-line summary, and the white "View Full
+ * Report" → /analytics button; right — the score ring + the status-dot metric
+ * panel.
  *
  * Server component — pure presentation, no interactivity. It consumes the
  * ALREADY-COMPUTED `computeHealthScore(...)` output passed down from
- * `page.tsx`; it does NOT recompute the score.
- *
- * The shared `ScoreRing` primitive renders its center number in `--ink` (dark),
- * which would be invisible on the indigo gradient, so the ring is drawn inline
- * here with a white stroke + white number (self-contained, no edit to the
- * shared primitive).
+ * `page.tsx`; it does NOT recompute the score. The shared `ScoreRing` is reused
+ * directly — `.dbh-banner__ring` locally remaps `--ink`/`--surface-3`/
+ * `--rl-muted` so its number renders white on the gradient.
  */
 
 const DOT_COLOR: Record<MetricStatus, string> = {
@@ -29,10 +30,32 @@ const DOT_COLOR: Record<MetricStatus, string> = {
   locked: "rgba(255,255,255,0.45)",
 };
 
+/**
+ * The multi-location framing headline. Honest by construction: the lead phrase
+ * comes from the real score band, "and improving" is appended ONLY when the
+ * real 7d review-volume delta is positive, and the "across N locations" suffix
+ * uses the real establishment count (omitted when the count is 0/unknown).
+ */
+function framingHeadline(
+  band: HealthScoreResult["band"],
+  trendPct: number | null,
+  locations: number,
+): string {
+  const lead = band === "strong" ? "Strong" : band === "fair" ? "On track" : "Building momentum";
+  const improving = trendPct !== null && trendPct > 0 && band !== "weak";
+  const phrase = improving ? `${lead} and improving` : lead;
+  const where =
+    locations >= 1 ? ` across ${locations} location${locations === 1 ? "" : "s"}` : "";
+  return phrase + where;
+}
+
 export function VisibilityHealthBanner({
   score,
   metrics,
   summary,
+  band,
+  locations,
+  trendPct,
 }: {
   /** Composite 0–100 health score (from `computeHealthScore`). */
   score: number;
@@ -40,76 +63,41 @@ export function VisibilityHealthBanner({
   metrics: HealthMetric[];
   /** One-line summary keyed off the score band. */
   summary: string;
+  /** Score band (from `computeHealthScore`) — drives the framing headline. */
+  band: HealthScoreResult["band"];
+  /** Real establishment count (non-deleted) — the "across N locations" framing. */
+  locations: number;
+  /** Real reviews-7d vs prior-7d delta % (null = no prior data). */
+  trendPct: number | null;
 }) {
-  return (
-    <div
-      className="viz-banner"
-      style={{
-        color: "#fff",
-        border: "none",
-        padding: "26px 30px",
-        marginBottom: 20,
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        gap: 26,
-      }}
-    >
-      {/* Left — score ring (white, drawn inline so the number is visible) */}
-      <WhiteScoreRing value={score} />
+  const velocityLine =
+    trendPct !== null && trendPct > 0 ? ` Review velocity is up ${trendPct}% vs last week.` : "";
 
-      {/* Center — heading + summary */}
-      <div style={{ flex: "1 1 240px", minWidth: 200 }}>
-        <div className="viz-banner__kicker">Online Visibility Health Score</div>
-        <h2
-          style={{
-            fontSize: 28,
-            fontWeight: 750,
-            letterSpacing: "-0.025em",
-            lineHeight: 1.12,
-            margin: "8px 0 0",
-          }}
-        >
-          {score}
-          <span style={{ fontSize: 16, fontWeight: 600, opacity: 0.68 }}> / 100</span>
-        </h2>
-        <p style={{ fontSize: 13, lineHeight: 1.5, margin: "7px 0 0", opacity: 0.92, maxWidth: 460 }}>
+  return (
+    <div className="viz-banner dbh-banner">
+      {/* Left — live pill + framing headline + summary + CTA */}
+      <div className="dbh-banner__main">
+        <span className="dbh-banner__chip">Live visibility health</span>
+        <h2 className="dbh-banner__headline">{framingHeadline(band, trendPct, locations)}</h2>
+        <p className="dbh-banner__sub">
           {summary}
+          {velocityLine}
         </p>
-        <Link
-          href="/analytics"
-          className="btn"
-          style={{
-            marginTop: 16,
-            background: "#fff",
-            color: "var(--pri)",
-            fontWeight: 650,
-            border: "none",
-            boxShadow: "0 2px 8px -2px rgba(15,23,42,0.25)",
-          }}
-        >
+        <Link href="/analytics" className="btn dbh-banner__cta">
           View Full Report <Icon name="arrowR" size={13} />
         </Link>
       </div>
 
-      {/* Right — status-dot metric column */}
-      <div
-        style={{
-          flex: "0 0 auto",
-          display: "flex",
-          flexDirection: "column",
-          gap: 11,
-          minWidth: 198,
-          padding: "16px 18px",
-          background: "rgba(255,255,255,0.12)",
-          border: "1px solid rgba(255,255,255,0.18)",
-          borderRadius: 14,
-          backdropFilter: "blur(4px)",
-        }}
-      >
-        {metrics.map((m) => (
-          <MetricRow key={m.key} metric={m} />
-        ))}
+      {/* Right — score ring + status-dot metric panel */}
+      <div className="dbh-banner__side">
+        <div className="dbh-banner__ring">
+          <ScoreRing value={score} suffix="SCORE" size={106} stroke={9} color="var(--dbh-ring-stroke, #3ddc97)" />
+        </div>
+        <div className="dbh-banner__metrics">
+          {metrics.map((m) => (
+            <MetricRow key={m.key} metric={m} />
+          ))}
+        </div>
       </div>
     </div>
   );
@@ -136,53 +124,6 @@ function MetricRow({ metric }: { metric: HealthMetric }) {
         {locked && <Icon name="lock" size={11} style={{ marginRight: 4, verticalAlign: "-1px", opacity: 0.8 }} />}
         {metric.value}
       </span>
-    </div>
-  );
-}
-
-/**
- * A white score ring for the dark gradient banner. Mirrors the geometry of the
- * shared `ScoreRing` but draws the track + number in white so they read on the
- * indigo background (the shared primitive hard-codes the number to `--ink`).
- */
-function WhiteScoreRing({ value, size = 104, stroke = 9 }: { value: number; size?: number; stroke?: number }) {
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  const pct = Math.max(0, Math.min(1, value / 100));
-  const dash = c * pct;
-  const numFs = Math.round(size * 0.3);
-
-  return (
-    <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="rgba(255,255,255,0.25)" strokeWidth={stroke} />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="#fff"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${dash} ${c}`}
-        />
-      </svg>
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          justifyContent: "center",
-          lineHeight: 1,
-        }}
-      >
-        <span style={{ fontSize: numFs, fontWeight: 700, letterSpacing: "-0.03em", color: "#fff" }}>{value}</span>
-        <span style={{ fontSize: numFs * 0.32, color: "rgba(255,255,255,0.75)", fontWeight: 500, marginTop: 2 }}>
-          / 100
-        </span>
-      </div>
     </div>
   );
 }

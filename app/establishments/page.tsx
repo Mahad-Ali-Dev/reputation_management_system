@@ -3,12 +3,18 @@ import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
-import { listEstablishmentsForCards } from "@/lib/establishments/queries";
+import {
+  latestRanksByEstablishment,
+  listEstablishmentsForCards,
+} from "@/lib/establishments/queries";
 import Link from "next/link";
 import { deriveCardState, shouldShowDevicePrompt } from "./_components/card-state";
 import { DevicePromptBanner } from "./_components/device-prompt-banner";
 import { EstablishmentCard } from "./_components/establishment-card";
 import { LinkedDevicesRow } from "./_components/linked-devices-row";
+import { deriveSummaryTile } from "./_components/summary-state";
+import { SummaryStrip } from "./_components/summary-strip";
+import "./establishments.css";
 
 /**
  * My Establishments — redesigned to the master-plan spec (module 03).
@@ -33,12 +39,17 @@ export default async function EstablishmentsPage({
 }) {
   const { orgId } = await getOrgContext();
   const sp = (await searchParams) ?? {};
-  const rows = await listEstablishmentsForCards(orgId);
+  // Ranks read fail-soft (empty map when keyword_ranks is missing/empty).
+  const [rows, ranks] = await Promise.all([
+    listEstablishmentsForCards(orgId),
+    latestRanksByEstablishment(orgId),
+  ]);
 
   if (rows.length === 0) return <EmptyEstablishments />;
 
   const cards = rows.map(deriveCardState);
   const connectedCount = cards.filter((c) => c.connected).length;
+  const tiles = rows.map((row) => deriveSummaryTile(row, ranks.get(row.id) ?? null));
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Establishments"]}>
@@ -77,9 +88,13 @@ export default async function EstablishmentsPage({
         </div>
       )}
 
+      {/* At-a-glance tile per location (rating · completeness · 30d sparkline);
+          clicking a tile jumps to that establishment's full card below. */}
+      <SummaryStrip tiles={tiles} />
+
       <div className="col" style={{ gap: 18 }}>
         {cards.map((card) => (
-          <div key={card.id} className="col" style={{ gap: 10 }}>
+          <div key={card.id} id={`est-${card.id}`} className="col est-anchor" style={{ gap: 10 }}>
             <EstablishmentCard est={card} />
             {shouldShowDevicePrompt(card) ? (
               <DevicePromptBanner establishmentId={card.id} />

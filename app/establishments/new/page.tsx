@@ -5,6 +5,19 @@ import { AppShellServer } from "@/components/app-shell-server";
 import { TopBar } from "@/components/topbar";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
+import "../establishments.css";
+
+/**
+ * The 4-step add-business flow (mockup: establishments-after.png). Purely
+ * visual — this page IS step 1; Verify/Connect/Launch happen after create
+ * (Connect = Google OAuth from the new card / the /connections hub).
+ */
+const FLOW_STEPS = [
+  { label: "Details", sub: "Name, category, address" },
+  { label: "Verify", sub: "Confirm the profile" },
+  { label: "Connect", sub: "Google Business Profile" },
+  { label: "Launch", sub: "Reviews start syncing" },
+] as const;
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +41,24 @@ export default async function NewEstablishmentPage() {
           </Link>
         }
       />
+
+      {/* Visual stepper only — the create form/action below is unchanged. */}
+      <ol className="est-steps" aria-label="Add-business steps">
+        {FLOW_STEPS.map((s, i) => (
+          <li
+            key={s.label}
+            className={`est-step${i === 0 ? " est-step--active" : ""}`}
+            aria-current={i === 0 ? "step" : undefined}
+          >
+            <span className="est-step__dot">{i + 1}</span>
+            <span className="est-step__txt">
+              <span className="est-step__label">{s.label}</span>
+              <span className="est-step__sub">{s.sub}</span>
+            </span>
+            {i < FLOW_STEPS.length - 1 && <span className="est-step__bar" aria-hidden="true" />}
+          </li>
+        ))}
+      </ol>
 
       <section className="ds-card" style={{ maxWidth: 640 }}>
         <div className="ds-card__head">

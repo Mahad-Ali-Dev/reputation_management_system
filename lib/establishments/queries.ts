@@ -1,4 +1,5 @@
 import { withTenant } from "@/lib/db/with-tenant";
+import { logger } from "@/lib/logger";
 
 /**
  * One raw establishment row powering the redesigned "My Establishments" list.
@@ -14,6 +15,8 @@ export type EstablishmentCardData = {
   imageUrl: string | null;
   googlePlaceId: string | null;
   createdAt: Date;
+  /** Optional so older test fixtures stay valid; the query always selects it. */
+  timezone?: string | null;
   connections: Array<{
     id: string;
     provider: string;
@@ -21,7 +24,8 @@ export type EstablishmentCardData = {
     accountLabel: string | null;
     lastSyncedAt: Date | null;
   }>;
-  reviews: Array<{ rating: number }>;
+  /** `postedAt` is optional for the same fixture-compat reason as `timezone`. */
+  reviews: Array<{ rating: number; postedAt?: Date }>;
   devices: Array<{
     id: string;
     productKind: string;
@@ -58,6 +62,7 @@ export async function listEstablishmentsForCards(orgId: string): Promise<Establi
         imageUrl: true,
         googlePlaceId: true,
         createdAt: true,
+        timezone: true,
         // Only the active Google Business connection drives "Connected".
         connections: {
           where: { provider: "google_business", status: "active" },
@@ -69,8 +74,9 @@ export async function listEstablishmentsForCards(orgId: string): Promise<Establi
             lastSyncedAt: true,
           },
         },
-        // Ratings only — averaged + counted in JS (matches the page's old approach).
-        reviews: { select: { rating: true } },
+        // Ratings + timestamps — averaged/bucketed in JS (rating average for the
+        // card, postedAt for the summary-strip 30-day sparkline).
+        reviews: { select: { rating: true, postedAt: true } },
         devices: {
           select: {
             id: true,
@@ -125,6 +131,68 @@ export async function getEstablishment(orgId: string, id: string) {
       },
     });
   });
+}
+
+/**
+ * Latest local-rank reading per establishment for the summary strip's rank
+ * badge. `position` is the most recent non-null KeywordRank position;
+ * `prevPosition` is the next-older check of the SAME keyword (drives the
+ * up/down trend arrow — lower position = better).
+ */
+export type EstablishmentRank = {
+  keyword: string;
+  position: number;
+  prevPosition: number | null;
+};
+
+/** Postgres 42P01 (undefined_table) / 42703 (undefined_column) → not migrated. */
+function isMissingRelation(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "P2021" || code === "P2022" || code === "42P01" || code === "42703") return true;
+  const pgCode = ((err as { meta?: { code?: string } } | null)?.meta ?? {}).code;
+  return pgCode === "42P01" || pgCode === "42703";
+}
+
+/**
+ * Fail-soft read of `keyword_ranks` (Owner: 13_reports). The summary strip
+ * renders a rank badge ONLY when real rank data exists, so a missing table or
+ * an empty one both resolve to an empty map and the badge is simply omitted.
+ */
+export async function latestRanksByEstablishment(
+  orgId: string,
+): Promise<Map<string, EstablishmentRank>> {
+  try {
+    return await withTenant(orgId, async (tx) => {
+      // Newest-first window — enough to find latest + previous per location
+      // without scanning the whole history.
+      const rows = await tx.keywordRank.findMany({
+        where: { establishmentId: { not: null }, position: { not: null } },
+        orderBy: { checkedAt: "desc" },
+        take: 200,
+        select: { establishmentId: true, keyword: true, position: true },
+      });
+      const map = new Map<string, EstablishmentRank>();
+      for (const r of rows) {
+        if (!r.establishmentId || r.position === null) continue;
+        const cur = map.get(r.establishmentId);
+        if (!cur) {
+          map.set(r.establishmentId, {
+            keyword: r.keyword,
+            position: r.position,
+            prevPosition: null,
+          });
+        } else if (cur.prevPosition === null && r.keyword === cur.keyword) {
+          cur.prevPosition = r.position;
+        }
+      }
+      return map;
+    });
+  } catch (err) {
+    if (!isMissingRelation(err)) {
+      logger.warn({ orgId, error: String(err), event: "establishments.rank_read_failed" });
+    }
+    return new Map();
+  }
 }
 
 export async function hasGoogleConnection(orgId: string, establishmentId: string): Promise<boolean> {

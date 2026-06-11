@@ -29,6 +29,7 @@ import {
   TodayCommandCard,
   WeeklyReviewChart,
 } from "./_components/dashboard-sections";
+import "./dashboard-hero.css";
 
 /**
  * Dashboard — repulabs v3 command center (two-tier relayout).
@@ -245,6 +246,9 @@ export default async function DashboardPage({
               score={health.score}
               metrics={health.metrics}
               summary={health.summary}
+              band={health.band}
+              locations={d.establishmentCount}
+              trendPct={d.reviews7dDeltaPct}
             />
 
             {/* Merged Today card (queue ∪ setup checklist) + slim setup ring */}

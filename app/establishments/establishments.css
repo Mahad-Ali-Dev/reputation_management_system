@@ -1,0 +1,229 @@
+/**
+ * Establishments route styles (.est- prefix only).
+ *  - .est-strip / .est-tile  — per-location summary card grid on /establishments
+ *  - .est-anchor             — :target ring when a tile jumps to a card
+ *  - .est-steps / .est-step  — 4-step add-business flow strip on /establishments/new
+ * Tokens come from globals.css / design-system.css; nothing shared is redefined.
+ */
+
+/* ---------- summary strip ---------- */
+
+.est-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(232px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.est-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  color: var(--ink);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-2, 0.15s) var(--ease-standard, ease),
+    box-shadow var(--dur-2, 0.15s) var(--ease-standard, ease);
+}
+
+.est-tile:hover,
+.est-tile:focus-visible {
+  border-color: var(--pri-300);
+  box-shadow: 0 2px 10px rgb(36 87 255 / 0.08);
+}
+
+.est-tile__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.est-tile__name {
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.est-tile__rank {
+  flex-shrink: 0;
+  gap: 4px;
+}
+
+.est-tile__rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--gold);
+}
+
+.est-tile__score {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.est-tile__meterwrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.est-tile__meter {
+  height: 5px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  overflow: hidden;
+}
+
+.est-tile__meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--pri);
+}
+
+.est-tile__caption {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.est-tile__spark {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+}
+
+/* Single location → one slim full-width tile. */
+.est-strip--solo {
+  grid-template-columns: 1fr;
+}
+
+.est-strip--solo .est-tile {
+  flex-direction: row;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 18px;
+  padding: 12px 18px;
+}
+
+.est-strip--solo .est-tile__head {
+  flex: 0 1 auto;
+  min-width: 140px;
+}
+
+.est-strip--solo .est-tile__meterwrap {
+  flex: 1 1 180px;
+  min-width: 150px;
+}
+
+.est-strip--solo .est-tile__spark {
+  margin-top: 0;
+  align-items: center;
+}
+
+/* Tile click → smooth-scroll the matching card into view with a brief ring. */
+.est-anchor {
+  scroll-margin-top: 84px;
+}
+
+.est-anchor:target > .ds-card:first-of-type {
+  box-shadow: 0 0 0 2px var(--pri-300);
+}
+
+/* ---------- add-business 4-step flow strip (/establishments/new) ---------- */
+
+.est-steps {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  margin: 0 0 18px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+}
+
+.est-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 0;
+  min-width: 165px;
+  padding: 2px 6px;
+}
+
+.est-step__dot {
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--r-full);
+  border: 1px solid var(--line);
+  background: var(--surface-3);
+  color: var(--rl-muted-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.est-step--active .est-step__dot {
+  background: var(--pri);
+  border-color: var(--pri);
+  color: var(--text-on-pri, #fff);
+}
+
+.est-step__txt {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.est-step__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--rl-muted);
+}
+
+.est-step--active .est-step__label {
+  color: var(--pri);
+}
+
+.est-step__sub {
+  font-size: 11px;
+  color: var(--rl-muted-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.est-step__bar {
+  flex: 1;
+  min-width: 14px;
+  height: 1px;
+  margin: 0 12px;
+  background: var(--line-2);
+}
+
+@media (max-width: 700px) {
+  .est-step {
+    flex-basis: calc(50% - 8px);
+  }
+
+  .est-step__bar {
+    display: none;
+  }
+}

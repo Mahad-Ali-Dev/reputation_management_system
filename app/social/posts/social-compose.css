@@ -1,0 +1,200 @@
+/* ============================================================================
+   Social Studio — compose-view additions (design-mockup parity).
+   Consumed by app/social/posts/_components/composer.tsx.
+   Prefix: .soc-
+   ========================================================================== */
+
+/* ---------------- mini content-calendar (schedule column) ---------------- */
+
+.soc-minical {
+  margin-top: 12px;
+  border-top: 1px dashed var(--line);
+  padding-top: 12px;
+}
+
+.soc-minical__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.soc-minical__title {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.soc-minical__link {
+  font-size: 10.5px;
+  color: var(--pri);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.soc-minical__link:hover {
+  text-decoration: underline;
+}
+
+.soc-minical__grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.soc-minical__dow {
+  font-size: 8.5px;
+  font-weight: 650;
+  text-align: center;
+  color: var(--rl-muted-3);
+  text-transform: uppercase;
+  padding-bottom: 2px;
+}
+
+.soc-minical__day {
+  aspect-ratio: 1 / 1;
+  display: grid;
+  place-items: center;
+  border-radius: 7px;
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  font-size: 9.5px;
+  color: var(--rl-muted);
+  text-decoration: none;
+  transition:
+    border-color 0.12s,
+    transform 0.12s;
+}
+
+a.soc-minical__day:hover {
+  border-color: var(--pri);
+  transform: translateY(-1px);
+}
+
+.soc-minical__day--pad {
+  background: transparent;
+}
+
+.soc-minical__day--today {
+  box-shadow: inset 0 0 0 1.5px var(--pri);
+  color: var(--pri);
+  font-weight: 700;
+}
+
+.soc-minical__day--scheduled {
+  background: var(--pri);
+  color: #fff;
+  font-weight: 700;
+}
+
+.soc-minical__day--scheduled.soc-minical__day--today {
+  color: #fff;
+  box-shadow: none;
+}
+
+.soc-minical__day--published {
+  background: var(--trust);
+  color: #fff;
+  font-weight: 700;
+}
+
+.soc-minical__day--published.soc-minical__day--today {
+  color: #fff;
+  box-shadow: none;
+}
+
+.soc-minical__legend {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+  font-size: 9.5px;
+  color: var(--rl-muted);
+}
+
+.soc-minical__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  display: inline-block;
+  margin-right: 4px;
+  vertical-align: -1px;
+}
+
+/* ----------------------- creative idea tile row -------------------------- */
+
+.soc-ideas {
+  margin-top: 14px;
+}
+
+.soc-ideas__grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.soc-idea {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+  padding: 10px;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  cursor: pointer;
+  transition:
+    border-color 0.12s,
+    box-shadow 0.12s,
+    transform 0.12s;
+}
+
+.soc-idea:hover {
+  border-color: var(--pri);
+  box-shadow: var(--sh);
+  transform: translateY(-1px);
+}
+
+.soc-idea__art {
+  height: 86px;
+  border-radius: 9px;
+  background: var(--surface-2);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+
+.soc-idea__art img {
+  max-width: 88%;
+  max-height: 74px;
+  object-fit: contain;
+}
+
+.soc-idea__name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+
+.soc-idea__sub {
+  display: block;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--rl-muted);
+  margin-top: 2px;
+}
+
+@media (max-width: 1100px) {
+  .soc-ideas__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 540px) {
+  .soc-ideas__grid {
+    grid-template-columns: 1fr;
+  }
+}

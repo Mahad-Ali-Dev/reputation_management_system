@@ -68,6 +68,8 @@ export type DashboardData = {
     body: string | null;
   }>;
   listings: DashboardListing[];
+  /** Total non-deleted establishments (NOT capped like `listings`). */
+  establishmentCount: number;
   activeConnections: number;
   hasGoogle: boolean;
   requestsSent30d: number;
@@ -93,6 +95,7 @@ const EMPTY_DASHBOARD: DashboardData = {
   liveReviews: [],
   latestReviews: [],
   listings: [],
+  establishmentCount: 0,
   activeConnections: 0,
   hasGoogle: false,
   requestsSent30d: 0,
@@ -139,6 +142,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         liveReviews,
         topReviews,
         establishments,
+        establishmentCount,
         activeConnections,
         requestsSent30d,
         chartReviews,
@@ -188,6 +192,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
             reviews: { select: { rating: true } },
           },
         }),
+        tx.establishment.count({ where: { deletedAt: null } }),
         tx.connection.count({ where: { status: "active" } }),
         tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
         tx.review.findMany({
@@ -223,7 +228,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       return {
         ratingAgg, ratingGroups, reviews7d, reviewsPrev7d, repliedCount, pendingReplyCount,
         needsReplyCount, aiDrafted24h, liveReviews, topReviews, establishments,
-        activeConnections, requestsSent30d, chartReviews, recentReplies, recentRequests,
+        establishmentCount, activeConnections, requestsSent30d, chartReviews, recentReplies, recentRequests,
         recentCalls, recentScans,
         funnelSent, funnelDelivered, funnelOpened, funnelConverted,
       };
@@ -357,6 +362,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       liveReviews: d.liveReviews,
       latestReviews: d.topReviews,
       listings,
+      establishmentCount: d.establishmentCount,
       activeConnections: d.activeConnections,
       hasGoogle,
       requestsSent30d: d.requestsSent30d,

@@ -115,4 +115,10 @@ desktop.ini
 /.pdf-build/shoot-wave3.mjs
 /tasks/ui-wave3/
 
+/.pdf-build/shoot-wave4.mjs
+/.pdf-build/shoot-final.mjs
+/.pdf-build/debug-*.mjs
+/tasks/ui-wave4/
+/tasks/ui-final-sweep/
+
 /outputs/

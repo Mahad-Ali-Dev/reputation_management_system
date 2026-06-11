@@ -12,7 +12,7 @@ import {
 import { imageGenAvailability } from "@/lib/social/image-gen";
 import { listLibraryAssets } from "@/lib/social/library";
 import Link from "next/link";
-import { Composer, type InitialPost } from "./_components/composer";
+import { Composer, type InitialPost, type MiniCalMonth } from "./_components/composer";
 import {
   generateCaptionsForComposer,
   generateCreativesForComposer,
@@ -150,7 +150,12 @@ async function CreatePanel({
   const isUuid = (s?: string) =>
     !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
-  const [establishments, libraryAssetsRaw, imageGen, initialPostRow] = await Promise.all([
+  // Window for the schedule mini-calendar (current month, server tz).
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+
+  const [establishments, libraryAssetsRaw, imageGen, initialPostRow, monthPosts] = await Promise.all([
     withTenant(orgId, async (tx) =>
       tx.establishment.findMany({
         where: { deletedAt: null },
@@ -178,7 +183,41 @@ async function CreatePanel({
           }),
         ).catch(() => null)
       : Promise.resolve(null),
+    // Mini-calendar source: same shape the /social/calendar query uses, narrowed
+    // to the current month. FAIL-SOFT — an unmigrated relation just renders an
+    // unmarked grid instead of crashing the composer.
+    withTenant(orgId, async (tx) =>
+      tx.socialPost.findMany({
+        where: {
+          status: { in: ["scheduled", "published"] },
+          OR: [
+            { scheduledFor: { gte: monthStart, lt: monthEnd } },
+            { postedAt: { gte: monthStart, lt: monthEnd } },
+          ],
+        },
+        select: { status: true, scheduledFor: true, postedAt: true },
+        take: 500,
+      }),
+    ).catch(() => []),
   ]);
+
+  // Collapse month posts → marked day numbers (published wins over scheduled).
+  const scheduledDays = new Set<number>();
+  const publishedDays = new Set<number>();
+  for (const p of monthPosts) {
+    const when = p.postedAt ?? p.scheduledFor;
+    if (!when || when < monthStart || when >= monthEnd) continue;
+    (p.status === "published" ? publishedDays : scheduledDays).add(when.getDate());
+  }
+  const miniCal: MiniCalMonth = {
+    ym: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
+    label: now.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    daysInMonth: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(),
+    firstDow: (monthStart.getDay() + 6) % 7, // Monday-first, like /social/calendar
+    today: now.getDate(),
+    scheduledDays: [...scheduledDays],
+    publishedDays: [...publishedDays],
+  };
 
   // Brand colors: first establishment with a brandVoice.colors wins.
   let brandColors: string[] = [];
@@ -240,6 +279,7 @@ async function CreatePanel({
       generateCreatives={generateCreativesForComposer}
       recommendTimes={recommendTimesForComposer}
       initialPost={initialPost}
+      miniCal={miniCal}
     />
   );
 }

@@ -8,6 +8,7 @@ import { CaptionModal, type CaptionOption, type GenerateCaptionsFn } from "./cap
 import { CreativesModal, type GenerateCreativesFn } from "./creatives-modal";
 import { LibraryModal, type LibraryAsset } from "./library-modal";
 import { PhonePreview, type PreviewPlatform } from "./phone-preview";
+import "../social-compose.css";
 
 /**
  * `<Composer>` (Module 10) — the 3-column post creator island.
@@ -63,6 +64,72 @@ export type InitialPost = {
 
 type Establishment = { id: string; name: string };
 
+/** Server-computed snapshot of the current month for the schedule mini-calendar. */
+export type MiniCalMonth = {
+  /** "YYYY-MM" — the /social/calendar deep-link param. */
+  ym: string;
+  /** e.g. "June 2026" */
+  label: string;
+  daysInMonth: number;
+  /** Monday-first offset of day 1 (0 = Monday … 6 = Sunday). */
+  firstDow: number;
+  /** Today's day-of-month. */
+  today: number;
+  /** Day numbers with ≥1 scheduled post. */
+  scheduledDays: number[];
+  /** Day numbers with ≥1 published post. */
+  publishedDays: number[];
+};
+
+/** Starter angles for the "Creative ideas" tile row — prefill, never auto-send. */
+type CreativeIdea = {
+  id: string;
+  name: string;
+  sub: string;
+  art: string;
+  caption: string;
+  hashtags: string[];
+};
+
+const CREATIVE_IDEAS: CreativeIdea[] = [
+  {
+    id: "review",
+    name: "Share a five-star review",
+    sub: "Turn your latest praise into proof.",
+    art: "/assets/repulabs/illustrations/feat-reviews.png",
+    caption:
+      "⭐⭐⭐⭐⭐ Review of the week!\n\n“[paste your favorite recent review here]”\n\nThank you, [customer name] — feedback like this is why we do what we do.",
+    hashtags: ["fivestars", "customerlove"],
+  },
+  {
+    id: "offer",
+    name: "Promote an offer",
+    sub: "A limited-time deal with a clear CTA.",
+    art: "/assets/repulabs/illustrations/feat-qr-nfc.png",
+    caption:
+      "🎉 This week only: [your offer].\n\nMention this post in store or book online to claim it — ends [date].",
+    hashtags: ["offer", "local"],
+  },
+  {
+    id: "milestone",
+    name: "Celebrate a milestone",
+    sub: "Reviews, years, customers — mark the moment.",
+    art: "/assets/repulabs/illustrations/feat-analytics.png",
+    caption:
+      "Milestone unlocked 🚀 We just hit [X reviews / X years / X customers].\n\nA huge thank-you to every one of you who got us here.",
+    hashtags: ["milestone", "thankyou"],
+  },
+  {
+    id: "thanks",
+    name: "Thank your customers",
+    sub: "A simple gratitude post that invites replies.",
+    art: "/assets/repulabs/illustrations/voice-review.png",
+    caption:
+      "To everyone who shared feedback with us this month — thank you. We read every single review, and it shapes what we do next.\n\nHad a great experience? We'd love to hear about it too.",
+    hashtags: ["thankyou", "community"],
+  },
+];
+
 export function Composer({
   connectedPlatforms,
   establishments,
@@ -75,6 +142,7 @@ export function Composer({
   generateCreatives,
   recommendTimes,
   initialPost,
+  miniCal,
 }: {
   /** Platforms the org can publish to (server-computed from active Connections). */
   connectedPlatforms: PreviewPlatform[];
@@ -92,6 +160,8 @@ export function Composer({
   /** Best-time recommender (bound by the page; optional until backend lands). */
   recommendTimes?: (platforms: string[]) => Promise<string[]>;
   initialPost?: InitialPost | null;
+  /** Current-month post days for the schedule mini-calendar (server-computed, fail-soft). */
+  miniCal?: MiniCalMonth | null;
 }): JSX.Element {
   const connectedSet = useMemo(() => new Set(connectedPlatforms), [connectedPlatforms]);
   const anyConnected = connectedPlatforms.length > 0;
@@ -144,6 +214,7 @@ export function Composer({
   const [success, setSuccess] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement | null>(null);
+  const captionRef = useRef<HTMLTextAreaElement | null>(null);
   const [dragOver, setDragOver] = useState(false);
 
   // ---- derived -----------------------------------------------------------
@@ -164,6 +235,17 @@ export function Composer({
     setCaption(opt.caption);
     if (opt.hashtags.length) setHashtags(opt.hashtags);
     setIsAiCaption(true);
+  }
+
+  /** Creative-idea tile → prefill the editor with a starter angle (user edits it). */
+  function applyIdea(idea: CreativeIdea) {
+    setCaption(idea.caption);
+    setHashtags(idea.hashtags);
+    setIsAiCaption(false);
+    setError(null);
+    setSuccess(null);
+    captionRef.current?.focus();
+    captionRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
   function addMedia(items: ComposerMedia[]) {
@@ -453,6 +535,9 @@ export function Composer({
                   )}
                 </div>
               )}
+
+              {/* mini content-calendar — month at a glance, deep-links to /social/calendar */}
+              {miniCal && <MiniCalendar data={miniCal} />}
             </div>
           </div>
         </div>
@@ -469,6 +554,7 @@ export function Composer({
           <div className="ds-card__body" style={{ display: "grid", gap: 14 }}>
             <div>
               <textarea
+                ref={captionRef}
                 className="ds-textarea"
                 rows={6}
                 value={caption}
@@ -713,6 +799,34 @@ export function Composer({
         </div>
       </div>
 
+      {/* ===================== creative idea tiles ===================== */}
+      <section className="ds-card soc-ideas" aria-label="Creative ideas">
+        <div className="ds-card__head">
+          <div>
+            <h3 className="ds-card__title">Creative ideas</h3>
+            <p className="ds-card__sub" style={{ margin: "3px 0 0" }}>
+              Starter angles — tap one to prefill the editor, then make it yours.
+            </p>
+          </div>
+        </div>
+        <div className="ds-card__body">
+          <div className="soc-ideas__grid">
+            {CREATIVE_IDEAS.map((idea) => (
+              <button key={idea.id} type="button" className="soc-idea" onClick={() => applyIdea(idea)}>
+                <span className="soc-idea__art" aria-hidden>
+                  {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+                  <img src={idea.art} alt="" loading="lazy" />
+                </span>
+                <span>
+                  <span className="soc-idea__name">{idea.name}</span>
+                  <span className="soc-idea__sub">{idea.sub}</span>
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ===================== modals ===================== */}
       <CaptionModal
         open={captionOpen}
@@ -765,6 +879,79 @@ function SegBtn({ label, active, onClick }: { label: string; active: boolean; on
     >
       {label}
     </button>
+  );
+}
+
+const MINICAL_DOW = ["M", "T", "W", "T", "F", "S", "S"];
+
+/**
+ * Compact month grid in the schedule column — dots/fills on days that already
+ * have scheduled or published posts (server-computed). Every day deep-links to
+ * the full /social/calendar; the datetime input above stays the real control.
+ */
+function MiniCalendar({ data }: { data: MiniCalMonth }) {
+  const scheduled = new Set(data.scheduledDays);
+  const published = new Set(data.publishedDays);
+  const monthName = data.label.split(" ")[0] ?? data.label;
+  const href = `/social/calendar?ym=${data.ym}`;
+  const cells: (number | null)[] = [
+    ...Array.from({ length: data.firstDow }, () => null),
+    ...Array.from({ length: data.daysInMonth }, (_, i) => i + 1),
+  ];
+  return (
+    <div className="soc-minical">
+      <div className="soc-minical__head">
+        <span className="soc-minical__title">{data.label}</span>
+        <Link href={href} className="soc-minical__link">
+          Open calendar →
+        </Link>
+      </div>
+      <div className="soc-minical__grid">
+        {MINICAL_DOW.map((d, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-day header
+          <span key={`dow-${i}`} className="soc-minical__dow" aria-hidden>
+            {d}
+          </span>
+        ))}
+        {cells.map((day, i) =>
+          day === null ? (
+            // biome-ignore lint/suspicious/noArrayIndexKey: leading pad cells are positional
+            <span key={`pad-${i}`} className="soc-minical__day soc-minical__day--pad" aria-hidden />
+          ) : (
+            <Link
+              key={day}
+              href={href}
+              className={[
+                "soc-minical__day",
+                published.has(day)
+                  ? "soc-minical__day--published"
+                  : scheduled.has(day)
+                    ? "soc-minical__day--scheduled"
+                    : "",
+                day === data.today ? "soc-minical__day--today" : "",
+              ]
+                .filter(Boolean)
+                .join(" ")}
+              aria-label={`Open the content calendar — ${monthName} ${day}`}
+            >
+              {day}
+            </Link>
+          ),
+        )}
+      </div>
+      {(scheduled.size > 0 || published.size > 0) && (
+        <div className="soc-minical__legend">
+          <span>
+            <span className="soc-minical__dot" style={{ background: "var(--pri)" }} />
+            Scheduled
+          </span>
+          <span>
+            <span className="soc-minical__dot" style={{ background: "var(--trust)" }} />
+            Published
+          </span>
+        </div>
+      )}
+    </div>
   );
 }
 
