@@ -19,6 +19,28 @@ UI changes where needed, and ReviewBoost feature parity per the `tasks/` specs.
 test suite green. Tests 918 → 995. Heavy autonomous spawning stopped here: the high-value,
 verifiable work is done; remaining items are credential-dependent or low-priority (below).
 
+### Final wave + fix-pass landing (COMMITTED + PUSHED, 2026-06-11)
+- **`1ab1532`** — landed the two previously-verified-but-uncommitted fix passes (49 files):
+  the 2026-06-11 external assessment (13/13 bugs, E2E-verified — see docs/BUG_BACKLOG.md)
+  + the 2026-06-10 bugs/vulns pass (signup OAuth, $0 MRR, dev CSP/hydration, SSRF guard,
+  Cmd-K palette, global-error). Includes migration `20260611000000_auto_reply_delay_sentinel`
+  — MUST be in the next `prisma migrate deploy`. TikTok files + outputs/ excluded (gitignored).
+- **`603218b` Wave 4** — establishments per-location summary tiles (completeness/sparkline/
+  honest rank badge) + add-business 4-step strip; dashboard blue->teal health ribbon with
+  ScoreRing + honest multi-location framing; social compose mini-calendar (real post dots) +
+  creative-idea prefill tiles; scheduler `scheduled_request` stub now FAILS LOUDLY (was
+  {ok:true} -> would silently mark scheduled sends done without sending; zero producers today
+  but the build-plan spec pointed future modules at it — spec amended).
+- **Scheduler/cron investigation findings (OPS — founder action):** vercel.json crons do NOT
+  run on the VPS; no systemd timer/crontab in repo. Required: crontab entries hitting the
+  cron endpoints with Bearer CRON_SECRET per docs/DEPLOYMENT_RUNBOOK.md §6 — at minimum
+  `/api/cron/dispatch-review-requests` and `/api/cron/dispatch-scheduled` (onboarding jobs
+  depend on it).
+- **Pricing mismatch (founder decision):** marketing home Pro $59.99/mo vs /subscription
+  $89/mo annual / $111 monthly — reconcile.
+- Adversarial review workflow over f6b12b8..HEAD launched (5 dimensions + per-finding
+  verification); confirmed findings to be fixed before the run ends.
+
 ### Mockup-driven UI build — Waves 1-3 (COMMITTED, 2026-06-11)
 Built the product UI to the target design mockups (public/assets/repulabs/design-mockups/
 *-after.png) with the brand illustration kit, one wave at a time, each gated on
