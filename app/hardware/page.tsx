@@ -3,8 +3,10 @@ import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { QrCode } from "@/components/shell/qr-code";
 import { TopBar } from "@/components/topbar";
+import { getAdminSession } from "@/lib/admin/session";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { orgHasFeature } from "@/lib/billing/feature-access";
+import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { listEstablishments } from "@/lib/establishments/queries";
 import { restoreDevice } from "@/lib/hardware/actions";
@@ -17,11 +19,12 @@ import {
 import { getDeviceRoi } from "@/lib/roi/summary";
 import Link from "next/link";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
-import { DeviceCard } from "./_components/device-card";
+import { DeviceTable } from "./_components/device-table";
 import { NextStepBanner } from "./_components/next-step-banner";
 import { recordNfcUid } from "./_components/nfc-actions";
 import { NfcConfigCard } from "./_components/nfc-config-card";
 import { SummaryStats } from "./_components/summary-stats";
+import "./devices.css";
 
 /** Product kinds that are programmed as NFC chips rather than printed QR. */
 const NFC_KINDS = new Set(["nfc", "wifi", "multi_platform"]);
@@ -59,13 +62,6 @@ function titleFromSku(sku: string): string {
   if (sku.includes("stand")) return "Counter Stand";
   if (sku.includes("card")) return "Counter Card";
   return "QR Product";
-}
-
-function subtitleFromSku(sku: string): string {
-  if (sku.includes("plaque")) return "Brushed brass · 200×120 mm";
-  if (sku.includes("stand")) return "Acrylic · 100×150 mm";
-  if (sku.includes("card")) return "Premium card · 85×54 mm";
-  return sku;
 }
 
 type NfcStatus = "saved" | "duplicate" | "bad_uid" | "not_found" | "unavailable" | "error";
@@ -185,9 +181,9 @@ export default async function QrCodesPage({
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
       <PageHeader
-        kicker="Cards · plaques · stands"
-        title="My Devices"
-        description="Manage and track your connected ReviewBoost devices."
+        kicker="QR and NFC"
+        title="Turn the counter into a review engine"
+        description="QR stands, NFC cards, previews, scan analytics, and activation status."
         actions={
           <>
             <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
@@ -301,108 +297,63 @@ export default async function QrCodesPage({
         </span>
       </div>
 
-      <div className="col" style={{ gap: 12, marginBottom: 22 }}>
-        {activeDevices.map((d) => (
-          <DeviceCard
-            key={d.id}
-            deviceId={d.id}
-            productImageUrl={d.productImageUrl}
-            productTitle={d.productName ?? titleFromSku(d.productSku)}
-            productSubtitle={subtitleFromSku(d.productSku)}
-            establishmentName={d.establishment?.name ?? null}
-            scans={d.scanCount}
-            reviews={d.reviewCount}
-            shortSlug={d.shortSlug}
-            productKind={d.productKind}
-            nfcUid={d.nfcUid ?? null}
-          />
-        ))}
-        <div
-          className="ds-card"
-          style={{
-            border: "1.5px dashed var(--line)",
-            background: "var(--surface-2)",
-            boxShadow: "none",
-            padding: "14px 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
-          <div className="row" style={{ gap: 10 }}>
-            <span
-              aria-hidden
-              style={{
-                display: "grid",
-                placeItems: "center",
-                width: 34,
-                height: 34,
-                borderRadius: 9,
-                background: "var(--surface)",
-                border: "1px solid var(--line)",
-                color: "var(--pri)",
-              }}
-            >
-              <Icon name="plus" size={16} />
-            </span>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
-                Add another device
-              </div>
-              <div className="dim" style={{ fontSize: 11.5 }}>
-                Enter the code from a new card, plaque, or stand.
-              </div>
-            </div>
-          </div>
-          <ConnectDeviceModal
-            establishments={businessOptions}
-            triggerClassName="btn"
-            triggerLabel="Add Device"
-          />
-        </div>
-      </div>
+      <div className="dev-layout">
+        {/* Lead section — the device-list table (after-mockup). Rows link to
+            ?selected=<id>#qr-panel, the page's existing selection mechanism. */}
+        <DeviceTable
+          devices={activeDevices.map((d) => ({
+            id: d.id,
+            productTitle: d.productName ?? titleFromSku(d.productSku),
+            productImageUrl: d.productImageUrl,
+            establishmentName: d.establishment?.name ?? null,
+            productKind: d.productKind,
+            shortSlug: d.shortSlug,
+            scans: d.scanCount,
+            reviews: d.reviewCount,
+          }))}
+          selectedId={selectedDevice.id}
+          establishments={businessOptions}
+        />
 
-      <div
-        id="qr-panel"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(320px, 360px) minmax(0, 1fr)",
-          gap: 16,
-          scrollMarginTop: 80,
-        }}
-      >
-        {isNfcKind(selectedDevice.productKind) ? (
-          <NfcConfigCard
-            deviceId={selectedDevice.id}
-            productKind={selectedDevice.productKind}
-            encodeUrl={publicQrUrl(selectedDevice.shortSlug)}
-            slug={selectedDevice.shortSlug}
-            currentNfcUid={selectedDevice.nfcUid ?? null}
-            deviceTitle={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
-            recordNfcUidAction={recordNfcUid}
-            saveStatus={normalizeNfcStatus(sp.nfc)}
-          />
-        ) : (
+        {/* Preview rail — QR preview for the selected device, plus the NFC
+            tap-destination config when the device is an NFC kind (a tap and a
+            scan resolve through the same /r/<slug> link). */}
+        <div id="qr-panel" className="dev-rail" style={{ scrollMarginTop: 80 }}>
           <DeviceQrPanel
             deviceId={selectedDevice.id}
             code={selectedDevice.shortSlug}
-            name={titleFromSku(selectedDevice.productSku)}
+            name={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
             location={selectedDevice.establishment?.name ?? "Unassigned"}
             redirectUrl={selectedDevice.redirectUrl ?? null}
             productKind={selectedDevice.productKind}
           />
-        )}
-        <ScanAnalytics
-          scanCount={selectedDevice.scanCount}
-          scans={selectedScans}
-          reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
-          estimatedRevenue={deviceRoi.estimatedRevenue}
-          currency={deviceRoi.currency}
-          isPro={isPro}
-        />
+          {isNfcKind(selectedDevice.productKind) && (
+            <NfcConfigCard
+              deviceId={selectedDevice.id}
+              productKind={selectedDevice.productKind}
+              encodeUrl={publicQrUrl(selectedDevice.shortSlug)}
+              slug={selectedDevice.shortSlug}
+              currentNfcUid={selectedDevice.nfcUid ?? null}
+              deviceTitle={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
+              recordNfcUidAction={recordNfcUid}
+              saveStatus={normalizeNfcStatus(sp.nfc)}
+            />
+          )}
+        </div>
       </div>
+
+      <ScanAnalytics
+        deviceLabel={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
+        code={selectedDevice.shortSlug}
+        scanCount={selectedDevice.scanCount}
+        scans={selectedScans}
+        reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
+        estimatedRevenue={deviceRoi.estimatedRevenue}
+        currency={deviceRoi.currency}
+        isPro={isPro}
+      />
+
+      <BatchGeneratorSection />
     </AppShellServer>
   );
 }
@@ -417,9 +368,9 @@ function EmptyState({
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
       <PageHeader
-        kicker="Cards · plaques · stands"
-        title="My Devices"
-        description="Manage and track your connected ReviewBoost devices."
+        kicker="QR and NFC"
+        title="Turn the counter into a review engine"
+        description="QR stands, NFC cards, previews, scan analytics, and activation status."
         actions={<ConnectDeviceModal establishments={establishments} />}
       />
       {recentActivation && (
@@ -599,6 +550,8 @@ function platformLabel(p: string): string {
 }
 
 function ScanAnalytics({
+  deviceLabel,
+  code,
   scanCount,
   scans,
   reviews,
@@ -606,6 +559,10 @@ function ScanAnalytics({
   currency,
   isPro,
 }: {
+  /** Friendly name of the selected device, e.g. "Wall Plaque". */
+  deviceLabel: string;
+  /** The device's short slug, shown so it's clear which row is charted. */
+  code: string;
   scanCount: number;
   scans: Array<{ scannedAt: Date }>;
   reviews: number;
@@ -637,9 +594,14 @@ function ScanAnalytics({
   const todayScans = monthlyScans[29] ?? 0;
 
   return (
-    <div className="ds-card">
+    <div className="ds-card" style={{ marginBottom: 22 }}>
       <div className="ds-card__head">
-        <h3 className="ds-card__title">Scan analytics</h3>
+        <div>
+          <h3 className="ds-card__title">Scan analytics</h3>
+          <div className="ds-card__sub" style={{ margin: 0 }}>
+            {deviceLabel} · {code}
+          </div>
+        </div>
         <div className="seg">
           <button type="button" className="seg__t">
             7d
@@ -803,6 +765,83 @@ function Mini({ l, v }: { l: string; v: string }) {
 function labelFromDays(daysAgo: number): string {
   const d = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
   return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/* ============================================================
+   Batch generator (admin-gated) — surfaces the EXISTING bulk QR/NFC
+   batch feature that lives at /admin/hardware (1-500 units per run,
+   streamed ZIP of QR/NFC encode assets).
+
+   Rendered ONLY when a verified platform-admin JWT (`admin_session`)
+   is present — tenant users never see it, so nothing is misleading.
+   `hardware_batches` is a global (non-tenant) table; reading it here
+   mirrors the documented direct-prisma pattern in app/admin/hardware.
+   Fails soft (hidden stat) if the table isn't migrated yet.
+============================================================ */
+
+function isMissingRelation(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "42P01" || code === "42703") return true;
+  const metaCode = (err as { meta?: { code?: string } } | null)?.meta?.code;
+  return metaCode === "42P01" || metaCode === "42703";
+}
+
+async function BatchGeneratorSection() {
+  const admin = await getAdminSession();
+  if (!admin) return null;
+
+  let totalUnits = 0;
+  let batchCount = 0;
+  let latest: Date | null = null;
+  try {
+    const agg = await prisma.hardwareBatch.aggregate({
+      _sum: { quantity: true },
+      _count: { _all: true },
+      _max: { createdAt: true },
+    });
+    totalUnits = agg._sum.quantity ?? 0;
+    batchCount = agg._count._all;
+    latest = agg._max.createdAt;
+  } catch (err) {
+    if (!isMissingRelation(err)) throw err;
+    // Table not migrated yet — still show the entry point, just without stats.
+  }
+
+  return (
+    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="dev-card-head">
+        <span className="dev-card-head__icon" aria-hidden>
+          <Icon name="qr" size={15} />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <h3 className="dev-card-head__title">Batch generator</h3>
+          <p className="dev-card-head__sub">
+            Admin hardware · bulk QR/NFC production runs (up to 500 units)
+          </p>
+        </div>
+        <span className="dev-card-head__count">ADMIN ONLY</span>
+      </div>
+      <div className="dev-batch-body">
+        <div className="dev-batch-stat">
+          <div className="lbl-mono">Labels generated</div>
+          <div className="dev-batch-stat__num">{totalUnits.toLocaleString("en-US")}</div>
+          <div className="dev-batch-stat__sub">
+            {batchCount.toLocaleString("en-US")} batch{batchCount === 1 ? "" : "es"}
+            {latest ? ` · last ${latest.toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+          </div>
+        </div>
+        <div className="dev-batch-actions">
+          <Link href="/admin/hardware" className="btn btn--pri">
+            <Icon name="qr" size={12} />
+            Open batch generator
+          </Link>
+          <span className="dim" style={{ fontSize: 11.5 }}>
+            Mint devices in bulk and download the ZIP of QR/NFC encode assets.
+          </span>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ============================================================

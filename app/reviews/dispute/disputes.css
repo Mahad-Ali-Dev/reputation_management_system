@@ -1,0 +1,199 @@
+/* ==========================================================================
+ * Disputes — 3-panel workflow layout (route-local, .dsp- prefix).
+ *
+ * Panels: flagged-reviews list | AI-dispute-draft (evidence package) |
+ * status pipeline (Draft / Submitted / Won / Lost). Tokens + chips come from
+ * app/design-system.css; this file is LAYOUT only.
+ * ======================================================================== */
+
+.dsp-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .dsp-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* --- Panel 1: flagged list ------------------------------------------------ */
+
+.dsp-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dsp-row {
+  display: block;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px);
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.dsp-row:hover {
+  border-color: var(--pri);
+}
+
+.dsp-row.is-selected {
+  border-color: var(--pri);
+  box-shadow: 0 0 0 1px var(--pri) inset;
+  background: var(--m3-primary-container, var(--pri-50, #eef3ff));
+}
+
+.dsp-row__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  min-width: 0;
+}
+
+.dsp-row__name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dsp-section-label {
+  margin: 14px 0 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* --- Panel 2: draft / evidence package ------------------------------------ */
+
+.dsp-argument {
+  white-space: pre-wrap;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px);
+  background: var(--bg, #f8fafc);
+  padding: 12px 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.dsp-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+}
+
+@media (max-width: 480px) {
+  .dsp-meta {
+    grid-template-columns: 1fr;
+  }
+}
+
+.dsp-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* --- Panel 3: status pipeline --------------------------------------------- */
+
+.dsp-cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (max-width: 1280px) and (min-width: 1101px) {
+  .dsp-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .dsp-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.dsp-col {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 150px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 12px);
+  background: var(--bg, #f8fafc);
+}
+
+.dsp-col__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.dsp-col__title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+
+.dsp-col__count {
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  padding: 3px 7px;
+  border-radius: var(--r-pill, 999px);
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+}
+
+.dsp-col__empty {
+  margin: auto 0;
+  text-align: center;
+  font-size: 12px;
+}
+
+.dsp-mini {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-sm, 8px);
+  background: #fff;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.dsp-mini:hover {
+  border-color: var(--pri);
+}
+
+.dsp-mini.is-selected {
+  border-color: var(--pri);
+  box-shadow: 0 0 0 1px var(--pri) inset;
+}
+
+.dsp-mini__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

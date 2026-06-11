@@ -1,0 +1,160 @@
+/* Phone / AI receptionist dashboard — target: design-mockups/phone-after.png.
+   All classes prefixed .ph2- ; tokens + .ds-card/.tbl/.chip come from
+   design-system.css (do not redefine them here). */
+
+/* ── top grid: number provisioning | call log ───────────────────────── */
+.ph2-grid {
+  display: grid;
+  grid-template-columns: minmax(280px, 340px) minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  margin-bottom: 14px;
+}
+
+/* ── number provisioning card ───────────────────────────────────────── */
+.ph2-numpanel {
+  margin: 12px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md);
+  background: var(--surface-2, var(--bg));
+}
+.ph2-numpanel__label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--rl-muted);
+}
+.ph2-num {
+  font-size: clamp(22px, 2.4vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+  margin-top: 4px;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.ph2-numpanel__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+.ph2-extra {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  text-decoration: none;
+  color: inherit;
+}
+.ph2-extra:hover {
+  background: var(--surface-2);
+}
+.ph2-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 4px 12px 14px;
+}
+
+/* ── call log table ─────────────────────────────────────────────────── */
+.ph2-tablewrap {
+  overflow-x: auto;
+}
+.ph2-tablewrap .tbl {
+  min-width: 560px;
+}
+.ph2-caller {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  min-width: 0;
+}
+.ph2-caller__name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--ink);
+}
+.ph2-caller:hover .ph2-caller__name {
+  color: var(--pri);
+}
+.ph2-caller__sub {
+  font-size: 11px;
+  color: var(--rl-muted);
+  margin-top: 1px;
+  font-variant-numeric: tabular-nums;
+}
+.ph2-intent {
+  text-transform: capitalize;
+}
+
+/* ── transcript-to-review story card ────────────────────────────────── */
+.ph2-story {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 20px;
+  align-items: center;
+  padding: 18px;
+}
+.ph2-story__quote {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--ink);
+  margin: 0;
+}
+.ph2-story__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--rl-muted);
+}
+.ph2-story__art {
+  display: grid;
+  place-items: center;
+  padding: 10px;
+  border-radius: var(--r-md);
+  background: var(--pri-50, var(--surface-2));
+}
+.ph2-story__art img {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  display: block;
+}
+.ph2-story--empty {
+  text-align: center;
+  padding: 28px 18px;
+}
+
+/* ── responsive collapse ────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .ph2-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ph2-story {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .ph2-story__art {
+    order: -1;
+    justify-self: center;
+    width: min(100%, 280px);
+  }
+}
+@media (max-width: 640px) {
+  .ph2-numpanel {
+    margin: 10px;
+    padding: 14px;
+  }
+  .ph2-story {
+    padding: 14px;
+  }
+}
