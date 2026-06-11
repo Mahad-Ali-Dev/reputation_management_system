@@ -19,6 +19,32 @@ UI changes where needed, and ReviewBoost feature parity per the `tasks/` specs.
 test suite green. Tests 918 → 995. Heavy autonomous spawning stopped here: the high-value,
 verifiable work is done; remaining items are credential-dependent or low-priority (below).
 
+### Mockup-driven UI build — Waves 1-3 (COMMITTED, 2026-06-11)
+Built the product UI to the target design mockups (public/assets/repulabs/design-mockups/
+*-after.png) with the brand illustration kit, one wave at a time, each gated on
+tsc + next build + vitest + authed screenshot review. All live tenant data, no schema changes.
+- **`12d5de5` Wave 1** — premium marketing home (app/page.tsx, pure RSC), dark-navy
+  split-screen auth (passwordless wiring intact; NEW /login/verify + /login/error pages —
+  auth config pointed at them but they 404'd in prod), designed 404/error/loading states.
+- **`a48bd89` Wave 2** — contacts 3-column CRM workspace (segments rail + profile drawer
+  with cross-module timeline), outreach campaign hub (programs from real automation rules +
+  templates, deliverability card, template studio), onboarding 4-step wizard hub (agentic
+  intake preserved as step 1), AI-KB training hub (readiness ribbon + pill tabs + gaps rail).
+- **`5b55c08` Wave 3a** — disputes 3-panel workflow + status pipeline, devices table + NFC
+  card + admin batch section, phone call-log (CALLER/INTENT/OUTCOME/REVIEW) + transcript-to-
+  review card, settings overview landing (plan card + live usage meters).
+- **`ed5309c` Wave 3b** — surveys smart-routing card + CSAT + responses preview, analytics
+  3-card viz row (local 3-pack + competitor compare with designed zero/connect states),
+  autopilot 3-up loop cards (honest policy captions) + action ledger + ROI tiles. PLUS a
+  latent repo-wide fix: lib/logger.ts pino.transport() crashed EVERY dev-mode client bundle
+  that pulled a logger-importing lib module (10 paths) — masked until the CSP/hydration fix;
+  guarded with typeof window. Prod was unaffected.
+- Audit agent ranked all screens vs mockups; P4 establishments touch-up intentionally
+  SKIPPED — app/establishments/page.tsx carries uncommitted foreign edits (parallel session).
+- Gotchas learned: NEVER run next build while the dev server shares .next (corrupt chunks /
+  phantom prerender failures); a leftover `next start` on :3000 silently rejects dev session
+  cookies (__Secure- prefix) — check x-nextjs-prerender header when authed shots redirect.
+
 ### Design wave — Material You + visual verification (COMMITTED)
 - **`19af43f` Material You design pass** — re-skinned the design system to M3 tonal roles
   (`--m3-primary-container` / `--m3-secondary-container` + on-* pairs, legacy `--pri-50/--pri`
