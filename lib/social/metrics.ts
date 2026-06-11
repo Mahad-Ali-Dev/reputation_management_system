@@ -41,7 +41,7 @@ export type PostForMetrics = {
 /** Postgres 42P01 / 42703 → table/column not migrated. */
 function isMissingRelation(err: unknown): boolean {
   const code = (err as { code?: string } | null)?.code;
-  return code === "42P01" || code === "42703";
+  return code === "42P01" || code === "42703" || code === "P2021" || code === "P2022";
 }
 
 /** Is daily metrics refresh enabled? Same gate as publishing (Meta creds). */

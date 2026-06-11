@@ -3,7 +3,72 @@
 Living list of UX bugs, dead buttons, and rough edges found during the
 post-deploy walk-through. Triaged by impact. Strike-through means fixed.
 
-Last updated: 2026-06-04
+Last updated: 2026-06-11
+
+---
+
+## External assessment fixes — 2026-06-11 ✅
+
+Source: third-party "Repulabs Functionality & Security Assessment" (June 2026,
+13 bugs: 10 high / 2 medium / 1 low — `outputs/sas-report.txt`). All 13 fixed.
+Typecheck clean; `next build` passes; 1054 tests pass (RLS suite still needs a
+live DB); 13/13 verified end-to-end against a local production build
+(`.pdf-build/verify-bugfixes.mjs`, screenshots in `outputs/bugfix-verify/`).
+
+**Root-cause theme:** most "crash with digest" reports were server actions that
+`throw` on expected failures (entitlement, validation, unmigrated tables) while
+submitted from bare `<form action>` — production masks thrown messages and
+takes down the whole page. Those actions now return typed `{ok|error}` results
+rendered inline (`useActionState`).
+
+- ✅ **001 (low)** 2FA/SSO dead toggles (`app/settings/security/page.tsx`) — fake `.tg` switch replaced with explicit "Coming soon" chip (2FA) and "Upgrade to Scale" link (SSO).
+- ✅ **002 (high)** Google connect → raw `{"error":"establishmentId_required"}` (`app/api/connections/google/authorize/route.ts`) — param now optional for browser entry points (onboarding setup steps, `/connections` hub): single-location orgs auto-resolve their establishment; 0/2+ locations redirect to `/establishments?connect=google` with a picker banner. Misconfigured client id also redirects instead of raw JSON.
+- ✅ **003 (high)** Autopilot toggle dead (`lib/autopilot/config-actions.ts`) — `toggleAutopilot`/`saveAutopilotConfig` return typed results (entitlement/role/migration mapped to clear messages — production masked the old thrown `AutopilotNotEntitledError`, so the UI showed nothing).
+- ✅ **004 (high)** 5★ auto-reply toggle crashed page, digest 1899587870 (`lib/auto-reply/toggle.ts`) — TWO bugs: (a) throwing action + bare form → whole-page crash; now result-returning + inline error via `useActionState`. (b) the real thrower: `AUTO_REPLY_RANDOMIZED_SENTINEL = -1` violates `auto_reply_rules_delay_chk (0..1440)` → **new migration `20260611000000_auto_reply_delay_sentinel` (NOT yet applied — run `prisma migrate deploy`)**.
+- ✅ **005 (med)** Establishment Settings tab inert (`app/establishments/[id]/page.tsx`) — was a bare `<button>`; now links to the new `app/establishments/[id]/settings/page.tsx` (edit name/category/timezone/address via `updateEstablishment` + danger zone).
+- ✅ **006 (high)** Test AI chat always "Something went wrong" (`app/api/ai/kb-test/route.ts`, `lib/ai/chatbot.ts`) — root cause: retrieval hard-failed on missing `VOYAGE_API_KEY`/unmigrated embeddings, killing every turn. Retrieval is now fail-soft (answers via the honest fallback with zero chunks); route pre-flights `ANTHROPIC_API_KEY` (clear 503) and 401s cleanly on expired sessions. Verified live: with no Voyage key the chat answers.
+- ✅ **007 (high)** Library upload "Couldn't save to library" (`lib/social/library.ts`) — `isMissingRelation` only matched raw PG codes (42P01/42703) but Prisma surfaces **P2021/P2022**, so the designed "storage not set up" fail-soft never fired (prod DB lacks the master migration). Fixed matcher (+ same fix in `lib/social/{publish,metrics,dispatch,connections,best-time}.ts`, `lib/auto-reply/managed-rule.ts`); audit write moved out of the asset transaction. **Prod still needs the master migration for uploads to land.**
+- ✅ **008 (high)** Add-Contact inputs lose focus per keystroke (`app/contacts/_components/modal.tsx`) — Modal's mount effect depended on `[onClose]` (new closure every parent render) → re-ran `panelRef.focus()` on every keystroke. Effect now runs once; `onClose` tracked via ref. Also fixes the Bulk-Request dialog.
+- ✅ **009 (high)** KB PDF upload crashed page, digest 1149675588 (`lib/ai/actions.ts`) — `uploadAiDocument`/`ingestAiDocumentFromUrl` return results; new client island `app/ai/_components/kb-add-forms.tsx` renders them + pre-checks file size; `serverActions.bodySizeLimit` raised 2mb→10mb so ≤8MB PDFs reach the action's friendly error instead of a framework 413 crash.
+- ✅ **010 (high)** Server-Components error on /outreach send (`app/outreach/_components/send-tab.tsx`) — in-transaction `.catch(()=>[])` on the unmigrated `outreach_templates` read couldn't contain the failure (a failed query aborts the whole PG transaction, 25P02) so sibling queries died too. Templates read isolated in its own tenant transaction, fail-soft to `[]`. `createReviewRequest`/`resendReviewRequest` also converted to result contracts (TCPA/unsubscribed messages were masked in prod); history-tab resend now uses a client `ResendButton`.
+- ✅ **011 (high)** Bulk CSV submit crashed page, digest 3852383719 (`lib/outreach/bulk-actions.ts`) — result contract + new `app/outreach/bulk/bulk-send-form.tsx` island; a phone number pasted under the Email channel now explains the mismatch inline.
+- ✅ **012 (high)** /analytics client-side crash — current (rebuilt) page verified clean: 200, full render, zero uncaught client exceptions (crash was in the pre-redesign build). Hardened the one unvalidated DB-JSON cast (`pickFactors` in `app/analytics/page.tsx`) that could crash the score panel on malformed snapshots.
+- ✅ **013 (med)** Monthly/Annual toggle stuck (`app/subscription/page.tsx`) — was static server markup with `is-active` hardcoded. New `BillingPeriodSection` client island + dual-variant Pro pricing ($89/mo annual ↔ $111/mo monthly).
+
+**Deploy checklist for these fixes**
+1. `prisma migrate deploy` against prod (founder-run): `20260611000000_auto_reply_delay_sentinel` + the pending master-delta migration (content library et al.).
+2. Set `VOYAGE_API_KEY` (KB retrieval quality) — chat degrades gracefully without it but can't cite documents.
+3. Observed (not in report): marketing home prices Pro at **$59.99/mo** vs `/subscription`'s **$89/mo** — reconcile.
+
+---
+
+## Bugs / vulns / UI pass — 2026-06-10 ✅
+
+Triggered by a 3-domain audit (security / runtime bugs / UI consistency) over the
+post-2026-06-04 code (new social OAuth, auth/billing/email/QR branch). All fixes
+typecheck-clean; 1051 tests pass (+9 new SSRF tests); key surfaces runtime-verified.
+
+**Critical / high bugs**
+- ✅ **Google sign-up broken on `/signup`** (`app/signup/page.tsx`) — still used the broken `next-auth/react` client `signIn("google")` (bakes wrong base URL into the bundle) that `/login` was already converted away from. Now routes through the `googleSignIn` server action like login. Blocked the primary OAuth sign-up path.
+- ✅ **Admin Revenue always $0** (`app/admin/mrr/page.tsx`) — `PLAN_MRR_USD` keyed by `pro_monthly`/`pro_annual`, but `Subscription.plan` stores the Stripe **price id** (`lib/billing/sync.ts`). Now keyed off `STRIPE_PRO_PRICE_ID` (single-tier Pro) with a `price_*` fallback + friendly `planLabel`.
+- ✅ **All local-dev hydration broken by CSP** (`middleware.ts`) — the middleware CSP omitted `'unsafe-eval'`; browsers enforce the intersection of it and the `next.config.mjs` CSP, so eval was blocked and the Next dev runtime couldn't hydrate ANY client component (command palette, drawers, etc. all dead in dev). Now allows `'unsafe-eval'` in **development only**; production CSP unchanged (still strict).
+- ✅ **Dashboard "Composite rating −100%"** (`app/dashboard/page.tsx`) — the composite-rating KPI chip showed `reviews7dDeltaPct` (a review-**volume** delta), reading as if the rating cratered. Moved the volume delta to the "Reviews · 7d" card (labeled "vs prior"); composite rating now shows its sample size ("N reviews").
+
+**Vulnerability**
+- ✅ **Blind SSRF via outbound webhook URL** (`lib/notifications/webhook.ts`, set in `lib/account/actions.ts` `saveWebhook`) — the tenant-set webhook URL was fetched with no host validation (cloud metadata / loopback / internal reachable) and followed redirects. Extracted the proven crawler guard into shared **`lib/net/ssrf.ts`** (scheme + credentials + private-IP-after-DNS + DNS-rebind pinning); dispatch now vets the host, refuses redirects (`redirect:"manual"`), and `saveWebhook` rejects internal targets up front. Tests: `tests/net/ssrf.test.ts` (9).
+  - Residual (LOW, deferred): the webhook signing secret is still stored plaintext in `settings.api.webhookSecret` (needs a migration/format-detection to envelope-encrypt; DB-read-only blast radius).
+
+**UI polish / completeness**
+- ✅ **Brand 404 / 500 pages** — added `app/not-found.tsx`, `app/error.tsx`, `app/global-error.tsx` (shared `components/error-screen.tsx`) using the existing `not-found.svg`/`error.svg` illustrations + Sentry capture. Replaces Next's raw defaults.
+- ✅ **Real ⌘K command palette** (`components/command-palette.tsx`) — replaces the two formerly-decorative search affordances (topbar input + sidebar "Search… ⌘K") with a working keyboard-driven jump menu (20 destinations + actions, keyword synonyms, a11y listbox). Wired into `app-shell.tsx` + `sidebar-nav.tsx`.
+- ✅ **Dead topbar "Help" button** (`components/topbar.tsx`) → links to `/docs`.
+- ✅ **`/establishments` fake-disabled CTA** — removed the misleading `aria-disabled="true"` on a still-navigable link (kept the visual de-emphasis).
+- ✅ **`/subscription` plan enum** (`app/subscription/page.tsx`) — reconciled the never-written `standard|pro|scale` cast to the real `org.plan` values (`pro|trial|free|past_due|suspended`); trial users now correctly read as on the Pro tier; "Manage billing"/cancel/auto-renew gated on an actual paid plan.
+
+**Still open / recommended next (from the UI audit)**
+- Time-range segmented filters (`.seg`) on `/dashboard`, `/hardware`, `/analytics` are still decorative — needs a `<RangeFilter>` + `?range=` data plumbing (4–6h).
+- Three parallel component systems (shadcn `components/ui/*` vs `.btn`/`.ds-card` vs the orphaned `components/repulabs-ui/*`); consolidating onto one (lead with `/phone/*`) is the biggest remaining consistency lever.
+- `loading.tsx` skeletons missing on ~12 high-traffic routes (primitives exist in `components/skeleton.tsx`).
 
 ---
 

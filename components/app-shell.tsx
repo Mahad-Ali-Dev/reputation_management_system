@@ -3,6 +3,7 @@
 import { Icon } from "@/components/shell/icon";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { CommandPalette, openCommandPalette } from "./command-palette";
 import { SidebarNav } from "./sidebar-nav";
 
 /**
@@ -99,10 +100,27 @@ export function AppShell({
             </button>
           )}
 
-          <label className="tb__search">
+          <button
+            type="button"
+            className="tb__search"
+            onClick={openCommandPalette}
+            aria-label="Search and navigate (Command or Control + K)"
+            style={{ cursor: "pointer", font: "inherit", textAlign: "left", width: "100%" }}
+          >
             <Icon name="search" size={14} />
-            <input placeholder="Search reviews, customers, topics…" aria-label="Search" />
-          </label>
+            <span style={{ flex: 1 }}>Search reviews, customers, topics…</span>
+            <kbd
+              style={{
+                fontSize: 10.5,
+                border: "1px solid var(--line)",
+                borderRadius: 6,
+                padding: "1px 6px",
+                color: "var(--rl-muted)",
+              }}
+            >
+              ⌘K
+            </kbd>
+          </button>
 
           {dateLabel && (
             <button type="button" className="tb__date">
@@ -117,6 +135,8 @@ export function AppShell({
 
         <div className="scroll">{children}</div>
       </main>
+
+      <CommandPalette />
     </div>
   );
 }

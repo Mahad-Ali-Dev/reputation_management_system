@@ -50,10 +50,18 @@ export type LibraryAsset = {
   createdAt: Date;
 };
 
-/** Postgres 42P01 (undefined_table) / 42703 (undefined_column) → not migrated. */
+/**
+ * Relation/column not migrated yet. Prisma model queries surface this as
+ * P2021/P2022 — NOT the raw Postgres codes — so matching only 42P01/42703
+ * meant the typed `library_not_migrated` path never fired and uploads failed
+ * with the generic "Couldn't save to library" (bug 007 in the June 2026
+ * assessment). Match both layers.
+ */
 function isMissingRelation(err: unknown): boolean {
   const code = (err as { code?: string } | null)?.code;
-  return code === "42P01" || code === "42703";
+  if (code === "42P01" || code === "42703" || code === "P2021" || code === "P2022") return true;
+  const meta = (err as { meta?: { code?: string } } | null)?.meta;
+  return meta?.code === "42P01" || meta?.code === "42703";
 }
 
 async function requireOrg() {
@@ -187,19 +195,33 @@ export async function createLibraryUpload(
         },
         select: { id: true },
       });
-      await tx.auditLog.create({
-        data: {
-          organizationId: orgId,
-          actorType: "user",
-          actorId: userId,
-          action: "content_library.asset_created",
-          resourceType: "content_library_asset",
-          resourceId: created.id,
-          afterData: { kind: d.kind, source: d.source, folder: d.folder ?? null },
-        },
-      });
       return created.id;
     });
+
+    // Best-effort audit OUTSIDE the asset transaction — an audit hiccup must
+    // not roll back (and so fail) the upload itself.
+    try {
+      await withTenant(orgId, (tx) =>
+        tx.auditLog.create({
+          data: {
+            organizationId: orgId,
+            actorType: "user",
+            actorId: userId,
+            action: "content_library.asset_created",
+            resourceType: "content_library_asset",
+            resourceId: id,
+            afterData: { kind: d.kind, source: d.source, folder: d.folder ?? null },
+          },
+        }),
+      );
+    } catch (err) {
+      logger.warn({
+        orgId,
+        event: "social.library.create.audit_failed",
+        error: err instanceof Error ? err.message : String(err),
+      });
+    }
+
     revalidatePath("/social/posts");
     return { id };
   } catch (err) {

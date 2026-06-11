@@ -1,5 +1,6 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { CancelSubscriptionButton } from "@/components/cancel-subscription";
+import { BillingPeriodSection } from "./_components/billing-period";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
@@ -80,8 +81,15 @@ export default async function SubscriptionPage({
   ]);
   if (!org) return null;
 
-  const plan = (org.plan as "standard" | "pro" | "scale") ?? "standard";
-  const isPro = plan === "pro" || plan === "scale";
+  // org.plan is the canonical billing state (pro | trial | free | past_due |
+  // suspended) — NOT the pricing-tier names shown on this page. Map it onto the
+  // two real tiers. An active trial includes full Pro features, but only a paid
+  // plan has a Stripe subscription to manage/cancel/auto-renew.
+  const realPlan = org.plan ?? "free";
+  const hasPaidPlan = realPlan === "pro";
+  const onProTier = realPlan === "pro" || realPlan === "trial";
+  const tier: "standard" | "pro" = onProTier ? "pro" : "standard";
+  const isPro = onProTier;
 
   const billingEmail = org.ownerEmail ?? userEmail ?? "—";
   const renewsAt = org.subscription?.currentPeriodEnd;
@@ -95,12 +103,16 @@ export default async function SubscriptionPage({
     <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Subscription"]}>
       <PageHeader
         kicker={
-          plan === "pro" ? "Pro · billed monthly · $89/mo per location" : `${prettyPlan(plan)} plan`
+          realPlan === "pro"
+            ? "Pro · billed monthly · $89/mo per location"
+            : realPlan === "trial"
+              ? "Free trial · Pro features active"
+              : `${prettyPlan(realPlan)} plan`
         }
         title="Plans & billing"
         description="Start free, level up when reviews start rolling. No per-seat surprises."
         actions={
-          isPro ? (
+          hasPaidPlan ? (
             <form action={portalAction}>
               <button type="submit" className="btn btn--pri">
                 <Icon name="card" size={12} />
@@ -136,55 +148,44 @@ export default async function SubscriptionPage({
         </div>
       )}
 
-      <div className="row" style={{ justifyContent: "center", marginBottom: 26 }}>
-        <div className="seg">
-          <button type="button" className="seg__t">
-            Monthly
-          </button>
-          <button type="button" className="seg__t is-active">
-            Annual{" "}
-            <span className="mono" style={{ color: "var(--ok)", marginLeft: 6 }}>
-              −20%
-            </span>
-          </button>
+      <BillingPeriodSection initial="annual">
+        <div className="grid-3" style={{ gap: 16 }}>
+          <PlanCard
+            name="Standard"
+            price="Free"
+            period="forever · 1 location"
+            // If the user is on Pro, the Standard column shows a "Cancel
+            // subscription" CTA that opens a reason form (server action records
+            // a cancel request for the billing team to process).
+            ctaLabel={tier === "standard" ? "Current plan" : "Downgrade"}
+            ctaDisabled={tier === "standard"}
+            customCta={hasPaidPlan ? <CancelSubscriptionButton /> : undefined}
+            features={PLAN_FEATURES.standard}
+          />
+          <PlanCard
+            name="Pro"
+            badge="MOST POPULAR"
+            price="$89"
+            priceSuffix="/mo"
+            period="per location · billed annually"
+            monthly={{ price: "$111", priceSuffix: "/mo", period: "per location · billed monthly" }}
+            ctaLabel={hasPaidPlan ? "Current plan" : "Continue on Pro"}
+            ctaActive={!hasPaidPlan}
+            ctaDisabled={hasPaidPlan}
+            accent
+            isUpgrade={!hasPaidPlan}
+            features={PLAN_FEATURES.pro}
+          />
+          <PlanCard
+            name="Scale"
+            price="Custom"
+            period="10+ locations · multi-brand"
+            ctaLabel="Talk to sales"
+            ctaHref="mailto:sales@repulabs.com"
+            features={PLAN_FEATURES.scale}
+          />
         </div>
-      </div>
-
-      <div className="grid-3" style={{ gap: 16 }}>
-        <PlanCard
-          name="Standard"
-          price="Free"
-          period="forever · 1 location"
-          // If the user is on Pro, the Standard column shows a "Cancel
-          // subscription" CTA that opens a reason form (server action records
-          // a cancel request for the billing team to process).
-          ctaLabel={plan === "standard" ? "Current plan" : "Downgrade"}
-          ctaDisabled={plan === "standard"}
-          customCta={isPro ? <CancelSubscriptionButton /> : undefined}
-          features={PLAN_FEATURES.standard}
-        />
-        <PlanCard
-          name="Pro"
-          badge="MOST POPULAR"
-          price="$89"
-          priceSuffix="/mo"
-          period="per location · billed annually"
-          ctaLabel={plan === "pro" ? "Current plan" : "Continue on Pro"}
-          ctaActive={plan !== "pro"}
-          ctaDisabled={plan === "pro"}
-          accent
-          isUpgrade={plan !== "pro"}
-          features={PLAN_FEATURES.pro}
-        />
-        <PlanCard
-          name="Scale"
-          price="Custom"
-          period="10+ locations · multi-brand"
-          ctaLabel="Talk to sales"
-          ctaHref="mailto:sales@repulabs.com"
-          features={PLAN_FEATURES.scale}
-        />
-      </div>
+      </BillingPeriodSection>
 
       <div className="grid-2" style={{ gap: 16, marginTop: 26 }}>
         <div className="ds-card">
@@ -225,7 +226,7 @@ export default async function SubscriptionPage({
         <div className="ds-card">
           <div className="ds-card__head">
             <h3 className="ds-card__title">Billing</h3>
-            {isPro && (
+            {hasPaidPlan && (
               <span className="chip chip--ok">
                 <Icon name="checkCircle" size={9} stroke={2.4} />
                 Auto-renew
@@ -234,7 +235,7 @@ export default async function SubscriptionPage({
           </div>
           <div className="ds-card__body">
             <BillingRow l="Next charge" v={nextCharge} />
-            <BillingRow l="Plan" v={prettyPlan(plan)} />
+            <BillingRow l="Plan" v={prettyPlan(realPlan)} />
             <BillingRow l="Billing email" v={billingEmail} />
             <BillingRow l="Country" v={org.country ?? "—"} />
             {org.subscription?.stripeSubscriptionId && (
@@ -261,6 +262,7 @@ function PlanCard({
   price,
   priceSuffix,
   period,
+  monthly,
   features,
   ctaLabel,
   ctaActive,
@@ -275,6 +277,9 @@ function PlanCard({
   price: string;
   priceSuffix?: string;
   period: string;
+  /** Optional monthly-billing price variant — shown when the Monthly/Annual
+   *  toggle (BillingPeriodSection) is set to monthly. */
+  monthly?: { price: string; priceSuffix?: string; period: string };
   features: Array<[string, boolean]>;
   ctaLabel: string;
   ctaActive?: boolean;
@@ -359,17 +364,36 @@ function PlanCard({
             </span>
           )}
         </div>
-        <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-          <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: "-0.025em" }}>{price}</span>
-          {priceSuffix && (
-            <span style={{ fontSize: 15, color: "var(--rl-muted)", fontWeight: 500 }}>
-              {priceSuffix}
-            </span>
-          )}
+        <div data-when={monthly ? "annual" : undefined}>
+          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: "-0.025em" }}>{price}</span>
+            {priceSuffix && (
+              <span style={{ fontSize: 15, color: "var(--rl-muted)", fontWeight: 500 }}>
+                {priceSuffix}
+              </span>
+            )}
+          </div>
+          <div className="dim" style={{ fontSize: 11.5 }}>
+            {period}
+          </div>
         </div>
-        <div className="dim" style={{ fontSize: 11.5 }}>
-          {period}
-        </div>
+        {monthly && (
+          <div data-when="monthly">
+            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
+              <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: "-0.025em" }}>
+                {monthly.price}
+              </span>
+              {monthly.priceSuffix && (
+                <span style={{ fontSize: 15, color: "var(--rl-muted)", fontWeight: 500 }}>
+                  {monthly.priceSuffix}
+                </span>
+              )}
+            </div>
+            <div className="dim" style={{ fontSize: 11.5 }}>
+              {monthly.period}
+            </div>
+          </div>
+        )}
         {cta}
         <div className="divider" />
         <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
@@ -451,7 +475,16 @@ function BillingRow({ l, v, mono }: { l: string; v: string; mono?: boolean }) {
 }
 
 function prettyPlan(plan: string): string {
-  return plan.charAt(0).toUpperCase() + plan.slice(1);
+  const labels: Record<string, string> = {
+    pro: "Pro",
+    trial: "Free trial",
+    free: "Free",
+    past_due: "Past due",
+    suspended: "Suspended",
+    standard: "Standard",
+    scale: "Scale",
+  };
+  return labels[plan] ?? plan.charAt(0).toUpperCase() + plan.slice(1);
 }
 
 async function upgradeAction() {

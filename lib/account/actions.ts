@@ -6,6 +6,7 @@ import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { validatePublicUrlSync } from "@/lib/net/ssrf";
 import { redirect } from "next/navigation";
 import { evaluateInvite } from "./invite-validation";
 import type { Prisma } from "@prisma/client";
@@ -542,6 +543,20 @@ export async function saveWebhook(form: FormData): Promise<void> {
     throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
   }
   const webhookUrl = parsed.data.webhookUrl || "";
+
+  // Reject obviously-internal targets up front (scheme, credentials, literal
+  // private IPs, localhost). The DNS-resolving guard in lib/notifications/webhook.ts
+  // is the load-bearing check at delivery time; this just gives fast feedback.
+  if (webhookUrl) {
+    const ssrf = validatePublicUrlSync(webhookUrl);
+    if (ssrf) {
+      throw new Error(
+        ssrf === "non_http_scheme"
+          ? "Webhook URL must start with https://"
+          : "Webhook URL must be a public https endpoint (no localhost or private addresses).",
+      );
+    }
+  }
 
   await withTenant(orgId, async (tx) => {
     const current = await tx.organization.findUnique({

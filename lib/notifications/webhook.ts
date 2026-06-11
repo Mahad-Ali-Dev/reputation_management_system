@@ -1,6 +1,7 @@
 import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { logger } from "@/lib/logger";
+import { assertDnsStable, validatePublicUrl } from "@/lib/net/ssrf";
 
 /**
  * Outbound webhooks.
@@ -49,6 +50,26 @@ export async function dispatchWebhook(
     const secret = typeof api?.webhookSecret === "string" ? api.webhookSecret : null;
     if (!url) return; // not configured → no-op
 
+    // SSRF guard: the webhook URL is tenant-controlled. Resolve + vet the host
+    // before connecting so it can never point at cloud metadata, loopback, or an
+    // internal address. (See lib/net/ssrf.ts.)
+    const vetted = await validatePublicUrl(url);
+    if ("error" in vetted) {
+      logger.warn(
+        { event: "webhook.dispatch.blocked", orgId, hook: event, reason: vetted.error },
+        "webhook endpoint blocked by SSRF guard",
+      );
+      return;
+    }
+    const rebind = await assertDnsStable(vetted.url, vetted.pinnedIps);
+    if (rebind) {
+      logger.warn(
+        { event: "webhook.dispatch.blocked", orgId, hook: event, reason: `rebind:${rebind}` },
+        "webhook endpoint blocked by DNS-rebind guard",
+      );
+      return;
+    }
+
     const body = JSON.stringify({
       event,
       created: new Date().toISOString(),
@@ -60,8 +81,11 @@ export async function dispatchWebhook(
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
     try {
-      const res = await fetch(url, {
+      const res = await fetch(vetted.url.toString(), {
         method: "POST",
+        // Never auto-follow: a 30x to an internal host would bypass the vetting
+        // above. Treat a redirect as a non-2xx delivery the receiver must fix.
+        redirect: "manual",
         headers: {
           "content-type": "application/json",
           "user-agent": "Repulabs-Webhooks/1",

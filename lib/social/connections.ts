@@ -71,7 +71,7 @@ export function platformToProvider(platform: SocialPlatform): string {
 /** Postgres 42P01 (undefined_table) / 42703 (undefined_column) → not migrated. */
 function isMissingRelation(err: unknown): boolean {
   const code = (err as { code?: string } | null)?.code;
-  return code === "42P01" || code === "42703";
+  return code === "42P01" || code === "42703" || code === "P2021" || code === "P2022";
 }
 
 /**

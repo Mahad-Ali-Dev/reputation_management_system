@@ -25,9 +25,17 @@ export function Modal({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
+  // Track the latest onClose in a ref so the mount effect below never re-runs
+  // because of it. Parents pass a fresh closure every render, and with
+  // `[onClose]` as a dep the effect re-ran — and re-stole focus to the panel —
+  // on EVERY keystroke inside the dialog (bug 008 in the June 2026 assessment:
+  // Add Contact inputs lost focus after each character).
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") onCloseRef.current();
     };
     document.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
@@ -37,7 +45,7 @@ export function Modal({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
-  }, [onClose]);
+  }, []);
 
   return (
     <div

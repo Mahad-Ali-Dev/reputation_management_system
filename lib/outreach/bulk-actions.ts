@@ -1,7 +1,7 @@
 "use server";
 
 import { auth } from "@/lib/auth/config";
-import { assertEntitled } from "@/lib/billing/entitlements";
+import { assertEntitled, PlanInactiveError } from "@/lib/billing/entitlements";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { withTenant } from "@/lib/db/with-tenant";
 import { generateSlug } from "@/lib/hardware/codes";
@@ -29,12 +29,23 @@ async function requireOrg() {
 }
 
 /**
+ * Result contract for the bulk commit. Every expected failure (bad CSV, wrong
+ * channel for the pasted values, plan gating, all-suppressed) returns an
+ * inline-renderable error — the old throwing version crashed the whole
+ * /outreach/bulk page with a digest (bug 011 in the June 2026 assessment).
+ */
+export type BulkCommitResult =
+  | { ok: true; inserted: number; skipped: number }
+  | { ok: false; error: string };
+
+/**
  * Commit a bulk send: parse CSV, suppress unsubs and recent contacts, insert
  * review_requests in batch, audit, and (for SMS) record consent.
  *
  * Delivery itself relies on the existing per-request scheduled-send cron worker.
  */
-export async function commitBulkReviewRequests(form: FormData): Promise<void> {
+export async function commitBulkReviewRequests(form: FormData): Promise<BulkCommitResult> {
+  try {
   const { orgId, userId } = await requireOrg();
   // Bulk outreach incurs SMS/email cost — gate on an active plan.
   await assertEntitled(orgId);
@@ -47,7 +58,10 @@ export async function commitBulkReviewRequests(form: FormData): Promise<void> {
     consentAttested: form.get("consentAttested") === "on",
   });
   if (!parsed.success) {
-    throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+    return {
+      ok: false,
+      error: `Check the form: ${parsed.error.issues.map((i) => `${i.path.join(".")} — ${i.message}`).join("; ")}`,
+    };
   }
 
   const { establishmentId, channel, csvText, scheduleHours, consentAttested } = parsed.data;
@@ -58,22 +72,33 @@ export async function commitBulkReviewRequests(form: FormData): Promise<void> {
       select: { id: true },
     }),
   );
-  if (!estab) throw new Error("Establishment not found");
+  if (!estab) return { ok: false, error: "Establishment not found." };
 
   const { rows } = parseRecipientsCsv({ csvText, channel });
-  if (rows.length === 0) throw new Error("No valid recipients found in CSV");
+  if (rows.length === 0) {
+    return {
+      ok: false,
+      error:
+        channel === "email"
+          ? "No valid email recipients found. Each line needs an email address (you may have pasted phone numbers — switch the channel to SMS)."
+          : "No valid SMS recipients found. Each line needs an E.164 phone like +15551234567 (you may have pasted emails — switch the channel to Email).",
+    };
+  }
 
   if (channel === "sms" && !consentAttested) {
-    throw new Error(
-      "TCPA consent required. You must attest that every recipient in this list has previously given written consent to receive SMS marketing.",
-    );
+    return {
+      ok: false,
+      error:
+        "TCPA consent required. You must attest that every recipient in this list has previously given written consent to receive SMS marketing.",
+    };
   }
 
   const preview = await previewBulkRecipients({ orgId, channel, rows });
   if (preview.valid.length === 0) {
-    throw new Error(
-      `All ${rows.length} recipients are either unsubscribed or were contacted within the last 30 days.`,
-    );
+    return {
+      ok: false,
+      error: `All ${rows.length} recipients are either unsubscribed or were contacted within the last 30 days.`,
+    };
   }
 
   const scheduledFor = new Date(Date.now() + scheduleHours * 60 * 60 * 1000);
@@ -162,4 +187,30 @@ export async function commitBulkReviewRequests(form: FormData): Promise<void> {
 
   revalidatePath("/outreach");
   revalidatePath("/outreach/bulk");
+  return {
+    ok: true,
+    inserted: preview.valid.length,
+    skipped: preview.unsubscribed.length + preview.alreadyContacted.length,
+  };
+  } catch (err) {
+    // requireOrg's /login redirect is Next control flow — let it propagate.
+    const digest = (err as { digest?: unknown } | null)?.digest;
+    if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+
+    if (err instanceof PlanInactiveError) {
+      return { ok: false, error: "Bulk review requests are a paid feature — upgrade to send them." };
+    }
+    const code = (err as { code?: string } | null)?.code;
+    if (code === "P2021" || code === "P2022" || code === "42P01" || code === "42703") {
+      return {
+        ok: false,
+        error: "Outreach isn't provisioned yet — ask your admin to apply the latest database migration.",
+      };
+    }
+    logger.error({
+      event: "review_request.bulk_commit_failed",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { ok: false, error: "Could not queue the bulk send. Try again." };
+  }
 }

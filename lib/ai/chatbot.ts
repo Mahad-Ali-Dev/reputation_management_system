@@ -97,14 +97,32 @@ export async function chatbotTurn(args: {
   //    Reranker recovers from embedding mismatches (e.g. "what time do you close"
   //    pulls a generic "open every day" by vector, but Haiku correctly picks
   //    a "Mon-Fri 9am-9pm" chunk).
-  const candidateRows = await withTenant(args.orgId, async () =>
-    retrieveChunks({
-      organizationId: args.orgId,
-      establishmentId: args.establishmentId,
-      query: userMessage,
-      topK: 20,
-    }),
-  );
+  //
+  // FAIL-SOFT: retrieval needs Voyage embeddings + the embeddings tables. If
+  // either is unavailable (VOYAGE_API_KEY unset, table unmigrated, transient
+  // API error) we proceed with ZERO chunks — the turn still answers via the
+  // honest "I'm not sure" fallback instead of erroring every message (bug 006
+  // in the June 2026 assessment).
+  let candidateRows: Awaited<ReturnType<typeof retrieveChunks>> = [];
+  try {
+    candidateRows = await withTenant(args.orgId, async () =>
+      retrieveChunks({
+        organizationId: args.orgId,
+        establishmentId: args.establishmentId,
+        query: userMessage,
+        topK: 20,
+      }),
+    );
+  } catch (err) {
+    logger.warn(
+      {
+        event: "chatbot.retrieval_failed",
+        orgId: args.orgId,
+        error: err instanceof Error ? err.message : String(err),
+      },
+      "chunk retrieval failed; answering without knowledge-base context",
+    );
+  }
 
   // Skip reranker if we have very few candidates already (saves a Haiku call)
   let chunks: typeof candidateRows;

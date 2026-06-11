@@ -50,13 +50,15 @@ export default async function SecuritySettingsPage() {
         <div className="divider" />
         <ToggleRowDisplay
           title="Two-factor authentication"
-          sub="Coming in Phase 0 — WebAuthn passkeys + TOTP fallback"
+          sub="WebAuthn passkeys + TOTP fallback. Not released yet — we'll email you when it ships."
           icon="lock"
+          status="coming_soon"
         />
         <ToggleRowDisplay
           title="Single sign-on (SSO)"
-          sub="Google Workspace + Microsoft 365 — available on Scale"
+          sub="Google Workspace + Microsoft 365 — included in the Scale plan."
           icon="users"
+          status="plan_locked"
         />
         <div className="divider" />
         <div className="lbl-mono">Active sessions</div>
@@ -68,16 +70,22 @@ export default async function SecuritySettingsPage() {
   );
 }
 
+/**
+ * Upcoming/plan-gated feature row. Deliberately NOT a toggle: 2FA isn't
+ * released yet and SSO needs the Scale plan, so a switch would be a dead
+ * control (bug 001 in the June 2026 assessment). Shows an explicit status
+ * chip — "Coming soon" or an Upgrade link — instead.
+ */
 function ToggleRowDisplay({
   title,
   sub,
   icon,
-  on,
+  status,
 }: {
   title: string;
   sub: string;
   icon: "lock" | "users" | "clock";
-  on?: boolean;
+  status: "coming_soon" | "plan_locked";
 }) {
   return (
     <div
@@ -95,8 +103,8 @@ function ToggleRowDisplay({
           width: 32,
           height: 32,
           borderRadius: 8,
-          background: on ? "var(--pri-50)" : "var(--surface-3)",
-          color: on ? "var(--pri)" : "var(--rl-muted)",
+          background: "var(--surface-3)",
+          color: "var(--rl-muted)",
           display: "grid",
           placeItems: "center",
           flexShrink: 0,
@@ -110,7 +118,22 @@ function ToggleRowDisplay({
           {sub}
         </div>
       </div>
-      <span className={`tg${on ? " is-on" : ""}`} aria-hidden="true" />
+      {status === "coming_soon" ? (
+        <span className="chip" title="This feature hasn't shipped yet">
+          <Icon name="clock" size={9} stroke={2.4} />
+          Coming soon
+        </span>
+      ) : (
+        <a
+          href="/subscription?feature=sso"
+          className="chip chip--pri"
+          style={{ textDecoration: "none" }}
+          title="SSO is included in the Scale plan"
+        >
+          <Icon name="lock" size={9} stroke={2.4} />
+          Upgrade to Scale
+        </a>
+      )}
     </div>
   );
 }

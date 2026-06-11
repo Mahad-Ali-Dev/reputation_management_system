@@ -125,15 +125,24 @@ export default async function DashboardPage({
     {
       label: "Composite rating",
       value: avgRating > 0 ? avgRating.toFixed(2) : "—",
+      // Sample size, not a trend. The 7d delta is a review-VOLUME metric and
+      // lives on the "Reviews · 7d" card below — showing it here read as if the
+      // rating itself had dropped (e.g. "-100%" next to a 4.17).
       chip:
-        d.reviews7dDeltaPct !== null
-          ? { text: `${d.reviews7dDeltaPct >= 0 ? "+" : ""}${d.reviews7dDeltaPct}%`, tone: d.reviews7dDeltaPct >= 0 ? "ok" : "warn" }
+        total > 0
+          ? { text: `${total.toLocaleString()} review${total === 1 ? "" : "s"}`, tone: "muted" }
           : undefined,
     },
     {
       label: "Reviews · 7d",
       value: String(d.reviews7d),
-      chip: { text: `${total.toLocaleString()} total`, tone: "muted" },
+      chip:
+        d.reviews7dDeltaPct !== null
+          ? {
+              text: `${d.reviews7dDeltaPct >= 0 ? "+" : ""}${d.reviews7dDeltaPct}% vs prior`,
+              tone: d.reviews7dDeltaPct >= 0 ? "ok" : "warn",
+            }
+          : { text: `${total.toLocaleString()} total`, tone: "muted" },
     },
     {
       label: "Requests sent · 30d",

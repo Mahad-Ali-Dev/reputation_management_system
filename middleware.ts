@@ -36,10 +36,18 @@ function applySecurityHeaders(res: NextResponse, pathname: string): NextResponse
   );
 
   // Content-Security-Policy. We allow Stripe + Google avatars and explicitly
-  // omit `unsafe-eval`. Next.js 15 production builds don't require inline script.
+  // omit `unsafe-eval` IN PRODUCTION (Next 15 prod builds don't need it). The
+  // Next.js dev runtime (webpack HMR / React Refresh) DOES eval, and because the
+  // browser enforces the intersection of this header and the one in
+  // next.config.mjs, omitting it here in dev blocks eval and breaks client
+  // hydration entirely. So allow it in development only — prod stays strict.
+  const scriptSrc =
+    process.env.NODE_ENV === "production"
+      ? "script-src 'self' 'unsafe-inline' https://js.stripe.com"
+      : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com";
   const csp = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' https://js.stripe.com",
+    scriptSrc,
     "style-src 'self' 'unsafe-inline'", // Tailwind generated; many components inline styles
     "img-src 'self' data: blob: https://*.googleusercontent.com https://*.stripe.com https://lh3.googleusercontent.com",
     "font-src 'self' data:",

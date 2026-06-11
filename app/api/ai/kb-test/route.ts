@@ -41,12 +41,39 @@ const FeedbackBody = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const { orgId, userId } = await getOrgContext();
+  // Resolve the org context ourselves — an expired session or missing org must
+  // come back as a clear 401, not an unhandled 500 the tester renders as
+  // "Something went wrong" (bug 006 in the June 2026 assessment).
+  let orgId: string;
+  let userId: string;
+  try {
+    ({ orgId, userId } = await getOrgContext());
+  } catch {
+    return NextResponse.json(
+      { error: "unauthenticated", message: "Your session expired — refresh the page and log in again." },
+      { status: 401 },
+    );
+  }
 
   if (!(await isOrgEntitled(orgId))) {
     return NextResponse.json(
       { error: "plan_inactive", message: "AI features aren't included on your current plan." },
       { status: 402 },
+    );
+  }
+
+  // Pre-flight the model key so a misconfigured deployment yields an
+  // actionable message instead of a generic failure on every single turn.
+  const anthropicKey = process.env.ANTHROPIC_API_KEY;
+  if (!anthropicKey || anthropicKey === "sk-ant-...") {
+    logger.error({ event: "kb_test.ai_not_configured", orgId });
+    return NextResponse.json(
+      {
+        error: "ai_not_configured",
+        message:
+          "The AI service isn't configured for this deployment yet (missing ANTHROPIC_API_KEY). Ask your admin to add the key.",
+      },
+      { status: 503 },
     );
   }
 

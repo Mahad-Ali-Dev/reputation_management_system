@@ -37,8 +37,12 @@ export async function getAutoReply5StarState(orgId: string): Promise<AutoReply5S
       return { enabled: rule?.enabled ?? false };
     });
   } catch (err) {
+    // Prisma surfaces missing relations as P2021/P2022; raw paths carry the
+    // Postgres 42P01/42703 codes directly. Treat both as "off".
     const code = (err as { code?: string } | null)?.code;
-    if (code === "42P01" || code === "42703") return { enabled: false };
+    if (code === "42P01" || code === "42703" || code === "P2021" || code === "P2022") {
+      return { enabled: false };
+    }
     throw err;
   }
 }

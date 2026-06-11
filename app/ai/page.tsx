@@ -2,13 +2,8 @@ import Link from "next/link";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import { isMissingRelation } from "@/lib/contacts/fail-soft";
-import {
-  createWidgetKey,
-  deleteAiDocument,
-  ingestAiDocumentFromUrl,
-  revokeWidgetKey,
-  uploadAiDocument,
-} from "@/lib/ai/actions";
+import { createWidgetKey, deleteAiDocument, revokeWidgetKey } from "@/lib/ai/actions";
+import { KbAddForms } from "./_components/kb-add-forms";
 import { listKnowledgeGaps, learningStats } from "@/lib/ai/knowledge-gaps";
 import { Button } from "@/components/ui/button";
 import { AppShellServer } from "@/components/app-shell-server";
@@ -247,87 +242,9 @@ export default async function AiSettingsPage({
 
             {tab === "info" && (
               <div>
-                {/* Knowledge base upload (existing action: uploadAiDocument) */}
-                <h4 className="aikb-subhead">
-                  <Icon name="upload" size={14} /> Add knowledge
-                </h4>
-                <form action={uploadAiDocument} className="space-y-3">
-                  <div className="aikb-formgrid">
-                    <label className="aikb-label">
-                      Title
-                      <input name="title" placeholder="Business FAQ" className="aikb-input" />
-                    </label>
-                    <label className="aikb-label">
-                      Establishment (optional)
-                      <EstablishmentSelect establishments={establishments} />
-                    </label>
-                  </div>
-                  <label className="aikb-label">
-                    Content (markdown supported)
-                    <textarea
-                      name="content"
-                      rows={8}
-                      placeholder={`## Hours\nMon-Fri 9am-9pm, Sat 10am-10pm, closed Sundays.\n\n## Location\n123 Main St, Springfield...\n\n## Pricing\nHaircuts from $35...`}
-                      className="aikb-textarea"
-                    />
-                    <span className="aikb-hint">
-                      Use ## headings to organize sections — the AI uses them as context.
-                      Re-uploading the same title replaces the previous version.
-                    </span>
-                  </label>
-                  <div className="aikb-dropzone">
-                    <label className="aikb-label">
-                      Or upload a document (.pdf, .txt, .md)
-                      <input
-                        type="file"
-                        name="file"
-                        accept=".pdf,text/plain,.md,application/pdf"
-                        className="mt-1 block w-full text-sm file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-primary-foreground"
-                      />
-                      <span className="aikb-hint">
-                        PDFs are text-extracted server-side (max 8 MB). Scanned/image-only PDFs
-                        won&apos;t extract — paste the text instead. A file takes priority over
-                        pasted content.
-                      </span>
-                    </label>
-                  </div>
-                  <Button type="submit">Upload document</Button>
-                </form>
-
-                <hr className="aikb-divider" />
-
-                {/* URL crawler (existing action: ingestAiDocumentFromUrl) */}
-                <h4 className="aikb-subhead">
-                  <Icon name="download" size={14} /> Import from URL
-                </h4>
-                <form action={ingestAiDocumentFromUrl} className="space-y-3">
-                  <div className="aikb-formgrid">
-                    <label className="aikb-label">
-                      Title
-                      <input name="title" required placeholder="Pricing page" className="aikb-input" />
-                    </label>
-                    <label className="aikb-label">
-                      Establishment (optional)
-                      <EstablishmentSelect establishments={establishments} />
-                    </label>
-                  </div>
-                  <label className="aikb-label">
-                    URL
-                    <input
-                      type="url"
-                      name="url"
-                      required
-                      placeholder="https://yourwebsite.com/faq"
-                      className="aikb-input"
-                    />
-                    <span className="aikb-hint">
-                      HTTPS only. Max 2 MB. We honor robots.txt and block private/internal IPs.
-                    </span>
-                  </label>
-                  <Button type="submit" variant="outline">
-                    Crawl &amp; index
-                  </Button>
-                </form>
+                {/* Add-knowledge + URL-import forms (client island — renders
+                    the actions' {ok|error} results inline; bug 009). */}
+                <KbAddForms establishments={establishments} />
 
                 <hr className="aikb-divider" />
 

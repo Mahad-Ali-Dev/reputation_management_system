@@ -34,7 +34,10 @@ const nextConfig = {
   serverExternalPackages: ["archiver"],
   experimental: {
     serverActions: {
-      bodySizeLimit: "2mb",
+      // Must comfortably exceed the 8 MB KB-PDF cap (lib/ai/actions.ts) —
+      // at 2mb the framework 413'd big uploads BEFORE the action could return
+      // its friendly "PDF too large" error, crashing the /ai page (bug 009).
+      bodySizeLimit: "10mb",
     },
   },
   // Force route handlers for /api/webhooks/* to use Node runtime (Stripe SDK + crypto)

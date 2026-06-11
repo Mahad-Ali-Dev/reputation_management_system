@@ -1,7 +1,7 @@
 "use server";
 
-import { requireRole } from "@/lib/auth/rbac";
-import { assertEntitled } from "@/lib/billing/entitlements";
+import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
+import { assertEntitled, PlanInactiveError } from "@/lib/billing/entitlements";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
@@ -12,6 +12,39 @@ import { hasSmsConsent, isUnsubscribed, recordSmsConsent } from "./suppression";
 
 const PHONE_RE = /^\+[1-9][0-9]{1,14}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+/**
+ * Result contract for the outreach send actions. Thrown server-action errors
+ * get their messages MASKED in production builds, so the compliance-critical
+ * messages here (TCPA attestation, unsubscribed recipients) never reached
+ * users — and bare `<form action>` callers crashed outright (bugs 010/011 in
+ * the June 2026 assessment). Callers render `error` inline.
+ */
+export type OutreachActionResult = { ok: true } | { ok: false; error: string };
+
+/** Next.js control-flow errors (redirect/notFound) must propagate. */
+function isNextControlFlowError(err: unknown): boolean {
+  const digest = (err as { digest?: unknown } | null)?.digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_");
+}
+
+function mapOutreachError(err: unknown, event: string): OutreachActionResult {
+  if (err instanceof PlanInactiveError) {
+    return { ok: false, error: "Review requests are a paid feature — upgrade to send them." };
+  }
+  if (err instanceof ForbiddenError) {
+    return { ok: false, error: "Only managers and admins can send review requests." };
+  }
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "P2021" || code === "P2022" || code === "42P01" || code === "42703") {
+    return {
+      ok: false,
+      error: "Outreach isn't provisioned yet — ask your admin to apply the latest database migration.",
+    };
+  }
+  logger.error({ event, error: err instanceof Error ? err.message : String(err) });
+  return { ok: false, error: "Could not send the request. Try again." };
+}
 
 const Body = z.object({
   establishmentId: z.string().uuid(),
@@ -33,7 +66,8 @@ const Body = z.object({
  * - SMS: requires TCPA consent + checks unsubscribe list + sends via Twilio
  * - Email: uses Resend, adds List-Unsubscribe header
  */
-export async function createReviewRequest(form: FormData): Promise<void> {
+export async function createReviewRequest(form: FormData): Promise<OutreachActionResult> {
+  try {
   const { orgId, userId } = await requireRole("manager");
   // Outreach sends incur SMS/email cost — gate on an active plan.
   await assertEntitled(orgId);
@@ -49,22 +83,22 @@ export async function createReviewRequest(form: FormData): Promise<void> {
     outreachTemplateId: (form.get("outreachTemplateId") as string) || undefined,
   });
   if (!parsed.success) {
-    throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+    return { ok: false, error: `Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}` };
   }
   const data = parsed.data;
 
   // Normalize + validate recipient by channel
   const recipient = data.recipient.trim();
   if (data.channel === "sms" && !PHONE_RE.test(recipient)) {
-    throw new Error("SMS recipient must be E.164 format, e.g. +15551234567");
+    return { ok: false, error: "SMS recipient must be E.164 format, e.g. +15551234567" };
   }
   if (data.channel === "email" && !EMAIL_RE.test(recipient)) {
-    throw new Error("Invalid email address");
+    return { ok: false, error: "Invalid email address" };
   }
 
   // Unsubscribe check (hard block — required for compliance)
   if (await isUnsubscribed({ channel: data.channel, recipient, organizationId: orgId })) {
-    throw new Error("This recipient has unsubscribed from " + data.channel);
+    return { ok: false, error: `This recipient has unsubscribed from ${data.channel}` };
   }
 
   // SMS: TCPA consent required
@@ -72,9 +106,11 @@ export async function createReviewRequest(form: FormData): Promise<void> {
     const hasConsent = await hasSmsConsent({ organizationId: orgId, phoneE164: recipient });
     if (!hasConsent) {
       if (!data.consentAttested) {
-        throw new Error(
-          "TCPA consent required. Confirm you have prior express written consent from this recipient by checking the attestation box.",
-        );
+        return {
+          ok: false,
+          error:
+            "TCPA consent required. Confirm you have prior express written consent from this recipient by checking the attestation box.",
+        };
       }
       // Record consent based on the user's attestation
       await recordSmsConsent({
@@ -106,16 +142,16 @@ export async function createReviewRequest(form: FormData): Promise<void> {
   });
 
   if (!enq.ok) {
-    // Map the seam's structured reasons back to the UI's thrown-error contract.
+    // Map the seam's structured reasons back to the UI's result contract.
     switch (enq.reason) {
       case "establishment_not_found":
-        throw new Error("Establishment not found");
+        return { ok: false, error: "Establishment not found" };
       case "unsubscribed":
-        throw new Error(`This recipient has unsubscribed from ${data.channel}`);
+        return { ok: false, error: `This recipient has unsubscribed from ${data.channel}` };
       case "no_sms_consent":
-        throw new Error("TCPA consent required for this SMS recipient.");
+        return { ok: false, error: "TCPA consent required for this SMS recipient." };
       default:
-        throw new Error(`Could not create review request: ${enq.reason}`);
+        return { ok: false, error: `Could not create review request: ${enq.reason}` };
     }
   }
 
@@ -158,6 +194,11 @@ export async function createReviewRequest(form: FormData): Promise<void> {
   );
 
   revalidatePath("/outreach");
+  return { ok: true };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    return mapOutreachError(err, "review_request.create_failed");
+  }
 }
 
 /**
@@ -169,31 +210,39 @@ export async function createReviewRequest(form: FormData): Promise<void> {
  * picks it up. Suppression is re-checked at send time only implicitly — so we also
  * hard-block here if the recipient has since unsubscribed.
  */
-export async function resendReviewRequest(form: FormData): Promise<void> {
-  const { orgId } = await requireRole("manager");
-  await assertEntitled(orgId);
-  const id = z.string().uuid().parse(form.get("id"));
+export async function resendReviewRequest(form: FormData): Promise<OutreachActionResult> {
+  try {
+    const { orgId } = await requireRole("manager");
+    await assertEntitled(orgId);
+    const idParsed = z.string().uuid().safeParse(form.get("id"));
+    if (!idParsed.success) return { ok: false, error: "Invalid request id." };
+    const id = idParsed.data;
 
-  const rr = await withTenant(orgId, (tx) =>
-    tx.reviewRequest.findUnique({
-      where: { id },
-      select: { id: true, channel: true, recipient: true },
-    }),
-  );
-  if (!rr) throw new Error("review_request_not_found");
+    const rr = await withTenant(orgId, (tx) =>
+      tx.reviewRequest.findUnique({
+        where: { id },
+        select: { id: true, channel: true, recipient: true },
+      }),
+    );
+    if (!rr) return { ok: false, error: "That request no longer exists." };
 
-  const channel = rr.channel === "sms" ? "sms" : "email";
-  if (await isUnsubscribed({ channel, recipient: rr.recipient, organizationId: orgId })) {
-    throw new Error(`This recipient has unsubscribed from ${channel}`);
+    const channel = rr.channel === "sms" ? "sms" : "email";
+    if (await isUnsubscribed({ channel, recipient: rr.recipient, organizationId: orgId })) {
+      return { ok: false, error: `This recipient has unsubscribed from ${channel}` };
+    }
+
+    await withTenant(orgId, (tx) =>
+      tx.reviewRequest.update({
+        where: { id },
+        data: { status: "queued", scheduledFor: new Date(), error: null },
+      }),
+    );
+
+    logger.info({ orgId, reviewRequestId: id, event: "review_request.resend_queued" });
+    revalidatePath("/outreach");
+    return { ok: true };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    return mapOutreachError(err, "review_request.resend_failed");
   }
-
-  await withTenant(orgId, (tx) =>
-    tx.reviewRequest.update({
-      where: { id },
-      data: { status: "queued", scheduledFor: new Date(), error: null },
-    }),
-  );
-
-  logger.info({ orgId, reviewRequestId: id, event: "review_request.resend_queued" });
-  revalidatePath("/outreach");
 }

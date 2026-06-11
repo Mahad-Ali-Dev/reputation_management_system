@@ -40,7 +40,7 @@ export type DispatchResult =
 /** Postgres 42P01 / 42703 → table/column not migrated yet. */
 function isMissingRelation(err: unknown): boolean {
   const code = (err as { code?: string } | null)?.code;
-  return code === "42P01" || code === "42703";
+  return code === "42P01" || code === "42703" || code === "P2021" || code === "P2022";
 }
 
 /**

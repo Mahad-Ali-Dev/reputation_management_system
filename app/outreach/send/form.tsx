@@ -84,7 +84,7 @@ export function SendOneOffForm({
     startSendTransition(async () => {
       try {
         // Send via each channel separately (server action expects one channel per call)
-        const tasks: Array<Promise<void>> = [];
+        const tasks: Array<Promise<{ ok: true } | { ok: false; error: string }>> = [];
         const fullBody = `${greeting}\n\n${body}`;
 
         if (sendEmail) {
@@ -109,7 +109,12 @@ export function SendOneOffForm({
           tasks.push(createReviewRequest(fd));
         }
 
-        await Promise.all(tasks);
+        const results = await Promise.all(tasks);
+        const failed = results.find((r) => !r.ok);
+        if (failed && !failed.ok) {
+          setError(failed.error);
+          return;
+        }
         setSuccess(`Sent! Customer will receive ${sendEmail && sendSms ? "both messages" : sendEmail ? "an email" : "an SMS"} ${scheduleHours > 0 ? `in ${scheduleHours}h` : "now"}.`);
         setCustomerName("");
         setCustomerPhone("");

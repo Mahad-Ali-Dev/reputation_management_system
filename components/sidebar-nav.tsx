@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon, type IconName } from "@/components/shell/icon";
+import { openCommandPalette } from "@/components/command-palette";
 import { LockIcon, upgradeHref } from "@/components/pro-gate";
 import type { FeatureKey } from "@/lib/billing/feature-access";
 import Image from "next/image";
@@ -140,7 +141,12 @@ export function SidebarNav({
         </div>
       </Link>
 
-      <button type="button" className="sb__search" aria-label="Search">
+      <button
+        type="button"
+        className="sb__search"
+        aria-label="Search and navigate (Command or Control + K)"
+        onClick={openCommandPalette}
+      >
         <Icon name="search" size={14} />
         <span>Search…</span>
         <kbd>⌘K</kbd>

@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
+import { withTenant } from "@/lib/db/with-tenant";
 import { signOAuthState } from "@/lib/oauth/state";
 import { logger } from "@/lib/logger";
 
@@ -8,6 +9,12 @@ import { logger } from "@/lib/logger";
  *
  * Starts the Google Business Profile OAuth flow. Sets a state JWT + cookie hash, with PKCE.
  * Redirects to Google's consent screen.
+ *
+ * `establishmentId` is optional for browser entry points (onboarding setup
+ * steps + the /connections hub link without location context — bug 002 in the
+ * June 2026 assessment served those users raw JSON). When omitted we resolve
+ * it: a single-location org auto-uses its only establishment; otherwise we
+ * redirect to /establishments to pick (or create) one — never raw JSON.
  */
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -17,15 +24,40 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const establishmentId = req.nextUrl.searchParams.get("establishmentId");
+  let establishmentId = req.nextUrl.searchParams.get("establishmentId");
+  // This is a browser navigation — resolve or redirect, never raw JSON.
   if (!establishmentId) {
-    return NextResponse.json({ error: "establishmentId_required" }, { status: 400 });
+    const candidates = await withTenant(orgId, (tx) =>
+      tx.establishment.findMany({
+        where: { deletedAt: null },
+        orderBy: { createdAt: "asc" },
+        select: { id: true },
+        take: 2,
+      }),
+    ).catch(() => []);
+    if (candidates.length === 1) {
+      establishmentId = candidates[0]?.id ?? null;
+    } else if (candidates.length === 0) {
+      return NextResponse.redirect(
+        new URL("/establishments?connect=google&connect_error=no_location", req.url),
+      );
+    } else {
+      // Multiple locations — the user must pick which one to connect.
+      return NextResponse.redirect(new URL("/establishments?connect=google", req.url));
+    }
+  }
+  if (!establishmentId) {
+    return NextResponse.redirect(
+      new URL("/establishments?connect=google&connect_error=no_location", req.url),
+    );
   }
 
   const clientId = process.env.AUTH_GOOGLE_ID;
   if (!clientId) {
     logger.error({ event: "oauth.google.no_client_id" });
-    return NextResponse.json({ error: "google_oauth_not_configured" }, { status: 500 });
+    return NextResponse.redirect(
+      new URL("/connections?connect_error=google_not_configured", req.url),
+    );
   }
 
   const { state, cookieHash, pkceChallenge: challenge } = await signOAuthState({

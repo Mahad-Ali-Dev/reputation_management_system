@@ -3,6 +3,7 @@
 import { Icon } from "@/components/shell/icon";
 import { setAutoReply5Star } from "@/lib/auto-reply/toggle";
 import Link from "next/link";
+import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 
 /**
@@ -14,10 +15,21 @@ import { useFormStatus } from "react-dom";
  * NEVER exposes auto-posting for ≤4★ — those always wait for a human.
  *
  * The form submits the DESIRED next state via a hidden `enable` flag (computed
- * `!enabled`); the server action upserts/flips the managed rule. Power users
- * get a "Manage all rules" link to the full rules surface.
+ * `!enabled`); the server action upserts/flips the managed rule and returns a
+ * `{ok}/{ok:false,error}` result rendered inline via `useActionState` — a
+ * failure (not entitled, not admin, unmigrated) shows a message instead of
+ * crashing the page (bug 004 in the June 2026 assessment). Power users get a
+ * "Manage all rules" link to the full rules surface.
  */
 export function AutoReplyToggle({ enabled }: { enabled: boolean }) {
+  const [error, formAction] = useActionState(
+    async (_prev: string | null, form: FormData): Promise<string | null> => {
+      const res = await setAutoReply5Star(form);
+      return res.ok ? null : res.error;
+    },
+    null,
+  );
+
   return (
     <div
       className="ds-card"
@@ -55,9 +67,18 @@ export function AutoReplyToggle({ enabled }: { enabled: boolean }) {
             Manage all rules →
           </Link>
         </p>
+        {error && (
+          <p
+            role="alert"
+            style={{ fontSize: 12, margin: "6px 0 0", color: "var(--bad, #dc2626)", lineHeight: 1.5 }}
+          >
+            <Icon name="alert" size={11} style={{ verticalAlign: "-1px", marginRight: 4 }} />
+            {error}
+          </p>
+        )}
       </div>
 
-      <form action={setAutoReply5Star} style={{ flexShrink: 0 }}>
+      <form action={formAction} style={{ flexShrink: 0 }}>
         <input type="hidden" name="enable" value={(!enabled).toString()} />
         <ToggleSwitch enabled={enabled} />
       </form>

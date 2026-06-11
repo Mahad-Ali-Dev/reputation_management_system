@@ -1,6 +1,7 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { KpiCard, TableCard, THead, Th, Td } from "@/components/admin/admin-ui";
 import { prisma } from "@/lib/db/client";
+import { STRIPE_PRO_PRICE_ID } from "@/lib/stripe/client";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -14,15 +15,27 @@ export const dynamic = "force-dynamic";
  * minutes.
  */
 
-const PLAN_MRR_USD: Record<string, number> = {
-  pro_monthly: 49,
-  pro_annual: 39.2, // $470/yr ÷ 12 (20% annual discount)
-};
+// `Subscription.plan` stores the Stripe *price id* the customer is billed on
+// (see lib/billing/sync.ts) — NOT a friendly slug. Repulabs is single-tier
+// (Pro), so any real Stripe price maps to the Pro MRR. Keeping this keyed by the
+// configured price id (with a price_* fallback for legacy/rotated ids) is what
+// makes the numbers non-zero — the old `pro_monthly`/`pro_annual` keys never
+// matched anything written, so every figure rendered $0.
+const PRO_MRR_USD = 89; // current Pro list price ($/mo) — keep in sync with app/subscription/page.tsx
 
 function planMrrCents(plan: string): number {
-  const usd = PLAN_MRR_USD[plan];
-  if (typeof usd !== "number") return 0;
-  return Math.round(usd * 100);
+  if (!plan || plan === "unknown" || plan === "free") return 0;
+  if (STRIPE_PRO_PRICE_ID && plan === STRIPE_PRO_PRICE_ID) return Math.round(PRO_MRR_USD * 100);
+  // Defensive fallback: any Stripe price id (e.g. after a price rotation) is Pro.
+  if (plan.startsWith("price_")) return Math.round(PRO_MRR_USD * 100);
+  return 0;
+}
+
+/** Friendly label for the distribution table (raw value is a Stripe price id). */
+function planLabel(plan: string): string {
+  if (planMrrCents(plan) > 0) return "Pro";
+  if (!plan || plan === "unknown") return "Unknown";
+  return plan.replace(/_/g, " ");
 }
 
 export default async function MrrPage() {
@@ -122,9 +135,7 @@ export default async function MrrPage() {
                 return (
                   <tr key={plan} style={{ borderTop: "1px solid var(--line)" }}>
                     <Td>
-                      <span style={{ textTransform: "capitalize" }}>
-                        {plan.replace(/_/g, " ")}
-                      </span>
+                      <span style={{ textTransform: "capitalize" }}>{planLabel(plan)}</span>
                     </Td>
                     <Td align="right">{count}</Td>
                     <Td align="right">{fmt(perSub)}</Td>

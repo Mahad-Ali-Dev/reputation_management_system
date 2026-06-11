@@ -4,8 +4,8 @@ import { createHash, randomBytes } from "node:crypto";
 import { crawlUrl } from "@/lib/ai/crawl";
 import { ingestDocument } from "@/lib/ai/ingest";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
-import { requireRole } from "@/lib/auth/rbac";
-import { assertEntitled } from "@/lib/billing/entitlements";
+import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
+import { assertEntitled, PlanInactiveError } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { assertRateLimit } from "@/lib/ratelimit";
@@ -14,6 +14,43 @@ import { z } from "zod";
 
 /** 8 MB cap on uploaded PDFs (text extraction happens server-side). */
 const MAX_PDF_BYTES = 8 * 1024 * 1024;
+
+/**
+ * Result contract for the KB ingest actions. They used to throw on every
+ * failure (size, validation, entitlement, ingest), which — submitted from a
+ * bare `<form action>` — crashed the whole /ai page with a digest in
+ * production (bug 009 in the June 2026 assessment). The forms now render
+ * these inline via `useActionState`.
+ */
+export type AiIngestResult = { ok: true; message?: string } | { ok: false; error: string };
+
+/** Next.js control-flow errors (redirect/notFound) must propagate. */
+function isNextControlFlowError(err: unknown): boolean {
+  const digest = (err as { digest?: unknown } | null)?.digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_");
+}
+
+function mapIngestError(err: unknown, event: string): AiIngestResult {
+  if (err instanceof PlanInactiveError) {
+    return { ok: false, error: "Knowledge-base indexing is a paid feature — upgrade to use it." };
+  }
+  if (err instanceof ForbiddenError) {
+    return { ok: false, error: "Only managers and admins can change the knowledge base." };
+  }
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "P2021" || code === "P2022" || code === "42P01" || code === "42703") {
+    return {
+      ok: false,
+      error: "The knowledge base isn't provisioned yet — ask your admin to apply the latest database migration.",
+    };
+  }
+  const msg = err instanceof Error ? err.message : String(err);
+  if (msg.startsWith("rate_limit")) {
+    return { ok: false, error: "Too many imports in a short window — wait a minute and retry." };
+  }
+  logger.error({ event, error: msg });
+  return { ok: false, error: "Something went wrong saving that document. Try again." };
+}
 
 const DocSchema = z.object({
   title: z.string().min(1).max(120),
@@ -35,118 +72,134 @@ function isPdf(file: File): boolean {
  * Accepts manual paste (the `content` field) OR a `.pdf` file (text-extracted
  * server-side via lib/ai/pdf-extract). Both feed the same chunk→embed pipeline.
  */
-export async function uploadAiDocument(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireRole("manager");
-  // Indexing is a paid AI feature — match the URL-crawl path's gating.
-  await assertEntitled(orgId);
-
-  const fileEntry = form.get("file");
-  const hasPdf = fileEntry instanceof File && fileEntry.size > 0 && isPdf(fileEntry);
-
-  let title: string;
-  let content: string;
-  let establishmentId: string | undefined;
-  let sourceType: "manual" | "pdf";
-
-  if (hasPdf) {
-    const file = fileEntry as File;
-    if (file.size > MAX_PDF_BYTES) {
-      throw new Error(`PDF too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).`);
-    }
-    const meta = DocMetaSchema.safeParse({
-      title: (form.get("title") as string) || undefined,
-      establishmentId: form.get("establishmentId") || undefined,
-    });
-    if (!meta.success) {
-      throw new Error(`Validation: ${meta.error.issues.map((i) => i.message).join("; ")}`);
-    }
-    const buf = Buffer.from(await file.arrayBuffer());
-    const extracted = await extractPdfText(buf);
-    if (extracted.trim().length < 20) {
-      throw new Error(
-        "We couldn't extract readable text from that PDF (it may be scanned/image-only). Paste the text instead.",
-      );
-    }
-    title = (meta.data.title ?? file.name.replace(/\.pdf$/i, "")).slice(0, 120) || "PDF document";
-    content = extracted;
-    establishmentId = meta.data.establishmentId;
-    sourceType = "pdf";
-  } else {
-    const parsed = DocSchema.safeParse({
-      title: form.get("title"),
-      content: form.get("content"),
-      establishmentId: form.get("establishmentId") || undefined,
-    });
-    if (!parsed.success) {
-      throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
-    }
-    title = parsed.data.title;
-    content = parsed.data.content;
-    establishmentId = parsed.data.establishmentId;
-    sourceType = "manual";
-  }
-
-  const contentHash = createHash("sha256").update(content).digest("hex");
-
-  // Create the doc (or replace existing one for the same establishment+title)
-  const doc = await withTenant(orgId, async (tx) => {
-    const existing = await tx.aiDocument.findFirst({
-      where: {
-        organizationId: orgId,
-        establishmentId: establishmentId ?? null,
-        title,
-      },
-    });
-    if (existing) {
-      return tx.aiDocument.update({
-        where: { id: existing.id },
-        data: { content, contentHash, sourceType, status: "indexing" },
-      });
-    }
-    return tx.aiDocument.create({
-      data: {
-        organizationId: orgId,
-        establishmentId: establishmentId ?? null,
-        title,
-        content,
-        contentHash,
-        sourceType,
-        status: "indexing",
-      },
-    });
-  });
-
-  // Run ingestion (chunk + embed + insert). This is synchronous in v1; queue it Day 10+.
+export async function uploadAiDocument(form: FormData): Promise<AiIngestResult> {
   try {
-    await ingestDocument({
-      documentId: doc.id,
-      organizationId: orgId,
-      establishmentId: establishmentId ?? null,
-      content,
-    });
-  } catch (err) {
-    logger.error(
-      { docId: doc.id, error: String(err), event: "ai.ingest.failed" },
-      "AI document ingestion failed",
-    );
-    throw err;
-  }
+    const { orgId, userId } = await requireRole("manager");
+    // Indexing is a paid AI feature — match the URL-crawl path's gating.
+    await assertEntitled(orgId);
 
-  await withTenant(orgId, async (tx) => {
-    await tx.auditLog.create({
-      data: {
+    const fileEntry = form.get("file");
+    const hasPdf = fileEntry instanceof File && fileEntry.size > 0 && isPdf(fileEntry);
+
+    let title: string;
+    let content: string;
+    let establishmentId: string | undefined;
+    let sourceType: "manual" | "pdf";
+
+    if (hasPdf) {
+      const file = fileEntry as File;
+      if (file.size > MAX_PDF_BYTES) {
+        return { ok: false, error: `PDF too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).` };
+      }
+      const meta = DocMetaSchema.safeParse({
+        title: (form.get("title") as string) || undefined,
+        establishmentId: form.get("establishmentId") || undefined,
+      });
+      if (!meta.success) {
+        return { ok: false, error: `Validation: ${meta.error.issues.map((i) => i.message).join("; ")}` };
+      }
+      const buf = Buffer.from(await file.arrayBuffer());
+      const extracted = await extractPdfText(buf);
+      if (extracted.trim().length < 20) {
+        return {
+          ok: false,
+          error:
+            "We couldn't extract readable text from that PDF (it may be scanned/image-only). Paste the text instead.",
+        };
+      }
+      title = (meta.data.title ?? file.name.replace(/\.pdf$/i, "")).slice(0, 120) || "PDF document";
+      content = extracted;
+      establishmentId = meta.data.establishmentId;
+      sourceType = "pdf";
+    } else {
+      const parsed = DocSchema.safeParse({
+        title: form.get("title"),
+        content: form.get("content"),
+        establishmentId: form.get("establishmentId") || undefined,
+      });
+      if (!parsed.success) {
+        return {
+          ok: false,
+          error: `Check the form: ${parsed.error.issues.map((i) => `${i.path.join(".")} — ${i.message}`).join("; ")}`,
+        };
+      }
+      title = parsed.data.title;
+      content = parsed.data.content;
+      establishmentId = parsed.data.establishmentId;
+      sourceType = "manual";
+    }
+
+    const contentHash = createHash("sha256").update(content).digest("hex");
+
+    // Create the doc (or replace existing one for the same establishment+title)
+    const doc = await withTenant(orgId, async (tx) => {
+      const existing = await tx.aiDocument.findFirst({
+        where: {
+          organizationId: orgId,
+          establishmentId: establishmentId ?? null,
+          title,
+        },
+      });
+      if (existing) {
+        return tx.aiDocument.update({
+          where: { id: existing.id },
+          data: { content, contentHash, sourceType, status: "indexing" },
+        });
+      }
+      return tx.aiDocument.create({
+        data: {
+          organizationId: orgId,
+          establishmentId: establishmentId ?? null,
+          title,
+          content,
+          contentHash,
+          sourceType,
+          status: "indexing",
+        },
+      });
+    });
+
+    // Run ingestion (chunk + embed + insert). This is synchronous in v1; queue it Day 10+.
+    try {
+      await ingestDocument({
+        documentId: doc.id,
         organizationId: orgId,
-        actorType: "user",
-        actorId: userId,
-        action: "ai.document.uploaded",
-        resourceType: "ai_document",
-        resourceId: doc.id,
-        afterData: { title, length: content.length },
-      },
-    });
-  });
+        establishmentId: establishmentId ?? null,
+        content,
+      });
+    } catch (err) {
+      logger.error(
+        { docId: doc.id, error: String(err), event: "ai.ingest.failed" },
+        "AI document ingestion failed",
+      );
+      revalidatePath("/ai");
+      return {
+        ok: false,
+        error:
+          "The document was saved but indexing failed, so it isn't searchable yet. Check the AI/embedding keys and re-upload to retry.",
+      };
+    }
 
-  revalidatePath("/ai");
+    await withTenant(orgId, async (tx) => {
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "ai.document.uploaded",
+          resourceType: "ai_document",
+          resourceId: doc.id,
+          afterData: { title, length: content.length },
+        },
+      });
+    });
+
+    revalidatePath("/ai");
+    return { ok: true, message: `"${title}" indexed.` };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    return mapIngestError(err, "ai.upload.failed");
+  }
 }
 
 const UrlIngestSchema = z.object({
@@ -159,38 +212,40 @@ const UrlIngestSchema = z.object({
  * Crawl a URL, extract text, then run the same chunk → embed pipeline as manual uploads.
  * SSRF protections live in lib/ai/crawl.ts (private-IP blocks, size cap, robots.txt).
  */
-export async function ingestAiDocumentFromUrl(form: FormData): Promise<void> {
-  const { orgId, userId } = await requireRole("manager");
-  // URL crawl + embedding is a paid AI feature.
-  await assertEntitled(orgId);
+export async function ingestAiDocumentFromUrl(form: FormData): Promise<AiIngestResult> {
+  try {
+    const { orgId, userId } = await requireRole("manager");
+    // URL crawl + embedding is a paid AI feature.
+    await assertEntitled(orgId);
 
-  // Rate limit before any external fetch
-  await assertRateLimit("url_crawl", orgId);
+    // Rate limit before any external fetch
+    await assertRateLimit("url_crawl", orgId);
 
-  const parsed = UrlIngestSchema.safeParse({
-    url: form.get("url"),
-    title: form.get("title"),
-    establishmentId: form.get("establishmentId") || undefined,
-  });
-  if (!parsed.success) {
-    throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
-  }
-  const { url, title, establishmentId } = parsed.data;
+    const parsed = UrlIngestSchema.safeParse({
+      url: form.get("url"),
+      title: form.get("title"),
+      establishmentId: form.get("establishmentId") || undefined,
+    });
+    if (!parsed.success) {
+      return { ok: false, error: `Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}` };
+    }
+    const { url, title, establishmentId } = parsed.data;
 
-  const crawl = await crawlUrl(url);
-  if ("error" in crawl) {
-    throw new Error(
-      `URL crawl failed: ${crawl.error}${crawl.details ? ` (${crawl.details})` : ""}`,
-    );
-  }
-  const { result } = crawl;
+    const crawl = await crawlUrl(url);
+    if ("error" in crawl) {
+      return {
+        ok: false,
+        error: `URL crawl failed: ${crawl.error}${crawl.details ? ` (${crawl.details})` : ""}`,
+      };
+    }
+    const { result } = crawl;
 
-  if (result.text.length < 20) {
-    throw new Error("Crawled page had no usable text after stripping HTML.");
-  }
-  if (result.text.length > 200_000) {
-    throw new Error("Crawled page is too large (>200K chars). Use a smaller URL.");
-  }
+    if (result.text.length < 20) {
+      return { ok: false, error: "Crawled page had no usable text after stripping HTML." };
+    }
+    if (result.text.length > 200_000) {
+      return { ok: false, error: "Crawled page is too large (>200K chars). Use a smaller URL." };
+    }
 
   const contentHash = createHash("sha256").update(result.text).digest("hex");
 
@@ -238,36 +293,46 @@ export async function ingestAiDocumentFromUrl(form: FormData): Promise<void> {
     });
   });
 
-  try {
-    await ingestDocument({
-      documentId: doc.id,
-      organizationId: orgId,
-      establishmentId: establishmentId ?? null,
-      content: result.text,
-    });
-  } catch (err) {
-    logger.error(
-      { docId: doc.id, error: String(err), event: "ai.url_ingest.failed" },
-      "URL ingestion failed",
-    );
-    throw err;
-  }
-
-  await withTenant(orgId, async (tx) => {
-    await tx.auditLog.create({
-      data: {
+    try {
+      await ingestDocument({
+        documentId: doc.id,
         organizationId: orgId,
-        actorType: "user",
-        actorId: userId,
-        action: "ai.document.url_ingested",
-        resourceType: "ai_document",
-        resourceId: doc.id,
-        afterData: { title, url: result.finalUrl, bytes: result.bytes },
-      },
-    });
-  });
+        establishmentId: establishmentId ?? null,
+        content: result.text,
+      });
+    } catch (err) {
+      logger.error(
+        { docId: doc.id, error: String(err), event: "ai.url_ingest.failed" },
+        "URL ingestion failed",
+      );
+      revalidatePath("/ai");
+      return {
+        ok: false,
+        error:
+          "The page was crawled but indexing failed, so it isn't searchable yet. Check the AI/embedding keys and retry.",
+      };
+    }
 
-  revalidatePath("/ai");
+    await withTenant(orgId, async (tx) => {
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "ai.document.url_ingested",
+          resourceType: "ai_document",
+          resourceId: doc.id,
+          afterData: { title, url: result.finalUrl, bytes: result.bytes },
+        },
+      });
+    });
+
+    revalidatePath("/ai");
+    return { ok: true, message: `"${title}" crawled and indexed.` };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    return mapIngestError(err, "ai.url_ingest.failed");
+  }
 }
 
 export async function deleteAiDocument(documentId: string): Promise<void> {

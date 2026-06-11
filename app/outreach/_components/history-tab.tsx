@@ -1,8 +1,7 @@
 import { EmptyIllustration } from "@/components/empty-state";
 import { Avatar } from "@/components/shell/avatar";
-import { Icon } from "@/components/shell/icon";
-import { resendReviewRequest } from "@/lib/outreach/actions";
 import { listReviewRequests, reviewRequestStats } from "@/lib/outreach/queries";
+import { ResendButton } from "./resend-button";
 
 /**
  * Sent History panel (server) — 4 stat cards (Total Sent / Opened / Clicked /
@@ -101,13 +100,7 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
                     </td>
                     <td style={{ textAlign: "right", paddingRight: 16 }}>
                       {canResend ? (
-                        <form action={resendReviewRequest} style={{ display: "inline" }}>
-                          <input type="hidden" name="id" value={r.id} />
-                          <button type="submit" className="btn" style={{ height: 26, padding: "0 10px" }}>
-                            <Icon name="refresh" size={11} />
-                            Resend
-                          </button>
-                        </form>
+                        <ResendButton requestId={r.id} />
                       ) : (
                         <span className="dim" style={{ fontSize: 11 }}>—</span>
                       )}

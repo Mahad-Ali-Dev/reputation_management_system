@@ -28,9 +28,9 @@ export async function TopBar({ title }: { title?: string } = {}) {
         </div>
       )}
 
-      <button type="button" className="tb__iconbtn" aria-label="Help">
+      <Link href="/docs" className="tb__iconbtn" aria-label="Help & documentation">
         <Icon name="help" size={16} />
-      </button>
+      </Link>
 
       <div className="tb__iconbtn" aria-label="Notifications">
         <NotificationsBell />

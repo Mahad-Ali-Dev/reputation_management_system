@@ -26,8 +26,13 @@ import { LinkedDevicesRow } from "./_components/linked-devices-row";
 
 export const dynamic = "force-dynamic";
 
-export default async function EstablishmentsPage() {
+export default async function EstablishmentsPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ connect?: string; connect_error?: string }>;
+}) {
   const { orgId } = await getOrgContext();
+  const sp = (await searchParams) ?? {};
   const rows = await listEstablishmentsForCards(orgId);
 
   if (rows.length === 0) return <EmptyEstablishments />;
@@ -48,6 +53,29 @@ export default async function EstablishmentsPage() {
           </Link>
         }
       />
+
+      {/* The Google authorize route lands here when it can't resolve which
+          location to connect (multi-location org, or a stale link). */}
+      {sp.connect === "google" && (
+        <div
+          className="ds-card row"
+          role="status"
+          style={{
+            padding: "12px 16px",
+            marginBottom: 16,
+            gap: 10,
+            background: "var(--pri-50)",
+            borderColor: "var(--pri-100)",
+          }}
+        >
+          <Icon name="google" size={14} style={{ color: "var(--pri)", flexShrink: 0 }} />
+          <span style={{ fontSize: 13 }}>
+            {sp.connect_error === "no_location"
+              ? "Create your business first, then connect it to Google from its card."
+              : "Choose which business to connect — use the Connect Google button on its card below."}
+          </span>
+        </div>
+      )}
 
       <div className="col" style={{ gap: 18 }}>
         {cards.map((card) => (
@@ -82,11 +110,12 @@ function EmptyEstablishments() {
         title="My Establishments"
         description="Connect a Google Business Profile to start syncing reviews and drafting AI replies."
         actions={
+          // De-emphasized on purpose — the dashed card below is the focal CTA.
+          // It still navigates, so no aria-disabled (that would lie to AT).
           <Link
             href="/establishments/new"
             className="btn btn--pri"
-            aria-disabled="true"
-            style={{ opacity: 0.5 }}
+            style={{ opacity: 0.6 }}
           >
             <Icon name="plus" size={12} />
             Add New Business

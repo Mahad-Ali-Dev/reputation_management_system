@@ -234,9 +234,13 @@ export default async function EstablishmentDetailPage({
         <Link href="/connections" className="tabs__t" style={{ textDecoration: "none" }}>
           Connections
         </Link>
-        <button type="button" className="tabs__t">
+        <Link
+          href={`/establishments/${establishment.id}/settings`}
+          className="tabs__t"
+          style={{ textDecoration: "none" }}
+        >
           Settings
-        </button>
+        </Link>
       </div>
 
       {/* Overview grid */}
