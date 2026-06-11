@@ -79,8 +79,16 @@ const baseConfig: pino.LoggerOptions = {
   },
 };
 
+// `typeof window` guard: several lib modules that import this logger also get
+// pulled into CLIENT bundles (e.g. a "use client" panel importing a constant
+// from a lib query module). Pino's browser build has no `.transport()` — calling
+// it at module scope crashed every such page in dev (NODE_ENV=development is
+// inlined into the browser bundle too). In the browser, plain pino() falls back
+// to its console shim, which is what we want.
 const transport =
-  process.env.NODE_ENV === "development" && !process.env.NEXT_RUNTIME
+  typeof window === "undefined" &&
+  process.env.NODE_ENV === "development" &&
+  !process.env.NEXT_RUNTIME
     ? pino.transport({
         target: "pino-pretty",
         options: { colorize: true, singleLine: true, translateTime: "HH:MM:ss" },

@@ -5,7 +5,11 @@ import { TabBar, type TabItem } from "@/components/tab-bar";
 import { Icon } from "@/components/shell/icon";
 import type { SurveyAutomationRow } from "@/lib/surveys/automations";
 import type { IncentiveCoupon, IncentiveStats } from "@/lib/surveys/coupon-queries";
-import type { SurveyInsight } from "@/lib/surveys/insights-types";
+import {
+  PRIORITY_COLOR,
+  PRIORITY_LABEL,
+  type SurveyInsight,
+} from "@/lib/surveys/insights-types";
 import type {
   DetailedResponse,
   NpsDistribution,
@@ -49,6 +53,23 @@ export type SurveyCampaignCard = {
   tokens: number;
 };
 
+/** Org-wide CSAT from rating-type answers (null = none exist → tile omitted). */
+export type SurveyCsat = { score: number; count: number };
+
+/**
+ * Landing-page snapshot of the smart-routing config. Routing is per-campaign
+ * (`smartRouteEnabled`), so the server picks the first active routed campaign
+ * and pairs it with org-wide routed-outcome counts. `null` = no campaigns yet
+ * → the routing card is omitted.
+ */
+export type SurveyRoutingSnapshot = {
+  enabled: boolean;
+  sourceName: string;
+  editHref: string;
+  routedReview: number;
+  routedAlert: number;
+};
+
 export type SurveysTabsData = {
   campaigns: SurveyCampaignCard[];
   overview: SurveysOverview;
@@ -64,6 +85,8 @@ export type SurveysTabsData = {
   hasInsightsAccess: boolean;
   couponStats: IncentiveStats;
   coupons: IncentiveCoupon[];
+  csat: SurveyCsat | null;
+  routing: SurveyRoutingSnapshot | null;
 };
 
 const TAB_KEYS = [
@@ -121,7 +144,7 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
       </div>
 
       <div hidden={tab !== "surveys"}>
-        <SurveysPanel data={data} />
+        <SurveysPanel data={data} onNavigate={onChange} />
       </div>
       <div hidden={tab !== "templates"}>
         <TemplatesPanel campaigns={data.campaigns} />
@@ -158,10 +181,33 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
   );
 }
 
-function SurveysPanel({ data }: { data: SurveysTabsData }) {
+function SurveysPanel({
+  data,
+  onNavigate,
+}: {
+  data: SurveysTabsData;
+  /** Switches the workspace tab (same handler as the TabBar). */
+  onNavigate: (key: string) => void;
+}) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <StatCards overview={data.overview} />
+      <StatCards overview={data.overview} csat={data.csat} />
+
+      {data.routing && (
+        <div className="svl-grid">
+          <SmartRoutingCard routing={data.routing} />
+          <AiThemesRail
+            insights={data.insights}
+            hasAccess={data.hasInsightsAccess}
+            onNavigate={onNavigate}
+          />
+        </div>
+      )}
+
+      {data.responses.length > 0 && (
+        <RecentResponsesCard responses={data.responses} onNavigate={onNavigate} />
+      )}
+
       {data.campaigns.length === 0 ? (
         <div className="ds-card" style={{ padding: 48, textAlign: "center", maxWidth: 520, marginInline: "auto" }}>
           <EmptyIllustration name="surveys-empty" style={{ marginBottom: 16 }} />
@@ -216,6 +262,229 @@ function SurveysPanel({ data }: { data: SurveysTabsData }) {
       )}
     </div>
   );
+}
+
+/**
+ * Smart-routing visual card — the two branch tiles (Happy → Public review /
+ * Unhappy → Private recovery) mirroring the REAL per-campaign routing rule in
+ * lib/surveys/actions.ts (score ≥ 8 → review_request, ≤ 6 → internal_alert).
+ * Counts are org-wide routed outcomes; the edit link opens the source campaign.
+ */
+function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
+  return (
+    <div className="ds-card svl-route-card" style={{ padding: 20 }}>
+      <div className="svl-route-head">
+        <div>
+          <div className="row" style={{ gap: 8 }}>
+            <Icon name="bolt" size={14} style={{ color: "var(--pri)" }} />
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em" }}>
+              Smart routing
+            </h3>
+            <span className={`chip ${routing.enabled ? "chip--ok" : "chip--out"}`} style={{ fontSize: 11 }}>
+              {routing.enabled ? "On" : "Off"}
+            </span>
+          </div>
+          <p className="dim" style={{ margin: "4px 0 0", fontSize: 12.5, lineHeight: 1.5 }}>
+            Based on “{routing.sourceName}” — happy customers go public, unhappy ones stay private.
+          </p>
+        </div>
+        <Link href={routing.editHref} className="btn btn--sm" style={{ marginLeft: "auto" }}>
+          <Icon name="edit" size={12} />
+          Edit routing
+        </Link>
+      </div>
+
+      <div className="svl-route-branches">
+        <div className="svl-branch svl-branch--happy">
+          <span className="svl-branch__icon" aria-hidden>
+            <Icon name="checkCircle" size={17} />
+          </span>
+          <div>
+            <div className="svl-branch__title">Happy → Public review</div>
+            <div className="svl-branch__sub">Scores 8–10 get a review request</div>
+          </div>
+          <div className="svl-branch__count">
+            <b>{routing.routedReview.toLocaleString()}</b>
+            <span>routed</span>
+          </div>
+        </div>
+        <div className="svl-branch svl-branch--unhappy">
+          <span className="svl-branch__icon" aria-hidden>
+            <Icon name="alert" size={17} />
+          </span>
+          <div>
+            <div className="svl-branch__title">Unhappy → Private recovery</div>
+            <div className="svl-branch__sub">Scores 0–6 alert your team privately</div>
+          </div>
+          <div className="svl-branch__count">
+            <b>{routing.routedAlert.toLocaleString()}</b>
+            <span>alerted</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="svl-route-rule">One question, two outcomes — passives (7) are simply recorded</div>
+    </div>
+  );
+}
+
+/**
+ * AI-theme chips rail — reuses the cached AI-insights rows already fetched for
+ * the AI Insights tab (fail-soft upstream). Each chip jumps to that tab; the
+ * zero/gated states are honest about why nothing is showing.
+ */
+function AiThemesRail({
+  insights,
+  hasAccess,
+  onNavigate,
+}: {
+  insights: SurveyInsight[];
+  hasAccess: boolean;
+  onNavigate: (key: string) => void;
+}) {
+  const top = insights.slice(0, 5);
+  return (
+    <div className="ds-card svl-themes" style={{ padding: 20 }}>
+      <div className="row" style={{ gap: 8 }}>
+        <Icon name="brain" size={14} style={{ color: "var(--pri)" }} />
+        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em" }}>
+          AI themes
+        </h3>
+        <button
+          type="button"
+          className="btn btn--sm"
+          style={{ marginLeft: "auto" }}
+          onClick={() => onNavigate("insights")}
+        >
+          View all
+          <Icon name="arrowR" size={11} />
+        </button>
+      </div>
+
+      {top.length === 0 ? (
+        <p className="dim" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55 }}>
+          {hasAccess
+            ? "No themes yet — they appear once AI analysis runs on 10+ responses."
+            : "AI theme detection is a Pro feature. Open the AI Insights tab to learn more."}
+        </p>
+      ) : (
+        <div className="svl-theme-list">
+          {top.map((ins, i) => (
+            <button
+              key={`${ins.type}-${i}`}
+              type="button"
+              className="svl-theme"
+              onClick={() => onNavigate("insights")}
+              title={ins.description}
+            >
+              <span className="svl-theme__dot" style={{ background: PRIORITY_COLOR[ins.priority] }} aria-hidden />
+              <span className="svl-theme__label">{ins.headline}</span>
+              <span className="svl-theme__tag" style={{ color: PRIORITY_COLOR[ins.priority] }}>
+                {PRIORITY_LABEL[ins.priority]}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
+ * Compact recent-responses preview (Customer / Score / Route / Status) — the
+ * first rows of the same `listResponsesDetailed` data the Results tab renders
+ * in full. Footer button jumps to the Results tab.
+ */
+function RecentResponsesCard({
+  responses,
+  onNavigate,
+}: {
+  responses: SurveysTabsData["responses"];
+  onNavigate: (key: string) => void;
+}) {
+  const recent = responses.slice(0, 6);
+  return (
+    <div className="ds-card svl-recent" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="row" style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>Recent responses</div>
+          <div className="dim" style={{ fontSize: 12 }}>Latest feedback and where it was routed</div>
+        </div>
+        <button
+          type="button"
+          className="btn btn--sm"
+          style={{ marginLeft: "auto" }}
+          onClick={() => onNavigate("responses")}
+        >
+          View all results
+          <Icon name="arrowR" size={11} />
+        </button>
+      </div>
+      <div style={{ overflowX: "auto" }}>
+        <table>
+          <thead>
+            <tr>
+              <th>Customer</th>
+              <th>Score</th>
+              <th>Route</th>
+              <th className="svl-hide-sm">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {recent.map((r) => (
+              <tr key={r.id}>
+                <td>
+                  <span style={{ fontWeight: 500 }}>{r.recipient ?? "Anonymous"}</span>
+                  {r.campaignName && (
+                    <div className="dim" style={{ fontSize: 11 }}>{r.campaignName}</div>
+                  )}
+                </td>
+                <td>
+                  <ScoreChip nps={r.npsScore} rating={r.rating} />
+                </td>
+                <td>
+                  {r.smartRouteTo === "review_request" ? (
+                    <span className="chip chip--ok" style={{ fontSize: 11 }}>Public review</span>
+                  ) : r.smartRouteTo === "internal_alert" ? (
+                    <span className="chip chip--warn" style={{ fontSize: 11 }}>Private recovery</span>
+                  ) : (
+                    <span className="dim">—</span>
+                  )}
+                </td>
+                <td className="svl-hide-sm">
+                  <span className="dim" style={{ whiteSpace: "nowrap", fontSize: 12 }}>
+                    Completed {new Date(r.createdAt).toLocaleDateString()}
+                  </span>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/** Color-coded score chip — NPS 0–10 preferred, 1–5★ rating fallback. */
+function ScoreChip({ nps, rating }: { nps: number | null; rating: number | null }) {
+  if (nps !== null) {
+    const tone =
+      nps >= 9
+        ? { bg: "var(--ok-soft, rgba(5,150,105,0.1))", fg: "var(--ok)" }
+        : nps >= 7
+          ? { bg: "var(--warn-soft, rgba(217,119,6,0.1))", fg: "var(--warn)" }
+          : { bg: "var(--bad-soft, rgba(220,38,38,0.1))", fg: "var(--bad)" };
+    return (
+      <span
+        className="chip"
+        style={{ background: tone.bg, color: tone.fg, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
+      >
+        {nps}/10
+      </span>
+    );
+  }
+  if (rating !== null) return <span>{rating}★</span>;
+  return <span className="dim">—</span>;
 }
 
 function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {

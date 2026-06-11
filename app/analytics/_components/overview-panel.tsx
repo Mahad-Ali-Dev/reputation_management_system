@@ -1,7 +1,16 @@
 import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
+import { EmptyIllustration } from "@/components/empty-state";
 import type { OverviewMetrics } from "@/lib/seo/overview";
 import { ExecSummaryCard } from "./exec-summary-card";
+
+/** Minimal competitor slice for the Overview compare chart (built by the page
+ *  from the same `listCompetitors` query the Competitors tab uses; `null` when
+ *  the org isn't entitled so gated data never reaches the client). */
+export type CompetitorCompareData = {
+  you: { name: string; rating: number | null; reviewCount: number | null };
+  competitors: { name: string; rating: number | null; reviewCount: number | null }[];
+};
 
 /**
  * Overview tab (Module 13) — the cross-functional hub.
@@ -17,10 +26,16 @@ export function OverviewPanel({
   metrics,
   execSummary,
   entitled,
+  orgName,
+  competitorCompare,
 }: {
   metrics: OverviewMetrics;
   execSummary: { summary: string; generatedAt: string | null; ai: boolean };
   entitled: boolean;
+  /** Org display name — labels the "You" slot in the local 3-pack visual. */
+  orgName: string;
+  /** Compare-chart data (entitled orgs only; null ⇒ upgrade CTA). */
+  competitorCompare: CompetitorCompareData | null;
 }) {
   const rep = metrics.reputation;
   const hasReviews = rep.reviewCount > 0;
@@ -76,16 +91,15 @@ export function OverviewPanel({
           icon="qr"
         />
 
-        {/* SEO cards — gated by connection */}
-        {metrics.connected.rankTracking ? (
+        {/* SEO cards — gated by connection. The local-rank KPI only renders when
+            connected; the unconnected state lives in the richer 3-pack card below. */}
+        {metrics.connected.rankTracking && (
           <KpiTile
             label="Local pack position"
             value={metrics.seo.localPackPosition != null ? `#${metrics.seo.localPackPosition}` : "—"}
             hint={metrics.seo.localPackPosition != null ? "Best tracked keyword" : "Awaiting first crawl"}
             icon="pin"
           />
-        ) : (
-          <ConnectTile label="Local pack position" hint="Connect rank tracking" href="/connections" icon="pin" />
         )}
         {metrics.connected.ga4 ? (
           <KpiTile
@@ -99,19 +113,30 @@ export function OverviewPanel({
         )}
       </div>
 
-      {/* Reviews trend */}
-      <div className="ds-card">
-        <div className="ds-card__head">
-          <div className="ds-card__title">Reviews per day</div>
-          <div className="ds-card__sub">
-            {hasReviews
-              ? `${rep.reviewCount} review${rep.reviewCount === 1 ? "" : "s"} in the last ${metrics.rangeDays} days.`
-              : "No data yet. Sync your Google reviews to see activity here."}
+      {/* Chart row — reviews trend + local 3-pack + competitor compare */}
+      <div className="anx-row">
+        <div className="ds-card">
+          <div className="ds-card__head">
+            <div className="ds-card__title">Reviews per day</div>
+            <div className="ds-card__sub">
+              {hasReviews
+                ? `${rep.reviewCount} review${rep.reviewCount === 1 ? "" : "s"} in the last ${metrics.rangeDays} days.`
+                : "No data yet. Sync your Google reviews to see activity here."}
+            </div>
+          </div>
+          <div className="ds-card__body">
+            <ReviewsTrendChart points={rep.reviewsPerDay} />
           </div>
         </div>
-        <div className="ds-card__body">
-          <ReviewsTrendChart points={rep.reviewsPerDay} />
-        </div>
+
+        <LocalPackCard
+          connected={metrics.connected.rankTracking}
+          position={metrics.seo.localPackPosition}
+          orgName={orgName}
+          rating={hasReviews ? rep.avgRating : null}
+        />
+
+        <CompetitorCompareCard data={competitorCompare} />
       </div>
 
       {/* Rating distribution + NPS/chatbot */}
@@ -193,6 +218,200 @@ function ConnectTile({ label, hint, href, icon }: { label: string; hint: string;
         </div>
       </div>
     </Link>
+  );
+}
+
+/**
+ * Local 3-pack mini visual. Three states:
+ *  - rank tracking connected + position known → mini map-pack: three rank
+ *    slots, yours highlighted (anonymous slots are skeleton bars — we never
+ *    invent competitor names for positions we don't know).
+ *  - connected, no crawl yet → "awaiting first crawl".
+ *  - not connected → designed connect-CTA card into /connections.
+ */
+function LocalPackCard({
+  connected,
+  position,
+  orgName,
+  rating,
+}: {
+  connected: boolean;
+  position: number | null;
+  orgName: string;
+  rating: number | null;
+}) {
+  if (!connected) {
+    return (
+      <div className="ds-card">
+        <div className="ds-card__head">
+          <div className="ds-card__title">Local 3-pack</div>
+          <div className="ds-card__sub">Your spot in Google's map results</div>
+        </div>
+        <div className="ds-card__body anx-connect">
+          <span className="anx-connect__icon">
+            <Icon name="pin" size={18} />
+          </span>
+          <p className="anx-connect__title">See your local 3-pack rank</p>
+          <p className="anx-connect__sub">
+            Connect rank tracking to monitor where you appear in Google's local map pack for your keywords.
+          </p>
+          <Link href="/connections" className="anx-connect__cta">
+            <Icon name="plug" size={13} /> Connect rank tracking
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (position == null) {
+    return (
+      <div className="ds-card">
+        <div className="ds-card__head">
+          <div className="ds-card__title">Local 3-pack</div>
+          <div className="ds-card__sub">Your spot in Google's map results</div>
+        </div>
+        <div className="ds-card__body anx-connect">
+          <span className="anx-connect__icon">
+            <Icon name="pin" size={18} />
+          </span>
+          <p className="anx-connect__title">Awaiting first crawl</p>
+          <p className="anx-connect__sub">
+            Rank tracking is connected — your local-pack position appears after the next crawl.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const inPack = position <= 3;
+  return (
+    <div className="ds-card">
+      <div className="ds-card__head">
+        <div className="ds-card__title">Local 3-pack</div>
+        <div className="ds-card__sub">Best tracked keyword</div>
+      </div>
+      <div className="ds-card__body">
+        <div className="anx-pack__list">
+          {[1, 2, 3].map((slot) =>
+            inPack && slot === position ? (
+              <div key={slot} className="anx-pack__slot anx-pack__slot--you">
+                <span className="anx-pack__rank">{slot}</span>
+                <span style={{ minWidth: 0 }}>
+                  <span className="anx-pack__you-name" style={{ display: "block" }}>
+                    {orgName}
+                  </span>
+                  <span className="anx-pack__you-meta">
+                    You{rating != null ? ` · ${rating.toFixed(1)} ★` : ""}
+                  </span>
+                </span>
+              </div>
+            ) : (
+              <div key={slot} className="anx-pack__slot" aria-hidden="true">
+                <span className="anx-pack__rank">{slot}</span>
+                <span className="anx-pack__ghost">
+                  <span className="anx-pack__ghost-bar" />
+                  <span className="anx-pack__ghost-bar anx-pack__ghost-bar--short" />
+                </span>
+              </div>
+            ),
+          )}
+        </div>
+        {inPack ? (
+          <p className="anx-pack__foot">You hold position #{position} in the map pack.</p>
+        ) : (
+          <p className="anx-pack__foot anx-pack__foot--out">
+            You're #{position} — outside the 3-pack. See Recommendations to climb.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Competitor compare — compact bar chart of review volume (You vs tracked
+ * rivals), reusing the Competitors tab's `listCompetitors` data. Zero state
+ * deep-links into the Competitors tab; non-entitled orgs get the upgrade CTA
+ * (same `/subscription` route the padlocked tab uses).
+ */
+function CompetitorCompareCard({ data }: { data: CompetitorCompareData | null }) {
+  if (data === null) {
+    return (
+      <div className="ds-card">
+        <div className="ds-card__head">
+          <div className="ds-card__title">Competitor compare</div>
+          <div className="ds-card__sub">Review volume vs rivals</div>
+        </div>
+        <div className="ds-card__body anx-connect">
+          <span className="anx-connect__icon">
+            <Icon name="lock" size={16} />
+          </span>
+          <p className="anx-connect__title">Competitor intel is a Pro feature</p>
+          <p className="anx-connect__sub">
+            Upgrade to benchmark your rating and review volume against up to 3 local rivals.
+          </p>
+          <Link href="/subscription?feature=competitors" className="anx-connect__cta">
+            Upgrade →
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (data.competitors.length === 0) {
+    return (
+      <div className="ds-card">
+        <div className="ds-card__head">
+          <div className="ds-card__title">Competitor compare</div>
+          <div className="ds-card__sub">Review volume vs rivals</div>
+        </div>
+        <div className="ds-card__body anx-comp__empty">
+          <EmptyIllustration name="insights-empty" size={120} />
+          <p className="anx-connect__title">No competitors tracked yet</p>
+          <p className="anx-connect__sub">Track up to 3 local rivals to see how your review volume stacks up.</p>
+          <Link href="/analytics?tab=competitors" className="anx-connect__cta">
+            <Icon name="target" size={13} /> Track competitors
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const entries = [
+    { name: data.you.name, rating: data.you.rating, reviewCount: data.you.reviewCount ?? 0, you: true },
+    ...data.competitors.map((c) => ({ name: c.name, rating: c.rating, reviewCount: c.reviewCount ?? 0, you: false })),
+  ];
+  const max = Math.max(1, ...entries.map((e) => e.reviewCount));
+
+  return (
+    <div className="ds-card">
+      <div className="ds-card__head">
+        <div className="ds-card__title">Competitor compare</div>
+        <div className="ds-card__sub">Total review volume</div>
+      </div>
+      <div className="ds-card__body">
+        <div className="anx-comp__bars" role="img" aria-label="Review volume: you vs tracked competitors">
+          {entries.map((e) => (
+            <div key={e.name + (e.you ? "-you" : "")} className="anx-comp__col">
+              <span className="anx-comp__val">{e.reviewCount.toLocaleString()}</span>
+              <div
+                className={`anx-comp__bar${e.you ? " anx-comp__bar--you" : ""}`}
+                style={{ height: `${Math.max(3, (e.reviewCount / max) * 80)}%` }}
+                title={`${e.name}: ${e.reviewCount.toLocaleString()} reviews${e.rating != null ? `, ${e.rating.toFixed(1)} ★` : ""}`}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="anx-comp__labels">
+          {entries.map((e) => (
+            <span key={e.name + (e.you ? "-you" : "")} className={`anx-comp__label${e.you ? " anx-comp__label--you" : ""}`}>
+              {e.you ? "You" : e.name}
+              <span className="anx-comp__rating">{e.rating != null ? `${e.rating.toFixed(1)} ★` : "—"}</span>
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 

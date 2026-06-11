@@ -11,6 +11,8 @@ import {
   getAutopilotConfig,
   getNeedsHumanQueue,
 } from "@/lib/autopilot/queries";
+import { summarizeAutopilotActions } from "@/lib/autopilot/ledger";
+import "./autopilot.css";
 import { buildRoiFunnel } from "@/lib/roi/attribution";
 import { estimateRevenue } from "@/lib/roi/estimate";
 import { getRoiHeadline, loadRoiSettings } from "@/lib/roi/summary";
@@ -48,15 +50,17 @@ export default async function AutopilotPage({
   const now = new Date();
   const since30d = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-  const [config, feed, needsYou, funnel, headline, settings, establishments] = await Promise.all([
-    getAutopilotConfig(orgId),
-    getAutopilotActivityFeed(orgId, 60),
-    getNeedsHumanQueue(orgId, 25),
-    buildRoiFunnel(orgId, { range: { start: since30d, end: now } }),
-    getRoiHeadline(orgId, { start: since30d, end: now }),
-    loadRoiSettings(orgId, null),
-    listEstablishments(orgId),
-  ]);
+  const [config, feed, needsYou, funnel, headline, settings, establishments, ledger30d] =
+    await Promise.all([
+      getAutopilotConfig(orgId),
+      getAutopilotActivityFeed(orgId, 60),
+      getNeedsHumanQueue(orgId, 25),
+      buildRoiFunnel(orgId, { range: { start: since30d, end: now } }),
+      getRoiHeadline(orgId, { start: since30d, end: now }),
+      loadRoiSettings(orgId, null),
+      listEstablishments(orgId),
+      summarizeAutopilotActions(orgId, since30d), // fail-soft: all-zeros on missing table
+    ]);
 
   const estimate = estimateRevenue(
     {
@@ -90,6 +94,10 @@ export default async function AutopilotPage({
     },
     establishments,
     rangeLabel: "last 30 days",
+    automation: {
+      actions: ledger30d.total,
+      hoursSaved: estimateHoursSaved(ledger30d.byLoop),
+    },
   };
 
   const steps: ChecklistStep[] = [
@@ -138,6 +146,30 @@ export default async function AutopilotPage({
       )}
     </AppShellServer>
   );
+}
+
+/**
+ * Hours saved, derived from REAL ledger counts × an average handling time per
+ * action type (the assumption is surfaced in the tile's caption). Pure math —
+ * no fixtures; zero actions → 0.
+ */
+const MINUTES_PER_ACTION: Record<string, number> = {
+  auto_reply: 6,
+  low_star_draft: 4,
+  review_request: 3,
+  voice_review: 3,
+  dispute: 10,
+  geo_post: 8,
+  inbox_reply: 4,
+  escalation: 1,
+};
+
+function estimateHoursSaved(byLoop: Record<string, number>): number {
+  let minutes = 0;
+  for (const [loop, count] of Object.entries(byLoop)) {
+    minutes += (MINUTES_PER_ACTION[loop] ?? 2) * count;
+  }
+  return minutes / 60;
 }
 
 /** Establishments for the ROI settings dropdown (tolerant of empty/unmigrated). */

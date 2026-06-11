@@ -1,19 +1,21 @@
 "use client";
 
 import { Icon, type IconName } from "@/components/shell/icon";
-import { saveAutopilotConfig } from "@/lib/autopilot/config-actions";
 import Link from "next/link";
-import { type JSX, useState, useTransition } from "react";
+import type { JSX } from "react";
 import type { AutopilotConfigView } from "@/lib/autopilot/queries";
 
 /**
  * Controls panel (Module 15) — the per-loop switch grid. Each loop has a
- * one-line explainer + a deep-link to the owning module's settings. Persists the
- * whole config via `saveAutopilotConfig` (admin-only server action). The loop
- * switches only take effect once Autopilot's master switch is on.
+ * one-line explainer + a deep-link to the owning module's settings.
+ *
+ * CONTROLLED: loop state + persistence live in the parent AutopilotShell (so
+ * the 3-up loop cards and this list share one source of truth — flipping a
+ * card flips here too, and both go through the same `saveAutopilotConfig`
+ * admin-only server action).
  */
 
-type LoopKey =
+export type LoopKey =
   | "autoReply5Star"
   | "draftLowStar"
   | "sendReviewRequests"
@@ -88,47 +90,21 @@ const LOOPS: { key: LoopKey; label: string; hint: string; icon: IconName; href?:
   },
 ];
 
-export function ControlsPanel({ config }: { config: AutopilotConfigView }): JSX.Element {
-  const [state, setState] = useState<Record<LoopKey, boolean>>({
-    autoReply5Star: config.loops.autoReply5Star,
-    draftLowStar: config.loops.draftLowStar,
-    sendReviewRequests: config.loops.sendReviewRequests,
-    voiceToReviewEnabled: config.loops.voiceToReviewEnabled,
-    draftDisputes: config.loops.draftDisputes,
-    geoPosts: config.loops.geoPosts,
-    inboxAutoReply: config.loops.inboxAutoReply,
-    escalateToHuman: config.loops.escalateToHuman,
-    weeklyDigestEnabled: config.weeklyDigestEnabled,
-  });
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
-
-  function persist(next: Record<LoopKey, boolean>) {
-    setError(null);
-    setSaved(false);
-    const fd = new FormData();
-    fd.set("enabled", config.enabled ? "on" : "");
-    fd.set("riskTolerance", config.riskTolerance);
-    for (const k of Object.keys(next) as LoopKey[]) {
-      if (next[k]) fd.set(k, "on");
-    }
-    startTransition(async () => {
-      try {
-        await saveAutopilotConfig(fd);
-        setSaved(true);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Could not save.");
-      }
-    });
-  }
-
-  function toggle(key: LoopKey) {
-    const next = { ...state, [key]: !state[key] };
-    setState(next);
-    persist(next);
-  }
-
+export function ControlsPanel({
+  config,
+  state,
+  pending,
+  saved,
+  error,
+  onToggle,
+}: {
+  config: AutopilotConfigView;
+  state: Record<LoopKey, boolean>;
+  pending: boolean;
+  saved: boolean;
+  error: string | null;
+  onToggle: (key: LoopKey) => void;
+}): JSX.Element {
   return (
     <div className="ds-card">
       <div className="ds-card__head">
@@ -195,32 +171,10 @@ export function ControlsPanel({ config }: { config: AutopilotConfigView }): JSX.
               aria-checked={state[loop.key]}
               aria-label={loop.label}
               disabled={pending}
-              onClick={() => toggle(loop.key)}
-              style={{
-                width: 42,
-                height: 24,
-                borderRadius: 999,
-                border: "none",
-                background: state[loop.key] ? "var(--pri)" : "var(--rl-muted-2, #cbd5e1)",
-                position: "relative",
-                cursor: pending ? "wait" : "pointer",
-                flexShrink: 0,
-                transition: "background 120ms",
-              }}
+              onClick={() => onToggle(loop.key)}
+              className="ap2-switch"
             >
-              <span
-                style={{
-                  position: "absolute",
-                  top: 3,
-                  left: state[loop.key] ? 21 : 3,
-                  width: 18,
-                  height: 18,
-                  borderRadius: "50%",
-                  background: "#fff",
-                  transition: "left 120ms",
-                  boxShadow: "0 1px 2px rgba(0,0,0,0.2)",
-                }}
-              />
+              <span className="ap2-switch__knob" />
             </button>
           </div>
         ))}

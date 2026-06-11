@@ -3,11 +3,20 @@ import type { SurveysOverview } from "@/lib/surveys/queries";
 /**
  * Server-friendly presentational stat-card row for the Surveys tab (Module 11).
  * Pure props; reuses the `.ds-card` / `.stat` classes used across the app. Shows
- * Total Sent, Completed (+ rate), Avg NPS (0–100), and Scheduled.
+ * Total Sent, Completed (+ rate), Avg NPS (0–100), CSAT (when rating-type
+ * answers exist — tile is omitted otherwise), and Scheduled. The `.svl-kpis`
+ * auto-fit grid absorbs the 4-vs-5 tile difference.
  */
-export function StatCards({ overview }: { overview: SurveysOverview }) {
+export function StatCards({
+  overview,
+  csat,
+}: {
+  overview: SurveysOverview;
+  /** `null` = no rating-type answers yet → tile omitted (live data only). */
+  csat?: { score: number; count: number } | null;
+}) {
   return (
-    <div className="grid-4" style={{ gap: 12 }}>
+    <div className="svl-kpis">
       <Stat label="Total sent" value={overview.totalSent.toLocaleString()} sub="Survey invites · all time" />
       <Stat
         label="Completed"
@@ -20,6 +29,14 @@ export function StatCards({ overview }: { overview: SurveysOverview }) {
         sub="% promoters − % detractors"
         accent
       />
+      {csat ? (
+        <Stat
+          label="CSAT"
+          value={`${csat.score}%`}
+          sub={`${csat.count.toLocaleString()} rating answer${csat.count === 1 ? "" : "s"} · 4–5★`}
+          accent
+        />
+      ) : null}
       <Stat label="Scheduled" value={overview.scheduled.toLocaleString()} sub="Awaiting response" />
     </div>
   );

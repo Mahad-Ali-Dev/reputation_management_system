@@ -1,0 +1,216 @@
+/* Analytics Overview tab — chart row (reviews trend + local 3-pack + competitor
+   compare). Co-located styles for app/analytics, all classes prefixed .anx-. */
+
+/* ── 3-up chart row ───────────────────────────────────────────── */
+.anx-row {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) minmax(0, 1fr);
+  align-items: stretch;
+}
+@media (max-width: 1100px) {
+  .anx-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Local 3-pack mini visual ─────────────────────────────────── */
+.anx-pack__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.anx-pack__slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-md, 10px);
+  background: var(--surface-2);
+  min-height: 44px;
+}
+.anx-pack__slot--you {
+  background: color-mix(in srgb, var(--pri) 8%, transparent);
+  border-color: color-mix(in srgb, var(--pri) 35%, var(--line));
+}
+.anx-pack__rank {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface-3);
+  color: var(--rl-muted);
+  flex-shrink: 0;
+}
+.anx-pack__slot--you .anx-pack__rank {
+  background: var(--pri);
+  color: #fff;
+}
+.anx-pack__you-name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.anx-pack__you-meta {
+  font-size: 11px;
+  color: var(--rl-muted);
+}
+/* Anonymous slot — decorative skeleton bars (occupant unknown, never faked). */
+.anx-pack__ghost {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+.anx-pack__ghost-bar {
+  height: 7px;
+  border-radius: 4px;
+  background: var(--surface-3);
+}
+.anx-pack__ghost-bar--short {
+  width: 55%;
+}
+.anx-pack__foot {
+  margin: 10px 0 0;
+  font-size: 11.5px;
+  color: var(--rl-muted-2);
+}
+.anx-pack__foot--out {
+  color: var(--warn, #b45309);
+  font-weight: 600;
+}
+
+/* Connect-CTA state for the 3-pack card */
+.anx-connect {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  padding: 18px 14px;
+  height: 100%;
+}
+.anx-connect__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--pri) 10%, transparent);
+  color: var(--pri);
+  margin-bottom: 6px;
+}
+.anx-connect__title {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0;
+}
+.anx-connect__sub {
+  font-size: 12px;
+  color: var(--rl-muted);
+  margin: 0;
+  max-width: 240px;
+}
+.anx-connect__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  background: var(--pri);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.anx-connect__cta:hover {
+  background: color-mix(in srgb, var(--pri) 88%, #000);
+}
+
+/* ── Competitor compare bar chart ─────────────────────────────── */
+.anx-comp__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  height: 132px;
+  padding-top: 6px;
+}
+.anx-comp__col {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  gap: 4px;
+}
+.anx-comp__val {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--rl-muted);
+}
+.anx-comp__bar {
+  width: 100%;
+  max-width: 44px;
+  border-radius: 6px 6px 2px 2px;
+  background: color-mix(in srgb, var(--pri) 30%, var(--surface-3));
+  min-height: 3px;
+}
+.anx-comp__bar--you {
+  background: var(--pri);
+}
+.anx-comp__labels {
+  display: flex;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 6px;
+  padding-top: 6px;
+}
+.anx-comp__label {
+  flex: 1;
+  min-width: 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--rl-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.anx-comp__label--you {
+  color: var(--pri);
+  font-weight: 700;
+}
+.anx-comp__rating {
+  display: block;
+  font-size: 10.5px;
+  color: var(--rl-muted-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Zero state inside the compare card */
+.anx-comp__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 4px;
+  padding: 14px 12px;
+  height: 100%;
+}

@@ -23,6 +23,7 @@ import { fetchCoreWebVitals } from "@/lib/seo/adapters/pagespeed";
 import { computeRecommendations } from "@/lib/seo/recommendations";
 import type { ScoreFactor } from "@/lib/seo/reputation-score";
 
+import "./analytics-overview.css";
 import { ReportsTabs, type ReportTabKey } from "./_components/reports-tabs";
 import { RangeSelector } from "./_components/range-selector";
 import { OverviewPanel } from "./_components/overview-panel";
@@ -61,7 +62,8 @@ export default async function AnalyticsPage({
 }: {
   searchParams: Promise<SearchParams>;
 }) {
-  const { orgId } = await getOrgContext();
+  const ctx = await getOrgContext();
+  const { orgId } = ctx;
   const sp = await searchParams;
   const rangeDays = normalizeRange(sp.range);
   const requestedTab = (sp.tab ?? "overview") as ReportTabKey;
@@ -127,8 +129,33 @@ export default async function AnalyticsPage({
     ? await renderCompetitorsPanel(orgId, establishmentId, metrics, competitors)
     : <UpgradeCard feature="competitor_intel" />;
 
+  // Overview compare chart reuses the Competitors tab's `listCompetitors` rows
+  // (already fetched above) — gated data is only serialized for entitled orgs.
+  const competitorCompare = entitled
+    ? {
+        you: {
+          name: ctx.org.name,
+          rating: metrics.reputation.avgRating || null,
+          reviewCount: metrics.reputation.reviewCount || null,
+        },
+        competitors: competitors.map((c) => ({
+          name: c.name,
+          rating: c.rating,
+          reviewCount: c.reviewCount,
+        })),
+      }
+    : null;
+
   const panels: Record<ReportTabKey, React.ReactNode> = {
-    overview: <OverviewPanel metrics={metrics} execSummary={serializeSummary(execSummary)} entitled={entitled} />,
+    overview: (
+      <OverviewPanel
+        metrics={metrics}
+        execSummary={serializeSummary(execSummary)}
+        entitled={entitled}
+        orgName={ctx.org.name}
+        competitorCompare={competitorCompare}
+      />
+    ),
     weekly: <WeeklyReportsPanel snapshots={snapshots} entitled={entitled} />,
     score: <ReputationScorePanel score={latestSnapshot?.reputationScore ?? metrics.seo.reputationScore} factors={pickFactors(latestSnapshot?.scoreFactors, scoreFactors)} />,
     seo: seoNode,
@@ -159,9 +186,21 @@ function serializeSummary(s: { summary: string; generatedAt: Date; ai: boolean }
   return { summary: s.summary, generatedAt: s.generatedAt.toISOString(), ai: s.ai };
 }
 
-/** Prefer the stored snapshot factors; fall back to the freshly-computed ones. */
+/**
+ * Prefer the stored snapshot factors; fall back to the freshly-computed ones.
+ * The stored value is raw DB JSON — validate each row before trusting it, or a
+ * malformed snapshot crashes the score panel (`factor.points.toFixed`).
+ */
 function pickFactors(stored: unknown, fresh: ScoreFactor[]): ScoreFactor[] {
-  if (Array.isArray(stored) && stored.length > 0) return stored as ScoreFactor[];
+  if (Array.isArray(stored) && stored.length > 0) {
+    const valid = stored.filter(
+      (f): f is ScoreFactor =>
+        typeof (f as ScoreFactor | null)?.label === "string" &&
+        Number.isFinite((f as ScoreFactor).points) &&
+        Number.isFinite((f as ScoreFactor).weight),
+    );
+    if (valid.length > 0) return valid;
+  }
   return fresh;
 }
 

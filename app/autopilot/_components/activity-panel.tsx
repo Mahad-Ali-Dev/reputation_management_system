@@ -83,18 +83,11 @@ export function ActivityPanel({
   const dayKeys = [...groups.keys()].sort((a, b) => (a < b ? 1 : -1));
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0, 1.6fr) minmax(0, 1fr)",
-        gap: 14,
-        alignItems: "start",
-      }}
-    >
-      {/* Activity feed */}
+    <div className="ap2-cols">
+      {/* Action ledger */}
       <div className="ds-card">
         <div className="ds-card__head">
-          <h3 className="ds-card__title">Activity</h3>
+          <h3 className="ds-card__title">Action ledger</h3>
           <span className="dim" style={{ fontSize: 12 }}>
             {feed.length} recent action{feed.length === 1 ? "" : "s"}
           </span>
@@ -107,26 +100,16 @@ export function ActivityPanel({
             </p>
           </div>
         ) : (
-          <div style={{ padding: 4 }}>
+          <div style={{ padding: "0 0 8px" }}>
             {dayKeys.map((k) => {
               const items = groups.get(k) ?? [];
               const firstItem = items[0];
               if (!firstItem) return null;
               return (
-                <div key={k} style={{ marginBottom: 6 }}>
-                  <div
-                    className="dim"
-                    style={{
-                      fontSize: 11,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      padding: "10px 12px 4px",
-                    }}
-                  >
-                    {dayLabel(firstItem.createdAt)}
-                  </div>
-                  {items.map((item, i) => (
-                    <ActivityRow key={item.id} item={item} first={i === 0} />
+                <div key={k}>
+                  <div className="ap2-ledger-day">{dayLabel(firstItem.createdAt)}</div>
+                  {items.map((item) => (
+                    <ActivityRow key={item.id} item={item} />
                   ))}
                 </div>
               );
@@ -193,7 +176,15 @@ export function ActivityPanel({
   );
 }
 
-function ActivityRow({ item, first }: { item: ActivityFeedItem; first: boolean }): JSX.Element {
+/** Ledger status chip: failed > needs-you > queued > done. */
+function statusChip(item: ActivityFeedItem): { className: string; label: string } {
+  if (item.status === "failed") return { className: "chip chip--bad", label: "Failed" };
+  if (item.requiresHuman) return { className: "chip chip--warn", label: "Needs you" };
+  if (item.status === "pending") return { className: "chip chip--info", label: "Queued" };
+  return { className: "chip chip--ok", label: "Done" };
+}
+
+function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const meta = LOOP_META[item.loop] ?? { label: item.loop, icon: "bolt" as IconName };
   const verb = ACTION_VERB[item.action] ?? item.action;
   const time = new Date(item.createdAt).toLocaleTimeString(undefined, {
@@ -201,42 +192,21 @@ function ActivityRow({ item, first }: { item: ActivityFeedItem; first: boolean }
     minute: "2-digit",
   });
   const failed = item.status === "failed";
+  const chip = statusChip(item);
   return (
-    <div
-      className="row"
-      style={{
-        padding: "10px 12px",
-        gap: 10,
-        borderTop: first ? "none" : "1px solid var(--line)",
-      }}
-    >
-      <span
-        style={{
-          width: 28,
-          height: 28,
-          borderRadius: 6,
-          background: failed ? "var(--bad-soft)" : "var(--pri-50)",
-          color: failed ? "var(--bad)" : "var(--pri)",
-          display: "grid",
-          placeItems: "center",
-          flexShrink: 0,
-        }}
-      >
+    <div className={`ap2-ledger-row${failed ? " ap2-ledger-row--failed" : ""}`}>
+      <span className="ap2-ledger-row__icon">
         <Icon name={meta.icon} size={13} />
       </span>
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13 }}>
-          {meta.label}
-          {item.requiresHuman && (
-            <span className="chip chip--warn" style={{ marginLeft: 8, fontSize: 10 }}>
-              needs you
-            </span>
-          )}
-        </div>
+        <div style={{ fontSize: 13, fontWeight: 500 }}>{meta.label}</div>
         <div className="dim" style={{ fontSize: 11 }}>
           {failed ? "Failed" : verb} · {time}
         </div>
       </div>
+      <span className={chip.className} style={{ fontSize: 10.5, flexShrink: 0 }}>
+        {chip.label}
+      </span>
     </div>
   );
 }

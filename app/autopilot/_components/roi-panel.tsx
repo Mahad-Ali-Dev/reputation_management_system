@@ -34,6 +34,11 @@ export type RoiPanelData = {
   };
   establishments: { id: string; name: string }[];
   rangeLabel: string;
+  /** Real ledger-derived counts (last 30 days). `hoursSaved` is an estimate from action counts × avg handling minutes. */
+  automation: {
+    actions: number;
+    hoursSaved: number;
+  };
 };
 
 export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
@@ -87,6 +92,31 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
         </div>
       </div>
 
+      {/* Automation tiles — real ledger counts; hours are an estimate from those counts */}
+      <div className="ap2-tiles">
+        <div className="ds-card ap2-tile">
+          <div className="ap2-tile__label">Hours saved · {data.rangeLabel}</div>
+          <div className="ap2-tile__value">
+            {data.automation.actions === 0 ? "—" : (
+              <>
+                {data.automation.hoursSaved.toLocaleString(undefined, { maximumFractionDigits: 1 })}{" "}
+                <em>hrs</em>
+              </>
+            )}
+          </div>
+          <div className="ap2-tile__hint">
+            {data.automation.actions === 0
+              ? "No automated actions logged yet."
+              : "Estimate: ≈6 min per review reply, 3 min per request, 8 min per post."}
+          </div>
+        </div>
+        <div className="ds-card ap2-tile">
+          <div className="ap2-tile__label">Actions completed · {data.rangeLabel}</div>
+          <div className="ap2-tile__value">{data.automation.actions.toLocaleString()}</div>
+          <div className="ap2-tile__hint">Replies, requests, posts &amp; drafts logged in the action ledger.</div>
+        </div>
+      </div>
+
       {/* Funnel strip */}
       <div className="ds-card">
         <div className="ds-card__head">
@@ -136,9 +166,7 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
       </div>
 
       {/* Attribution split + revenue by channel */}
-      <div
-        style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 14 }}
-      >
+      <div className="ap2-roi-split">
         <div className="ds-card">
           <div className="ds-card__head">
             <h3 className="ds-card__title">Where reviews came from</h3>

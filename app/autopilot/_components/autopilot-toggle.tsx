@@ -2,7 +2,6 @@
 
 import { Icon } from "@/components/shell/icon";
 import { toggleAutopilot } from "@/lib/autopilot/config-actions";
-import { AutopilotNotEntitledError } from "@/lib/autopilot/errors";
 import Link from "next/link";
 import { type JSX, useState, useTransition } from "react";
 import type { RiskTolerance } from "@/lib/autopilot/policy";
@@ -43,16 +42,17 @@ export function AutopilotToggle({
     fd.set("riskTolerance", nextRisk);
     startTransition(async () => {
       try {
-        await toggleAutopilot(fd);
-        setEnabled(nextEnabled);
-        setRisk(nextRisk);
-        setConfirming(false);
-      } catch (err) {
-        if (err instanceof AutopilotNotEntitledError || (err as { code?: string })?.code === "autopilot_not_entitled") {
-          setError("Reputation Autopilot requires a paid plan.");
+        const res = await toggleAutopilot(fd);
+        if (res.ok) {
+          setEnabled(nextEnabled);
+          setRisk(nextRisk);
+          setConfirming(false);
         } else {
-          setError(err instanceof Error ? err.message : "Could not update Autopilot.");
+          setError(res.message);
         }
+      } catch (err) {
+        // Network failure / unexpected — the action itself returns errors.
+        setError(err instanceof Error ? err.message : "Could not update Autopilot.");
       }
     });
   }

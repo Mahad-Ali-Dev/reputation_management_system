@@ -18,7 +18,14 @@ import {
 } from "@/lib/surveys/queries";
 import { Suspense } from "react";
 import { SurveysGettingStarted } from "./_components/surveys-getting-started";
-import { SurveysTabs, type SurveyCampaignCard, type SurveysTabsData } from "./_components/surveys-tabs";
+import {
+  SurveysTabs,
+  type SurveyCampaignCard,
+  type SurveyCsat,
+  type SurveyRoutingSnapshot,
+  type SurveysTabsData,
+} from "./_components/surveys-tabs";
+import "./surveys-landing.css";
 
 /**
  * Customer Surveys hub (Module 11) — the 5-tab shell host.
@@ -75,6 +82,8 @@ export default async function SurveysPage({
     hasInsightsAccess,
     couponStatsData,
     coupons,
+    csat,
+    routeCounts,
   ] = await Promise.all([
     listCampaigns(orgId),
     surveysOverview(orgId),
@@ -87,6 +96,8 @@ export default async function SurveysPage({
     orgHasFeature(orgId, "surveys_insights"),
     couponStats(orgId),
     listCoupons(orgId, 50),
+    surveysCsat(orgId),
+    smartRouteCounts(orgId),
   ]);
 
   const campaigns: SurveyCampaignCard[] = campaignsRaw.map((c) => ({
@@ -104,6 +115,24 @@ export default async function SurveysPage({
 
   const showGettingStarted = campaigns.length === 0 && automations.length === 0;
 
+  // Smart-routing snapshot for the landing branch tiles. `smartRouteEnabled` is
+  // per-campaign; surface the first ACTIVE campaign's config (fall back to the
+  // newest) with a deep-link to edit it. Counts are org-wide, fail-soft.
+  const routingSource =
+    campaignsRaw.find((c) => c.status === "active" && c.smartRouteEnabled) ??
+    campaignsRaw.find((c) => c.smartRouteEnabled) ??
+    campaignsRaw[0] ??
+    null;
+  const routing: SurveyRoutingSnapshot | null = routingSource
+    ? {
+        enabled: routingSource.smartRouteEnabled,
+        sourceName: routingSource.name,
+        editHref: `/surveys/${routingSource.id}`,
+        routedReview: routeCounts.review,
+        routedAlert: routeCounts.alert,
+      }
+    : null;
+
   const data: SurveysTabsData = {
     campaigns,
     overview,
@@ -119,6 +148,8 @@ export default async function SurveysPage({
     hasInsightsAccess,
     couponStats: couponStatsData,
     coupons,
+    csat,
+    routing,
   };
 
   return (
@@ -164,5 +195,61 @@ async function orgHasContacts(orgId: string): Promise<boolean> {
     });
   } catch {
     return false;
+  }
+}
+
+/**
+ * Org-wide CSAT from rating-type answers (1–5 stars): % of ratings ≥ 4.
+ * Walks recent responses (tenant-scoped) and flattens their rating answers.
+ * `null` when no rating answers exist → the landing KPI tile is omitted.
+ * Fail-soft like `orgHasContacts` (un-migrated/RLS issues → null).
+ */
+async function surveysCsat(orgId: string): Promise<SurveyCsat | null> {
+  try {
+    return await withTenant(orgId, async (tx) => {
+      const rows = await tx.surveyResponse.findMany({
+        orderBy: { createdAt: "desc" },
+        take: 2000,
+        select: {
+          answers: {
+            where: { question: { type: "rating" } },
+            select: { value: true },
+          },
+        },
+      });
+      const ratings: number[] = [];
+      for (const r of rows) {
+        for (const a of r.answers) {
+          const n = (a.value as { number?: number } | null)?.number;
+          if (typeof n === "number" && n >= 1 && n <= 5) ratings.push(n);
+        }
+      }
+      if (ratings.length === 0) return null;
+      const satisfied = ratings.filter((n) => n >= 4).length;
+      return { score: Math.round((satisfied / ratings.length) * 100), count: ratings.length };
+    });
+  } catch {
+    return null;
+  }
+}
+
+/** Org-wide smart-route outcome counts (fail-soft → zeros). */
+async function smartRouteCounts(orgId: string): Promise<{ review: number; alert: number }> {
+  try {
+    return await withTenant(orgId, async (tx) => {
+      const rows = await tx.surveyResponse.groupBy({
+        by: ["smartRouteTo"],
+        _count: { _all: true },
+      });
+      let review = 0;
+      let alert = 0;
+      for (const r of rows) {
+        if (r.smartRouteTo === "review_request") review = r._count._all;
+        else if (r.smartRouteTo === "internal_alert") alert = r._count._all;
+      }
+      return { review, alert };
+    });
+  } catch {
+    return { review: 0, alert: 0 };
   }
 }
