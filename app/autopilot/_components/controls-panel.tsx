@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import type { JSX } from "react";
-import type { AutopilotConfigView } from "@/lib/autopilot/queries";
 import "./autopilot-controls.css";
 
 /**
@@ -14,8 +13,7 @@ import "./autopilot-controls.css";
  *
  * CONTROLLED: loop state + persistence live in the parent AutopilotShell (so
  * the upper controls and this list share one source of truth — both go
- * through the same `saveAutopilotConfig` admin-only server action). Props /
- * exports are unchanged from the pre-redesign contract.
+ * through the same `saveAutopilotConfig` admin-only server action).
  */
 
 export type LoopKey =
@@ -116,32 +114,25 @@ const GROUPS: { title: string; subtitle: string; rows: LoopRow[] }[] = [
 ];
 
 export function ControlsPanel({
-  config,
   state,
   pending,
   saved,
   error,
   onToggle,
 }: {
-  config: AutopilotConfigView;
   state: Record<LoopKey, boolean>;
   pending: boolean;
   saved: boolean;
   error: string | null;
   onToggle: (key: LoopKey) => void;
 }): JSX.Element {
-  const status = pending ? "Saving…" : saved ? "Saved" : config.enabled ? "Live" : "Paused";
-
   return (
     <div className="apc-root">
-      <div className="apc-topline">
-        {!config.enabled && (
-          <span className="apc-note">These take effect once Autopilot is switched on above.</span>
-        )}
-        <span className={`apc-status${saved && !pending ? " is-saved" : ""}`} aria-live="polite">
-          {status}
-        </span>
-      </div>
+      {/* Kit shows nothing here at rest — the save state only flashes while a
+          toggle persists (floated into the tab-bar row, no layout shift). */}
+      <span className={`apc-status${saved && !pending ? " is-saved" : ""}`} aria-live="polite">
+        {pending ? "Saving…" : saved ? "Saved" : ""}
+      </span>
 
       <div className="apc-grid">
         {GROUPS.map((group) => {
@@ -160,7 +151,7 @@ export function ControlsPanel({
                 {group.rows.map((row) => {
                   const on = state[row.key];
                   return (
-                    <div key={row.key} className={`apc-row${config.enabled ? "" : " is-dim"}`}>
+                    <div key={row.key} className="apc-row">
                       <img
                         className="apc-row__icon"
                         src={row.asset}

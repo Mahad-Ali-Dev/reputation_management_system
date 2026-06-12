@@ -39,7 +39,8 @@
 /* ---------- Layout ---------- */
 .apr-row1 {
   display: grid;
-  grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+  /* Kit mockup: revenue and funnel cards are EQUAL width (measured 384/375). */
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 16px;
   align-items: stretch;
 }
@@ -223,11 +224,12 @@
 
 .apr-rev__body {
   display: flex;
-  align-items: flex-end;
+  /* Kit: KPI + pills hug the header (top-left); only the chart sits low. */
+  align-items: flex-start;
   justify-content: space-between;
   gap: 14px;
   flex: 1;
-  margin-top: 6px;
+  margin-top: 10px;
 }
 
 .apr-rev__left {
@@ -472,7 +474,7 @@
 
 .apr-bysrc__cell {
   background: var(--apr-soft);
-  border: 1px solid var(--apr-line-soft);
+  border: 1px solid #edf2f9; /* kit: near-invisible ring on the soft fill */
   border-radius: 12px;
   padding: 12px;
   min-width: 0;

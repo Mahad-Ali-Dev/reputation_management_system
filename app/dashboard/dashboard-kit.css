@@ -1,10 +1,11 @@
 /* Dashboard design-kit styles — page-scoped, .dk- prefix only.
    Source of truth: tasks/Dashboard/Dashboard/ ("Mockup for active state.png" +
    "Mockup emptystate.png" + the two handoff reports). Kit palette: primary
-   #2563EB (hover #1D4ED8), green #16A34A, star #FACC15, card bg #F9FAFB,
-   ink #111827, secondary #6B7280, placeholder #9CA3AF. Inter type scale:
-   H1 24 bold / H2 20 bold / body 14 / buttons 14 medium. Cards 16px padding,
-   24px vertical section spacing. Responsive 1440 → 768 (stack), usable @390. */
+   #2563EB (hover #1D4ED8), green #16A34A, star #FACC15, card bg #FFFFFF,
+   ink #111827. Secondary text in the SHIPPED MOCKUP is a navy-slate
+   (~#4D5A80), not the handoff's grey — the pixels win. Inter type scale:
+   H1 24 bold / H2 20 bold / body 14 / buttons 14 medium. Cards 16-20px
+   padding, 24px vertical section spacing. Responsive 1440 → 768 (stack). */
 
 .dk {
   --dk-pri: #2563eb;
@@ -20,8 +21,10 @@
   --dk-card: #ffffff;
   --dk-card-2: #f9fafb;
   --dk-ink: #111827;
-  --dk-mut: #6b7280;
-  --dk-ph: #9ca3af;
+  --dk-mut: #4d5a80; /* mockup-sampled navy-slate secondary (#4C5B82/#4F5986) */
+  --dk-name: #303d87; /* reviewer names — mockup-sampled indigo */
+  --dk-lilac: #f0d9fd; /* reviewer avatar tile — mockup-sampled lilac */
+  --dk-ph: #8d96b8;
   --dk-line: #e5e7eb;
   display: flex;
   flex-direction: column;
@@ -37,11 +40,12 @@
   box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
 }
 
-/* The kit's canvas is a flat neutral wash (mockup page bg) — not the app's
+/* The kit's canvas is a flat neutral wash that fades near-white toward the
+   bottom of the page (sampled #F8F9FE top → #FEFEFE bottom) — not the app's
    teal-mist gradient. Scoped with :has() so only pages rendering the kit
-   (.dk) lose the gradient; every other page keeps the app canvas. */
+   (.dk) swap canvas; every other page keeps the app canvas. */
 .app--canvas:has(.dk) {
-  background-image: none;
+  background-image: linear-gradient(180deg, #f6f7fc 0%, #fbfbfd 55%, #fdfdfe 100%);
   background-color: #f7f8fb;
 }
 
@@ -51,8 +55,9 @@
 
 .dk-top {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(280px, 386px);
-  gap: 16px;
+  /* Kit: stat cluster ≈ 35% of the content width (405/1150). */
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 384px);
+  gap: 16px 22px;
   align-items: stretch;
 }
 
@@ -69,20 +74,20 @@
   display: flex;
   align-items: center;
   gap: 20px;
-  padding: 24px 28px;
+  padding: 18px 28px;
   overflow: hidden;
   flex: 1;
 }
 
 .dk-hero__greet {
-  font-size: 14px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--dk-ink);
-  margin: 0 0 6px;
+  margin: 0 0 5px;
 }
 
 .dk-hero__title {
-  font-size: 28px;
+  font-size: 27px;
   font-weight: 800;
   letter-spacing: -0.03em;
   line-height: 1.1;
@@ -90,15 +95,17 @@
 }
 
 .dk-hero__sub {
-  font-size: 14px;
+  font-size: 13.5px;
   color: var(--dk-mut);
   margin: 0;
   line-height: 1.5;
 }
 
+/* Kit illustration floats free on the card (no containing tile), wider than
+   tall (~160×130). */
 .dk-hero__art {
-  width: 168px;
-  height: 168px;
+  width: auto;
+  height: 126px;
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -109,14 +116,14 @@
   display: flex;
   align-items: center;
   gap: 14px;
-  padding: 16px 18px;
+  padding: 10px 16px;
   flex-wrap: wrap;
 }
 
 .dk-train__icon {
-  width: 46px;
-  height: 46px;
-  border-radius: 12px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
   flex-shrink: 0;
 }
 
@@ -126,28 +133,28 @@
 }
 
 .dk-train__title {
-  font-size: 15px;
+  font-size: 14.5px;
   font-weight: 700;
   letter-spacing: -0.01em;
-  margin: 0 0 3px;
+  margin: 0 0 2px;
 }
 
 .dk-train__sub {
-  font-size: 13px;
+  font-size: 11px;
   color: var(--dk-mut);
   margin: 0;
-  line-height: 1.45;
+  line-height: 1.4;
 }
 
 .dk-train__cta {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 11px 20px;
-  border-radius: 12px;
+  padding: 9px 16px;
+  border-radius: 11px;
   background: linear-gradient(135deg, var(--dk-pri) 0%, var(--dk-pri-dark) 100%);
   color: #fff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   text-decoration: none;
   box-shadow: 0 6px 16px -6px rgba(37, 99, 235, 0.55);
@@ -165,15 +172,15 @@
    never ellipsized. */
 .dk-quick {
   display: flex;
-  gap: 6px;
+  gap: 4px;
 }
 
 .dk-quick__chip {
   flex: 1 1 auto;
   display: flex;
   align-items: center;
-  gap: 7px;
-  padding: 8px 9px;
+  gap: 6px;
+  padding: 6px 7px;
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
@@ -186,16 +193,16 @@
 }
 
 .dk-quick__icon {
-  width: 25px;
-  height: 25px;
-  border-radius: 7px;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   flex-shrink: 0;
 }
 
 .dk-quick__title {
   font-size: 10.5px;
   font-weight: 650;
-  letter-spacing: -0.015em;
+  letter-spacing: -0.022em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -203,6 +210,7 @@
 
 .dk-quick__sub {
   font-size: 9.5px;
+  letter-spacing: -0.012em;
   color: var(--dk-mut);
   margin-top: 1px;
   white-space: nowrap;
@@ -220,41 +228,50 @@
 }
 
 .dk-stat {
-  padding: 16px;
+  padding: 16px 18px;
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
+/* Kit chip anatomy: 44px icon tile on the left; label stacked ABOVE the value
+   to its right; delta bottom-left + sparkline bottom-right. */
 .dk-stat__head {
   display: flex;
   align-items: center;
-  gap: 9px;
-  margin-bottom: 10px;
+  gap: 10px;
 }
 
 .dk-stat__icon {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
   flex-shrink: 0;
+}
+
+.dk-stat__hcol {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
 }
 
 .dk-stat__label {
   font-size: 12px;
   font-weight: 600;
   color: var(--dk-ink);
+  white-space: nowrap;
 }
 
 .dk-stat__value {
-  font-size: 26px;
+  font-size: 25px;
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1;
+  line-height: 1.1;
   font-variant-numeric: tabular-nums;
   display: flex;
   align-items: center;
   gap: 6px;
+  margin-top: 2px;
 }
 
 .dk-stat__value .dk-star {
@@ -267,12 +284,12 @@
   justify-content: space-between;
   gap: 8px;
   margin-top: auto;
-  padding-top: 10px;
+  padding-top: 8px;
   min-height: 30px;
 }
 
 .dk-delta {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 600;
   display: inline-flex;
   align-items: center;
@@ -284,7 +301,7 @@
 .dk-delta--down { color: var(--dk-red); }
 .dk-delta__vs {
   color: var(--dk-mut);
-  font-weight: 500;
+  font-weight: 600;
 }
 
 .dk-stat__pending {
@@ -292,17 +309,18 @@
   font-weight: 600;
   color: var(--dk-pri);
   text-decoration: none;
-  margin-top: 6px;
+  margin-top: 4px;
+  white-space: nowrap;
 }
 
 .dk-stat__pending:hover { text-decoration: underline; }
 
-/* Empty-state stat chip */
+/* Empty-state stat chip (kit: head row left, then centered -- / title / hint) */
 .dk-stat--empty { text-align: center; }
 .dk-stat--empty .dk-stat__value {
   justify-content: center;
   color: var(--dk-ph);
-  margin: 14px 0 10px;
+  margin: 12px 0 8px;
 }
 .dk-stat__none {
   font-size: 12.5px;
@@ -329,7 +347,7 @@
 }
 
 .dk-colcard {
-  padding: 16px;
+  padding: 18px 20px;
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -370,7 +388,7 @@
 
 .dk-google__body {
   display: flex;
-  gap: 16px;
+  gap: 18px;
   align-items: center;
   flex: 1;
   flex-wrap: nowrap; /* kit: rating · bars · donut on ONE row */
@@ -381,7 +399,7 @@
 }
 
 .dk-google__num {
-  font-size: 40px;
+  font-size: 38px;
   font-weight: 800;
   letter-spacing: -0.04em;
   line-height: 1;
@@ -393,7 +411,7 @@
 .dk-google__num .dk-star { color: var(--dk-star); }
 
 .dk-google__based {
-  font-size: 11.5px;
+  font-size: 12px;
   color: var(--dk-mut);
   margin-top: 6px;
 }
@@ -407,13 +425,13 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 7px;
+  margin-bottom: 8px;
 }
 
 .dk-dist-row__label {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--dk-mut);
-  width: 18px;
+  width: 19px;
   display: inline-flex;
   align-items: center;
   gap: 2px;
@@ -422,7 +440,7 @@
 
 .dk-dist-row__track {
   flex: 1;
-  height: 7px;
+  height: 8px;
   border-radius: 999px;
   background: #f1f3f6;
   overflow: hidden;
@@ -435,7 +453,7 @@
 }
 
 .dk-dist-row__count {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--dk-mut);
   width: 30px;
   text-align: right;
@@ -497,55 +515,55 @@
 
 /* ---------- Recent reviews ---------- */
 
+/* Kit rows have NO divider lines — just breathing room. */
 .dk-review-row {
   display: flex;
-  gap: 10px;
-  padding: 10px 0;
-  border-bottom: 1px solid var(--dk-line);
+  gap: 12px;
+  padding: 9px 0;
   text-decoration: none;
   color: inherit;
 }
 
-.dk-review-row:last-of-type { border-bottom: none; }
-
+/* Kit avatar: rounded SQUARE lilac tile with deep-violet initials. */
 .dk-review-row__avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--dk-pri-soft);
-  color: var(--dk-pri);
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: var(--dk-lilac);
+  color: #46327e;
   display: grid;
   place-items: center;
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
 .dk-review-row__name {
-  font-size: 12.5px;
-  font-weight: 650;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--dk-name);
 }
 
 .dk-review-row__meta {
   display: flex;
   align-items: center;
   gap: 7px;
-  margin: 2px 0 4px;
+  margin: 3px 0 5px;
 }
 
 .dk-review-row__time {
-  font-size: 10.5px;
+  font-size: 11px;
   color: var(--dk-mut);
 }
 
 .dk-review-row__body {
-  font-size: 12px;
+  font-size: 12.5px;
   color: var(--dk-mut);
   line-height: 1.5;
   margin: 0;
   overflow: hidden;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
 }
 
@@ -575,22 +593,31 @@
 .dk-setup__list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   flex: 1;
 }
 
+/* Kit: every label stays ink — completed steps are NOT muted. */
 .dk-setup__step {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 6px 0;
-  font-size: 12.5px;
+  font-size: 13px;
   color: var(--dk-ink);
   text-decoration: none;
 }
 
-.dk-setup__step--done {
-  color: var(--dk-mut);
+/* Kit "done" marker: solid green disc with a white check. */
+.dk-setup__check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--dk-green);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
 }
 
 .dk-setup__cta {
@@ -654,7 +681,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
 }
 
 .dk-insights__title {
@@ -665,9 +692,12 @@
 }
 
 .dk-insights__range {
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: var(--dk-mut);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
 }
 
 .dk-insights__grid {
@@ -677,24 +707,24 @@
 }
 
 .dk-insight {
-  padding: 16px;
+  padding: 16px 18px;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 13px;
   min-width: 0;
 }
 
 .dk-insight__icon {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   flex-shrink: 0;
 }
 
 .dk-insight__icontile {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   background: var(--dk-purple-soft);
   color: var(--dk-purple);
   display: grid;
@@ -703,13 +733,13 @@
 }
 
 .dk-insight__label {
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
   color: var(--dk-mut);
 }
 
 .dk-insight__value {
-  font-size: 21px;
+  font-size: 23px;
   font-weight: 800;
   letter-spacing: -0.025em;
   line-height: 1.15;
@@ -724,7 +754,7 @@
 .dk-insight__value--empty { color: var(--dk-ph); }
 
 .dk-insight__chip {
-  font-size: 11.5px;
+  font-size: 12.5px;
   font-weight: 700;
 }
 
@@ -741,21 +771,24 @@
    AI copilot panel
    ============================================================ */
 
+/* Kit panel: lavender wash (#F2F4FD → #EBEDFD sampled), 20px radius, text +
+   input on the left, suggestion chips on a full-width row BELOW, 3D robot
+   floating to the right (vertically centered, not edge-cropped). */
 .dk-copilot {
   position: relative;
   overflow: hidden;
-  border: 1px solid #dbe5ff;
-  border-radius: 18px;
-  padding: 22px 26px;
-  background: linear-gradient(115deg, #eef4ff 0%, #e8efff 55%, #e3e9ff 100%);
-  display: flex;
-  gap: 20px;
-  align-items: center;
+  border: 1px solid #dfe5fb;
+  border-radius: 20px;
+  padding: 26px 30px;
+  background: linear-gradient(120deg, #f3f5fe 0%, #eef1fd 55%, #e9ecfc 100%);
+  min-height: 210px;
 }
 
 .dk-copilot__main {
-  flex: 1;
+  position: relative;
+  z-index: 1;
   min-width: 0;
+  padding-right: 330px;
 }
 
 .dk-copilot__kicker {
@@ -779,7 +812,7 @@
 }
 
 .dk-copilot__title {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
   letter-spacing: -0.02em;
   margin: 0 0 4px;
@@ -797,9 +830,8 @@
   gap: 8px;
   background: #fff;
   border: 1px solid #dbe5ff;
-  border-radius: 13px;
+  border-radius: 12px;
   padding: 6px 6px 6px 14px;
-  max-width: 560px;
   box-shadow: 0 4px 14px -8px rgba(37, 99, 235, 0.25);
 }
 
@@ -838,7 +870,10 @@
 .dk-copilot__send:hover { background: var(--dk-pri-dark); }
 .dk-copilot__send:disabled { opacity: 0.55; cursor: default; }
 
+/* Full-width chips row under the input (kit: one row of 4). */
 .dk-copilot__chips {
+  position: relative;
+  z-index: 1;
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -866,34 +901,26 @@
   background: #fff;
 }
 
+/* Kit: the illustration floats inside the panel's right side, vertically
+   centered with clear margins (NOT cropped to the edge). The 3D robot asset
+   already carries its speech bubble + sparkle, cropped from the mockup. */
 .dk-copilot__art {
-  width: 190px;
-  height: 190px;
-  flex-shrink: 0;
-  margin: -10px -6px -10px 0;
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 220px;
+  height: auto;
+  margin: 0;
 }
 
-/* The 3D robot band cropped from the mockup: anchored to the panel's right
-   edge at full height, left edge feathered into the panel gradient so the
-   rectangular crop blends seamlessly. */
-.dk-copilot {
-  min-height: 196px;
-}
-.dk-copilot__main {
-  position: relative;
-  z-index: 1;
-  padding-right: 300px;
-}
 .dk-copilot__art--3d {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  width: auto;
-  height: 100%;
-  margin: 0;
-  -webkit-mask-image: linear-gradient(to left, #000 72%, transparent 100%);
-  mask-image: linear-gradient(to left, #000 72%, transparent 100%);
+  width: 310px;
+  right: 22px;
+  /* The robot is cropped from the mockup PNG — feather its left edge so the
+     rectangular crop melts into the panel gradient. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 100%);
 }
 
 /* ============================================================
@@ -910,10 +937,17 @@
 
 @media (max-width: 860px) {
   .dk-cols { grid-template-columns: 1fr; }
-  .dk-hero__art { width: 130px; height: 130px; }
-  .dk-copilot__art { width: 140px; height: 140px; }
+  .dk-hero__art { height: 104px; }
   .dk-copilot__main { padding-right: 0; }
-  .dk-copilot__art--3d { position: static; height: 150px; width: auto; align-self: flex-end; mask-image: none; -webkit-mask-image: none; border-radius: 14px; }
+  .dk-copilot__art,
+  .dk-copilot__art--3d {
+    position: static;
+    transform: none;
+    display: block;
+    width: auto;
+    height: 150px;
+    margin: 12px 0 0 auto;
+  }
   .dk-quick__chip { flex: 1 1 45%; }
 }
 
@@ -927,8 +961,8 @@
   .dk-stat__value { font-size: 22px; }
   .dk-quick__chip { flex: 1 1 100%; }
   .dk-insights__grid { grid-template-columns: 1fr; }
-  .dk-copilot { flex-direction: column; align-items: stretch; padding: 18px; }
-  .dk-copilot__art { display: none; }
+  .dk-copilot { padding: 18px; }
+  .dk-copilot__art, .dk-copilot__art--3d { display: none; }
   .dk-train__cta { width: 100%; justify-content: center; }
   .dk-google__body { flex-wrap: wrap; gap: 14px; }
   .dk-btn-outline--end { align-self: center; }

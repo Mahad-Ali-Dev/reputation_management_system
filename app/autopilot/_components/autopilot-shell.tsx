@@ -103,7 +103,6 @@ export function AutopilotShell({
         </div>
         <div hidden={tab !== "controls"}>
           <ControlsPanel
-            config={config}
             state={loops}
             pending={pending}
             saved={saved}

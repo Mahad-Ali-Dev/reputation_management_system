@@ -7,10 +7,14 @@ import { useState } from "react";
 /**
  * Dashboard "Your AI copilot" prompt panel (design kit, bottom section).
  *
- * Client island: the input + suggestion chips are wired to the REAL global
+ * Client islands: the input + suggestion chips are wired to the REAL global
  * Ask-AI assistant (components/ask-ai.tsx) via its `openAskAi(prompt)` window
  * event — submitting here opens the slide-over with the question already sent.
  * No dead inputs.
+ *
+ * Split into two exports because the kit lays them out in different panel
+ * slots: the form lives in the text column (left of the robot), while the
+ * suggestion chips run on a full-width row underneath.
  */
 
 const CHIPS: Array<{ icon: IconName; label: string }> = [
@@ -24,42 +28,45 @@ export function CopilotPrompt() {
   const [draft, setDraft] = useState("");
 
   return (
-    <div className="dk-copilot__controls">
-      <form
-        className="dk-copilot__form"
-        onSubmit={(e) => {
-          e.preventDefault();
-          const q = draft.trim();
-          if (!q) return;
-          openAskAi(q);
-          setDraft("");
-        }}
+    <form
+      className="dk-copilot__form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const q = draft.trim();
+        if (!q) return;
+        openAskAi(q);
+        setDraft("");
+      }}
+    >
+      <input
+        type="text"
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        placeholder="Ask anything about your reviews, customers, or performance…"
+        aria-label="Ask the AI copilot"
+        className="dk-copilot__input"
+      />
+      <button
+        type="submit"
+        className="dk-copilot__send"
+        aria-label="Send question to the AI copilot"
+        disabled={draft.trim().length === 0}
       >
-        <input
-          type="text"
-          value={draft}
-          onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask anything about your reviews, customers, or performance…"
-          aria-label="Ask the AI copilot"
-          className="dk-copilot__input"
-        />
-        <button
-          type="submit"
-          className="dk-copilot__send"
-          aria-label="Send question to the AI copilot"
-          disabled={draft.trim().length === 0}
-        >
-          <Icon name="send" size={15} />
+        <Icon name="send" size={15} />
+      </button>
+    </form>
+  );
+}
+
+export function CopilotChips() {
+  return (
+    <div className="dk-copilot__chips">
+      {CHIPS.map((c) => (
+        <button key={c.label} type="button" className="dk-copilot__chip" onClick={() => openAskAi(c.label)}>
+          <Icon name={c.icon} size={13} />
+          {c.label}
         </button>
-      </form>
-      <div className="dk-copilot__chips">
-        {CHIPS.map((c) => (
-          <button key={c.label} type="button" className="dk-copilot__chip" onClick={() => openAskAi(c.label)}>
-            <Icon name={c.icon} size={13} />
-            {c.label}
-          </button>
-        ))}
-      </div>
+      ))}
     </div>
   );
 }

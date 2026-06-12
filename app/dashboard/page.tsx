@@ -11,7 +11,7 @@ import { prisma } from "@/lib/db/client";
 import { getOnboardingFacts } from "@/lib/onboarding/facts";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CopilotPrompt } from "./_components/copilot-panel";
+import { CopilotChips, CopilotPrompt } from "./_components/copilot-panel";
 import "./dashboard-kit.css";
 
 /**
@@ -234,7 +234,11 @@ export default async function DashboardPage({
         <section aria-label="Key insights">
           <div className="dk-insights__head">
             <h2 className="dk-insights__title">Key Insights</h2>
-            <span className="dk-insights__range">Last 30 days</span>
+            {/* Kit shows a "30 days ⌄" range label (static — we don't ship a
+                fake dropdown; insights are fixed to the last 30 days). */}
+            <span className="dk-insights__range">
+              30 days <Icon name="chevD" size={13} />
+            </span>
           </div>
           <div className="dk-insights__grid">
             <InsightCard
@@ -251,7 +255,11 @@ export default async function DashboardPage({
               label="Sentiment"
               art="insight-sentiment"
               value={total > 0 ? sentimentLabel(d.sentiment).label : null}
-              chip={total > 0 ? { text: `${sentimentLabel(d.sentiment).pct}%`, dir: sentimentLabel(d.sentiment).dir } : undefined}
+              chip={
+                total > 0
+                  ? { text: `${sentimentLabel(d.sentiment).pct}%`, dir: sentimentLabel(d.sentiment).dir, arrow: false }
+                  : undefined
+              }
             />
             <InsightCard
               label="Trend"
@@ -278,8 +286,12 @@ export default async function DashboardPage({
             <p className="dk-copilot__sub">Ask anything. Get insights, summaries, and recommendations.</p>
             <CopilotPrompt />
           </div>
-          {/* Active: the kit's 3D robot, cropped at native resolution from the
-              delivered mockup (no standalone 3D asset ships with the kit).
+          {/* Kit: the 4 suggestion chips sit on a full-width row BELOW the
+              input, clear of the illustration column. */}
+          <CopilotChips />
+          {/* Active: the kit's 3D robot (with speech bubble + sparkle), cropped
+              at native resolution from the delivered mockup — floats vertically
+              centered on the panel's right, exactly like the kit.
               Empty: the kit's delivered empty-orb SVG. */}
           {isEmpty ? (
             <img className="dk-copilot__art" src={`${ASSETS}/copilot-empty-orb.svg`} alt="" />
@@ -357,23 +369,26 @@ function StatChip({
 
   return (
     <div className="dk-card dk-stat">
+      {/* Kit anatomy: icon tile left, label stacked over value to its right. */}
       <div className="dk-stat__head">
         <img className="dk-stat__icon" src={`${ASSETS}/${icon}.svg`} alt="" />
-        <span className="dk-stat__label">{label}</span>
-      </div>
-      <div className="dk-stat__value">
-        {value}
-        {star && (
-          <span className="dk-star" aria-hidden>
-            <Icon name="star" size={16} style={{ fill: "currentColor" }} />
+        <span className="dk-stat__hcol">
+          <span className="dk-stat__label">{label}</span>
+          <span className="dk-stat__value">
+            {value}
+            {star && (
+              <span className="dk-star" aria-hidden>
+                <Icon name="star" size={15} style={{ fill: "currentColor" }} />
+              </span>
+            )}
           </span>
-        )}
+          {pending !== undefined && (
+            <Link href="/reviews" className="dk-stat__pending" title={`${pending} AI replies awaiting approval`}>
+              {pending} awaiting →
+            </Link>
+          )}
+        </span>
       </div>
-      {pending !== undefined && (
-        <Link href="/reviews" className="dk-stat__pending">
-          {pending} awaiting approval →
-        </Link>
-      )}
       <div className="dk-stat__foot">
         {delta ? (
           <span className={`dk-delta dk-delta--${delta.dir}`}>
@@ -383,7 +398,7 @@ function StatChip({
         ) : (
           <span />
         )}
-        {spark && <Sparkline points={spark} color={sparkColor} width={86} height={26} area={false} />}
+        {spark && <Sparkline points={spark} color={sparkColor} width={112} height={38} area={false} />}
       </div>
     </div>
   );
@@ -506,8 +521,8 @@ function GoogleOverviewCard({
 
 /** Multi-segment donut of the REAL rating split, total reviews in the center. */
 function RatingDonut({ total, byRating }: { total: number; byRating: (r: number) => number }) {
-  const size = 108;
-  const stroke = 13;
+  const size = 112;
+  const stroke = 14;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   let offset = 0;
@@ -616,7 +631,7 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
         <h3 className="dk-colcard__title">Setup Progress</h3>
       </div>
       <div className="dk-setup__top">
-        <ScoreRing value={setup.pct} suffix="%" size={66} stroke={8} hideMax color="var(--dk-pri, #2563eb)" />
+        <ScoreRing value={setup.pct} suffix="%" size={72} stroke={9} hideMax color="var(--dk-pri, #2563eb)" />
         <p className="dk-setup__copy">
           {setup.pct === 100 ? (
             <>
@@ -635,12 +650,24 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
       </div>
       <div className="dk-setup__list">
         {setup.steps.map((s) => (
-          <Link key={s.key} href={s.href} className={`dk-setup__step${s.done ? " dk-setup__step--done" : ""}`}>
-            <Icon
-              name={s.done ? "checkCircle" : "round"}
-              size={17}
-              style={{ color: s.done ? "var(--dk-green, #16a34a)" : "var(--dk-ph, #9ca3af)", flexShrink: 0 }}
-            />
+          <Link key={s.key} href={s.href} className="dk-setup__step">
+            {s.done ? (
+              /* Kit done marker: solid green disc + white check. */
+              <span className="dk-setup__check" aria-hidden>
+                <Icon name="check" size={11} />
+              </span>
+            ) : (
+              /* Kit pending circle: green outline once setup is underway,
+                 grey before anything is done (matches both mockups). */
+              <Icon
+                name="round"
+                size={18}
+                style={{
+                  color: setup.completed > 0 ? "var(--dk-green, #16a34a)" : "var(--dk-ph, #9ca3af)",
+                  flexShrink: 0,
+                }}
+              />
+            )}
             {s.label}
           </Link>
         ))}
@@ -671,7 +698,8 @@ function InsightCard({
   clockTile?: boolean;
   /** null → the kit's designed "-- / No data yet" empty insight. */
   value: string | null;
-  chip?: { text: string; dir: "up" | "down" };
+  /** arrow:false → kit's plain percentage chip (Sentiment card). */
+  chip?: { text: string; dir: "up" | "down"; arrow?: boolean };
 }) {
   return (
     <div className="dk-card dk-insight">
@@ -694,7 +722,7 @@ function InsightCard({
             {value}
             {chip && (
               <span className={`dk-insight__chip dk-insight__chip--${chip.dir}`}>
-                {chip.dir === "up" ? "↑" : "↓"} {chip.text}
+                {chip.arrow === false ? chip.text : `${chip.dir === "up" ? "↑" : "↓"} ${chip.text}`}
               </span>
             )}
           </div>

@@ -201,9 +201,10 @@ export function AutopilotToggle({
           <Icon name="bolt" size={13} />
           Autopilot learns and improves over time based on your feedback.
         </span>
+        {/* Kit: play triangle leads the label (no trailing arrow). */}
         <Link href="/tour" className="ap2-howbtn">
+          <Icon name="play" size={11} />
           See how it works
-          <Icon name="arrowR" size={12} />
         </Link>
       </div>
     </section>
