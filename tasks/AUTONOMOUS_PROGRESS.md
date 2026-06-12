@@ -19,6 +19,21 @@ UI changes where needed, and ReviewBoost feature parity per the `tasks/` specs.
 test suite green. Tests 918 → 995. Heavy autonomous spawning stopped here: the high-value,
 verifiable work is done; remaining items are credential-dependent or low-priority (below).
 
+### Adversarial review pass (COMMITTED + PUSHED `22cfd58`, 2026-06-12)
+5-dimension review of the overnight diff + per-finding adversarial verification
+(2 workflow runs; 15 verifiers died on session limits — their findings were
+self-verified inline). 18 fixes landed: marketing-home fabrications removed
+(fake metrics/testimonials/SOC2 claim), phone fake sparkline + mislabeled KPI,
+display-only $111 billing toggle removed, 0->N "+100%" delta, >100% deliverability
+rates, /ai + establishment-settings bare-form crash class, outreach Overview
+bug-010 transaction trap, surveys hydration dates, contacts eligibility lookup,
+social mini-calendar browser-tz bucketing, composer 390px collapse, mobile Log in,
+contrast bumps, connections connect_error banner.
+DEFERRED (low, non-blocking): command-palette focus trap, keyboard upload
+fallback, tab aria-semantics, orphaned landing components (dead code), lib/db in
+client bundles (browser shims make it benign; bundle-size only).
+STILL OPEN (founder): marketing $59.99 vs billing $89 price mismatch.
+
 ### Final wave + fix-pass landing (COMMITTED + PUSHED, 2026-06-11)
 - **`1ab1532`** — landed the two previously-verified-but-uncommitted fix passes (49 files):
   the 2026-06-11 external assessment (13/13 bugs, E2E-verified — see docs/BUG_BACKLOG.md)
