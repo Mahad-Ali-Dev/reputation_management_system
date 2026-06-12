@@ -1,0 +1,18 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Header bot avatar illustration">
+  <title>Header bot avatar illustration</title>
+  
+  <rect x="44" y="44" width="168" height="168" rx="28" fill="#EEF3FF"/>
+  <circle cx="128" cy="128" r="46" fill="url(#g)"/>
+  <rect x="84" y="101" width="88" height="72" rx="30" fill="url(#g)"/>
+  <circle cx="108" cy="134" r="9" fill="white"/>
+  <circle cx="148" cy="134" r="9" fill="white"/>
+  <path d="M114 154c9 8 19 8 28 0" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <path d="M128 96V76" stroke="#AAB6FF" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="128" cy="68" r="8" fill="#AAB6FF"/>
+  <circle cx="76" cy="80" r="6" fill="#8D9AFF"/>
+  <circle cx="190" cy="92" r="6" fill="#3157FF"/>
+  <circle cx="72" cy="172" r="5" fill="#7A5AF8"/>
+  <circle cx="186" cy="178" r="5" fill="#8D9AFF"/>
+  <defs><linearGradient id="g" x1="78" y1="82" x2="176" y2="180" gradientUnits="userSpaceOnUse"><stop stop-color="#8D9AFF"/><stop offset="1" stop-color="#263DFF"/></linearGradient></defs>
+
+</svg>

@@ -1,0 +1,287 @@
+/* /autopilot — Controls tab only (prefix: .apc-).
+   Source of truth: tasks/autopilot/autopilot/control section/
+   02_Developer_Handoff/repulabs-autopilot-controls-final-developer-handoff.md
+   Two-column card grid ("Customer flow" / "Safety & reporting"), circular
+   badge icons (kit SVGs, color baked in), green On / gray Off pills, blue
+   toggles. Values are the kit's tokens at production scale; shared chrome
+   (tabs, page wash) lives in autopilot.css and is untouched here. */
+
+.apc-root {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* ---- Top line: "takes effect when on" note (left) + save status (right) ---- */
+
+.apc-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 18px;
+}
+
+.apc-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #eef3ff; /* kit --blue-soft */
+  color: #475467;
+  font-size: 12.5px;
+  line-height: 1.3;
+}
+
+.apc-note::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #3157ff; /* kit --blue */
+}
+
+.apc-status {
+  margin-left: auto;
+  flex: 0 0 auto;
+  font-size: 12px;
+  font-weight: 500;
+  color: #98a2b3; /* kit --text-muted */
+}
+
+.apc-status.is-saved {
+  color: #12b76a; /* kit --success */
+}
+
+/* ---- Two-column card grid ---- */
+
+.apc-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.apc-card {
+  background: #ffffff; /* kit --surface */
+  border: 1px solid #e4e7ec; /* kit --border-strong */
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+  padding: 16px;
+}
+
+.apc-card__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #eaecf0; /* kit --border */
+}
+
+.apc-card__title {
+  margin: 0;
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 700;
+  color: #182230; /* kit --text-primary */
+}
+
+.apc-card__subtitle {
+  margin: 3px 0 0;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: #667085; /* kit --text-secondary */
+}
+
+.apc-countpill {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  height: 22px;
+  padding: 0 10px;
+  border-radius: 999px;
+  border: 1px solid #e4e7ec;
+  background: #ffffff;
+  color: #475467;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ---- Control rows ---- */
+
+.apc-row {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr) auto auto;
+  align-items: center;
+  column-gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eaecf0;
+}
+
+.apc-row:last-child {
+  border-bottom: 0;
+  padding-bottom: 2px;
+}
+
+.apc-row.is-dim {
+  opacity: 0.7;
+}
+
+.apc-row__icon {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  display: block;
+}
+
+.apc-row__copy {
+  min-width: 0;
+}
+
+.apc-row__titleline {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+
+.apc-row__title {
+  font-size: 12.5px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: #182230;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apc-row__settings {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 500;
+  color: #98a2b3;
+  text-decoration: none;
+}
+
+.apc-row__settings:hover,
+.apc-row__settings:focus-visible {
+  color: #3157ff;
+  text-decoration: underline;
+}
+
+.apc-row__desc {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.2;
+  color: #667085;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---- On/Off status pill ---- */
+
+.apc-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+  height: 18px;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  line-height: 1;
+  font-weight: 600;
+}
+
+.apc-pill.is-on {
+  background: #ecfdf3; /* kit --success-soft */
+  color: #12b76a; /* kit --success */
+}
+
+.apc-pill.is-off {
+  background: #f2f4f7;
+  color: #98a2b3;
+}
+
+/* ---- Toggle switch ---- */
+
+.apc-toggle {
+  position: relative;
+  width: 36px;
+  height: 20px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 999px;
+  background: #d0d5dd;
+  cursor: pointer;
+  padding: 0;
+  transition: background 0.15s ease;
+}
+
+.apc-toggle.is-on {
+  background: #3157ff; /* kit --blue */
+}
+
+.apc-toggle:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.apc-toggle:focus-visible {
+  outline: 2px solid #3157ff;
+  outline-offset: 2px;
+}
+
+.apc-toggle__knob {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(16, 24, 40, 0.2);
+  transition: transform 0.15s ease;
+}
+
+.apc-toggle.is-on .apc-toggle__knob {
+  transform: translateX(16px);
+}
+
+/* ---- Error line ---- */
+
+.apc-error {
+  font-size: 12.5px;
+  color: #d92d20;
+}
+
+/* ---- Responsive ---- */
+
+@media (max-width: 940px) {
+  .apc-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .apc-topline {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .apc-status {
+    margin-left: 0;
+    text-align: right;
+  }
+
+  /* Let copy breathe on narrow phones instead of hard-ellipsizing. */
+  .apc-row__title,
+  .apc-row__desc {
+    white-space: normal;
+  }
+}

@@ -127,4 +127,11 @@ desktop.ini
 /.pdf-build/shoot-ship.mjs
 /tasks/ui-ship/
 
+/.pdf-build/shoot-autopilot.mjs
+/tasks/ui-autopilot/
+
+/.tmp-mockup-crops/
+/.tmp-render-crops/
+/tasks/autopilot/
+
 /outputs/

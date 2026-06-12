@@ -1,0 +1,757 @@
+/* /autopilot — ROI tab (prefix: .apr-).
+   Design kit: tasks/autopilot/autopilot/ROI section (active + empty handoffs).
+   White cards on the page wash, 14px radius, #DDE7F1 borders, soft shadow,
+   kit accents: blue #315BFF, indigo #5B5CFF, pink #EC5A7E, amber #FBBF24,
+   purple #7C58FF, green #10B981, cyan #06B6D4, orange #F59E0B.
+   Page-level tokens (--ap-*) cascade from .ap2-page in autopilot.css. */
+
+.apr-root {
+  --apr-line: #dde7f1;
+  --apr-line-soft: #e6eef4;
+  --apr-ink: #111827;
+  --apr-body: #475569;
+  --apr-mut: #64748b;
+  --apr-mut-2: #94a3b8;
+  --apr-blue: #315bff;
+  --apr-blue-soft: #eef2ff;
+  --apr-indigo: #5b5cff;
+  --apr-pink: #ec5a7e;
+  --apr-amber: #fbbf24;
+  --apr-purple: #7c58ff;
+  --apr-purple-soft: #f2eeff;
+  --apr-green: #10b981;
+  --apr-green-soft: #e5faf0;
+  --apr-cyan: #06b6d4;
+  --apr-cyan-soft: #e2fafe;
+  --apr-orange: #f59e0b;
+  --apr-yellow-soft: #fff7dd;
+  --apr-gray-soft: #f1f5f9;
+  --apr-soft: #f7f9fc;
+  --apr-panel: #fafcfb;
+  --apr-shadow: 0 10px 30px rgba(18, 28, 48, 0.06);
+
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  color: var(--apr-ink);
+}
+
+/* ---------- Layout ---------- */
+.apr-row1 {
+  display: grid;
+  grid-template-columns: minmax(0, 38fr) minmax(0, 62fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
+.apr-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.apr-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ---------- Card chrome ---------- */
+.apr-card {
+  background: #fff;
+  border: 1px solid var(--apr-line);
+  border-radius: 14px;
+  box-shadow: var(--apr-shadow);
+  padding: 18px;
+  min-width: 0;
+}
+
+.apr-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+}
+
+.apr-head__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.apr-badge {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.apr-badge--green {
+  background: var(--apr-green-soft);
+  color: var(--apr-green);
+}
+
+.apr-badge--purple {
+  background: var(--apr-purple-soft);
+  color: var(--apr-purple);
+}
+
+.apr-badge--cyan {
+  background: var(--apr-cyan-soft);
+  color: var(--apr-cyan);
+}
+
+.apr-badge--blue {
+  background: var(--apr-blue-soft);
+  color: var(--apr-blue);
+}
+
+.apr-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--apr-ink);
+}
+
+.apr-sub {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--apr-mut);
+}
+
+/* ---------- Pills ---------- */
+.apr-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 24px;
+  padding: 0 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.apr-pill--mint {
+  background: var(--apr-green-soft);
+  color: var(--apr-green);
+}
+
+.apr-pill--blue {
+  background: var(--apr-blue-soft);
+  color: var(--apr-blue);
+}
+
+.apr-pill--amber {
+  background: var(--apr-yellow-soft);
+  color: #b45309;
+}
+
+.apr-pill--gray {
+  background: var(--apr-gray-soft);
+  color: var(--apr-body);
+}
+
+/* ================================================================== */
+/* Estimated booked revenue card                                       */
+/* ================================================================== */
+.apr-rev {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.apr-rev__top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.apr-minis {
+  flex-shrink: 0;
+}
+
+.apr-minis__caption {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--apr-mut-2);
+  text-align: right;
+  margin-bottom: 4px;
+}
+
+.apr-minis__row {
+  display: flex;
+  gap: 16px;
+}
+
+.apr-mini {
+  text-align: left;
+}
+
+.apr-mini__value {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--apr-ink);
+}
+
+.apr-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.apr-mini__label {
+  margin-top: 1px;
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--apr-mut);
+}
+
+.apr-rev__body {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 14px;
+  flex: 1;
+  margin-top: 6px;
+}
+
+.apr-rev__left {
+  min-width: 0;
+}
+
+.apr-kpi {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.15;
+  color: #121c30;
+}
+
+.apr-rev__pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.apr-rev__chart {
+  flex-shrink: 0;
+  align-self: flex-end;
+}
+
+.apr-rev__chart svg {
+  display: block;
+}
+
+.apr-emptyart {
+  width: 104px;
+  height: 104px;
+  flex-shrink: 0;
+}
+
+.apr-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 14px;
+  margin-top: 12px;
+  border: 1px solid rgba(49, 91, 255, 0.35);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--apr-blue);
+  font-size: 12px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 120ms;
+}
+
+.apr-cta:hover {
+  background: var(--apr-blue-soft);
+}
+
+/* ================================================================== */
+/* Funnel card                                                         */
+/* ================================================================== */
+.apr-funnel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.apr-funnel__panel {
+  margin-top: 14px;
+  border: 1px solid var(--apr-line-soft);
+  border-radius: 12px;
+  background: var(--apr-panel);
+  padding: 12px 14px 12px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.apr-fmetrics {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+
+.apr-fmetric__value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 16px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: var(--apr-ink);
+}
+
+.apr-fmetric__label {
+  margin-top: 1px;
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--apr-mut);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apr-fstream {
+  margin-top: 8px;
+  flex: 1;
+}
+
+.apr-fstream svg {
+  display: block;
+  width: 100%;
+  height: 72px;
+}
+
+.apr-fbadges {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.apr-fbadges .apr-pill {
+  height: 22px;
+  font-size: 10.5px;
+}
+
+/* ================================================================== */
+/* Where reviews came from                                             */
+/* ================================================================== */
+.apr-sources {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 18px;
+  margin-top: 14px;
+}
+
+.apr-source {
+  min-width: 0;
+}
+
+.apr-source__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apr-srcicon {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.apr-srcicon--green {
+  background: var(--apr-green-soft);
+  color: var(--apr-green);
+}
+
+.apr-srcicon--purple {
+  background: var(--apr-purple-soft);
+  color: var(--apr-purple);
+}
+
+.apr-srcicon--blue {
+  background: var(--apr-blue-soft);
+  color: var(--apr-blue);
+}
+
+.apr-srcicon--indigo {
+  background: var(--apr-blue-soft);
+  color: var(--apr-indigo);
+}
+
+.apr-srcicon--orange {
+  background: var(--apr-yellow-soft);
+  color: var(--apr-orange);
+}
+
+.apr-source__label {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--apr-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apr-source__value {
+  font-size: 12.5px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--apr-ink);
+}
+
+.apr-bar {
+  margin-top: 7px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--apr-gray-soft);
+  overflow: hidden;
+}
+
+.apr-bar__fill {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  min-width: 6px;
+}
+
+.apr-sources__foot {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.apr-sources__foot .apr-pill {
+  justify-content: center;
+  height: 30px;
+  padding: 0 10px;
+  overflow: hidden;
+}
+
+/* ================================================================== */
+/* Estimated revenue by source                                         */
+/* ================================================================== */
+.apr-bysrc {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.apr-bysrc__cell {
+  background: var(--apr-soft);
+  border: 1px solid var(--apr-line-soft);
+  border-radius: 12px;
+  padding: 12px;
+  min-width: 0;
+}
+
+.apr-bysrc__top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.apr-bysrc__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--apr-body);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.apr-bysrc__value {
+  margin-top: 6px;
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: #121c30;
+}
+
+.apr-bysrc__bar {
+  margin-top: 7px;
+  height: 5px;
+  border-radius: 999px;
+  background: #e9eef8;
+  overflow: hidden;
+}
+
+.apr-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.apr-foot--blue {
+  background: var(--apr-blue-soft);
+  color: var(--apr-blue);
+}
+
+/* ================================================================== */
+/* Revenue assumptions                                                 */
+/* ================================================================== */
+.apr-assume .apr-head {
+  align-items: center;
+}
+
+.apr-form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 16px;
+  margin-top: 18px;
+}
+
+.apr-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.apr-field__label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--apr-mut);
+}
+
+.apr-glyph {
+  width: 20px;
+  height: 20px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 9px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+.apr-glyph--blue {
+  background: var(--apr-blue-soft);
+  color: var(--apr-blue);
+}
+
+.apr-glyph--green {
+  background: var(--apr-green-soft);
+  color: var(--apr-green);
+}
+
+.apr-glyph--purple {
+  background: var(--apr-purple-soft);
+  color: var(--apr-purple);
+}
+
+.apr-glyph--yellow {
+  background: var(--apr-yellow-soft);
+  color: var(--apr-orange);
+}
+
+.apr-input {
+  height: 36px;
+  width: 100%;
+  padding: 0 12px;
+  border: 1px solid #d3ddec;
+  border-radius: 10px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--apr-ink);
+  min-width: 0;
+}
+
+.apr-input:focus {
+  outline: none;
+  border-color: var(--apr-blue);
+  box-shadow: 0 0 0 3px rgba(49, 91, 255, 0.12);
+}
+
+.apr-input:disabled {
+  background: var(--apr-soft);
+  color: var(--apr-mut-2);
+}
+
+select.apr-input {
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%2364748B' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 30px;
+}
+
+.apr-assume__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.apr-savebtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 32px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: var(--apr-blue);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 120ms;
+}
+
+.apr-savebtn:hover:not(:disabled) {
+  background: #244bee;
+}
+
+.apr-savebtn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.apr-assume__error {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+.apr-sum {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.apr-sumrow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 16px;
+  border-radius: 12px;
+  background: var(--apr-soft);
+}
+
+.apr-sumrow__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--apr-body);
+}
+
+.apr-sumrow__value {
+  font-size: 14.5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #121c30;
+}
+
+.apr-sumrow--ok {
+  background: var(--apr-green-soft);
+}
+
+.apr-sumrow--ok .apr-sumrow__label,
+.apr-sumrow--ok .apr-sumrow__value {
+  color: var(--apr-green);
+}
+
+/* ================================================================== */
+/* Responsive                                                          */
+/* ================================================================== */
+@media (max-width: 1100px) {
+  .apr-row1,
+  .apr-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .apr-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .apr-rev__body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .apr-rev__chart {
+    align-self: center;
+  }
+
+  .apr-minis__caption {
+    text-align: left;
+  }
+}
+
+@media (max-width: 480px) {
+  .apr-card {
+    padding: 14px;
+  }
+
+  .apr-fmetric__value {
+    font-size: 13px;
+    gap: 4px;
+  }
+
+  .apr-fmetric__label {
+    font-size: 9px;
+  }
+
+  .apr-sources {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .apr-sources__foot {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .apr-kpi {
+    font-size: 24px;
+  }
+}

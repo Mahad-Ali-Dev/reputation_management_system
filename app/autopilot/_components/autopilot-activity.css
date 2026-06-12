@@ -1,0 +1,349 @@
+/* ============================================================
+   Autopilot — Activity tab (Activity + Needs you cards)
+   Kit: tasks/autopilot/autopilot/Activity section/
+   (report-empty-state.md + report-active-state.md)
+   Prefix: apa- — scoped to the activity panel only.
+   ============================================================ */
+
+.apa-grid {
+  --apa-bg-hover: #f6f8fc;
+  --apa-border: #e4eaf5;
+  --apa-border-soft: #edf1f7;
+  --apa-border-dash: #d8e0ee;
+  --apa-text: #0b1220;
+  --apa-text-2: #475569;
+  --apa-muted: #94a3b8;
+  --apa-primary: #2563eb;
+  --apa-primary-soft: #eaf1ff;
+  --apa-purple: #7c3aed;
+  --apa-purple-soft: #f3e8ff;
+  --apa-success: #10b981;
+  --apa-success-deep: #047857;
+  --apa-success-soft: #e8fff6;
+  --apa-warning: #f59e0b;
+  --apa-warning-deep: #b45309;
+  --apa-warning-soft: #fff7e6;
+  --apa-danger: #ef4444;
+  --apa-danger-deep: #b91c1c;
+  --apa-danger-soft: #fff1f2;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
+  gap: 20px;
+  align-items: stretch;
+}
+
+/* ---- card shell ---- */
+.apa-card {
+  background: #ffffff;
+  border: 1px solid var(--apa-border);
+  border-radius: 18px;
+  padding: 20px;
+  min-height: 320px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.apa-card__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.apa-card__title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.apa-card__title {
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+  color: var(--apa-text);
+  margin: 0;
+}
+
+.apa-meta {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--apa-muted);
+  white-space: nowrap;
+}
+
+.apa-link {
+  appearance: none;
+  border: none;
+  background: none;
+  padding: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--apa-primary);
+  cursor: pointer;
+  white-space: nowrap;
+  border-radius: 6px;
+}
+
+.apa-link:hover {
+  color: #155eef;
+  text-decoration: underline;
+}
+
+.apa-count-pill {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: var(--apa-warning-soft);
+  color: var(--apa-warning-deep);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* ---- rows ---- */
+.apa-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.apa-row {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 13px 8px;
+  margin: 0 -8px;
+  border-radius: 12px;
+  border-bottom: 1px solid var(--apa-border-soft);
+  text-decoration: none;
+  color: inherit;
+  transition: background 160ms ease;
+}
+
+.apa-list > .apa-row:last-child {
+  border-bottom: none;
+}
+
+a.apa-row:hover {
+  background: var(--apa-bg-hover);
+}
+
+.apa-row:focus-visible {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+.apa-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.apa-icon--primary {
+  background: var(--apa-primary-soft);
+  color: var(--apa-primary);
+}
+
+.apa-icon--purple {
+  background: var(--apa-purple-soft);
+  color: var(--apa-purple);
+}
+
+.apa-icon--success {
+  background: var(--apa-success-soft);
+  color: var(--apa-success);
+}
+
+.apa-icon--warning {
+  background: var(--apa-warning-soft);
+  color: var(--apa-warning);
+}
+
+.apa-icon--danger {
+  background: var(--apa-danger-soft);
+  color: var(--apa-danger);
+}
+
+.apa-row__title {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 600;
+  color: var(--apa-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apa-row__desc {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 19px;
+  color: var(--apa-text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.apa-row__desc--danger {
+  color: var(--apa-danger);
+  font-weight: 600;
+}
+
+.apa-row__side {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.apa-time {
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 500;
+  color: var(--apa-muted);
+  white-space: nowrap;
+}
+
+.apa-chip {
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 0 7px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.apa-chip--ok {
+  background: var(--apa-success-soft);
+  color: var(--apa-success-deep);
+}
+
+.apa-chip--info {
+  background: var(--apa-primary-soft);
+  color: #1d4ed8;
+}
+
+.apa-chip--warn {
+  background: var(--apa-warning-soft);
+  color: var(--apa-warning-deep);
+}
+
+.apa-chip--bad {
+  background: var(--apa-danger-soft);
+  color: var(--apa-danger-deep);
+}
+
+.apa-needs-end {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--apa-muted);
+  flex-shrink: 0;
+}
+
+/* ---- empty states ---- */
+.apa-empty {
+  flex: 1;
+  border: 1px dashed var(--apa-border-dash);
+  border-radius: 16px;
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  padding: 28px 24px;
+}
+
+.apa-empty__img {
+  width: 184px;
+  height: auto;
+}
+
+.apa-empty__img--check {
+  width: 84px;
+}
+
+.apa-empty__text {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 20px;
+  color: var(--apa-text-2);
+  max-width: 300px;
+}
+
+/* ---- footer "view all" ---- */
+.apa-foot {
+  margin-top: auto;
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+@media (max-width: 1099px) {
+  .apa-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .apa-card {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 767px) {
+  .apa-grid {
+    gap: 16px;
+  }
+
+  .apa-card {
+    padding: 16px;
+  }
+
+  .apa-row {
+    grid-template-columns: 40px minmax(0, 1fr);
+    gap: 12px;
+    align-items: start;
+  }
+
+  .apa-row__side {
+    grid-column: 2;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
+  .apa-needs-end {
+    display: none;
+  }
+
+  .apa-row__title,
+  .apa-row__desc {
+    white-space: normal;
+  }
+
+  .apa-empty__img {
+    width: 150px;
+  }
+}

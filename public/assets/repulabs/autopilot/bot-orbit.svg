@@ -1,0 +1,20 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Autopilot bot orbit illustration">
+  <title>Autopilot bot orbit illustration</title>
+  
+  <circle cx="128" cy="128" r="84" stroke="#E5E9FF" stroke-width="3"/>
+  <circle cx="128" cy="128" r="54" fill="#EEF3FF"/>
+  <circle cx="128" cy="128" r="42" fill="url(#g)"/>
+  <rect x="84" y="100" width="88" height="76" rx="32" fill="url(#g)"/>
+  <circle cx="108" cy="134" r="10" fill="white"/>
+  <circle cx="148" cy="134" r="10" fill="white"/>
+  <path d="M112 154c10 10 22 10 32 0" stroke="white" stroke-width="7" stroke-linecap="round"/>
+  <path d="M128 92V70" stroke="#AAB6FF" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="128" cy="62" r="10" fill="#AAB6FF"/>
+  <circle cx="198" cy="84" r="10" fill="#3157FF"/>
+  <circle cx="206" cy="160" r="8" fill="#12B76A"/>
+  <circle cx="56" cy="112" r="7" fill="#3157FF"/>
+  <circle cx="78" cy="194" r="8" fill="#FDB022"/>
+  <circle cx="178" cy="208" r="7" fill="#7A5AF8"/>
+  <defs><linearGradient id="g" x1="82" y1="82" x2="178" y2="180" gradientUnits="userSpaceOnUse"><stop stop-color="#8D9AFF"/><stop offset="1" stop-color="#263DFF"/></linearGradient></defs>
+
+</svg>

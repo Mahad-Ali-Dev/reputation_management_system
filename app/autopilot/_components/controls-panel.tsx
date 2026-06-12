@@ -1,18 +1,21 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/shell/icon";
 import Link from "next/link";
 import type { JSX } from "react";
 import type { AutopilotConfigView } from "@/lib/autopilot/queries";
+import "./autopilot-controls.css";
 
 /**
- * Controls panel (Module 15) — the per-loop switch grid. Each loop has a
- * one-line explainer + a deep-link to the owning module's settings.
+ * Controls panel (Module 15) — design-kit rebuild (tasks/autopilot/autopilot/
+ * control section). The 9 loop switches regrouped into the kit's two cards:
+ * "Customer flow" and "Safety & reporting", each row = kit badge SVG + title +
+ * one-line description + green On / gray Off pill + blue toggle. Group headers
+ * carry a live "N active" count pill.
  *
  * CONTROLLED: loop state + persistence live in the parent AutopilotShell (so
- * the 3-up loop cards and this list share one source of truth — flipping a
- * card flips here too, and both go through the same `saveAutopilotConfig`
- * admin-only server action).
+ * the upper controls and this list share one source of truth — both go
+ * through the same `saveAutopilotConfig` admin-only server action). Props /
+ * exports are unchanged from the pre-redesign contract.
  */
 
 export type LoopKey =
@@ -26,67 +29,89 @@ export type LoopKey =
   | "escalateToHuman"
   | "weeklyDigestEnabled";
 
-const LOOPS: { key: LoopKey; label: string; hint: string; icon: IconName; href?: string }[] = [
+type LoopRow = {
+  key: LoopKey;
+  label: string;
+  desc: string;
+  /** Kit badge SVG (circle + glyph baked in) under /public. */
+  asset: string;
+  href?: string;
+};
+
+/** Grouping, order, copy and icons follow the kit handoff exactly. */
+const GROUPS: { title: string; subtitle: string; rows: LoopRow[] }[] = [
   {
-    key: "autoReply5Star",
-    label: "Auto-reply to 5★ reviews",
-    hint: "Publishes a reply to glowing reviews automatically.",
-    icon: "star",
-    href: "/reviews/auto-reply",
+    title: "Customer flow",
+    subtitle: "Automations that collect, reply, and convert reviews.",
+    rows: [
+      {
+        key: "autoReply5Star",
+        label: "Auto-reply to 5-star reviews",
+        desc: "Publish replies to glowing reviews automatically.",
+        asset: "/assets/repulabs/autopilot/control-auto-reply-star.svg",
+        href: "/reviews/auto-reply",
+      },
+      {
+        key: "draftLowStar",
+        label: "Draft replies to 1–4-star reviews",
+        desc: "Write replies for approval before publishing.",
+        asset: "/assets/repulabs/autopilot/control-draft-replies.svg",
+        href: "/reviews/auto-reply",
+      },
+      {
+        key: "sendReviewRequests",
+        label: "Send review requests",
+        desc: "Ask happy customers for a review.",
+        asset: "/assets/repulabs/autopilot/control-review-requests.svg",
+        href: "/outreach",
+      },
+      {
+        key: "voiceToReviewEnabled",
+        label: "Voice to Review",
+        desc: "Turn resolved calls into review requests.",
+        asset: "/assets/repulabs/autopilot/control-voice-review.svg",
+        href: "/phone",
+      },
+      {
+        key: "inboxAutoReply",
+        label: "Inbox auto-reply",
+        desc: "Answer routine inbox messages.",
+        asset: "/assets/repulabs/autopilot/control-inbox-auto-reply.svg",
+        href: "/support",
+      },
+    ],
   },
   {
-    key: "draftLowStar",
-    label: "Draft replies to 1–4★ reviews",
-    hint: "Writes a reply for you to approve — never auto-published.",
-    icon: "edit",
-    href: "/reviews/auto-reply",
-  },
-  {
-    key: "sendReviewRequests",
-    label: "Send review requests",
-    hint: "Asks happy customers for a review (consent-gated).",
-    icon: "send",
-    href: "/outreach",
-  },
-  {
-    key: "voiceToReviewEnabled",
-    label: "Voice → Review",
-    hint: "Turns resolved phone calls into review requests.",
-    icon: "phone",
-    href: "/phone",
-  },
-  {
-    key: "draftDisputes",
-    label: "Draft review disputes",
-    hint: "Drafts a flag/dispute argument for policy-violating reviews.",
-    icon: "flag",
-    href: "/reviews/dispute",
-  },
-  {
-    key: "geoPosts",
-    label: "Geo posts",
-    hint: "Publishes location-targeted social posts.",
-    icon: "pin",
-    href: "/social/posts",
-  },
-  {
-    key: "inboxAutoReply",
-    label: "Inbox auto-reply",
-    hint: "Replies to routine inbox messages; escalates the rest.",
-    icon: "chat",
-    href: "/support",
-  },
-  {
-    key: "escalateToHuman",
-    label: "Escalate to a human",
-    hint: "When unsure, queue it for you instead of acting.",
-    icon: "alert",
-  },
-  {
-    key: "weeklyDigestEnabled",
-    label: "Weekly digest email",
-    hint: "Sends owners a Monday summary of what Autopilot did.",
-    icon: "mail",
+    title: "Safety & reporting",
+    subtitle: "Guardrails, publishing, and owner updates.",
+    rows: [
+      {
+        key: "draftDisputes",
+        label: "Draft review disputes",
+        desc: "Prepare policy-based dispute drafts.",
+        asset: "/assets/repulabs/autopilot/control-draft-disputes.svg",
+        href: "/reviews/dispute",
+      },
+      {
+        key: "geoPosts",
+        label: "Geo posts",
+        desc: "Publish location-targeted social posts.",
+        asset: "/assets/repulabs/autopilot/control-geo-posts.svg",
+        href: "/social/posts",
+      },
+      {
+        key: "escalateToHuman",
+        label: "Escalate to a human",
+        desc: "Pause when confidence is low.",
+        asset: "/assets/repulabs/autopilot/control-human-escalation.svg",
+      },
+      {
+        key: "weeklyDigestEnabled",
+        label: "Weekly digest email",
+        desc: "Send owners a Monday summary.",
+        asset: "/assets/repulabs/autopilot/control-weekly-digest.svg",
+      },
+    ],
   },
 ];
 
@@ -105,85 +130,82 @@ export function ControlsPanel({
   error: string | null;
   onToggle: (key: LoopKey) => void;
 }): JSX.Element {
+  const status = pending ? "Saving…" : saved ? "Saved" : config.enabled ? "Live" : "Paused";
+
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <h3 className="ds-card__title">What Autopilot can do</h3>
-        <span className="dim" style={{ fontSize: 12 }}>
-          {pending ? "Saving…" : saved ? "Saved" : config.enabled ? "Live" : "Paused"}
+    <div className="apc-root">
+      <div className="apc-topline">
+        {!config.enabled && (
+          <span className="apc-note">These take effect once Autopilot is switched on above.</span>
+        )}
+        <span className={`apc-status${saved && !pending ? " is-saved" : ""}`} aria-live="polite">
+          {status}
         </span>
       </div>
 
-      {!config.enabled && (
-        <div
-          className="row"
-          style={{ margin: "12px 16px 0", gap: 8, padding: "10px 12px", background: "var(--info-soft)", borderRadius: 8 }}
-        >
-          <Icon name="info" size={14} style={{ color: "var(--info)" }} />
-          <span style={{ fontSize: 12.5 }}>
-            These take effect once Autopilot is switched on above.
-          </span>
-        </div>
-      )}
+      <div className="apc-grid">
+        {GROUPS.map((group) => {
+          const activeCount = group.rows.filter((row) => state[row.key]).length;
+          return (
+            <section key={group.title} className="apc-card" aria-label={group.title}>
+              <header className="apc-card__head">
+                <div>
+                  <h3 className="apc-card__title">{group.title}</h3>
+                  <p className="apc-card__subtitle">{group.subtitle}</p>
+                </div>
+                <span className="apc-countpill">{activeCount} active</span>
+              </header>
 
-      <div style={{ padding: "8px 8px 12px" }}>
-        {LOOPS.map((loop, i) => (
-          <div
-            key={loop.key}
-            className="row"
-            style={{
-              padding: 14,
-              gap: 12,
-              borderTop: i ? "1px solid var(--line)" : "none",
-              opacity: config.enabled ? 1 : 0.7,
-            }}
-          >
-            <span
-              style={{
-                width: 32,
-                height: 32,
-                borderRadius: 8,
-                background: state[loop.key] ? "var(--pri-50)" : "var(--rl-surface-2, #f1f5f9)",
-                color: state[loop.key] ? "var(--pri)" : "var(--rl-muted-2)",
-                display: "grid",
-                placeItems: "center",
-                flexShrink: 0,
-              }}
-            >
-              <Icon name={loop.icon} size={15} />
-            </span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div className="row" style={{ gap: 8 }}>
-                <span style={{ fontSize: 13.5, fontWeight: 500 }}>{loop.label}</span>
-                {loop.href && (
-                  <Link href={loop.href} className="dim" style={{ fontSize: 11, textDecoration: "none" }}>
-                    Settings <Icon name="ext" size={9} />
-                  </Link>
-                )}
+              <div>
+                {group.rows.map((row) => {
+                  const on = state[row.key];
+                  return (
+                    <div key={row.key} className={`apc-row${config.enabled ? "" : " is-dim"}`}>
+                      <img
+                        className="apc-row__icon"
+                        src={row.asset}
+                        alt=""
+                        width={30}
+                        height={30}
+                        loading="lazy"
+                      />
+                      <div className="apc-row__copy">
+                        <div className="apc-row__titleline">
+                          <span className="apc-row__title">{row.label}</span>
+                          {row.href && (
+                            <Link href={row.href} className="apc-row__settings">
+                              Settings
+                            </Link>
+                          )}
+                        </div>
+                        <p className="apc-row__desc">{row.desc}</p>
+                      </div>
+                      <span className={`apc-pill ${on ? "is-on" : "is-off"}`}>
+                        {on ? "On" : "Off"}
+                      </span>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={on}
+                        aria-label={row.label}
+                        disabled={pending}
+                        onClick={() => onToggle(row.key)}
+                        className={`apc-toggle${on ? " is-on" : ""}`}
+                      >
+                        <span className="apc-toggle__knob" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="dim" style={{ fontSize: 11.5, marginTop: 1 }}>
-                {loop.hint}
-              </div>
-            </div>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={state[loop.key]}
-              aria-label={loop.label}
-              disabled={pending}
-              onClick={() => onToggle(loop.key)}
-              className="ap2-switch"
-            >
-              <span className="ap2-switch__knob" />
-            </button>
-          </div>
-        ))}
+            </section>
+          );
+        })}
       </div>
 
       {error && (
-        <div className="row" style={{ padding: "0 16px 14px", gap: 8, color: "var(--bad)" }}>
-          <Icon name="alert" size={14} />
-          <span style={{ fontSize: 12.5 }}>{error}</span>
+        <div className="apc-error" role="alert">
+          {error}
         </div>
       )}
     </div>

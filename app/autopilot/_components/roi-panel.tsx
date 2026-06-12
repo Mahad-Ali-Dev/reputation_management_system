@@ -1,17 +1,27 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/shell/icon";
+import { Icon } from "@/components/shell/icon";
 import { saveRoiSettings } from "@/lib/roi/actions";
 import { type JSX, useState, useTransition } from "react";
 import type { RoiByChannel } from "@/lib/roi/estimate";
+import "./autopilot-roi.css";
 
 /**
- * ROI panel (Module 15) — presentational funnel + a thin settings island.
+ * ROI panel (Module 15) — design-kit rebuild (tasks/autopilot/autopilot/
+ * ROI section, active + empty handoffs).
  *
- * Renders the spec's funnel (scans → reviews → calls → bookings → $) as a stat
- * strip, the attribution split (QR vs review requests vs Voice→Review), the
- * estimated-revenue headline (clearly labeled ESTIMATED, never "booked"), and a
- * small RoiSettings editor that persists via `saveRoiSettings`.
+ * Layout per the kit: row 1 = "Estimated booked revenue" (KPI + mini metrics +
+ * by-source mini chart) beside "The funnel" (stage metrics + colored flow
+ * ribbon); row 2 = "Where reviews came from" + "Estimated revenue by source"
+ * stacked on the left, the tall "Revenue assumptions" form on the right.
+ *
+ * LIVE DATA ONLY: every figure binds to the props the page already computes
+ * (funnel attribution, `estimateRevenue` by-channel split, action ledger).
+ * Money always formats with the org's RoiSettings currency. The empty state
+ * (org has no funnel data) renders the kit's zero-state: illustration in the
+ * trend slot, "No bookings yet" / "No reviews yet" badges, blank assumption
+ * fields and a "Set your average job value" CTA. Settings still persist via
+ * `saveRoiSettings` (manager+ server action) — same contract as before.
  */
 
 export type RoiPanelData = {
@@ -41,203 +51,490 @@ export type RoiPanelData = {
   };
 };
 
+/* ------------------------------------------------------------------ */
+/* Formatting helpers (org currency — NEVER hardcoded)                 */
+/* ------------------------------------------------------------------ */
+
+function fmtMoney(currency: string, n: number): string {
+  return `${currency} ${Math.round(n).toLocaleString()}`;
+}
+
+/** Kit's compact money ("PKR 184.5k") for the mini cards + summary rows. */
+function fmtMoneyCompact(currency: string, n: number): string {
+  if (n >= 1000) {
+    return `${currency} ${(n / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`;
+  }
+  return fmtMoney(currency, n);
+}
+
+/** Decorative label glyph for the assumptions form ("Rs", "$", "PKR"…). */
+function currencyGlyph(code: string): string {
+  const trimmed = code.trim();
+  if (!trimmed) return "$";
+  try {
+    const part = new Intl.NumberFormat("en", { style: "currency", currency: trimmed.toUpperCase() })
+      .formatToParts(1)
+      .find((p) => p.type === "currency");
+    return (part?.value ?? trimmed).slice(0, 3);
+  } catch {
+    return trimmed.slice(0, 3).toUpperCase();
+  }
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/* ------------------------------------------------------------------ */
+/* Charts (pure SVG, data-driven — codebase chart idiom)               */
+/* ------------------------------------------------------------------ */
+
+type Pt = { x: number; y: number };
+
+function curveThrough(pts: Pt[]): string {
+  let d = "";
+  let prev = pts[0];
+  if (!prev) return d;
+  for (const b of pts.slice(1)) {
+    const dx = (b.x - prev.x) * 0.45;
+    d += ` C ${r1(prev.x + dx)},${r1(prev.y)} ${r1(b.x - dx)},${r1(b.y)} ${r1(b.x)},${r1(b.y)}`;
+    prev = b;
+  }
+  return d;
+}
+
+function bandPath(top: Pt[], bot: Pt[]): string {
+  const t0 = top[0];
+  const rev = [...bot].reverse();
+  const b0 = rev[0];
+  if (!t0 || !b0) return "";
+  return `M ${r1(t0.x)},${r1(t0.y)}${curveThrough(top)} L ${r1(b0.x)},${r1(b0.y)}${curveThrough(rev)} Z`;
+}
+
+function r1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+/**
+ * The kit's colored funnel flow (indigo / pink / amber ribbons). Ribbon
+ * thickness at each stage column scales with the REAL stage value (sqrt-eased
+ * so small tails stay visible). With zero data it falls back to the kit's
+ * decorative empty-state shape — the handoff requires the colored funnel to
+ * stay visible, never a blank rectangle.
+ */
+function FunnelStream({ stages }: { stages: number[] }): JSX.Element {
+  const W = 600;
+  const H = 120;
+  const xs = [4, 152, 300, 448, 594];
+  const max = Math.max(...stages);
+  const fallback = [1, 0.66, 0.45, 0.3, 0.2];
+  // Band shares shift along x so the ribbons appear to cross (kit visual).
+  const cols = xs.map((x, i) => {
+    const n = max > 0 ? Math.sqrt(Math.max(stages[i] ?? 0, 0) / max) : (fallback[i] ?? 0.2);
+    const h = 26 + 78 * n;
+    const fr = i / (xs.length - 1);
+    const y0 = 60 - h / 2;
+    const y1 = y0 + h * (0.42 - 0.32 * fr);
+    const y2 = y1 + h * (0.28 + 0.06 * fr);
+    const y3 = y2 + h * (0.2 - 0.02 * fr);
+    const y4 = y3 + h * (0.1 + 0.28 * fr);
+    return { x, h, y0, y1, y2, y3, y4 };
+  });
+  const last = cols[cols.length - 1];
+  const pts = (top: (c: (typeof cols)[number]) => number) =>
+    cols.map((c) => ({ x: c.x, y: top(c) }));
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
+      {[152, 300, 448].map((x) => (
+        <line key={x} x1={x} y1={10} x2={x} y2={H - 10} stroke="#E6EDF2" strokeWidth={1} />
+      ))}
+      <path d={bandPath(pts((c) => c.y0), pts((c) => c.y1))} fill="#5B5CFF" />
+      <path d={bandPath(pts((c) => c.y1), pts((c) => c.y2))} fill="#EC5A7E" />
+      <path d={bandPath(pts((c) => c.y2), pts((c) => c.y3))} fill="#FBBF24" />
+      <path d={bandPath(pts((c) => c.y3), pts((c) => c.y4))} fill="#5B5CFF" />
+      {last && <rect x={W - 6} y={r1(last.y0)} width={5} height={r1(last.h)} rx={2.5} fill="#F59E0B" />}
+    </svg>
+  );
+}
+
+/** Mini chart in the revenue card: pale bars + blue line over the four REAL per-source revenue figures. */
+function RevenueMiniChart({ values }: { values: number[] }): JSX.Element {
+  const W = 168;
+  const H = 92;
+  const max = Math.max(...values, 1);
+  const slot = W / values.length;
+  const items = values.map((v, i) => ({
+    x: slot * i + slot / 2,
+    y: H - 12 - (H - 36) * (v / max),
+    bh: 14 + (H - 40) * (v / max) * 0.8,
+  }));
+  const line = items.map((p, i) => `${i === 0 ? "M" : "L"} ${r1(p.x)},${r1(p.y)}`).join(" ");
+  return (
+    <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} aria-hidden="true">
+      {items.map((p) => (
+        <rect
+          key={`b-${p.x}`}
+          x={r1(p.x - 8)}
+          y={r1(H - 4 - p.bh)}
+          width={16}
+          height={r1(p.bh)}
+          rx={8}
+          fill="#EAF0FF"
+        />
+      ))}
+      <path d={line} fill="none" stroke="#315BFF" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+      {items.map((p, i) => (
+        <circle key={`d-${p.x}`} cx={r1(p.x)} cy={r1(p.y)} r={i === items.length - 1 ? 4.5 : 3} fill="#315BFF" />
+      ))}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Panel                                                               */
+/* ------------------------------------------------------------------ */
+
+const DOT = {
+  blue: "var(--apr-indigo)",
+  orange: "var(--apr-orange)",
+  purple: "var(--apr-purple)",
+  green: "var(--apr-green)",
+  cyan: "var(--apr-cyan)",
+} as const;
+
 export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
-  const stages: { key: string; label: string; value: number | null; icon: IconName }[] = [
-    { key: "scans", label: "QR scans", value: data.funnel.scans, icon: "qr" },
-    { key: "reviews", label: "Reviews", value: data.funnel.reviews.total, icon: "star" },
-    { key: "gbp", label: "Profile views", value: data.funnel.gbpViews, icon: "eye" },
-    { key: "calls", label: "Calls", value: data.funnel.calls, icon: "phone" },
-    { key: "bookings", label: "Bookings", value: data.funnel.bookings.total, icon: "cal" },
+  const cur = data.currency;
+  const f = data.funnel;
+  const totalReviews = f.reviews.total;
+  const isEmpty =
+    f.scans === 0 &&
+    totalReviews === 0 &&
+    f.calls === 0 &&
+    f.bookings.total === 0 &&
+    data.estimatedRevenue === 0;
+
+  const reviewedPct =
+    f.scans > 0 && totalReviews > 0 ? Math.round((totalReviews / f.scans) * 100) : null;
+
+  const sources = [
+    { key: "voice", label: "Voice → Review", value: f.reviews.fromVoice, tone: "green" as const },
+    { key: "outreach", label: "Review requests", value: f.reviews.fromOutreach, tone: "purple" as const },
+    { key: "qr", label: "QR plaques", value: f.reviews.fromQr, tone: "blue" as const },
+    { key: "organic", label: "Organic", value: f.reviews.organic, tone: "orange" as const },
+  ];
+  const topSource = sources.reduce(
+    (a, b) => (b.value > a.value ? b : a),
+    { key: "none", label: "", value: 0, tone: "green" as const },
+  );
+
+  const stageMetrics = [
+    { key: "scans", label: "QR scans", value: f.scans as number | null, dot: DOT.blue },
+    { key: "reviews", label: "Reviews", value: totalReviews as number | null, dot: DOT.orange },
+    { key: "views", label: "Views", value: f.gbpViews, dot: DOT.purple },
+    { key: "calls", label: "Calls", value: f.calls as number | null, dot: DOT.green },
+    { key: "bookings", label: "Bookings", value: f.bookings.total as number | null, dot: DOT.cyan },
   ];
 
-  const fmtMoney = (n: number) => `${data.currency} ${n.toLocaleString()}`;
+  const bySource = [
+    { key: "bookings", label: "Bookings", value: data.byChannel.bookings, icon: "cal", tone: "green" as const },
+    { key: "outreach", label: "Review requests", value: data.byChannel.outreachReviews, icon: "send", tone: "purple" as const },
+    { key: "voice", label: "Voice → Review", value: data.byChannel.voiceReviews, icon: "phone", tone: "indigo" as const },
+    { key: "qr", label: "QR plaques", value: data.byChannel.qrReviews, icon: "qr", tone: "blue" as const },
+  ] as const;
+  const maxChannel = Math.max(...bySource.map((c) => c.value), 1);
+
+  function focusAvgJobValue() {
+    const el = document.getElementById("apr-input-avg") as HTMLInputElement | null;
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.focus({ preventScroll: true });
+  }
+
+  const rangePill = capitalize(data.rangeLabel);
 
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      {/* Headline */}
-      <div
-        className="ds-card"
-        style={{ padding: 20, background: "linear-gradient(135deg, var(--pri-50), var(--surface))" }}
-      >
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start", gap: 12 }}>
-          <div>
-            <div
-              className="dim"
-              style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.05em" }}
-            >
-              Estimated booked revenue · {data.rangeLabel}
-            </div>
-            <div style={{ fontSize: 34, fontWeight: 700, marginTop: 2 }}>
-              {fmtMoney(data.estimatedRevenue)}
-            </div>
-            <div className="dim" style={{ fontSize: 12, marginTop: 2 }}>
-              {data.topDriver !== "—" ? `Top driver: ${data.topDriver} · ` : ""}
-              Estimated from your funnel — not booked revenue.
-            </div>
-          </div>
-          <span
-            style={{
-              width: 44,
-              height: 44,
-              borderRadius: 12,
-              background: "var(--pri)",
-              color: "#fff",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Icon name="trend" size={22} />
-          </span>
-        </div>
-      </div>
-
-      {/* Automation tiles — real ledger counts; hours are an estimate from those counts */}
-      <div className="ap2-tiles">
-        <div className="ds-card ap2-tile">
-          <div className="ap2-tile__label">Hours saved · {data.rangeLabel}</div>
-          <div className="ap2-tile__value">
-            {data.automation.actions === 0 ? "—" : (
-              <>
-                {data.automation.hoursSaved.toLocaleString(undefined, { maximumFractionDigits: 1 })}{" "}
-                <em>hrs</em>
-              </>
-            )}
-          </div>
-          <div className="ap2-tile__hint">
-            {data.automation.actions === 0
-              ? "No automated actions logged yet."
-              : "Estimate: ≈6 min per review reply, 3 min per request, 8 min per post."}
-          </div>
-        </div>
-        <div className="ds-card ap2-tile">
-          <div className="ap2-tile__label">Actions completed · {data.rangeLabel}</div>
-          <div className="ap2-tile__value">{data.automation.actions.toLocaleString()}</div>
-          <div className="ap2-tile__hint">Replies, requests, posts &amp; drafts logged in the action ledger.</div>
-        </div>
-      </div>
-
-      {/* Funnel strip */}
-      <div className="ds-card">
-        <div className="ds-card__head">
-          <h3 className="ds-card__title">The funnel</h3>
-          <span className="dim" style={{ fontSize: 12 }}>
-            Reviews → calls → bookings → $
-          </span>
-        </div>
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: `repeat(${stages.length}, minmax(0, 1fr))`,
-            gap: 0,
-            padding: 8,
-          }}
-        >
-          {stages.map((s, i) => (
-            <div key={s.key} style={{ position: "relative", padding: "12px 10px", textAlign: "center" }}>
-              <span style={{ color: "var(--pri)" }}>
-                <Icon name={s.icon} size={16} />
+    <div className="apr-root">
+      {/* ---- Row 1: Estimated booked revenue | The funnel ---- */}
+      <div className="apr-row1">
+        <section className="apr-card apr-rev" aria-label="Estimated booked revenue">
+          <div className="apr-rev__top">
+            <div className="apr-head">
+              <span className="apr-badge apr-badge--green">
+                <Icon name="trend" size={17} />
               </span>
-              <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
-                {s.value === null ? "—" : s.value.toLocaleString()}
+              <div className="apr-head__text">
+                <h3 className="apr-title">Estimated booked revenue</h3>
+                <p className="apr-sub">Estimated from your review funnel — not booked revenue.</p>
               </div>
-              <div className="dim" style={{ fontSize: 11 }}>
-                {s.label}
-                {s.key === "gbp" && s.value === null && (
-                  <span style={{ display: "block", fontSize: 10 }}>connect GBP</span>
+            </div>
+            <div className="apr-minis">
+              <div className="apr-minis__caption">{isEmpty ? "No activity yet" : "Revenue inputs"}</div>
+              <div className="apr-minis__row">
+                <div className="apr-mini">
+                  <span className="apr-mini__value">
+                    <span className="apr-dot" style={{ background: DOT.orange }} aria-hidden="true" />
+                    {totalReviews.toLocaleString()}
+                  </span>
+                  <div className="apr-mini__label">Reviews</div>
+                </div>
+                <div className="apr-mini">
+                  <span className="apr-mini__value">
+                    <span className="apr-dot" style={{ background: DOT.green }} aria-hidden="true" />
+                    {f.calls.toLocaleString()}
+                  </span>
+                  <div className="apr-mini__label">Calls</div>
+                </div>
+                <div className="apr-mini">
+                  <span className="apr-mini__value">
+                    <span className="apr-dot" style={{ background: DOT.cyan }} aria-hidden="true" />
+                    {f.bookings.total.toLocaleString()}
+                  </span>
+                  <div className="apr-mini__label">Bookings</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="apr-rev__body">
+            <div className="apr-rev__left">
+              <div className="apr-kpi">{fmtMoney(cur, data.estimatedRevenue)}</div>
+              <div className="apr-rev__pills">
+                <span className="apr-pill apr-pill--mint">
+                  {f.bookings.total > 0
+                    ? `${f.bookings.total.toLocaleString()} bookings`
+                    : "No bookings yet"}
+                </span>
+                <span className="apr-pill apr-pill--blue">{rangePill}</span>
+                {data.topDriver !== "—" && !isEmpty && (
+                  <span className="apr-pill apr-pill--amber">Top driver: {data.topDriver}</span>
                 )}
               </div>
-              {i < stages.length - 1 && (
-                <span
-                  style={{
-                    position: "absolute",
-                    right: -6,
-                    top: "50%",
-                    transform: "translateY(-50%)",
-                    color: "var(--rl-muted-2)",
-                  }}
-                >
-                  <Icon name="chevR" size={14} />
-                </span>
+              {isEmpty && data.settings.averageJobValue == null && (
+                <button type="button" className="apr-cta" onClick={focusAvgJobValue}>
+                  <Icon name="sliders" size={12} />
+                  Set your average job value
+                </button>
               )}
             </div>
-          ))}
-        </div>
+            <div className="apr-rev__chart">
+              {isEmpty ? (
+                <img
+                  className="apr-emptyart"
+                  src="/assets/repulabs/autopilot/roi-trend-empty.svg"
+                  alt=""
+                />
+              ) : (
+                <RevenueMiniChart
+                  values={[
+                    data.byChannel.qrReviews,
+                    data.byChannel.outreachReviews,
+                    data.byChannel.voiceReviews,
+                    data.byChannel.bookings,
+                  ]}
+                />
+              )}
+            </div>
+          </div>
+        </section>
+
+        <section className="apr-card apr-funnel" aria-label="The funnel">
+          <div className="apr-head">
+            <span className="apr-badge apr-badge--purple">
+              <Icon name="filter" size={17} />
+            </span>
+            <div className="apr-head__text">
+              <h3 className="apr-title">The funnel</h3>
+              <p className="apr-sub">Conversion flow by stage</p>
+            </div>
+            <span className="apr-pill apr-pill--gray">Reviews → $</span>
+          </div>
+
+          <div className="apr-funnel__panel">
+            <div className="apr-fmetrics">
+              {stageMetrics.map((m) => (
+                <div key={m.key} className="apr-fmetric">
+                  <span className="apr-fmetric__value">
+                    <span className="apr-dot" style={{ background: m.dot }} aria-hidden="true" />
+                    {m.value === null ? "—" : m.value.toLocaleString()}
+                  </span>
+                  <div
+                    className="apr-fmetric__label"
+                    title={m.key === "views" && m.value === null ? "Connect Google Business Profile" : undefined}
+                  >
+                    {m.label}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="apr-fstream">
+              <FunnelStream
+                stages={[f.scans, totalReviews, f.gbpViews ?? 0, f.calls, f.bookings.total]}
+              />
+            </div>
+            <div className="apr-fbadges">
+              <span className="apr-pill apr-pill--blue">
+                {reviewedPct !== null
+                  ? `${reviewedPct}% reviewed`
+                  : totalReviews > 0
+                    ? `${totalReviews.toLocaleString()} reviews`
+                    : "No reviews yet"}
+              </span>
+              <span className="apr-pill apr-pill--amber">
+                {f.bookings.total > 0
+                  ? `${f.bookings.total.toLocaleString()} bookings won`
+                  : "No bookings yet"}
+              </span>
+            </div>
+          </div>
+        </section>
       </div>
 
-      {/* Attribution split + revenue by channel */}
-      <div className="ap2-roi-split">
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Where reviews came from</h3>
-          </div>
-          <div style={{ padding: 14 }}>
-            <AttrRow label="Voice → Review" value={data.funnel.reviews.fromVoice} accent="var(--pri)" icon="phone" />
-            <AttrRow label="Review requests" value={data.funnel.reviews.fromOutreach} accent="var(--info)" icon="send" />
-            <AttrRow label="QR plaques" value={data.funnel.reviews.fromQr} accent="var(--ok)" icon="qr" />
-            <AttrRow label="Organic" value={data.funnel.reviews.organic} accent="var(--rl-muted-2)" icon="star" />
-          </div>
+      {/* ---- Row 2: sources + revenue-by-source | revenue assumptions ---- */}
+      <div className="apr-grid">
+        <div className="apr-stack">
+          <section className="apr-card" aria-label="Where reviews came from">
+            <div className="apr-head">
+              <span className="apr-badge apr-badge--cyan">
+                <Icon name="share" size={17} />
+              </span>
+              <div className="apr-head__text">
+                <h3 className="apr-title">Where reviews came from</h3>
+                <p className="apr-sub">{isEmpty ? "No source activity yet" : "Active source mix"}</p>
+              </div>
+            </div>
+
+            <div className="apr-sources">
+              {sources.map((s) => (
+                <div key={s.key} className="apr-source">
+                  <div className="apr-source__top">
+                    <span className={`apr-srcicon apr-srcicon--${s.tone}`}>
+                      <Icon
+                        name={s.key === "voice" ? "phone" : s.key === "outreach" ? "send" : s.key === "qr" ? "qr" : "star"}
+                        size={13}
+                      />
+                    </span>
+                    <span className="apr-source__label">{s.label}</span>
+                    <span className="apr-source__value">{s.value.toLocaleString()}</span>
+                  </div>
+                  <div className="apr-bar" aria-hidden="true">
+                    <span
+                      className="apr-bar__fill"
+                      style={{
+                        width: `${totalReviews > 0 ? Math.round((s.value / totalReviews) * 100) : 0}%`,
+                        background: DOT[s.tone],
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="apr-sources__foot">
+              <span className="apr-pill apr-pill--gray">
+                {totalReviews.toLocaleString()} total reviews
+              </span>
+              {topSource.value > 0 ? (
+                <span className="apr-pill apr-pill--mint">
+                  {topSource.value.toLocaleString()} from {topSource.label}
+                </span>
+              ) : (
+                <span className="apr-pill apr-pill--gray">No source activity yet</span>
+              )}
+            </div>
+          </section>
+
+          <section className="apr-card" aria-label="Estimated revenue by source">
+            <div className="apr-head">
+              <span className="apr-badge apr-badge--green">
+                <Icon name="card" size={17} />
+              </span>
+              <div className="apr-head__text">
+                <h3 className="apr-title">Estimated revenue by source</h3>
+                <p className="apr-sub">Revenue tied to each source</p>
+              </div>
+            </div>
+
+            <div className="apr-bysrc">
+              {bySource.map((c) => (
+                <div key={c.key} className="apr-bysrc__cell">
+                  <div className="apr-bysrc__top">
+                    <span className={`apr-srcicon apr-srcicon--${c.tone}`}>
+                      <Icon name={c.icon} size={13} />
+                    </span>
+                    <span className="apr-bysrc__label">{c.label}</span>
+                  </div>
+                  <div className="apr-bysrc__value">{fmtMoneyCompact(cur, c.value)}</div>
+                  <div className="apr-bysrc__bar" aria-hidden="true">
+                    <span
+                      className="apr-bar__fill"
+                      style={{
+                        width: `${Math.round((c.value / maxChannel) * 100)}%`,
+                        background: DOT[c.tone === "indigo" ? "blue" : c.tone],
+                      }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="apr-foot apr-foot--blue">
+              {isEmpty
+                ? "Connect sources to estimate revenue by acquisition"
+                : `${cur} model active — revenue by acquisition source`}
+            </div>
+          </section>
         </div>
 
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Estimated revenue by source</h3>
-          </div>
-          <div style={{ padding: 14 }}>
-            <AttrRow label="Bookings" value={fmtMoney(data.byChannel.bookings)} accent="var(--pri)" icon="cal" raw />
-            <AttrRow label="Voice → Review" value={fmtMoney(data.byChannel.voiceReviews)} accent="var(--pri)" icon="phone" raw />
-            <AttrRow label="Review requests" value={fmtMoney(data.byChannel.outreachReviews)} accent="var(--info)" icon="send" raw />
-            <AttrRow label="QR plaques" value={fmtMoney(data.byChannel.qrReviews)} accent="var(--ok)" icon="qr" raw />
-          </div>
-        </div>
+        <RoiSettingsEditor
+          settings={data.settings}
+          establishments={data.establishments}
+          currency={cur}
+          estimatedRevenue={data.estimatedRevenue}
+        />
       </div>
 
-      {/* Settings editor */}
-      <RoiSettingsEditor settings={data.settings} establishments={data.establishments} />
+      {/* Kit's ROI section ends at the assumptions card ("Model status" row) —
+          no extra tiles below. The automation ledger data stays in the props
+          contract (page.tsx still computes it) for the weekly digest. */}
     </div>
   );
 }
 
-function AttrRow({
-  label,
-  value,
-  accent,
-  icon,
-  raw,
-}: {
-  label: string;
-  value: number | string;
-  accent: string;
-  icon: IconName;
-  raw?: boolean;
-}): JSX.Element {
-  return (
-    <div className="row" style={{ gap: 10, padding: "8px 0" }}>
-      <span style={{ color: accent, flexShrink: 0 }}>
-        <Icon name={icon} size={14} />
-      </span>
-      <span style={{ flex: 1, fontSize: 13 }}>{label}</span>
-      <span style={{ fontSize: 14, fontWeight: 600 }}>
-        {raw ? value : typeof value === "number" ? value.toLocaleString() : value}
-      </span>
-    </div>
-  );
-}
+/* ------------------------------------------------------------------ */
+/* Revenue assumptions (kit card; persists via saveRoiSettings)        */
+/* ------------------------------------------------------------------ */
 
 function RoiSettingsEditor({
   settings,
   establishments,
+  currency,
+  estimatedRevenue,
 }: {
   settings: RoiPanelData["settings"];
   establishments: { id: string; name: string }[];
+  /** Display currency for the summary rows (org RoiSettings currency). */
+  currency: string;
+  estimatedRevenue: number;
 }): JSX.Element {
+  // Kit empty state: all four fields blank until the model is configured.
+  const configured = settings.averageJobValue != null;
   const [estId, setEstId] = useState(settings.establishmentId ?? establishments[0]?.id ?? "");
-  const [avg, setAvg] = useState(settings.averageJobValue != null ? String(settings.averageJobValue) : "");
-  const [rate, setRate] = useState(String(settings.bookingToJobRate ?? 0.6));
-  const [currency, setCurrency] = useState(settings.currency || "USD");
+  const [avg, setAvg] = useState(configured ? String(settings.averageJobValue) : "");
+  const [rate, setRate] = useState(configured ? String(settings.bookingToJobRate ?? 0.6) : "");
+  const [cur, setCur] = useState(configured ? settings.currency || "USD" : "");
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  const statusPill = pending
+    ? { label: "Saving…", cls: "apr-pill--gray" }
+    : saved || configured
+      ? { label: "Saved", cls: "apr-pill--mint" }
+      : { label: "Empty", cls: "apr-pill--gray" };
+
+  // Saved-model summary (live props, not in-progress keystrokes).
+  const valuePerBooking = configured
+    ? (settings.averageJobValue ?? 0) * (settings.bookingToJobRate ?? 0.6)
+    : 0;
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -247,7 +544,7 @@ function RoiSettingsEditor({
     fd.set("establishmentId", estId);
     if (avg.trim()) fd.set("averageJobValue", avg.trim());
     if (rate.trim()) fd.set("bookingToJobRate", rate.trim());
-    fd.set("currency", currency);
+    if (cur.trim()) fd.set("currency", cur.trim());
     startTransition(async () => {
       try {
         await saveRoiSettings(fd);
@@ -259,79 +556,136 @@ function RoiSettingsEditor({
   }
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <h3 className="ds-card__title">Revenue assumptions</h3>
-        <span className="dim" style={{ fontSize: 12 }}>
-          {pending ? "Saving…" : saved ? "Saved" : "Tune the estimate"}
+    <section className="apr-card apr-assume" aria-label="Revenue assumptions">
+      <div className="apr-head">
+        <span className="apr-badge apr-badge--blue">
+          <Icon name="sliders" size={17} />
+        </span>
+        <div className="apr-head__text">
+          <h3 className="apr-title">Revenue assumptions</h3>
+        </div>
+        <span className={`apr-pill ${statusPill.cls}`} aria-live="polite">
+          {statusPill.label}
         </span>
       </div>
-      <form onSubmit={onSubmit} style={{ padding: 16, display: "grid", gap: 12 }}>
-        <p className="dim" style={{ fontSize: 12, margin: 0 }}>
-          The estimate uses these to turn bookings + attributed reviews into a dollar figure. It is
-          always an estimate, never billed revenue.
-        </p>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0,1fr))", gap: 12 }}>
-          {establishments.length > 1 && (
-            <label style={{ fontSize: 12, display: "grid", gap: 4 }}>
-              <span className="dim">Location</span>
-              <select className="input" value={estId} onChange={(e) => setEstId(e.target.value)}>
+
+      <form onSubmit={onSubmit}>
+        <div className="apr-form">
+          <div className="apr-field">
+            <label className="apr-field__label" htmlFor="apr-input-location">
+              <span className="apr-glyph apr-glyph--blue" aria-hidden="true">
+                <Icon name="pin" size={11} />
+              </span>
+              Location
+            </label>
+            {establishments.length > 0 ? (
+              <select
+                id="apr-input-location"
+                className="apr-input"
+                value={estId}
+                onChange={(e) => setEstId(e.target.value)}
+              >
                 {establishments.map((e) => (
                   <option key={e.id} value={e.id}>
                     {e.name}
                   </option>
                 ))}
               </select>
+            ) : (
+              <input
+                id="apr-input-location"
+                className="apr-input"
+                type="text"
+                value=""
+                disabled
+                aria-label="No locations yet"
+                readOnly
+              />
+            )}
+          </div>
+
+          <div className="apr-field">
+            <label className="apr-field__label" htmlFor="apr-input-avg">
+              <span className="apr-glyph apr-glyph--green" aria-hidden="true">
+                {currencyGlyph(cur || currency)}
+              </span>
+              Average job value
             </label>
-          )}
-          <label style={{ fontSize: 12, display: "grid", gap: 4 }}>
-            <span className="dim">Average job value</span>
             <input
-              className="input"
+              id="apr-input-avg"
+              className="apr-input"
               type="number"
               min={0}
               step="1"
-              placeholder="150"
               value={avg}
               onChange={(e) => setAvg(e.target.value)}
             />
-          </label>
-          <label style={{ fontSize: 12, display: "grid", gap: 4 }}>
-            <span className="dim">Booking → job rate (0–1)</span>
+          </div>
+
+          <div className="apr-field">
+            <label className="apr-field__label" htmlFor="apr-input-rate">
+              <span className="apr-glyph apr-glyph--purple" aria-hidden="true">
+                %
+              </span>
+              Booking rate (0–1)
+            </label>
             <input
-              className="input"
+              id="apr-input-rate"
+              className="apr-input"
               type="number"
               min={0}
               max={1}
               step="0.05"
-              placeholder="0.6"
               value={rate}
               onChange={(e) => setRate(e.target.value)}
             />
-          </label>
-          <label style={{ fontSize: 12, display: "grid", gap: 4 }}>
-            <span className="dim">Currency</span>
+          </div>
+
+          <div className="apr-field">
+            <label className="apr-field__label" htmlFor="apr-input-currency">
+              <span className="apr-glyph apr-glyph--yellow" aria-hidden="true">
+                $
+              </span>
+              Currency
+            </label>
             <input
-              className="input"
+              id="apr-input-currency"
+              className="apr-input"
               type="text"
               maxLength={8}
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
+              value={cur}
+              onChange={(e) => setCur(e.target.value)}
             />
-          </label>
+          </div>
         </div>
-        <div className="row" style={{ gap: 8 }}>
-          <button type="submit" className="btn btn--pri" disabled={pending || !estId}>
+
+        <div className="apr-assume__actions">
+          <button type="submit" className="apr-savebtn" disabled={pending || !estId}>
             {pending ? "Saving…" : "Save assumptions"}
           </button>
           {error && (
-            <span className="row" style={{ gap: 6, color: "var(--bad)", fontSize: 12.5 }}>
+            <span className="apr-assume__error" role="alert">
               <Icon name="alert" size={13} />
               {error}
             </span>
           )}
         </div>
       </form>
-    </div>
+
+      <div className="apr-sum">
+        <div className="apr-sumrow">
+          <span className="apr-sumrow__label">Estimated value per booking</span>
+          <span className="apr-sumrow__value">{fmtMoneyCompact(currency, valuePerBooking)}</span>
+        </div>
+        <div className="apr-sumrow">
+          <span className="apr-sumrow__label">Projected booked revenue</span>
+          <span className="apr-sumrow__value">{fmtMoneyCompact(currency, estimatedRevenue)}</span>
+        </div>
+        <div className={`apr-sumrow${configured ? " apr-sumrow--ok" : ""}`}>
+          <span className="apr-sumrow__label">Model status</span>
+          <span className="apr-sumrow__value">{configured ? "Active" : "Not ready"}</span>
+        </div>
+      </div>
+    </section>
   );
 }

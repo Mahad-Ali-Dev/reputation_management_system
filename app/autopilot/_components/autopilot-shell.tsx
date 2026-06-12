@@ -1,29 +1,27 @@
 "use client";
 
-import { TabBar, type TabItem } from "@/components/tab-bar";
 import { saveAutopilotConfig } from "@/lib/autopilot/config-actions";
-import { type JSX, useState, useTransition } from "react";
 import type { ActivityFeedItem, AutopilotConfigView } from "@/lib/autopilot/queries";
+import { type JSX, useState, useTransition } from "react";
 import { ActivityPanel } from "./activity-panel";
 import { ControlsPanel, type LoopKey } from "./controls-panel";
-import { LoopCards } from "./loop-cards";
 import { RoiPanel, type RoiPanelData } from "./roi-panel";
 
 /**
  * Client shell for /autopilot (Module 15).
  *
- * Owns BOTH the TabBar active-tab state and the per-loop config state. The
- * loop state is lifted here so the 3-up loop cards (always visible) and the
- * Controls tab's full list stay in sync — both persist through one
- * `saveAutopilotConfig` call (admin-only server action, full-config overwrite,
- * same contract as before the redesign). All three tab panels stay mounted
- * (`hidden`) so per-tab state survives switches.
+ * Owns BOTH the tab state (design-kit inline tab bar: Activity / Controls /
+ * ROI, kit SVG icons recolored via CSS mask) and the per-loop config state.
+ * The loop state is lifted here so the Controls tab's list persists through
+ * one `saveAutopilotConfig` call (admin-only server action, full-config
+ * overwrite, same contract as before the redesign). All three tab panels stay
+ * mounted (`hidden`) so per-tab state survives switches.
  */
 
-const TABS: TabItem[] = [
-  { key: "activity", label: "Action ledger", icon: "bolt" },
-  { key: "controls", label: "Controls", icon: "sliders" },
-  { key: "roi", label: "ROI", icon: "trend" },
+const TABS: { key: string; label: string }[] = [
+  { key: "activity", label: "Activity" },
+  { key: "controls", label: "Controls" },
+  { key: "roi", label: "ROI" },
 ];
 
 export function AutopilotShell({
@@ -79,35 +77,42 @@ export function AutopilotShell({
   }
 
   return (
-    <div>
-      <LoopCards
-        loops={loops}
-        enabled={config.enabled}
-        risk={config.riskTolerance}
-        pending={pending}
-        error={error}
-        onToggle={toggleLoop}
-      />
+    <div className="ap2-tabsection">
+      <div role="tablist" aria-label="Autopilot sections" className="ap2-tabs">
+        {TABS.map((t) => {
+          const active = tab === t.key;
+          return (
+            <button
+              key={t.key}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              className={`ap2-tab${active ? " is-active" : ""}`}
+              onClick={() => setTab(t.key)}
+            >
+              <span className={`ap2-tab__icon ap2-tab__icon--${t.key}`} aria-hidden="true" />
+              {t.label}
+            </button>
+          );
+        })}
+      </div>
 
-      <div style={{ marginTop: 18 }}>
-        <TabBar tabs={TABS} activeKey={tab} onChange={setTab} />
-        <div style={{ marginTop: 14 }}>
-          <div hidden={tab !== "activity"}>
-            <ActivityPanel feed={feed} needsYou={needsYou} />
-          </div>
-          <div hidden={tab !== "controls"}>
-            <ControlsPanel
-              config={config}
-              state={loops}
-              pending={pending}
-              saved={saved}
-              error={error}
-              onToggle={toggleLoop}
-            />
-          </div>
-          <div hidden={tab !== "roi"}>
-            <RoiPanel data={roi} />
-          </div>
+      <div className="ap2-tabpanels">
+        <div hidden={tab !== "activity"}>
+          <ActivityPanel feed={feed} needsYou={needsYou} />
+        </div>
+        <div hidden={tab !== "controls"}>
+          <ControlsPanel
+            config={config}
+            state={loops}
+            pending={pending}
+            saved={saved}
+            error={error}
+            onToggle={toggleLoop}
+          />
+        </div>
+        <div hidden={tab !== "roi"}>
+          <RoiPanel data={roi} />
         </div>
       </div>
     </div>

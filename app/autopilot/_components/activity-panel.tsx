@@ -2,48 +2,35 @@
 
 import { Icon, type IconName } from "@/components/shell/icon";
 import Link from "next/link";
-import type { JSX } from "react";
+import { type JSX, useState } from "react";
 import type { ActivityFeedItem } from "@/lib/autopilot/queries";
+import "./autopilot-activity.css";
 
 /**
- * Activity panel (Module 15) — presentational. Renders the AutopilotAction feed
- * grouped by day ("Replied to 12 reviews", "Sent 8 review requests") plus the
- * "Needs you" queue (escalations / drafts awaiting approval) with deep-links.
- * Pure props; no data fetching.
+ * Activity tab (Module 15) — presentational. Built to the design kit in
+ * tasks/autopilot/autopilot/Activity section/ (report-active-state.md +
+ * report-empty-state.md): a two-column "Activity" + "Needs you" card grid with
+ * pastel icon tiles, status chips and relative timestamps. Pure props; no
+ * data fetching — rows come from getAutopilotActivityFeed / getNeedsHumanQueue.
  */
 
-const LOOP_META: Record<string, { label: string; icon: IconName }> = {
-  auto_reply: { label: "Replied to a review", icon: "reply" },
-  low_star_draft: { label: "Drafted a low-star reply", icon: "edit" },
-  review_request: { label: "Sent a review request", icon: "send" },
-  voice_review: { label: "Turned a call into a review request", icon: "phone" },
-  dispute: { label: "Drafted a review dispute", icon: "flag" },
-  geo_post: { label: "Published a geo post", icon: "pin" },
-  inbox_reply: { label: "Replied in the inbox", icon: "chat" },
-  escalation: { label: "Escalated to you", icon: "alert" },
+type Tone = "primary" | "purple" | "success" | "warning" | "danger";
+
+const LOOP_META: Record<string, { label: string; icon: IconName; tone: Tone }> = {
+  auto_reply: { label: "AI reply published", icon: "chat", tone: "success" },
+  low_star_draft: { label: "Low-star reply drafted", icon: "edit", tone: "warning" },
+  review_request: { label: "Review request sent", icon: "send", tone: "purple" },
+  voice_review: { label: "Voice → Review request", icon: "phone", tone: "primary" },
+  dispute: { label: "Review dispute drafted", icon: "flag", tone: "warning" },
+  geo_post: { label: "Geo post published", icon: "pin", tone: "primary" },
+  inbox_reply: { label: "Inbox reply sent", icon: "reply", tone: "success" },
+  escalation: { label: "Escalated to you", icon: "alert", tone: "warning" },
 };
 
-const ACTION_VERB: Record<string, string> = {
-  published: "published",
-  drafted: "drafted",
-  scheduled_request: "scheduled",
-  escalated: "escalated",
-};
+const FALLBACK_META = { label: "Autopilot action", icon: "bolt" as IconName, tone: "primary" as Tone };
 
-function dayKey(iso: string): string {
-  return iso.slice(0, 10);
-}
-
-function dayLabel(iso: string): string {
-  const d = new Date(iso);
-  const today = new Date();
-  const isToday = d.toDateString() === today.toDateString();
-  const yest = new Date(today.getTime() - 86400000);
-  const isYest = d.toDateString() === yest.toDateString();
-  if (isToday) return "Today";
-  if (isYest) return "Yesterday";
-  return d.toLocaleDateString(undefined, { weekday: "short", month: "short", day: "numeric" });
-}
+/** How many rows each card shows before "View all" expands it. */
+const VISIBLE_ROWS = 7;
 
 /** Best-effort deep link to the resource an action touched. */
 function hrefFor(item: ActivityFeedItem): string | null {
@@ -66,6 +53,58 @@ function hrefFor(item: ActivityFeedItem): string | null {
   }
 }
 
+/** `detail.summary` when the engine recorded one (real per-action copy). */
+function detailSummary(item: ActivityFeedItem): string | null {
+  if (item.detail && typeof item.detail === "object") {
+    const d = item.detail as Record<string, unknown>;
+    if (typeof d.summary === "string" && d.summary.trim().length > 0) return d.summary;
+  }
+  return null;
+}
+
+/** Sub-line for a ledger row: real summary first, then an action/status verb. */
+function subLine(item: ActivityFeedItem): string {
+  const summary = detailSummary(item);
+  if (summary) return summary;
+  if (item.status === "failed") return "Failed — needs another try";
+  if (item.requiresHuman) return "Waiting for your approval";
+  if (item.status === "pending") return "Queued to run";
+  switch (item.action) {
+    case "published":
+      return "Published automatically";
+    case "drafted":
+      return "Draft saved for you";
+    case "scheduled_request":
+      return "Scheduled to send";
+    case "escalated":
+      return "Flagged for your attention";
+    default:
+      return item.action.replace(/_/g, " ");
+  }
+}
+
+/** Ledger status chip: failed > needs-you > queued > done. */
+function statusChip(item: ActivityFeedItem): { tone: string; label: string } {
+  if (item.status === "failed") return { tone: "bad", label: "Failed" };
+  if (item.requiresHuman) return { tone: "warn", label: "Needs you" };
+  if (item.status === "pending") return { tone: "info", label: "Queued" };
+  return { tone: "ok", label: "Done" };
+}
+
+/** "12m ago" style relative timestamp (kit shows relative times). */
+function relTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  const diff = Math.max(0, Date.now() - then);
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return `${days}d ago`;
+  return new Date(iso).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
 export function ActivityPanel({
   feed,
   needsYou,
@@ -73,140 +112,172 @@ export function ActivityPanel({
   feed: ActivityFeedItem[];
   needsYou: ActivityFeedItem[];
 }): JSX.Element {
-  const groups = new Map<string, ActivityFeedItem[]>();
-  for (const item of feed) {
-    const k = dayKey(item.createdAt);
-    const arr = groups.get(k) ?? [];
-    arr.push(item);
-    groups.set(k, arr);
-  }
-  const dayKeys = [...groups.keys()].sort((a, b) => (a < b ? 1 : -1));
+  const [allFeed, setAllFeed] = useState(false);
+  const [allNeeds, setAllNeeds] = useState(false);
+
+  const visibleFeed = allFeed ? feed : feed.slice(0, VISIBLE_ROWS);
+  const visibleNeeds = allNeeds ? needsYou : needsYou.slice(0, VISIBLE_ROWS);
 
   return (
-    <div className="ap2-cols">
-      {/* Action ledger */}
-      <div className="ds-card">
-        <div className="ds-card__head">
-          <h3 className="ds-card__title">Action ledger</h3>
-          <span className="dim" style={{ fontSize: 12 }}>
-            {feed.length} recent action{feed.length === 1 ? "" : "s"}
-          </span>
+    <div className="apa-grid">
+      {/* ---- Activity card ---- */}
+      <section className="apa-card" aria-label="Autopilot activity">
+        <div className="apa-card__head">
+          <div className="apa-card__title-wrap">
+            <h3 className="apa-card__title">Activity</h3>
+          </div>
+          {feed.length > VISIBLE_ROWS ? (
+            <button
+              type="button"
+              className="apa-link"
+              aria-expanded={allFeed}
+              onClick={() => setAllFeed((v) => !v)}
+            >
+              {allFeed ? "Show less" : "View all"}
+            </button>
+          ) : (
+            <span className="apa-meta">
+              {feed.length} recent action{feed.length === 1 ? "" : "s"}
+            </span>
+          )}
         </div>
+
         {feed.length === 0 ? (
-          <div className="ds-card__body dim" style={{ textAlign: "center", padding: 32 }}>
-            <Icon name="bolt" size={26} style={{ color: "var(--pri)" }} />
-            <p style={{ marginTop: 10, fontSize: 13 }}>
+          <div className="apa-empty">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/repulabs/autopilot/activity-empty.svg"
+              alt=""
+              className="apa-empty__img"
+              width={240}
+              height={132}
+            />
+            <p className="apa-empty__text">
               Nothing yet. When Autopilot is on, everything it does shows up here.
             </p>
           </div>
         ) : (
-          <div style={{ padding: "0 0 8px" }}>
-            {dayKeys.map((k) => {
-              const items = groups.get(k) ?? [];
-              const firstItem = items[0];
-              if (!firstItem) return null;
-              return (
-                <div key={k}>
-                  <div className="ap2-ledger-day">{dayLabel(firstItem.createdAt)}</div>
-                  {items.map((item) => (
-                    <ActivityRow key={item.id} item={item} />
-                  ))}
-                </div>
-              );
-            })}
+          <div className="apa-list">
+            {visibleFeed.map((item) => (
+              <ActivityRow key={item.id} item={item} />
+            ))}
           </div>
         )}
-      </div>
+      </section>
 
-      {/* Needs you */}
-      <div className="ds-card">
-        <div className="ds-card__head">
-          <h3 className="ds-card__title">Needs you</h3>
-          {needsYou.length > 0 && <span className="chip chip--warn">{needsYou.length}</span>}
+      {/* ---- Needs you card ---- */}
+      <section className="apa-card" aria-label="Needs your attention">
+        <div className="apa-card__head">
+          <div className="apa-card__title-wrap">
+            <h3 className="apa-card__title">Needs you</h3>
+            {needsYou.length > 0 && <span className="apa-count-pill">{needsYou.length}</span>}
+          </div>
+          {needsYou.length > VISIBLE_ROWS && (
+            <button
+              type="button"
+              className="apa-link"
+              aria-expanded={allNeeds}
+              onClick={() => setAllNeeds((v) => !v)}
+            >
+              {allNeeds ? "Show less" : "View all"}
+            </button>
+          )}
         </div>
+
         {needsYou.length === 0 ? (
-          <div className="ds-card__body dim" style={{ textAlign: "center", padding: 28 }}>
-            <Icon name="checkCircle" size={24} style={{ color: "var(--ok)" }} />
-            <p style={{ marginTop: 10, fontSize: 13 }}>All caught up — nothing needs you right now.</p>
+          <div className="apa-empty">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/assets/repulabs/autopilot/needs-caught-up.svg"
+              alt=""
+              className="apa-empty__img apa-empty__img--check"
+              width={96}
+              height={96}
+            />
+            <p className="apa-empty__text">All caught up — nothing needs your attention right now.</p>
           </div>
         ) : (
-          <div style={{ padding: 4 }}>
-            {needsYou.map((item, i) => {
-              const meta = LOOP_META[item.loop] ?? { label: item.loop, icon: "alert" as IconName };
-              const href = hrefFor(item);
-              const detail =
-                item.detail && typeof item.detail === "object"
-                  ? ((item.detail as Record<string, unknown>).summary as string | undefined)
-                  : undefined;
-              const body = (
-                <div
-                  className="row"
-                  style={{
-                    padding: 12,
-                    gap: 10,
-                    borderTop: i ? "1px solid var(--line)" : "none",
-                    textDecoration: "none",
-                    color: "inherit",
-                  }}
-                >
-                  <span style={{ color: "var(--warn)", flexShrink: 0 }}>
-                    <Icon name={meta.icon} size={15} />
-                  </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, fontWeight: 500 }}>{meta.label}</div>
-                    <div className="dim" style={{ fontSize: 11.5 }}>
-                      {detail ?? "Awaiting your review"}
-                    </div>
-                  </div>
-                  {href && <Icon name="chevR" size={13} style={{ color: "var(--rl-muted-2)" }} />}
-                </div>
-              );
-              return href ? (
-                <Link key={item.id} href={href} style={{ display: "block" }}>
-                  {body}
-                </Link>
-              ) : (
-                <div key={item.id}>{body}</div>
-              );
-            })}
+          <div className="apa-list">
+            {visibleNeeds.map((item) => (
+              <NeedsRow key={item.id} item={item} />
+            ))}
           </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }
 
-/** Ledger status chip: failed > needs-you > queued > done. */
-function statusChip(item: ActivityFeedItem): { className: string; label: string } {
-  if (item.status === "failed") return { className: "chip chip--bad", label: "Failed" };
-  if (item.requiresHuman) return { className: "chip chip--warn", label: "Needs you" };
-  if (item.status === "pending") return { className: "chip chip--info", label: "Queued" };
-  return { className: "chip chip--ok", label: "Done" };
+function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
+  const meta = LOOP_META[item.loop] ?? { ...FALLBACK_META, label: item.loop.replace(/_/g, " ") };
+  const failed = item.status === "failed";
+  const tone: Tone = failed ? "danger" : meta.tone;
+  const chip = statusChip(item);
+  const href = hrefFor(item);
+
+  const body = (
+    <>
+      <span className={`apa-icon apa-icon--${tone}`} aria-hidden="true">
+        <Icon name={meta.icon} size={18} />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div className="apa-row__title">{meta.label}</div>
+        <div className={`apa-row__desc${failed ? " apa-row__desc--danger" : ""}`}>{subLine(item)}</div>
+      </div>
+      <div className="apa-row__side">
+        <span className="apa-time" suppressHydrationWarning>
+          {relTime(item.createdAt)}
+        </span>
+        <span className={`apa-chip apa-chip--${chip.tone}`}>{chip.label}</span>
+      </div>
+    </>
+  );
+
+  return href ? (
+    <Link href={href} className="apa-row">
+      {body}
+    </Link>
+  ) : (
+    <div className="apa-row">{body}</div>
+  );
 }
 
-function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
-  const meta = LOOP_META[item.loop] ?? { label: item.loop, icon: "bolt" as IconName };
-  const verb = ACTION_VERB[item.action] ?? item.action;
-  const time = new Date(item.createdAt).toLocaleTimeString(undefined, {
-    hour: "numeric",
-    minute: "2-digit",
-  });
+function NeedsRow({ item }: { item: ActivityFeedItem }): JSX.Element {
+  const meta = LOOP_META[item.loop] ?? { ...FALLBACK_META, label: item.loop.replace(/_/g, " ") };
   const failed = item.status === "failed";
-  const chip = statusChip(item);
-  return (
-    <div className={`ap2-ledger-row${failed ? " ap2-ledger-row--failed" : ""}`}>
-      <span className="ap2-ledger-row__icon">
-        <Icon name={meta.icon} size={13} />
+  const urgent = failed || item.loop === "escalation";
+  const desc =
+    detailSummary(item) ??
+    (failed
+      ? "Failed — check and retry"
+      : item.loop === "escalation"
+        ? "High priority"
+        : "Waiting for your approval");
+  const href = hrefFor(item);
+
+  const body = (
+    <>
+      <span className={`apa-icon apa-icon--${failed ? "danger" : meta.tone}`} aria-hidden="true">
+        <Icon name={meta.icon} size={18} />
       </span>
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ fontSize: 13, fontWeight: 500 }}>{meta.label}</div>
-        <div className="dim" style={{ fontSize: 11 }}>
-          {failed ? "Failed" : verb} · {time}
-        </div>
+      <div style={{ minWidth: 0 }}>
+        <div className="apa-row__title">{meta.label}</div>
+        <div className={`apa-row__desc${urgent ? " apa-row__desc--danger" : ""}`}>{desc}</div>
       </div>
-      <span className={chip.className} style={{ fontSize: 10.5, flexShrink: 0 }}>
-        {chip.label}
-      </span>
-    </div>
+      <div className="apa-needs-end">
+        <span className="apa-time" suppressHydrationWarning>
+          {relTime(item.createdAt)}
+        </span>
+        {href && <Icon name="chevR" size={14} />}
+      </div>
+    </>
+  );
+
+  return href ? (
+    <Link href={href} className="apa-row">
+      {body}
+    </Link>
+  ) : (
+    <div className="apa-row">{body}</div>
   );
 }
