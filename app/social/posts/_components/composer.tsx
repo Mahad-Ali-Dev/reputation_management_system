@@ -3,7 +3,7 @@
 import { Icon, type IconName } from "@/components/shell/icon";
 import { createSocialPost, publishSocialPostNow } from "@/lib/social/post-actions";
 import Link from "next/link";
-import { type JSX, useMemo, useRef, useState, useTransition } from "react";
+import { type JSX, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CaptionModal, type CaptionOption, type GenerateCaptionsFn } from "./caption-modal";
 import { CreativesModal, type GenerateCreativesFn } from "./creatives-modal";
 import { LibraryModal, type LibraryAsset } from "./library-modal";
@@ -65,21 +65,14 @@ export type InitialPost = {
 type Establishment = { id: string; name: string };
 
 /** Server-computed snapshot of the current month for the schedule mini-calendar. */
-export type MiniCalMonth = {
-  /** "YYYY-MM" — the /social/calendar deep-link param. */
-  ym: string;
-  /** e.g. "June 2026" */
-  label: string;
-  daysInMonth: number;
-  /** Monday-first offset of day 1 (0 = Monday … 6 = Sunday). */
-  firstDow: number;
-  /** Today's day-of-month. */
-  today: number;
-  /** Day numbers with ≥1 scheduled post. */
-  scheduledDays: number[];
-  /** Day numbers with ≥1 published post. */
-  publishedDays: number[];
-};
+/**
+ * One scheduled/published post for the mini-calendar. `when` is an ISO string;
+ * the CLIENT buckets it into a day so the grid reflects the USER's timezone —
+ * server-side day-bucketing put posts on the wrong day for anyone not in the
+ * VPS timezone (2026-06-11 review). The server widens its query window by ±36h
+ * so boundary posts land in whichever month the browser says they belong to.
+ */
+export type MiniCalPost = { status: string; when: string };
 
 /** Starter angles for the "Creative ideas" tile row — prefill, never auto-send. */
 type CreativeIdea = {
@@ -161,7 +154,7 @@ export function Composer({
   recommendTimes?: (platforms: string[]) => Promise<string[]>;
   initialPost?: InitialPost | null;
   /** Current-month post days for the schedule mini-calendar (server-computed, fail-soft). */
-  miniCal?: MiniCalMonth | null;
+  miniCal?: MiniCalPost[] | null;
 }): JSX.Element {
   const connectedSet = useMemo(() => new Set(connectedPlatforms), [connectedPlatforms]);
   const anyConnected = connectedPlatforms.length > 0;
@@ -383,7 +376,6 @@ export function Composer({
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 0.95fr) minmax(0, 1.25fr) minmax(0, 0.85fr)",
           gap: 14,
           alignItems: "start",
         }}
@@ -537,7 +529,7 @@ export function Composer({
               )}
 
               {/* mini content-calendar — month at a glance, deep-links to /social/calendar */}
-              {miniCal && <MiniCalendar data={miniCal} />}
+              {miniCal && <MiniCalendar posts={miniCal} />}
             </div>
           </div>
         </div>
@@ -884,14 +876,56 @@ function SegBtn({ label, active, onClick }: { label: string; active: boolean; on
 
 const MINICAL_DOW = ["M", "T", "W", "T", "F", "S", "S"];
 
+type MiniCalView = {
+  ym: string;
+  label: string;
+  daysInMonth: number;
+  firstDow: number;
+  today: number;
+  scheduled: Set<number>;
+  published: Set<number>;
+};
+
+/** Bucket posts into day-of-month sets using BROWSER-LOCAL date getters. */
+function buildMiniCalView(posts: MiniCalPost[]): MiniCalView {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = now.getMonth();
+  const scheduled = new Set<number>();
+  const published = new Set<number>();
+  for (const p of posts) {
+    const when = new Date(p.when);
+    if (Number.isNaN(when.getTime())) continue;
+    if (when.getFullYear() !== y || when.getMonth() !== m) continue; // user-local month
+    (p.status === "published" ? published : scheduled).add(when.getDate());
+  }
+  return {
+    ym: `${y}-${String(m + 1).padStart(2, "0")}`,
+    label: now.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+    daysInMonth: new Date(y, m + 1, 0).getDate(),
+    firstDow: (new Date(y, m, 1).getDay() + 6) % 7, // Monday-first
+    today: now.getDate(),
+    scheduled,
+    published,
+  };
+}
+
 /**
  * Compact month grid in the schedule column — dots/fills on days that already
- * have scheduled or published posts (server-computed). Every day deep-links to
- * the full /social/calendar; the datetime input above stays the real control.
+ * have scheduled or published posts. Month/today/day-buckets are computed in
+ * the BROWSER after mount (useEffect) so the grid reflects the user's timezone
+ * AND never hydration-mismatches the server HTML (no new Date() in render).
+ * Every day deep-links to the full /social/calendar; the datetime input above
+ * stays the real control.
  */
-function MiniCalendar({ data }: { data: MiniCalMonth }) {
-  const scheduled = new Set(data.scheduledDays);
-  const published = new Set(data.publishedDays);
+function MiniCalendar({ posts }: { posts: MiniCalPost[] }) {
+  const [data, setData] = useState<MiniCalView | null>(null);
+  useEffect(() => {
+    setData(buildMiniCalView(posts));
+  }, [posts]);
+  if (!data) return <div className="soc-minical" aria-hidden style={{ minHeight: 196 }} />;
+  const scheduled = data.scheduled;
+  const published = data.published;
   const monthName = data.label.split(" ")[0] ?? data.label;
   const href = `/social/calendar?ym=${data.ym}`;
   const cells: (number | null)[] = [

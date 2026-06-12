@@ -238,11 +238,17 @@ function suggestionConnectHref(
 export default async function ConnectionsPage({
   searchParams,
 }: {
-  searchParams?: Promise<{ import?: string }>;
+  searchParams?: Promise<{ import?: string; connect_error?: string }>;
 }) {
   const { orgId } = await getOrgContext();
   const sp = (await searchParams) ?? {};
   const showImport = sp.import === "1";
+  // The Google authorize route redirects here with ?connect_error= when the
+  // OAuth client isn't configured — previously nothing rendered it (silent).
+  const connectError =
+    sp.connect_error === "google_not_configured"
+      ? "Google connection isn't configured on this server yet (missing OAuth client). Contact support — nothing is wrong with your account."
+      : null;
 
   const [connections, providerApps, latestRun] = await Promise.all([
     loadConnections(orgId),
@@ -416,6 +422,24 @@ export default async function ConnectionsPage({
           </>
         }
       />
+
+      {connectError && (
+        <div
+          className="ds-card row"
+          role="alert"
+          style={{
+            padding: "10px 14px",
+            marginBottom: 14,
+            gap: 8,
+            borderColor: "var(--bad)",
+            background: "var(--bad-soft, #fee2e2)",
+            fontSize: 13,
+          }}
+        >
+          <Icon name="alert" size={13} style={{ color: "var(--bad)" }} />
+          {connectError}
+        </div>
+      )}
 
       <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>
         <Kpi l="Connected" v={String(connectedCount)} d={`of ${totalAvailable} available`} />

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import { isMissingRelation } from "@/lib/contacts/fail-soft";
@@ -25,6 +26,12 @@ export const dynamic = "force-dynamic";
  * crawler, indexed-document list + delete, widget-key generate/revoke, embed
  * snippet, test-page links. Every number is a live tenant query (fail-soft).
  */
+
+/** redirect()/notFound() throw — those must propagate out of our catch. */
+function isNextControlFlow(err: unknown): boolean {
+  const digest = (err as { digest?: unknown } | null)?.digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_");
+}
 
 type TabKey = "info" | "voice" | "setup";
 
@@ -106,11 +113,12 @@ function EstablishmentSelect({
 export default async function AiSettingsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; saved?: string }>;
 }) {
   const { orgId } = await getOrgContext();
   const sp = await searchParams;
   const tab: TabKey = sp.tab === "voice" || sp.tab === "setup" ? sp.tab : "info";
+  const actionFailed = sp.saved === "error";
 
   const loadAi = () =>
     withTenant(orgId, async (tx) =>
@@ -240,6 +248,23 @@ export default async function AiSettingsPage({
               </div>
             </div>
 
+            {actionFailed && (
+              <div
+                className="ds-card"
+                role="alert"
+                style={{
+                  padding: "10px 14px",
+                  marginBottom: 14,
+                  borderColor: "var(--bad, #e14d62)",
+                  background: "color-mix(in srgb, var(--bad, #e14d62) 6%, white)",
+                  fontSize: 13,
+                }}
+              >
+                That action couldn&apos;t be completed. You may not have permission (manager role
+                required), or the item was already removed — refresh and try again.
+              </div>
+            )}
+
             {tab === "info" && (
               <div>
                 {/* Add-knowledge + URL-import forms (client island — renders
@@ -295,7 +320,12 @@ export default async function AiSettingsPage({
                           <form
                             action={async () => {
                               "use server";
-                              await deleteAiDocument(d.id);
+                              try {
+                                await deleteAiDocument(d.id);
+                              } catch (err) {
+                                if (isNextControlFlow(err)) throw err;
+                                redirect("/ai?tab=info&saved=error");
+                              }
                             }}
                           >
                             <Button type="submit" variant="ghost" size="sm">
@@ -395,7 +425,18 @@ export default async function AiSettingsPage({
                   Generate a widget key, then paste the snippet on any page where you want the
                   chatbot.
                 </p>
-                <form action={createWidgetKey} className="space-y-3">
+                <form
+                  action={async (form: FormData) => {
+                    "use server";
+                    try {
+                      await createWidgetKey(form);
+                    } catch (err) {
+                      if (isNextControlFlow(err)) throw err;
+                      redirect("/ai?tab=setup&saved=error");
+                    }
+                  }}
+                  className="space-y-3"
+                >
                   <div className="aikb-formgrid">
                     <label className="aikb-label">
                       Establishment (optional)
@@ -435,7 +476,12 @@ export default async function AiSettingsPage({
                           <form
                             action={async () => {
                               "use server";
-                              await revokeWidgetKey(w.id);
+                              try {
+                                await revokeWidgetKey(w.id);
+                              } catch (err) {
+                                if (isNextControlFlow(err)) throw err;
+                                redirect("/ai?tab=setup&saved=error");
+                              }
                             }}
                           >
                             <Button type="submit" variant="ghost" size="sm">

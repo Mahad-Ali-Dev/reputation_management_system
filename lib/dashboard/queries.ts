@@ -240,12 +240,13 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
     const hasGoogle =
       d.establishments.some((e) => e._count.connections > 0) || d.activeConnections > 0;
 
+    // null (not a fabricated "+100%") when the prior window is empty — a 0->N
+    // week has no defined growth rate; consumers (KPI chip, visibility banner's
+    // "and improving" headline + velocity sentence) all degrade gracefully on null.
     const reviews7dDeltaPct =
       d.reviewsPrev7d > 0
         ? Math.round(((d.reviews7d - d.reviewsPrev7d) / d.reviewsPrev7d) * 100)
-        : d.reviews7d > 0
-          ? 100
-          : null;
+        : null;
 
     // 12-week weekly histogram (bucket 0 = oldest week).
     const weeklyReviews = new Array(12).fill(0);

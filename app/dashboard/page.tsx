@@ -148,7 +148,14 @@ export default async function DashboardPage({
     {
       label: "Requests sent · 30d",
       value: d.requestsSent30d.toLocaleString(),
-      chip: { text: `${d.funnel.find((f) => f.label === "Opened")?.pct ?? 0}% open`, tone: "info" },
+      // No fabricated "0% open" before anything was sent — chip only when the
+      // funnel has a real Opened stage to report.
+      chip: (() => {
+        const openedPct = d.funnel.find((f) => f.label === "Opened")?.pct;
+        return openedPct !== undefined
+          ? { text: `${openedPct}% open`, tone: "info" as const }
+          : undefined;
+      })(),
     },
     {
       label: "Response rate",

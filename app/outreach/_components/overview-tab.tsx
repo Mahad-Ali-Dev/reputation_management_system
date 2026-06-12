@@ -62,46 +62,49 @@ const QUEUE_STATUS_TONE: Record<string, string> = {
 };
 
 export async function OverviewTab({ orgId }: { orgId: string }) {
-  const [stats, rules, data] = await Promise.all([
+  // Each read runs in its OWN tenant transaction. A per-query .catch INSIDE a
+  // shared transaction cannot contain a failure — one failed statement aborts
+  // the whole PG transaction (25P02) and takes the sibling queries down with
+  // it. That was exactly assessment bug 010 on the Send tab; the unmigrated
+  // outreach_templates table would have re-triggered it here.
+  const [stats, rules, templates, org, queue] = await Promise.all([
     reviewRequestStats(orgId),
     listAutomationRules(orgId),
-    withTenant(orgId, async (tx) => {
-      const [templates, org, queue] = await Promise.all([
-        tx.outreachTemplate
-          .findMany({
-            orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
-            select: {
-              id: true,
-              name: true,
-              channel: true,
-              subject: true,
-              body: true,
-              isDefault: true,
-            },
-          })
-          .catch(() => [] as StudioTemplate[]),
-        tx.organization.findUnique({ where: { id: orgId }, select: { name: true } }),
-        tx.reviewRequest
-          .findMany({
-            where: { status: { in: ["queued", "scheduled", "sending"] } },
-            orderBy: { scheduledFor: "asc" },
-            take: 6,
-            select: {
-              id: true,
-              channel: true,
-              recipient: true,
-              recipientName: true,
-              status: true,
-              triggerSource: true,
-              scheduledFor: true,
-              establishment: { select: { name: true } },
-            },
-          })
-          .catch(() => []),
-      ]);
-      return { templates, org, queue };
-    }),
+    withTenant(orgId, (tx) =>
+      tx.outreachTemplate.findMany({
+        orderBy: [{ isDefault: "desc" }, { updatedAt: "desc" }],
+        select: {
+          id: true,
+          name: true,
+          channel: true,
+          subject: true,
+          body: true,
+          isDefault: true,
+        },
+      }),
+    ).catch(() => [] as StudioTemplate[]),
+    withTenant(orgId, (tx) =>
+      tx.organization.findUnique({ where: { id: orgId }, select: { name: true } }),
+    ).catch(() => null),
+    withTenant(orgId, (tx) =>
+      tx.reviewRequest.findMany({
+        where: { status: { in: ["queued", "scheduled", "sending"] } },
+        orderBy: { scheduledFor: "asc" },
+        take: 6,
+        select: {
+          id: true,
+          channel: true,
+          recipient: true,
+          recipientName: true,
+          status: true,
+          triggerSource: true,
+          scheduledFor: true,
+          establishment: { select: { name: true } },
+        },
+      }),
+    ).catch(() => []),
   ]);
+  const data = { templates, org, queue };
 
   // Fallback for the Recipients card: latest sent requests when nothing queued.
   const recent =

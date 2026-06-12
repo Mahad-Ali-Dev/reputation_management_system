@@ -1,6 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { CancelSubscriptionButton } from "@/components/cancel-subscription";
-import { BillingPeriodSection } from "./_components/billing-period";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
@@ -148,8 +147,7 @@ export default async function SubscriptionPage({
         </div>
       )}
 
-      <BillingPeriodSection initial="annual">
-        <div className="grid-3" style={{ gap: 16 }}>
+      <div className="grid-3" style={{ gap: 16 }}>
           <PlanCard
             name="Standard"
             price="Free"
@@ -167,8 +165,7 @@ export default async function SubscriptionPage({
             badge="MOST POPULAR"
             price="$89"
             priceSuffix="/mo"
-            period="per location · billed annually"
-            monthly={{ price: "$111", priceSuffix: "/mo", period: "per location · billed monthly" }}
+            period="per location · billed monthly"
             ctaLabel={hasPaidPlan ? "Current plan" : "Continue on Pro"}
             ctaActive={!hasPaidPlan}
             ctaDisabled={hasPaidPlan}
@@ -184,8 +181,7 @@ export default async function SubscriptionPage({
             ctaHref="mailto:sales@repulabs.com"
             features={PLAN_FEATURES.scale}
           />
-        </div>
-      </BillingPeriodSection>
+      </div>
 
       <div className="grid-2" style={{ gap: 16, marginTop: 26 }}>
         <div className="ds-card">
@@ -277,8 +273,11 @@ function PlanCard({
   price: string;
   priceSuffix?: string;
   period: string;
-  /** Optional monthly-billing price variant — shown when the Monthly/Annual
-   *  toggle (BillingPeriodSection) is set to monthly. */
+  /** Optional monthly-billing price variant (renders with the
+   *  BillingPeriodSection toggle). UNUSED until a real monthly Stripe price
+   *  (e.g. STRIPE_PRO_MONTHLY_PRICE_ID) exists AND checkout honors the chosen
+   *  period — a display-only variant the buyer can't actually purchase is
+   *  dishonest (removed 2026-06-11 review). */
   monthly?: { price: string; priceSuffix?: string; period: string };
   features: Array<[string, boolean]>;
   ctaLabel: string;

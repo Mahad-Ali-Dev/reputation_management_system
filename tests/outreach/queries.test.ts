@@ -30,6 +30,12 @@ vi.mock("@/lib/db/with-tenant", () => ({
           const v = (r as Record<string, unknown>)[field] as Date | null;
           if (!v || v < (cond as { gte: Date }).gte) return false;
         }
+        // `{ not: null }` — downstream stages anchored to the sent cohort.
+        if (cond && typeof cond === "object" && "not" in (cond as object)) {
+          const v = (r as Record<string, unknown>)[field];
+          if ((cond as { not: unknown }).not === null && (v === null || v === undefined))
+            return false;
+        }
       }
       return true;
     };

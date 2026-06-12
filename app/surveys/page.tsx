@@ -118,10 +118,12 @@ export default async function SurveysPage({
   // Smart-routing snapshot for the landing branch tiles. `smartRouteEnabled` is
   // per-campaign; surface the first ACTIVE campaign's config (fall back to the
   // newest) with a deep-link to edit it. Counts are org-wide, fail-soft.
+  // Only a campaign that actually has routing enabled may headline the card —
+  // the old `?? campaignsRaw[0]` fallback could caption org-wide routed counts
+  // with a campaign that never routed anything.
   const routingSource =
     campaignsRaw.find((c) => c.status === "active" && c.smartRouteEnabled) ??
     campaignsRaw.find((c) => c.smartRouteEnabled) ??
-    campaignsRaw[0] ??
     null;
   const routing: SurveyRoutingSnapshot | null = routingSource
     ? {

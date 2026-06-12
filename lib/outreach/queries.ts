@@ -56,12 +56,16 @@ export async function listReviewRequests(orgId: string, opts: ListReviewRequests
 export async function reviewRequestStats(orgId: string) {
   return withTenant(orgId, async (tx) => {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    // Every downstream stage is anchored to the SAME sent cohort (sentAt >= since)
+    // so numerators are subsets of the denominator and rates can never exceed
+    // 100% (an event landing inside the window for a request sent before it
+    // previously inflated the stage above its cohort).
     const [sent, delivered, opened, clicked, converted] = await Promise.all([
       tx.reviewRequest.count({ where: { sentAt: { gte: since } } }),
-      tx.reviewRequest.count({ where: { deliveredAt: { gte: since } } }),
-      tx.reviewRequest.count({ where: { openedAt: { gte: since } } }),
-      tx.reviewRequest.count({ where: { clickedAt: { gte: since } } }),
-      tx.reviewRequest.count({ where: { convertedAt: { gte: since } } }),
+      tx.reviewRequest.count({ where: { sentAt: { gte: since }, deliveredAt: { not: null } } }),
+      tx.reviewRequest.count({ where: { sentAt: { gte: since }, openedAt: { not: null } } }),
+      tx.reviewRequest.count({ where: { sentAt: { gte: since }, clickedAt: { not: null } } }),
+      tx.reviewRequest.count({ where: { sentAt: { gte: since }, convertedAt: { not: null } } }),
     ]);
     return { sent, delivered, opened, clicked, converted };
   });

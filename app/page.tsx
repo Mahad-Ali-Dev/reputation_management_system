@@ -145,21 +145,21 @@ function Hero() {
 ============================================================ */
 function TrustStrip() {
   const logos = [
-    "Northwind",
-    "Greenboard",
-    "Stellaris",
-    "Helios Co.",
-    "Bricklane",
-    "Sunrise",
-    "Brightway",
-    "Pinecroft",
-    "Quill & Co.",
-    "Atlas POS",
+    "Dental studios",
+    "Cafes & coffee",
+    "Auto shops",
+    "Salons & spas",
+    "Clinics",
+    "Restaurants",
+    "Gyms & fitness",
+    "Home services",
+    "Retail",
+    "Hotels",
   ];
   const row = [...logos, ...logos];
   return (
-    <section className="mkt-strip" aria-label="Trusted by local businesses">
-      <div className="mkt-strip-label">TRUSTED BY 1,200+ LOCAL OPERATORS</div>
+    <section className="mkt-strip" aria-label="Industries Repulabs is built for">
+      <div className="mkt-strip-label">BUILT FOR EVERY KIND OF LOCAL BUSINESS</div>
       <div className="mkt-marquee-mask">
         <div className="mkt-marquee">
           {row.map((name, i) => (
@@ -458,36 +458,42 @@ function PlanCard({
 }
 
 /* ============================================================
-   Social proof — stats band + testimonial cards (initials
-   avatars; no fake named individuals).
+   Capabilities band + use-case cards. Deliberately NOT social
+   proof: no fabricated metrics, testimonials, or customer
+   counts until there are real ones to cite (2026-06-11 review).
 ============================================================ */
 function SocialProof() {
+  // Product capabilities, not performance claims — we have no published
+  // benchmark/customer dataset to cite yet, so no invented numbers here.
   const stats = [
-    { v: "4.8★", l: "Average review score", s: "Across 200+ SMB pilots" },
-    { v: "71%", l: "AI reply acceptance", s: "Published without edits" },
-    { v: "1.6s", l: "Avg AI draft time", s: "Reply ready to approve" },
-    { v: "$48k", l: "Annual revenue lift", s: "Median per location, 12mo" },
+    { v: "1-click", l: "AI review replies", s: "Drafted in your brand voice" },
+    { v: "One inbox", l: "Every channel together", s: "Reviews, DMs, comments, SMS, chat" },
+    { v: "QR · NFC", l: "Capture at the counter", s: "Plus an AI phone line" },
+    { v: "Autopilot", l: "Owner-safe automation", s: "Approval gates on every loop" },
   ];
+  // Use-case scenarios, deliberately NOT testimonials: no invented people, no
+  // "verified customer" bylines, no fabricated quotes. Each card describes what
+  // the product does for that operator type.
   const quotes = [
     {
-      q: "We went from a handful of reviews a month to dozens — and our rating climbed past 4.8. The AI sounds like our best manager on a good day.",
-      initials: "DG",
-      who: "Practice owner",
-      role: "Multi-location dental group",
+      q: "Every patient leaves with a QR tap or a follow-up text. Five-star visits become public Google reviews; concerns route to the front desk privately.",
+      initials: "DS",
+      who: "For practice owners",
+      role: "Dental & medical clinics",
       avatar: "",
     },
     {
-      q: "Our front desk used to spend over an hour a day chasing review follow-ups. Now it's automated and they're free for actual patients.",
-      initials: "FC",
-      who: "Clinic manager",
-      role: "Family medical clinic",
+      q: "Review follow-ups, reply drafts, and social posts run on autopilot with approval gates — the front desk stays focused on customers, not tabs.",
+      initials: "CM",
+      who: "For busy front desks",
+      role: "Cafes, salons & local shops",
       avatar: "mkt-avatar--teal",
     },
     {
-      q: "The unified inbox and AI phone line mean nothing slips. Every call answered, every comment replied to — in our voice.",
-      initials: "RG",
-      who: "Operations lead",
-      role: "Regional restaurant group",
+      q: "One inbox for every location's reviews, DMs, comments, and calls — with an AI phone line that books, answers, and asks for the review afterward.",
+      initials: "OL",
+      who: "For operations leads",
+      role: "Multi-location groups",
       avatar: "mkt-avatar--gold",
     },
   ];
@@ -495,7 +501,7 @@ function SocialProof() {
     <section id="testimonials" className="mkt-section">
       <div className="mkt-container">
         <div className="mkt-section-head">
-          <span className="mkt-kicker">Loved by operators</span>
+          <span className="mkt-kicker">Built for operators</span>
           <h2 className="mkt-h2">From corner cafes to multi-location groups.</h2>
         </div>
 
@@ -512,11 +518,6 @@ function SocialProof() {
         <div className="mkt-quotes">
           {quotes.map((t) => (
             <article key={t.role} className="mkt-quote">
-              <div className="mkt-quote-stars" aria-label="5 out of 5 stars">
-                {[1, 2, 3, 4, 5].map((s) => (
-                  <Star key={s} size={15} fill="currentColor" />
-                ))}
-              </div>
               <p>&ldquo;{t.q}&rdquo;</p>
               <div className="mkt-quote-byline">
                 <span className={`mkt-avatar ${t.avatar}`.trim()} aria-hidden>
@@ -524,7 +525,7 @@ function SocialProof() {
                 </span>
                 <span>
                   <span className="mkt-quote-name" style={{ display: "block" }}>
-                    {t.who} · verified customer
+                    {t.who}
                   </span>
                   <span className="mkt-quote-role" style={{ display: "block" }}>
                     {t.role}
@@ -549,8 +550,8 @@ function SecurityStrip() {
       d: "Every byte of customer data encrypted by default — including OAuth tokens for your integrations.",
     },
     {
-      t: "SOC 2 Type II",
-      d: "Independently audited controls. DPA available on request, with GDPR + CCPA addenda.",
+      t: "SOC 2-aligned controls",
+      d: "Security program built on SOC 2 control objectives. DPA available on request, with GDPR + CCPA addenda.",
     },
     {
       t: "No model training on your data",

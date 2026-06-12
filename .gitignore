@@ -121,4 +121,7 @@ desktop.ini
 /tasks/ui-wave4/
 /tasks/ui-final-sweep/
 
+/.pdf-build/shoot-reviewfix.mjs
+/tasks/ui-reviewfix/
+
 /outputs/

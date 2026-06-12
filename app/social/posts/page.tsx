@@ -12,7 +12,7 @@ import {
 import { imageGenAvailability } from "@/lib/social/image-gen";
 import { listLibraryAssets } from "@/lib/social/library";
 import Link from "next/link";
-import { Composer, type InitialPost, type MiniCalMonth } from "./_components/composer";
+import { Composer, type InitialPost, type MiniCalPost } from "./_components/composer";
 import {
   generateCaptionsForComposer,
   generateCreativesForComposer,
@@ -150,10 +150,13 @@ async function CreatePanel({
   const isUuid = (s?: string) =>
     !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
-  // Window for the schedule mini-calendar (current month, server tz).
+  // Window for the schedule mini-calendar. Day-bucketing happens in the CLIENT
+  // (browser timezone) — the server only fetches a generous window: current
+  // month ±36h so posts near month boundaries land correctly in any user tz.
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const PAD_MS = 36 * 60 * 60 * 1000;
+  const monthStart = new Date(new Date(now.getFullYear(), now.getMonth(), 1).getTime() - PAD_MS);
+  const monthEnd = new Date(new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() + PAD_MS);
 
   const [establishments, libraryAssetsRaw, imageGen, initialPostRow, monthPosts] = await Promise.all([
     withTenant(orgId, async (tx) =>
@@ -201,23 +204,12 @@ async function CreatePanel({
     ).catch(() => []),
   ]);
 
-  // Collapse month posts → marked day numbers (published wins over scheduled).
-  const scheduledDays = new Set<number>();
-  const publishedDays = new Set<number>();
-  for (const p of monthPosts) {
+  // Serializable posts for the client-side mini-calendar (it buckets by the
+  // BROWSER's timezone; the server no longer picks the day).
+  const miniCal: MiniCalPost[] = monthPosts.flatMap((p) => {
     const when = p.postedAt ?? p.scheduledFor;
-    if (!when || when < monthStart || when >= monthEnd) continue;
-    (p.status === "published" ? publishedDays : scheduledDays).add(when.getDate());
-  }
-  const miniCal: MiniCalMonth = {
-    ym: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`,
-    label: now.toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-    daysInMonth: new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate(),
-    firstDow: (monthStart.getDay() + 6) % 7, // Monday-first, like /social/calendar
-    today: now.getDate(),
-    scheduledDays: [...scheduledDays],
-    publishedDays: [...publishedDays],
-  };
+    return when ? [{ status: p.status, when: when.toISOString() }] : [];
+  });
 
   // Brand colors: first establishment with a brandVoice.colors wins.
   let brandColors: string[] = [];

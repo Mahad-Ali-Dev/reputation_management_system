@@ -2,7 +2,9 @@ import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
+import { auth } from "@/lib/auth/config";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { roleAtLeast } from "@/lib/auth/rbac";
 import { deleteEstablishment, updateEstablishment } from "@/lib/establishments/actions";
 import { getEstablishment } from "@/lib/establishments/queries";
 import Link from "next/link";
@@ -43,6 +45,12 @@ export default async function EstablishmentSettingsPage({
   const establishment = await getEstablishment(orgId, id);
   if (!establishment) notFound();
 
+  // deleteEstablishment requires "admin" — don't render a button that can
+  // only throw for manager/member/viewer roles.
+  const session = await auth();
+  const callerRole = (session as { role?: string } | null)?.role ?? null;
+  const canDelete = roleAtLeast(callerRole, "admin");
+
   const sp = await searchParams;
   const addr = (establishment.address ?? {}) as Address;
 
@@ -50,7 +58,11 @@ export default async function EstablishmentSettingsPage({
     "use server";
     try {
       await updateEstablishment(id, form);
-    } catch {
+    } catch (err) {
+      // redirect()/notFound() control-flow must propagate (e.g. an expired
+      // session redirecting to /login from inside the action).
+      const digest = (err as { digest?: unknown } | null)?.digest;
+      if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
       // Validation/transient failure — land back on the form with a flag
       // instead of crashing the route (server-action errors are masked in
       // production builds anyway).
@@ -248,6 +260,7 @@ export default async function EstablishmentSettingsPage({
             </div>
           </div>
 
+          {canDelete && (
           <div className="ds-card" style={{ borderColor: "var(--bad-soft)" }}>
             <div className="ds-card__head">
               <h3 className="ds-card__title" style={{ color: "var(--bad)" }}>
@@ -258,7 +271,13 @@ export default async function EstablishmentSettingsPage({
               <form
                 action={async () => {
                   "use server";
-                  await deleteEstablishment(id);
+                  try {
+                    await deleteEstablishment(id);
+                  } catch (err) {
+                    const digest = (err as { digest?: unknown } | null)?.digest;
+                    if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+                    redirect(`/establishments/${id}/settings?saved=error`);
+                  }
                 }}
               >
                 <button type="submit" className="btn btn--danger btn--sm">
@@ -272,6 +291,7 @@ export default async function EstablishmentSettingsPage({
               </p>
             </div>
           </div>
+          )}
         </div>
       </div>
     </AppShellServer>

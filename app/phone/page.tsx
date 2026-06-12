@@ -112,25 +112,13 @@ export default async function PhoneDashboardPage() {
       />
 
       <div className="grid-4" style={{ gap: 12, marginBottom: 14 }}>
-        <Kpi
-          l="Calls · 30d"
-          v={String(totalCalls)}
-          d={`${avgMinutes}m avg`}
-          up={totalCalls > 0}
-          spark={[2, 3, 4, 6, 5, 8, 7]}
-        />
-        <Kpi
-          l="Minutes handled"
-          v={String(totalMinutes)}
-          d="AI on the phone"
-          up={totalMinutes > 0}
-        />
+        <Kpi l="Calls · 30d" v={String(totalCalls)} d={`${avgMinutes}m avg`} />
+        <Kpi l="Minutes handled" v={String(totalMinutes)} d="AI on the phone" />
         <Kpi l="AI cost · 30d" v={`$${totalCost}`} d="Pay-as-you-talk" />
         <Kpi
-          l="Reviews from calls"
+          l="Review asks from calls"
           v={String(voiceReview.last30d)}
           d={voiceReview.enabled ? "Voice → Review on" : "Voice → Review off"}
-          up={voiceReview.last30d > 0}
         />
       </div>
 
@@ -350,7 +338,7 @@ export default async function PhoneDashboardPage() {
             </div>
             <div className="dim" style={{ fontSize: 12, marginTop: 2 }}>
               {voiceReview.enabled
-                ? `Resolved calls become Google review requests automatically — ${voiceReview.last30d} sent in the last 30 days.`
+                ? `Resolved calls become Google review requests automatically — ${voiceReview.last30d} created in the last 30 days.`
                 : "Turn resolved phone calls into Google reviews automatically. Manage in Autopilot."}
             </div>
           </div>

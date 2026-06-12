@@ -3,6 +3,7 @@ import { Icon } from "@/components/shell/icon";
 import { getContactSourceMeta } from "@/lib/contacts/source-meta";
 import { getContactWithFields } from "@/lib/contacts/queries";
 import { getContactTimeline, type TimelineEvent } from "@/lib/contacts/timeline";
+import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 
 /**
@@ -59,6 +60,27 @@ export async function ProfileDrawer({
     take: DRAWER_TIMELINE_TAKE,
   }).catch(() => ({ events: [] as TimelineEvent[], nextCursor: null as string | null }));
 
+  // Eligibility must NOT derive from the 8-event display page above — a recent
+  // review request scrolls off it under newer events, and a failed fetch would
+  // read as "eligible". Direct lookup over the full window instead (same
+  // recipient keys lib/contacts/timeline.ts matches on); null = unknown.
+  const recipientKeys = [contact.email?.toLowerCase(), contact.phone].filter(
+    (v): v is string => !!v,
+  );
+  const recentRequest: { createdAt: Date } | null | undefined =
+    recipientKeys.length > 0
+      ? await withTenant(orgId, (tx) =>
+          tx.reviewRequest.findFirst({
+            where: {
+              recipient: { in: recipientKeys },
+              createdAt: { gte: new Date(Date.now() - RECENT_REQUEST_WINDOW_DAYS * 86_400_000) },
+            },
+            orderBy: { createdAt: "desc" },
+            select: { createdAt: true },
+          }),
+        ).catch(() => undefined)
+      : null;
+
   const displayName =
     contact.name?.trim() ||
     [contact.firstName, contact.lastName].filter(Boolean).join(" ").trim() ||
@@ -67,7 +89,7 @@ export async function ProfileDrawer({
     "Unnamed contact";
   const initials = initialsOf(displayName);
   const sourceMeta = getContactSourceMeta(contact.source);
-  const eligibility = computeEligibility(contact, timeline.events);
+  const eligibility = computeEligibility(contact, recentRequest);
 
   return (
     <aside className="ds-card crm-drawer" aria-label={`Profile: ${displayName}`}>
@@ -232,12 +254,13 @@ type Eligibility = {
 
 /**
  * Review-request eligibility hint, computed from real data only:
- * consent status + reachable channels + the most recent `review_request`
- * event in the (already-loaded) timeline page.
+ * consent status + reachable channels + a direct 30-day review-request lookup
+ * (NOT the truncated display timeline). `undefined` = the lookup failed —
+ * say "unknown" rather than asserting eligibility.
  */
 function computeEligibility(
   contact: { email: string | null; phone: string | null; consentStatus: string | null },
-  events: TimelineEvent[],
+  recentRequest: { createdAt: Date } | null | undefined,
 ): Eligibility {
   if (contact.consentStatus === "opted_out") {
     return { tone: "bad", icon: "xCircle", message: "Opted out — do not send review requests." };
@@ -249,16 +272,20 @@ function computeEligibility(
       message: "Not reachable — add an email or phone number to send a request.",
     };
   }
-  const lastRequest = events.find((e) => e.channel === "review_request");
-  if (lastRequest) {
-    const days = Math.floor((Date.now() - new Date(lastRequest.occurredAt).getTime()) / 86_400_000);
-    if (days >= 0 && days < RECENT_REQUEST_WINDOW_DAYS) {
-      return {
-        tone: "warn",
-        icon: "clock",
-        message: `Requested ${days === 0 ? "today" : `${days}d ago`} — recently contacted, consider waiting.`,
-      };
-    }
+  if (recentRequest === undefined) {
+    return {
+      tone: "warn",
+      icon: "alert",
+      message: "Recent-request check unavailable — verify before sending.",
+    };
+  }
+  if (recentRequest) {
+    const days = Math.floor((Date.now() - recentRequest.createdAt.getTime()) / 86_400_000);
+    return {
+      tone: "warn",
+      icon: "clock",
+      message: `Requested ${days <= 0 ? "today" : `${days}d ago`} — recently contacted, consider waiting.`,
+    };
   }
   const channels = [contact.email && "email", contact.phone && "SMS"].filter(Boolean).join(" or ");
   return {

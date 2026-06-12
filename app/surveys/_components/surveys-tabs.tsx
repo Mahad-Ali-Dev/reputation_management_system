@@ -240,7 +240,7 @@ function SurveysPanel({
               </div>
               <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 }}>{c.name}</h3>
               <div className="dim" style={{ fontSize: 12.5, marginTop: 6 }}>
-                Created {new Date(c.createdAt).toLocaleDateString()}
+                Created {new Date(c.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })}
               </div>
               <div
                 className="row"
@@ -305,7 +305,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
           </div>
           <div className="svl-branch__count">
             <b>{routing.routedReview.toLocaleString()}</b>
-            <span>routed</span>
+            <span>routed · all surveys</span>
           </div>
         </div>
         <div className="svl-branch svl-branch--unhappy">
@@ -318,7 +318,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
           </div>
           <div className="svl-branch__count">
             <b>{routing.routedAlert.toLocaleString()}</b>
-            <span>alerted</span>
+            <span>alerted · all surveys</span>
           </div>
         </div>
       </div>
@@ -453,7 +453,7 @@ function RecentResponsesCard({
                 </td>
                 <td className="svl-hide-sm">
                   <span className="dim" style={{ whiteSpace: "nowrap", fontSize: 12 }}>
-                    Completed {new Date(r.createdAt).toLocaleDateString()}
+                    Completed {new Date(r.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })}
                   </span>
                 </td>
               </tr>

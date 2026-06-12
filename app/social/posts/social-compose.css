@@ -198,3 +198,20 @@ a.soc-minical__day:hover {
     grid-template-columns: 1fr;
   }
 }
+
+/* ── Composer 3-column workspace — responsive (was an inline style with no
+      media query, so Channels/Content/Preview stayed squeezed side-by-side at
+      390px; 2026-06-12 review fix). ── */
+.composer-grid {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr) minmax(0, 0.85fr);
+}
+@media (max-width: 1100px) {
+  .composer-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+@media (max-width: 760px) {
+  .composer-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
