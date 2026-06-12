@@ -14,6 +14,18 @@ const SUGGESTIONS = [
 ];
 
 /**
+ * Window event that opens the assistant panel from anywhere (same pattern as
+ * the ⌘K palette's OPEN_EVENT — no prop-drilling through the server shell).
+ * `detail.prompt`, when present, is submitted as the first question.
+ */
+export const ASK_AI_OPEN_EVENT = "repulabs:open-ask-ai";
+
+/** Convenience for triggers elsewhere (e.g. the dashboard AI-copilot panel). */
+export function openAskAi(prompt?: string) {
+  window.dispatchEvent(new CustomEvent(ASK_AI_OPEN_EVENT, { detail: { prompt } }));
+}
+
+/**
  * Floating "Ask repulabs" assistant.
  *
  * Rendered globally from app/layout.tsx (Providers tree). The launcher is a
@@ -98,6 +110,18 @@ export function AskAi() {
     },
     [messages, pending],
   );
+
+  // External opener (dashboard AI-copilot panel, etc.): open the slide-over
+  // and, when a prompt is supplied, submit it immediately — no dead inputs.
+  useEffect(() => {
+    function onOpen(e: Event) {
+      setOpen(true);
+      const prompt = (e as CustomEvent<{ prompt?: string }>).detail?.prompt;
+      if (prompt?.trim()) send(prompt);
+    }
+    window.addEventListener(ASK_AI_OPEN_EVENT, onOpen);
+    return () => window.removeEventListener(ASK_AI_OPEN_EVENT, onOpen);
+  }, [send]);
 
   // Hide the launcher entirely if the assistant API is unavailable
   // (e.g. logged-out visitor on a public page).

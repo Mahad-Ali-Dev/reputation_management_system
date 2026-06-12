@@ -134,4 +134,8 @@ desktop.ini
 /.tmp-render-crops/
 /tasks/autopilot/
 
+/.pdf-build/shoot-dashkit.mjs
+/tasks/ui-dashkit/
+/tasks/Dashboard/
+
 /outputs/
