@@ -38,7 +38,7 @@ rendered inline (`useActionState`).
 **Deploy checklist for these fixes**
 1. `prisma migrate deploy` against prod (founder-run): `20260611000000_auto_reply_delay_sentinel` + the pending master-delta migration (content library et al.).
 2. Set `VOYAGE_API_KEY` (KB retrieval quality) — chat degrades gracefully without it but can't cite documents.
-3. Observed (not in report): marketing home prices Pro at **$59.99/mo** vs `/subscription`'s **$89/mo** — reconcile.
+3. ~~Observed (not in report): marketing home prices Pro at **$59.99/mo** vs `/subscription`'s **$89/mo**~~ — RESOLVED 2026-06-12: founder set the price to **A$79/mo (AUD)**; marketing, /subscription, settings overview, admin MRR, and the AI assistant's product knowledge all updated. ⚠️ The Stripe Price behind `STRIPE_PRO_PRICE_ID` must be (re)created as **A$79.00 AUD monthly recurring** — the UI now states A$79 AUD, so a stale USD price would mischarge.
 
 ---
 

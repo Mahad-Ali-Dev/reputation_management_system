@@ -93,7 +93,7 @@ export default async function SubscriptionPage({
   const billingEmail = org.ownerEmail ?? userEmail ?? "—";
   const renewsAt = org.subscription?.currentPeriodEnd;
   const nextCharge = renewsAt
-    ? `${renewsAt.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} · $89.00 USD`
+    ? `${renewsAt.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} · A$79.00 AUD`
     : org.plan === "pro"
       ? "—"
       : "No active subscription";
@@ -103,7 +103,7 @@ export default async function SubscriptionPage({
       <PageHeader
         kicker={
           realPlan === "pro"
-            ? "Pro · billed monthly · $89/mo per location"
+            ? "Pro · billed monthly · A$79/mo per location"
             : realPlan === "trial"
               ? "Free trial · Pro features active"
               : `${prettyPlan(realPlan)} plan`
@@ -163,7 +163,7 @@ export default async function SubscriptionPage({
           <PlanCard
             name="Pro"
             badge="MOST POPULAR"
-            price="$89"
+            price="A$79"
             priceSuffix="/mo"
             period="per location · billed monthly"
             ctaLabel={hasPaidPlan ? "Current plan" : "Continue on Pro"}

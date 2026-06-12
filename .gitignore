@@ -124,4 +124,7 @@ desktop.ini
 /.pdf-build/shoot-reviewfix.mjs
 /tasks/ui-reviewfix/
 
+/.pdf-build/shoot-ship.mjs
+/tasks/ui-ship/
+
 /outputs/

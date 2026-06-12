@@ -78,7 +78,7 @@ KEY UI LOCATIONS
 
 PLANS
 - Free: 1 location, 50 review requests/mo, basic features.
-- Pro: $89/mo per location — unlimited requests, AI replies in brand voice, AI phone (200 min), premium dispute, priority support.
+- Pro: A$79/mo per location — unlimited requests, AI replies in brand voice, AI phone (200 min), premium dispute, priority support.
 - Scale: custom — SSO, multi-brand, dedicated CSM.
 
 STYLE

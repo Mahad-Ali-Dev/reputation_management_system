@@ -21,13 +21,13 @@ export const dynamic = "force-dynamic";
 // configured price id (with a price_* fallback for legacy/rotated ids) is what
 // makes the numbers non-zero — the old `pro_monthly`/`pro_annual` keys never
 // matched anything written, so every figure rendered $0.
-const PRO_MRR_USD = 89; // current Pro list price ($/mo) — keep in sync with app/subscription/page.tsx
+const PRO_MRR_AUD = 79; // current Pro list price (A$/mo) — keep in sync with app/subscription/page.tsx
 
 function planMrrCents(plan: string): number {
   if (!plan || plan === "unknown" || plan === "free") return 0;
-  if (STRIPE_PRO_PRICE_ID && plan === STRIPE_PRO_PRICE_ID) return Math.round(PRO_MRR_USD * 100);
+  if (STRIPE_PRO_PRICE_ID && plan === STRIPE_PRO_PRICE_ID) return Math.round(PRO_MRR_AUD * 100);
   // Defensive fallback: any Stripe price id (e.g. after a price rotation) is Pro.
-  if (plan.startsWith("price_")) return Math.round(PRO_MRR_USD * 100);
+  if (plan.startsWith("price_")) return Math.round(PRO_MRR_AUD * 100);
   return 0;
 }
 
@@ -221,6 +221,6 @@ function FunnelRow({ label, value }: { label: string; value: number | string }) 
 
 function fmt(cents: number): string {
   const sign = cents < 0 ? "-" : "";
-  const usd = Math.abs(cents) / 100;
-  return `${sign}$${usd.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
+  const aud = Math.abs(cents) / 100;
+  return `${sign}A$${aud.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 }

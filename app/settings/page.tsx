@@ -281,7 +281,7 @@ export default async function SettingsOverviewPage() {
                 {isPaid ? "MONTHLY" : plan === "trial" ? "TRIAL" : "CURRENT PLAN"}
               </div>
               <div className="set-plan-price-row">
-                <span className="set-plan-price">{isPaid ? "$89" : "$0"}</span>
+                <span className="set-plan-price">{isPaid ? "A$79" : "$0"}</span>
                 <span className="set-plan-price-suffix">
                   {isPaid ? "/mo per location" : plan === "trial" ? "during trial" : "free plan"}
                 </span>

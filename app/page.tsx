@@ -382,9 +382,9 @@ function Pricing() {
           <PlanCard
             name="Pro"
             badge="MOST POPULAR"
-            price="$59.99"
+            price="A$79"
             priceSuffix="/mo"
-            period="per location · billed annually"
+            period="per location · billed monthly · AUD"
             features={PRO}
             cta="Start 30-day trial"
             ctaHref="/signup"
