@@ -873,6 +873,29 @@
   margin: -10px -6px -10px 0;
 }
 
+/* The 3D robot band cropped from the mockup: anchored to the panel's right
+   edge at full height, left edge feathered into the panel gradient so the
+   rectangular crop blends seamlessly. */
+.dk-copilot {
+  min-height: 196px;
+}
+.dk-copilot__main {
+  position: relative;
+  z-index: 1;
+  padding-right: 300px;
+}
+.dk-copilot__art--3d {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: auto;
+  height: 100%;
+  margin: 0;
+  -webkit-mask-image: linear-gradient(to left, #000 72%, transparent 100%);
+  mask-image: linear-gradient(to left, #000 72%, transparent 100%);
+}
+
 /* ============================================================
    Responsive: 1440 → 768 stack (per handoff) · usable at 390
    ============================================================ */
@@ -889,6 +912,8 @@
   .dk-cols { grid-template-columns: 1fr; }
   .dk-hero__art { width: 130px; height: 130px; }
   .dk-copilot__art { width: 140px; height: 140px; }
+  .dk-copilot__main { padding-right: 0; }
+  .dk-copilot__art--3d { position: static; height: 150px; width: auto; align-self: flex-end; mask-image: none; -webkit-mask-image: none; border-radius: 14px; }
   .dk-quick__chip { flex: 1 1 45%; }
 }
 

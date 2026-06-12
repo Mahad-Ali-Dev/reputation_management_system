@@ -278,11 +278,18 @@ export default async function DashboardPage({
             <p className="dk-copilot__sub">Ask anything. Get insights, summaries, and recommendations.</p>
             <CopilotPrompt />
           </div>
-          <img
-            className="dk-copilot__art"
-            src={`${ASSETS}/${isEmpty ? "copilot-empty-orb" : "copilot-robot"}.svg`}
-            alt=""
-          />
+          {/* Active: the kit's 3D robot, cropped at native resolution from the
+              delivered mockup (no standalone 3D asset ships with the kit).
+              Empty: the kit's delivered empty-orb SVG. */}
+          {isEmpty ? (
+            <img className="dk-copilot__art" src={`${ASSETS}/copilot-empty-orb.svg`} alt="" />
+          ) : (
+            <img
+              className="dk-copilot__art dk-copilot__art--3d"
+              src={`${ASSETS}/copilot-robot-3d.png`}
+              alt=""
+            />
+          )}
         </section>
       </div>
     </AppShellServer>
@@ -386,24 +393,19 @@ function StatChip({
 // Google Reviews Overview
 // ============================================================
 
-/** Donut segment palette (kit donut: blue / green / yellow / orange / red). */
+/** ONE per-star palette shared by the distribution bars AND the donut — the
+ *  kit colored them differently, which made the (fully data-driven) donut read
+ *  as a fake decorative circle next to the bars (founder feedback 2026-06-12).
+ *  Same star = same color everywhere, so the two visuals visibly agree. */
 const RATING_COLORS: Record<number, string> = {
-  5: "#2563eb",
-  4: "#16a34a",
-  3: "#facc15",
-  2: "#f97316",
-  1: "#ef4444",
-};
-
-/** Distribution-bar palette — the kit colors the bars differently from the
- *  donut: 5★ and 4★ are blue, 3★ olive, 2★ amber, 1★ red. */
-const BAR_COLORS: Record<number, string> = {
   5: "#2563eb",
   4: "#3b82f6",
   3: "#ca8a04",
   2: "#facc15",
   1: "#ef4444",
 };
+
+const BAR_COLORS = RATING_COLORS;
 
 /** Brand-colored Google "G" (the kit shows the multicolor mark, not a tinted glyph). */
 function GoogleG({ size = 14 }: { size?: number }) {
