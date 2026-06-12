@@ -33,6 +33,13 @@
   color: var(--ap-ink);
 }
 
+/* Kit: main content max width 1240px, centered (the wash itself stays full-bleed). */
+.ap2-page > * {
+  max-width: 1240px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 @media (max-width: 767px) {
   .ap2-page {
     margin: -16px -14px -28px;
@@ -157,8 +164,8 @@
 
 .ap2-hero__title {
   margin: 0;
-  font-size: 28px;
-  line-height: 36px;
+  font-size: 30px; /* kit: 30/700 */
+  line-height: 38px;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--ap-ink);
@@ -398,8 +405,8 @@
 }
 
 .ap2-control__status {
-  font-size: 40px;
-  line-height: 46px;
+  font-size: 38px; /* kit: 38/800 */
+  line-height: 44px;
   font-weight: 800;
   letter-spacing: -0.04em;
   color: var(--ap-blue);
@@ -686,8 +693,8 @@
 }
 
 .ap2-about__art {
-  width: 96px;
-  height: 96px;
+  width: 120px; /* kit: 120px */
+  height: 120px;
   flex-shrink: 0;
   margin: -4px -6px 0 auto;
 }
@@ -1006,4 +1013,20 @@
   .ap2-tiles {
     grid-template-columns: minmax(0, 1fr);
   }
+}
+
+/* ── Kit a11y + hover polish (completeness audit 2026-06-12) ── */
+.ap2-tab:focus-visible,
+.ap2-switch:focus-visible,
+.ap2-seg__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.35);
+  border-radius: 8px;
+}
+.ap2-setup__item:hover {
+  background: #f8faff; /* kit: setup row hover wash */
+}
+.ap2-btn--pri:hover {
+  background: #155eef; /* kit: primary hover */
+  transform: translateY(-1px);
 }

@@ -627,25 +627,29 @@ select.apr-input {
   margin-top: 14px;
 }
 
+/* Kit explicitly says "no large blue Save button"; the form must still persist
+   explicitly (autosaving money assumptions on blur is too surprising), so the
+   button stays but quiet: compact outline, not a blue primary. */
 .apr-savebtn {
   display: inline-flex;
   align-items: center;
   gap: 7px;
   height: 32px;
-  padding: 0 16px;
-  border: none;
+  padding: 0 14px;
+  border: 1px solid #d3ddec;
   border-radius: 999px;
-  background: var(--apr-blue);
-  color: #fff;
+  background: #fff;
+  color: #2a3548;
   font-size: 12px;
   font-weight: 700;
   font-family: inherit;
   cursor: pointer;
-  transition: background 120ms;
+  transition: border-color 120ms, background 120ms;
 }
 
 .apr-savebtn:hover:not(:disabled) {
-  background: #244bee;
+  border-color: var(--apr-blue);
+  background: #f6f9ff;
 }
 
 .apr-savebtn:disabled {
