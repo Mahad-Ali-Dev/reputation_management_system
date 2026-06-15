@@ -139,7 +139,13 @@ log "Building Next.js production bundle"
 # Call `pnpm build` (which itself runs `prisma generate && next build`)
 # instead of `pnpm exec next build` directly. Belt-and-suspenders with the
 # explicit `prisma generate` above — but harmless to run twice.
-run "NODE_ENV=production pnpm build"
+#
+# CRITICAL: load $ENV_FILE into the BUILD shell. Next inlines NEXT_PUBLIC_* at
+# build time, and lib/env.ts validates the required prod vars during "Collecting
+# page data" (it process.exit(1)s when they're missing). The systemd unit only
+# injects env at RUNTIME, so without this the build sees an empty process.env
+# and fails. Same file the migrate step and runtime use.
+run "set -a; . ./$ENV_FILE; set +a; NODE_ENV=production pnpm build"
 
 # Sanity check: BUILD_ID must exist or systemctl restart will just run the
 # OLD bundle (or worse: crash on missing manifest).
@@ -180,6 +186,7 @@ while true; do
       git checkout "$PREV_SHA"
       CI=true pnpm install --frozen-lockfile --prod=false
       pnpm exec prisma generate
+      set -a; . "./$ENV_FILE"; set +a
       NODE_ENV=production pnpm build
       sudo systemctl restart "$SERVICE_NAME"
       sleep 5
