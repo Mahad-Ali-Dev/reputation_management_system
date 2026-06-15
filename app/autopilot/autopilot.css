@@ -764,18 +764,18 @@
 }
 
 .ap2-tab__icon--activity {
-  -webkit-mask-image: url("/assets/repulabs/autopilot/tab-activity.svg");
-  mask-image: url("/assets/repulabs/autopilot/tab-activity.svg");
+  -webkit-mask-image: url("/assets/repulabs/autopilot/tab-activity.png");
+  mask-image: url("/assets/repulabs/autopilot/tab-activity.png");
 }
 
 .ap2-tab__icon--controls {
-  -webkit-mask-image: url("/assets/repulabs/autopilot/tab-controls.svg");
-  mask-image: url("/assets/repulabs/autopilot/tab-controls.svg");
+  -webkit-mask-image: url("/assets/repulabs/autopilot/tab-controls.png");
+  mask-image: url("/assets/repulabs/autopilot/tab-controls.png");
 }
 
 .ap2-tab__icon--roi {
-  -webkit-mask-image: url("/assets/repulabs/autopilot/tab-roi.svg");
-  mask-image: url("/assets/repulabs/autopilot/tab-roi.svg");
+  -webkit-mask-image: url("/assets/repulabs/autopilot/tab-roi.png");
+  mask-image: url("/assets/repulabs/autopilot/tab-roi.png");
 }
 
 .ap2-tabpanels {

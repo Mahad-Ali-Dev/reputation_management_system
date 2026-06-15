@@ -111,14 +111,14 @@ export default async function AutopilotPage({
       key: "enable",
       title: "Turn on Autopilot",
       body: "Flip the switch and pick a risk tolerance.",
-      icon: `${ASSETS}/setup-zap.svg`,
+      icon: `${ASSETS}/setup-zap.png`,
       done: config.enabled,
     },
     {
       key: "voice",
       title: "Connect your phone for Voice → Review",
       body: "Enable Voice→Review to turn calls into reviews automatically.",
-      icon: `${ASSETS}/setup-phone.svg`,
+      icon: `${ASSETS}/setup-phone.png`,
       done: false,
       href: "/phone",
     },
@@ -126,7 +126,7 @@ export default async function AutopilotPage({
       key: "roi",
       title: "Set your average job value",
       body: "We'll use this to prioritize opportunities and measure ROI.",
-      icon: `${ASSETS}/setup-dollar.svg`,
+      icon: `${ASSETS}/setup-dollar.png`,
       done: settings.averageJobValue != null,
       href: "/autopilot?tab=roi",
     },
@@ -138,7 +138,7 @@ export default async function AutopilotPage({
         {/* ---- Hero: intro + at-a-glance metrics ---- */}
         <header className="ap2-hero">
           <div className="ap2-hero__intro">
-            <img className="ap2-hero__avatar" src={`${ASSETS}/bot-avatar.svg`} alt="" />
+            <img className="ap2-hero__avatar" src={`${ASSETS}/bot-avatar.png`} alt="" />
             <div className="ap2-hero__text">
               <div className="ap2-hero__titlerow">
                 <h1 className="ap2-hero__title">Reputation Autopilot</h1>
@@ -158,17 +158,17 @@ export default async function AutopilotPage({
             <div className="ap2-glance__title">At a glance</div>
             <div className="ap2-glance__row">
               <GlanceMetric
-                icon={`${ASSETS}/glance-star.svg`}
+                icon={`${ASSETS}/glance-star.png`}
                 value={glance.reviews30d > 0 ? glance.avgRating.toFixed(1) : "—"}
                 label="Average Rating"
               />
               <GlanceMetric
-                icon={`${ASSETS}/glance-reviews.svg`}
+                icon={`${ASSETS}/glance-reviews.png`}
                 value={glance.reviews30d.toLocaleString()}
                 label="New Reviews"
               />
               <GlanceMetric
-                icon={`${ASSETS}/glance-growth.svg`}
+                icon={`${ASSETS}/glance-growth.png`}
                 value={
                   glance.growthPct == null
                     ? "—"
@@ -388,7 +388,7 @@ function AboutCard() {
         <p className="ap2-about__copy">
           Autopilot handles the busywork so you can focus on what matters.
         </p>
-        <img className="ap2-about__art" src={`${ASSETS}/about-clipboard.svg`} alt="" />
+        <img className="ap2-about__art" src={`${ASSETS}/about-clipboard.png`} alt="" />
       </div>
       <Link href="/tour" className="ap2-btn-secondary ap2-about__cta">
         <Icon name="play" size={12} />
