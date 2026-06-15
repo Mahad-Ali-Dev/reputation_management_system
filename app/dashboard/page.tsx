@@ -125,13 +125,13 @@ export default async function DashboardPage({
               </div>
               <img
                 className="dk-hero__art"
-                src={`${ASSETS}/${isEmpty ? "empty-hero" : "hero-growth-board"}.svg`}
+                src={`${ASSETS}/${isEmpty ? "empty-hero.svg" : "hero-growth-board.png"}`}
                 alt=""
               />
             </div>
 
             <div className="dk-card dk-train">
-              <img className="dk-train__icon" src={`${ASSETS}/train-agent-stack.svg`} alt="" />
+              <img className="dk-train__icon" src={`${ASSETS}/train-agent-stack.png`} alt="" />
               <div className="dk-train__body">
                 <h2 className="dk-train__title">Train your agent</h2>
                 <p className="dk-train__sub">
@@ -144,18 +144,18 @@ export default async function DashboardPage({
             </div>
 
             <div className="dk-quick">
-              <QuickChip icon="chip-upload-faq" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
-              <QuickChip icon="chip-add-business" title="Add business info" sub="Services, hours, etc." href="/ai/training" />
-              <QuickChip icon="chip-train-reviews" title="Train from reviews" sub="Learn from feedback" href="/ai/training#test" />
-              <QuickChip icon="chip-brand-voice" title="Brand voices" sub="Tone and style" href="/ai/training#behavior" />
-              <QuickChip icon="chip-knowledge" title="Knowledge sources" sub="Docs, URLs & more" href="/ai/training#knowledge" />
+              <QuickChip icon="chip-upload-faq.png" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
+              <QuickChip icon="chip-add-business.png" title="Add business info" sub="Services, hours, etc." href="/ai/training" />
+              <QuickChip icon="chip-train-reviews.png" title="Train from reviews" sub="Learn from feedback" href="/ai/training#test" />
+              <QuickChip icon="chip-brand-voice.png" title="Brand voices" sub="Tone and style" href="/ai/training#behavior" />
+              <QuickChip icon="chip-knowledge.png" title="Knowledge sources" sub="Docs, URLs & more" href="/ai/training#knowledge" />
             </div>
           </div>
 
           <div className="dk-stats">
             <StatChip
               label="Average Rating"
-              icon={isEmpty || total === 0 ? "empty-stat-rating" : "stat-rating-star"}
+              icon={isEmpty || total === 0 ? "empty-stat-rating.svg" : "stat-rating-star.png"}
               value={total > 0 ? avgRating.toFixed(1) : null}
               star={total > 0}
               delta={
@@ -170,7 +170,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="Total Reviews"
-              icon={isEmpty || total === 0 ? "empty-stat-reviews" : "stat-reviews-chat"}
+              icon={isEmpty || total === 0 ? "empty-stat-reviews.svg" : "stat-reviews-chat.png"}
               value={total > 0 ? total.toLocaleString() : null}
               delta={
                 d.deltas30d.reviewsPct !== null && d.deltas30d.reviewsPct !== 0
@@ -184,7 +184,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="AI Replies Sent"
-              icon={d.aiRepliesSent === 0 ? "empty-stat-replies" : "stat-ai-replies"}
+              icon={d.aiRepliesSent === 0 ? "empty-stat-replies.svg" : "stat-ai-replies.png"}
               value={d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null}
               delta={
                 d.deltas30d.aiRepliesPct !== null && d.deltas30d.aiRepliesPct !== 0
@@ -199,7 +199,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="5-star Reviews"
-              icon={fiveStarCount === 0 ? "empty-stat-five-star" : "stat-five-star"}
+              icon={fiveStarCount === 0 ? "empty-stat-five-star.svg" : "stat-five-star.png"}
               value={fiveStarCount > 0 ? fiveStarCount.toLocaleString() : null}
               delta={
                 d.deltas30d.fiveStarPct !== null && d.deltas30d.fiveStarPct !== 0
@@ -243,7 +243,7 @@ export default async function DashboardPage({
           <div className="dk-insights__grid">
             <InsightCard
               label="Response Rate"
-              art="insight-users"
+              art="insight-users.png"
               value={total > 0 ? `${responseRate}%` : null}
             />
             <InsightCard
@@ -253,7 +253,7 @@ export default async function DashboardPage({
             />
             <InsightCard
               label="Sentiment"
-              art="insight-sentiment"
+              art="insight-sentiment.png"
               value={total > 0 ? sentimentLabel(d.sentiment).label : null}
               chip={
                 total > 0
@@ -263,7 +263,7 @@ export default async function DashboardPage({
             />
             <InsightCard
               label="Trend"
-              art="insight-trend"
+              art="insight-trend.png"
               value={total > 0 ? (d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0 ? "Improving" : "Steady") : null}
               chip={
                 total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
@@ -315,7 +315,7 @@ export default async function DashboardPage({
 function QuickChip({ icon, title, sub, href }: { icon: string; title: string; sub: string; href: string }) {
   return (
     <Link href={href} className="dk-card dk-quick__chip">
-      <img className="dk-quick__icon" src={`${ASSETS}/${icon}.svg`} alt="" />
+      <img className="dk-quick__icon" src={`${ASSETS}/${icon}`} alt="" />
       <span style={{ minWidth: 0 }}>
         <span className="dk-quick__title" style={{ display: "block" }}>{title}</span>
         <span className="dk-quick__sub" style={{ display: "block" }}>{sub}</span>
@@ -357,7 +357,7 @@ function StatChip({
     return (
       <div className="dk-card dk-stat dk-stat--empty">
         <div className="dk-stat__head">
-          <img className="dk-stat__icon" src={`${ASSETS}/${icon}.svg`} alt="" />
+          <img className="dk-stat__icon" src={`${ASSETS}/${icon}`} alt="" />
           <span className="dk-stat__label">{label}</span>
         </div>
         <div className="dk-stat__value">--</div>
@@ -371,7 +371,7 @@ function StatChip({
     <div className="dk-card dk-stat">
       {/* Kit anatomy: icon tile left, label stacked over value to its right. */}
       <div className="dk-stat__head">
-        <img className="dk-stat__icon" src={`${ASSETS}/${icon}.svg`} alt="" />
+        <img className="dk-stat__icon" src={`${ASSETS}/${icon}`} alt="" />
         <span className="dk-stat__hcol">
           <span className="dk-stat__label">{label}</span>
           <span className="dk-stat__value">
@@ -708,7 +708,7 @@ function InsightCard({
           <Icon name="clock" size={17} />
         </span>
       ) : (
-        art && <img className="dk-insight__icon" src={`${ASSETS}/${art}.svg`} alt="" />
+        art && <img className="dk-insight__icon" src={`${ASSETS}/${art}`} alt="" />
       )}
       <div style={{ minWidth: 0 }}>
         <div className="dk-insight__label">{label}</div>
