@@ -8,7 +8,6 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { orgHasFeature } from "@/lib/billing/feature-access";
 import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
-import { withTenant } from "@/lib/db/with-tenant";
 import { listEstablishments } from "@/lib/establishments/queries";
 import { restoreDevice } from "@/lib/hardware/actions";
 import {
@@ -18,7 +17,6 @@ import {
   listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
-import { getDeviceRoi } from "@/lib/roi/summary";
 import Link from "next/link";
 import { AiChatbotCard } from "./_components/ai-chatbot-card";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
@@ -172,17 +170,6 @@ export default async function QrCodesPage({
   const reviewsByDeviceId = new Map<string, number>();
   for (const d of activeDevices) reviewsByDeviceId.set(d.id, d.reviewCount);
 
-  const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-  const [selectedScans, deviceRoi] = await Promise.all([
-    withTenant(orgId, (tx) =>
-      tx.deviceScan.findMany({
-        where: { deviceId: selectedDevice.id, scannedAt: { gte: since30d } },
-        select: { scannedAt: true },
-      }),
-    ),
-    getDeviceRoi(orgId, selectedDevice.id),
-  ]);
-
   const selectedName = selectedDevice.productName ?? titleFromSku(selectedDevice.productSku);
   const selectedUrl = publicQrUrl(selectedDevice.shortSlug);
   const selectedPlatform = platformForDevice(
@@ -275,16 +262,16 @@ export default async function QrCodesPage({
             </Link>
           </div>
           <div style={{ flex: 1 }} />
-          <span className="mono dim" style={{ fontSize: 10.5 }}>
-            SHOWING {activeDevices.length} OF {devices.length}
+          <span className="md-devhead__count">
+            {activeDevices.length} active device{activeDevices.length === 1 ? "" : "s"}
           </span>
+          <ConnectDeviceModal establishments={businessOptions} />
         </div>
 
         <DeviceTable
           devices={activeDevices.map((d) => ({
             id: d.id,
             productTitle: d.productName ?? titleFromSku(d.productSku),
-            productImageUrl: d.productImageUrl,
             establishmentName: d.establishment?.name ?? null,
             productKind: d.productKind,
             shortSlug: d.shortSlug,
@@ -292,7 +279,6 @@ export default async function QrCodesPage({
             reviews: d.reviewCount,
           }))}
           selectedId={selectedDevice.id}
-          establishments={businessOptions}
         />
 
         {/* Lower section — Live feed · Reviews-by-rating · Devices-impact. */}
@@ -303,7 +289,7 @@ export default async function QrCodesPage({
         </div>
 
         {/* Bottom row — QR product card + AI chatbot card. */}
-        <div className="md-bottom">
+        <div id="qr-panel" className="md-bottom" style={{ scrollMarginTop: 80 }}>
           <QrProductCard
             deviceId={selectedDevice.id}
             code={selectedDevice.shortSlug}
@@ -319,7 +305,7 @@ export default async function QrCodesPage({
 
         {/* NFC tap-destination config (preserved — only for NFC kinds). */}
         {isNfcKind(selectedDevice.productKind) && (
-          <div id="qr-panel" style={{ scrollMarginTop: 80, marginBottom: 14 }}>
+          <div id="nfc-panel" style={{ scrollMarginTop: 80, marginBottom: 14 }}>
             <NfcConfigCard
               deviceId={selectedDevice.id}
               productKind={selectedDevice.productKind}
@@ -334,18 +320,6 @@ export default async function QrCodesPage({
         )}
 
         <MdFooterTip />
-
-        {/* Deeper per-device scan analytics (preserved — real DeviceScan series). */}
-        <ScanAnalytics
-          deviceLabel={selectedName}
-          code={selectedDevice.shortSlug}
-          scanCount={selectedDevice.scanCount}
-          scans={selectedScans}
-          reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
-          estimatedRevenue={deviceRoi.estimatedRevenue}
-          currency={deviceRoi.currency}
-          isPro={isPro}
-        />
 
         <BatchGeneratorSection />
       </div>
@@ -482,16 +456,31 @@ function EmptyState({
         {/* AI-training banner stays on the empty state (kit). */}
         <MdTrainingBanner href={upgradeHref("ai_autopilot")} />
 
+        {/* Scan-analytics summary row — genuine zeros (no fabricated data). */}
+        <MdSummaryRow
+          totalScans={0}
+          todayScans={0}
+          reviewsFromScans={0}
+          conversionLabel="0%"
+          activeDevices={0}
+        />
+
+        {/* Devices section header — matches the active layout (tabs + Add device). */}
+        <div className="md-devhead">
+          <span className="md-devhead__title">Devices</span>
+          <div className="seg">
+            <span className="seg__t is-active">Active (0)</span>
+            <Link href="/hardware?view=trash" className="seg__t" style={{ textDecoration: "none" }}>
+              Trash (0)
+            </Link>
+          </div>
+          <div style={{ flex: 1 }} />
+          <span className="md-devhead__count">0 active devices</span>
+          <ConnectDeviceModal establishments={establishments} />
+        </div>
+
         {/* Empty devices panel — kit illustration + connect CTA. */}
         <section className="md-card" aria-label="Devices">
-          <div className="md-card__head">
-            <span className="md-devhead__title" style={{ fontSize: 14 }}>
-              Devices
-            </span>
-            <span className="chip" style={{ marginLeft: 8, height: 20, fontSize: 10.5 }}>
-              Active (0)
-            </span>
-          </div>
           <div className="md-blank">
             {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
             <img
@@ -538,6 +527,11 @@ function EmptyState({
           <MdDevicesImpact impact={buildEmptyImpactForView()} />
         </div>
 
+        {/* AI Chatbot card (kit) — no data dependency, useful even before any device. */}
+        <div className="md-bottom" style={{ gridTemplateColumns: "1fr" }}>
+          <AiChatbotCard orbSrc="/assets/repulabs/my-devices/ai-chatbot-orb.svg" />
+        </div>
+
         <MdFooterTip />
       </div>
     </AppShellServer>
@@ -553,220 +547,6 @@ function buildEmptyImpactForView() {
     d.setDate(today.getDate() - (6 - i));
     return { label: labels[d.getDay()] ?? "?", scans: 0, reviews: 0 };
   });
-}
-
-function ScanAnalytics({
-  deviceLabel,
-  code,
-  scanCount,
-  scans,
-  reviews,
-  estimatedRevenue,
-  currency,
-  isPro,
-}: {
-  deviceLabel: string;
-  code: string;
-  scanCount: number;
-  scans: Array<{ scannedAt: Date }>;
-  reviews: number;
-  estimatedRevenue: number;
-  currency: string;
-  isPro: boolean;
-}) {
-  const monthlyScans = Array<number>(30).fill(0);
-  const peakHours = Array<number>(24).fill(0);
-  const dayOfWeekRaw = Array<number>(7).fill(0);
-  const dayLabels = ["M", "T", "W", "T", "F", "S", "S"];
-  for (const s of scans) {
-    const days = Math.floor((Date.now() - s.scannedAt.getTime()) / (24 * 60 * 60 * 1000));
-    const idx = 29 - days;
-    if (idx >= 0 && idx < 30) monthlyScans[idx] = (monthlyScans[idx] ?? 0) + 1;
-    peakHours[s.scannedAt.getHours()] = (peakHours[s.scannedAt.getHours()] ?? 0) + 1;
-    const dow = (s.scannedAt.getDay() + 6) % 7;
-    dayOfWeekRaw[dow] = (dayOfWeekRaw[dow] ?? 0) + 1;
-  }
-  const dayOfWeek = dayOfWeekRaw.map((v, i) => ({
-    d: dayLabels[i] ?? "?",
-    v,
-  }));
-  const maxDow = Math.max(...dayOfWeek.map((d) => d.v), 1);
-  const peakMax = Math.max(...peakHours, 1);
-  const monthlyMax = Math.max(...monthlyScans, 1);
-  const uniqueScans = scans.length;
-  const todayScans = monthlyScans[29] ?? 0;
-
-  return (
-    <div className="ds-card" style={{ marginBottom: 14 }}>
-      <div className="ds-card__head">
-        <div>
-          <h3 className="ds-card__title">Scan analytics</h3>
-          <div className="ds-card__sub" style={{ margin: 0 }}>
-            {deviceLabel} · {code}
-          </div>
-        </div>
-        <div className="seg">
-          <button type="button" className="seg__t">
-            7d
-          </button>
-          <button type="button" className="seg__t is-active">
-            30d
-          </button>
-          <button type="button" className="seg__t">
-            90d
-          </button>
-        </div>
-      </div>
-      <div className="ds-card__body">
-        <div className="grid-4" style={{ gap: 12, marginBottom: 16 }}>
-          <Mini l="SCANS · 30d" v={String(uniqueScans)} />
-          <Mini l="TOTAL · all time" v={String(scanCount)} />
-          <Mini l="TODAY" v={String(todayScans)} />
-          <Mini l="REVIEWS" v={String(reviews)} />
-        </div>
-
-        <Link
-          href="/autopilot?tab=roi"
-          className="row"
-          style={{
-            gap: 10,
-            padding: "10px 12px",
-            marginBottom: 16,
-            background: "var(--pri-50)",
-            borderRadius: 8,
-            textDecoration: "none",
-            color: "inherit",
-          }}
-        >
-          <Icon name="trend" size={16} style={{ color: "var(--pri)", flexShrink: 0 }} />
-          <span style={{ fontSize: 12.5, flex: 1, lineHeight: 1.5 }}>
-            This device generated <strong>{reviews}</strong> review{reviews === 1 ? "" : "s"}
-            {isPro ? (
-              <>
-                {" "}
-                and an estimated{" "}
-                <strong>
-                  {currency} {estimatedRevenue.toLocaleString()}
-                </strong>{" "}
-                in booked revenue.
-              </>
-            ) : (
-              <>. Upgrade to see the estimated revenue it drove.</>
-            )}
-          </span>
-          <Icon name="chevR" size={13} style={{ color: "var(--rl-muted-2)" }} />
-        </Link>
-
-        <div style={{ height: 120, display: "flex", alignItems: "flex-end", gap: 2 }}>
-          {monthlyScans.map((v, i) => (
-            <div
-              // biome-ignore lint/suspicious/noArrayIndexKey: ordered fixed-length time series
-              key={`bar-${i}`}
-              style={{
-                flex: 1,
-                height: `${(v / monthlyMax) * 100}%`,
-                background: i === monthlyScans.length - 1 ? "var(--pri)" : "var(--pri-300)",
-                borderRadius: 2,
-                minHeight: 2,
-                opacity: i === monthlyScans.length - 1 ? 1 : 0.7,
-              }}
-            />
-          ))}
-        </div>
-        <div className="row" style={{ marginTop: 8 }}>
-          <span className="mono dim" style={{ fontSize: 10 }}>
-            {labelFromDays(29)}
-          </span>
-          <span className="mono dim" style={{ fontSize: 10, marginLeft: "auto" }}>
-            {labelFromDays(0)}
-          </span>
-        </div>
-
-        <div className="divider" />
-
-        <div className="grid-2" style={{ gap: 16 }}>
-          <div>
-            <div className="lbl-mono">Peak hours</div>
-            <div
-              className="row"
-              style={{ marginTop: 6, height: 60, alignItems: "flex-end", gap: 1 }}
-            >
-              {peakHours.map((h, i) => (
-                <div
-                  // biome-ignore lint/suspicious/noArrayIndexKey: 24 fixed hour buckets
-                  key={`hour-${i}`}
-                  style={{
-                    flex: 1,
-                    height: `${(h / peakMax) * 100}%`,
-                    background: i >= 17 && i <= 19 ? "var(--pri)" : "var(--pri-100)",
-                    borderRadius: 2,
-                    minHeight: 2,
-                  }}
-                />
-              ))}
-            </div>
-            <div
-              className="row"
-              style={{
-                marginTop: 4,
-                fontSize: 10,
-                color: "var(--rl-muted)",
-                fontFamily: "var(--f-mono)",
-              }}
-            >
-              <span>00</span>
-              <span style={{ marginLeft: "auto" }}>12</span>
-              <span style={{ marginLeft: "auto" }}>24</span>
-            </div>
-          </div>
-          <div>
-            <div className="lbl-mono">By day of week</div>
-            <div className="row" style={{ marginTop: 6, gap: 4 }}>
-              {dayOfWeek.map((d, i) => (
-                <div key={`${d.d}-${i}`} style={{ flex: 1, textAlign: "center" }}>
-                  <div
-                    style={{
-                      height: 40,
-                      background: "var(--pri-100)",
-                      borderRadius: 4,
-                      position: "relative",
-                    }}
-                  >
-                    <div
-                      style={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        height: `${(d.v / maxDow) * 100}%`,
-                        background: i === 4 ? "var(--pri)" : "var(--pri-300)",
-                        borderRadius: 4,
-                      }}
-                    />
-                  </div>
-                  <div style={{ fontSize: 10, color: "var(--rl-muted)", marginTop: 4 }}>{d.d}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function Mini({ l, v }: { l: string; v: string }) {
-  return (
-    <div>
-      <div className="lbl-mono">{l}</div>
-      <div style={{ fontSize: 16, fontWeight: 600, marginTop: 2 }}>{v}</div>
-    </div>
-  );
-}
-
-function labelFromDays(daysAgo: number): string {
-  const d = new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
 /* ============================================================

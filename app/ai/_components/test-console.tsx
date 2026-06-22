@@ -454,21 +454,24 @@ export function TestConsole({
           <span className="akb-pill akb-pill--lav">This session</span>
         </div>
         <div className="akb-perf">
-          <PerfCell icon="test-total.svg" value={totalTests} label="Total tests" />
+          <PerfCell icon="test-total.svg" tone="success" value={totalTests} label="Total tests" />
           <PerfCell
             icon="test-answered.svg"
+            tone="primary"
             value={answered}
-            label="Answered confidently"
+            label="Answered correctly"
             sub={`${pct(answered)} accuracy`}
           />
           <PerfCell
             icon="test-partial.svg"
+            tone="warning"
             value={partial}
-            label="Partially confident"
+            label="Partially correct"
             sub={pct(partial)}
           />
           <PerfCell
             icon="test-notanswered.svg"
+            tone="danger"
             value={couldnt}
             label="Couldn't answer"
             sub={pct(couldnt)}
@@ -600,14 +603,21 @@ export function TestConsole({
 
 function PerfCell({
   icon,
+  tone,
   value,
   label,
   sub,
-}: { icon: string; value: number; label: string; sub?: string }) {
+}: {
+  icon: string;
+  tone: "success" | "primary" | "warning" | "danger";
+  value: number;
+  label: string;
+  sub?: string;
+}) {
   return (
     <div className="akb-perf__cell">
-      <span className="akb-perf__icon" aria-hidden="true">
-        <Image src={`${ASSET}/${icon}`} alt="" width={38} height={38} unoptimized />
+      <span className={`akb-perf__icon akb-perf__icon--${tone}`} aria-hidden="true">
+        <Image src={`${ASSET}/${icon}`} alt="" width={26} height={26} unoptimized />
       </span>
       <div style={{ minWidth: 0 }}>
         <div className="akb-perf__value">{value}</div>

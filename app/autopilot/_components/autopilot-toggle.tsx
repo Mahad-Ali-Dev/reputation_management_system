@@ -198,7 +198,7 @@ export function AutopilotToggle({
 
       <div className="ap2-control__foot">
         <span className="ap2-control__note">
-          <Icon name="bolt" size={13} />
+          <Icon name="chat" size={13} />
           Autopilot learns and improves over time based on your feedback.
         </span>
         {/* Kit: play triangle leads the label (no trailing arrow). */}

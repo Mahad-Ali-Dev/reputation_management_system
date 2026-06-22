@@ -320,7 +320,7 @@ function SetupCard({ steps }: { steps: SetupStep[] }) {
       {/* Kit: label first, book glyph after the text. */}
       <Link href="/docs" className="ap2-btn-secondary ap2-setup__guide">
         View setup guide
-        <Icon name="survey" size={14} />
+        <Icon name="book" size={14} />
       </Link>
     </section>
   );

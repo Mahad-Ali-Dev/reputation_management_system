@@ -24,8 +24,15 @@ export function MdHero() {
         </h1>
         <p className="md-hero__sub">QR devices, NFC cards, scan tracking, review automation.</p>
       </div>
-      {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG, not inlined) */}
-      <img src={`${ASSET}/hero.svg`} alt="" aria-hidden className="md-hero__art" />
+      {/* Composed kit illustration: person + floating rating badge + growth chart. */}
+      <div className="md-hero__art" aria-hidden>
+        {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
+        <img src={`${ASSET}/hero.svg`} alt="" className="md-hero__person" />
+        {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+        <img src={`${ASSET}/hero-rating.svg`} alt="" className="md-hero__rating" />
+        {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+        <img src={`${ASSET}/hero-chart.svg`} alt="" className="md-hero__chart" />
+      </div>
     </div>
   );
 }

@@ -31,6 +31,19 @@ const DAY_LABELS: Array<[string, string]> = [
   ["sunday", "Su"],
 ];
 
+/** Format a "HH:MM" 24h time to the kit's "09:00 AM" 12h display. */
+function to12h(t: string | undefined): string {
+  if (!t) return "—";
+  const m = /^(\d{1,2}):(\d{2})/.exec(t.trim());
+  if (!m) return t;
+  let h = Number(m[1]);
+  const min = m[2];
+  const ampm = h >= 12 ? "PM" : "AM";
+  h = h % 12;
+  if (h === 0) h = 12;
+  return `${String(h).padStart(2, "0")}:${min} ${ampm}`;
+}
+
 export type BusinessDetailRow = { id: string; icon: IconName; title: string; body: string | null };
 export type RecentLearningRow = {
   id: string;
@@ -43,34 +56,24 @@ export type LocationData = {
   hours: Record<string, { open?: string; close?: string }>;
 };
 
-export function KnowledgeDashboard({
+/**
+ * Readiness + stats summary row. In the kit this sits ABOVE the tabs strip on
+ * the Knowledge surface, so the page renders it between the hero and the tabs
+ * (and only on the Knowledge tab).
+ */
+export function KnowledgeSummary({
   readinessPct,
   totalSources,
   activeSources,
   lastUpdated,
-  websiteActive,
-  businessDetails,
-  location,
-  recentLearning,
 }: {
   readinessPct: number;
   totalSources: number;
   activeSources: number;
   lastUpdated: Date | null;
-  websiteActive: boolean;
-  businessDetails: BusinessDetailRow[];
-  location: LocationData;
-  recentLearning: RecentLearningRow[];
 }) {
   const hasSources = totalSources > 0;
   const statusLabel = hasSources ? "Active" : "Getting started";
-  const filledDetails = businessDetails.filter((d) => d.body && d.body.trim().length > 0);
-  const hasOverview = filledDetails.length > 0;
-  const hasLocation = Boolean(location.address && location.address.trim().length > 0);
-  const activeDay = DAY_LABELS.find(([k]) => location.hours[k]?.open)?.[0] ?? "monday";
-  const openTime = location.hours[activeDay]?.open ?? "09:00";
-  const closeTime = location.hours[activeDay]?.close ?? "17:00";
-  const hasLearning = recentLearning.length > 0;
 
   // readiness ring geometry
   const R = 60;
@@ -84,9 +87,7 @@ export function KnowledgeDashboard({
         : "Let's get started! Build your knowledge base to make your AI smarter.";
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      {/* readiness + stats */}
-      <div className="akb-summary">
+    <div className="akb-summary">
         {/* knowledge strength */}
         <section className="akb-card akb-readiness" aria-label="Knowledge strength">
           <span className="akb-readiness__tile" aria-hidden="true">
@@ -204,8 +205,38 @@ export function KnowledgeDashboard({
             </div>
           </div>
         </section>
-      </div>
+    </div>
+  );
+}
 
+/**
+ * Knowledge body — sources + quick actions row, then the business
+ * overview / location / recent-learning bottom row. Rendered AFTER the tabs
+ * strip (the readiness/stats summary renders before the tabs).
+ */
+export function KnowledgeBody({
+  hasSources,
+  websiteActive,
+  businessDetails,
+  location,
+  recentLearning,
+}: {
+  hasSources: boolean;
+  websiteActive: boolean;
+  businessDetails: BusinessDetailRow[];
+  location: LocationData;
+  recentLearning: RecentLearningRow[];
+}) {
+  const filledDetails = businessDetails.filter((d) => d.body && d.body.trim().length > 0);
+  const hasOverview = filledDetails.length > 0;
+  const hasLocation = Boolean(location.address && location.address.trim().length > 0);
+  const activeDay = DAY_LABELS.find(([k]) => location.hours[k]?.open)?.[0] ?? "monday";
+  const openTime = location.hours[activeDay]?.open ?? "09:00";
+  const closeTime = location.hours[activeDay]?.close ?? "17:00";
+  const hasLearning = recentLearning.length > 0;
+
+  return (
+    <div style={{ display: "grid", gap: 10 }}>
       {/* sources + quick actions */}
       <div className="akb-main-row">
         {/* knowledge sources */}
@@ -214,32 +245,92 @@ export function KnowledgeDashboard({
           <p className="akb-card__sub">
             Upload documents or connect sources for your AI to learn from.
           </p>
-          <div className="akb-sources__grid">
-            <a className="akb-source akb-source--upload" href="#add-source">
-              <span className="akb-source__icon" aria-hidden="true">
-                <Image src={`${ASSET}/upload-doc.svg`} alt="" width={40} height={40} unoptimized />
-              </span>
-              <span className="akb-source__title">Upload documents</span>
-              <span className="akb-source__desc">PDF, DOCX, TXT</span>
-              <span className="akb-source__desc">Drag &amp; drop or click to browse</span>
-            </a>
-            <a className="akb-source akb-source--full" href="#add-source">
-              <span className="akb-source__icon" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/connect-website.svg`}
-                  alt=""
-                  width={40}
-                  height={40}
-                  unoptimized
-                />
-              </span>
-              <span className="akb-source__body">
-                <span className="akb-source__title">Connect website</span>
-                <span className="akb-source__desc">Auto-scrape your website</span>
-              </span>
-              {websiteActive && <span className="akb-pill akb-pill--success">Active</span>}
-            </a>
-          </div>
+          {hasSources ? (
+            <div className="akb-sources__grid">
+              <a className="akb-source akb-source--upload" href="#add-source">
+                <span className="akb-source__icon" aria-hidden="true">
+                  <Image
+                    src={`${ASSET}/upload-doc.svg`}
+                    alt=""
+                    width={40}
+                    height={40}
+                    unoptimized
+                  />
+                </span>
+                <span className="akb-source__title">Upload documents</span>
+                <span className="akb-source__desc">PDF, DOCX, TXT</span>
+                <span className="akb-source__desc">Drag &amp; drop or click to browse</span>
+              </a>
+              <a className="akb-source akb-source--full" href="#add-source">
+                <span className="akb-source__icon" aria-hidden="true">
+                  <Image
+                    src={`${ASSET}/connect-website.svg`}
+                    alt=""
+                    width={40}
+                    height={40}
+                    unoptimized
+                  />
+                </span>
+                <span className="akb-source__body">
+                  <span className="akb-source__title">Connect website</span>
+                  <span className="akb-source__desc">Auto-scrape your website</span>
+                </span>
+                {websiteActive && <span className="akb-pill akb-pill--success">Active</span>}
+              </a>
+            </div>
+          ) : (
+            <div className="akb-sources__empty">
+              {/* large "Business grid" dashed dropzone (kit empty layout) */}
+              <a className="akb-source akb-source--grid" href="#add-source">
+                <span className="akb-source__icon" aria-hidden="true">
+                  <Image
+                    src={`${ASSET}/upload-doc.svg`}
+                    alt=""
+                    width={40}
+                    height={40}
+                    unoptimized
+                  />
+                </span>
+                <span className="akb-source__title">Business grid</span>
+                <span className="akb-source__desc">
+                  Upload documents or connect a website to be searchable for AI knowledge.
+                </span>
+              </a>
+              {/* right column: two stacked dashed action boxes */}
+              <div className="akb-sources__empty-col">
+                <a className="akb-source akb-source--box" href="#add-source">
+                  <span className="akb-source__icon" aria-hidden="true">
+                    <Image
+                      src={`${ASSET}/upload-doc.svg`}
+                      alt=""
+                      width={34}
+                      height={34}
+                      unoptimized
+                    />
+                  </span>
+                  <span className="akb-source__body">
+                    <span className="akb-source__title">Upload documents</span>
+                    <span className="akb-source__desc">PDF, DOCX, TXT</span>
+                  </span>
+                </a>
+                <a className="akb-source akb-source--box" href="#add-source">
+                  <span className="akb-source__icon" aria-hidden="true">
+                    <Image
+                      src={`${ASSET}/connect-website.svg`}
+                      alt=""
+                      width={34}
+                      height={34}
+                      unoptimized
+                    />
+                  </span>
+                  <span className="akb-source__body">
+                    <span className="akb-source__title">Connect website</span>
+                    <span className="akb-source__desc">Auto-scrape your website</span>
+                  </span>
+                </a>
+              </div>
+            </div>
+          )}
           <div className="akb-card__foot">
             <a className="akb-link" href="#add-source">
               View all sources <Icon name="arrowR" size={13} />
@@ -422,11 +513,18 @@ export function KnowledgeDashboard({
               </div>
               <div className="akb-loc__times">
                 <span className="akb-time">
-                  {openTime} <Icon name="chevD" size={12} />
+                  {to12h(openTime)} <Icon name="chevD" size={12} />
                 </span>
                 <span className="akb-time__to">to</span>
                 <span className="akb-time">
-                  {closeTime} <Icon name="chevD" size={12} />
+                  {to12h(closeTime)} <Icon name="chevD" size={12} />
+                </span>
+                <span
+                  className="akb-toggle is-on"
+                  role="img"
+                  aria-label="Operating hours enabled"
+                >
+                  <span className="akb-toggle__knob" />
                 </span>
               </div>
             </>

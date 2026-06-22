@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import type { JSX } from "react";
 import "./autopilot-controls.css";
 
@@ -33,7 +32,6 @@ type LoopRow = {
   desc: string;
   /** Kit badge SVG (circle + glyph baked in) under /public. */
   asset: string;
-  href?: string;
 };
 
 /** Grouping, order, copy and icons follow the kit handoff exactly. */
@@ -47,35 +45,30 @@ const GROUPS: { title: string; subtitle: string; rows: LoopRow[] }[] = [
         label: "Auto-reply to 5-star reviews",
         desc: "Publish replies to glowing reviews automatically.",
         asset: "/assets/repulabs/autopilot/control-auto-reply-star.png",
-        href: "/reviews/auto-reply",
       },
       {
         key: "draftLowStar",
         label: "Draft replies to 1–4-star reviews",
         desc: "Write replies for approval before publishing.",
         asset: "/assets/repulabs/autopilot/control-draft-replies.png",
-        href: "/reviews/auto-reply",
       },
       {
         key: "sendReviewRequests",
         label: "Send review requests",
         desc: "Ask happy customers for a review.",
         asset: "/assets/repulabs/autopilot/control-review-requests.png",
-        href: "/outreach",
       },
       {
         key: "voiceToReviewEnabled",
         label: "Voice to Review",
         desc: "Turn resolved calls into review requests.",
         asset: "/assets/repulabs/autopilot/control-voice-review.png",
-        href: "/phone",
       },
       {
         key: "inboxAutoReply",
         label: "Inbox auto-reply",
         desc: "Answer routine inbox messages.",
         asset: "/assets/repulabs/autopilot/control-inbox-auto-reply.png",
-        href: "/support",
       },
     ],
   },
@@ -88,14 +81,12 @@ const GROUPS: { title: string; subtitle: string; rows: LoopRow[] }[] = [
         label: "Draft review disputes",
         desc: "Prepare policy-based dispute drafts.",
         asset: "/assets/repulabs/autopilot/control-draft-disputes.png",
-        href: "/reviews/dispute",
       },
       {
         key: "geoPosts",
         label: "Geo posts",
         desc: "Publish location-targeted social posts.",
         asset: "/assets/repulabs/autopilot/control-geo-posts.png",
-        href: "/social/posts",
       },
       {
         key: "escalateToHuman",
@@ -163,11 +154,6 @@ export function ControlsPanel({
                       <div className="apc-row__copy">
                         <div className="apc-row__titleline">
                           <span className="apc-row__title">{row.label}</span>
-                          {row.href && (
-                            <Link href={row.href} className="apc-row__settings">
-                              Settings
-                            </Link>
-                          )}
                         </div>
                         <p className="apc-row__desc">{row.desc}</p>
                       </div>

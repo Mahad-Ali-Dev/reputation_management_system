@@ -267,7 +267,7 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
               </div>
             </div>
             <div className="apr-minis">
-              <div className="apr-minis__caption">{isEmpty ? "No activity yet" : "Revenue inputs"}</div>
+              <div className="apr-minis__caption">Revenue trend</div>
               <div className="apr-minis__row">
                 <div className="apr-mini">
                   <span className="apr-mini__value">

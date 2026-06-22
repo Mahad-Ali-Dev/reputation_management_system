@@ -83,14 +83,6 @@ function subLine(item: ActivityFeedItem): string {
   }
 }
 
-/** Ledger status chip: failed > needs-you > queued > done. */
-function statusChip(item: ActivityFeedItem): { tone: string; label: string } {
-  if (item.status === "failed") return { tone: "bad", label: "Failed" };
-  if (item.requiresHuman) return { tone: "warn", label: "Needs you" };
-  if (item.status === "pending") return { tone: "info", label: "Queued" };
-  return { tone: "ok", label: "Done" };
-}
-
 /** "12m ago" style relative timestamp (kit shows relative times). */
 function relTime(iso: string): string {
   const then = new Date(iso).getTime();
@@ -170,7 +162,6 @@ export function ActivityPanel({
         <div className="apa-card__head">
           <div className="apa-card__title-wrap">
             <h3 className="apa-card__title">Needs you</h3>
-            {needsYou.length > 0 && <span className="apa-count-pill">{needsYou.length}</span>}
           </div>
           {needsYou.length > VISIBLE_ROWS && (
             <button
@@ -212,9 +203,10 @@ function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const meta = LOOP_META[item.loop] ?? { ...FALLBACK_META, label: item.loop.replace(/_/g, " ") };
   const failed = item.status === "failed";
   const tone: Tone = failed ? "danger" : meta.tone;
-  const chip = statusChip(item);
   const href = hrefFor(item);
 
+  // Kit shows a relative timestamp only on the right of each Activity row
+  // (no status chip) — the status is conveyed by the sub-line copy.
   const body = (
     <>
       <span className={`apa-icon apa-icon--${tone}`} aria-hidden="true">
@@ -228,7 +220,6 @@ function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
         <span className="apa-time" suppressHydrationWarning>
           {relTime(item.createdAt)}
         </span>
-        <span className={`apa-chip apa-chip--${chip.tone}`}>{chip.label}</span>
       </div>
     </>
   );
@@ -264,12 +255,7 @@ function NeedsRow({ item }: { item: ActivityFeedItem }): JSX.Element {
         <div className="apa-row__title">{meta.label}</div>
         <div className={`apa-row__desc${urgent ? " apa-row__desc--danger" : ""}`}>{desc}</div>
       </div>
-      <div className="apa-needs-end">
-        <span className="apa-time" suppressHydrationWarning>
-          {relTime(item.createdAt)}
-        </span>
-        {href && <Icon name="chevR" size={14} />}
-      </div>
+      <div className="apa-needs-end">{href && <Icon name="chevR" size={14} />}</div>
     </>
   );
 

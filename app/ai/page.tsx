@@ -13,7 +13,8 @@ import { type BehaviourFields, BehaviourSettings } from "./_components/behaviour
 import { KbAddForms } from "./_components/kb-add-forms";
 import {
   type BusinessDetailRow,
-  KnowledgeDashboard,
+  KnowledgeBody,
+  KnowledgeSummary,
   type LocationData,
   type RecentLearningRow,
 } from "./_components/knowledge-dashboard";
@@ -245,27 +246,42 @@ export default async function AiSettingsPage({
       crumbs={["AI Engine", "AI Knowledge Base"]}
     >
       <div className="akb">
-        {/* ---------- hero banner ---------- */}
-        <section
-          className={`akb-hero ${readinessPct === 0 ? "akb-hero--empty" : ""}`}
-          aria-label="AI Knowledge Base"
-        >
-          <div style={{ minWidth: 0 }}>
-            <div className="akb-hero__eyebrow">AI Engine</div>
-            <h1 className="akb-hero__title">AI Knowledge Base</h1>
-            <p className="akb-hero__copy">
-              Teach your AI about your business, voice and policies. It uses this to answer reviews,
-              DMs, surveys and phone calls — and learns from every question it can&apos;t answer.
-            </p>
-          </div>
-          <div className="akb-hero__art" aria-hidden="true">
-            <img src="/assets/repulabs/ai-kb/hero-brain.svg" alt="" />
-          </div>
-          <Link href="/ai/training" className="akb-btn-outline akb-hero__cta">
-            <Icon name="play" size={15} />
-            How it works
-          </Link>
-        </section>
+        {/* ---------- hero banner (Knowledge tab only — the Behaviour/Test
+             kit mockups start directly at the tabs header, no hero) ---------- */}
+        {tab === "knowledge" && (
+          <section
+            className={`akb-hero ${readinessPct === 0 ? "akb-hero--empty" : ""}`}
+            aria-label="AI Knowledge Base"
+          >
+            <div style={{ minWidth: 0 }}>
+              <div className="akb-hero__eyebrow">AI Engine</div>
+              <h1 className="akb-hero__title">AI Knowledge Base</h1>
+              <p className="akb-hero__copy">
+                Teach your AI about your business, voice and policies. It uses this to answer
+                reviews, DMs, surveys and phone calls — and learns from every question it
+                can&apos;t answer.
+              </p>
+            </div>
+            <div className="akb-hero__art" aria-hidden="true">
+              <img src="/assets/repulabs/ai-kb/hero-brain.svg" alt="" />
+            </div>
+            <Link href="/ai/training" className="akb-btn-outline akb-hero__cta">
+              <Icon name="play" size={15} />
+              How it works
+            </Link>
+          </section>
+        )}
+
+        {/* ---------- readiness + stats (Knowledge tab only — sits above the
+             tabs strip in the kit) ---------- */}
+        {tab === "knowledge" && (
+          <KnowledgeSummary
+            readinessPct={readinessPct}
+            totalSources={totalSources}
+            activeSources={activeSources}
+            lastUpdated={lastUpdated}
+          />
+        )}
 
         {/* ---------- tabs / action bar ---------- */}
         <nav className="akb-card akb-tabs" aria-label="AI Knowledge Base sections">
@@ -325,11 +341,8 @@ export default async function AiSettingsPage({
         {/* ---------- Knowledge tab ---------- */}
         {tab === "knowledge" && (
           <>
-            <KnowledgeDashboard
-              readinessPct={readinessPct}
-              totalSources={totalSources}
-              activeSources={activeSources}
-              lastUpdated={lastUpdated}
+            <KnowledgeBody
+              hasSources={totalSources > 0}
               websiteActive={websiteActive}
               businessDetails={businessDetails}
               location={location}
