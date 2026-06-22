@@ -155,7 +155,7 @@ export default async function DashboardPage({
           <div className="dk-stats">
             <StatChip
               label="Average Rating"
-              icon={isEmpty || total === 0 ? "empty-stat-rating.svg" : "stat-rating-star.png"}
+              icon="stat-rating-star.png"
               value={total > 0 ? avgRating.toFixed(1) : null}
               star={total > 0}
               delta={
@@ -170,7 +170,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="Total Reviews"
-              icon={isEmpty || total === 0 ? "empty-stat-reviews.svg" : "stat-reviews-chat.png"}
+              icon="stat-reviews-chat.png"
               value={total > 0 ? total.toLocaleString() : null}
               delta={
                 d.deltas30d.reviewsPct !== null && d.deltas30d.reviewsPct !== 0
@@ -184,7 +184,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="AI Replies Sent"
-              icon={d.aiRepliesSent === 0 ? "empty-stat-replies.svg" : "stat-ai-replies.png"}
+              icon="stat-ai-replies.png"
               value={d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null}
               delta={
                 d.deltas30d.aiRepliesPct !== null && d.deltas30d.aiRepliesPct !== 0
@@ -199,7 +199,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="5-star Reviews"
-              icon={fiveStarCount === 0 ? "empty-stat-five-star.svg" : "stat-five-star.png"}
+              icon="stat-five-star.png"
               value={fiveStarCount > 0 ? fiveStarCount.toLocaleString() : null}
               delta={
                 d.deltas30d.fiveStarPct !== null && d.deltas30d.fiveStarPct !== 0
@@ -289,19 +289,14 @@ export default async function DashboardPage({
           {/* Kit: the 4 suggestion chips sit on a full-width row BELOW the
               input, clear of the illustration column. */}
           <CopilotChips />
-          {/* Active: the kit's 3D robot (with speech bubble + sparkle), cropped
-              at native resolution from the delivered mockup — floats vertically
-              centered on the panel's right, exactly like the kit.
-              Empty: the kit's delivered empty-orb SVG. */}
-          {isEmpty ? (
-            <img className="dk-copilot__art" src={`${ASSETS}/copilot-empty-orb.svg`} alt="" />
-          ) : (
-            <img
-              className="dk-copilot__art dk-copilot__art--3d"
-              src={`${ASSETS}/copilot-robot-3d.png`}
-              alt=""
-            />
-          )}
+          {/* Kit (v2): the SAME 3D robot floats vertically centered on the
+              panel's right in BOTH states — sparkles baked into the asset, with
+              the chat bubble tucked above-left. The robot is cropped from the
+              delivered mockup, so we feather its left edge into the panel wash. */}
+          <div className="dk-copilot__bot" aria-hidden>
+            <img className="dk-copilot__bubble" src={`${ASSETS}/copilot-chat-bubble.png`} alt="" />
+            <img className="dk-copilot__art dk-copilot__art--3d" src={`${ASSETS}/copilot-robot-3d.png`} alt="" />
+          </div>
         </section>
       </div>
     </AppShellServer>
@@ -594,9 +589,11 @@ function RecentReviewsCard({
         </div>
       ) : (
         <div>
-          {reviews.slice(0, 3).map((rv) => (
+          {reviews.slice(0, 3).map((rv, i) => (
             <Link key={rv.id} href="/reviews" className="dk-review-row">
-              <span className="dk-review-row__avatar">{initials(rv.reviewerName)}</span>
+              <span className={`dk-review-row__avatar dk-review-row__avatar--${["a", "b", "c"][i % 3]}`}>
+                {initials(rv.reviewerName)}
+              </span>
               <span style={{ flex: 1, minWidth: 0 }}>
                 <span className="dk-review-row__name">{rv.reviewerName ?? "Anonymous"}</span>
                 <span className="dk-review-row__meta">

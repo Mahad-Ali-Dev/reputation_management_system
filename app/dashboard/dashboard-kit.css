@@ -515,16 +515,23 @@
 
 /* ---------- Recent reviews ---------- */
 
-/* Kit rows have NO divider lines — just breathing room. */
+/* Kit (v2): thin hairline divider between rows (not after the last). */
 .dk-review-row {
   display: flex;
   gap: 12px;
-  padding: 9px 0;
+  align-items: flex-start;
+  padding: 11px 0;
   text-decoration: none;
   color: inherit;
+  border-bottom: 1px solid var(--dk-line);
 }
 
-/* Kit avatar: rounded SQUARE lilac tile with deep-violet initials. */
+.dk-review-row:last-child {
+  border-bottom: none;
+}
+
+/* Kit (v2): rounded-square avatar tiles in cycling soft tints (sampled from
+   the delivered avatar set: lavender / blue / green) with a tint-matched ink. */
 .dk-review-row__avatar {
   width: 40px;
   height: 40px;
@@ -537,6 +544,10 @@
   font-weight: 700;
   flex-shrink: 0;
 }
+
+.dk-review-row__avatar--a { background: #f4e2ff; color: #451789; }
+.dk-review-row__avatar--b { background: #e5e8ff; color: #222d89; }
+.dk-review-row__avatar--c { background: #dcfbea; color: #00632d; }
 
 .dk-review-row__name {
   font-size: 13px;
@@ -901,26 +912,44 @@
   background: #fff;
 }
 
-/* Kit: the illustration floats inside the panel's right side, vertically
-   centered with clear margins (NOT cropped to the edge). The 3D robot asset
-   already carries its speech bubble + sparkle, cropped from the mockup. */
-.dk-copilot__art {
+/* Kit (v2): the robot + its chat bubble float inside the panel's right side,
+   vertically centered. The robot is cropped from the mockup PNG, so we feather
+   its left edge so the rectangular crop melts into the panel gradient. The
+   bubble sits above-left of the robot (matching both mockups). */
+.dk-copilot__bot {
   position: absolute;
-  right: 30px;
+  right: 22px;
   top: 50%;
   transform: translateY(-50%);
-  width: 220px;
-  height: auto;
+  width: 300px;
+  /* matches the robot asset aspect ratio (195×170) at this width */
+  height: 262px;
+}
+
+.dk-copilot__art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
   margin: 0;
 }
 
 .dk-copilot__art--3d {
-  width: 310px;
-  right: 22px;
   /* The robot is cropped from the mockup PNG — feather its left edge so the
      rectangular crop melts into the panel gradient. */
   -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 100%);
   mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 100%);
+}
+
+.dk-copilot__bubble {
+  position: absolute;
+  left: 8px;
+  top: 30px;
+  width: 44px;
+  height: auto;
+  z-index: 1;
+  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.18));
 }
 
 /* ============================================================
@@ -939,12 +968,12 @@
   .dk-cols { grid-template-columns: 1fr; }
   .dk-hero__art { height: 104px; }
   .dk-copilot__main { padding-right: 0; }
-  .dk-copilot__art,
-  .dk-copilot__art--3d {
-    position: static;
+  .dk-copilot__bot {
+    position: relative;
+    right: auto;
+    top: auto;
     transform: none;
-    display: block;
-    width: auto;
+    width: 210px;
     height: 150px;
     margin: 12px 0 0 auto;
   }
@@ -962,7 +991,7 @@
   .dk-quick__chip { flex: 1 1 100%; }
   .dk-insights__grid { grid-template-columns: 1fr; }
   .dk-copilot { padding: 18px; }
-  .dk-copilot__art, .dk-copilot__art--3d { display: none; }
+  .dk-copilot__bot { display: none; }
   .dk-train__cta { width: 100%; justify-content: center; }
   .dk-google__body { flex-wrap: wrap; gap: 14px; }
   .dk-btn-outline--end { align-self: center; }

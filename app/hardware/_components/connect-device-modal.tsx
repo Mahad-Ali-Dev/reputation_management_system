@@ -1,51 +1,62 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/shell/icon";
+import { Icon } from "@/components/shell/icon";
 import { type ActivateDeviceState, activateDevice } from "@/lib/hardware/actions";
 import Link from "next/link";
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
+import "./connect-device-modal.css";
 
 /**
- * Module 04 — the reusable 3-step Connect Device modal (the spec's headline
- * artifact; the same shape recurs in Connections, Step 15).
+ * My Devices kit — the 3-step "Connect a device" wizard, restyled to the
+ * stp1/stp2/stp3 mockups.
  *
- * Renders a "+ Add Device" trigger and, on open, a centered dialog (modeled on
- * `components/cancel-subscription.tsx`) with three labeled steps:
- *   1. Select Your Business   — <select name="establishmentId">
- *   2. Enter Your Device Code  — <input name="activationCode"> (5-char code)
- *   3. Platform               — Google pre-selected; others disabled "soon"
- * plus a full-width "Connect Device" submit and a subtle "Watch setup video".
+ *   1. Select Your Business      — <select name="establishmentId">
+ *   2. Enter Your Device Code     — 6 code slots over one real <input name="activationCode">
+ *   3. Choose Review Platform     — Google live + selected; others "coming soon"
  *
  * It WRAPS the existing `activateDevice` server action via `useActionState`
- * (the action keeps its 2-arg `(prevState, formData)` signature — changing it
- * would break /activate). All three fields live in ONE <form> and stay mounted
- * across steps so a submit always carries `establishmentId` + `activationCode`;
- * only the active step's panel is visible. The action's inline `{ error }`
- * renders under the form; on success the action `redirect()`s to
- * /hardware?activated=… and the new card appears.
+ * (2-arg `(prevState, formData)` signature is untouched — changing it would
+ * break /activate). All three fields live in ONE <form> and stay mounted across
+ * steps so a submit always carries `establishmentId` + `activationCode`; only
+ * the active step's panel is shown. The action's inline `{ error }` renders in
+ * the footer/body; on success the action `redirect()`s to /hardware?activated=…
  *
- * Platform note: the activation flow only computes a Google review URL, so
- * Google is the single live target. Non-Google platforms render disabled
- * ("coming soon") and are NOT wired — matching reality, not faking choice.
+ * Visuals come from app/hardware/connect-device-modal.css (.cdm- prefix). The
+ * decorative right-side illustration is built with CSS/SVG, aria-hidden.
  */
 
 const initialState: ActivateDeviceState = { error: null };
 
 const SETUP_VIDEO_URL = process.env.NEXT_PUBLIC_SETUP_VIDEO_URL ?? null;
+const ASSET = "/assets/repulabs/my-devices";
 
-type Platform = { key: string; label: string; icon: IconName };
-const PLATFORMS: Platform[] = [
-  { key: "google", label: "Google", icon: "google" },
-  { key: "facebook", label: "Facebook", icon: "fb" },
-  { key: "yelp", label: "Yelp", icon: "star" },
-  { key: "tripadvisor", label: "Tripadvisor", icon: "pin" },
+type PlatformDef = { id: string; label: string; icon: string; live: boolean };
+const PLATFORMS: PlatformDef[] = [
+  { id: "google", label: "Google", icon: "plat-google.svg", live: true },
+  { id: "facebook", label: "Facebook", icon: "plat-facebook.svg", live: false },
+  { id: "linkedin", label: "LinkedIn", icon: "plat-linkedin.svg", live: false },
+  { id: "twitter-x", label: "Twitter / X", icon: "plat-twitter.svg", live: false },
+  { id: "instagram", label: "Instagram", icon: "plat-instagram.svg", live: false },
+  { id: "tiktok", label: "TikTok", icon: "plat-tiktok.svg", live: false },
+  { id: "yelp", label: "Yelp", icon: "plat-yelp.svg", live: false },
+  { id: "tripadvisor", label: "Tripadvisor", icon: "plat-tripadvisor.svg", live: false },
+  { id: "fiverr", label: "Fiverr", icon: "plat-fiverr.svg", live: false },
+  { id: "upwork", label: "Upwork", icon: "plat-upwork.svg", live: false },
 ];
+
+function normalizeCode(value: string): string {
+  return value
+    .replace(/[\s-]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 6);
+}
 
 export function ConnectDeviceModal({
   establishments,
   triggerClassName = "btn btn--pri",
-  triggerLabel = "Add Device",
+  triggerLabel = "Add device",
 }: {
   establishments: Array<{ id: string; name: string }>;
   triggerClassName?: string;
@@ -53,24 +64,33 @@ export function ConnectDeviceModal({
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
+  const [code, setCode] = useState("");
+  const [platform, setPlatform] = useState("google");
   const [state, formAction] = useActionState(activateDevice, initialState);
+  const codeInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset to step 1 each time the modal opens so it always starts clean.
+  // Reset to step 1 each time the modal opens.
   useEffect(() => {
     if (open) setStep(1);
   }, [open]);
 
-  // Esc closes the dialog.
+  // Esc closes; lock body scroll while open.
   useEffect(() => {
     if (!open) return;
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
   }, [open]);
 
   const noBusinesses = establishments.length === 0;
+  const codeComplete = code.length >= 5;
 
   return (
     <>
@@ -80,306 +100,319 @@ export function ConnectDeviceModal({
       </button>
 
       {open && (
-        <>
+        <div className="cdm-backdrop">
           <button
             type="button"
-            aria-label="Close"
+            aria-label="Close add device dialog"
+            className="cdm-scrim"
             onClick={() => setOpen(false)}
-            style={{
-              position: "fixed",
-              inset: 0,
-              background: "rgba(11,13,14,.45)",
-              zIndex: 80,
-              border: "none",
-              cursor: "default",
-            }}
           />
-          <div
+          <section
             role="dialog"
-            aria-label="Connect a device"
             aria-modal="true"
-            style={{
-              position: "fixed",
-              top: "50%",
-              left: "50%",
-              transform: "translate(-50%, -50%)",
-              width: "min(520px, calc(100vw - 32px))",
-              maxHeight: "calc(100vh - 32px)",
-              overflowY: "auto",
-              background: "var(--surface)",
-              borderRadius: 16,
-              boxShadow: "0 30px 60px -20px rgba(11,13,14,.4)",
-              zIndex: 81,
-              padding: 24,
-            }}
+            aria-labelledby="cdm-title"
+            className={`cdm-modal cdm-modal--step${step}`}
           >
-            <Header step={step} onClose={() => setOpen(false)} />
+            <button
+              type="button"
+              aria-label="Close add device dialog"
+              className="cdm-close"
+              onClick={() => setOpen(false)}
+            >
+              <Icon name="x" size={18} stroke={2.2} />
+            </button>
 
             {noBusinesses ? (
-              <NoBusinessNotice />
+              <div className="cdm-pad">
+                <Header step={step} />
+                <NoBusinessNotice />
+              </div>
             ) : (
-              <form action={formAction} className="col" style={{ gap: 16, marginTop: 18 }}>
-                {state.error && (
-                  <div
-                    role="alert"
-                    style={{
-                      padding: "10px 14px",
-                      borderRadius: 10,
-                      background: "var(--bad-soft)",
-                      border: "1px solid #fecaca",
-                      color: "#7f1d1d",
-                      fontSize: 12.5,
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {state.error}
-                  </div>
-                )}
+              <form action={formAction} className="cdm-form">
+                <div className="cdm-form__body">
+                  <div className="cdm-left">
+                    <Header step={step} />
 
-                {/* Step 1 — Business. Always mounted; hidden when not active. */}
-                <StepPanel active={step === 1} n={1} title="Select Your Business">
-                  <select
-                    name="establishmentId"
-                    required
-                    defaultValue={establishments[0]?.id}
-                    style={fieldStyle}
-                  >
-                    {establishments.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                  </select>
-                  <Helper>
-                    Scans from this device will route to this business&rsquo;s review page.
-                  </Helper>
-                </StepPanel>
-
-                {/* Step 2 — Device code. */}
-                <StepPanel active={step === 2} n={2} title="Enter Your Device Code">
-                  <input
-                    name="activationCode"
-                    required
-                    placeholder="XXXXX"
-                    autoComplete="off"
-                    inputMode="text"
-                    maxLength={12}
-                    style={{
-                      ...fieldStyle,
-                      height: 48,
-                      fontFamily: "var(--f-mono)",
-                      fontSize: 18,
-                      letterSpacing: ".18em",
-                      textTransform: "uppercase",
-                    }}
-                  />
-                  <Helper>Find this on the card inside your package.</Helper>
-                </StepPanel>
-
-                {/* Step 3 — Platform (Google pre-selected). */}
-                <StepPanel active={step === 3} n={3} title="Choose Review Platform">
-                  <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-                    {PLATFORMS.map((p) => {
-                      const isGoogle = p.key === "google";
-                      return (
-                        <span
-                          key={p.key}
-                          aria-disabled={!isGoogle}
-                          title={isGoogle ? "Selected" : "Coming soon"}
-                          style={{
-                            display: "inline-flex",
-                            alignItems: "center",
-                            gap: 7,
-                            height: 38,
-                            padding: "0 14px",
-                            borderRadius: "var(--r-pill)",
-                            fontSize: 13,
-                            fontWeight: 500,
-                            border: isGoogle
-                              ? "1.5px solid var(--pri)"
-                              : "1px solid var(--line)",
-                            background: isGoogle ? "var(--pri-50)" : "var(--surface)",
-                            color: isGoogle ? "var(--pri)" : "var(--rl-muted)",
-                            opacity: isGoogle ? 1 : 0.6,
-                            cursor: isGoogle ? "default" : "not-allowed",
-                          }}
-                        >
-                          <Icon name={p.icon} size={15} />
-                          {p.label}
-                          {isGoogle ? (
-                            <Icon name="check" size={13} />
-                          ) : (
-                            <span style={{ fontSize: 9.5, opacity: 0.8 }}>soon</span>
-                          )}
-                        </span>
-                      );
-                    })}
-                  </div>
-                  <Helper>
-                    Google is live today. We&rsquo;ll add more platforms here as they come online.
-                  </Helper>
-                </StepPanel>
-
-                {/* Nav + submit */}
-                {step < 3 ? (
-                  <div className="row" style={{ justifyContent: "space-between", marginTop: 4 }}>
-                    {step > 1 ? (
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => setStep((s) => s - 1)}
-                      >
-                        <Icon name="chevL" size={12} />
-                        Back
-                      </button>
-                    ) : (
-                      <span />
+                    {state.error && (
+                      <div className="cdm-error" role="alert">
+                        {state.error}
+                      </div>
                     )}
+
+                    {/* Step 1 — Business */}
+                    <div className="cdm-panel" hidden={step !== 1}>
+                      <SectionHead n={1} icon="building" title="Select Your Business" />
+                      <div className="cdm-field">
+                        <span className="cdm-field__icon" aria-hidden>
+                          <Icon name="building" size={20} />
+                        </span>
+                        <select
+                          name="establishmentId"
+                          required
+                          defaultValue={establishments[0]?.id}
+                          aria-label="Select your business"
+                          className="cdm-select"
+                        >
+                          {establishments.map((e) => (
+                            <option key={e.id} value={e.id}>
+                              {e.name}
+                            </option>
+                          ))}
+                        </select>
+                        <Icon name="chevD" size={18} className="cdm-field__chev" />
+                      </div>
+                      <Callout icon="info">
+                        Scans from this device will route to this business&rsquo;s review page.
+                      </Callout>
+                    </div>
+
+                    {/* Step 2 — Device code (6 slots over one real input) */}
+                    <div className="cdm-panel" hidden={step !== 2}>
+                      <SectionHead n={2} icon="card" title="Enter Your Device Code" />
+                      <p className="cdm-helper">Find this on the card inside your package.</p>
+                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: focus-proxy wrapper; the real input handles keyboard */}
+                      <div className="cdm-code" onClick={() => codeInputRef.current?.focus()}>
+                        <input
+                          ref={codeInputRef}
+                          name="activationCode"
+                          value={code}
+                          onChange={(e) => setCode(normalizeCode(e.target.value))}
+                          inputMode="text"
+                          autoComplete="off"
+                          autoCapitalize="characters"
+                          maxLength={6}
+                          required
+                          aria-label="Device code"
+                          className="cdm-code__input"
+                        />
+                        <div className="cdm-code__slots" aria-hidden>
+                          {Array.from({ length: 6 }).map((_, i) => (
+                            <span
+                              // biome-ignore lint/suspicious/noArrayIndexKey: fixed 6-slot display
+                              key={`slot-${i}`}
+                              className={code[i] ? "cdm-slot cdm-slot--has" : "cdm-slot"}
+                            >
+                              {code[i] ?? ""}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                      <Callout icon="info" title="Can't find the code?">
+                        Check the card inside your package.
+                      </Callout>
+                    </div>
+
+                    {/* Step 3 — Platform */}
+                    <div className="cdm-panel" hidden={step !== 3}>
+                      <SectionHead n={3} icon="grid" title="Choose Review Platform" />
+                      <div className="cdm-grid" role="radiogroup" aria-label="Review platform">
+                        {PLATFORMS.map((p) => {
+                          const selected = platform === p.id;
+                          return (
+                            <button
+                              key={p.id}
+                              type="button"
+                              role="radio"
+                              aria-checked={selected}
+                              aria-disabled={!p.live}
+                              disabled={!p.live}
+                              title={p.live ? p.label : "Coming soon"}
+                              onClick={() => p.live && setPlatform(p.id)}
+                              className={`cdm-plat${selected ? " cdm-plat--sel" : ""}${p.live ? "" : " cdm-plat--soon"}`}
+                            >
+                              <span className="cdm-plat__main">
+                                {/* biome-ignore lint/performance/noImgElement: static brand icon */}
+                                <img
+                                  src={`${ASSET}/${p.icon}`}
+                                  alt=""
+                                  aria-hidden
+                                  className="cdm-plat__icon"
+                                />
+                                <span className="cdm-plat__label">{p.label}</span>
+                              </span>
+                              <span className="cdm-plat__radio" aria-hidden>
+                                {selected ? <Icon name="check" size={15} /> : null}
+                              </span>
+                              {!p.live && <span className="cdm-plat__soon">soon</span>}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <Callout icon="info" title="Google is live today.">
+                        We&rsquo;ll add more platforms here as they come online.
+                      </Callout>
+                    </div>
+                  </div>
+
+                  {/* Decorative right-side illustration (steps 1 & 2 only). */}
+                  {step < 3 && (
+                    <div className="cdm-art" aria-hidden>
+                      <div className="cdm-art__glow" />
+                      <div className="cdm-art__card">
+                        <span className="cdm-art__card-icon">
+                          <Icon name={step === 1 ? "star" : "box"} size={22} />
+                        </span>
+                        <div className="cdm-art__card-title">
+                          {step === 1 ? "We'd love your feedback!" : "Your Device Code"}
+                        </div>
+                        {step === 1 ? (
+                          <div className="cdm-art__stars">★★★★★</div>
+                        ) : (
+                          <div className="cdm-art__codepill">X X X X X X</div>
+                        )}
+                        <div className="cdm-art__lines">
+                          <span />
+                          <span />
+                        </div>
+                        {step === 1 && (
+                          <div className="cdm-art__pill">
+                            <Icon name="checkCircle" size={14} />
+                            Reviews collected
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <footer className="cdm-footer">
+                  {step > 1 ? (
                     <button
                       type="button"
-                      className="btn btn--pri"
+                      className="cdm-back"
+                      onClick={() => setStep((s) => s - 1)}
+                    >
+                      <Icon name="chevL" size={16} />
+                      Back
+                    </button>
+                  ) : (
+                    <span />
+                  )}
+
+                  {step === 3 && <WatchVideoLink />}
+
+                  {step < 3 ? (
+                    <button
+                      type="button"
+                      className="cdm-cta"
+                      disabled={step === 2 && !codeComplete}
                       onClick={() => setStep((s) => s + 1)}
                     >
                       Continue
-                      <Icon name="chevR" size={12} />
+                      <Icon name="arrowR" size={17} />
                     </button>
-                  </div>
-                ) : (
-                  <div className="col" style={{ gap: 12, marginTop: 4 }}>
-                    <div className="row" style={{ gap: 8 }}>
-                      <button
-                        type="button"
-                        className="btn"
-                        onClick={() => setStep((s) => s - 1)}
-                      >
-                        <Icon name="chevL" size={12} />
-                        Back
-                      </button>
-                      <ConnectButton />
-                    </div>
-                    <WatchVideoLink />
-                  </div>
-                )}
+                  ) : (
+                    <ConnectButton platform={platform} />
+                  )}
+                </footer>
               </form>
             )}
-          </div>
-        </>
+          </section>
+        </div>
       )}
     </>
   );
 }
 
-function Header({ step, onClose }: { step: number; onClose: () => void }) {
+function Header({ step }: { step: number }) {
   return (
-    <div className="row" style={{ alignItems: "flex-start", justifyContent: "space-between" }}>
+    <div className="cdm-head">
+      <span className="cdm-head__tile" aria-hidden>
+        <Icon name={step === 3 ? "share" : "smartphone"} size={26} />
+      </span>
       <div>
-        <h2
-          style={{
-            margin: 0,
-            fontSize: 20,
-            fontWeight: 600,
-            letterSpacing: "-0.015em",
-            marginBottom: 6,
-          }}
-        >
+        <h2 id="cdm-title" className="cdm-head__title">
           Connect a device
         </h2>
-        <div className="row" style={{ gap: 6 }}>
-          {[1, 2, 3].map((n) => (
-            <span
-              key={n}
-              aria-hidden
-              style={{
-                height: 4,
-                width: 28,
-                borderRadius: 999,
-                background: n <= step ? "var(--pri)" : "var(--line)",
-              }}
-            />
-          ))}
-          <span className="mono dim" style={{ fontSize: 10.5, marginLeft: 4 }}>
-            STEP {step} OF 3
-          </span>
-        </div>
+        {step === 1 && (
+          <p className="cdm-head__sub">
+            Let&rsquo;s get your device connected and start collecting reviews.
+          </p>
+        )}
       </div>
-      <button
-        type="button"
-        aria-label="Close"
-        onClick={onClose}
-        className="btn btn--ghost btn--xs"
-        style={{ width: 28, height: 28, padding: 0, justifyContent: "center" }}
-      >
-        <Icon name="x" size={14} />
-      </button>
+      <div className="cdm-stepper">
+        {[1, 2, 3].map((n) => {
+          const cls = n === step ? "is-active" : n < step ? "is-done" : "is-idle";
+          return (
+            <span key={n} className="cdm-stepper__group">
+              <span className={`cdm-step ${cls}`}>
+                {n < step ? <Icon name="check" size={14} stroke={2.4} /> : n}
+              </span>
+              {n < 3 && <span className="cdm-step__conn" aria-hidden />}
+            </span>
+          );
+        })}
+        <span className="cdm-step__pill">STEP {step} OF 3</span>
+      </div>
+      <p className="cdm-sr">
+        Step {step} of 3.{" "}
+        {step === 1
+          ? "Select your business."
+          : step === 2
+            ? "Enter your device code."
+            : "Choose review platform."}
+      </p>
     </div>
   );
 }
 
-function StepPanel({
-  active,
+function SectionHead({
   n,
+  icon,
+  title,
+}: { n: number; icon: "building" | "card" | "grid"; title: string }) {
+  return (
+    <div className="cdm-sec">
+      <span className="cdm-sec__badge" aria-hidden>
+        <Icon name={icon} size={18} />
+      </span>
+      <h3 className="cdm-sec__title">
+        {n}. {title}
+      </h3>
+    </div>
+  );
+}
+
+function Callout({
+  icon,
   title,
   children,
 }: {
-  active: boolean;
-  n: number;
-  title: string;
+  icon: "info";
+  title?: string;
   children: React.ReactNode;
 }) {
-  // Keep mounted (so the field always submits) but visually hide inactive steps.
   return (
-    <div style={{ display: active ? "block" : "none" }}>
-      <label className="col" style={{ gap: 6 }}>
-        <span className="lbl" style={{ fontSize: 13, fontWeight: 500 }}>
-          <strong style={{ color: "var(--pri)" }}>{n}.</strong> {title}
-        </span>
-        {children}
-      </label>
+    <div className="cdm-callout">
+      <Icon name={icon} size={20} className="cdm-callout__icon" />
+      <div>
+        {title && <div className="cdm-callout__title">{title}</div>}
+        <div className="cdm-callout__copy">{children}</div>
+      </div>
     </div>
-  );
-}
-
-function Helper({ children }: { children: React.ReactNode }) {
-  return (
-    <span className="dim" style={{ fontSize: 11.5, lineHeight: 1.5 }}>
-      {children}
-    </span>
   );
 }
 
 function NoBusinessNotice() {
   return (
-    <div className="col" style={{ gap: 14, marginTop: 18 }}>
-      <p style={{ margin: 0, fontSize: 13, color: "var(--rl-muted)", lineHeight: 1.55 }}>
+    <div className="col" style={{ gap: 14, marginTop: 24 }}>
+      <p style={{ margin: 0, fontSize: 14, color: "var(--rl-muted)", lineHeight: 1.55 }}>
         Add a business first — a device has to point its scans at one of your listings.
       </p>
-      <Link
-        href="/establishments/new"
-        className="btn btn--pri"
-        style={{ alignSelf: "flex-start" }}
-      >
-        <Icon name="plus" size={13} />
+      <Link href="/establishments/new" className="cdm-cta" style={{ alignSelf: "flex-start" }}>
+        <Icon name="plus" size={15} />
         Add a business
       </Link>
     </div>
   );
 }
 
-function ConnectButton() {
+function ConnectButton({ platform }: { platform: string }) {
   const { pending } = useFormStatus();
   return (
-    <button
-      type="submit"
-      className="btn btn--pri"
-      disabled={pending}
-      style={{
-        flex: 1,
-        justifyContent: "center",
-        opacity: pending ? 0.6 : 1,
-        cursor: pending ? "wait" : undefined,
-      }}
-    >
-      <Icon name="check" size={13} />
+    <button type="submit" className="cdm-cta" disabled={pending || platform !== "google"}>
+      <Icon name="share" size={16} />
       {pending ? "Connecting…" : "Connect Device"}
     </button>
   );
@@ -387,39 +420,18 @@ function ConnectButton() {
 
 function WatchVideoLink() {
   const enabled = !!SETUP_VIDEO_URL;
-  const common = {
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 6,
-    alignSelf: "center",
-    fontSize: 12,
-    color: enabled ? "var(--pri)" : "var(--rl-muted)",
-    textDecoration: "none",
-  } as const;
   if (enabled) {
     return (
-      <a href={SETUP_VIDEO_URL} target="_blank" rel="noopener noreferrer" style={common}>
-        <Icon name="play" size={12} />
+      <a href={SETUP_VIDEO_URL} target="_blank" rel="noopener noreferrer" className="cdm-watch">
+        <Icon name="play" size={15} />
         Watch setup video
       </a>
     );
   }
   return (
-    <span aria-disabled style={{ ...common, cursor: "not-allowed", opacity: 0.7 }}>
-      <Icon name="play" size={12} />
+    <span aria-disabled className="cdm-watch cdm-watch--off">
+      <Icon name="play" size={15} />
       Watch setup video
     </span>
   );
 }
-
-const fieldStyle: React.CSSProperties = {
-  width: "100%",
-  height: 42,
-  padding: "0 14px",
-  borderRadius: "var(--r)",
-  border: "1px solid var(--line)",
-  background: "var(--surface)",
-  color: "var(--ink)",
-  fontSize: 13,
-  outline: "none",
-};

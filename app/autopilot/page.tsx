@@ -138,7 +138,7 @@ export default async function AutopilotPage({
         {/* ---- Hero: intro + at-a-glance metrics ---- */}
         <header className="ap2-hero">
           <div className="ap2-hero__intro">
-            <img className="ap2-hero__avatar" src={`${ASSETS}/bot-avatar.png`} alt="" />
+            <img className="ap2-hero__avatar" src={`${ASSETS}/bot-avatar-v2.png`} alt="" />
             <div className="ap2-hero__text">
               <div className="ap2-hero__titlerow">
                 <h1 className="ap2-hero__title">Reputation Autopilot</h1>
@@ -388,7 +388,7 @@ function AboutCard() {
         <p className="ap2-about__copy">
           Autopilot handles the busywork so you can focus on what matters.
         </p>
-        <img className="ap2-about__art" src={`${ASSETS}/about-clipboard.png`} alt="" />
+        <img className="ap2-about__art" src={`${ASSETS}/about-clipboard-v2.png`} alt="" />
       </div>
       <Link href="/tour" className="ap2-btn-secondary ap2-about__cta">
         <Icon name="play" size={12} />

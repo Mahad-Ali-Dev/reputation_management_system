@@ -195,3 +195,166 @@ export async function listOrgDevicesWithProduct(orgId: string): Promise<DeviceWi
     };
   });
 }
+
+// ============================================================
+// My Devices kit — dashboard extras
+//
+// New fail-soft reads powering the redesigned dashboard's lower-section cards
+// (Live feed · Reviews-by-rating · Devices-impact) plus the "Today" summary
+// metric. All bound to REAL tenant data; any un-migrated relation/column
+// (P2021/P2022/42P01/42703) degrades to an empty/zero shape so the page never
+// 500s — mirroring the page's existing isMissingRelation pattern.
+// ============================================================
+
+/** A recent review row for the Live feed card (scan-attributed first). */
+export type RecentReviewRow = {
+  id: string;
+  reviewerName: string | null;
+  rating: number;
+  body: string | null;
+  source: string;
+  postedAt: Date;
+};
+
+/** One day in the Devices-impact series. */
+export type ImpactDay = {
+  /** Short weekday label, e.g. "Mon". */
+  label: string;
+  scans: number;
+  reviews: number;
+};
+
+export type DeviceDashboardExtras = {
+  /** Org-wide scans recorded today (DeviceScan.scannedAt >= start of today). */
+  todayScans: number;
+  /** Count of currently-active devices (status === "active"). */
+  activeDeviceCount: number;
+  /** rating(1..5) → count, over all the org's reviews. */
+  reviewsByRating: Record<1 | 2 | 3 | 4 | 5, number>;
+  /** Last 7 days (oldest→newest) of org-wide scans + reviews. */
+  impact: ImpactDay[];
+  /** Up to `limit` most-recent reviews for the Live feed. */
+  recentReviews: RecentReviewRow[];
+};
+
+function emptyExtras(activeDeviceCount = 0): DeviceDashboardExtras {
+  return {
+    todayScans: 0,
+    activeDeviceCount,
+    reviewsByRating: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    impact: buildEmptyImpact(),
+    recentReviews: [],
+  };
+}
+
+/** A code (P2021/P2022) or 42P01/42703 SQLSTATE → relation/column missing. */
+function isMissingRelationErr(err: unknown): boolean {
+  const code = (err as { code?: string } | null)?.code;
+  if (code === "P2021" || code === "P2022" || code === "42P01" || code === "42703") return true;
+  const metaCode = (err as { meta?: { code?: string } } | null)?.meta?.code;
+  return metaCode === "42P01" || metaCode === "42703";
+}
+
+const WEEKDAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+function startOfDay(d: Date): Date {
+  const x = new Date(d);
+  x.setHours(0, 0, 0, 0);
+  return x;
+}
+
+/** A 7-element zeroed series ending today (oldest→newest). */
+function buildEmptyImpact(): ImpactDay[] {
+  const today = startOfDay(new Date());
+  return Array.from({ length: 7 }, (_, i) => {
+    const day = new Date(today);
+    day.setDate(today.getDate() - (6 - i));
+    return { label: WEEKDAY_LABELS[day.getDay()] ?? "?", scans: 0, reviews: 0 };
+  });
+}
+
+/**
+ * One tenant-scoped read for every lower-section card on the My Devices
+ * dashboard. Bins the last 7 days of DeviceScan + Review rows in JS so the SQL
+ * stays portable. Fails soft to {@link emptyExtras}.
+ */
+export async function getDeviceDashboardExtras(
+  orgId: string,
+  recentLimit = 3,
+): Promise<DeviceDashboardExtras> {
+  const today = startOfDay(new Date());
+  const since7d = new Date(today);
+  since7d.setDate(today.getDate() - 6);
+
+  try {
+    return await withTenant(orgId, async (tx) => {
+      const [activeDeviceCount, ratingGroups, scans, reviews, recent] = await Promise.all([
+        tx.device.count({ where: { organizationId: orgId, status: "active" } }),
+        tx.review.groupBy({
+          by: ["rating"],
+          where: { organizationId: orgId },
+          _count: { _all: true },
+        }),
+        tx.deviceScan.findMany({
+          where: { scannedAt: { gte: since7d } },
+          select: { scannedAt: true },
+        }),
+        tx.review.findMany({
+          where: { postedAt: { gte: since7d } },
+          select: { postedAt: true },
+        }),
+        tx.review.findMany({
+          orderBy: { postedAt: "desc" },
+          take: Math.min(recentLimit, 10),
+          select: {
+            id: true,
+            reviewerName: true,
+            rating: true,
+            body: true,
+            source: true,
+            postedAt: true,
+          },
+        }),
+      ]);
+
+      const reviewsByRating: Record<1 | 2 | 3 | 4 | 5, number> = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
+      for (const g of ratingGroups) {
+        const r = g.rating as 1 | 2 | 3 | 4 | 5;
+        if (r >= 1 && r <= 5) reviewsByRating[r] = g._count._all;
+      }
+
+      const impact = buildEmptyImpact();
+      const dayIndex = (d: Date) => {
+        const diff = Math.floor((startOfDay(d).getTime() - since7d.getTime()) / 86_400_000);
+        return diff >= 0 && diff < 7 ? diff : -1;
+      };
+      let todayScans = 0;
+      for (const s of scans) {
+        const idx = dayIndex(s.scannedAt);
+        if (idx >= 0) {
+          const bucket = impact[idx];
+          if (bucket) bucket.scans += 1;
+        }
+        if (s.scannedAt >= today) todayScans += 1;
+      }
+      for (const r of reviews) {
+        const idx = dayIndex(r.postedAt);
+        if (idx >= 0) {
+          const bucket = impact[idx];
+          if (bucket) bucket.reviews += 1;
+        }
+      }
+
+      return {
+        todayScans,
+        activeDeviceCount,
+        reviewsByRating,
+        impact,
+        recentReviews: recent,
+      };
+    });
+  } catch (err) {
+    if (isMissingRelationErr(err)) return emptyExtras();
+    throw err;
+  }
+}

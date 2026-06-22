@@ -6,25 +6,37 @@ import { TopBar } from "@/components/topbar";
 import { getAdminSession } from "@/lib/admin/session";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { orgHasFeature } from "@/lib/billing/feature-access";
+import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { listEstablishments } from "@/lib/establishments/queries";
 import { restoreDevice } from "@/lib/hardware/actions";
 import {
   formatConversionPct,
+  getDeviceDashboardExtras,
   getDeviceMetrics,
   listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
 import { getDeviceRoi } from "@/lib/roi/summary";
 import Link from "next/link";
+import { AiChatbotCard } from "./_components/ai-chatbot-card";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
+import {
+  MdDevicesImpact,
+  MdFooterTip,
+  MdHero,
+  MdLiveFeed,
+  MdReviewsByRating,
+  MdSummaryRow,
+  MdTrainingBanner,
+} from "./_components/dashboard-cards";
 import { DeviceTable } from "./_components/device-table";
-import { NextStepBanner } from "./_components/next-step-banner";
 import { recordNfcUid } from "./_components/nfc-actions";
 import { NfcConfigCard } from "./_components/nfc-config-card";
-import { SummaryStats } from "./_components/summary-stats";
+import { QrActions } from "./_components/qr-actions";
 import "./devices.css";
+import "./my-devices.css";
 
 /** Product kinds that are programmed as NFC chips rather than printed QR. */
 const NFC_KINDS = new Set(["nfc", "wifi", "multi_platform"]);
@@ -34,27 +46,28 @@ function isNfcKind(productKind: string | null | undefined): boolean {
 }
 
 /**
- * QR Codes — per repulabs v2 design, adapted: physical-product commerce
- * lives on Shopify; this screen is the SaaS-side dashboard for activated
+ * My Devices — redesigned to the new "My Devices" kit, adapted: physical-product
+ * commerce lives on Shopify; this screen is the SaaS-side dashboard for activated
  * stands, plaques, and cards.
  *
- * All metrics are computed from DeviceScan and Review tables — no demo data:
- *   • Total scans · 30d         → COUNT(DeviceScan WHERE scannedAt >= now-30d)
- *   • Reviews from QR · 30d     → COUNT(Review WHERE attributedDeviceId IS NOT NULL)
- *   • Per-device reviews/conv   → review.groupBy(attributedDeviceId)
- *   • Hero rating + count       → review.groupBy(establishmentId) with _avg
+ * Every metric/figure is computed from REAL DeviceScan / Review / Device tables
+ * — mockup numbers (15,200 / 450 / Cafe Coffee Day) are placeholders only:
+ *   • Summary row    → getDeviceMetrics + getDeviceDashboardExtras (today, active)
+ *   • Live feed      → recent reviews (getDeviceDashboardExtras.recentReviews)
+ *   • Reviews-rating → review.groupBy(rating)
+ *   • Devices impact → 7-day DeviceScan + Review series
+ *   • QR card        → the SELECTED device's signed /r/<slug> + per-device stats
  *
- * Empty state when no activated devices: hero card with "Buy on Shopify"
- * external link and "Redeem activation code" CTA → /activate.
+ * Empty state when no activated devices: kit illustration + Connect-a-device CTA.
  */
 
 export const dynamic = "force-dynamic";
 
 const SHOPIFY_URL = process.env.NEXT_PUBLIC_SHOPIFY_STORE_URL ?? "https://repulabs.com.au";
+const APP_ORIGIN = process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com";
 
 function publicQrUrl(slug: string): string {
-  const base = process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com";
-  return `${base}/r/${slug}`;
+  return `${APP_ORIGIN}/r/${slug}`;
 }
 
 function titleFromSku(sku: string): string {
@@ -131,7 +144,6 @@ export default async function QrCodesPage({
   const sp = await searchParams;
 
   // Trash view — show only retired devices with a Restore button per card.
-  // Early return so it works whether or not the user has any active devices.
   if (sp.view === "trash") {
     const retiredDevices = devices.filter((d) => d.status === "retired");
     return <TrashView devices={retiredDevices} justRestored={sp.restored} />;
@@ -144,24 +156,19 @@ export default async function QrCodesPage({
   }
 
   // Use ?selected=<deviceId> to focus the QR + analytics panels on a specific
-  // device. Falls back to the first active device when no selection is
-  // provided or the ID is invalid.
+  // device. Falls back to the first active device.
   const selectedDevice =
     (sp.selected && activeDevices.find((d) => d.id === sp.selected)) || activeDevices[0];
   if (!selectedDevice)
     return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
 
-  // Aggregate summary (the spec's 3-pill row) via the extracted, unit-tested
-  // helper. The Pro/Free banner branch reads the canonical entitlement (same
-  // source as <ProGate> — we never fork the plan check).
-  const [metrics, isPro] = await Promise.all([
+  // Org-aggregate metrics + entitlement + dashboard extras (all live, fail-soft).
+  const [metrics, isPro, extras] = await Promise.all([
     getDeviceMetrics(orgId),
     orgHasFeature(orgId, "ai_autopilot"),
+    getDeviceDashboardExtras(orgId, 3),
   ]);
 
-  // Per-device review counts come from listOrgDevicesWithProduct (one groupBy).
-  // The selected-device QR/analytics panels still need that device's scan
-  // series — a single tenant-scoped read so the RLS predicate runs once.
   const reviewsByDeviceId = new Map<string, number>();
   for (const d of activeDevices) reviewsByDeviceId.set(d.id, d.reviewCount);
 
@@ -173,133 +180,106 @@ export default async function QrCodesPage({
         select: { scannedAt: true },
       }),
     ),
-    // Per-device scan-to-revenue line (Module 15): "this plaque generated N
-    // reviews and an estimated $X". Fail-soft → zeros.
     getDeviceRoi(orgId, selectedDevice.id),
   ]);
 
+  const selectedName = selectedDevice.productName ?? titleFromSku(selectedDevice.productSku);
+  const selectedUrl = publicQrUrl(selectedDevice.shortSlug);
+  const selectedPlatform = platformForDevice(
+    selectedDevice.redirectUrl ?? null,
+    selectedDevice.productKind,
+  );
+  const qrDownloadHref = `/api/devices/${selectedDevice.id}/qr?format=png${selectedPlatform ? `&platform=${selectedPlatform}` : ""}`;
+  const retiredCount = devices.filter((d) => d.status === "retired").length;
+
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
-      <PageHeader
-        kicker="QR and NFC"
-        title="Turn the counter into a review engine"
-        description="QR stands, NFC cards, previews, scan analytics, and activation status."
-        actions={
-          <>
-            <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
-              <Icon name="ext" size={12} />
-              Buy stands
-            </a>
-            <Link href="/hardware/new" className="btn">
-              <Icon name="qr" size={12} />
-              Generate QR
+      <div className="md">
+        {/* Hero + top-right actions */}
+        <div
+          className="row"
+          style={{ justifyContent: "flex-end", gap: 8, marginBottom: 4, flexWrap: "wrap" }}
+        >
+          <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
+            <Icon name="ext" size={12} />
+            Buy stands
+          </a>
+          <Link href="/hardware/new" className="btn">
+            <Icon name="qr" size={12} />
+            Generate QR
+          </Link>
+          <ConnectDeviceModal establishments={businessOptions} />
+        </div>
+
+        <MdHero />
+
+        {/* searchParams banners (preserved) */}
+        {sp.activated && (
+          <Banner tone="ok">
+            Device <code className="mono">{sp.activated}</code> activated. Scans now route to your
+            Google review page.
+          </Banner>
+        )}
+        {sp.updated && (
+          <Banner tone="ok">Redirect URL updated. Scans now route to the new destination.</Banner>
+        )}
+        {sp.deleted && (
+          <Banner tone="bad">
+            <span style={{ marginRight: 8 }}>🗑</span>
+            QR code moved to Trash. You have 30 days to{" "}
+            <Link
+              href="/hardware?view=trash"
+              style={{ color: "inherit", textDecoration: "underline" }}
+            >
+              restore it
+            </Link>{" "}
+            before it&rsquo;s permanently deleted.
+          </Banner>
+        )}
+        {sp.restored && (
+          <Banner tone="ok">
+            QR code restored. Scans now route to the original Google review page again.
+          </Banner>
+        )}
+
+        {/* AI-training banner — CTA respects entitlement (Pro → train, Free → upgrade). */}
+        <MdTrainingBanner href={isPro ? "/ai/training" : upgradeHref("ai_autopilot")} />
+
+        {/* Scan-analytics summary row — REAL metrics. */}
+        <MdSummaryRow
+          totalScans={metrics.totalScans}
+          todayScans={extras.todayScans}
+          reviewsFromScans={metrics.reviewsFromScans}
+          conversionLabel={formatConversionPct(metrics.reviewsFromScans, metrics.totalScans)}
+          activeDevices={extras.activeDeviceCount || activeDevices.length}
+        />
+
+        {/* Devices section header — Active / Trash tabs + Add device. */}
+        <div className="md-devhead">
+          <span className="md-devhead__title">Devices</span>
+          <div className="seg">
+            <Link href="/hardware" className="seg__t is-active" style={{ textDecoration: "none" }}>
+              Active ({activeDevices.length})
             </Link>
-            <ConnectDeviceModal establishments={businessOptions} />
-          </>
-        }
-      />
-
-      {sp.activated && (
-        <div
-          className="ds-card ds-card--pri"
-          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
-        >
-          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
-          Device <code className="mono">{sp.activated}</code> activated. Scans now route to your
-          Google review page.
+            <Link
+              href="/hardware?view=trash"
+              className="seg__t"
+              style={{
+                textDecoration: "none",
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 6,
+              }}
+            >
+              Trash ({retiredCount})
+            </Link>
+          </div>
+          <div style={{ flex: 1 }} />
+          <span className="mono dim" style={{ fontSize: 10.5 }}>
+            SHOWING {activeDevices.length} OF {devices.length}
+          </span>
         </div>
-      )}
-      {sp.updated && (
-        <div
-          className="ds-card ds-card--pri"
-          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
-        >
-          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
-          Redirect URL updated. Scans now route to the new destination.
-        </div>
-      )}
-      {sp.deleted && (
-        <div
-          className="ds-card"
-          style={{
-            padding: "10px 14px",
-            marginBottom: 16,
-            fontSize: 12.5,
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            color: "#7f1d1d",
-          }}
-        >
-          <span style={{ marginRight: 8 }}>🗑</span>
-          QR code moved to Trash. You have 30 days to{" "}
-          <Link
-            href="/hardware?view=trash"
-            style={{ color: "inherit", textDecoration: "underline" }}
-          >
-            restore it
-          </Link>{" "}
-          before it&rsquo;s permanently deleted.
-        </div>
-      )}
-      {sp.restored && (
-        <div
-          className="ds-card ds-card--pri"
-          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
-        >
-          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
-          QR code restored. Scans now route to the original Google review page again.
-        </div>
-      )}
 
-      <NextStepBanner isPro={isPro} />
-
-      <SummaryStats
-        totalScans={metrics.totalScans}
-        reviewsFromScans={metrics.reviewsFromScans}
-        conversionRate={formatConversionPct(metrics.reviewsFromScans, metrics.totalScans)}
-      />
-
-      <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
-        <div className="seg">
-          <Link href="/hardware" className="seg__t is-active" style={{ textDecoration: "none" }}>
-            Active
-          </Link>
-          <Link
-            href="/hardware?view=trash"
-            className="seg__t"
-            style={{ textDecoration: "none", display: "inline-flex", alignItems: "center", gap: 6 }}
-          >
-            Trash
-            {devices.filter((d) => d.status === "retired").length > 0 && (
-              <span
-                style={{
-                  display: "inline-grid",
-                  placeItems: "center",
-                  minWidth: 18,
-                  height: 18,
-                  padding: "0 6px",
-                  borderRadius: 999,
-                  background: "var(--rl-muted, #94a3b8)",
-                  color: "#fff",
-                  fontSize: 10,
-                  fontWeight: 600,
-                  fontFamily: "var(--f-mono)",
-                }}
-              >
-                {devices.filter((d) => d.status === "retired").length}
-              </span>
-            )}
-          </Link>
-        </div>
-        <div style={{ flex: 1 }} />
-        <span className="mono dim" style={{ fontSize: 10.5 }}>
-          SHOWING {activeDevices.length} OF {devices.length}
-        </span>
-      </div>
-
-      <div className="dev-layout">
-        {/* Lead section — the device-list table (after-mockup). Rows link to
-            ?selected=<id>#qr-panel, the page's existing selection mechanism. */}
         <DeviceTable
           devices={activeDevices.map((d) => ({
             id: d.id,
@@ -315,46 +295,154 @@ export default async function QrCodesPage({
           establishments={businessOptions}
         />
 
-        {/* Preview rail — QR preview for the selected device, plus the NFC
-            tap-destination config when the device is an NFC kind (a tap and a
-            scan resolve through the same /r/<slug> link). */}
-        <div id="qr-panel" className="dev-rail" style={{ scrollMarginTop: 80 }}>
-          <DeviceQrPanel
+        {/* Lower section — Live feed · Reviews-by-rating · Devices-impact. */}
+        <div className="md-lower" style={{ marginTop: 14 }}>
+          <MdLiveFeed reviews={extras.recentReviews} />
+          <MdReviewsByRating dist={extras.reviewsByRating} />
+          <MdDevicesImpact impact={extras.impact} />
+        </div>
+
+        {/* Bottom row — QR product card + AI chatbot card. */}
+        <div className="md-bottom">
+          <QrProductCard
             deviceId={selectedDevice.id}
             code={selectedDevice.shortSlug}
-            name={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
+            name={selectedName}
             location={selectedDevice.establishment?.name ?? "Unassigned"}
-            redirectUrl={selectedDevice.redirectUrl ?? null}
-            productKind={selectedDevice.productKind}
+            url={selectedUrl}
+            downloadHref={qrDownloadHref}
+            scans={selectedDevice.scanCount}
+            reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
           />
-          {isNfcKind(selectedDevice.productKind) && (
+          <AiChatbotCard orbSrc="/assets/repulabs/my-devices/ai-chatbot-orb.svg" />
+        </div>
+
+        {/* NFC tap-destination config (preserved — only for NFC kinds). */}
+        {isNfcKind(selectedDevice.productKind) && (
+          <div id="qr-panel" style={{ scrollMarginTop: 80, marginBottom: 14 }}>
             <NfcConfigCard
               deviceId={selectedDevice.id}
               productKind={selectedDevice.productKind}
-              encodeUrl={publicQrUrl(selectedDevice.shortSlug)}
+              encodeUrl={selectedUrl}
               slug={selectedDevice.shortSlug}
               currentNfcUid={selectedDevice.nfcUid ?? null}
-              deviceTitle={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
+              deviceTitle={selectedName}
               recordNfcUidAction={recordNfcUid}
               saveStatus={normalizeNfcStatus(sp.nfc)}
             />
-          )}
-        </div>
+          </div>
+        )}
+
+        <MdFooterTip />
+
+        {/* Deeper per-device scan analytics (preserved — real DeviceScan series). */}
+        <ScanAnalytics
+          deviceLabel={selectedName}
+          code={selectedDevice.shortSlug}
+          scanCount={selectedDevice.scanCount}
+          scans={selectedScans}
+          reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
+          estimatedRevenue={deviceRoi.estimatedRevenue}
+          currency={deviceRoi.currency}
+          isPro={isPro}
+        />
+
+        <BatchGeneratorSection />
+      </div>
+    </AppShellServer>
+  );
+}
+
+/** Small reusable success/error banner (preserves the page's prior banners). */
+function Banner({ tone, children }: { tone: "ok" | "bad"; children: React.ReactNode }) {
+  if (tone === "bad") {
+    return (
+      <div
+        className="ds-card"
+        style={{
+          padding: "10px 14px",
+          marginBottom: 16,
+          fontSize: 12.5,
+          background: "#fef2f2",
+          border: "1px solid #fecaca",
+          color: "#7f1d1d",
+        }}
+      >
+        {children}
+      </div>
+    );
+  }
+  return (
+    <div
+      className="ds-card ds-card--pri"
+      style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
+    >
+      <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
+      {children}
+    </div>
+  );
+}
+
+/**
+ * QR product card (server component — renders the QR via the async QrCode and
+ * defers clipboard/embed to the QrActions client island).
+ */
+function QrProductCard({
+  deviceId,
+  code,
+  name,
+  location,
+  url,
+  downloadHref,
+  scans,
+  reviews,
+}: {
+  deviceId: string;
+  code: string;
+  name: string;
+  location: string;
+  url: string;
+  downloadHref: string;
+  scans: number;
+  reviews: number;
+}) {
+  return (
+    <section className="md-card md-qr" aria-label={`QR for ${code}`}>
+      <div className="md-card__head" style={{ padding: 0 }}>
+        <h3 className="md-card__title">QR for {name}</h3>
+        <span className="chip chip--ok" style={{ height: 18, fontSize: 10, marginLeft: 8 }}>
+          <span className="live" />
+          Active
+        </span>
+      </div>
+      <div className="md-qr__id">ID: {code}</div>
+      <div className="md-qr__id" style={{ marginTop: 2 }}>
+        Location: {location}
       </div>
 
-      <ScanAnalytics
-        deviceLabel={selectedDevice.productName ?? titleFromSku(selectedDevice.productSku)}
-        code={selectedDevice.shortSlug}
-        scanCount={selectedDevice.scanCount}
-        scans={selectedScans}
-        reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
-        estimatedRevenue={deviceRoi.estimatedRevenue}
-        currency={deviceRoi.currency}
-        isPro={isPro}
+      <div className="md-qr__frame">
+        <QrCode value={url} size={172} />
+      </div>
+
+      <QrActions
+        deviceId={deviceId}
+        code={code}
+        url={url}
+        origin={APP_ORIGIN}
+        downloadHref={downloadHref}
       />
 
-      <BatchGeneratorSection />
-    </AppShellServer>
+      <div className="md-qr__stats">
+        <div className="md-qr__stat">
+          <div className="md-qr__stat-num">{scans.toLocaleString("en-US")}</div>
+          <div className="md-qr__stat-lbl">Scans</div>
+        </div>
+        <div className="md-qr__stat">
+          <div className="md-qr__stat-num">{reviews.toLocaleString("en-US")}</div>
+          <div className="md-qr__stat-lbl">Reviews</div>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -367,186 +455,104 @@ function EmptyState({
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
-      <PageHeader
-        kicker="QR and NFC"
-        title="Turn the counter into a review engine"
-        description="QR stands, NFC cards, previews, scan analytics, and activation status."
-        actions={<ConnectDeviceModal establishments={establishments} />}
-      />
-      {recentActivation && (
-        <div
-          className="ds-card ds-card--pri"
-          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
-        >
-          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
-          Device activated, but it appears inactive — refresh to see it here.
-        </div>
-      )}
-
-      {/* Dashed connect-a-device empty card with the brand illustration. */}
-      <div
-        className="ds-card"
-        style={{
-          border: "2px dashed var(--line)",
-          boxShadow: "none",
-          background: "var(--surface-2)",
-          padding: "44px 28px",
-          textAlign: "center",
-          maxWidth: 640,
-          marginInline: "auto",
-        }}
-      >
-        {/* biome-ignore lint/performance/noImgElement: static brand SVG illustration */}
-        <img
-          src="/assets/repulabs/illustrations/qr-stands-empty.svg"
-          alt=""
-          width={180}
-          height={130}
-          style={{ margin: "0 auto 18px", display: "block", maxWidth: "60%", height: "auto" }}
-        />
-        <h3 style={{ fontSize: 19, fontWeight: 600, margin: 0, letterSpacing: "-0.015em" }}>
-          Connect your first device
-        </h3>
-        <p
-          className="dim"
-          style={{ fontSize: 13.5, marginTop: 8, lineHeight: 1.6, maxWidth: 420, marginInline: "auto" }}
-        >
-          Got a ReviewBoost card, plaque, or stand? Enter the 5-character code from your package and
-          we&rsquo;ll route every scan to your Google review page.
-        </p>
+      <div className="md">
         <div
           className="row"
-          style={{ gap: 8, marginTop: 18, justifyContent: "center", flexWrap: "wrap" }}
+          style={{ justifyContent: "flex-end", gap: 8, marginBottom: 4, flexWrap: "wrap" }}
         >
-          <ConnectDeviceModal
-            establishments={establishments}
-            triggerClassName="btn btn--pri btn--lg"
-            triggerLabel="Connect a Device"
-          />
-          <Link href="/hardware/new" className="btn btn--lg">
-            <Icon name="qr" size={14} />
-            Generate a QR instead
-          </Link>
-        </div>
-        <div className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
-          Don&rsquo;t have a device yet?{" "}
-          <a
-            href={SHOPIFY_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: "var(--pri)", textDecoration: "none" }}
-          >
-            Shop cards &amp; stands →
+          <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
+            <Icon name="ext" size={12} />
+            Buy stands
           </a>
+          <Link href="/hardware/new" className="btn">
+            <Icon name="qr" size={12} />
+            Generate QR
+          </Link>
+          <ConnectDeviceModal establishments={establishments} />
         </div>
+
+        <MdHero />
+
+        {recentActivation && (
+          <Banner tone="ok">
+            Device activated, but it appears inactive — refresh to see it here.
+          </Banner>
+        )}
+
+        {/* AI-training banner stays on the empty state (kit). */}
+        <MdTrainingBanner href={upgradeHref("ai_autopilot")} />
+
+        {/* Empty devices panel — kit illustration + connect CTA. */}
+        <section className="md-card" aria-label="Devices">
+          <div className="md-card__head">
+            <span className="md-devhead__title" style={{ fontSize: 14 }}>
+              Devices
+            </span>
+            <span className="chip" style={{ marginLeft: 8, height: 20, fontSize: 10.5 }}>
+              Active (0)
+            </span>
+          </div>
+          <div className="md-blank">
+            {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
+            <img
+              src="/assets/repulabs/my-devices/devices-empty.svg"
+              alt=""
+              aria-hidden
+              className="md-blank__art"
+            />
+            <h3 className="md-blank__title">No devices added yet</h3>
+            <p className="md-blank__body">
+              Got a ReviewBoost card, plaque, or stand? Add your first device to start collecting
+              scans and engage more customers — enter the code from your package and we&rsquo;ll
+              route every scan to your Google review page.
+            </p>
+            <div className="md-blank__cta">
+              <ConnectDeviceModal
+                establishments={establishments}
+                triggerClassName="btn btn--pri btn--lg"
+                triggerLabel="Add device"
+              />
+              <Link href="/hardware/new" className="btn btn--lg">
+                <Icon name="qr" size={14} />
+                Generate a QR instead
+              </Link>
+            </div>
+            <div className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
+              Don&rsquo;t have a device yet?{" "}
+              <a
+                href={SHOPIFY_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: "var(--md-blue)", textDecoration: "none" }}
+              >
+                Shop cards &amp; stands →
+              </a>
+            </div>
+          </div>
+        </section>
+
+        {/* Lower zero-state cards mirror the empty mockup. */}
+        <div className="md-lower" style={{ marginTop: 14 }}>
+          <MdLiveFeed reviews={[]} />
+          <MdReviewsByRating dist={{ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }} />
+          <MdDevicesImpact impact={buildEmptyImpactForView()} />
+        </div>
+
+        <MdFooterTip />
       </div>
     </AppShellServer>
   );
 }
 
-function DeviceQrPanel({
-  deviceId,
-  code,
-  name,
-  location,
-  redirectUrl,
-  productKind,
-}: {
-  deviceId: string;
-  code: string;
-  name: string;
-  location: string;
-  redirectUrl: string | null;
-  productKind: string;
-}) {
-  const url = publicQrUrl(code);
-  // Center a platform glyph (Google / Facebook / Instagram / multi) in the
-  // downloaded QR when we can infer one from the destination — matches the
-  // server-side default in /api/devices/[id]/qr. null → plain QR.
-  const platform = platformForDevice(redirectUrl, productKind);
-  // The /api/devices/[id]/qr route streams PNG/SVG with the right Content-Type
-  // + Content-Disposition headers — the browser triggers a download via the
-  // `download` attribute on the anchor. PDF intentionally omitted for now; the
-  // PNG prints well or can be "Save as PDF" via the browser print dialog.
-  const downloadHref = (format: "png" | "svg") =>
-    `/api/devices/${deviceId}/qr?format=${format}${platform ? `&platform=${platform}` : ""}`;
-  const downloadName = (format: "png" | "svg") => `repulabs-${code}.${format}`;
-
-  const linkStyle: React.CSSProperties = {
-    flex: 1,
-    justifyContent: "center",
-    display: "inline-flex",
-    alignItems: "center",
-    gap: 4,
-    textDecoration: "none",
-  };
-
-  return (
-    <div className="ds-card" style={{ padding: 18 }}>
-      <h3 className="ds-card__title">QR for {code}</h3>
-      <div className="ds-card__sub" style={{ marginBottom: 14 }}>
-        {name} · {location}
-      </div>
-
-      <div
-        style={{
-          aspectRatio: 1,
-          background: "#fff",
-          border: "1px solid var(--line)",
-          borderRadius: 12,
-          padding: 20,
-          position: "relative",
-          display: "grid",
-          placeItems: "center",
-        }}
-      >
-        <QrCode value={url} size={280} />
-      </div>
-      <div className="row" style={{ marginTop: 12, gap: 6 }}>
-        <a
-          href={downloadHref("png")}
-          download={downloadName("png")}
-          className="btn btn--sm btn--pri"
-          style={linkStyle}
-        >
-          <Icon name="download" size={11} />
-          PNG (high-res)
-        </a>
-        <a
-          href={downloadHref("svg")}
-          download={downloadName("svg")}
-          className="btn btn--sm"
-          style={linkStyle}
-        >
-          <Icon name="download" size={11} />
-          SVG (vector)
-        </a>
-      </div>
-      {platform && (
-        <div
-          className="dim row"
-          style={{ fontSize: 10.5, marginTop: 8, gap: 5, justifyContent: "center" }}
-        >
-          <Icon name={platform === "facebook" ? "fb" : platform === "google" ? "google" : "star"} size={11} />
-          Downloads embed the {platformLabel(platform)} glyph in the center.
-        </div>
-      )}
-      <div
-        className="mono dim"
-        style={{ fontSize: 10, marginTop: 12, textAlign: "center", wordBreak: "break-all" }}
-      >
-        {url}
-      </div>
-    </div>
-  );
-}
-
-function platformLabel(p: string): string {
-  if (p === "google") return "Google";
-  if (p === "facebook") return "Facebook";
-  if (p === "instagram") return "Instagram";
-  if (p === "multi") return "multi-platform";
-  return "Repulabs";
+/** A zeroed 7-day series for the empty-state impact card (display only). */
+function buildEmptyImpactForView() {
+  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = new Date();
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (6 - i));
+    return { label: labels[d.getDay()] ?? "?", scans: 0, reviews: 0 };
+  });
 }
 
 function ScanAnalytics({
@@ -559,9 +565,7 @@ function ScanAnalytics({
   currency,
   isPro,
 }: {
-  /** Friendly name of the selected device, e.g. "Wall Plaque". */
   deviceLabel: string;
-  /** The device's short slug, shown so it's clear which row is charted. */
   code: string;
   scanCount: number;
   scans: Array<{ scannedAt: Date }>;
@@ -570,7 +574,6 @@ function ScanAnalytics({
   currency: string;
   isPro: boolean;
 }) {
-  // Bucket real DeviceScan entries by day/hour/dow over the last 30 days.
   const monthlyScans = Array<number>(30).fill(0);
   const peakHours = Array<number>(24).fill(0);
   const dayOfWeekRaw = Array<number>(7).fill(0);
@@ -594,7 +597,7 @@ function ScanAnalytics({
   const todayScans = monthlyScans[29] ?? 0;
 
   return (
-    <div className="ds-card" style={{ marginBottom: 22 }}>
+    <div className="ds-card" style={{ marginBottom: 14 }}>
       <div className="ds-card__head">
         <div>
           <h3 className="ds-card__title">Scan analytics</h3>
@@ -622,7 +625,6 @@ function ScanAnalytics({
           <Mini l="REVIEWS" v={String(reviews)} />
         </div>
 
-        {/* Scan-to-revenue line (Module 15) — the tangible ROI story. */}
         <Link
           href="/autopilot?tab=roi"
           className="row"
@@ -769,14 +771,8 @@ function labelFromDays(daysAgo: number): string {
 
 /* ============================================================
    Batch generator (admin-gated) — surfaces the EXISTING bulk QR/NFC
-   batch feature that lives at /admin/hardware (1-500 units per run,
-   streamed ZIP of QR/NFC encode assets).
-
-   Rendered ONLY when a verified platform-admin JWT (`admin_session`)
-   is present — tenant users never see it, so nothing is misleading.
-   `hardware_batches` is a global (non-tenant) table; reading it here
-   mirrors the documented direct-prisma pattern in app/admin/hardware.
-   Fails soft (hidden stat) if the table isn't migrated yet.
+   batch feature that lives at /admin/hardware. Rendered ONLY when a
+   verified platform-admin JWT (`admin_session`) is present.
 ============================================================ */
 
 function isMissingRelation(err: unknown): boolean {
@@ -804,7 +800,6 @@ async function BatchGeneratorSection() {
     latest = agg._max.createdAt;
   } catch (err) {
     if (!isMissingRelation(err)) throw err;
-    // Table not migrated yet — still show the entry point, just without stats.
   }
 
   return (
@@ -827,7 +822,9 @@ async function BatchGeneratorSection() {
           <div className="dev-batch-stat__num">{totalUnits.toLocaleString("en-US")}</div>
           <div className="dev-batch-stat__sub">
             {batchCount.toLocaleString("en-US")} batch{batchCount === 1 ? "" : "es"}
-            {latest ? ` · last ${latest.toLocaleDateString("en-US", { month: "short", day: "numeric" })}` : ""}
+            {latest
+              ? ` · last ${latest.toLocaleDateString("en-US", { month: "short", day: "numeric" })}`
+              : ""}
           </div>
         </div>
         <div className="dev-batch-actions">
@@ -845,10 +842,7 @@ async function BatchGeneratorSection() {
 }
 
 /* ============================================================
-   Trash view — visible when /hardware?view=trash.
-   Lists every retired (soft-deleted) device with a Restore button.
-   Real hard-deletion only happens via a background sweep after 30 days
-   (planned cron job; for now the rows stay forever — easy to recover).
+   Trash view — visible when /hardware?view=trash. (Unchanged behavior.)
 ============================================================ */
 
 type RetiredDevice = Awaited<ReturnType<typeof listOrgDevices>>[number];
@@ -884,8 +878,6 @@ function TrashView({
         </div>
       )}
 
-      {/* Tab segment so user can flip back to active. Same shape as the
-          one on the active list for consistency. */}
       <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
         <div className="seg">
           <Link href="/hardware" className="seg__t" style={{ textDecoration: "none" }}>

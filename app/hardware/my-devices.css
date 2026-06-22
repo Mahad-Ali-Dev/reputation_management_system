@@ -1,0 +1,709 @@
+/* ============================================================
+   My Devices — route-local styles for the new design kit.
+   Prefix: .md-   (parallel-agent CSS isolation rule).
+   Kit palette: blue #245BFF · purple #6C4DFF · soft lavender/blue tints.
+   These styles co-exist with devices.css (.dev- prefix) and the shared
+   design-system tokens — they never touch globals.
+============================================================ */
+
+.md {
+  --md-blue: #245bff;
+  --md-purple: #6c4dff;
+  --md-lav: #f2eeff;
+  --md-soft-blue: #eef4ff;
+  --md-soft-green: #e8fcf1;
+  --md-soft-yellow: #fff4da;
+  --md-ink: #101828;
+  --md-muted: #667085;
+  --md-muted-2: #8a94a6;
+  --md-line: #e4eaf6;
+  --md-line-strong: #d2dcf8;
+  --md-ok: #18be78;
+  --md-warn: #ffb020;
+  --md-bad: #ff5969;
+  --md-card-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+/* ── Generic kit card ──────────────────────────────────────────────── */
+.md-card {
+  background: #fff;
+  border: 1px solid var(--md-line);
+  border-radius: 14px;
+  box-shadow: var(--md-card-shadow);
+}
+.md-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 18px 0;
+}
+.md-card__title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--md-ink);
+}
+.md-card__sub {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  color: var(--md-muted);
+}
+.md-card__link {
+  margin-left: auto;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--md-blue);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.md-card__link:hover {
+  text-decoration: underline;
+}
+
+/* ── Hero ──────────────────────────────────────────────────────────── */
+.md-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 360px);
+  gap: 24px;
+  align-items: center;
+  margin-bottom: 16px;
+}
+.md-hero__title {
+  margin: 0;
+  font-size: clamp(24px, 3vw, 30px);
+  line-height: 1.12;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--md-ink);
+}
+.md-hero__title em {
+  font-style: normal;
+  color: var(--md-blue);
+}
+.md-hero__sub {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  color: var(--md-muted);
+  line-height: 1.55;
+  max-width: 420px;
+}
+.md-hero__art {
+  justify-self: end;
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+@media (max-width: 760px) {
+  .md-hero {
+    grid-template-columns: 1fr;
+  }
+  .md-hero__art {
+    justify-self: center;
+    max-width: 260px;
+    order: -1;
+  }
+}
+
+/* ── AI-training banner ────────────────────────────────────────────── */
+.md-train {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--md-line-strong);
+  background: linear-gradient(100deg, var(--md-soft-blue) 0%, var(--md-lav) 100%);
+}
+.md-train__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 11px;
+  background: #fff;
+  color: var(--md-purple);
+  box-shadow: 0 4px 10px rgba(108, 77, 255, 0.12);
+}
+.md-train__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--md-ink);
+}
+.md-train__body {
+  font-size: 12px;
+  color: var(--md-muted);
+  margin-top: 2px;
+  line-height: 1.5;
+}
+.md-train__cta {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 10px;
+  background: var(--md-blue);
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.md-train__cta:hover {
+  filter: brightness(1.05);
+}
+@media (max-width: 560px) {
+  .md-train__cta {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* ── Scan-analytics summary row ────────────────────────────────────── */
+.md-summary {
+  margin-bottom: 16px;
+  padding-bottom: 18px;
+}
+.md-summary__grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  padding: 14px 0 0;
+}
+.md-metric {
+  padding: 4px 18px;
+  border-left: 1px solid var(--md-line);
+  min-width: 0;
+}
+.md-metric:first-child {
+  border-left: 0;
+}
+.md-metric__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.md-metric__icon {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  object-fit: contain;
+}
+.md-metric__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--md-muted);
+  line-height: 1.25;
+}
+.md-metric__value {
+  font-size: 24px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--md-ink);
+  margin-top: 8px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1.05;
+}
+.md-metric__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-top: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+}
+.md-metric__badge--up {
+  background: var(--md-soft-green);
+  color: var(--md-ok);
+}
+.md-metric__badge--steady {
+  background: var(--md-soft-blue);
+  color: var(--md-blue);
+}
+.md-metric__sub {
+  font-size: 10px;
+  color: var(--md-muted-2);
+  margin-top: 6px;
+}
+@media (max-width: 1100px) {
+  .md-summary__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: 18px;
+  }
+  .md-metric:nth-child(4),
+  .md-metric:nth-child(3n + 1) {
+    border-left: 0;
+  }
+}
+@media (max-width: 560px) {
+  .md-summary__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .md-metric {
+    padding: 4px 12px;
+  }
+  .md-metric:nth-child(odd) {
+    border-left: 0;
+  }
+}
+
+/* ── Lower section: 3-up grid ──────────────────────────────────────── */
+.md-lower {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 1000px) {
+  .md-lower {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Live feed rows */
+.md-feed {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 8px 8px;
+}
+.md-feed__row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+}
+.md-feed__row:hover {
+  background: var(--md-soft-blue);
+}
+.md-feed__avatar {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+.md-feed__name {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--md-ink);
+}
+.md-feed__stars {
+  font-size: 11px;
+  letter-spacing: 1px;
+  color: var(--md-warn);
+  margin-top: 1px;
+}
+.md-feed__snippet {
+  font-size: 11.5px;
+  color: var(--md-muted);
+  line-height: 1.45;
+  margin-top: 3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.md-feed__time {
+  font-size: 10px;
+  color: var(--md-muted-2);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.md-feed__src {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 800;
+  margin-top: 1px;
+}
+
+/* Empty-state inside lower cards */
+.md-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 22px 16px 26px;
+}
+.md-empty__art {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin-bottom: 12px;
+}
+.md-empty__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--md-ink);
+}
+.md-empty__body {
+  font-size: 11.5px;
+  color: var(--md-muted);
+  line-height: 1.5;
+  margin-top: 4px;
+  max-width: 200px;
+}
+
+/* Reviews-by-rating bars */
+.md-rbr {
+  padding: 16px 18px 18px;
+}
+.md-rbr__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  height: 130px;
+  margin-top: 8px;
+}
+.md-rbr__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  height: 100%;
+  justify-content: flex-end;
+}
+.md-rbr__track {
+  width: 100%;
+  max-width: 30px;
+  flex: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+.md-rbr__bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  min-height: 3px;
+  transition: height 0.2s ease;
+}
+.md-rbr__count {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--md-ink);
+}
+.md-rbr__axis {
+  font-size: 10px;
+  color: var(--md-muted-2);
+  font-weight: 600;
+}
+
+/* Devices-impact area chart */
+.md-impact {
+  padding: 16px 18px 14px;
+}
+.md-impact__legend {
+  display: flex;
+  gap: 14px;
+  margin-top: 6px;
+}
+.md-impact__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
+  color: var(--md-muted);
+  font-weight: 600;
+}
+.md-impact__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+}
+.md-impact__svg {
+  width: 100%;
+  height: 130px;
+  display: block;
+  margin-top: 6px;
+}
+.md-impact__axis {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 4px;
+  font-size: 9.5px;
+  color: var(--md-muted-2);
+  font-weight: 600;
+}
+
+/* ── Bottom: QR product card + AI chatbot ──────────────────────────── */
+.md-bottom {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+  gap: 14px;
+  margin-bottom: 14px;
+}
+@media (max-width: 900px) {
+  .md-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* QR product card */
+.md-qr {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+}
+.md-qr__id {
+  font-family: var(--f-mono);
+  font-size: 10px;
+  color: var(--md-muted);
+  letter-spacing: 0.04em;
+  margin-top: 8px;
+  word-break: break-all;
+}
+.md-qr__frame {
+  margin: 14px auto 0;
+  width: 100%;
+  max-width: 200px;
+  aspect-ratio: 1;
+  background: #fff;
+  border: 1px solid var(--md-line);
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  padding: 14px;
+}
+.md-qr__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+.md-qr__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 38px;
+  border-radius: 9px;
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid var(--md-line-strong);
+  background: #fff;
+  color: var(--md-ink);
+  cursor: pointer;
+}
+.md-qr__btn:hover {
+  background: var(--md-soft-blue);
+}
+.md-qr__btn--pri {
+  background: var(--md-blue);
+  border-color: var(--md-blue);
+  color: #fff;
+}
+.md-qr__btn--pri:hover {
+  filter: brightness(1.05);
+  background: var(--md-blue);
+}
+.md-qr__stats {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--md-line);
+}
+.md-qr__stat {
+  flex: 1;
+  text-align: center;
+}
+.md-qr__stat-num {
+  font-size: 20px;
+  font-weight: 750;
+  color: var(--md-ink);
+  font-variant-numeric: tabular-nums;
+}
+.md-qr__stat-lbl {
+  font-size: 10.5px;
+  color: var(--md-muted);
+  font-weight: 600;
+  margin-top: 1px;
+}
+
+/* AI chatbot card */
+.md-chat {
+  padding: 16px 18px 18px;
+  position: relative;
+  overflow: hidden;
+}
+.md-chat__body {
+  font-size: 12.5px;
+  color: var(--md-muted);
+  margin-top: 8px;
+  line-height: 1.5;
+  max-width: 70%;
+}
+.md-chat__prompts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 14px;
+}
+.md-chat__prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--md-line);
+  background: var(--md-soft-blue);
+  color: var(--md-ink);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  line-height: 1.3;
+}
+.md-chat__prompt:hover {
+  border-color: var(--md-blue);
+  background: #fff;
+}
+.md-chat__inputrow {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+}
+.md-chat__send {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  border-radius: 11px;
+  border: none;
+  background: linear-gradient(140deg, var(--md-blue) 0%, var(--md-purple) 100%);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.md-chat__send:hover {
+  filter: brightness(1.06);
+}
+.md-chat__orb {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 56px;
+  height: 56px;
+  pointer-events: none;
+}
+@media (max-width: 560px) {
+  .md-chat__prompts {
+    grid-template-columns: 1fr;
+  }
+  .md-chat__body {
+    max-width: 100%;
+  }
+}
+
+/* ── Footer tip ────────────────────────────────────────────────────── */
+.md-tip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 12px 18px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: var(--md-soft-blue);
+  border: 1px solid var(--md-line);
+}
+.md-tip__icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--md-purple);
+}
+.md-tip__text {
+  font-size: 12.5px;
+  color: var(--md-ink);
+  flex: 1;
+  min-width: 200px;
+}
+.md-tip__text strong {
+  color: var(--md-purple);
+}
+.md-tip__link {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--md-blue);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.md-tip__link:hover {
+  text-decoration: underline;
+}
+
+/* ── Devices section header (tabs + add) ───────────────────────────── */
+.md-devhead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.md-devhead__title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--md-ink);
+}
+
+/* ── Empty state (no devices) ──────────────────────────────────────── */
+.md-blank {
+  text-align: center;
+  padding: 8px 24px 36px;
+}
+.md-blank__art {
+  width: 100%;
+  max-width: 360px;
+  height: auto;
+  margin: 0 auto 6px;
+  display: block;
+}
+.md-blank__title {
+  font-size: 19px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+  color: var(--md-ink);
+  margin: 0;
+}
+.md-blank__body {
+  font-size: 13px;
+  color: var(--md-muted);
+  line-height: 1.6;
+  max-width: 420px;
+  margin: 8px auto 0;
+}
+.md-blank__cta {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 18px;
+}

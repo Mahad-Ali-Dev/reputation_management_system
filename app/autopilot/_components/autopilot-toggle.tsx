@@ -116,7 +116,7 @@ export function AutopilotToggle({
           </button>
         </div>
 
-        <img className="ap2-control__orbit" src="/assets/repulabs/autopilot/bot-orbit.png" alt="" />
+        <img className="ap2-control__orbit" src="/assets/repulabs/autopilot/bot-orbit-v2.png" alt="" />
       </div>
 
       {/* Risk segmented control */}
