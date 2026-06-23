@@ -191,42 +191,71 @@
    /phone — main dashboard
    ===================================================================== */
 
-/* hero illustration sits right of the page header copy */
-.pr-hero-art {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding-right: 8px;
-}
-.pr-hero-art__headset {
-  width: 96px;
-  height: 96px;
-  border-radius: 24px;
-  background: var(--pr-grad);
+/* hero — copy left, actions top-right, headset illustration lower-right */
+.pr-hero {
   display: grid;
-  place-items: center;
-  color: #fff;
-  box-shadow: 0 16px 30px rgba(75, 24, 245, 0.22);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  gap: 28px;
+  align-items: start;
+  margin-bottom: 18px;
 }
-.pr-hero-art__card {
-  display: flex;
-  flex-direction: column;
+.pr-hero__copy {
+  min-width: 0;
+  padding-top: 2px;
+}
+.pr-hero__pill {
+  display: inline-flex;
+  align-items: center;
   gap: 6px;
-  padding: 12px 14px;
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid var(--pr-line);
-  box-shadow: var(--pr-shadow-card);
+  height: 24px;
+  padding: 0 10px;
+  border-radius: 7px;
+  background: var(--pr-pri-soft);
+  color: var(--pr-pri);
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
 }
-.pr-hero-art__stars {
-  display: flex;
-  gap: 3px;
+.pr-hero__title {
+  margin: 14px 0 0;
+  font-size: 31px;
+  line-height: 1.16;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--pr-ink);
+}
+.pr-hero__title-em {
   color: var(--pr-pri);
 }
-.pr-hero-art__bar {
-  height: 7px;
-  border-radius: 999px;
-  background: var(--pr-lav-2);
+.pr-hero__sub {
+  margin: 12px 0 0;
+  max-width: 470px;
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 500;
+  color: var(--pr-ink-3);
+}
+.pr-hero__right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+.pr-hero__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.pr-hero__art {
+  width: 100%;
+  max-width: 460px;
+  height: auto;
+  display: block;
+  margin-top: 2px;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* KPI row */
@@ -310,36 +339,47 @@
 }
 .pr-prov-illo {
   position: relative;
-  width: 132px;
-  height: 96px;
+  width: 168px;
+  height: 132px;
   display: grid;
   place-items: center;
 }
-.pr-phone-frame {
-  width: 70px;
-  height: 92px;
-  border-radius: 16px;
-  border: 2px solid var(--pr-pri-border);
-  background: var(--pr-surface-soft);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  position: relative;
+.pr-prov-illo__img {
+  width: 168px;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
 }
+/* real-number pill overlaid on the kit phone illustration (covers the kit's
+   decorative baked-in placeholder pill; shows live tenant number) */
 .pr-numpill {
+  position: absolute;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   height: 22px;
-  padding: 0 10px;
+  padding: 0 7px 0 12px;
   border-radius: 999px;
   background: var(--pr-pri);
   color: #fff;
   font-size: 10px;
   font-weight: 800;
+  white-space: nowrap;
   font-variant-numeric: tabular-nums;
+  box-shadow: 0 6px 14px rgba(75, 24, 245, 0.28);
+}
+.pr-numpill__dot {
+  display: grid;
+  place-items: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+  color: #fff;
 }
 .pr-prov-copy {
   font-size: 12px;
@@ -704,7 +744,70 @@
 }
 .pr-config-art {
   position: relative;
+  overflow: hidden;
 }
+
+/* header robot illustration (assistant page) — floats in the header */
+.pr-header-robot {
+  width: 150px;
+  height: auto;
+  display: block;
+  margin-top: -8px;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* decorative kit illustrations placed inside config cards */
+.pr-card-art {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.pr-card-art--behavior {
+  right: 20px;
+  bottom: 16px;
+  width: 210px;
+  height: auto;
+  opacity: 0.92;
+}
+.pr-card-art--shield {
+  right: 22px;
+  top: 14px;
+  width: 168px;
+  height: auto;
+}
+/* keep form content above decorative art */
+.pr-config-art .pr-step-head,
+.pr-config-art .pr-step-body {
+  position: relative;
+  z-index: 1;
+}
+
+/* custom-instructions textarea: lavender left strip + sparkle (kit) */
+.pr-instr-wrap {
+  position: relative;
+}
+.pr-instr-strip {
+  position: absolute;
+  left: 1px;
+  top: 1px;
+  bottom: 1px;
+  width: 41px;
+  display: grid;
+  place-items: center;
+  align-content: start;
+  padding-top: 14px;
+  border-radius: 12px 0 0 12px;
+  border-right: 2px solid #b7a7ff;
+  background: #f6f3ff;
+  color: var(--pr-pri);
+  pointer-events: none;
+}
+.pr-instr-textarea {
+  padding-left: 58px;
+}
+
 /* enable/disable toggle (real checkbox) */
 .pr-switch {
   position: relative;
@@ -769,13 +872,31 @@
 }
 .pr-setup-card {
   display: grid;
-  grid-template-columns: 96px minmax(0, 1fr);
+  grid-template-columns: 96px minmax(0, 1fr) 300px;
   gap: 22px;
+  align-items: start;
   padding: 26px 24px;
   background: var(--pr-surface);
   border: 1px solid var(--pr-line);
   border-radius: 10px;
   box-shadow: 0 10px 26px rgba(20, 28, 70, 0.06);
+  overflow: hidden;
+}
+/* right-side decorative kit illustration for each setup step */
+.pr-setup-art {
+  justify-self: end;
+  align-self: center;
+  width: 280px;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
+}
+.pr-setup-art--keypad {
+  width: 230px;
+}
+.pr-setup-art--robot {
+  width: 190px;
 }
 .pr-setup-icon {
   position: relative;
@@ -979,6 +1100,52 @@
   text-decoration: underline;
 }
 
+/* voice-cloning kit header: left title tile + title + sparkle, right action */
+.pr-vc-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.pr-vc-header__tile {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  background: var(--pr-pri-soft);
+}
+.pr-vc-header__copy {
+  min-width: 0;
+  flex: 1;
+}
+.pr-vc-header__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 28px;
+  line-height: 1.15;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+  color: var(--pr-ink);
+}
+.pr-vc-header__spark {
+  color: var(--pr-pri);
+}
+.pr-vc-header__sub {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--pr-ink-2);
+}
+.pr-vc-header__btn {
+  flex-shrink: 0;
+  height: 38px;
+  border-radius: 6px;
+}
+
 /* banner (warning / verified / how-to) */
 .pr-banner {
   display: flex;
@@ -1168,14 +1335,16 @@
   margin-left: auto;
   align-self: center;
   flex-shrink: 0;
-  width: 110px;
-  height: 110px;
+  width: 280px;
   display: grid;
   place-items: center;
 }
 .pr-tips__art img {
-  width: 96px;
-  height: 96px;
+  width: 280px;
+  height: auto;
+  display: block;
+  pointer-events: none;
+  user-select: none;
 }
 
 /* =====================================================================
@@ -1197,6 +1366,27 @@
     justify-self: center;
     width: min(100%, 260px);
   }
+  /* hero stacks: copy then actions+illustration */
+  .pr-hero {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pr-hero__right {
+    align-items: flex-start;
+  }
+  .pr-hero__actions {
+    justify-content: flex-start;
+  }
+  /* setup steps drop the illustration column */
+  .pr-setup-card {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .pr-setup-art {
+    display: none;
+  }
+  /* config-card decorative art hidden when cramped */
+  .pr-card-art {
+    display: none;
+  }
 }
 @media (max-width: 760px) {
   .pr-kpis {
@@ -1215,7 +1405,8 @@
     height: 64px;
   }
   .pr-config-art,
-  .pr-tips__art {
+  .pr-tips__art,
+  .pr-header-robot {
     display: none;
   }
   .pr-banner,

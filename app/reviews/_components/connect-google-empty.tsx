@@ -58,8 +58,10 @@ function BenefitStrip() {
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={b.icon} alt="" width={38} height={38} />
           </span>
-          <h3 className="rf-benefit__title">{b.title}</h3>
-          <p className="rf-benefit__body">{b.body}</p>
+          <div className="rf-benefit__text">
+            <h3 className="rf-benefit__title">{b.title}</h3>
+            <p className="rf-benefit__body">{b.body}</p>
+          </div>
         </div>
       ))}
     </div>

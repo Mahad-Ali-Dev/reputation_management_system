@@ -1,5 +1,4 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
@@ -59,24 +58,35 @@ export default async function PhoneVoicesPage() {
           Back to AI Phone Receptionist
         </Link>
 
-        <PageHeader
-          title="Voice cloning"
-          description="Make AI sound like you with your cloned voice."
-          actions={
-            <span
-              className="pr-tile pr-tile--lav"
-              aria-hidden="true"
-              style={{ width: 64, height: 64, borderRadius: 14 }}
-            >
-              <img
-                src={`${ASSET}/voice-cloning-waveform.svg`}
-                alt=""
-                width={36}
-                height={36}
+        {/* Kit header — left title tile + title + sparkle, right purple action */}
+        <header className="pr-vc-header">
+          <span className="pr-vc-header__tile" aria-hidden="true">
+            <img
+              src={`${ASSET}/voice-cloning-waveform.svg`}
+              alt=""
+              width={36}
+              height={36}
+            />
+          </span>
+          <div className="pr-vc-header__copy">
+            <h1 className="pr-vc-header__title">
+              Voice cloning
+              <Icon
+                name="sparkle"
+                size={18}
+                className="pr-vc-header__spark"
+                stroke={2}
               />
-            </span>
-          }
-        />
+            </h1>
+            <p className="pr-vc-header__sub">
+              Make AI sound like you with your cloned voice.
+            </p>
+          </div>
+          <span className="pr-btn pr-btn--pri pr-vc-header__btn" aria-hidden="true">
+            <Icon name="sound" size={14} />
+            Voice cloning
+          </span>
+        </header>
 
         <div className="pr-stack">
           {/* ── Verification banner — gated on real status ── */}
@@ -289,19 +299,11 @@ export default async function PhoneVoicesPage() {
               </ul>
             </div>
             <span className="pr-tips__art" aria-hidden="true">
-              <img src={`${ASSET}/headphones.svg`} alt="" width={96} height={96} />
+              {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+              <img src={`${ASSET}/tips-headphones.svg`} alt="" />
             </span>
           </section>
         </div>
-
-        <Link
-          href="/phone/assistant"
-          className="pr-fab"
-          aria-label="Open support chat"
-        >
-          <Icon name="chat" size={26} />
-          <span className="pr-fab__dot" aria-hidden="true" />
-        </Link>
       </AppShellServer>
     </div>
   );

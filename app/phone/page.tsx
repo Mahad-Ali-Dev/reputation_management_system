@@ -1,5 +1,4 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
@@ -27,7 +26,10 @@ import "./phone-receptionist.css";
 
 export const dynamic = "force-dynamic";
 
+// Active story panel → audio/play+waveform art (kit "transcript to review_active").
+// Empty panel → document+chat art (kit "transcript to review_empty", real raster).
 const TRANSCRIPT_ILLO = "/assets/repulabs/phone/transcript-to-review.svg";
+const TRANSCRIPT_EMPTY_ILLO = "/assets/repulabs/phone/transcript-empty.svg";
 
 export default async function PhoneDashboardPage() {
   const { orgId } = await getOrgContext();
@@ -101,16 +103,30 @@ export default async function PhoneDashboardPage() {
         topBar={<TopBar />}
         crumbs={["Intelligence", "Phone Receptionist"]}
       >
-        <PageHeader
-          kicker={
-            assistant?.enabled
-              ? "Voice · live, answering 24/7"
-              : "Voice · paused"
-          }
-          title="Answer calls and turn great moments into reviews"
-          description="Number provisioning, AI receptionist settings, call logs, and review conversion — your AI answers, qualifies, books, and asks happy callers for a review."
-          actions={
-            <>
+        {/* ── Hero — kit composition: copy left, actions top-right, headset
+            illustration lower-right (real kit asset main.svg) ── */}
+        <header className="pr-hero">
+          <div className="pr-hero__copy">
+            <span className="pr-hero__pill">
+              <Icon name="sparkle" size={12} stroke={2.2} />
+              {assistant?.enabled
+                ? "VOICE · LIVE, ANSWERING 24/7"
+                : "VOICE · PAUSED"}
+            </span>
+            <h1 className="pr-hero__title">
+              Answer calls and turn
+              <br />
+              great moments into{" "}
+              <span className="pr-hero__title-em">reviews</span>
+            </h1>
+            <p className="pr-hero__sub">
+              Number provisioning, AI receptionist settings, call logs, and
+              review conversion — your AI answers, qualifies, books, and asks
+              happy callers for a review.
+            </p>
+          </div>
+          <div className="pr-hero__right">
+            <div className="pr-hero__actions">
               <Link href="/phone/voices" className="pr-btn pr-btn--sec">
                 <Icon name="sound" size={14} />
                 Voice cloning
@@ -123,9 +139,16 @@ export default async function PhoneDashboardPage() {
                 <Icon name="sparkle" size={14} />
                 Provision number
               </Link>
-            </>
-          }
-        />
+            </div>
+            {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration; next/image optimizer 400s on these */}
+            <img
+              className="pr-hero__art"
+              src="/assets/repulabs/phone/hero-main.svg"
+              alt=""
+              aria-hidden="true"
+            />
+          </div>
+        </header>
 
         {/* ── KPI row — all live aggregates ── */}
         <div className="pr-kpis">
@@ -180,53 +203,29 @@ export default async function PhoneDashboardPage() {
               </Link>
             </div>
             {mainNumber ? (
-              <div className="pr-prov-body" style={{ alignItems: "stretch" }}>
-                <div className="pr-numpanel">
-                  <div className="pr-numpanel__label">
-                    {mainNumber.friendlyName || "Main line"}
-                  </div>
-                  <div className="pr-num">{formatE164(mainNumber.phoneE164)}</div>
-                  <div className="pr-numpanel__meta">
-                    <span className="pr-chip pr-chip--ok">
-                      <Icon name="check" size={11} stroke={2.6} />
-                      {assistant?.enabled ? "Live" : "Active"}
+              <div className="pr-prov-body">
+                <div className="pr-prov-illo" aria-hidden="true">
+                  {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+                  <img
+                    className="pr-prov-illo__img"
+                    src="/assets/repulabs/phone/number-provisioning.svg"
+                    alt=""
+                  />
+                  <span className="pr-numpill">
+                    {formatE164(mainNumber.phoneE164)}
+                    <span className="pr-numpill__dot">
+                      <Icon name="check" size={9} stroke={3} />
                     </span>
-                    {mainNumber.forwardToE164 && (
-                      <span
-                        className="pr-caller__sub"
-                        style={{ fontFamily: "var(--f-mono)" }}
-                      >
-                        Handoff → {formatE164(mainNumber.forwardToE164)}
-                      </span>
-                    )}
-                  </div>
+                  </span>
                 </div>
-                {extraNumbers.map((p) => (
-                  <Link key={p.id} href="/phone/setup" className="pr-extra">
-                    <Icon
-                      name="phone"
-                      size={13}
-                      style={{ color: "var(--pr-pri)", flexShrink: 0 }}
-                    />
-                    <span style={{ fontWeight: 500 }}>
-                      {formatE164(p.phoneE164)}
-                    </span>
-                    {p.friendlyName && (
-                      <span className="pr-caller__sub">{p.friendlyName}</span>
-                    )}
-                    <span
-                      className="pr-chip pr-chip--ok"
-                      style={{ marginLeft: "auto" }}
-                    >
-                      Active
-                    </span>
-                  </Link>
-                ))}
-                <Link
-                  href="/phone/setup"
-                  className="pr-btn pr-btn--pri"
-                  style={{ marginTop: 4, alignSelf: "center" }}
-                >
+                <p className="pr-prov-copy">
+                  {mainNumber.friendlyName || "Local line"} is live and the AI is
+                  answering
+                  {extraNumbers.length > 0
+                    ? ` · ${extraNumbers.length + 1} numbers leased.`
+                    : "."}
+                </p>
+                <Link href="/phone/setup" className="pr-btn pr-btn--pri">
                   <Icon name="plus" size={13} />
                   Buy local number
                 </Link>
@@ -234,37 +233,18 @@ export default async function PhoneDashboardPage() {
             ) : (
               <div className="pr-prov-body">
                 <div className="pr-prov-illo" aria-hidden="true">
-                  <div className="pr-phone-frame">
-                    <Icon
-                      name="checkCircle"
-                      size={18}
-                      style={{ color: "var(--pr-warn)" }}
-                    />
-                    <span className="pr-numpill">
-                      <Icon name="phone" size={9} />
-                      Local
+                  {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+                  <img
+                    className="pr-prov-illo__img"
+                    src="/assets/repulabs/phone/number-provisioning.svg"
+                    alt=""
+                  />
+                  <span className="pr-numpill">
+                    (555) 123-4567
+                    <span className="pr-numpill__dot">
+                      <Icon name="check" size={9} stroke={3} />
                     </span>
-                  </div>
-                  <Icon
-                    name="sparkle"
-                    size={14}
-                    style={{
-                      position: "absolute",
-                      top: 6,
-                      right: 12,
-                      color: "var(--pr-pri-border)",
-                    }}
-                  />
-                  <Icon
-                    name="sparkle"
-                    size={10}
-                    style={{
-                      position: "absolute",
-                      bottom: 10,
-                      left: 8,
-                      color: "var(--pr-pri-border)",
-                    }}
-                  />
+                  </span>
                 </div>
                 <p className="pr-prov-copy">
                   No numbers leased yet. Lease a local line and the AI starts
@@ -408,8 +388,8 @@ export default async function PhoneDashboardPage() {
           ) : (
             <div className="pr-story pr-story--empty">
               <div className="pr-story__art">
-                {/* biome-ignore lint/performance/noImgElement: static brand illustration */}
-                <img src={TRANSCRIPT_ILLO} alt="" aria-hidden="true" />
+                {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+                <img src={TRANSCRIPT_EMPTY_ILLO} alt="" aria-hidden="true" />
               </div>
               <div>
                 <div className="pr-empty__title">No transcripts yet</div>

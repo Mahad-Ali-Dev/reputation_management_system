@@ -1,6 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
-import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -35,13 +34,14 @@ export default async function AssistantConfigPage() {
           description="Make your AI receptionist sound and behave."
           breadcrumb={[{ label: "AI Phone", href: "/phone" }, { label: "Assistant" }]}
           actions={
-            <span
-              className="pr-tile pr-tile--grad"
+            // Real kit robot illustration — floats in the header (not a tile).
+            // biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration
+            <img
+              className="pr-header-robot"
+              src="/assets/repulabs/phone/robot.svg"
+              alt=""
               aria-hidden="true"
-              style={{ width: 56, height: 56, borderRadius: 16 }}
-            >
-              <Icon name="bot" size={28} />
-            </span>
+            />
           }
         />
 

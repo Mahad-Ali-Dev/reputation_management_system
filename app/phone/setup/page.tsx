@@ -97,6 +97,13 @@ export default async function PhoneSetupPage() {
                 </li>
               </ul>
             </div>
+            {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+            <img
+              className="pr-setup-art"
+              src="/assets/repulabs/phone/setup-twilio.svg"
+              alt=""
+              aria-hidden="true"
+            />
           </section>
 
           {/* ── Step 2 — Configure webhooks ── */}
@@ -124,6 +131,13 @@ export default async function PhoneSetupPage() {
                 Method: POST &nbsp;·&nbsp; Events: completed, no-answer, busy, failed
               </p>
             </div>
+            {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+            <img
+              className="pr-setup-art"
+              src="/assets/repulabs/phone/setup-configure.svg"
+              alt=""
+              aria-hidden="true"
+            />
           </section>
 
           {/* ── Step 3 — Register the number here ── */}
@@ -211,6 +225,13 @@ export default async function PhoneSetupPage() {
                 </button>
               </form>
             </div>
+            {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+            <img
+              className="pr-setup-art pr-setup-art--keypad"
+              src="/assets/repulabs/phone/setup-phone-ui.svg"
+              alt=""
+              aria-hidden="true"
+            />
           </section>
 
           {/* ── Step 4 — Configure the AI assistant ── */}
@@ -229,17 +250,15 @@ export default async function PhoneSetupPage() {
                 . Enable it when you're ready for the AI to start answering.
               </p>
             </div>
+            {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+            <img
+              className="pr-setup-art pr-setup-art--robot"
+              src="/assets/repulabs/phone/robot.svg"
+              alt=""
+              aria-hidden="true"
+            />
           </section>
         </div>
-
-        <Link
-          href="/phone/assistant"
-          className="pr-fab"
-          aria-label="Open support chat"
-        >
-          <Icon name="chat" size={26} />
-          <span className="pr-fab__dot" aria-hidden="true" />
-        </Link>
       </AppShellServer>
     </div>
   );

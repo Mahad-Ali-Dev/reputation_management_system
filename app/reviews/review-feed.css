@@ -135,7 +135,7 @@
   position: relative;
   display: inline-block;
   height: auto;
-  width: min(320px, 64%);
+  width: min(588px, 72%);
   z-index: 1;
 }
 
@@ -227,18 +227,23 @@
 
 .rf-benefit {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   align-items: center;
-  text-align: center;
-  gap: 12px;
-  padding: 34px 24px;
+  text-align: left;
+  gap: 16px;
+  padding: 30px 28px;
 }
 
 .rf-benefit + .rf-benefit {
   border-left: 1px solid var(--rf-border-card);
 }
 
+.rf-benefit__text {
+  min-width: 0;
+}
+
 .rf-benefit__icon {
+  flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -266,7 +271,7 @@
 }
 
 .rf-benefit__title {
-  margin: 0;
+  margin: 0 0 4px;
   font-size: 16px;
   font-weight: 800;
   color: var(--rf-text-primary);
@@ -275,7 +280,7 @@
 .rf-benefit__body {
   margin: 0;
   font-size: 16px;
-  line-height: 24px;
+  line-height: 22px;
   color: var(--rf-text-secondary);
 }
 

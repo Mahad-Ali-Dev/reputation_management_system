@@ -136,6 +136,14 @@ export function AssistantConfigForm({ assistant }: { assistant: Assistant }) {
 
       {/* ── Step 2 — Behavior ── */}
       <section className="pr-card pr-config-art">
+        {/* real kit behavior illustration — decorative, lower-right */}
+        {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+        <img
+          className="pr-card-art pr-card-art--behavior"
+          src="/assets/repulabs/phone/behavior-voice.svg"
+          alt=""
+          aria-hidden="true"
+        />
         <div className="pr-step-head">
           <span className="pr-step-num">2</span>
           <span className="pr-step-icon">
@@ -253,13 +261,16 @@ export function AssistantConfigForm({ assistant }: { assistant: Assistant }) {
               Use this for phone-specific guidance.
             </strong>
           </p>
-          <div className="pr-field-wrap">
+          <div className="pr-field-wrap pr-instr-wrap">
+            <span className="pr-instr-strip" aria-hidden="true">
+              <Icon name="sparkle" size={15} stroke={2} />
+            </span>
             <textarea
               name="customInstructions"
               aria-label="Custom instructions"
               rows={5}
               maxLength={2000}
-              className="pr-textarea"
+              className="pr-textarea pr-instr-textarea"
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder={
@@ -273,6 +284,14 @@ export function AssistantConfigForm({ assistant }: { assistant: Assistant }) {
 
       {/* ── Step 4 — Enable / disable ── */}
       <section className="pr-card pr-config-art">
+        {/* real kit shield illustration — decorative, top-right */}
+        {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+        <img
+          className="pr-card-art pr-card-art--shield"
+          src="/assets/repulabs/phone/enable-shield.svg"
+          alt=""
+          aria-hidden="true"
+        />
         <div className="pr-step-head">
           <span className="pr-step-num">4</span>
           <span className="pr-step-icon">
