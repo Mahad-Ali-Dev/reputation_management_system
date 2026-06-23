@@ -6,6 +6,18 @@
    ap2-switch, ap2-roi-split) are consumed by the tab-panel components —
    keep their selectors stable. */
 
+/* Kit canvas — the autopilot mockups use a flat near-white (#F8FAFF), not the
+   product-wide teal/gold app-shell radial gradient (--grad-canvas, which is
+   background-attachment:fixed and would otherwise show through the topbar band
+   and any area the page wash doesn't cover). `.app--canvas` is an ANCESTOR of
+   the `.ap2-page` wrapper (app > main > .scroll > .ap2-page), so neutralize it
+   with :has() — same page-scoped technique as dashboard / My Devices, no
+   shared-file edit. */
+.app--canvas:has(.ap2-page) {
+  background-image: none;
+  background-color: #f8faff;
+}
+
 .ap2-page {
   /* Kit palette, page-scoped */
   --ap-bg: #f8faff;
@@ -332,8 +344,28 @@
 }
 
 .ap2-setup__icon {
+  /* Kit: each step glyph sits in a soft, hue-matched circle tile (the kit icon
+     PNGs are bare glyphs, so the tile is drawn here). Glyph is inset via padding
+     + object-fit so it reads ~22px inside the 44px circle, like the mockup. */
   width: 44px;
   height: 44px;
+  border-radius: 50%;
+  padding: 11px;
+  box-sizing: border-box;
+  object-fit: contain;
+  background: var(--ap-indigo-soft); /* default pale-blue; per-step tints below */
+}
+
+.ap2-setup__icon--enable {
+  background: #eaf1ff; /* pale blue (zap) */
+}
+
+.ap2-setup__icon--voice {
+  background: #e7f9ef; /* pale green (phone) */
+}
+
+.ap2-setup__icon--roi {
+  background: #f2eeff; /* pale purple (dollar) */
 }
 
 .ap2-setup__copy {
@@ -391,6 +423,10 @@
   display: flex;
   align-items: flex-start;
   gap: 16px;
+  /* Reserve the right-column height the orbit illustration occupies (it's
+     absolutely positioned), so the risk control below clears it — matches the
+     mockup's airier toggle → risk rhythm. */
+  min-height: 232px;
 }
 
 .ap2-control__main {
@@ -422,10 +458,20 @@
 }
 
 .ap2-control__orbit {
-  width: 210px;
-  height: 210px;
+  /* Kit: the orbit robot reads ~25% of the card width; measured render was only
+     ~17% at 210px, so the illustration sat too small. Bump to 250px. Pulled
+     out of the flex flow and pinned upper-right so the full orbit ring (with
+     the chat/phone/doc/star badges) stays inside the card and rides beside the
+     toggle band the way the mockup frames it, instead of being clipped by the
+     body's right padding. The body reserves min-height so the risk control
+     below clears the orbit. */
+  position: absolute;
+  top: 12px;
+  right: 10px;
+  width: 250px;
+  height: 250px;
   flex-shrink: 0;
-  margin: -6px -4px 0 auto;
+  pointer-events: none;
 }
 
 /* Big master switch */
@@ -845,10 +891,15 @@
   .ap2-control__body {
     flex-direction: column-reverse;
     align-items: center;
+    min-height: 0;
   }
   .ap2-control__orbit {
-    width: 160px;
-    height: 160px;
+    /* Back to in-flow on phones — the desktop center-right absolute pin would
+       overlap the stacked content. */
+    position: static;
+    transform: none;
+    width: 180px;
+    height: 180px;
     margin: 0 auto;
   }
   .ap2-control__main {

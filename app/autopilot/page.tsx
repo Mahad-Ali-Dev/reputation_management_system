@@ -330,7 +330,7 @@ function SetupCard({ steps }: { steps: SetupStep[] }) {
 function SetupRow({ step }: { step: SetupStep }) {
   return (
     <>
-      <img className="ap2-setup__icon" src={step.icon} alt="" />
+      <img className={`ap2-setup__icon ap2-setup__icon--${step.key}`} src={step.icon} alt="" />
       <span className="ap2-setup__copy">
         <span className="ap2-setup__steptitle">{step.title}</span>
         <span className="ap2-setup__stepbody">{step.body}</span>
