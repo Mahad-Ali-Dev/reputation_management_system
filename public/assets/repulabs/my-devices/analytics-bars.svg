@@ -1,0 +1,38 @@
+
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C4DFF"/>
+      <stop offset="100%" stop-color="#B388FF"/>
+    </linearGradient>
+
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#F9C66B"/>
+      <stop offset="100%" stop-color="#D89B2D"/>
+    </linearGradient>
+
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.15"/>
+    </filter>
+
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- background -->
+  <rect width="512" height="512" rx="80" fill="#F6F7FB"/>
+
+  <!-- bars -->
+  <g filter="url(#softShadow)">
+    <rect x="80" y="300" width="40" height="120" rx="12" fill="url(#purple)" filter="url(#glow)"/>
+    <rect x="140" y="220" width="40" height="200" rx="12" fill="url(#gold)" filter="url(#glow)"/>
+    <rect x="200" y="260" width="40" height="160" rx="12" fill="url(#purple)" filter="url(#glow)"/>
+    <rect x="260" y="180" width="40" height="240" rx="12" fill="url(#gold)" filter="url(#glow)"/>
+    <rect x="320" y="240" width="40" height="180" rx="12" fill="url(#purple)" filter="url(#glow)"/>
+  </g>
+</svg>

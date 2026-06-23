@@ -92,9 +92,10 @@ export default async function NewQrPage({
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Generate"]}>
       <div className="gq">
-        {/* Hero */}
+        {/* Hero — header (left) · 3D QR-on-pedestal illustration (center) ·
+            back button (right), matching the Generate-QR mockup. */}
         <div className="gq-hero">
-          <div>
+          <div className="gq-hero__lead">
             <span className="gq-hero__eyebrow">Free · self-service</span>
             <h1 className="gq-hero__title">
               Generate a <em>QR code</em>
@@ -110,7 +111,7 @@ export default async function NewQrPage({
           </div>
           {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
           <img
-            src="/assets/repulabs/my-devices/qr-hero.svg"
+            src="/assets/repulabs/my-devices/qr-pedestal.svg"
             alt=""
             aria-hidden
             className="gq-hero__art"
@@ -283,14 +284,21 @@ export default async function NewQrPage({
                   campaign, and business location.
                 </p>
                 <div className="gq-promo__chart" aria-hidden>
-                  {[40, 65, 50, 80, 60, 95, 72].map((h, i) => (
-                    <span
-                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed decorative bars
-                      key={`b-${i}`}
-                      className="gq-promo__bar"
-                      style={{ height: `${h}%` }}
-                    />
-                  ))}
+                  {/* Real kit analytics art: purple/gold bars + a line-chart overlay. */}
+                  {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+                  <img
+                    src="/assets/repulabs/my-devices/analytics-chart.svg"
+                    alt=""
+                    aria-hidden
+                    className="gq-promo__bars"
+                  />
+                  {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+                  <img
+                    src="/assets/repulabs/my-devices/analytics-line.svg"
+                    alt=""
+                    aria-hidden
+                    className="gq-promo__line"
+                  />
                 </div>
                 {isPro ? (
                   <Link href="/reports" className="gq-promo__cta">

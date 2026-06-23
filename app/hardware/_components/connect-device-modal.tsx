@@ -32,17 +32,18 @@ const SETUP_VIDEO_URL = process.env.NEXT_PUBLIC_SETUP_VIDEO_URL ?? null;
 const ASSET = "/assets/repulabs/my-devices";
 
 type PlatformDef = { id: string; label: string; icon: string; live: boolean };
+// Real kit brand glyphs (designs/.../stp3/illustrations → public brand-*.svg).
 const PLATFORMS: PlatformDef[] = [
-  { id: "google", label: "Google", icon: "plat-google.svg", live: true },
-  { id: "facebook", label: "Facebook", icon: "plat-facebook.svg", live: false },
-  { id: "linkedin", label: "LinkedIn", icon: "plat-linkedin.svg", live: false },
-  { id: "twitter-x", label: "Twitter / X", icon: "plat-twitter.svg", live: false },
-  { id: "instagram", label: "Instagram", icon: "plat-instagram.svg", live: false },
-  { id: "tiktok", label: "TikTok", icon: "plat-tiktok.svg", live: false },
-  { id: "yelp", label: "Yelp", icon: "plat-yelp.svg", live: false },
-  { id: "tripadvisor", label: "Tripadvisor", icon: "plat-tripadvisor.svg", live: false },
-  { id: "fiverr", label: "Fiverr", icon: "plat-fiverr.svg", live: false },
-  { id: "upwork", label: "Upwork", icon: "plat-upwork.svg", live: false },
+  { id: "google", label: "Google", icon: "brand-google.svg", live: true },
+  { id: "facebook", label: "Facebook", icon: "brand-facebook.svg", live: false },
+  { id: "linkedin", label: "LinkedIn", icon: "brand-linkedin.svg", live: false },
+  { id: "twitter-x", label: "Twitter / X", icon: "brand-twitter.svg", live: false },
+  { id: "instagram", label: "Instagram", icon: "brand-instagram.svg", live: false },
+  { id: "tiktok", label: "TikTok", icon: "brand-tiktok.svg", live: false },
+  { id: "yelp", label: "Yelp", icon: "brand-yelp.svg", live: false },
+  { id: "tripadvisor", label: "Tripadvisor", icon: "brand-tripadvisor.svg", live: false },
+  { id: "fiverr", label: "Fiverr", icon: "brand-fiverr.svg", live: false },
+  { id: "upwork", label: "Upwork", icon: "brand-upwork.svg", live: false },
 ];
 
 function normalizeCode(value: string): string {
@@ -244,33 +245,29 @@ export function ConnectDeviceModal({
                     </div>
                   </div>
 
-                  {/* Decorative right-side illustration (steps 1 & 2 only). */}
+                  {/* Decorative right-side illustration (steps 1 & 2 only) — the
+                      real kit art: step 1 = device-on-pedestal + review card,
+                      step 2 = device-code card on pedestal with plant. Both stay
+                      mounted (only the active one shown) so the large SVGs
+                      preload together and never flash blank when advancing. */}
                   {step < 3 && (
                     <div className="cdm-art" aria-hidden>
-                      <div className="cdm-art__glow" />
-                      <div className="cdm-art__card">
-                        <span className="cdm-art__card-icon">
-                          <Icon name={step === 1 ? "star" : "box"} size={22} />
-                        </span>
-                        <div className="cdm-art__card-title">
-                          {step === 1 ? "We'd love your feedback!" : "Your Device Code"}
-                        </div>
-                        {step === 1 ? (
-                          <div className="cdm-art__stars">★★★★★</div>
-                        ) : (
-                          <div className="cdm-art__codepill">X X X X X X</div>
-                        )}
-                        <div className="cdm-art__lines">
-                          <span />
-                          <span />
-                        </div>
-                        {step === 1 && (
-                          <div className="cdm-art__pill">
-                            <Icon name="checkCircle" size={14} />
-                            Reviews collected
-                          </div>
-                        )}
-                      </div>
+                      {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
+                      <img
+                        src={`${ASSET}/add-step1-review.svg`}
+                        alt=""
+                        aria-hidden
+                        className="cdm-art__img"
+                        hidden={step !== 1}
+                      />
+                      {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
+                      <img
+                        src={`${ASSET}/add-step2-code.svg`}
+                        alt=""
+                        aria-hidden
+                        className="cdm-art__img"
+                        hidden={step !== 2}
+                      />
                     </div>
                   )}
                 </div>

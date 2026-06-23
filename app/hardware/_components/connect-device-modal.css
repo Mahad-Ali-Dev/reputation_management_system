@@ -90,12 +90,13 @@
 }
 .cdm-form__body {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  min-height: 0;
+  grid-template-columns: 1.05fr 0.95fr;
+  min-height: 380px;
   overflow-y: auto;
 }
 .cdm-modal--step3 .cdm-form__body {
   grid-template-columns: 1fr;
+  min-height: 0;
 }
 .cdm-left {
   padding: 34px 34px 24px;
@@ -397,10 +398,13 @@
   min-width: 0;
 }
 .cdm-plat__icon {
-  width: 30px;
-  height: 30px;
-  flex: 0 0 30px;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
   object-fit: contain;
+  /* Some brand glyphs carry a light baked box; multiply blends it into the
+     white/tinted tile so only the logo shows. */
+  mix-blend-mode: multiply;
 }
 .cdm-plat__label {
   font-size: 14px;
@@ -537,105 +541,22 @@
   min-width: 0;
   display: grid;
   place-items: center;
-  padding: 24px;
+  padding: 20px 28px;
   overflow: hidden;
 }
-.cdm-art__glow {
-  position: absolute;
-  width: 420px;
-  height: 420px;
-  border-radius: 999px;
-  background: radial-gradient(
-    circle,
-    rgba(239, 237, 255, 0.95) 0%,
-    rgba(239, 237, 255, 0.55) 55%,
-    transparent 100%
-  );
-}
-.cdm-art__card {
-  position: relative;
-  width: 220px;
-  padding: 22px 20px 20px;
-  border-radius: 16px;
-  background: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.8);
-  box-shadow: 0 16px 40px rgba(68, 69, 120, 0.16);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transform: rotate(-3deg);
-}
-.cdm-art__card-icon {
-  width: 56px;
-  height: 56px;
-  border-radius: 14px;
-  display: grid;
-  place-items: center;
-  background: #f1ecff;
-  color: #6c4dff;
-}
-.cdm-art__card-title {
-  margin-top: 14px;
-  font-size: 14px;
-  font-weight: 760;
-  color: #303a59;
-}
-.cdm-art__stars {
-  margin-top: 8px;
-  font-size: 20px;
-  letter-spacing: 3px;
-  color: #f7b719;
-}
-.cdm-art__codepill {
-  margin-top: 12px;
-  padding: 10px 16px;
-  border-radius: 10px;
-  background: #f0edff;
-  color: #6c4dff;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: 2px;
-  font-family: var(--f-mono, monospace);
-}
-.cdm-art__lines {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 16px;
+.cdm-art__img {
+  grid-area: 1 / 1;
   width: 100%;
-  align-items: center;
+  max-width: 420px;
+  max-height: 420px;
+  height: auto;
+  object-fit: contain;
+  /* Kit art embeds a light lavender backdrop; multiply blends it into the
+     modal's soft gradient panel so the device/card art sits cleanly. */
+  mix-blend-mode: multiply;
 }
-.cdm-art__lines span {
-  height: 8px;
-  border-radius: 999px;
-  background: #e9ebf4;
-}
-.cdm-art__lines span:first-child {
-  width: 80%;
-}
-.cdm-art__lines span:last-child {
-  width: 62%;
-}
-.cdm-art__pill {
-  position: absolute;
-  bottom: -16px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  white-space: nowrap;
-  padding: 8px 14px;
-  border-radius: 999px;
-  background: #d9f7e8;
-  color: #1f2b3e;
-  font-size: 12px;
-  font-weight: 700;
-  box-shadow: 0 8px 18px rgba(31, 184, 120, 0.18);
-}
-.cdm-art__pill svg {
-  color: #6c4dff;
+.cdm-art__img[hidden] {
+  display: none;
 }
 
 /* ── Responsive ─────────────────────────────────────────────────────── */

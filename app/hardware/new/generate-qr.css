@@ -18,10 +18,13 @@
 /* Hero */
 .gq-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 300px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 440px);
   gap: 24px;
   align-items: center;
   margin-bottom: 22px;
+}
+.gq-hero__lead {
+  min-width: 0;
 }
 .gq-hero__eyebrow {
   display: inline-flex;
@@ -56,11 +59,14 @@
   line-height: 1.55;
   max-width: 440px;
 }
+/* 3D QR-on-pedestal illustration (qr-pedestal.svg) — prominent, with its light
+   baked backdrop multiplied into the cool canvas so only the QR/pedestal shows. */
 .gq-hero__art {
-  justify-self: end;
+  justify-self: center;
   width: 100%;
-  max-width: 280px;
+  max-width: 440px;
   height: auto;
+  mix-blend-mode: multiply;
 }
 @media (max-width: 760px) {
   .gq-hero {
@@ -68,7 +74,7 @@
   }
   .gq-hero__art {
     justify-self: center;
-    max-width: 220px;
+    max-width: 360px;
     order: -1;
   }
 }
@@ -317,16 +323,23 @@
 .gq-promo__cta:hover {
   filter: brightness(1.06);
 }
+/* Analytics art — real kit charts: a bar group (top-right) over a line chart. */
 .gq-promo__chart {
-  display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  height: 56px;
+  position: relative;
   margin-top: 14px;
+  min-height: 118px;
 }
-.gq-promo__bar {
-  flex: 1;
-  border-radius: 4px 4px 0 0;
-  background: linear-gradient(180deg, var(--gq-purple), #b9a8ff);
-  opacity: 0.85;
+.gq-promo__line {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gq-promo__bars {
+  position: absolute;
+  top: -6px;
+  right: 0;
+  width: 42%;
+  max-width: 150px;
+  height: auto;
+  filter: drop-shadow(0 8px 16px rgba(68, 33, 141, 0.16));
 }
