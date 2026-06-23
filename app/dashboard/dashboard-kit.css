@@ -45,8 +45,8 @@
    teal-mist gradient. Scoped with :has() so only pages rendering the kit
    (.dk) swap canvas; every other page keeps the app canvas. */
 .app--canvas:has(.dk) {
-  background-image: linear-gradient(180deg, #f6f7fc 0%, #fbfbfd 55%, #fdfdfe 100%);
-  background-color: #f7f8fb;
+  background-image: linear-gradient(180deg, #fcfcfe 0%, #fdfdff 55%, #ffffff 100%);
+  background-color: #fcfcfe;
 }
 
 /* ============================================================
@@ -57,7 +57,9 @@
   display: grid;
   /* Kit: stat cluster ≈ 35% of the content width (405/1150). */
   grid-template-columns: minmax(0, 1fr) minmax(300px, 384px);
-  gap: 16px 22px;
+  /* Mockup column gap between the hero-left stack and the stat cluster is a
+     tight ~14px (sampled), not 22px. */
+  gap: 16px 14px;
   align-items: stretch;
 }
 
@@ -87,9 +89,12 @@
 }
 
 .dk-hero__title {
-  font-size: 27px;
+  /* Mockup hero is a display title — sampled cap-height ≈ 29-30px logical with
+     tight tracking (handoff lists H1 24, but the mockup's hero is deliberately
+     larger; the mockup wins per the brief). */
+  font-size: 29px;
   font-weight: 800;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.04em;
   line-height: 1.1;
   margin: 0 0 8px;
 }
@@ -791,7 +796,8 @@
   border: 1px solid #dfe5fb;
   border-radius: 20px;
   padding: 26px 30px;
-  background: linear-gradient(120deg, #f3f5fe 0%, #eef1fd 55%, #e9ecfc 100%);
+  /* Mockup panel wash is a light, low-saturation lavender (sampled ~#F2F3FD). */
+  background: linear-gradient(120deg, #f5f6fe 0%, #f0f2fd 55%, #ebeefc 100%);
   min-height: 210px;
 }
 
@@ -799,7 +805,7 @@
   position: relative;
   z-index: 1;
   min-width: 0;
-  padding-right: 330px;
+  padding-right: 288px;
 }
 
 .dk-copilot__kicker {
@@ -879,7 +885,9 @@
 }
 
 .dk-copilot__send:hover { background: var(--dk-pri-dark); }
-.dk-copilot__send:disabled { opacity: 0.55; cursor: default; }
+/* Mockup shows the send button as a solid vivid blue (not a washed-out disabled
+   chip). Keep it visibly blue while empty — only a hairline dim signals idle. */
+.dk-copilot__send:disabled { opacity: 0.9; cursor: default; }
 
 /* Full-width chips row under the input (kit: one row of 4). */
 .dk-copilot__chips {
@@ -918,12 +926,13 @@
    bubble sits above-left of the robot (matching both mockups). */
 .dk-copilot__bot {
   position: absolute;
-  right: 22px;
+  right: 26px;
   top: 50%;
   transform: translateY(-50%);
-  width: 300px;
-  /* matches the robot asset aspect ratio (195×170) at this width */
-  height: 262px;
+  /* Mockup robot is smaller than full-width; a tighter box also reduces upscale
+     blur of the 195×170 asset. Aspect preserved (195/170 ≈ 1.147). */
+  width: 250px;
+  height: 218px;
 }
 
 .dk-copilot__art {
@@ -936,10 +945,16 @@
 }
 
 .dk-copilot__art--3d {
-  /* The robot is cropped from the mockup PNG — feather its left edge so the
-     rectangular crop melts into the panel gradient. */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 100%);
-  mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 100%);
+  /* The robot is cropped from the delivered PNG and its baked background is not a
+     perfectly uniform panel tint (corners drift toward white). Feather ALL four
+     edges (intersected) so the rectangular crop melts into the panel gradient on
+     every side, not just the left. */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 8%, #000 93%, transparent 100%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 92%, transparent 100%),
+    linear-gradient(to bottom, transparent 0%, #000 8%, #000 93%, transparent 100%);
+  mask-composite: intersect;
 }
 
 .dk-copilot__bubble {

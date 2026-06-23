@@ -409,7 +409,7 @@ function StatChip({
  *  Same star = same color everywhere, so the two visuals visibly agree. */
 const RATING_COLORS: Record<number, string> = {
   5: "#2563eb",
-  4: "#3b82f6",
+  4: "#2563eb", // mockup paints 4★ the same vivid primary blue as 5★ (not a lighter tint)
   3: "#ca8a04",
   2: "#facc15",
   1: "#ef4444",
@@ -516,8 +516,10 @@ function GoogleOverviewCard({
 
 /** Multi-segment donut of the REAL rating split, total reviews in the center. */
 function RatingDonut({ total, byRating }: { total: number; byRating: (r: number) => number }) {
-  const size = 112;
-  const stroke = 14;
+  // Mockup donut is ~94px outer diameter with a ~10px ring (sampled), smaller and
+  // thinner than the previous 112/14.
+  const size = 96;
+  const stroke = 10;
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
   let offset = 0;
