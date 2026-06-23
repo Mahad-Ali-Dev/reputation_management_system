@@ -136,11 +136,14 @@ export function AssistantConfigForm({ assistant }: { assistant: Assistant }) {
 
       {/* ── Step 2 — Behavior ── */}
       <section className="pr-card pr-config-art">
-        {/* real kit behavior illustration — decorative, lower-right */}
+        {/* real kit behavior illustration — decorative, lower-right. Kit source
+            = Phone Assistant/illustrations/calls.svg: the lavender oval with a
+            chat bubble + waveform bubble + purple handset + sparkles, exactly as
+            the mockup's behavior card (handoff §9.4). */}
         {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
         <img
           className="pr-card-art pr-card-art--behavior"
-          src="/assets/repulabs/phone/behavior-voice.svg"
+          src="/assets/repulabs/phone/behavior-illustration.svg"
           alt=""
           aria-hidden="true"
         />

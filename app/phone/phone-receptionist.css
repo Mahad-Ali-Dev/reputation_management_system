@@ -15,6 +15,18 @@
    CONTENT only.
 ============================================================ */
 
+/* Kit canvas — every /phone mockup uses a flat cool near-white (#FBFCFF), not
+   the product-wide teal/gold app-shell radial gradient that otherwise bleeds
+   through behind the content. Page-scoped override (no shared-file edit). NOTE:
+   unlike the dashboard/My-Devices kits (whose wrapper sits INSIDE the shell, so
+   they use `.app--canvas:has(.dk)`), the /phone pages wrap the whole shell in
+   `.pr`, so `.app--canvas` is a DESCENDANT of `.pr` — target it directly. All
+   four /phone pages share the `.pr` wrapper, so one rule covers them all. */
+.pr .app--canvas {
+  background-image: none;
+  background-color: #fbfcff;
+}
+
 .pr {
   --pr-bg: #fbfcff;
   --pr-surface: #ffffff;
@@ -250,10 +262,17 @@
 }
 .pr-hero__art {
   width: 100%;
-  max-width: 460px;
+  max-width: 470px;
+  /* The kit raster (1536×1024) frames a WIDE, short composition with generous
+     vertical padding; left unbounded it renders ~307px tall and inflates the
+     hero to ~360px vs the mockup's ~220px. Cap the height so the artwork scales
+     to the mockup's compact proportion (no distortion — contain). */
+  max-height: 208px;
   height: auto;
+  object-fit: contain;
+  object-position: right center;
   display: block;
-  margin-top: 2px;
+  margin-top: -8px;
   pointer-events: none;
   user-select: none;
 }
@@ -268,16 +287,35 @@
 .pr-kpi {
   display: flex;
   align-items: flex-start;
-  gap: 18px;
-  padding: 22px 20px;
+  gap: 20px;
+  padding: 24px 20px;
   background: var(--pr-surface);
   border: 1px solid var(--pr-line);
   border-radius: 13px;
   box-shadow: var(--pr-shadow-card);
 }
 .pr-kpi__tile {
-  width: 60px;
-  height: 60px;
+  width: 64px;
+  height: 64px;
+}
+/* metric-tone icons read SOLID in the mockup (filled star, solid green dollar),
+   not the default stroke glyphs — fill the closed icon paths inside the tile. */
+.pr-tile--yellow svg {
+  fill: currentColor;
+  stroke: none;
+}
+/* AI-cost tile: mockup is a solid green CIRCLE with a white $ (handoff §13). */
+.pr-kpi__dollar {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--pr-success);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
 }
 .pr-kpi__body {
   min-width: 0;
@@ -288,7 +326,7 @@
   color: var(--pr-ink-2);
 }
 .pr-kpi__value {
-  font-size: 28px;
+  font-size: 29px;
   line-height: 1;
   font-weight: 850;
   color: var(--pr-ink-strong);
@@ -299,7 +337,7 @@
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  height: 24px;
+  height: 25px;
   margin-top: 10px;
   padding: 0 11px;
   border-radius: 999px;
@@ -597,8 +635,9 @@
   color: inherit;
 }
 .pr-v2r__tile {
-  width: 56px;
-  height: 56px;
+  width: 60px;
+  height: 60px;
+  border-radius: 11px;
 }
 .pr-v2r__chevron {
   width: 50px;
@@ -765,11 +804,11 @@
   z-index: 0;
 }
 .pr-card-art--behavior {
-  right: 20px;
-  bottom: 16px;
-  width: 210px;
+  right: 16px;
+  bottom: 10px;
+  width: 232px;
   height: auto;
-  opacity: 0.92;
+  opacity: 0.96;
 }
 .pr-card-art--shield {
   right: 22px;

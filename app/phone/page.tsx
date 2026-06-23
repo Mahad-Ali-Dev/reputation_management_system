@@ -506,7 +506,15 @@ function Kpi({
   return (
     <div className="pr-kpi">
       <span className={`pr-tile pr-tile--${tone} pr-kpi__tile`}>
-        <Icon name={icon} size={26} />
+        {icon === "card" ? (
+          // Kit AI-cost glyph: solid green circle with a white $ (handoff §13),
+          // not a credit-card outline. No dollar icon exists in the shared set.
+          <span className="pr-kpi__dollar" aria-hidden="true">
+            $
+          </span>
+        ) : (
+          <Icon name={icon} size={icon === "star" ? 30 : 28} />
+        )}
       </span>
       <div className="pr-kpi__body">
         <div className="pr-kpi__label">{label}</div>
