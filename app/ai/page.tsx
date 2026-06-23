@@ -142,7 +142,7 @@ export default async function AiSettingsPage({
   }
 
   // Training profile feeds readiness + business overview + behaviour. Fail-soft
-  // on the un-migrated table (same guardrail as /ai/training).
+  // on the un-migrated table (same guardrail as /ai).
   const profile = await withTenant(orgId, async (tx) =>
     tx.aiTrainingProfile.findUnique({ where: { organizationId: orgId } }),
   ).catch((err: unknown) => {
@@ -265,7 +265,7 @@ export default async function AiSettingsPage({
             <div className="akb-hero__art" aria-hidden="true">
               <img src="/assets/repulabs/ai-kb/hero-brain.svg" alt="" />
             </div>
-            <Link href="/ai/training" className="akb-btn-outline akb-hero__cta">
+            <Link href="/ai" className="akb-btn-outline akb-hero__cta">
               <Icon name="play" size={15} />
               How it works
             </Link>
@@ -552,7 +552,7 @@ export default async function AiSettingsPage({
           <TestConsole
             suggestions={suggestions}
             openGaps={openGaps}
-            teachHref="/ai/training#test"
+            teachHref="/ai?tab=test"
           />
         )}
       </div>

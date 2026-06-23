@@ -10,7 +10,7 @@ import { useMemo, useRef, useState } from "react";
  *
  * Faithfully renders the kit's summary strip + three setting cards + channel
  * info bar + footer actions, but every editable control is bound to a REAL
- * column on `AiTrainingProfile` (the same fields the legacy /ai/training#behavior
+ * column on `AiTrainingProfile` (the same fields the legacy /ai?tab=behaviour
  * panel edits) and saved through the EXISTING `saveAiTraining` /
  * `autosaveAiTraining` server actions — no invented storage.
  *
@@ -367,7 +367,7 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
             ))}
           </div>
 
-          <a className="akb-btn-outline" href="/ai/training#behavior" style={{ marginTop: 24 }}>
+          <a className="akb-btn-outline" href="/ai?tab=behaviour" style={{ marginTop: 24 }}>
             <Image
               src={`${ASSET}/beh-manage-rules.svg`}
               alt=""

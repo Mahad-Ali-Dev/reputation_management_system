@@ -373,7 +373,7 @@ export function KnowledgeBody({
                   <div className="akb-qa__desc">See how your AI responds</div>
                 </span>
               </Link>
-              <Link className="akb-qa__row" href="/ai/training#test">
+              <Link className="akb-qa__row" href="/ai?tab=test">
                 <span className="akb-qa__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/qa-insights.svg`}
@@ -428,7 +428,7 @@ export function KnowledgeBody({
                       <div className="akb-bo__d">{d.body}</div>
                     </div>
                     <Link
-                      href="/ai/training#knowledge"
+                      href="/ai?tab=knowledge"
                       className="akb-icon-btn"
                       aria-label={`Edit ${d.title}`}
                     >
@@ -438,7 +438,7 @@ export function KnowledgeBody({
                 ))}
               </div>
               <div className="akb-card__foot">
-                <Link className="akb-link" href="/ai/training#knowledge">
+                <Link className="akb-link" href="/ai?tab=knowledge">
                   View all business details <Icon name="arrowR" size={13} />
                 </Link>
               </div>
@@ -459,7 +459,7 @@ export function KnowledgeBody({
                 Add information about your business to help AI answer better.
               </div>
               <Link
-                href="/ai/training#knowledge"
+                href="/ai?tab=knowledge"
                 className="akb-btn-outline"
                 style={{
                   marginTop: 6,
@@ -489,7 +489,7 @@ export function KnowledgeBody({
                   <Icon name="checkCircle" size={11} /> Saved
                 </span>
                 <Link
-                  href="/ai/training#knowledge"
+                  href="/ai?tab=knowledge"
                   className="akb-icon-btn"
                   aria-label="Edit location"
                 >
@@ -561,7 +561,7 @@ export function KnowledgeBody({
             <>
               <div style={{ marginTop: 6 }}>
                 {recentLearning.map((r) => (
-                  <Link href="/ai/training#test" className="akb-rl__row" key={r.id}>
+                  <Link href="/ai?tab=test" className="akb-rl__row" key={r.id}>
                     <span className={`akb-rl__dot akb-rl__dot--${r.tone}`} aria-hidden="true" />
                     <span style={{ minWidth: 0 }}>
                       <div className="akb-rl__t">{r.title}</div>
@@ -571,7 +571,7 @@ export function KnowledgeBody({
                 ))}
               </div>
               <div className="akb-card__foot">
-                <Link className="akb-link" href="/ai/training#test">
+                <Link className="akb-link" href="/ai?tab=test">
                   View all insights <Icon name="arrowR" size={13} />
                 </Link>
               </div>
@@ -591,7 +591,7 @@ export function KnowledgeBody({
               <div className="akb-empty__d">
                 AI learning updates will appear here once you add sources.
               </div>
-              <Link href="/ai/training#test" className="akb-link" style={{ marginTop: 6 }}>
+              <Link href="/ai?tab=test" className="akb-link" style={{ marginTop: 6 }}>
                 View all insights <Icon name="arrowR" size={13} />
               </Link>
             </div>

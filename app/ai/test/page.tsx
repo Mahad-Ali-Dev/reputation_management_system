@@ -111,7 +111,7 @@ export default async function AiTestPage({
             </ul>
             <p className="dim" style={{ fontSize: 12, marginTop: 14, marginBottom: 0 }}>
               Prefer the in-app tester (with answer ratings that feed your Learning Monitor)?{" "}
-              <Link href="/ai/training#test" style={linkStyle}>
+              <Link href="/ai?tab=test" style={linkStyle}>
                 Open the Test AI tab →
               </Link>
             </p>

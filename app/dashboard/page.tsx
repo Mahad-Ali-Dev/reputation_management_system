@@ -138,17 +138,17 @@ export default async function DashboardPage({
                   Teach your AI agent about your business so it can give smarter, on-brand answers.
                 </p>
               </div>
-              <Link href="/ai/training" className="dk-train__cta">
+              <Link href="/ai" className="dk-train__cta">
                 <Icon name="sparkle" size={14} /> Train your agent <Icon name="arrowR" size={13} />
               </Link>
             </div>
 
             <div className="dk-quick">
               <QuickChip icon="chip-upload-faq.png" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
-              <QuickChip icon="chip-add-business.png" title="Add business info" sub="Services, hours, etc." href="/ai/training" />
-              <QuickChip icon="chip-train-reviews.png" title="Train from reviews" sub="Learn from feedback" href="/ai/training#test" />
-              <QuickChip icon="chip-brand-voice.png" title="Brand voices" sub="Tone and style" href="/ai/training#behavior" />
-              <QuickChip icon="chip-knowledge.png" title="Knowledge sources" sub="Docs, URLs & more" href="/ai/training#knowledge" />
+              <QuickChip icon="chip-add-business.png" title="Add business info" sub="Services, hours, etc." href="/ai" />
+              <QuickChip icon="chip-train-reviews.png" title="Train from reviews" sub="Learn from feedback" href="/ai?tab=test" />
+              <QuickChip icon="chip-brand-voice.png" title="Brand voices" sub="Tone and style" href="/ai?tab=behaviour" />
+              <QuickChip icon="chip-knowledge.png" title="Knowledge sources" sub="Docs, URLs & more" href="/ai?tab=knowledge" />
             </div>
           </div>
 

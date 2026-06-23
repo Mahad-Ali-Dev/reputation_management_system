@@ -71,7 +71,7 @@ KEY UI LOCATIONS
 - /support/inbox — unified DM inbox.
 - /surveys — NPS campaigns + responses.
 - /phone — AI receptionist, voicemails, campaigns.
-- /ai/training — feed business knowledge to the AI for better replies.
+- /ai — feed business knowledge to the AI for better replies.
 - /analytics — trend charts, sentiment, channel mix.
 - /settings — profile, team, brand, notifications, security, API, data export.
 - /subscription — billing, plan, cancel.
