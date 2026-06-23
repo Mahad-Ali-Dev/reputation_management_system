@@ -1,3 +1,10 @@
+/* Kit canvas — AI KB mockup uses a flat near-white #fbfcff, not the product-wide
+   teal/gold app-shell gradient. Page-scoped override (no shared-file edit). */
+.app--canvas:has(.akb) {
+  background-image: none;
+  background-color: #fbfcff;
+}
+
 /* =====================================================================
    AI Knowledge Base — kit-faithful page styles (route /ai)
    All classes prefixed .akb- to avoid collisions with the shared shell
@@ -226,15 +233,15 @@
   color: #00aeca;
 }
 .akb-hero__title {
-  font-size: 34px;
+  font-size: 37px;
   line-height: 1.08;
-  font-weight: 780;
-  letter-spacing: -0.01em;
-  margin: 8px 0 0;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 9px 0 0;
   color: var(--akb-ink);
 }
 .akb-hero__copy {
-  font-size: 14.5px;
+  font-size: 15px;
   line-height: 1.55;
   font-weight: 500;
   color: #3f4777;
@@ -244,12 +251,18 @@
 .akb-hero__art {
   justify-self: end;
   width: 100%;
-  max-width: 460px;
+  max-width: 488px;
+  /* clear the absolutely-positioned "How it works" CTA at the right edge so the
+     chat/phone tiles aren't hidden behind it (matches the kit's spacing). */
+  margin-right: 96px;
 }
 .akb-hero__art img {
   display: block;
   width: 100%;
   height: auto;
+  /* The kit brain illustration ships a baked white background; multiply drops
+     it onto the lavender hero gradient (white → transparent, art stays). */
+  mix-blend-mode: multiply;
 }
 .akb-hero__cta {
   position: absolute;
@@ -289,6 +302,8 @@
 .akb-readiness__tile img {
   width: 76px;
   height: auto;
+  /* book+check art ships a baked white bg — blend onto the mint tile. */
+  mix-blend-mode: multiply;
 }
 .akb-readiness__body {
   flex: 1;
@@ -305,9 +320,9 @@
   color: var(--akb-muted);
 }
 .akb-readiness__metric {
-  font-size: 22px;
+  font-size: 24px;
   font-weight: 800;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.015em;
   margin: 8px 0 0;
   color: var(--akb-ink);
 }
@@ -601,6 +616,8 @@
   display: block;
   width: 100%;
   height: auto;
+  /* robot ships a baked white bg — blend it onto the white card. */
+  mix-blend-mode: multiply;
 }
 
 /* ===================================================================
@@ -901,17 +918,17 @@
   border-left: 1px solid var(--akb-divider);
 }
 .akb-summary-item__icon {
-  width: 44px;
-  height: 44px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
-  border-radius: 11px;
+  border-radius: 12px;
   background: var(--akb-soft);
   display: grid;
   place-items: center;
 }
 .akb-summary-item__icon img {
-  width: 26px;
-  height: 26px;
+  width: 28px;
+  height: 28px;
 }
 .akb-summary-item__t {
   font-size: 12px;
@@ -937,8 +954,9 @@
   padding: 24px;
 }
 .akb-beh-card__title {
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 800;
+  letter-spacing: -0.01em;
   margin: 0;
   color: var(--akb-ink);
 }
@@ -1117,6 +1135,8 @@
   width: 18px;
   height: 18px;
   flex-shrink: 0;
+  /* test-info ships a baked white bg — blend onto the lavender callout. */
+  mix-blend-mode: multiply;
 }
 
 .akb-perf {
@@ -1144,6 +1164,8 @@
 .akb-perf__icon img {
   width: 24px;
   height: 24px;
+  /* some kit metric icons ship a baked white bg — blend onto the tinted circle. */
+  mix-blend-mode: multiply;
 }
 .akb-perf__icon--success {
   background: var(--akb-success-soft);
