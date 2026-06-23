@@ -24,6 +24,17 @@
   --rf-shadow-soft: 0 18px 45px rgba(39, 53, 92, 0.08);
 }
 
+/* Page-scoped canvas override (Review Feed only).
+ * The shared app-shell paints `.app--canvas` with a teal/gold `--grad-canvas`
+ * wash that bleeds behind this page's content. The Review Feed mockup uses a
+ * FLAT near-white canvas (`--bg-app: #fbfcff`). Suppress the gradient *only*
+ * when this page's `.rf` content is present — :has keeps it page-scoped with no
+ * shared-file edit. */
+.app--canvas:has(.rf) {
+  background-image: none;
+  background-color: #fbfcff;
+}
+
 /* ───────────────────────── Inbox header ───────────────────────── */
 
 .rf-head {
@@ -96,15 +107,19 @@
   overflow: hidden;
 }
 
-/* Illustration / hero area */
+/* Illustration / hero area.
+ * Mockup wash: soft lavender glow tucked in the top-left corner → soft warm
+ * peach top-right, fading to a near-white center (NOT an edge-to-edge tint).
+ * Generous top padding (~162px) drops the illustration low and airy, matching
+ * the mockup where the title lands at ~614px from the card top (measured). */
 .rf-hero {
   position: relative;
-  padding: 56px 24px 8px;
+  padding: 162px 24px 0;
   text-align: center;
   background:
-    radial-gradient(circle at 18% 16%, rgba(111, 73, 255, 0.1), transparent 36%),
-    radial-gradient(circle at 88% 18%, rgba(255, 180, 110, 0.16), transparent 36%),
-    linear-gradient(180deg, #fff 0%, #fbfbff 100%);
+    radial-gradient(circle at 12% 10%, rgba(111, 73, 255, 0.12), transparent 34%),
+    radial-gradient(circle at 92% 12%, rgba(255, 168, 99, 0.13), transparent 36%),
+    linear-gradient(112deg, #faf8ff 0%, #ffffff 46%, #fff8f3 100%);
 }
 
 /* Dotted corner patterns (upper corners) */
@@ -134,19 +149,22 @@
 .rf-hero__art {
   position: relative;
   display: inline-block;
+  /* SVG is now content-cropped (viewBox 1394×644, aspect ≈2.165) so width drives
+   * the visible size with no phantom vertical space. Sized to the mockup's
+   * illustration footprint. */
+  width: min(496px, 46%);
   height: auto;
-  width: min(588px, 72%);
   z-index: 1;
 }
 
 /* Empty-state copy */
 .rf-body {
-  padding: 4px 24px 44px;
+  padding: 40px 24px 56px;
   text-align: center;
 }
 
 .rf-body__title {
-  margin: 8px 0 0;
+  margin: 0;
   font-size: 26px;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -231,7 +249,7 @@
   align-items: center;
   text-align: left;
   gap: 16px;
-  padding: 30px 28px;
+  padding: 52px 30px 58px;
 }
 
 .rf-benefit + .rf-benefit {
