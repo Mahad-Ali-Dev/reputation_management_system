@@ -61,7 +61,7 @@ const NAV: NavItem[] = [
   { href: "/hardware", label: "My Devices", icon: "qr" },
 
   { group: "AI Engine" },
-  { href: "/ai/training", label: "AI Knowledge Base", icon: "brain" },
+  { href: "/ai", label: "AI Knowledge Base", icon: "brain" },
   { href: "/phone", label: "AI Phone Receptionist", icon: "phone", badge: "AI" },
 
   { group: "Reviews" },
