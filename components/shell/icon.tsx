@@ -19,6 +19,7 @@ export type IconName =
   | "chat"
   | "share"
   | "survey"
+  | "book"
   | "flag"
   | "brain"
   | "phone"
@@ -140,6 +141,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
     <>
       <rect x="4" y="3" width="16" height="18" rx="2" />
       <path d="M8 8h8M8 12h6M8 16h4" />
+    </>
+  ),
+  book: (
+    <>
+      <path d="M12 6.5C10.6 5.6 8.8 5 7 5H3v13h4c1.8 0 3.6.6 5 1.5" />
+      <path d="M12 6.5C13.4 5.6 15.2 5 17 5h4v13h-4c-1.8 0-3.6.6-5 1.5" />
+      <path d="M12 6.5v13" />
     </>
   ),
   flag: (
