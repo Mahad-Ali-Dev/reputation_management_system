@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="micGrad" x1="130" y1="90" x2="382" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6C3EFF"/>
+      <stop offset="0.55" stop-color="#4D22FF"/>
+      <stop offset="1" stop-color="#6A42FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- microphone capsule -->
+  <rect x="212" y="108" width="88" height="176" rx="44" stroke="url(#micGrad)" stroke-width="18"/>
+  <rect x="246" y="166" width="20" height="60" rx="10" fill="url(#micGrad)"/>
+
+  <!-- microphone outer support -->
+  <path d="M184 210C184 268.542 218.607 310 256 310C293.393 310 328 268.542 328 210"
+        stroke="url(#micGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- stand -->
+  <path d="M256 310V356" stroke="url(#micGrad)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M220 366H292" stroke="url(#micGrad)" stroke-width="18" stroke-linecap="round"/>
+</svg>

@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bookGrad" x1="120" y1="110" x2="392" y2="402" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6E3BFF"/>
+      <stop offset="0.55" stop-color="#4E22FF"/>
+      <stop offset="1" stop-color="#6B42FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- outer left page -->
+  <path d="M134 356V174C134 144 160 126 190 118C214 112 238 115 256 135"
+        stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- outer right page -->
+  <path d="M378 356V174C378 144 352 126 322 118C298 112 274 115 256 135"
+        stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- bottom curves -->
+  <path d="M134 356C171 325 221 322 256 358"
+        stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M378 356C341 325 291 322 256 358"
+        stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- inner page edges -->
+  <path d="M230 152V332" stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M282 152V332" stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round"/>
+
+  <!-- top inner arches -->
+  <path d="M134 174C166 138 206 136 230 152" stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M378 174C346 138 306 136 282 152" stroke="url(#bookGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

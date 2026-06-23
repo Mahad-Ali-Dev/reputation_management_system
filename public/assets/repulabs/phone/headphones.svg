@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="g" x1="120" y1="80" x2="392" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7B4DFF"/>
+      <stop offset="0.5" stop-color="#5A2DFF"/>
+      <stop offset="1" stop-color="#6E3BFF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- headband -->
+  <path d="M160 260C160 180 220 140 256 140C292 140 352 180 352 260"
+        stroke="url(#g)" stroke-width="20" stroke-linecap="round" fill="none"/>
+
+  <!-- left cup -->
+  <rect x="138" y="250" width="70" height="90" rx="28"
+        stroke="url(#g)" stroke-width="20" fill="none"/>
+
+  <!-- right cup -->
+  <rect x="304" y="250" width="70" height="90" rx="28"
+        stroke="url(#g)" stroke-width="20" fill="none"/>
+
+  <!-- inner pads -->
+  <rect x="158" y="275" width="30" height="40" rx="12" fill="url(#g)"/>
+  <rect x="314" y="275" width="30" height="40" rx="12" fill="url(#g)"/>
+</svg>

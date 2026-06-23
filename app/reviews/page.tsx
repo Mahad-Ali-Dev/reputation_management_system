@@ -23,6 +23,7 @@ import { AutoReplyToggle } from "./_components/auto-reply-toggle";
 import { ConnectGoogleEmpty } from "./_components/connect-google-empty";
 import { PlatformDeepLink } from "./_components/platform-deep-link";
 import { ReplyDraftBox } from "./_components/reply-draft-box";
+import "./review-feed.css";
 
 /**
  * Review Inbox — repulabs v3, two-pane relayout (Module 06).
@@ -149,29 +150,20 @@ export default async function ReviewsPage({
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Reviews"]}>
-      {/* Inbox header strip — title + total/avg + disputes deep-link. Replaces
-          the tall PageHeader so the three panes get maximum vertical room. */}
-      <div
-        className="rev-head"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 12,
-          marginBottom: 14,
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ flex: "1 1 auto", minWidth: 0 }}>
-          <h1 style={{ fontSize: 18, fontWeight: 600, margin: 0, letterSpacing: "-0.01em" }}>
-            Review Inbox
-          </h1>
-          <p className="dim" style={{ fontSize: 12, margin: "2px 0 0" }}>
+      {/* Inbox header — "Review Inbox" branding per the Review Feed design kit:
+          title + live total/avg subtitle + "View disputes" deep-link. The `rf`
+          scope supplies the kit's CSS vars; figures bind to the real reviewStats
+          query (avg shows "—" when there are no rated reviews yet). */}
+      <div className="rf rf-head">
+        <div className="rf-head__main">
+          <h1 className="rf-head__title">Review Inbox</h1>
+          <p className="rf-head__subtitle">
             {stats.total.toLocaleString()} total · avg{" "}
             {stats.avgRating ? stats.avgRating.toFixed(2) : "—"} · AI drafts replies you approve
           </p>
         </div>
-        <Link href="/reviews/dispute" className="btn">
-          <Icon name="flag" size={12} />
+        <Link href="/reviews/dispute" className="rf-head__disputes">
+          <Icon name="flag" size={14} />
           View disputes
         </Link>
       </div>

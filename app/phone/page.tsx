@@ -1,30 +1,33 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { EmptyIllustration } from "@/components/empty-state";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
-import { Sparkline } from "@/components/shell/sparkline";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
-import "./phone.css";
+import "./phone-receptionist.css";
 
 /**
- * Phone receptionist — repulabs v2 design (target: design-mockups/phone-after.png).
+ * AI Phone Receptionist — main dashboard, rebuilt to the delivered design kit
+ * (designs/Ai phone receptionist/main section — active + empty states).
  *
- * Layout: number-provisioning card (large formatted number + live chip + Buy
- * local number) | call-log table (CALLER / INTENT / OUTCOME / REVIEW) on top,
- * then a full-width "Transcript to review" narrative card.
+ * Kit composition (exact): hero ("Answer calls and turn great moments into
+ * reviews", with a headset + review-card illustration) · KPI row (Calls·30d /
+ * Minutes handled / AI cost·30d / Reviews ask from calls) · Number-provisioning
+ * card · Call-log table · Transcript-to-review card · Voice→Review automation
+ * card.
  *
- * ALL live tenant data: PhoneNumber list, recent PhoneCall list (intent/summary
+ * EVERY figure is live tenant data — the same reads/aggregates that already
+ * powered this page: PhoneNumber list, recent PhoneCall list (intent/summary
  * are real columns), 30-day aggregates, PhoneAssistant config, and the REVIEW
- * column joins ReviewRequest rows with triggerSource="voice_call" matched on
- * the call's lead contact — the exact keys lib/phone/voice-review.ts writes.
+ * column joins ReviewRequest rows (triggerSource="voice_call") matched on the
+ * call's lead contact — the exact keys lib/phone/voice-review.ts writes. Empty
+ * account → the kit's empty states (no fabricated numbers).
  */
 
 export const dynamic = "force-dynamic";
 
-const VOICE_ILLO = "/assets/repulabs/illustrations/voice-review.png";
+const TRANSCRIPT_ILLO = "/assets/repulabs/phone/transcript-to-review.svg";
 
 export default async function PhoneDashboardPage() {
   const { orgId } = await getOrgContext();
@@ -59,7 +62,10 @@ export default async function PhoneDashboardPage() {
   // Fail-soft: a transient DB error / pre-migration window must not 500 the page.
   let phoneNumbers: PhoneData[0] = [];
   let recentCalls: PhoneData[1] = [];
-  let stats: PhoneData[2] = { _count: { _all: 0 }, _sum: { aiCostMicros: null, durationSeconds: null } };
+  let stats: PhoneData[2] = {
+    _count: { _all: 0 },
+    _sum: { aiCostMicros: null, durationSeconds: null },
+  };
   let assistant: PhoneData[3] = null;
   let storyCall: PhoneData[4] = null;
   try {
@@ -81,319 +87,451 @@ export default async function PhoneDashboardPage() {
   ]);
 
   const totalCalls = stats._count._all ?? 0;
-  const totalCost = ((stats._sum.aiCostMicros ?? 0) / 1_000_000).toFixed(2);
   const totalMinutes = Math.round((stats._sum.durationSeconds ?? 0) / 60);
-  const avgMinutes = totalCalls > 0 ? (totalMinutes / totalCalls).toFixed(1) : "0";
+  const totalCost = ((stats._sum.aiCostMicros ?? 0) / 1_000_000).toFixed(2);
+  const avgMinutes = totalCalls > 0 ? (totalMinutes / totalCalls).toFixed(1) : null;
+  // Empty account = no calls AND no number → show the kit's "--" placeholders.
+  const hasActivity = totalCalls > 0;
 
   const [mainNumber, ...extraNumbers] = phoneNumbers;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Intelligence", "Phone Receptionist"]}>
-      <PageHeader
-        kicker={assistant?.enabled ? "Voice · live, answering 24/7" : "Voice · paused"}
-        title="Answer calls and turn great moments into reviews"
-        description="Number provisioning, AI receptionist settings, call logs, and review conversion — your AI answers, qualifies, books, and asks happy callers for a review."
-        actions={
-          <>
-            <Link href="/phone/voices" className="btn">
-              <Icon name="sound" size={12} />
-              Voice cloning
-            </Link>
-            <Link href="/phone/assistant" className="btn">
-              <Icon name="sliders" size={12} />
-              Assistant
-            </Link>
-            <Link href="/phone/setup" className="btn btn--pri">
-              <Icon name="plus" size={12} />
-              Provision number
-            </Link>
-          </>
-        }
-      />
-
-      <div className="grid-4" style={{ gap: 12, marginBottom: 14 }}>
-        <Kpi l="Calls · 30d" v={String(totalCalls)} d={`${avgMinutes}m avg`} />
-        <Kpi l="Minutes handled" v={String(totalMinutes)} d="AI on the phone" />
-        <Kpi l="AI cost · 30d" v={`$${totalCost}`} d="Pay-as-you-talk" />
-        <Kpi
-          l="Review asks from calls"
-          v={String(voiceReview.last30d)}
-          d={voiceReview.enabled ? "Voice → Review on" : "Voice → Review off"}
-        />
-      </div>
-
-      <div className="ph2-grid">
-        {/* ── Number provisioning ── */}
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Number provisioning</h3>
-            <span className="dim" style={{ fontSize: 11 }}>
-              Local voice line
-            </span>
-          </div>
-          {mainNumber ? (
+    <div className="pr">
+      <AppShellServer
+        topBar={<TopBar />}
+        crumbs={["Intelligence", "Phone Receptionist"]}
+      >
+        <PageHeader
+          kicker={
+            assistant?.enabled
+              ? "Voice · live, answering 24/7"
+              : "Voice · paused"
+          }
+          title="Answer calls and turn great moments into reviews"
+          description="Number provisioning, AI receptionist settings, call logs, and review conversion — your AI answers, qualifies, books, and asks happy callers for a review."
+          actions={
             <>
-              <div className="ph2-numpanel">
-                <div className="ph2-numpanel__label">
-                  {mainNumber.friendlyName || "Main line"}
-                </div>
-                <div className="ph2-num">{formatE164(mainNumber.phoneE164)}</div>
-                <div className="ph2-numpanel__meta">
-                  <span className="chip chip--ok">
-                    {assistant?.enabled ? "Live" : "Active"}
-                  </span>
-                  {mainNumber.forwardToE164 && (
-                    <span className="dim mono" style={{ fontSize: 11 }}>
-                      Handoff → {formatE164(mainNumber.forwardToE164)}
+              <Link href="/phone/voices" className="pr-btn pr-btn--sec">
+                <Icon name="sound" size={14} />
+                Voice cloning
+              </Link>
+              <Link href="/phone/assistant" className="pr-btn pr-btn--sec">
+                <Icon name="bot" size={14} />
+                Assistant
+              </Link>
+              <Link href="/phone/setup" className="pr-btn pr-btn--pri">
+                <Icon name="sparkle" size={14} />
+                Provision number
+              </Link>
+            </>
+          }
+        />
+
+        {/* ── KPI row — all live aggregates ── */}
+        <div className="pr-kpis">
+          <Kpi
+            tone="lav"
+            icon="phone"
+            label="Calls · 30d"
+            value={hasActivity ? String(totalCalls) : "—"}
+            sub={avgMinutes ? `${avgMinutes}m avg per call` : "— vs last 30d"}
+            positive={hasActivity}
+          />
+          <Kpi
+            tone="lav"
+            icon="sound"
+            label="Minutes handled"
+            value={hasActivity ? String(totalMinutes) : "—"}
+            sub={hasActivity ? "AI on the phone" : "— vs last 30d"}
+            positive={hasActivity}
+          />
+          <Kpi
+            tone="green"
+            icon="card"
+            label="AI cost · 30d"
+            value={hasActivity ? `$${totalCost}` : "—"}
+            sub={hasActivity ? "Pay-as-you-talk" : "— vs last 30d"}
+            positive={hasActivity}
+          />
+          <Kpi
+            tone="yellow"
+            icon="star"
+            label="Reviews ask from calls"
+            value={
+              voiceReview.last30d > 0
+                ? String(voiceReview.last30d)
+                : hasActivity
+                  ? "0"
+                  : "—"
+            }
+            sub={voiceReview.enabled ? "Voice → Review on" : "Voice → Review off"}
+            positive={voiceReview.enabled && voiceReview.last30d > 0}
+          />
+        </div>
+
+        {/* ── middle grid: number provisioning | call log ── */}
+        <div className="pr-mid">
+          {/* Number provisioning */}
+          <div className="pr-card">
+            <div className="pr-card__head">
+              <h3 className="pr-card__title">Number provisioning</h3>
+              <Link href="/phone/setup" className="pr-card__link">
+                Local voice line
+              </Link>
+            </div>
+            {mainNumber ? (
+              <div className="pr-prov-body" style={{ alignItems: "stretch" }}>
+                <div className="pr-numpanel">
+                  <div className="pr-numpanel__label">
+                    {mainNumber.friendlyName || "Main line"}
+                  </div>
+                  <div className="pr-num">{formatE164(mainNumber.phoneE164)}</div>
+                  <div className="pr-numpanel__meta">
+                    <span className="pr-chip pr-chip--ok">
+                      <Icon name="check" size={11} stroke={2.6} />
+                      {assistant?.enabled ? "Live" : "Active"}
                     </span>
-                  )}
+                    {mainNumber.forwardToE164 && (
+                      <span
+                        className="pr-caller__sub"
+                        style={{ fontFamily: "var(--f-mono)" }}
+                      >
+                        Handoff → {formatE164(mainNumber.forwardToE164)}
+                      </span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              {extraNumbers.map((p) => (
-                <Link key={p.id} href="/phone/setup" className="ph2-extra">
-                  <Icon name="phone" size={13} style={{ color: "var(--pri)", flexShrink: 0 }} />
-                  <span className="mono" style={{ fontWeight: 500 }}>
-                    {formatE164(p.phoneE164)}
-                  </span>
-                  {p.friendlyName && <span className="dim">{p.friendlyName}</span>}
-                  <span className="chip chip--ok" style={{ marginLeft: "auto" }}>
-                    Active
-                  </span>
-                </Link>
-              ))}
-              <div className="ph2-actions">
-                <Link href="/phone/setup" className="btn">
-                  <Icon name="plus" size={11} />
+                {extraNumbers.map((p) => (
+                  <Link key={p.id} href="/phone/setup" className="pr-extra">
+                    <Icon
+                      name="phone"
+                      size={13}
+                      style={{ color: "var(--pr-pri)", flexShrink: 0 }}
+                    />
+                    <span style={{ fontWeight: 500 }}>
+                      {formatE164(p.phoneE164)}
+                    </span>
+                    {p.friendlyName && (
+                      <span className="pr-caller__sub">{p.friendlyName}</span>
+                    )}
+                    <span
+                      className="pr-chip pr-chip--ok"
+                      style={{ marginLeft: "auto" }}
+                    >
+                      Active
+                    </span>
+                  </Link>
+                ))}
+                <Link
+                  href="/phone/setup"
+                  className="pr-btn pr-btn--pri"
+                  style={{ marginTop: 4, alignSelf: "center" }}
+                >
+                  <Icon name="plus" size={13} />
                   Buy local number
                 </Link>
               </div>
-            </>
-          ) : (
-            <div className="ds-card__body" style={{ textAlign: "center", padding: "24px 18px" }}>
-              <EmptyIllustration name="phone-empty" size={170} />
-              <p className="dim" style={{ marginTop: 10, fontSize: 13 }}>
-                No numbers leased yet. Lease a local line and the AI starts answering.
-              </p>
-              <Link href="/phone/setup" className="btn btn--pri" style={{ marginTop: 12 }}>
-                Buy local number
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* ── Call log ── */}
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Call log</h3>
-            <div className="row" style={{ gap: 8 }}>
-              <span className="dim" style={{ fontSize: 11 }}>
-                Recent calls
-              </span>
-              <Link href="/phone/calls" className="btn btn--xs">
-                View all
-              </Link>
-            </div>
+            ) : (
+              <div className="pr-prov-body">
+                <div className="pr-prov-illo" aria-hidden="true">
+                  <div className="pr-phone-frame">
+                    <Icon
+                      name="checkCircle"
+                      size={18}
+                      style={{ color: "var(--pr-warn)" }}
+                    />
+                    <span className="pr-numpill">
+                      <Icon name="phone" size={9} />
+                      Local
+                    </span>
+                  </div>
+                  <Icon
+                    name="sparkle"
+                    size={14}
+                    style={{
+                      position: "absolute",
+                      top: 6,
+                      right: 12,
+                      color: "var(--pr-pri-border)",
+                    }}
+                  />
+                  <Icon
+                    name="sparkle"
+                    size={10}
+                    style={{
+                      position: "absolute",
+                      bottom: 10,
+                      left: 8,
+                      color: "var(--pr-pri-border)",
+                    }}
+                  />
+                </div>
+                <p className="pr-prov-copy">
+                  No numbers leased yet. Lease a local line and the AI starts
+                  answering.
+                </p>
+                <Link href="/phone/setup" className="pr-btn pr-btn--pri">
+                  Buy local number
+                </Link>
+              </div>
+            )}
           </div>
-          {recentCalls.length === 0 ? (
-            <div className="ds-card__body dim" style={{ textAlign: "center", padding: 32 }}>
-              <Icon name="phone" size={28} style={{ color: "var(--pri)" }} />
-              <p style={{ marginTop: 10, fontSize: 13 }}>Calls will appear here as they come in.</p>
-            </div>
-          ) : (
-            <div className="ph2-tablewrap">
-              <table className="tbl tbl--compact">
-                <thead>
-                  <tr>
-                    <th>Caller</th>
-                    <th>Intent</th>
-                    <th>Outcome</th>
-                    <th>Review</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentCalls.map((c) => {
-                    const outcome = callOutcome(c.status, c.forwardedTo, c.intent);
-                    const review = reviewChip(
-                      reviewByRecipient.get(c.leadPhone ?? "") ??
-                        reviewByRecipient.get(c.leadEmail ?? ""),
-                    );
-                    return (
-                      <tr key={c.id}>
-                        <td>
-                          <Link href={`/phone/calls/${c.id}`} className="ph2-caller">
-                            <span className="ph2-caller__name">
-                              {c.leadName || formatE164(c.fromE164)}
-                            </span>
-                            <span className="ph2-caller__sub">
-                              {c.leadName ? `${formatE164(c.fromE164)} · ` : ""}
-                              {c.durationSeconds
-                                ? `${Math.floor(c.durationSeconds / 60)}m ${c.durationSeconds % 60}s`
-                                : "—"}{" "}
-                              · {c.startedAt ? relativeTime(c.startedAt) : "—"}
-                            </span>
-                          </Link>
-                        </td>
-                        <td className="ph2-intent">{c.intent?.replace(/_/g, " ") || "—"}</td>
-                        <td>
-                          <span className={`chip ${outcome.tone}`}>{outcome.label}</span>
-                        </td>
-                        <td>{review}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
 
-      {/* ── Transcript to review (AI narrative) ── */}
-      <div className="ds-card" style={{ marginBottom: 14 }}>
-        <div className="ds-card__head">
-          <h3 className="ds-card__title">Transcript to review</h3>
-          <span className="dim" style={{ fontSize: 11 }}>
-            AI receptionist
-          </span>
-        </div>
-        {storyCall?.summary ? (
-          <div className="ph2-story">
-            <div style={{ minWidth: 0 }}>
-              <p className="ph2-story__quote">{storyCall.summary}</p>
-              <div className="ph2-story__meta">
-                <strong style={{ color: "var(--ink)" }}>
-                  {storyCall.leadName || formatE164(storyCall.fromE164)}
-                </strong>
-                {storyCall.intent && (
-                  <span className="chip chip--info ph2-intent">
-                    {storyCall.intent.replace(/_/g, " ")}
-                  </span>
-                )}
-                {reviewChip(
-                  reviewByRecipient.get(storyCall.leadPhone ?? "") ??
-                    reviewByRecipient.get(storyCall.leadEmail ?? ""),
-                  true,
-                )}
-                <span>{storyCall.startedAt ? relativeTime(storyCall.startedAt) : ""}</span>
-                <Link
-                  href={`/phone/calls/${storyCall.id}`}
-                  style={{ color: "var(--pri)", fontWeight: 600, textDecoration: "none" }}
+          {/* Call log */}
+          <div className="pr-card">
+            <div className="pr-card__head">
+              <h3 className="pr-card__title">Call log</h3>
+              <div
+                className="row"
+                style={{ gap: 10, marginLeft: "auto", alignItems: "center" }}
+              >
+                <span
+                  style={{ fontSize: 12, fontWeight: 800, color: "#252f67" }}
                 >
-                  Read full transcript →
+                  Recent calls
+                </span>
+                <Link href="/phone/calls" className="pr-btn pr-btn--sec pr-btn--xs">
+                  View all
                 </Link>
               </div>
             </div>
-            <div className="ph2-story__art">
-              {/* biome-ignore lint/performance/noImgElement: static brand illustration */}
-              <img src={VOICE_ILLO} alt="" aria-hidden="true" />
-            </div>
+            {recentCalls.length === 0 ? (
+              <div className="pr-empty">
+                <span className="pr-circle" style={{ width: 72, height: 72 }}>
+                  <Icon name="phone" size={30} />
+                </span>
+                <div className="pr-empty__title">No calls yet</div>
+                <div className="pr-empty__body">
+                  Calls will appear here as they come in.
+                </div>
+              </div>
+            ) : (
+              <div className="pr-tablewrap">
+                <table className="pr-tbl">
+                  <thead>
+                    <tr>
+                      <th>Caller</th>
+                      <th>Intent</th>
+                      <th>Outcome</th>
+                      <th>Review</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {recentCalls.map((c) => {
+                      const outcome = callOutcome(
+                        c.status,
+                        c.forwardedTo,
+                        c.intent,
+                      );
+                      const review = reviewChip(
+                        reviewByRecipient.get(c.leadPhone ?? "") ??
+                          reviewByRecipient.get(c.leadEmail ?? ""),
+                      );
+                      return (
+                        <tr key={c.id}>
+                          <td>
+                            <Link
+                              href={`/phone/calls/${c.id}`}
+                              className="pr-caller"
+                            >
+                              <span className="pr-caller__name">
+                                {c.leadName || formatE164(c.fromE164)}
+                              </span>
+                              <span className="pr-caller__sub">
+                                {c.leadName ? `${formatE164(c.fromE164)} · ` : ""}
+                                {c.durationSeconds
+                                  ? `${Math.floor(c.durationSeconds / 60)}m ${c.durationSeconds % 60}s`
+                                  : "—"}{" "}
+                                · {c.startedAt ? relativeTime(c.startedAt) : "—"}
+                              </span>
+                            </Link>
+                          </td>
+                          <td className="pr-intent">
+                            {c.intent?.replace(/_/g, " ") || "—"}
+                          </td>
+                          <td>
+                            <span className={`pr-chip ${outcome.tone}`}>
+                              {outcome.label}
+                            </span>
+                          </td>
+                          <td>{review}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
-        ) : (
-          <div className="ph2-story ph2-story--empty">
-            <div>
-              <EmptyIllustration name={VOICE_ILLO} size={230} />
-              <p className="dim" style={{ marginTop: 10, fontSize: 13, maxWidth: 420, marginInline: "auto" }}>
-                After each answered call the AI writes a summary here — and when the moment is
-                right, it queues a friendly review request automatically.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        </div>
 
-      {/* Voice → Review funnel card (Module 15) */}
-      <Link
-        href="/autopilot"
-        className="ds-card"
-        style={{
-          display: "block",
-          marginBottom: 14,
-          padding: 16,
-          textDecoration: "none",
-          color: "inherit",
-          borderColor: voiceReview.enabled ? "var(--pri)" : "var(--line)",
-        }}
-      >
-        <div className="row" style={{ gap: 14, alignItems: "center" }}>
-          <span
-            style={{
-              width: 38,
-              height: 38,
-              borderRadius: 10,
-              background: voiceReview.enabled ? "var(--pri)" : "var(--pri-50)",
-              color: voiceReview.enabled ? "#fff" : "var(--pri)",
-              display: "grid",
-              placeItems: "center",
-              flexShrink: 0,
-            }}
-          >
-            <Icon name="star" size={18} />
+        {/* ── Transcript to review ── */}
+        <div className="pr-card" style={{ marginBottom: 14 }}>
+          <div className="pr-card__head">
+            <h3 className="pr-card__title">Transcript to review</h3>
+            <span className="pr-card__action">All responses</span>
+          </div>
+          {storyCall?.summary ? (
+            <div className="pr-story">
+              <div style={{ minWidth: 0 }}>
+                <p className="pr-story__quote">{storyCall.summary}</p>
+                <div className="pr-story__meta">
+                  <strong style={{ color: "var(--pr-ink-strong)" }}>
+                    {storyCall.leadName || formatE164(storyCall.fromE164)}
+                  </strong>
+                  {storyCall.intent && (
+                    <span className="pr-chip pr-chip--info pr-intent">
+                      {storyCall.intent.replace(/_/g, " ")}
+                    </span>
+                  )}
+                  {reviewChip(
+                    reviewByRecipient.get(storyCall.leadPhone ?? "") ??
+                      reviewByRecipient.get(storyCall.leadEmail ?? ""),
+                    true,
+                  )}
+                  <span>
+                    {storyCall.startedAt ? relativeTime(storyCall.startedAt) : ""}
+                  </span>
+                  <Link
+                    href={`/phone/calls/${storyCall.id}`}
+                    className="pr-link"
+                  >
+                    Read full transcript →
+                  </Link>
+                </div>
+              </div>
+              <div className="pr-story__art">
+                {/* biome-ignore lint/performance/noImgElement: static brand illustration */}
+                <img src={TRANSCRIPT_ILLO} alt="" aria-hidden="true" />
+              </div>
+            </div>
+          ) : (
+            <div className="pr-story pr-story--empty">
+              <div className="pr-story__art">
+                {/* biome-ignore lint/performance/noImgElement: static brand illustration */}
+                <img src={TRANSCRIPT_ILLO} alt="" aria-hidden="true" />
+              </div>
+              <div>
+                <div className="pr-empty__title">No transcripts yet</div>
+                <p className="pr-story__empty-copy" style={{ marginTop: 6 }}>
+                  Transcripts of calls will appear here after your AI receptionist
+                  has conversations.
+                </p>
+                <Link
+                  href="/phone/calls"
+                  className="pr-btn pr-btn--outline"
+                  style={{ marginTop: 14 }}
+                >
+                  View transcripts
+                  <Icon name="chevR" size={13} />
+                </Link>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* ── Voice → Review automation card ── */}
+        <Link
+          href="/autopilot"
+          className="pr-card pr-v2r"
+          style={{
+            marginBottom: 14,
+            borderColor: voiceReview.enabled
+              ? "var(--pr-pri)"
+              : "var(--pr-line)",
+          }}
+        >
+          <span className="pr-tile pr-tile--grad pr-v2r__tile">
+            <Icon name="chat" size={26} />
           </span>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div className="row" style={{ gap: 8 }}>
-              <strong style={{ fontSize: 14 }}>Voice → Review</strong>
-              <span className={`chip ${voiceReview.enabled ? "chip--ok" : "chip--info"}`}>
+            <div className="row" style={{ gap: 8, alignItems: "center" }}>
+              <strong style={{ fontSize: 15, color: "var(--pr-ink-strong)" }}>
+                Voice → Review
+              </strong>
+              <span
+                className={`pr-chip ${voiceReview.enabled ? "pr-chip--ok" : "pr-chip--info"}`}
+              >
                 {voiceReview.enabled ? "On" : "Off"}
               </span>
             </div>
-            <div className="dim" style={{ fontSize: 12, marginTop: 2 }}>
+            <div
+              style={{
+                fontSize: 12,
+                fontWeight: 700,
+                color: "var(--pr-ink-3)",
+                marginTop: 3,
+              }}
+            >
               {voiceReview.enabled
                 ? `Resolved calls become Google review requests automatically — ${voiceReview.last30d} created in the last 30 days.`
                 : "Turn resolved phone calls into Google reviews automatically. Manage in Autopilot."}
             </div>
           </div>
-          <Icon name="chevR" size={14} style={{ color: "var(--rl-muted-2)" }} />
-        </div>
-      </Link>
+          <span className="pr-v2r__chevron">
+            <Icon name="chevR" size={16} />
+          </span>
+        </Link>
 
-      {!assistant?.enabled && (
-        <div className="ds-card" style={{ padding: 18 }}>
-          <div className="row" style={{ gap: 12 }}>
-            <Icon name="alert" size={18} style={{ color: "var(--warn)" }} />
-            <div style={{ flex: 1 }}>
-              <strong style={{ fontSize: 13 }}>The AI assistant is paused</strong>
-              <div className="dim" style={{ fontSize: 12, marginTop: 2 }}>
-                Configure the voice + prompt, then flip it live to start answering calls.
+        {!assistant?.enabled && (
+          <div className="pr-card" style={{ padding: 18 }}>
+            <div className="row" style={{ gap: 12, alignItems: "center" }}>
+              <Icon
+                name="alert"
+                size={18}
+                style={{ color: "var(--pr-warn)", flexShrink: 0 }}
+              />
+              <div style={{ flex: 1 }}>
+                <strong style={{ fontSize: 13, color: "var(--pr-ink-strong)" }}>
+                  The AI assistant is paused
+                </strong>
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: "var(--pr-muted)",
+                    marginTop: 2,
+                  }}
+                >
+                  Configure the voice + prompt, then flip it live to start
+                  answering calls.
+                </div>
               </div>
+              <Link href="/phone/assistant" className="pr-btn pr-btn--pri">
+                Configure
+              </Link>
             </div>
-            <Link href="/phone/assistant" className="btn btn--pri">
-              Configure
-            </Link>
           </div>
-        </div>
-      )}
-    </AppShellServer>
+        )}
+      </AppShellServer>
+    </div>
   );
 }
 
 function Kpi({
-  l,
-  v,
-  d,
-  spark,
-  up,
+  tone,
+  icon,
+  label,
+  value,
+  sub,
+  positive,
 }: {
-  l: string;
-  v: string;
-  d: string;
-  spark?: number[];
-  up?: boolean;
+  tone: "lav" | "green" | "yellow";
+  icon: "phone" | "sound" | "card" | "star";
+  label: string;
+  value: string;
+  sub: string;
+  /** Green chip only for a real positive signal; neutral otherwise. */
+  positive?: boolean;
 }) {
   return (
-    <div className="ds-card">
-      <div className="stat">
-        <div className="stat__label">{l}</div>
-        <div
-          className="row"
-          style={{ alignItems: "flex-end", gap: 8, justifyContent: "space-between" }}
-        >
-          <span className="stat__value">{v}</span>
-          {spark && <Sparkline points={spark} width={68} height={26} />}
-        </div>
-        <div className={`stat__delta${up ? " up" : ""}`}>
-          {up && <Icon name="arrowU" size={10} stroke={2.4} />}
-          {d}
-        </div>
+    <div className="pr-kpi">
+      <span className={`pr-tile pr-tile--${tone} pr-kpi__tile`}>
+        <Icon name={icon} size={26} />
+      </span>
+      <div className="pr-kpi__body">
+        <div className="pr-kpi__label">{label}</div>
+        <div className="pr-kpi__value">{value}</div>
+        <span className={`pr-trend${positive ? " pr-trend--up" : ""}`}>{sub}</span>
       </div>
     </div>
   );
@@ -411,43 +549,52 @@ function callOutcome(
   forwardedTo: string | null,
   intent: string | null,
 ): { label: string; tone: string } {
-  if (forwardedTo) return { label: "Handoff", tone: "chip--warn" };
+  if (forwardedTo) return { label: "Handoff", tone: "pr-chip--warn" };
   switch (status) {
     case "completed":
       return /book/i.test(intent ?? "")
-        ? { label: "Booked", tone: "chip--ok" }
-        : { label: "Answered", tone: "chip--ok" };
+        ? { label: "Booked", tone: "pr-chip--ok" }
+        : { label: "Answered", tone: "pr-chip--ok" };
     case "failed":
     case "busy":
     case "no-answer":
     case "canceled":
-      return { label: "Missed", tone: "chip--bad" };
+      return { label: "Missed", tone: "pr-chip--bad" };
     case "in-progress":
     case "ringing":
-      return { label: "Live", tone: "chip--info" };
+      return { label: "Live", tone: "pr-chip--info" };
     default:
-      return { label: status ? status.replace(/-/g, " ") : "—", tone: "chip--out" };
+      return {
+        label: status ? status.replace(/-/g, " ") : "—",
+        tone: "pr-chip--out",
+      };
   }
 }
 
 /** REVIEW cell: ReviewRequest status → chip (or a quiet em-dash). */
-function reviewChip(status: string | undefined, hideDash = false): React.ReactNode {
-  if (!status) return hideDash ? null : <span className="dim">—</span>;
+function reviewChip(
+  status: string | undefined,
+  hideDash = false,
+): React.ReactNode {
+  if (!status)
+    return hideDash ? null : (
+      <span style={{ color: "var(--pr-muted-2)" }}>—</span>
+    );
   const map: Record<string, { label: string; tone: string }> = {
-    queued: { label: "Queued", tone: "chip--warn" },
-    scheduled: { label: "Queued", tone: "chip--warn" },
-    sending: { label: "Sent", tone: "chip--info" },
-    sent: { label: "Sent", tone: "chip--info" },
-    delivered: { label: "Sent", tone: "chip--info" },
-    opened: { label: "Opened", tone: "chip--pri" },
-    clicked: { label: "Clicked", tone: "chip--pri" },
-    reviewed: { label: "Reviewed", tone: "chip--ok" },
-    converted: { label: "Reviewed", tone: "chip--ok" },
-    failed: { label: "Failed", tone: "chip--bad" },
-    bounced: { label: "Failed", tone: "chip--bad" },
+    queued: { label: "Queued", tone: "pr-chip--warn" },
+    scheduled: { label: "Queued", tone: "pr-chip--warn" },
+    sending: { label: "Sent", tone: "pr-chip--info" },
+    sent: { label: "Sent", tone: "pr-chip--info" },
+    delivered: { label: "Sent", tone: "pr-chip--info" },
+    opened: { label: "Opened", tone: "pr-chip--info" },
+    clicked: { label: "Clicked", tone: "pr-chip--info" },
+    reviewed: { label: "Reviewed", tone: "pr-chip--ok" },
+    converted: { label: "Reviewed", tone: "pr-chip--ok" },
+    failed: { label: "Failed", tone: "pr-chip--bad" },
+    bounced: { label: "Failed", tone: "pr-chip--bad" },
   };
-  const c = map[status] ?? { label: status, tone: "chip--out" };
-  return <span className={`chip ${c.tone}`}>{c.label}</span>;
+  const c = map[status] ?? { label: status, tone: "pr-chip--out" };
+  return <span className={`pr-chip ${c.tone}`}>{c.label}</span>;
 }
 
 function relativeTime(d: Date): string {

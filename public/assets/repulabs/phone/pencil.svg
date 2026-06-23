@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="pencilGrad" x1="145" y1="348" x2="368" y2="125" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6F43FF"/>
+      <stop offset="0.55" stop-color="#4D22FF"/>
+      <stop offset="1" stop-color="#6A42FF"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="rotate(-45 256 256)">
+    <!-- main pencil outline -->
+    <path d="M142 226H334C363 226 386 249 386 278C386 307 363 330 334 330H142L92 278L142 226Z"
+          stroke="url(#pencilGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- pencil tip -->
+    <path d="M92 278L142 256V300L92 278Z"
+          stroke="url(#pencilGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <!-- inner body line -->
+    <path d="M156 278H294" stroke="url(#pencilGrad)" stroke-width="18" stroke-linecap="round"/>
+
+    <!-- eraser/upper cap division -->
+    <path d="M322 226L360 264" stroke="url(#pencilGrad)" stroke-width="18" stroke-linecap="round"/>
+  </g>
+</svg>

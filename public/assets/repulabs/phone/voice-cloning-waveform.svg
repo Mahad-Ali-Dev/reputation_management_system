@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="purpleWave" x1="77" y1="48" x2="417" y2="468" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7A3DFF"/>
+      <stop offset="0.52" stop-color="#873FFF"/>
+      <stop offset="1" stop-color="#5120F4"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="97" y1="78" x2="397" y2="438" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A160FF" stop-opacity="0.45"/>
+      <stop offset="0.38" stop-color="#FFFFFF" stop-opacity="0.07"/>
+      <stop offset="1" stop-color="#2C0AD8" stop-opacity="0.18"/>
+    </linearGradient>
+  </defs>
+
+  <!-- transparent background, icon only -->
+  <g>
+    <ellipse cx="53.5" cy="256" rx="40.5" ry="39" fill="url(#purpleWave)"/>
+    <rect x="112" y="153" width="78" height="202" rx="39" fill="url(#purpleWave)"/>
+    <rect x="214" y="43" width="79" height="427" rx="39.5" fill="url(#purpleWave)"/>
+    <rect x="319" y="122" width="77" height="250" rx="38.5" fill="url(#purpleWave)"/>
+    <ellipse cx="456" cy="256" rx="40" ry="39" fill="url(#purpleWave)"/>
+  </g>
+
+  <g opacity="0.42">
+    <ellipse cx="53.5" cy="256" rx="40.5" ry="39" fill="url(#shine)"/>
+    <rect x="112" y="153" width="78" height="202" rx="39" fill="url(#shine)"/>
+    <rect x="214" y="43" width="79" height="427" rx="39.5" fill="url(#shine)"/>
+    <rect x="319" y="122" width="77" height="250" rx="38.5" fill="url(#shine)"/>
+    <ellipse cx="456" cy="256" rx="40" ry="39" fill="url(#shine)"/>
+  </g>
+</svg>

@@ -1,0 +1,360 @@
+/*
+ * Review Feed — page-scoped styles for the empty-state card + inbox header.
+ *
+ * Matches the "Review Feed" design-kit handoff (review feed.md). The kit's
+ * :root var block is mapped onto a `.rf` scope so these values never leak into
+ * the shared design system. The app keeps OUR AppShellServer sidebar + topbar;
+ * only the page CONTENT (header + empty card) is themed here.
+ *
+ * Class prefix: `rf-` (Review Feed). All custom props are `--rf-*`.
+ */
+
+.rf {
+  /* Kit palette (from handoff :root) */
+  --rf-text-primary: #090f24;
+  --rf-text-secondary: #405074;
+  --rf-text-body: #4a5a7d;
+  --rf-muted: #8a95ad;
+  --rf-border-soft: #e6eaf3;
+  --rf-border-card: #e5e8f2;
+  --rf-primary: #4b22f6;
+  --rf-primary-soft: #e6ddff;
+  --rf-green: #16a34a;
+  --rf-green-soft: #ddfbea;
+  --rf-shadow-soft: 0 18px 45px rgba(39, 53, 92, 0.08);
+}
+
+/* ───────────────────────── Inbox header ───────────────────────── */
+
+.rf-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.rf-head__main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.rf-head__title {
+  margin: 0;
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  color: var(--rf-text-primary);
+}
+
+.rf-head__subtitle {
+  margin: 6px 0 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--rf-text-secondary);
+}
+
+.rf-head__disputes {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid var(--rf-border-card);
+  background: #fff;
+  color: var(--rf-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    border-color 0.15s ease,
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+.rf-head__disputes:hover {
+  border-color: var(--rf-primary-soft);
+  box-shadow: 0 6px 16px rgba(39, 53, 92, 0.07);
+  transform: translateY(-1px);
+}
+
+.rf-head__disputes:focus-visible {
+  outline: 2px solid rgba(75, 34, 246, 0.35);
+  outline-offset: 2px;
+}
+
+/* ───────────────────────── Empty-state card ───────────────────────── */
+
+.rf-card {
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid var(--rf-border-card);
+  box-shadow: var(--rf-shadow-soft);
+  overflow: hidden;
+}
+
+/* Illustration / hero area */
+.rf-hero {
+  position: relative;
+  padding: 56px 24px 8px;
+  text-align: center;
+  background:
+    radial-gradient(circle at 18% 16%, rgba(111, 73, 255, 0.1), transparent 36%),
+    radial-gradient(circle at 88% 18%, rgba(255, 180, 110, 0.16), transparent 36%),
+    linear-gradient(180deg, #fff 0%, #fbfbff 100%);
+}
+
+/* Dotted corner patterns (upper corners) */
+.rf-hero::before,
+.rf-hero::after {
+  content: "";
+  position: absolute;
+  top: 22px;
+  width: 86px;
+  height: 60px;
+  background-image: radial-gradient(currentColor 1.6px, transparent 1.6px);
+  background-size: 14px 14px;
+  color: rgba(111, 73, 255, 0.18);
+  opacity: 0.9;
+  pointer-events: none;
+}
+
+.rf-hero::before {
+  left: 24px;
+}
+
+.rf-hero::after {
+  right: 24px;
+  color: rgba(255, 168, 99, 0.22);
+}
+
+.rf-hero__art {
+  position: relative;
+  display: inline-block;
+  height: auto;
+  width: min(320px, 64%);
+  z-index: 1;
+}
+
+/* Empty-state copy */
+.rf-body {
+  padding: 4px 24px 44px;
+  text-align: center;
+}
+
+.rf-body__title {
+  margin: 8px 0 0;
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  color: var(--rf-text-primary);
+}
+
+.rf-body__text {
+  margin: 14px auto 0;
+  max-width: 620px;
+  font-size: 17px;
+  line-height: 30px;
+  color: var(--rf-text-body);
+}
+
+.rf-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--rf-green-soft);
+  color: var(--rf-green);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rf-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 36px;
+  width: 395px;
+  max-width: 100%;
+  height: 56px;
+  padding: 0 24px;
+  border-radius: 28px;
+  border: none;
+  background: linear-gradient(90deg, #5527ff, #3c16f4);
+  color: #fff;
+  font-size: 18px;
+  font-weight: 700;
+  text-decoration: none;
+  box-shadow: 0 14px 28px rgba(68, 31, 245, 0.26);
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    filter 0.15s ease;
+}
+
+.rf-cta:hover {
+  filter: brightness(1.04);
+  transform: translateY(-1px);
+  box-shadow: 0 18px 34px rgba(68, 31, 245, 0.32);
+}
+
+.rf-cta:focus-visible {
+  outline: 2px solid rgba(75, 34, 246, 0.45);
+  outline-offset: 3px;
+}
+
+.rf-cta__arrow {
+  transition: transform 0.15s ease;
+}
+
+.rf-cta:hover .rf-cta__arrow {
+  transform: translateX(3px);
+}
+
+/* ───────────────────────── Benefit strip ───────────────────────── */
+
+.rf-benefits {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--rf-border-card);
+}
+
+.rf-benefit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 12px;
+  padding: 34px 24px;
+}
+
+.rf-benefit + .rf-benefit {
+  border-left: 1px solid var(--rf-border-card);
+}
+
+.rf-benefit__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+}
+
+.rf-benefit__icon img {
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
+}
+
+.rf-benefit__icon--purple {
+  background: #e1d4ff;
+}
+
+.rf-benefit__icon--blue {
+  background: #dce7ff;
+}
+
+.rf-benefit__icon--green {
+  background: #d8f7e5;
+}
+
+.rf-benefit__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--rf-text-primary);
+}
+
+.rf-benefit__body {
+  margin: 0;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--rf-text-secondary);
+}
+
+/* ───────────────────────── "Connected but syncing" variant ───────────────────────── */
+
+.rf-syncing {
+  padding: 44px 24px;
+  text-align: center;
+}
+
+.rf-syncing__art {
+  display: inline-block;
+  width: 132px;
+  height: auto;
+}
+
+.rf-syncing__title {
+  margin: 16px 0 6px;
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--rf-text-primary);
+}
+
+.rf-syncing__text {
+  margin: 0 auto;
+  max-width: 440px;
+  font-size: 15px;
+  line-height: 24px;
+  color: var(--rf-text-secondary);
+}
+
+/* ───────────────────────── Responsive ───────────────────────── */
+
+@media (max-width: 760px) {
+  .rf-head__title {
+    font-size: 24px;
+    line-height: 30px;
+  }
+  .rf-head__subtitle {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 640px) {
+  .rf-head {
+    align-items: stretch;
+  }
+  .rf-head__disputes {
+    width: 100%;
+    justify-content: center;
+  }
+  .rf-card {
+    border-radius: 16px;
+  }
+  .rf-hero {
+    padding: 40px 16px 4px;
+  }
+  .rf-hero::before,
+  .rf-hero::after {
+    display: none;
+  }
+  .rf-body {
+    padding: 4px 16px 36px;
+  }
+  .rf-body__title {
+    font-size: 23px;
+  }
+  .rf-body__text {
+    font-size: 16px;
+    line-height: 27px;
+  }
+  .rf-cta {
+    width: 100%;
+  }
+  .rf-benefits {
+    grid-template-columns: 1fr;
+  }
+  .rf-benefit + .rf-benefit {
+    border-left: none;
+    border-top: 1px solid var(--rf-border-card);
+  }
+}

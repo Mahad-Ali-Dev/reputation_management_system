@@ -1,20 +1,38 @@
-import Link from "next/link";
+import { AppShellServer } from "@/components/app-shell-server";
+import { PageHeader } from "@/components/page-header";
+import { Icon } from "@/components/shell/icon";
+import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { isElevenLabsConfigured } from "@/lib/phone/elevenlabs";
 import {
   deleteClonedVoice,
   revertToTwilioVoice,
   setActiveVoice,
-  uploadAndCloneVoice,
 } from "@/lib/phone/voice-actions";
-import { isElevenLabsConfigured } from "@/lib/phone/elevenlabs";
-import { AppShellServer } from "@/components/app-shell-server";
-import { TopBar } from "@/components/topbar";
-import { PageHeader } from "@/components/page-header";
+import Link from "next/link";
+import { CloneVoiceForm } from "./_components/clone-voice-form";
+import "../phone-receptionist.css";
+
+/**
+ * Voice cloning — rebuilt to the delivered design kit
+ * (designs/Ai phone receptionist/voice cloning). Kit sections: back link +
+ * header, verification banner, How-to card, Clone-a-new-voice form, optional
+ * description (inside the form), "Can't find your voice?" tips banner, floating
+ * chat.
+ *
+ * LIVE DATA / real wiring:
+ *   • Verification status = isElevenLabsConfigured() — drives the warning vs.
+ *     ready banner and gates the Clone button (the real precondition for cloning
+ *     in lib/phone/voice-actions.ts).
+ *   • Clone form → existing `uploadAndCloneVoice` (see ./_components).
+ *   • The active-voice card + cloned-voices list are EXISTING working features
+ *     (setActiveVoice / revertToTwilioVoice / deleteClonedVoice) with no mockup
+ *     equivalent — kept and restyled into kit cards (reported).
+ */
 
 export const dynamic = "force-dynamic";
+const ASSET = "/assets/repulabs/phone";
 
 export default async function PhoneVoicesPage() {
   const { orgId } = await getOrgContext();
@@ -27,182 +45,264 @@ export default async function PhoneVoicesPage() {
       }),
       tx.phoneAssistant.findUnique({ where: { organizationId: orgId } }),
     ]),
-  );
+  ).catch(() => [[], null] as const);
 
-  const configured = isElevenLabsConfigured();
+  const verified = isElevenLabsConfigured();
   const activeVoiceId = assistant?.elevenlabsVoiceId;
+  const usingClone = assistant?.voiceProvider === "elevenlabs";
 
   return (
-    <AppShellServer topBar={<TopBar title="Voice cloning" />}>
-      <PageHeader
-        title="Voice cloning"
-        description="Replace stock voices with a custom ElevenLabs clone."
-        breadcrumb={[{"label":"AI Phone","href":"/phone"},{"label":"Voices"}]}
-      />
+    <div className="pr">
+      <AppShellServer topBar={<TopBar title="Voice cloning" />}>
+        <Link href="/phone" className="pr-back">
+          <Icon name="arrowR" size={14} style={{ transform: "rotate(180deg)" }} />
+          Back to AI Phone Receptionist
+        </Link>
 
-        
-      <div className="space-y-6">
-{!configured && (
-          <Card className="border-amber-200 bg-amber-50">
-            <CardHeader>
-              <CardTitle className="text-base text-amber-900">ElevenLabs not configured</CardTitle>
-              <CardDescription className="text-amber-800">
-                Add <code className="bg-amber-100 px-1.5 py-0.5 rounded">ELEVENLABS_API_KEY</code> to your environment
-                variables. Get a key at{" "}
-                <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" rel="noopener noreferrer" className="underline">
-                  elevenlabs.io/app/settings/api-keys
-                </a>.
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
+        <PageHeader
+          title="Voice cloning"
+          description="Make AI sound like you with your cloned voice."
+          actions={
+            <span
+              className="pr-tile pr-tile--lav"
+              aria-hidden="true"
+              style={{ width: 64, height: 64, borderRadius: 14 }}
+            >
+              <img
+                src={`${ASSET}/voice-cloning-waveform.svg`}
+                alt=""
+                width={36}
+                height={36}
+              />
+            </span>
+          }
+        />
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-lg">
-              Active voice: {assistant?.voiceProvider === "elevenlabs" ? "ElevenLabs clone" : "Twilio (stock)"}
-            </CardTitle>
-            <CardDescription>
-              {assistant?.voiceProvider === "elevenlabs"
-                ? `Using cloned voice ${voices.find((v) => v.externalVoiceId === activeVoiceId)?.displayName ?? "(unknown)"}.`
-                : `Using Twilio's built-in voice "${assistant?.voice ?? "alice"}". Stable and instant — no latency.`}
-            </CardDescription>
-          </CardHeader>
-          {assistant?.voiceProvider === "elevenlabs" && (
-            <CardContent>
-              <form action={revertToTwilioVoice}>
-                <Button type="submit" variant="outline" size="sm">
-                  Revert to Twilio stock voice
-                </Button>
-              </form>
-            </CardContent>
+        <div className="pr-stack">
+          {/* ── Verification banner — gated on real status ── */}
+          {verified ? (
+            <section className="pr-banner pr-banner--ok">
+              <span
+                className="pr-circle pr-banner__circle"
+                style={{ background: "#cdf5e1", color: "#0a9f57" }}
+              >
+                <Icon name="checkCircle" size={26} />
+              </span>
+              <div>
+                <div className="pr-banner__title">Voice cloning is ready</div>
+                <div className="pr-banner__body">
+                  Upload a clean sample below to train a custom voice for your
+                  receptionist.
+                </div>
+              </div>
+            </section>
+          ) : (
+            <section className="pr-banner pr-banner--warn">
+              <span className="pr-circle pr-banner__circle pr-banner__circle--warn">
+                <img
+                  src={`${ASSET}/voice-not-verified-shield.svg`}
+                  alt=""
+                  aria-hidden="true"
+                  width={30}
+                  height={30}
+                />
+              </span>
+              <div>
+                <div className="pr-banner__title">Voice is not verified yet</div>
+                <div className="pr-banner__body">
+                  Add training data and verify your voice to unlock all features.
+                </div>
+              </div>
+              <a
+                href="https://elevenlabs.io/app/settings/api-keys"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="pr-banner__link-warn pr-banner__cta"
+              >
+                Go to verification guide
+                <Icon name="arrowR" size={13} />
+              </a>
+            </section>
           )}
-        </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Clone a new voice</CardTitle>
-            <CardDescription>
-              Upload 30–90 seconds of clean speech. WAV, MP3, OGG, or FLAC up to 10 MB.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form action={uploadAndCloneVoice} className="space-y-3">
-              <label className="block text-sm">
-                <span className="font-medium">Display name</span>
-                <input
-                  name="displayName"
-                  required
-                  maxLength={120}
-                  placeholder="Owner — Sarah"
-                  className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="font-medium">Description (optional)</span>
-                <input
-                  name="description"
-                  maxLength={500}
-                  placeholder="Female · 30s · warm and professional"
-                  className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm"
-                />
-              </label>
-              <label className="block text-sm">
-                <span className="font-medium">Audio sample</span>
-                <input
-                  type="file"
-                  name="audioSample"
-                  accept="audio/wav,audio/mpeg,audio/mp3,audio/ogg,audio/flac,audio/x-wav"
-                  required
-                  className="mt-1 block w-full text-sm"
-                />
-                <span className="mt-1 block text-xs text-muted-foreground">
-                  Clean speech, single speaker, no music. 30–90 seconds. Max 10 MB.
+          {/* ── How to use ── */}
+          <section className="pr-banner pr-banner--soft">
+            <span className="pr-circle pr-banner__circle">
+              <img
+                src={`${ASSET}/book-open.svg`}
+                alt=""
+                aria-hidden="true"
+                width={30}
+                height={30}
+              />
+            </span>
+            <div>
+              <div className="pr-banner__title">How to use — Train &amp; use</div>
+              <div className="pr-banner__body">
+                Learn how to clone your voice, add it to AI, and test it in
+                minutes.
+              </div>
+            </div>
+            <Link
+              href="/phone/assistant"
+              aria-label="Open how to use"
+              className="pr-circle pr-banner__cta"
+              style={{ width: 28, height: 28, background: "#eeeafb" }}
+            >
+              <Icon name="chevR" size={15} />
+            </Link>
+          </section>
+
+          {/* ── Active voice (existing working feature, restyled) ── */}
+          <section className="pr-card">
+            <div className="pr-step-body">
+              <div className="pr-lead">
+                <span
+                  className={`pr-tile pr-lead__circle ${usingClone ? "pr-tile--grad" : "pr-tile--lav"}`}
+                  style={{ borderRadius: 14 }}
+                >
+                  <Icon name="sound" size={26} />
                 </span>
-              </label>
-              <Button type="submit" disabled={!configured}>
-                Clone voice
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div className="pr-lead__title">
+                    Active voice:{" "}
+                    {usingClone ? "ElevenLabs clone" : "Twilio (stock)"}
+                  </div>
+                  <p className="pr-lead__sub">
+                    {usingClone
+                      ? `Using cloned voice ${voices.find((v) => v.externalVoiceId === activeVoiceId)?.displayName ?? "(unknown)"}.`
+                      : `Using Twilio's built-in voice "${assistant?.voice ?? "alice"}" — stable and instant, no latency.`}
+                  </p>
+                </div>
+                {usingClone && (
+                  <form action={revertToTwilioVoice}>
+                    <button type="submit" className="pr-btn pr-btn--sec pr-btn--xs">
+                      Revert to Twilio stock
+                    </button>
+                  </form>
+                )}
+              </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Your cloned voices ({voices.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {voices.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No cloned voices yet.</p>
-            ) : (
-              <ul className="space-y-2">
-                {voices.map((v) => {
-                  const isActive = v.externalVoiceId === activeVoiceId;
-                  return (
-                    <li key={v.id} className="rounded-md border bg-white p-3">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{v.displayName}</span>
+              {voices.length > 0 && (
+                <ul className="pr-voice-list">
+                  {voices.map((v) => {
+                    const isActive = v.externalVoiceId === activeVoiceId;
+                    return (
+                      <li key={v.id} className="pr-voice-item">
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div className="row" style={{ gap: 8, alignItems: "center" }}>
+                            <span className="pr-voice-item__name">
+                              {v.displayName}
+                            </span>
                             {isActive && (
-                              <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                                ACTIVE
-                              </span>
+                              <span className="pr-chip pr-chip--ok">Active</span>
                             )}
                           </div>
                           {v.description && (
-                            <p className="text-xs text-muted-foreground mt-0.5">{v.description}</p>
+                            <p className="pr-lead__sub" style={{ marginTop: 2 }}>
+                              {v.description}
+                            </p>
                           )}
                           {v.previewAudioUrl && (
-                            <audio controls className="mt-2 h-8 w-full max-w-md">
+                            // biome-ignore lint/a11y/useMediaCaption: short voice preview sample, no caption track available
+                            <audio controls className="pr-voice-audio">
                               <source src={v.previewAudioUrl} type="audio/mpeg" />
                             </audio>
                           )}
                         </div>
-                        <div className="flex flex-col gap-1 shrink-0">
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 6,
+                            flexShrink: 0,
+                          }}
+                        >
                           {!isActive && (
                             <form action={setActiveVoice}>
-                              <input type="hidden" name="voiceId" value={v.externalVoiceId} />
-                              <Button type="submit" size="sm" variant="outline">
+                              <input
+                                type="hidden"
+                                name="voiceId"
+                                value={v.externalVoiceId}
+                              />
+                              <button
+                                type="submit"
+                                className="pr-btn pr-btn--sec pr-btn--xs"
+                              >
                                 Use this
-                              </Button>
+                              </button>
                             </form>
                           )}
                           <form action={deleteClonedVoice}>
                             <input type="hidden" name="voiceRecordId" value={v.id} />
-                            <Button type="submit" size="sm" variant="ghost">
+                            <button
+                              type="submit"
+                              className="pr-btn pr-btn--xs"
+                              style={{ color: "var(--pr-bad, #c11839)" }}
+                            >
                               Delete
-                            </Button>
+                            </button>
                           </form>
                         </div>
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
-          </CardContent>
-        </Card>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          </section>
 
-        <Card className="border-slate-200 bg-slate-100">
-          <CardHeader>
-            <CardTitle className="text-base">Performance note</CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2 text-slate-700">
-            <p>
-              <strong>Twilio &lt;Say&gt;</strong> renders instantly (zero latency) but uses stock voices.
-            </p>
-            <p>
-              <strong>ElevenLabs &lt;Play&gt;</strong> takes 1–2s per response to synthesize the audio, then plays it.
-              Total turn latency goes from ~1.5s to ~3s. Cached after first generation for the same phrase.
-            </p>
-            <p>
-              For high-volume call centers, Phase-2 streaming TTS (Twilio Media Streams + ElevenLabs WebSocket)
-              brings latency back under 500ms. Not implemented yet.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    </AppShellServer>
+          {/* ── Clone a new voice (form island → uploadAndCloneVoice) ── */}
+          <CloneVoiceForm verified={verified} />
+
+          {/* ── Can't find your voice? tips ── */}
+          <section className="pr-tips">
+            <span className="pr-circle pr-tips__circle">
+              <img
+                src={`${ASSET}/headphones.svg`}
+                alt=""
+                aria-hidden="true"
+                width={32}
+                height={32}
+              />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <div className="pr-tips__title">Can't find your voice?</div>
+              <ul className="pr-tips__list">
+                <li>
+                  Try recording in a quiet place with minimal background noise.
+                </li>
+                <li>Use a clear microphone and speak naturally.</li>
+                <li>Our AI works best with 30–60 seconds of clean audio.</li>
+                <li>
+                  Still having trouble? Contact support or go through our{" "}
+                  <a
+                    href="https://elevenlabs.io/app/settings/api-keys"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="pr-link"
+                  >
+                    verification guide
+                  </a>{" "}
+                  for more tips.
+                </li>
+              </ul>
+            </div>
+            <span className="pr-tips__art" aria-hidden="true">
+              <img src={`${ASSET}/headphones.svg`} alt="" width={96} height={96} />
+            </span>
+          </section>
+        </div>
+
+        <Link
+          href="/phone/assistant"
+          className="pr-fab"
+          aria-label="Open support chat"
+        >
+          <Icon name="chat" size={26} />
+          <span className="pr-fab__dot" aria-hidden="true" />
+        </Link>
+      </AppShellServer>
+    </div>
   );
 }

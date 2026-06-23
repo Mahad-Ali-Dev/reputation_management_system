@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="cloudGrad" x1="100" y1="90" x2="410" y2="390" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6F42FF"/>
+      <stop offset="0.55" stop-color="#4D22FF"/>
+      <stop offset="1" stop-color="#6C43FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- cloud outline -->
+  <path d="M185 334H160C123 334 94 305 94 269C94 233 123 204 159 204C163 204 166 204 170 205C181 170 214 146 253 146C296 146 332 174 340 213C346 210 353 208 360 208C392 208 418 234 418 266C418 299 392 324 360 324H336"
+        stroke="url(#cloudGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- upload arrow -->
+  <path d="M256 346V236" stroke="url(#cloudGrad)" stroke-width="18" stroke-linecap="round"/>
+  <path d="M225 267L256 236L287 267" stroke="url(#cloudGrad)" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
