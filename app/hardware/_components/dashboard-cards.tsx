@@ -89,6 +89,7 @@ export function MdSummaryRow({
       <div className="md-summary__grid">
         <Metric
           icon="stat-total-scans.svg"
+          tint="lav"
           label="Total scans"
           value={fmt(totalScans)}
           badge={todayScans > 0 ? { kind: "up", text: "live" } : null}
@@ -96,23 +97,31 @@ export function MdSummaryRow({
         />
         <Metric
           icon="stat-today.svg"
+          tint="blue"
           label="Today scan"
           value={fmt(todayScans)}
           badge={todayScans > 0 ? { kind: "up", text: "today" } : null}
         />
         <Metric
           icon="stat-reviews.svg"
+          tint="yellow"
           label="Reviews from scans"
           value={fmt(reviewsFromScans)}
           badge={reviewsFromScans > 0 ? { kind: "up", text: "attributed" } : null}
         />
         <Metric
           icon="stat-conversion.svg"
+          tint="green"
           label="Conversion rate"
           value={conversionLabel}
           badge={conversionLabel === "—" ? null : { kind: "steady", text: "scans→reviews" }}
         />
-        <Metric icon="stat-active-devices.svg" label="Active devices" value={fmt(activeDevices)} />
+        <Metric
+          icon="stat-active-devices.svg"
+          tint="lav"
+          label="Active devices"
+          value={fmt(activeDevices)}
+        />
       </div>
     </section>
   );
@@ -120,12 +129,14 @@ export function MdSummaryRow({
 
 function Metric({
   icon,
+  tint,
   label,
   value,
   badge,
   sub,
 }: {
   icon: string;
+  tint: "lav" | "blue" | "yellow" | "green";
   label: string;
   value: string;
   badge?: { kind: "up" | "steady"; text: string } | null;
@@ -134,8 +145,10 @@ function Metric({
   return (
     <div className="md-metric">
       <div className="md-metric__top">
-        {/* biome-ignore lint/performance/noImgElement: static kit icon */}
-        <img src={`${ASSET}/${icon}`} alt="" aria-hidden className="md-metric__icon" />
+        <span className={`md-metric__tile md-metric__tile--${tint}`} aria-hidden>
+          {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+          <img src={`${ASSET}/${icon}`} alt="" aria-hidden className="md-metric__icon" />
+        </span>
         <span className="md-metric__label">{label}</span>
       </div>
       <div className="md-metric__value">{value}</div>

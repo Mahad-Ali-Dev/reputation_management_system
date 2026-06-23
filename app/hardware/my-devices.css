@@ -1,3 +1,11 @@
+/* Kit canvas — the My Devices mockup uses a flat near-white (#F7FAFC), not the
+   product-wide teal/gold app-shell gradient. Page-scoped override (no shared
+   file edit), same technique as the dashboard. */
+.app--canvas:has(.md) {
+  background-image: none;
+  background-color: #f7fafc;
+}
+
 /* ============================================================
    My Devices — route-local styles for the new design kit.
    Prefix: .md-   (parallel-agent CSS isolation rule).
@@ -64,7 +72,7 @@
 /* ── Hero ──────────────────────────────────────────────────────────── */
 .md-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 380px);
   gap: 24px;
   align-items: center;
   margin-bottom: 16px;
@@ -88,35 +96,37 @@
   line-height: 1.55;
   max-width: 420px;
 }
-/* Composed art: person centered, rating badge floats top-left, chart bottom-right. */
+/* Composed art: person centered, rating badge floats top-left, chart bottom-right.
+   Sized compact to match the mockup (illustration ≈ height of the 2-line title,
+   not a dominating block). */
 .md-hero__art {
   position: relative;
   justify-self: end;
   width: 100%;
-  max-width: 480px;
-  aspect-ratio: 16 / 9;
+  max-width: 380px;
+  aspect-ratio: 5 / 3;
 }
 .md-hero__person {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 52%;
+  left: 52%;
   transform: translate(-50%, -50%);
-  width: 58%;
+  width: 46%;
   height: auto;
 }
 .md-hero__rating {
   position: absolute;
-  top: 6%;
+  top: 8%;
   left: 0;
-  width: 33%;
+  width: 30%;
   height: auto;
   filter: drop-shadow(0 10px 22px rgba(15, 23, 42, 0.12));
 }
 .md-hero__chart {
   position: absolute;
-  bottom: 4%;
+  bottom: 6%;
   right: 0;
-  width: 34%;
+  width: 30%;
   height: auto;
 }
 @media (max-width: 760px) {
@@ -125,7 +135,7 @@
   }
   .md-hero__art {
     justify-self: center;
-    max-width: 340px;
+    max-width: 300px;
     order: -1;
   }
 }
@@ -215,10 +225,31 @@
   align-items: center;
   gap: 10px;
 }
+/* Tinted rounded tile behind each metric glyph (mockup: 44px soft-color tile). */
+.md-metric__tile {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: var(--md-lav);
+}
+.md-metric__tile--lav {
+  background: var(--md-lav);
+}
+.md-metric__tile--blue {
+  background: var(--md-soft-blue);
+}
+.md-metric__tile--yellow {
+  background: var(--md-soft-yellow);
+}
+.md-metric__tile--green {
+  background: var(--md-soft-green);
+}
 .md-metric__icon {
-  width: 38px;
-  height: 38px;
-  flex: 0 0 38px;
+  width: 24px;
+  height: 24px;
   object-fit: contain;
 }
 .md-metric__label {
