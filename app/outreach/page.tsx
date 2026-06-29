@@ -38,7 +38,7 @@ const TAB_META: Record<
   overview: {
     title: "Send the right request at the right moment",
     description: "Campaigns, templates, and deliverability in one review request hub.",
-    hero: { src: "/assets/repulabs/review-request/hero-overview.svg", w: 200 },
+    hero: { src: "/assets/repulabs/review-request/hero-overview.svg", w: 190 },
   },
   send: {
     title: "Review requests",
@@ -95,26 +95,22 @@ export default async function OutreachPage({
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Requests"]}>
       <div className="rr">
         <div className="rr-hero">
+          {meta.hero && (
+            // biome-ignore lint/performance/noImgElement: static brand SVG (decorative hero)
+            <img
+              src={meta.hero.src}
+              alt=""
+              aria-hidden="true"
+              width={meta.hero.w}
+              className="rr-hero__art"
+              style={{ width: meta.hero.w }}
+            />
+          )}
           <PageHeader
             kicker="Outreach"
             title={meta.title}
             description={meta.description}
-            actions={
-              <div className="row" style={{ gap: 14, alignItems: "center" }}>
-                {meta.hero && (
-                  // biome-ignore lint/performance/noImgElement: static brand SVG (decorative hero)
-                  <img
-                    src={meta.hero.src}
-                    alt=""
-                    aria-hidden="true"
-                    width={meta.hero.w}
-                    className="rr-hero__art"
-                    style={{ width: meta.hero.w }}
-                  />
-                )}
-                {actions}
-              </div>
-            }
+            actions={actions}
           />
         </div>
 

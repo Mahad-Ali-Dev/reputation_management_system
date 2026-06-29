@@ -90,7 +90,13 @@ export type IconName =
   | "minus"
   | "triangleR"
   | "round"
-  | "presentation";
+  | "presentation"
+  | "globe"
+  | "tag"
+  | "more"
+  | "dotsH"
+  | "file"
+  | "folder";
 
 const PATHS: Record<IconName, React.ReactNode> = {
   home: (
@@ -401,6 +407,43 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <rect x="10.5" y="4" width="3" height="16" rx="1" />
       <rect x="17" y="13" width="3" height="7" rx="1" />
     </>
+  ),
+  globe: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M3 12h18" />
+      <path d="M12 3c2.5 2.4 3.9 5.6 3.9 9s-1.4 6.6-3.9 9c-2.5-2.4-3.9-5.6-3.9-9s1.4-6.6 3.9-9Z" />
+    </>
+  ),
+  tag: (
+    <>
+      <path d="M3.5 11.3V4.5A1 1 0 0 1 4.5 3.5h6.8a1 1 0 0 1 .7.3l8 8a1 1 0 0 1 0 1.4l-6.6 6.6a1 1 0 0 1-1.4 0l-8-8a1 1 0 0 1-.3-.7Z" />
+      <circle cx="7.6" cy="7.6" r="1.3" />
+    </>
+  ),
+  more: (
+    <>
+      <circle cx="12" cy="5.5" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="18.5" r="1.4" fill="currentColor" stroke="none" />
+    </>
+  ),
+  dotsH: (
+    <>
+      <circle cx="5.5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="12" cy="12" r="1.4" fill="currentColor" stroke="none" />
+      <circle cx="18.5" cy="12" r="1.4" fill="currentColor" stroke="none" />
+    </>
+  ),
+  file: (
+    <>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
+      <path d="M14 3v5h5" />
+      <path d="M9 13h6M9 17h6" />
+    </>
+  ),
+  folder: (
+    <path d="M3 7a2 2 0 0 1 2-2h3.6a2 2 0 0 1 1.4.6L11.8 7H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" />
   ),
   mail: (
     <>

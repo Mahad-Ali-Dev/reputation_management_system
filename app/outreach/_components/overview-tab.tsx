@@ -43,7 +43,7 @@ const TRIGGER_LABEL: Record<string, string> = {
 
 const STATUS_CHIP: Record<Program["status"], string> = {
   Live: "rr-chip rr-chip--ok",
-  Ready: "rr-chip rr-chip--blue",
+  Ready: "rr-chip rr-chip--ok",
   Draft: "rr-chip rr-chip--out",
 };
 
@@ -97,10 +97,22 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
   ]);
 
   // Channel split + avg response time (live) — for the metric row.
-  const [emailCount, smsCount, avgRespMins] = await Promise.all([
+  // Avg response is split into two 30-day windows so the metric card can show a
+  // REAL period-over-period delta ("↓ X% vs last 30 days"), matching the mockup.
+  const now = Date.now();
+  const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+  const win30 = new Date(now - 30 * 24 * 60 * 60 * 1000);
+  const win60 = new Date(now - 60 * 24 * 60 * 60 * 1000);
+  const [emailCount, smsCount, avgRespMins, avgPrevMins, queuedThisWeek] = await Promise.all([
     withTenant(orgId, (tx) => tx.reviewRequest.count({ where: { channel: "email" } })).catch(() => 0),
     withTenant(orgId, (tx) => tx.reviewRequest.count({ where: { channel: "sms" } })).catch(() => 0),
-    avgResponseMinutes(orgId).catch(() => null),
+    avgResponseMinutes(orgId, win30).catch(() => null),
+    avgResponseMinutes(orgId, win60, win30).catch(() => null),
+    withTenant(orgId, (tx) =>
+      tx.reviewRequest.count({
+        where: { createdAt: { gte: weekAgo }, status: { in: ["queued", "scheduled", "sending"] } },
+      }),
+    ).catch(() => 0),
   ]);
 
   const data = { templates, org, queue };
@@ -109,8 +121,30 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
   const totalQueued = queue.length;
   const liveEmail = emailCount;
   const liveSms = smsCount;
-  const liveAvg = avgRespMins;
+  const liveAvg = avgRespMins ?? avgPrevMins; // show any available avg
   const totalCh = liveEmail + liveSms;
+  const emailPct = totalCh > 0 ? (liveEmail / totalCh) * 100 : 0;
+  const smsPct = totalCh > 0 ? (liveSms / totalCh) * 100 : 0;
+
+  // Real avg-response-time trend: this 30d vs prior 30d (lower = faster = good).
+  let respDelta: { text: string; kind: "up" | "down" | "muted" } = {
+    text: "No data yet",
+    kind: "muted",
+  };
+  if (liveAvg != null) {
+    if (avgRespMins != null && avgPrevMins != null && avgPrevMins > 0) {
+      const change = Math.round(((avgRespMins - avgPrevMins) / avgPrevMins) * 100);
+      if (change === 0) {
+        respDelta = { text: "no change vs last 30 days", kind: "muted" };
+      } else if (change < 0) {
+        respDelta = { text: `${Math.abs(change)}% vs last 30 days`, kind: "down" };
+      } else {
+        respDelta = { text: `${change}% vs last 30 days`, kind: "up" };
+      }
+    } else {
+      respDelta = { text: "across all sends", kind: "muted" };
+    }
+  }
 
   // Fallback for Recipients: latest sent requests when nothing queued.
   const recent =
@@ -244,32 +278,40 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
             </div>
           ) : (
             <>
-              <DeliverabilityDonut
-                delivered={liveStats.delivered}
-                bounced={Math.max(0, liveStats.sent - liveStats.delivered - failedCount(liveStats))}
-                failed={failedCount(liveStats)}
-                pct={rate(liveStats.delivered)}
-              />
-              <div className="rr-legend">
-                <LegendRow
-                  color="var(--rr-ok)"
-                  label="Delivered"
-                  count={liveStats.delivered}
-                  pct={rate(liveStats.delivered)}
-                />
-                <LegendRow
-                  color="var(--rr-orange)"
-                  label="Opened"
-                  count={liveStats.opened}
-                  pct={rate(liveStats.opened)}
-                />
-                <LegendRow
-                  color="var(--rr-pri)"
-                  label="Reviews left"
-                  count={liveStats.converted}
-                  pct={rate(liveStats.converted)}
-                />
-              </div>
+              {(() => {
+                const failed = failedCount(liveStats);
+                const bounced = Math.max(0, liveStats.sent - liveStats.delivered - failed);
+                return (
+                  <>
+                    <DeliverabilityDonut
+                      delivered={liveStats.delivered}
+                      bounced={bounced}
+                      failed={failed}
+                      pct={rate(liveStats.delivered)}
+                    />
+                    <div className="rr-legend">
+                      <LegendRow
+                        color="var(--rr-ok)"
+                        label="Delivered"
+                        count={liveStats.delivered}
+                        pct={rate(liveStats.delivered)}
+                      />
+                      <LegendRow
+                        color="var(--rr-orange)"
+                        label="Bounced"
+                        count={bounced}
+                        pct={rate(bounced)}
+                      />
+                      <LegendRow
+                        color="var(--rr-paused)"
+                        label="Failed"
+                        count={failed}
+                        pct={rate(failed)}
+                      />
+                    </div>
+                  </>
+                );
+              })()}
               <div className="rr-mt12">
                 <Link href="/outreach?tab=history" className="rr-linkbtn">
                   View full report
@@ -375,38 +417,44 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
       <div className="rr-metrics">
         <MetricCard
           tile="pri"
-          img="/assets/repulabs/review-request/metric-queued.svg"
+          icon="send"
           label="Total queued"
           value={totalQueued.toLocaleString()}
-          delta={totalQueued > 0 ? `${totalQueued} pending` : "No data yet"}
-          deltaKind={totalQueued > 0 ? "up" : "muted"}
+          delta={
+            queuedThisWeek > 0
+              ? `${queuedThisWeek} this week`
+              : totalQueued > 0
+                ? `${totalQueued} pending`
+                : "No data yet"
+          }
+          deltaKind={queuedThisWeek > 0 ? "up" : "muted"}
           color="var(--rr-pri)"
         />
         <MetricCard
           tile="ok"
-          img="/assets/repulabs/review-request/metric-email.svg"
+          icon="mail"
           label="Email"
           value={liveEmail.toLocaleString()}
-          delta={totalCh > 0 ? `${Math.round((liveEmail / totalCh) * 100)}%` : "No data yet"}
-          deltaKind={totalCh > 0 ? "muted" : "muted"}
+          delta={totalCh > 0 ? `${fmtPct(emailPct)}%` : "No data yet"}
+          deltaKind={totalCh > 0 ? "neutral" : "muted"}
           color="var(--rr-ok)"
         />
         <MetricCard
           tile="blue"
-          img="/assets/repulabs/review-request/metric-sms.svg"
+          icon="chat"
           label="SMS"
           value={liveSms.toLocaleString()}
-          delta={totalCh > 0 ? `${Math.round((liveSms / totalCh) * 100)}%` : "No data yet"}
-          deltaKind="blue"
+          delta={totalCh > 0 ? `${fmtPct(smsPct)}%` : "No data yet"}
+          deltaKind={totalCh > 0 ? "blue" : "muted"}
           color="var(--rr-blue)"
         />
         <MetricCard
           tile="orange"
-          img="/assets/repulabs/review-request/metric-time.svg"
+          icon="clock"
           label="Avg. response time"
           value={liveAvg != null ? fmtDuration(liveAvg) : "—"}
-          delta={liveAvg != null ? "across all sends" : "No data yet"}
-          deltaKind="muted"
+          delta={respDelta.text}
+          deltaKind={respDelta.kind}
           color="var(--rr-orange)"
         />
       </div>
@@ -513,7 +561,7 @@ function LegendRow({
 
 function MetricCard({
   tile,
-  img,
+  icon,
   label,
   value,
   delta,
@@ -521,27 +569,35 @@ function MetricCard({
   color,
 }: {
   tile: "pri" | "ok" | "blue" | "orange";
-  img: string;
+  icon: IconName;
   label: string;
   value: string;
   delta: string;
-  deltaKind: "up" | "muted" | "blue";
+  deltaKind: "up" | "down" | "neutral" | "blue" | "muted";
   color: string;
 }) {
   return (
     <div className="rr-card rr-metric">
       <div className="rr-metric__top">
         <div className={`rr-metric__tile rr-metric__tile--${tile}`}>
-          {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-          <img src={img} alt="" aria-hidden="true" />
+          <Icon name={icon} size={22} stroke={1.7} />
         </div>
         <div className="rr-metric__label">{label}</div>
       </div>
       <div className="rr-metric__value">{value}</div>
-      <div className={`rr-metric__delta rr-metric__delta--${deltaKind}`}>{delta}</div>
+      <div className={`rr-metric__delta rr-metric__delta--${deltaKind}`}>
+        {deltaKind === "up" && <Icon name="arrowU" size={13} stroke={2.2} />}
+        {deltaKind === "down" && <Icon name="arrowD" size={13} stroke={2.2} />}
+        {delta}
+      </div>
       <Sparkline color={color} seed={label.length + value.length} />
     </div>
   );
+}
+
+/** Format a channel-share percentage like the mockup (83.3%, 16.7%). */
+function fmtPct(n: number): string {
+  return Number.isInteger(n) ? String(n) : n.toFixed(1);
 }
 
 /** Deterministic mini line chart (no axes), kit style. */
@@ -574,11 +630,23 @@ function Sparkline({ color, seed }: { color: string; seed: number }) {
   );
 }
 
-/** Average minutes from sentAt → first engagement (opened/clicked/converted). */
-async function avgResponseMinutes(orgId: string): Promise<number | null> {
+/**
+ * Average minutes from sentAt → first open, optionally bounded to a [from, to)
+ * window (on sentAt). The window lets the caller diff two periods for a real
+ * trend delta on the metric card.
+ */
+async function avgResponseMinutes(
+  orgId: string,
+  from?: Date,
+  to?: Date,
+): Promise<number | null> {
   return withTenant(orgId, async (tx) => {
+    const sentAt =
+      from || to
+        ? { not: null, ...(from ? { gte: from } : {}), ...(to ? { lt: to } : {}) }
+        : { not: null };
     const rows = await tx.reviewRequest.findMany({
-      where: { sentAt: { not: null }, openedAt: { not: null } },
+      where: { sentAt, openedAt: { not: null } },
       select: { sentAt: true, openedAt: true },
       take: 500,
     });

@@ -92,18 +92,31 @@
   font-weight: 500;
 }
 
-/* Hero decorative illustration sits to the right of the header copy */
+/* Hero decorative illustration — per the kit mockup it sits in the TOP-RIGHT
+ * band BELOW the "Create campaign" CTA, spanning the gap down toward the tab
+ * row (NOT inline beside the CTA). Absolutely positioned inside the relative
+ * .rr-hero so it can overflow downward into that gap. Tabs paint after and are
+ * left-aligned, so there is no interaction overlap. */
 .rr-hero {
   position: relative;
+  z-index: 1;
 }
 .rr-hero__art {
+  position: absolute;
+  top: 40px;
+  right: 96px;
   display: block;
   height: auto;
   mix-blend-mode: multiply;
-  flex-shrink: 0;
   pointer-events: none;
+  z-index: 0;
 }
-@media (max-width: 900px) {
+@media (max-width: 1320px) {
+  .rr-hero__art {
+    right: 40px;
+  }
+}
+@media (max-width: 1100px) {
   .rr-hero__art {
     display: none;
   }
@@ -469,6 +482,45 @@
   flex-wrap: wrap;
 }
 
+/* Template-editor footer buttons — all share one 34px height so Preview /
+ * Default / Edit template align in a clean row (matches the kit mockup). */
+.rr-tplbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  box-shadow: none;
+}
+.rr-tplbtn--ghost {
+  background: #fff;
+  border-color: var(--rr-border);
+  color: var(--rr-text);
+}
+.rr-tplbtn--ghost:hover {
+  border-color: color-mix(in srgb, var(--rr-pri) 35%, var(--rr-border));
+}
+.rr-tplbtn--tonal {
+  background: var(--rr-pri-soft);
+  color: var(--rr-pri);
+}
+.rr-tplbtn--pri {
+  background: linear-gradient(180deg, #5a2cf5 0%, #4516e8 100%);
+  color: #fff;
+  box-shadow: var(--rr-shadow-pri);
+}
+.rr-tplbtn--pri:hover {
+  background: linear-gradient(180deg, #4d22e6 0%, #3a10c9 100%);
+}
+
 /* Deliverability donut + legend */
 .rr-donutwrap {
   display: grid;
@@ -489,14 +541,16 @@
   line-height: 1.05;
 }
 .rr-donut__pct {
-  font-size: 26px;
+  font-size: 28px;
   font-weight: 700;
   color: var(--rr-text);
+  letter-spacing: -0.01em;
 }
 .rr-donut__cap {
   font-size: 12px;
   font-weight: 700;
-  color: var(--rr-ok);
+  color: var(--rr-head);
+  margin-top: 2px;
 }
 .rr-legend {
   display: flex;
@@ -626,26 +680,26 @@
 .rr-metric__tile {
   width: 44px;
   height: 44px;
-  border-radius: 10px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-.rr-metric__tile img {
-  width: 26px;
-  height: 26px;
-}
 .rr-metric__tile--pri {
   background: var(--rr-pri-soft);
+  color: var(--rr-pri);
 }
 .rr-metric__tile--ok {
   background: var(--rr-ok-soft);
+  color: var(--rr-ok);
 }
 .rr-metric__tile--blue {
   background: var(--rr-blue-soft);
+  color: var(--rr-blue);
 }
 .rr-metric__tile--orange {
   background: var(--rr-orange-soft);
+  color: var(--rr-orange);
 }
 .rr-metric__label {
   font-size: 12px;
@@ -668,6 +722,12 @@
 }
 .rr-metric__delta--up {
   color: var(--rr-ok);
+}
+.rr-metric__delta--down {
+  color: var(--rr-ok);
+}
+.rr-metric__delta--neutral {
+  color: var(--rr-head);
 }
 .rr-metric__delta--muted {
   color: var(--rr-muted);

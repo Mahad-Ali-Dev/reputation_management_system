@@ -61,39 +61,40 @@ export function CustomerContext({
         >
           <Icon name="x" size={15} />
         </Link>
+        <div className="uik-cover__quick">
+          <Link href={`/support?tab=conversations&thread=${thread.id}`} className="uik-quick uik-quick--sm" aria-label="Message" title="Message">
+            <Icon name="chat" size={15} />
+          </Link>
+          <Link href="/phone" className="uik-quick uik-quick--sm" aria-label="Call" title="Call">
+            <Icon name="phone" size={15} />
+          </Link>
+          <Link href="/contacts" className="uik-quick uik-quick--sm" aria-label="Email / contact" title="Open contact">
+            <Icon name="mail" size={15} />
+          </Link>
+          <Link href="/contacts" className="uik-quick uik-quick--sm" aria-label="More" title="More">
+            <Icon name="dotsH" size={15} />
+          </Link>
+        </div>
       </div>
 
       {/* Identity row (avatar overlaps cover) */}
       <div style={{ padding: "0 18px", marginTop: -34, position: "relative" }}>
-        <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-end" }}>
-          <div style={{ border: "4px solid #fff", borderRadius: "50%", position: "relative" }}>
-            <Avatar name={name} size={72} tone={toneFor(thread.id)} />
-            {thread.status !== "resolved" && (
-              <span
-                style={{
-                  position: "absolute",
-                  right: 2,
-                  bottom: 2,
-                  width: 15,
-                  height: 15,
-                  borderRadius: "50%",
-                  background: "var(--uik-ok)",
-                  border: "2.5px solid #fff",
-                }}
-              />
-            )}
-          </div>
-          <div className="row" style={{ gap: 7, marginBottom: 6 }}>
-            <Link href={`/support?tab=conversations&thread=${thread.id}`} className="uik-quick" aria-label="Message" title="Message">
-              <Icon name="chat" size={16} />
-            </Link>
-            <Link href="/phone" className="uik-quick" aria-label="Call" title="Call">
-              <Icon name="phone" size={16} />
-            </Link>
-            <Link href="/contacts" className="uik-quick" aria-label="Email / contact" title="Open contact">
-              <Icon name="mail" size={16} />
-            </Link>
-          </div>
+        <div style={{ border: "4px solid #fff", borderRadius: "50%", position: "relative", width: "fit-content" }}>
+          <Avatar name={name} size={72} tone={toneFor(thread.id)} />
+          {thread.status !== "resolved" && (
+            <span
+              style={{
+                position: "absolute",
+                right: 2,
+                bottom: 2,
+                width: 15,
+                height: 15,
+                borderRadius: "50%",
+                background: "var(--uik-ok)",
+                border: "2.5px solid #fff",
+              }}
+            />
+          )}
         </div>
 
         <div style={{ marginTop: 10 }}>
@@ -152,26 +153,48 @@ export function CustomerContext({
           <h4 className="uik-sect__title">Labels</h4>
           <Link href="/contacts" className="uik-sect__action">Manage</Link>
         </div>
-        <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
-          {thread.startedViaWidget && (
-            <span className="uik-pill uik-pill--needs">Website lead</span>
-          )}
+        <div className="row" style={{ gap: 8, flexWrap: "wrap", alignItems: "center" }}>
+          {thread.startedViaWidget && <LabelPill tone="purple" label="Website lead" />}
           {thread.status === "resolved" ? (
-            <span className="uik-pill uik-pill--replied">Resolved</span>
+            <LabelPill tone="success" label="Resolved" />
           ) : (
-            <span className="uik-pill uik-pill--info">Active</span>
+            <LabelPill tone="primary" label="Active" />
           )}
-          <Link href="/contacts" className="uik-chip" style={{ height: 24, color: "var(--uik-purple)", borderColor: "#d9d0ff" }}>
+          <Link
+            href="/contacts"
+            className="uik-chip"
+            style={{ height: 26, color: "var(--uik-purple)", borderColor: "#d9d0ff", background: "#fff" }}
+          >
             <Icon name="plus" size={11} />
             Add label
           </Link>
         </div>
       </div>
 
+      {/* Recent conversations */}
+      <div className="uik-sect">
+        <div className="uik-sect__head">
+          <h4 className="uik-sect__title">Recent Conversations</h4>
+          <Link href="/support?tab=conversations" className="uik-sect__action">View all</Link>
+        </div>
+        <Link href={`/support?tab=conversations&thread=${thread.id}`} className="uik-recent">
+          <ChannelGlyph channel={thread.channel} size={18} />
+          <span style={{ minWidth: 0, flex: 1 }}>
+            <span className="uik-recent__title">{thread.subject || channelLabel(thread.channel) + " conversation"}</span>
+            <span className="uik-recent__date">{relativeTime(thread.lastMessageAt)}</span>
+          </span>
+          <Icon name="chevR" size={14} style={{ color: "var(--uik-pri)" }} />
+        </Link>
+        <p className="uik-mut" style={{ fontSize: 11.5, margin: "8px 2px 0" }}>
+          Earlier threads with this customer will appear here.
+        </p>
+      </div>
+
       {/* Activity timeline */}
       <div className="uik-sect">
         <div className="uik-sect__head">
           <h4 className="uik-sect__title">Activity Timeline</h4>
+          <Link href={`/support?tab=conversations&thread=${thread.id}`} className="uik-sect__action">View all</Link>
         </div>
         <div className="uik-tl">
           <div className="uik-tl__item">
@@ -191,6 +214,36 @@ export function CustomerContext({
         </div>
       </div>
     </div>
+  );
+}
+
+const LABEL_TONES = {
+  danger: { bg: "var(--uik-bad-soft)", fg: "#e51b3e", dot: "#ff244b" },
+  purple: { bg: "var(--uik-purple-soft)", fg: "#6d38ef", dot: "#7b2fff" },
+  success: { bg: "var(--uik-ok-soft)", fg: "#099a5a", dot: "#15c76f" },
+  primary: { bg: "var(--uik-pri-soft)", fg: "var(--uik-pri)", dot: "var(--uik-pri)" },
+} as const;
+
+function LabelPill({ tone, label }: { tone: keyof typeof LABEL_TONES; label: string }) {
+  const t = LABEL_TONES[tone];
+  return (
+    <span
+      className="uik-pill"
+      style={{ background: t.bg, color: t.fg, height: 26, padding: "0 11px", gap: 6, fontSize: 11.5 }}
+    >
+      <span
+        aria-hidden
+        style={{
+          width: 9,
+          height: 9,
+          borderRadius: "50%",
+          background: t.dot,
+          boxShadow: `0 0 0 3px ${t.bg}`,
+          flex: "0 0 auto",
+        }}
+      />
+      {label}
+    </span>
   );
 }
 

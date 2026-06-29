@@ -132,17 +132,17 @@ export function TemplateStudio({
           <div className="rr-studiofoot">
             <button
               type="button"
-              className="rr-toolbtn"
+              className="rr-tplbtn rr-tplbtn--ghost"
               aria-pressed={showFilled}
               onClick={() => setShowFilled((v) => !v)}
             >
-              <Icon name={showFilled ? "eyeOff" : "eye"} size={12} />
+              <Icon name={showFilled ? "eyeOff" : "eye"} size={14} />
               {showFilled ? "Show tags" : "Preview"}
             </button>
             <div className="row" style={{ gap: 8 }}>
-              {active.isDefault && <span className="rr-chip rr-chip--pri">Default</span>}
-              <Link href={`/outreach/templates/${active.id}`} className="btn btn--pri btn--sm">
-                <Icon name="edit" size={11} />
+              {active.isDefault && <span className="rr-tplbtn rr-tplbtn--tonal">Default</span>}
+              <Link href={`/outreach/templates/${active.id}`} className="rr-tplbtn rr-tplbtn--pri">
+                <Icon name="edit" size={14} />
                 Edit template
               </Link>
             </div>

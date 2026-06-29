@@ -298,6 +298,52 @@
   font-weight: 700;
   opacity: 0.7;
 }
+/* Static "All conversations" label chip — white, bordered, blue count pill. */
+.uik-chip--label {
+  height: 36px;
+  padding: 0 8px 0 14px;
+  gap: 8px;
+  background: #fff;
+  border-color: var(--uik-line);
+  color: var(--uik-ink);
+  font-size: 12.5px;
+}
+.uik-chip--label:hover {
+  background: #fff;
+}
+.uik-chip__count--pri {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: var(--uik-r-pill);
+  background: var(--uik-pri-soft);
+  color: var(--uik-pri);
+  font-size: 11.5px;
+  font-weight: 700;
+  opacity: 1;
+}
+
+/* Square-ish icon buttons next to the list filter chip (sliders + search). */
+.uik-iconbtn {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--uik-r-md);
+  border: 1px solid var(--uik-line);
+  background: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uik-ink-2);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+}
+.uik-iconbtn:hover {
+  background: var(--uik-hover);
+  border-color: var(--uik-line-strong);
+}
 
 /* small status pill (needs reply / replied / starred…) */
 .uik-pill {
@@ -439,9 +485,9 @@
   width: 100%;
   text-align: left;
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 44px minmax(0, 1fr);
   gap: 10px;
-  align-items: start;
+  align-items: center;
   padding: 10px 12px;
   border: 1px solid transparent;
   border-left: 3px solid transparent;
@@ -481,16 +527,15 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 5px;
-  border-radius: var(--uik-r-pill);
-  background: var(--uik-bad);
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 7px;
+  background: var(--uik-pri);
   color: #fff;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  margin-top: 4px;
-  margin-left: auto;
+  line-height: 1;
 }
 
 /* avatar wrapper + channel mini-badge + online dot */
@@ -520,6 +565,47 @@
   border-radius: 50%;
   background: var(--uik-ok);
   border: 2px solid #fff;
+}
+
+/* Thread header — segmented action group (star / tag / resolve / more).
+   A single rounded pill with hairline dividers between buttons, matching the
+   conversations kit. */
+.uik-thdr-actions {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-lg);
+  background: #fff;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(30, 45, 110, 0.04);
+}
+.uik-thdr-btn {
+  width: 40px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-left: 1px solid var(--uik-divider);
+  background: transparent;
+  color: var(--uik-ink-2);
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.uik-thdr-btn:first-child {
+  border-left: 0;
+}
+.uik-thdr-btn:hover {
+  background: var(--uik-hover);
+  color: var(--uik-pri);
+}
+.uik-thdr-btn.is-on {
+  color: var(--uik-pri);
+  background: var(--uik-pri-soft);
+}
+.uik-thdr-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* ============================================================================
@@ -619,6 +705,16 @@
   justify-content: center;
   color: var(--uik-ink-2);
   cursor: pointer;
+  z-index: 2;
+}
+/* Quick-action row floats over the lower-right of the cover (chat/call/mail/more). */
+.uik-cover__quick {
+  position: absolute;
+  right: 14px;
+  bottom: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 2;
 }
 .uik-quick {
   width: 40px;
@@ -636,6 +732,17 @@
 }
 .uik-quick:hover {
   background: var(--uik-hover);
+}
+/* Smaller, lighter quick-action button used in the contact-panel header row. */
+.uik-quick--sm {
+  width: 36px;
+  height: 36px;
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 8px rgba(30, 45, 110, 0.1);
+}
+.uik-quick--sm:hover {
+  background: #fff;
 }
 .uik-sect {
   padding: 14px 18px;
@@ -675,6 +782,35 @@
   color: var(--uik-ink);
   margin-top: 2px;
 }
+/* Recent-conversations row in the contact panel. */
+.uik-recent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: var(--uik-r-md);
+  text-decoration: none;
+  transition: background 0.12s;
+}
+.uik-recent:hover {
+  background: var(--uik-hover);
+}
+.uik-recent__title {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--uik-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uik-recent__date {
+  display: block;
+  font-size: 11px;
+  color: var(--uik-mut);
+  margin-top: 1px;
+}
+
 .uik-tl {
   position: relative;
   padding-left: 18px;

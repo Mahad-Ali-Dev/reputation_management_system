@@ -37,8 +37,31 @@ export default async function SupportInboxPage({
   return (
     <AppShellServer topBar={<TopBar title="Unified Inbox" />} crumbs={["Engagement", "Unified Inbox"]}>
       <PageHeader
-        kicker="Real-time customer hub"
         title="Unified Inbox"
+        titleBadge={
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              fontSize: 12,
+              fontWeight: 600,
+              color: "var(--ink-2, #263764)",
+            }}
+          >
+            <span
+              aria-hidden
+              style={{
+                width: 8,
+                height: 8,
+                borderRadius: "50%",
+                background: "var(--success, #16a34a)",
+                boxShadow: "0 0 0 3px rgba(22, 163, 74, 0.18)",
+              }}
+            />
+            Live
+          </span>
+        }
         description="DMs, comments, website chat, SMS, email, and phone callbacks in one queue."
         breadcrumb={[{ label: "Engagement" }, { label: "Unified Inbox" }]}
         actions={

@@ -61,6 +61,18 @@
   margin-inline: auto;
 }
 
+/* Header action buttons — the kit shows taller, bolder pills (~44px, weight
+   700, radius 11) than the product's compact 34px .btn. */
+.sk-page .ph .sk-hbtn {
+  height: 44px;
+  padding: 0 20px;
+  border-radius: 11px;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+  gap: 8px;
+}
+
 /* The primary CTA gets the kit's purple-blue gradient + glow (overrides the
    flat --pri fill from design-system.css, scoped to this module). */
 .sk-page .btn--pri {
@@ -141,26 +153,26 @@
 .sk-kpi {
   position: relative;
   overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
   background: var(--sk-surface);
   border: 1px solid var(--sk-line);
   border-radius: 16px;
-  padding: 22px 24px;
+  padding: 24px 26px;
   box-shadow: var(--sk-shadow);
-  min-height: 132px;
+  min-height: 138px;
 }
-.sk-kpi__top {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 14px;
-}
+/* Colored rounded-square icon tile, sits to the LEFT of the label + value
+   block (matches the kit's KPI card composition). */
 .sk-kpi__tile {
-  width: 42px;
-  height: 42px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 15px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  margin-top: 2px;
 }
 .sk-kpi__tile--pri {
   background: var(--sk-pri-soft);
@@ -174,35 +186,83 @@
   background: var(--sk-draft-soft);
   color: var(--sk-draft);
 }
+.sk-kpi__main {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
 .sk-kpi__label {
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 600;
   color: var(--sk-ink-2);
 }
 .sk-kpi__value {
+  margin-top: 4px;
   font-size: 34px;
-  line-height: 1;
+  line-height: 1.05;
   font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--sk-ink);
   font-variant-numeric: tabular-nums;
 }
 .sk-kpi__helper {
-  margin-top: 8px;
+  margin-top: 10px;
   font-size: 12px;
   color: var(--sk-muted);
   display: inline-flex;
   align-items: center;
   gap: 5px;
 }
+/* Trend delta pill — pale tinted capsule with a colored arrow + label.
+   Tone-tinted to the card (purple / green / orange) with up/down arrow color. */
+.sk-kpi__delta {
+  margin-top: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.sk-kpi__delta svg {
+  flex-shrink: 0;
+}
+/* Direction sets the semantic up/down hue; tone tints the pill background so a
+   "down" on a green card still reads in its family but signals the dip. */
+.sk-kpi__delta--pri {
+  background: var(--sk-pri-soft);
+  color: var(--sk-pri);
+}
+.sk-kpi__delta--green {
+  background: var(--sk-published-soft);
+  color: #0f8a4d;
+}
+.sk-kpi__delta--orange {
+  background: var(--sk-draft-soft);
+  color: #c25a07;
+}
+/* A genuine decline always shows the warm "down" treatment regardless of card
+   tone, so a falling metric never looks like growth. */
+.sk-kpi__delta--down {
+  background: var(--sk-draft-soft);
+  color: #c25a07;
+}
+/* Faint pastel watercolor illustration, large, anchored to the card's
+   bottom-right corner behind the content (matches the kit). */
 .sk-kpi__art {
   position: absolute;
-  right: 10px;
-  bottom: 8px;
-  width: 72px;
-  height: 56px;
-  opacity: 0.9;
+  right: 16px;
+  bottom: 12px;
+  width: 90px;
+  height: 90px;
+  opacity: 0.38;
   pointer-events: none;
+  z-index: 0;
 }
 .sk-kpi__art img {
   width: 100%;

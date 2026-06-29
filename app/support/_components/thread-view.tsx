@@ -46,6 +46,7 @@ export function ThreadView({
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [showAssign, setShowAssign] = useState(false);
+  const [starred, setStarred] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -153,33 +154,57 @@ export function ThreadView({
           </p>
         </div>
 
-        <div className="row" style={{ gap: 6, position: "relative" }}>
-          <button
-            type="button"
-            className="uik-quick"
-            style={{ width: 38, height: 38, color: "var(--uik-ink-2)" }}
-            onClick={() => setShowAssign((s) => !s)}
-            aria-label="Assign conversation"
-            title="Assign"
-          >
-            <Icon name="user" size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={toggleStatus}
-            disabled={pending}
-            className={isResolved ? "uik-btn uik-btn--sm" : "uik-btn uik-btn--sm uik-btn--pri"}
-            title={isResolved ? "Reopen conversation" : "Mark as resolved"}
-          >
-            <Icon name={isResolved ? "refresh" : "check"} size={13} />
-            {isResolved ? "Reopen" : "Resolve"}
-          </button>
+        <div className="row" style={{ gap: 0, position: "relative" }}>
+          <div className="uik-thdr-actions" role="group" aria-label="Conversation actions">
+            <button
+              type="button"
+              className={`uik-thdr-btn${starred ? " is-on" : ""}`}
+              onClick={() => setStarred((s) => !s)}
+              aria-pressed={starred}
+              aria-label={starred ? "Unstar conversation" : "Star conversation"}
+              title={starred ? "Starred" : "Star"}
+            >
+              <Icon name="star" size={16} />
+            </button>
+            <button
+              type="button"
+              className="uik-thdr-btn"
+              onClick={() => setShowAssign((s) => !s)}
+              aria-label="Labels and assignment"
+              title="Labels"
+            >
+              <Icon name="tag" size={16} />
+            </button>
+            <button
+              type="button"
+              className={`uik-thdr-btn${isResolved ? " is-on" : ""}`}
+              onClick={toggleStatus}
+              disabled={pending}
+              aria-pressed={isResolved}
+              aria-label={isResolved ? "Reopen conversation" : "Mark as resolved"}
+              title={isResolved ? "Reopen conversation" : "Resolve"}
+            >
+              <Icon name="checkCircle" size={16} />
+            </button>
+            <button
+              type="button"
+              className="uik-thdr-btn"
+              onClick={() => setShowAssign((s) => !s)}
+              aria-haspopup="menu"
+              aria-expanded={showAssign}
+              aria-label="More actions"
+              title="More"
+            >
+              <Icon name="more" size={16} />
+            </button>
+          </div>
 
           {showAssign && (
             <div
+              role="menu"
               style={{
                 position: "absolute",
-                top: 44,
+                top: 48,
                 right: 0,
                 zIndex: 20,
                 background: "#fff",
@@ -187,9 +212,12 @@ export function ThreadView({
                 borderRadius: "var(--uik-r-md)",
                 boxShadow: "var(--uik-sh-soft)",
                 padding: 6,
-                minWidth: 180,
+                minWidth: 200,
               }}
             >
+              <p className="uik-field__label" style={{ padding: "4px 8px 6px", margin: 0 }}>
+                Assign to
+              </p>
               <button
                 type="button"
                 className="uik-btn uik-btn--ghost uik-btn--sm"
@@ -209,6 +237,19 @@ export function ThreadView({
                   {t.name}
                 </button>
               ))}
+              <div style={{ borderTop: "1px solid var(--uik-divider)", margin: "6px 0" }} />
+              <button
+                type="button"
+                className="uik-btn uik-btn--ghost uik-btn--sm"
+                style={{ width: "100%", justifyContent: "flex-start" }}
+                onClick={() => {
+                  setShowAssign(false);
+                  toggleStatus();
+                }}
+              >
+                <Icon name={isResolved ? "refresh" : "check"} size={13} />
+                {isResolved ? "Reopen conversation" : "Mark as resolved"}
+              </button>
             </div>
           )}
         </div>

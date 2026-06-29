@@ -49,6 +49,22 @@ function parseTab(raw?: string): TabKey {
   return raw === "history" || raw === "library" ? raw : "create";
 }
 
+type KpiDelta = { pct: number; dir: "up" | "down" } | null;
+type TrendMap = { scheduled?: KpiDelta; published?: KpiDelta; drafts?: KpiDelta };
+
+/**
+ * Percent change of `now` vs the `prev` 30-day window, for a KPI trend pill.
+ * Returns null when there's no signal yet (both windows empty) so the card can
+ * hide the pill instead of fabricating a "0%" / "↑ ∞%" — we never invent deltas.
+ */
+function pctDelta(now: number, prev: number): KpiDelta {
+  if (now === 0 && prev === 0) return null;
+  if (prev === 0) return { pct: 100, dir: "up" }; // new activity, no prior baseline
+  const change = Math.round(((now - prev) / prev) * 100);
+  if (change === 0) return { pct: 0, dir: "up" };
+  return { pct: Math.abs(change), dir: change > 0 ? "up" : "down" };
+}
+
 /** Best-effort brand colors from establishment.brandVoice.colors → hex list. */
 function extractBrandColors(brandVoice: unknown): string[] {
   if (brandVoice && typeof brandVoice === "object" && "colors" in brandVoice) {
@@ -86,13 +102,43 @@ export default async function SocialPostsPage({
   const connectedSet = await getConnectedPlatforms(orgId);
   const connectedPlatforms = ALL_PLATFORMS.filter((p) => connectedSet.has(p)) as SocialPlatform[];
 
-  // KPI counts (cheap aggregate, always shown).
-  const counts = await withTenant(orgId, async (tx) => {
-    const grouped = await tx.socialPost.groupBy({ by: ["status"], _count: { _all: true } });
+  // KPI counts (cheap aggregate, always shown) + the 30-day trend windows that
+  // drive each card's delta pill. All counts come from real socialPost rows —
+  // the deltas compare the last 30 days against the prior 30 days, never faked.
+  const NOW = Date.now();
+  const DAY = 864e5;
+  const win30 = new Date(NOW - 30 * DAY); // start of the current 30-day window
+  const win60 = new Date(NOW - 60 * DAY); // start of the prior 30-day window
+  const { counts, trend } = await withTenant(orgId, async (tx) => {
+    const [grouped, schedNow, schedPrev, pubNow, pubPrev, draftNow, draftPrev] = await Promise.all([
+      tx.socialPost.groupBy({ by: ["status"], _count: { _all: true } }),
+      // Scheduled: posts that entered the queue, bucketed by creation time.
+      tx.socialPost.count({ where: { status: "scheduled", createdAt: { gte: win30 } } }),
+      tx.socialPost.count({
+        where: { status: "scheduled", createdAt: { gte: win60, lt: win30 } },
+      }),
+      // Published: bucketed by when they actually went out (postedAt).
+      tx.socialPost.count({
+        where: { status: { in: ["published", "posted"] }, postedAt: { gte: win30 } },
+      }),
+      tx.socialPost.count({
+        where: { status: { in: ["published", "posted"] }, postedAt: { gte: win60, lt: win30 } },
+      }),
+      // Drafts: bucketed by creation time.
+      tx.socialPost.count({ where: { status: "draft", createdAt: { gte: win30 } } }),
+      tx.socialPost.count({ where: { status: "draft", createdAt: { gte: win60, lt: win30 } } }),
+    ]);
     const map: Record<string, number> = {};
     for (const g of grouped) map[g.status] = g._count._all;
-    return map;
-  }).catch(() => ({}) as Record<string, number>);
+    return {
+      counts: map,
+      trend: {
+        scheduled: pctDelta(schedNow, schedPrev),
+        published: pctDelta(pubNow, pubPrev),
+        drafts: pctDelta(draftNow, draftPrev),
+      },
+    };
+  }).catch(() => ({ counts: {} as Record<string, number>, trend: {} as TrendMap }));
 
   const scheduled = counts.scheduled ?? 0;
   // Demo seeds use "posted"; production publishes as "published".
@@ -108,12 +154,12 @@ export default async function SocialPostsPage({
           description="Compose once, preview per platform, and schedule across Facebook, Instagram, LinkedIn and X — with AI captions and creatives."
           actions={
             <>
-              <Link href="/social/posts?tab=create" className="btn btn--pri">
-                <Icon name="plus" size={13} />
+              <Link href="/social/posts?tab=create" className="btn sk-hbtn">
+                <Icon name="plus" size={14} />
                 Create new post
               </Link>
-              <Link href="/social/posts/bulk" className="btn">
-                <Icon name="cal" size={13} />
+              <Link href="/social/posts/bulk" className="btn btn--pri sk-hbtn">
+                <Icon name="cal" size={14} />
                 Bulk schedule
               </Link>
             </>
@@ -125,26 +171,26 @@ export default async function SocialPostsPage({
             {
               label: "Scheduled",
               value: String(scheduled),
-              helper: "Queued to publish",
+              delta: trend.scheduled ?? null,
               icon: "cal",
               tone: "pri",
-              art: "/assets/repulabs/post-creator/cal-calendar.svg",
+              art: "/assets/repulabs/post-creator/cp-scheduled.svg",
             },
             {
               label: "Published · all time",
               value: String(published),
-              helper: "Across all channels",
-              icon: "send",
+              delta: trend.published ?? null,
+              icon: "globe",
               tone: "green",
-              art: "/assets/repulabs/post-creator/cal-post.svg",
+              art: "/assets/repulabs/post-creator/cp-published.svg",
             },
             {
               label: "Drafts",
               value: String(drafts),
-              helper: "Not yet sent",
-              icon: "edit",
+              delta: trend.drafts ?? null,
+              icon: "file",
               tone: "orange",
-              art: "/assets/repulabs/post-creator/cal-postperweek.svg",
+              art: "/assets/repulabs/post-creator/cp-drafts.svg",
             },
           ]}
         />

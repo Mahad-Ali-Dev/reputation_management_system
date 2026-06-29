@@ -76,25 +76,29 @@ export function ThreadList({
               </span>
 
               <span style={{ minWidth: 0 }}>
-                <span className="row" style={{ gap: 6, justifyContent: "space-between" }}>
+                <span className="row" style={{ gap: 6, justifyContent: "space-between", alignItems: "center" }}>
                   <span className="uik-convo__name">{name}</span>
                   <span className="uik-convo__time uik-mono">{relativeTime(t.lastMessageAt)}</span>
                 </span>
-                <span
-                  className="uik-convo__preview"
-                  style={isMissed ? { color: "var(--uik-bad)", fontWeight: 600 } : undefined}
-                >
-                  {preview}
-                </span>
-              </span>
-
-              <span style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 4 }}>
-                {t.unreadCount > 0 && (
-                  <span className="uik-convo__badge" aria-label={`${t.unreadCount} unread`}>
-                    {t.unreadCount}
+                <span className="row" style={{ gap: 8, justifyContent: "space-between", alignItems: "center", marginTop: 2 }}>
+                  <span
+                    className="uik-convo__preview"
+                    style={{
+                      margin: 0,
+                      minWidth: 0,
+                      ...(isMissed ? { color: "var(--uik-bad)", fontWeight: 600 } : {}),
+                    }}
+                  >
+                    {preview}
                   </span>
-                )}
-                {t.status === "resolved" && <span className="uik-pill uik-pill--replied">Resolved</span>}
+                  {t.unreadCount > 0 ? (
+                    <span className="uik-convo__badge" aria-label={`${t.unreadCount} unread`}>
+                      {t.unreadCount}
+                    </span>
+                  ) : t.status === "resolved" ? (
+                    <span className="uik-pill uik-pill--replied">Resolved</span>
+                  ) : null}
+                </span>
               </span>
             </button>
           </li>

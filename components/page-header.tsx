@@ -6,7 +6,8 @@ import Link from "next/link";
  * Renders:
  *   - Optional kicker pill (mono uppercase with pulsing teal dot — via .ph__kicker)
  *   - Breadcrumb trail (small, sits above title)
- *   - Page title (32px, -0.03em tracking)
+ *   - Page title (32px, -0.03em tracking), with an optional inline badge to its
+ *     right (e.g. a live "● Live" status pill) via `titleBadge`
  *   - Description (14px muted)
  *   - Right-side actions slot
  */
@@ -15,12 +16,15 @@ export function PageHeader({
   description,
   breadcrumb,
   kicker,
+  titleBadge,
   actions,
 }: {
   title: string;
   description?: string;
   breadcrumb?: Array<{ label: string; href?: string }>;
   kicker?: string;
+  /** Optional small badge rendered inline to the right of the title. */
+  titleBadge?: React.ReactNode;
   actions?: React.ReactNode;
 }) {
   return (
@@ -59,7 +63,14 @@ export function PageHeader({
           </nav>
         )}
         {kicker && <div className="ph__kicker">{kicker}</div>}
-        <h1 className="ph__title">{title}</h1>
+        {titleBadge ? (
+          <div className="row" style={{ gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+            <h1 className="ph__title">{title}</h1>
+            {titleBadge}
+          </div>
+        ) : (
+          <h1 className="ph__title">{title}</h1>
+        )}
         {description && <p className="ph__sub">{description}</p>}
       </div>
       {actions && (

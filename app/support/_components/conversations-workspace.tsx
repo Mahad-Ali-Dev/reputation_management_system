@@ -256,13 +256,18 @@ export function ConversationsWorkspace({
         >
           <div style={{ padding: "16px 16px 10px" }}>
             <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 8 }}>
-              <span className="uik-chip is-active" style={{ cursor: "default" }}>
+              <span className="uik-chip uik-chip--label" style={{ cursor: "default" }}>
                 All conversations
-                <span className="uik-chip__count">{openCount}</span>
+                <span className="uik-chip__count uik-chip__count--pri">{openCount}</span>
               </span>
-              <button type="button" className="uik-quick" style={{ width: 36, height: 36 }} aria-label="Filter" title="Filter">
-                <Icon name="sliders" size={15} />
-              </button>
+              <div className="row" style={{ gap: 6 }}>
+                <button type="button" className="uik-iconbtn" aria-label="Filter" title="Filter">
+                  <Icon name="sliders" size={15} />
+                </button>
+                <button type="button" className="uik-iconbtn" aria-label="Search conversations" title="Search">
+                  <Icon name="search" size={15} />
+                </button>
+              </div>
             </div>
 
             {/* Search */}
