@@ -7,15 +7,17 @@ import { useRouter } from "next/navigation";
 import { type JSX, useMemo, useState, useTransition } from "react";
 
 /**
- * `<CalendarClient>` (Module 10) — drag-to-reschedule calendar island.
+ * `<CalendarClient>` (Module 10) — drag-to-reschedule calendar island, rebuilt
+ * to the delivered design kit (.sk-cal-* / .sk-week-*).
  *
  * The server page (`/social/calendar`) runs the DB query + keeps the month math;
  * it hands this island a flat, serializable `posts` array plus `year`/`month`/
- * `view`. The island renders the grid (month 6-week, or a single week) and adds:
- *   - HTML5 drag-and-drop: drop a post chip on a day → `rescheduleSocialPost`
+ * `view`. The island renders the toolbar (prev/today/next + month label +
+ * month/week toggle + legend + drag helper), the grid (month 6-week, or a rich
+ * week board with thumbnails + status badges + per-day add buttons) and adds:
+ *   - HTML5 drag-and-drop: drop a post chip/card on a day → `rescheduleSocialPost`
  *     (only `draft`/`scheduled` are draggable) → optimistic move + `router.refresh()`.
  *   - a week / month view toggle.
- * Platform-colored status bars are preserved from the original server render.
  *
  * RSC-safety: all interactivity lives here; the page stays a server component.
  */
@@ -25,6 +27,7 @@ export type CalendarPost = {
   caption: string | null;
   platforms: string[];
   status: string;
+  mediaUrl: string | null;
   /** ISO string of the day this chip sits on (postedAt ?? scheduledFor). */
   when: string;
   /** Whether this post can be dragged (draft | scheduled). */
@@ -38,20 +41,20 @@ const PLATFORM_ICON: Record<string, IconName> = {
   twitter: "twitter",
 };
 const PLATFORM_COLOR: Record<string, string> = {
-  facebook: "var(--pri)",
-  instagram: "#F59E0B",
+  facebook: "#1877F2",
+  instagram: "#E1306C",
   linkedin: "#0A66C2",
-  twitter: "#1DA1F2",
-};
-const STATUS_TONE: Record<string, string> = {
-  draft: "var(--rl-muted-2)",
-  scheduled: "var(--warn)",
-  publishing: "var(--info)",
-  published: "var(--ok)",
-  failed: "var(--bad)",
+  twitter: "#0F1419",
 };
 
-const DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+/** Map a post status → the kit's 3 calendar event tones. */
+function eventTone(status: string): "published" | "scheduled" | "draft" {
+  if (status === "published" || status === "posted") return "published";
+  if (status === "draft") return "draft";
+  return "scheduled"; // scheduled / publishing / failed all read as scheduled-purple
+}
+
+const DAY_NAMES = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
 
 function keyOf(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -89,6 +92,17 @@ function buildWeekGrid(year: number, month: number): Date[] {
 
 function isSameDay(a: Date, b: Date): boolean {
   return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+}
+
+function ymString(year: number, month: number): string {
+  return `${year}-${String(month + 1).padStart(2, "0")}`;
+}
+function hrefFor(year: number, month: number, view: "month" | "week"): string {
+  return `/social/calendar?ym=${ymString(year, month)}&view=${view}`;
+}
+function shiftMonth(year: number, month: number, delta: number) {
+  const d = new Date(year, month + delta, 1);
+  return { year: d.getFullYear(), month: d.getMonth() };
 }
 
 export function CalendarClient({
@@ -168,154 +182,199 @@ export function CalendarClient({
     });
   }
 
-  const today = new Date();
-  const colCount = 7;
-  const rowCount = view === "week" ? 1 : 6;
+  const prev = shiftMonth(year, month, -1);
+  const next = shiftMonth(year, month, +1);
+  const monthLabel = new Date(year, month, 1).toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+  const weekLabel = (() => {
+    const w = buildWeekGrid(year, month);
+    const a = w[0]!;
+    const b = w[6]!;
+    const fmt = (d: Date) => d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    return `${fmt(a)} - ${fmt(b)}, ${b.getFullYear()}`;
+  })();
 
   return (
     <div>
-      {/* view toggle + status line */}
-      <div className="row" style={{ justifyContent: "space-between", marginBottom: 10, gap: 12 }}>
-        <div className="seg">
-          <ViewBtn label="Month" active={view === "month"} href={hrefFor(year, month, "month")} />
-          <ViewBtn label="Week" active={view === "week"} href={hrefFor(year, month, "week")} />
+      {/* toolbar */}
+      <div className="sk-cal-toolbar">
+        <div className="sk-cal-nav">
+          <Link
+            href={hrefFor(prev.year, prev.month, view)}
+            className="sk-cal-navbtn"
+            aria-label="Previous"
+          >
+            <Icon name="chevL" size={15} />
+          </Link>
+          <Link href={`/social/calendar?view=${view}`} className="sk-cal-today">
+            Today
+          </Link>
+          <Link
+            href={hrefFor(next.year, next.month, view)}
+            className="sk-cal-navbtn"
+            aria-label="Next"
+          >
+            <Icon name="chevR" size={15} />
+          </Link>
+          <span className="sk-cal-month">{view === "week" ? weekLabel : monthLabel}</span>
         </div>
-        <div style={{ minHeight: 18, display: "flex", alignItems: "center", gap: 8 }}>
-          {pending && (
-            <span className="dim" style={{ fontSize: 11.5 }}>
-              <Icon name="refresh" size={11} /> Saving…
+
+        <div className="sk-cal-right">
+          <div className="sk-seg">
+            <Link
+              href={hrefFor(year, month, "month")}
+              className={`sk-seg__b${view === "month" ? " is-active" : ""}`}
+            >
+              Month
+            </Link>
+            <Link
+              href={hrefFor(year, month, "week")}
+              className={`sk-seg__b${view === "week" ? " is-active" : ""}`}
+            >
+              Week
+            </Link>
+          </div>
+          <div className="sk-legend">
+            <span className="sk-legend__item">
+              <span className="sk-legend__dot" style={{ background: "var(--sk-published)" }} />
+              Published
             </span>
-          )}
-          {error && (
-            <span style={{ fontSize: 11.5, color: "var(--bad)" }} role="alert">
-              <Icon name="alert" size={11} /> {error}
+            <span className="sk-legend__item">
+              <span className="sk-legend__dot" style={{ background: "var(--sk-scheduled)" }} />
+              Scheduled
             </span>
-          )}
-          <span className="dim" style={{ fontSize: 11 }}>
-            <Icon name="move" size={11} /> Drag drafts & scheduled posts to reschedule
+            <span className="sk-legend__item">
+              <span className="sk-legend__dot" style={{ background: "var(--sk-draft)" }} />
+              Draft
+            </span>
+          </div>
+          <span className="sk-cal-help">
+            {pending ? (
+              <>
+                <Icon name="refresh" size={13} /> Saving…
+              </>
+            ) : error ? (
+              <span style={{ color: "#c0344a" }} role="alert">
+                <Icon name="alert" size={13} /> {error}
+              </span>
+            ) : (
+              <>
+                <Icon name="move" size={13} /> Drag drafts &amp; scheduled posts to reschedule
+              </>
+            )}
           </span>
         </div>
       </div>
 
-      <div className="ds-card" style={{ overflow: "hidden", padding: 0 }}>
-        {/* weekday header */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(7, 1fr)",
-            background: "var(--surface-2)",
-            borderBottom: "1px solid var(--line)",
-          }}
-        >
-          {DAY_NAMES.map((d) => (
-            <div
-              key={d}
-              className="lbl-mono"
-              style={{ padding: "10px 14px", margin: 0, fontSize: 11, borderRight: "1px solid var(--line)" }}
-            >
-              {d}
-            </div>
-          ))}
-        </div>
-
-        {/* grid */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(7, 1fr)" }}>
-          {days.map((day, idx) => {
-            const inMonth = day.getMonth() === month;
-            const isToday = isSameDay(day, today);
-            const k = keyOf(day);
-            const dayPosts = byDay.get(k) ?? [];
-            const isOver = overKey === k;
-            const di = idx % colCount;
-            const wi = Math.floor(idx / colCount);
-            return (
-              // biome-ignore lint/a11y/useKeyWithClickEvents: drop targets are pointer-only; keyboard reschedule is available via the post editor's date field
-              <div
-                key={k}
-                onDragOver={(e) => {
-                  e.preventDefault();
-                  if (overKey !== k) setOverKey(k);
-                }}
-                onDragLeave={() => {
-                  if (overKey === k) setOverKey(null);
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  onDrop(day);
-                }}
-                style={{
-                  minHeight: view === "week" ? 320 : 112,
-                  padding: 8,
-                  borderRight: di < 6 ? "1px solid var(--line)" : "none",
-                  borderTop: wi > 0 ? "1px solid var(--line)" : "none",
-                  background: isOver
-                    ? "var(--pri-50)"
-                    : inMonth || view === "week"
-                      ? "var(--surface)"
-                      : "var(--surface-2)",
-                  opacity: inMonth || view === "week" ? 1 : 0.5,
-                  outline: isOver ? "2px dashed var(--pri)" : "none",
-                  outlineOffset: -2,
-                  position: "relative",
-                  transition: "background .12s",
-                }}
-              >
-                <div className="row" style={{ marginBottom: 6 }}>
-                  <span
-                    style={{
-                      fontSize: 11.5,
-                      fontWeight: isToday ? 600 : 500,
-                      width: 22,
-                      height: 22,
-                      borderRadius: 999,
-                      display: "grid",
-                      placeItems: "center",
-                      background: isToday ? "var(--pri)" : "transparent",
-                      color: isToday ? "#fff" : "var(--ink-2)",
-                      fontFamily: "var(--f-mono)",
-                    }}
-                  >
-                    {day.getDate()}
-                  </span>
-                  {dayPosts.length > 0 && (
-                    <span className="mono dim" style={{ marginLeft: "auto", fontSize: 10 }}>
-                      {dayPosts.length}
-                    </span>
-                  )}
-                </div>
-                <div className="col" style={{ gap: 4 }}>
-                  {dayPosts.slice(0, view === "week" ? 12 : 3).map((p) => (
-                    <PostChip
-                      key={p.id}
-                      post={p}
-                      dragging={dragId === p.id}
-                      onDragStart={() => setDragId(p.id)}
-                      onDragEnd={() => {
-                        setDragId(null);
-                        setOverKey(null);
-                      }}
-                    />
-                  ))}
-                  {view === "month" && dayPosts.length > 3 && (
-                    <span className="dim" style={{ fontSize: 10, paddingLeft: 6 }}>
-                      +{dayPosts.length - 3} more
-                    </span>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-      {/* a11y note: rowCount/colCount kept for grid semantics in week vs month */}
-      <span hidden aria-hidden>
-        {rowCount}x{colCount}
-      </span>
+      {view === "week" ? (
+        <WeekBoard
+          days={days}
+          byDay={byDay}
+          overKey={overKey}
+          dragId={dragId}
+          setDragId={setDragId}
+          setOverKey={setOverKey}
+          onDrop={onDrop}
+        />
+      ) : (
+        <MonthGrid
+          days={days}
+          month={month}
+          byDay={byDay}
+          overKey={overKey}
+          dragId={dragId}
+          setDragId={setDragId}
+          setOverKey={setOverKey}
+          onDrop={onDrop}
+        />
+      )}
     </div>
   );
 }
 
-function PostChip({
+/* ------------------------------- month grid ------------------------------- */
+
+function MonthGrid({
+  days,
+  month,
+  byDay,
+  overKey,
+  dragId,
+  setDragId,
+  setOverKey,
+  onDrop,
+}: {
+  days: Date[];
+  month: number;
+  byDay: Map<string, CalendarPost[]>;
+  overKey: string | null;
+  dragId: string | null;
+  setDragId: (id: string | null) => void;
+  setOverKey: (k: string | null) => void;
+  onDrop: (day: Date) => void;
+}) {
+  const today = new Date();
+  return (
+    <div className="sk-cal-card">
+      <div className="sk-cal-weekhead">
+        {DAY_NAMES.map((d) => (
+          <span key={d}>{d}</span>
+        ))}
+      </div>
+      <div className="sk-cal-grid">
+        {days.map((day) => {
+          const inMonth = day.getMonth() === month;
+          const isToday = isSameDay(day, today);
+          const k = keyOf(day);
+          const dayPosts = byDay.get(k) ?? [];
+          const isOver = overKey === k;
+          return (
+            // biome-ignore lint/a11y/useKeyWithClickEvents: drop targets are pointer-only; keyboard reschedule is available via the post editor's date field
+            <div
+              key={k}
+              className={`sk-cal-cell${inMonth ? "" : " sk-cal-cell--out"}${isOver ? " is-over" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (overKey !== k) setOverKey(k);
+              }}
+              onDragLeave={() => {
+                if (overKey === k) setOverKey(null);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                onDrop(day);
+              }}
+            >
+              <div className="sk-cal-cell__top">
+                <span className={`sk-cal-daynum${isToday ? " sk-cal-daynum--today" : ""}`}>
+                  {day.getDate()}
+                </span>
+                {dayPosts.length > 0 && <span className="sk-cal-count">{dayPosts.length}</span>}
+              </div>
+              {dayPosts.slice(0, 3).map((p) => (
+                <MonthChip
+                  key={p.id}
+                  post={p}
+                  dragging={dragId === p.id}
+                  onDragStart={() => setDragId(p.id)}
+                  onDragEnd={() => {
+                    setDragId(null);
+                    setOverKey(null);
+                  }}
+                />
+              ))}
+              {dayPosts.length > 3 && <span className="sk-cal-more">+{dayPosts.length - 3} more</span>}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function MonthChip({
   post,
   dragging,
   onDragStart,
@@ -326,11 +385,11 @@ function PostChip({
   onDragStart: () => void;
   onDragEnd: () => void;
 }) {
-  const platform = (post.platforms ?? [])[0]?.toLowerCase() ?? "";
-  const icon = PLATFORM_ICON[platform] ?? "share";
-  const platformColor = PLATFORM_COLOR[platform] ?? "var(--rl-muted-2)";
-  const tone = STATUS_TONE[post.status] ?? "var(--rl-muted-2)";
-
+  const tone = eventTone(post.status);
+  const time = new Date(post.when).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
   return (
     <Link
       href={`/social/posts?tab=create&post=${post.id}`}
@@ -345,71 +404,184 @@ function PostChip({
         onDragStart();
       }}
       onDragEnd={onDragEnd}
-      className="row"
+      className={`sk-chip-event sk-chip-event--${tone}`}
       title={post.movable ? "Drag to reschedule · click to edit" : "Click to view"}
-      style={{
-        gap: 5,
-        padding: "4px 6px",
-        borderRadius: 6,
-        background: "var(--surface-2)",
-        border: "1px solid var(--line)",
-        fontSize: 10.5,
-        textDecoration: "none",
-        color: "inherit",
-        overflow: "hidden",
-        position: "relative",
-        cursor: post.movable ? "grab" : "pointer",
-        opacity: dragging ? 0.4 : 1,
-      }}
+      style={{ opacity: dragging ? 0.4 : 1, cursor: post.movable ? "grab" : "pointer" }}
     >
-      <span
-        aria-hidden
-        style={{
-          position: "absolute",
-          left: 0,
-          top: 0,
-          bottom: 0,
-          width: 3,
-          background: tone,
-          borderRadius: "0 2px 2px 0",
-        }}
-      />
-      <Icon name={icon} size={10} style={{ color: platformColor, marginLeft: 4 }} />
-      <span
-        style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}
-      >
-        {post.caption?.slice(0, 26) ?? `(${post.status})`}
-        {post.caption && post.caption.length > 26 && "…"}
-      </span>
+      <span className="sk-chip-event__dot" />
+      <span className="sk-chip-event__txt">{time}</span>
     </Link>
   );
 }
 
-function ViewBtn({ label, active, href }: { label: string; active: boolean; href: string }) {
+/* -------------------------------- week board ------------------------------ */
+
+function WeekBoard({
+  days,
+  byDay,
+  overKey,
+  dragId,
+  setDragId,
+  setOverKey,
+  onDrop,
+}: {
+  days: Date[];
+  byDay: Map<string, CalendarPost[]>;
+  overKey: string | null;
+  dragId: string | null;
+  setDragId: (id: string | null) => void;
+  setOverKey: (k: string | null) => void;
+  onDrop: (day: Date) => void;
+}) {
+  const today = new Date();
+  const hasAny = days.some((d) => (byDay.get(keyOf(d)) ?? []).length > 0);
+  return (
+    <div className="sk-week">
+      {days.map((day, idx) => {
+        const k = keyOf(day);
+        const dayPosts = byDay.get(k) ?? [];
+        const isOver = overKey === k;
+        const isToday = isSameDay(day, today);
+        const publishedCount = dayPosts.filter(
+          (p) => p.status === "published" || p.status === "posted",
+        ).length;
+        const badgeTone = publishedCount >= dayPosts.length && dayPosts.length > 0 ? "published" : "scheduled";
+        return (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: drop targets are pointer-only; keyboard reschedule is available via the post editor's date field
+          <div
+            key={k}
+            className={`sk-weekcol${isOver ? " is-over" : ""}`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              if (overKey !== k) setOverKey(k);
+            }}
+            onDragLeave={() => {
+              if (overKey === k) setOverKey(null);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              onDrop(day);
+            }}
+          >
+            <div className="sk-weekcol__head">
+              <div className="sk-weekcol__day">{DAY_NAMES[idx]}</div>
+              <div className={`sk-weekcol__date${isToday ? " sk-weekcol__date--today" : ""}`}>
+                {day.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                {dayPosts.length > 0 && (
+                  <span className={`sk-weekcount sk-weekcount--${badgeTone}`}>{dayPosts.length}</span>
+                )}
+              </div>
+            </div>
+            {dayPosts.map((p) => (
+              <WeekCard
+                key={p.id}
+                post={p}
+                dragging={dragId === p.id}
+                onDragStart={() => setDragId(p.id)}
+                onDragEnd={() => {
+                  setDragId(null);
+                  setOverKey(null);
+                }}
+              />
+            ))}
+            <Link
+              href={`/social/posts?tab=create`}
+              className="sk-week-add"
+              aria-label={`Create post on ${day.toLocaleDateString("en-US", { month: "long", day: "numeric" })}`}
+              title="Create post on this day"
+            >
+              <Icon name="plus" size={15} />
+            </Link>
+          </div>
+        );
+      })}
+
+      {!hasAny && (
+        <div className="sk-week-empty">
+          <span className="sk-week-empty__badge" aria-hidden>
+            <Icon name="cal" size={28} />
+          </span>
+          <h3 className="sk-empty-center__title" style={{ fontSize: 20 }}>
+            Your calendar is empty
+          </h3>
+          <p className="sk-empty-center__body" style={{ margin: "6px 0 16px" }}>
+            No posts scheduled for this week.
+          </p>
+          <Link href="/social/posts?tab=create" className="btn btn--pri" style={{ height: 44 }}>
+            <Icon name="plus" size={14} />
+            Create your first post
+          </Link>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function WeekCard({
+  post,
+  dragging,
+  onDragStart,
+  onDragEnd,
+}: {
+  post: CalendarPost;
+  dragging: boolean;
+  onDragStart: () => void;
+  onDragEnd: () => void;
+}) {
+  const platform = (post.platforms ?? [])[0]?.toLowerCase() ?? "";
+  const icon = PLATFORM_ICON[platform] ?? "share";
+  const platformColor = PLATFORM_COLOR[platform] ?? "var(--sk-muted)";
+  const tone = eventTone(post.status);
+  const time = new Date(post.when).toLocaleTimeString("en-US", {
+    hour: "numeric",
+    minute: "2-digit",
+  });
   return (
     <Link
-      href={href}
-      className="seg__b"
-      aria-pressed={active}
-      style={{
-        padding: "6px 14px",
-        fontSize: 12.5,
-        borderRadius: "calc(var(--r) - 3px)",
-        textDecoration: "none",
-        background: active ? "var(--surface)" : "transparent",
-        color: active ? "var(--ink)" : "var(--rl-muted)",
-        fontWeight: active ? 600 : 450,
-        boxShadow: active ? "var(--sh)" : "none",
+      href={`/social/posts?tab=create&post=${post.id}`}
+      draggable={post.movable}
+      onDragStart={(e) => {
+        if (!post.movable) {
+          e.preventDefault();
+          return;
+        }
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", post.id);
+        onDragStart();
       }}
+      onDragEnd={onDragEnd}
+      className="sk-weekcard"
+      title={post.movable ? "Drag to reschedule · click to edit" : "Click to view"}
+      style={{ opacity: dragging ? 0.4 : 1, cursor: post.movable ? "grab" : "pointer" }}
     >
-      {label}
+      <div className="sk-weekcard__top">
+        <span className="sk-weekcard__time">{time}</span>
+        <Icon name={icon} size={15} style={{ color: platformColor }} />
+      </div>
+      {post.mediaUrl && (
+        // biome-ignore lint/performance/noImgElement: post thumbnail (user/blob asset)
+        <img
+          src={post.mediaUrl}
+          alt=""
+          style={{
+            width: "100%",
+            height: 64,
+            objectFit: "cover",
+            borderRadius: 8,
+            marginTop: 8,
+            border: "1px solid var(--sk-line)",
+          }}
+        />
+      )}
+      <div className="sk-weekcard__copy">{post.caption || "(no caption)"}</div>
+      <div className="sk-weekcard__foot">
+        <span className={`sk-status sk-status--${tone}`} style={{ height: 22, fontSize: 11 }}>
+          <span className="sk-status__dot" />
+          {tone}
+        </span>
+      </div>
     </Link>
   );
-}
-
-function hrefFor(year: number, month: number, view: "month" | "week"): string {
-  const ym = `${year}-${String(month + 1).padStart(2, "0")}`;
-  return `/social/calendar?ym=${ym}&view=${view}`;
 }
 
 function friendlyError(code: string): string {

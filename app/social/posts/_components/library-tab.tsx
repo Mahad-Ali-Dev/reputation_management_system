@@ -9,78 +9,117 @@ import Link from "next/link";
 import { LibraryUploader } from "./library-uploader";
 
 /**
- * `<LibraryTab>` (Module 10) — Content Library management panel (server).
+ * `<LibraryTab>` (Module 10) — Content Library management panel (server), rebuilt
+ * to the delivered design kit (.sk-lib-*).
  *
- * Grid of `ContentLibraryAsset` thumbnails (folder filter via `?folder=`, size,
- * date), an upload control (the `<LibraryUploader>` island), delete (admin-gated
- * by the action), and "Use in post" (links to Create with the asset's URL
- * preselected). Empty state when there's nothing yet. All reads fail soft
- * (pre-migration → empty), so the tab never 500s before the founder migrates.
+ * Header with "Add new" + "Upload media" actions, a filter-chip row bound to the
+ * org's real folders (`?folder=`), a 6-up asset grid of `ContentLibraryAsset`
+ * thumbnails (file-type badge, video play overlay + duration, more menu, title +
+ * folder + date), delete (admin-gated by the action) and "Use in post" (links to
+ * Create with the asset's URL preselected). Empty state = the kit dashed
+ * drop-zone. All reads fail soft (pre-migration → empty), so the tab never 500s.
  */
 
 export async function LibraryTab({
   orgId,
   folder,
+  forceEmpty,
 }: {
   orgId: string;
   folder?: string | null;
+  forceEmpty?: boolean;
 }) {
-  const [assets, folders] = await Promise.all([
+  const [assetsRaw, foldersRaw] = await Promise.all([
     listLibraryAssets(orgId, { folder: folder ?? undefined, take: 120 }),
     listLibraryFolders(orgId),
   ]);
+  const assets = forceEmpty ? [] : assetsRaw;
+  const folders = forceEmpty ? [] : foldersRaw;
+
+  const isEmpty = assets.length === 0 && !folder;
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
+    <div className="sk-card">
+      <div className="sk-card__head">
         <div>
-          <h3 className="ds-card__title">Content library</h3>
-          <div className="ds-card__sub">Reusable images & video for your posts.</div>
+          <h3 className="sk-card__title">Content library</h3>
+          <div className="sk-card__sub">
+            Organize and reuse your best content. Save time and maintain consistency.
+          </div>
         </div>
-        <LibraryUploader folder={folder} />
+        <div className="row" style={{ gap: 10 }}>
+          <Link href="/social/posts?tab=create" className="sk-btn-out" style={{ height: 38 }}>
+            <Icon name="plus" size={13} />
+            Add new
+          </Link>
+          <LibraryUploader folder={folder} />
+        </div>
       </div>
 
-      {/* folder filter */}
+      {/* filter chips (real folders) + folder/sort */}
       {folders.length > 0 && (
-        <div
-          className="row"
-          style={{ gap: 6, flexWrap: "wrap", padding: "10px 16px", borderBottom: "1px solid var(--line)" }}
-        >
-          <FolderLink label="All" href="/social/posts?tab=library" active={!folder} />
-          {folders.map((f) => (
-            <FolderLink
-              key={f}
-              label={f}
-              href={`/social/posts?tab=library&folder=${encodeURIComponent(f)}`}
-              active={folder === f}
-            />
-          ))}
+        <div className="sk-lib-chips">
+          <div className="sk-chips">
+            <FolderChip label="All" href="/social/posts?tab=library" active={!folder} />
+            {folders.map((f) => (
+              <FolderChip
+                key={f}
+                label={f}
+                href={`/social/posts?tab=library&folder=${encodeURIComponent(f)}`}
+                active={folder === f}
+              />
+            ))}
+          </div>
+          <div className="row" style={{ gap: 8 }}>
+            <span className="sk-chip" style={{ cursor: "default" }}>
+              <Icon name="grid" size={13} />
+              {folder ?? "All folders"}
+            </span>
+            <span className="sk-chip" style={{ cursor: "default" }}>
+              <Icon name="filter" size={13} />
+              Newest first
+            </span>
+          </div>
         </div>
       )}
 
-      <div className="ds-card__body">
+      <div className="sk-card__body">
         {assets.length === 0 ? (
-          <div style={{ padding: 36, textAlign: "center", color: "var(--rl-muted)" }}>
-            <Icon name="image" size={28} style={{ color: "var(--pri)" }} />
-            <p style={{ marginTop: 10, fontSize: 13 }}>
-              {folder ? `No media in “${folder}” yet.` : "Your library is empty."}
-            </p>
-            <p style={{ fontSize: 11.5, marginTop: 4 }}>
-              Upload images or video to reuse them across posts — or generate AI creatives from the composer.
-            </p>
-          </div>
+          isEmpty ? (
+            <LibraryUploader variant="dropzone" folder={folder} />
+          ) : (
+            <div className="sk-empty-center" style={{ padding: "32px 28px" }}>
+              <Icon name="image" size={30} style={{ color: "var(--sk-pri)" }} />
+              <p className="sk-empty-center__body" style={{ marginTop: 12 }}>
+                No media in “{folder}” yet.
+              </p>
+            </div>
+          )
         ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
-              gap: 12,
-            }}
-          >
-            {assets.map((a) => (
-              <AssetCard key={a.id} asset={a} />
-            ))}
-          </div>
+          <>
+            <div className="sk-lib-grid">
+              {assets.map((a) => (
+                <AssetCard key={a.id} asset={a} />
+              ))}
+            </div>
+            <div style={{ textAlign: "center", marginTop: 22 }}>
+              <Link
+                href="/social/posts?tab=library"
+                className="row"
+                style={{
+                  display: "inline-flex",
+                  gap: 6,
+                  color: "var(--sk-pri)",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                }}
+              >
+                View all content
+                <Icon name="arrowR" size={13} />
+              </Link>
+            </div>
+          </>
         )}
       </div>
     </div>
@@ -88,57 +127,61 @@ export async function LibraryTab({
 }
 
 function AssetCard({ asset }: { asset: LibraryAsset }) {
+  const ext = fileExt(asset.url, asset.kind);
   return (
-    <div className="ds-card" style={{ padding: 0, overflow: "hidden", borderRadius: 12 }}>
-      <div style={{ position: "relative", aspectRatio: "1 / 1", background: "var(--surface-3)" }}>
-        {asset.kind === "video" ? (
-          <div style={{ position: "absolute", inset: 0, background: "#0b1220" }}>
-            {/* biome-ignore lint/performance/noImgElement: library thumbnail (blob asset) */}
-            <img
-              src={asset.url}
-              alt={asset.caption ?? ""}
-              style={{ width: "100%", height: "100%", objectFit: "cover", opacity: 0.65 }}
-            />
-            <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
-              <Icon name="play" size={20} style={{ color: "#fff" }} />
+    <div className="sk-asset">
+      <div className="sk-asset__thumb">
+        {/* biome-ignore lint/performance/noImgElement: library thumbnail (blob asset) */}
+        <img
+          src={asset.url}
+          alt={asset.caption ?? ""}
+          style={asset.kind === "video" ? { opacity: 0.7 } : undefined}
+        />
+        {asset.kind === "video" && (
+          <span className="sk-asset__play" aria-hidden>
+            <span>
+              <Icon name="play" size={18} />
             </span>
-          </div>
-        ) : (
-          // biome-ignore lint/performance/noImgElement: library thumbnail (blob asset)
-          <img
-            src={asset.url}
-            alt={asset.caption ?? ""}
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
+          </span>
         )}
+        <span className="sk-asset__badge">{ext}</span>
         {asset.source === "ai_creative" && (
           <span
-            className="chip chip--pri"
-            style={{ position: "absolute", left: 6, top: 6, fontSize: 9, height: 18, padding: "0 6px" }}
+            className="sk-asset__dur"
+            style={{ left: "auto", right: 8, background: "var(--sk-pri)" }}
           >
-            <Icon name="sparkle" size={9} /> AI
+            <Icon name="sparkle" size={10} style={{ marginRight: 3 }} /> AI
           </span>
         )}
+        <button type="button" className="sk-asset__more" aria-label="Asset actions">
+          <Icon name="sliders" size={14} />
+        </button>
       </div>
-      <div style={{ padding: "8px 10px" }}>
-        <div className="row" style={{ justifyContent: "space-between", gap: 6 }}>
-          <span className="dim mono" style={{ fontSize: 9.5 }}>
-            {fmtSize(asset.sizeBytes)} · {fmtDate(asset.createdAt)}
-          </span>
+      <div className="sk-asset__meta">
+        <div className="sk-asset__title">{asset.caption || asset.folder || "Untitled asset"}</div>
+        <div className="sk-asset__info">
+          {asset.folder ? `${asset.folder} · ` : ""}
+          {fmtDate(asset.createdAt)}
         </div>
-        <div className="row" style={{ gap: 6, marginTop: 8 }}>
+        <div className="sk-asset__actions">
           <Link
             href={`/social/posts?tab=create&media=${encodeURIComponent(asset.url)}`}
-            className="btn btn--xs"
-            style={{ flex: 1, justifyContent: "center" }}
+            className="sk-btn-out"
+            style={{ flex: 1, justifyContent: "center", height: 32, fontSize: 12 }}
           >
-            <Icon name="plus" size={11} />
+            <Icon name="plus" size={12} />
             Use in post
           </Link>
           <form action={deleteLibraryAsset}>
             <input type="hidden" name="id" value={asset.id} />
-            <button type="submit" className="btn btn--xs btn--danger" aria-label="Delete asset" title="Delete (admin)">
-              <Icon name="trash" size={11} />
+            <button
+              type="submit"
+              className="sk-btn-out"
+              style={{ height: 32, padding: "0 10px", borderColor: "#f3c0c8", color: "#c0344a" }}
+              aria-label="Delete asset"
+              title="Delete (admin)"
+            >
+              <Icon name="trash" size={12} />
             </button>
           </form>
         </div>
@@ -147,25 +190,20 @@ function AssetCard({ asset }: { asset: LibraryAsset }) {
   );
 }
 
-function FolderLink({ label, href, active }: { label: string; href: string; active: boolean }) {
+function FolderChip({ label, href, active }: { label: string; href: string; active: boolean }) {
   return (
-    <Link
-      href={href}
-      className={`chip ${active ? "chip--pri" : "chip--out"}`}
-      style={{ textDecoration: "none" }}
-    >
+    <Link href={href} className={`sk-chip${active ? " is-active" : ""}`}>
       {label}
     </Link>
   );
 }
 
-function fmtSize(bytes: number | null): string {
-  if (!bytes) return "—";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+function fileExt(url: string, kind: string): string {
+  const m = url.split("?")[0]?.match(/\.([a-z0-9]{2,4})$/i);
+  if (m?.[1]) return m[1].toUpperCase();
+  return kind === "video" ? "MP4" : "IMG";
 }
 
 function fmtDate(d: Date): string {
-  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return new Date(d).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
 }

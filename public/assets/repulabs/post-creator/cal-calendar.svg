@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="512" viewBox="0 0 142 77" fill="none">
+  <defs>
+    <linearGradient id="purple" x1="58" y1="26" x2="87" y2="51" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6337FF"/>
+      <stop offset="1" stop-color="#3D18E8"/>
+    </linearGradient>
+    <radialGradient id="circle" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(71 38.5) rotate(90) scale(35)">
+      <stop stop-color="#F5F0FF"/>
+      <stop offset="1" stop-color="#ECE5FF"/>
+    </radialGradient>
+  </defs>
+
+  <circle cx="71" cy="38.5" r="35" fill="url(#circle)"/>
+
+  <path d="M60.5 35H86.5" stroke="url(#purple)" stroke-width="3.6" stroke-linecap="round"/>
+  <rect x="58.7" y="29.3" width="29" height="22" rx="3.8" stroke="url(#purple)" stroke-width="3.8"/>
+  <path d="M65 27.3V33.6M80.5 27.3V33.6" stroke="url(#purple)" stroke-width="3.8" stroke-linecap="round"/>
+  <path d="M70.8 43.2L74.3 46.5L81.3 38.5" stroke="url(#purple)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <path d="M25 14.2C26.2 18.3 27.2 19.3 31.3 20.5C27.2 21.7 26.2 22.7 25 26.8C23.8 22.7 22.8 21.7 18.7 20.5C22.8 19.3 23.8 18.3 25 14.2Z" fill="#D8CBFF"/>
+  <path d="M119 8.5C120.1 12.3 121.1 13.3 124.9 14.4C121.1 15.5 120.1 16.5 119 20.3C117.9 16.5 116.9 15.5 113.1 14.4C116.9 13.3 117.9 12.3 119 8.5Z" fill="#D8CBFF"/>
+  <path d="M121.6 54.2C122.9 58.5 123.9 59.5 128.2 60.8C123.9 62.1 122.9 63.1 121.6 67.4C120.3 63.1 119.3 62.1 115 60.8C119.3 59.5 120.3 58.5 121.6 54.2Z" fill="#D8CBFF"/>
+  <path d="M25.7 62.1C26.5 65 27.3 65.8 30.2 66.6C27.3 67.4 26.5 68.2 25.7 71.1C24.9 68.2 24.1 67.4 21.2 66.6C24.1 65.8 24.9 65 25.7 62.1Z" fill="#D8CBFF"/>
+</svg>

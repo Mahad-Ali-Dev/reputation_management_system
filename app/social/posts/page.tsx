@@ -19,9 +19,10 @@ import {
   recommendTimesForComposer,
 } from "./_components/composer-actions";
 import { HistoryTab } from "./_components/history-tab";
-import { HubTabs } from "./_components/hub-tabs";
 import { LibraryTab } from "./_components/library-tab";
 import type { LibraryAsset as PickerAsset } from "./_components/library-modal";
+import { StudioKpis, StudioTabs } from "./_components/studio-kit";
+import "./social-compose.css";
 
 /**
  * Social Studio (Module 10) — the 4-tab hub on `/social/posts`.
@@ -71,11 +72,15 @@ export default async function SocialPostsPage({
     media?: string;
     hpage?: string;
     folder?: string;
+    __empty?: string;
   }>;
 }) {
   const { orgId, org } = await getOrgContext();
   const sp = await searchParams;
   const tab = parseTab(sp.tab);
+  // Dev-only empty-state preview (?__empty=1) — forces the empty branch for
+  // screenshot verification. Harmless flag; no effect on real reads.
+  const forceEmpty = sp.__empty === "1";
 
   // Connection state — drives platform gating + the empty state.
   const connectedSet = await getConnectedPlatforms(orgId);
@@ -90,43 +95,80 @@ export default async function SocialPostsPage({
   }).catch(() => ({}) as Record<string, number>);
 
   const scheduled = counts.scheduled ?? 0;
-  const published = counts.published ?? 0;
+  // Demo seeds use "posted"; production publishes as "published".
+  const published = (counts.published ?? 0) + (counts.posted ?? 0);
   const drafts = counts.draft ?? 0;
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Engagement", "Social Studio"]}>
-      <PageHeader
-        kicker="Cross-channel scheduler"
-        title="Social studio"
-        description="Compose once, preview per platform, and schedule across Facebook, Instagram, LinkedIn and X — with AI captions and creatives."
-        actions={
-          <Link href="/social/posts/bulk" className="btn">
-            <Icon name="bars" size={12} />
-            Bulk schedule
-          </Link>
-        }
-      />
-
-      <div className="grid-3" style={{ gap: 12, marginBottom: 18 }}>
-        <Kpi l="Scheduled" v={String(scheduled)} d="Queued to publish" />
-        <Kpi l="Published · all time" v={String(published)} d="Across all channels" />
-        <Kpi l="Drafts" v={String(drafts)} d="Not yet sent" />
-      </div>
-
-      <HubTabs active={tab} />
-
-      {tab === "create" && (
-        <CreatePanel
-          orgId={orgId}
-          orgName={org.name}
-          orgLogoUrl={org.logoUrl}
-          connectedPlatforms={connectedPlatforms}
-          postId={sp.post}
-          presetMedia={sp.media}
+      <div className="sk-page">
+        <PageHeader
+          kicker="Cross-channel scheduler"
+          title="Social studio"
+          description="Compose once, preview per platform, and schedule across Facebook, Instagram, LinkedIn and X — with AI captions and creatives."
+          actions={
+            <>
+              <Link href="/social/posts?tab=create" className="btn btn--pri">
+                <Icon name="plus" size={13} />
+                Create new post
+              </Link>
+              <Link href="/social/posts/bulk" className="btn">
+                <Icon name="cal" size={13} />
+                Bulk schedule
+              </Link>
+            </>
+          }
         />
-      )}
-      {tab === "history" && <HistoryTab orgId={orgId} page={Number(sp.hpage) || 1} />}
-      {tab === "library" && <LibraryTab orgId={orgId} folder={sp.folder ?? null} />}
+
+        <StudioKpis
+          items={[
+            {
+              label: "Scheduled",
+              value: String(scheduled),
+              helper: "Queued to publish",
+              icon: "cal",
+              tone: "pri",
+              art: "/assets/repulabs/post-creator/cal-calendar.svg",
+            },
+            {
+              label: "Published · all time",
+              value: String(published),
+              helper: "Across all channels",
+              icon: "send",
+              tone: "green",
+              art: "/assets/repulabs/post-creator/cal-post.svg",
+            },
+            {
+              label: "Drafts",
+              value: String(drafts),
+              helper: "Not yet sent",
+              icon: "edit",
+              tone: "orange",
+              art: "/assets/repulabs/post-creator/cal-postperweek.svg",
+            },
+          ]}
+        />
+
+        <StudioTabs active={tab} />
+
+        {tab === "create" && (
+          <CreatePanel
+            orgId={orgId}
+            orgName={org.name}
+            orgLogoUrl={org.logoUrl}
+            connectedPlatforms={connectedPlatforms}
+            postId={sp.post}
+            presetMedia={sp.media}
+            hasPosts={!forceEmpty && scheduled + published + drafts > 0}
+          />
+        )}
+        {tab === "history" && (
+          <HistoryTab orgId={orgId} page={Number(sp.hpage) || 1} forceEmpty={forceEmpty} />
+        )}
+        {tab === "library" && (
+          <LibraryTab orgId={orgId} folder={sp.folder ?? null} forceEmpty={forceEmpty} />
+        )}
+      </div>
     </AppShellServer>
   );
 }
@@ -139,6 +181,7 @@ async function CreatePanel({
   connectedPlatforms,
   postId,
   presetMedia,
+  hasPosts,
 }: {
   orgId: string;
   orgName: string;
@@ -146,6 +189,7 @@ async function CreatePanel({
   connectedPlatforms: SocialPlatform[];
   postId?: string;
   presetMedia?: string;
+  hasPosts: boolean;
 }) {
   const isUuid = (s?: string) =>
     !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -192,7 +236,7 @@ async function CreatePanel({
     withTenant(orgId, async (tx) =>
       tx.socialPost.findMany({
         where: {
-          status: { in: ["scheduled", "published"] },
+          status: { in: ["scheduled", "published", "posted"] },
           OR: [
             { scheduledFor: { gte: monthStart, lt: monthEnd } },
             { postedAt: { gte: monthStart, lt: monthEnd } },
@@ -272,20 +316,7 @@ async function CreatePanel({
       recommendTimes={recommendTimesForComposer}
       initialPost={initialPost}
       miniCal={miniCal}
+      hasPosts={hasPosts}
     />
-  );
-}
-
-function Kpi({ l, v, d }: { l: string; v: string; d: string }) {
-  return (
-    <div className="ds-card">
-      <div className="stat">
-        <div className="stat__label">{l}</div>
-        <div className="stat__value" style={{ fontSize: 30 }}>
-          {v}
-        </div>
-        <div className="stat__delta">{d}</div>
-      </div>
-    </div>
   );
 }

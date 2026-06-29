@@ -18,12 +18,20 @@ import { type JSX, useRef, useState } from "react";
 
 const LIBRARY_NOT_MIGRATED = "Storage isn’t set up yet — ask your admin to finish setup.";
 
-export function LibraryUploader({ folder }: { folder?: string | null }): JSX.Element {
+export function LibraryUploader({
+  folder,
+  variant = "button",
+}: {
+  folder?: string | null;
+  /** "button" = the kit outline "Upload media" button; "dropzone" = the empty-state dashed zone. */
+  variant?: "button" | "dropzone";
+}): JSX.Element {
   const router = useRouter();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [count, setCount] = useState(0);
+  const [dragOver, setDragOver] = useState(false);
 
   async function handleFiles(files: FileList) {
     setError(null);
@@ -68,35 +76,81 @@ export function LibraryUploader({ folder }: { folder?: string | null }): JSX.Ele
     }
   }
 
+  const hiddenInput = (
+    <input
+      ref={fileRef}
+      type="file"
+      accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime"
+      multiple
+      hidden
+      onChange={(e) => {
+        if (e.target.files?.length) void handleFiles(e.target.files);
+        e.target.value = "";
+      }}
+    />
+  );
+
+  if (variant === "dropzone") {
+    return (
+      <>
+        {/* biome-ignore lint/a11y/useKeyWithClickEvents: the "Upload media" button in the card header is the keyboard-accessible control; this zone is a pointer/drag convenience */}
+        <div
+          className={`sk-dropzone${dragOver ? " is-drag" : ""}`}
+          onClick={() => fileRef.current?.click()}
+          onDragOver={(e) => {
+            e.preventDefault();
+            setDragOver(true);
+          }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => {
+            e.preventDefault();
+            setDragOver(false);
+            if (e.dataTransfer.files?.length) void handleFiles(e.dataTransfer.files);
+          }}
+          style={{ cursor: "pointer" }}
+        >
+          <div>
+            <div className="sk-dropzone__art" aria-hidden>
+              {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+              <img src="/assets/repulabs/post-creator/lib-library.svg" alt="" />
+            </div>
+            <h3 className="sk-empty-center__title" style={{ fontSize: 18 }}>
+              {dragOver ? "Drop files to upload" : "Your library is empty."}
+            </h3>
+            <p className="sk-empty-center__body">
+              {busy
+                ? "Uploading…"
+                : "Upload images or videos to reuse them across posts — or generate AI creatives from the composer."}
+            </p>
+            {error && (
+              <span className="sk-alert sk-alert--err" role="alert">
+                {error}
+              </span>
+            )}
+            {!error && count > 0 && (
+              <span className="sk-alert sk-alert--ok">{count} uploaded</span>
+            )}
+          </div>
+        </div>
+        {hiddenInput}
+      </>
+    );
+  }
+
   return (
     <div style={{ display: "inline-flex", flexDirection: "column", gap: 4, alignItems: "flex-end" }}>
-      <button
-        type="button"
-        className="btn btn--pri btn--sm"
-        disabled={busy}
-        onClick={() => fileRef.current?.click()}
-      >
-        <Icon name="upload" size={12} />
+      <button type="button" className="sk-btn-out" style={{ height: 38 }} disabled={busy} onClick={() => fileRef.current?.click()}>
+        <Icon name="upload" size={13} />
         {busy ? "Uploading…" : "Upload media"}
       </button>
-      <input
-        ref={fileRef}
-        type="file"
-        accept="image/png,image/jpeg,image/webp,video/mp4,video/quicktime"
-        multiple
-        hidden
-        onChange={(e) => {
-          if (e.target.files?.length) void handleFiles(e.target.files);
-          e.target.value = "";
-        }}
-      />
+      {hiddenInput}
       {error && (
-        <span style={{ fontSize: 11, color: "var(--bad)", maxWidth: 240, textAlign: "right" }} role="alert">
+        <span style={{ fontSize: 11, color: "#c0344a", maxWidth: 240, textAlign: "right" }} role="alert">
           {error}
         </span>
       )}
       {!error && count > 0 && (
-        <span style={{ fontSize: 10.5, color: "var(--ok)" }}>{count} uploaded</span>
+        <span style={{ fontSize: 10.5, color: "#0f8a4d" }}>{count} uploaded</span>
       )}
     </div>
   );

@@ -136,6 +136,7 @@ export function Composer({
   recommendTimes,
   initialPost,
   miniCal,
+  hasPosts = true,
 }: {
   /** Platforms the org can publish to (server-computed from active Connections). */
   connectedPlatforms: PreviewPlatform[];
@@ -155,6 +156,8 @@ export function Composer({
   initialPost?: InitialPost | null;
   /** Current-month post days for the schedule mini-calendar (server-computed, fail-soft). */
   miniCal?: MiniCalPost[] | null;
+  /** Whether the org has ANY post yet — drives the first-run "No posts yet" empty state. */
+  hasPosts?: boolean;
 }): JSX.Element {
   const connectedSet = useMemo(() => new Set(connectedPlatforms), [connectedPlatforms]);
   const anyConnected = connectedPlatforms.length > 0;
@@ -191,6 +194,9 @@ export function Composer({
     platforms[0] ?? connectedPlatforms[0] ?? "facebook",
   );
   const [isAiCaption, setIsAiCaption] = useState(false);
+  // First-run empty state ("No posts yet"): show until the user clicks "Create
+  // post" (or when editing an existing post via the calendar deep-link).
+  const [revealed, setRevealed] = useState(hasPosts || !!initialPost);
 
   // modals
   const [captionOpen, setCaptionOpen] = useState(false);
@@ -370,184 +376,38 @@ export function Composer({
     return <NothingConnected />;
   }
 
+  // ---- first-run empty state ("No posts yet") ----------------------------
+  if (!revealed) {
+    return <NoPostsYet onCreate={() => setRevealed(true)} />;
+  }
+
   // ---- composer ----------------------------------------------------------
   return (
     <>
-      <div
-        style={{
-          display: "grid",
-          gap: 14,
-          alignItems: "start",
-        }}
-        className="composer-grid"
-      >
-        {/* ===================== LEFT: channels + schedule ===================== */}
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Channels</h3>
-          </div>
-          <div className="ds-card__body" style={{ display: "grid", gap: 14 }}>
-            <div style={{ display: "grid", gap: 8 }}>
-              {PLATFORMS.map((p) => {
-                const connected = connectedSet.has(p.id);
-                const on = platforms.includes(p.id);
-                return (
-                  <button
-                    type="button"
-                    key={p.id}
-                    onClick={() => togglePlatform(p.id)}
-                    disabled={!connected}
-                    aria-pressed={on}
-                    title={connected ? p.label : `Connect ${p.label} on Connections →`}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 10,
-                      padding: "10px 12px",
-                      borderRadius: 10,
-                      border: on ? "1.5px solid var(--pri)" : "1px solid var(--line)",
-                      background: on ? "var(--pri-50)" : "var(--surface)",
-                      cursor: connected ? "pointer" : "not-allowed",
-                      opacity: connected ? 1 : 0.55,
-                      textAlign: "left",
-                      width: "100%",
-                    }}
-                  >
-                    <span
-                      style={{
-                        width: 30,
-                        height: 30,
-                        borderRadius: 8,
-                        background: on ? "var(--pri)" : "var(--surface-3)",
-                        color: on ? "#fff" : "var(--ink-2)",
-                        display: "grid",
-                        placeItems: "center",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Icon name={p.icon} size={15} />
-                    </span>
-                    <span style={{ flex: 1, minWidth: 0 }}>
-                      <span style={{ fontSize: 13, fontWeight: 500, display: "block" }}>{p.label}</span>
-                      {!connected && (
-                        <span style={{ fontSize: 10.5, color: "var(--rl-muted)" }}>Not connected</span>
-                      )}
-                    </span>
-                    {connected ? (
-                      <Icon
-                        name={on ? "checkCircle" : "round"}
-                        size={16}
-                        style={{ color: on ? "var(--pri)" : "var(--rl-muted-3)" }}
-                      />
-                    ) : (
-                      <Icon name="lock" size={13} style={{ color: "var(--rl-muted-2)" }} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {connectedPlatforms.length < PLATFORMS.length && (
-              <Link
-                href="/connections"
-                className="row"
-                style={{ gap: 6, fontSize: 11.5, color: "var(--pri)", textDecoration: "none" }}
-              >
-                <Icon name="plug" size={12} />
-                Connect more channels →
-              </Link>
-            )}
-
-            {/* establishment */}
-            {establishments.length > 0 && (
-              <label style={{ display: "block" }}>
-                <span className="lbl">Location</span>
-                <select
-                  className="ds-select"
-                  value={establishmentId}
-                  onChange={(e) => setEstablishmentId(e.target.value)}
-                >
-                  <option value="">All locations</option>
-                  {establishments.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-
-            {/* scheduler */}
-            <div style={{ borderTop: "1px solid var(--line)", paddingTop: 14 }}>
-              <span className="lbl">When to post</span>
-              <div className="seg" style={{ width: "100%", marginBottom: 10 }}>
-                <SegBtn label="Post now" active={scheduleMode === "now"} onClick={() => setScheduleMode("now")} />
-                <SegBtn
-                  label="Schedule"
-                  active={scheduleMode === "schedule"}
-                  onClick={() => setScheduleMode("schedule")}
-                />
-              </div>
-              {scheduleMode === "schedule" && (
-                <div style={{ display: "grid", gap: 8 }}>
-                  <input
-                    type="datetime-local"
-                    className="ds-input"
-                    aria-label="Schedule date and time"
-                    value={scheduledFor}
-                    onChange={(e) => setScheduledFor(e.target.value)}
-                  />
-                  {recommendTimes && (
-                    <div>
-                      <button
-                        type="button"
-                        className="btn btn--sm"
-                        onClick={fetchBestTimes}
-                        disabled={btPending}
-                      >
-                        <Icon name="bolt" size={12} />
-                        {btPending ? "Finding…" : "Suggest best times"}
-                      </button>
-                      {bestTimes && bestTimes.length > 0 && (
-                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
-                          {bestTimes.map((t) => (
-                            <button
-                              type="button"
-                              key={t}
-                              className="chip chip--info"
-                              style={{ cursor: "pointer" }}
-                              onClick={() => setScheduledFor(toLocalInput(t))}
-                            >
-                              {fmtBestTime(t)}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* mini content-calendar — month at a glance, deep-links to /social/calendar */}
-              {miniCal && <MiniCalendar posts={miniCal} />}
-            </div>
-          </div>
-        </div>
-
-        {/* ===================== CENTER: editor + media + AI ===================== */}
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Content</h3>
-            <button type="button" className="btn btn--xs btn--accent" onClick={() => setCaptionOpen(true)}>
-              <Icon name="sparkle" size={12} />
-              AI caption
-            </button>
-          </div>
-          <div className="ds-card__body" style={{ display: "grid", gap: 14 }}>
+      <div className="sk-composer">
+        {/* ===================== LEFT: create post (editor + schedule + actions) ===================== */}
+        <div className="sk-card">
+          <div className="sk-card__head">
             <div>
+              <h3 className="sk-card__title">Create post</h3>
+              <div className="sk-card__sub">Compose your content once and publish everywhere</div>
+            </div>
+          </div>
+          <div className="sk-card__body" style={{ display: "grid", gap: 16 }}>
+            {/* caption */}
+            <div>
+              <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
+                <span className="sk-lbl" style={{ margin: 0 }}>
+                  Your post
+                </span>
+                <button type="button" className="sk-btn-out" style={{ height: 32 }} onClick={() => setCaptionOpen(true)}>
+                  <Icon name="sparkle" size={13} />
+                  AI caption
+                </button>
+              </div>
               <textarea
                 ref={captionRef}
-                className="ds-textarea"
+                className="sk-textarea"
                 rows={6}
                 value={caption}
                 onChange={(e) => {
@@ -559,32 +419,30 @@ export function Composer({
               />
               <div className="row" style={{ justifyContent: "space-between", marginTop: 6 }}>
                 {isAiCaption ? (
-                  <span className="chip chip--info" style={{ fontSize: 10 }}>
-                    <Icon name="sparkle" size={10} /> AI-drafted
+                  <span className="sk-counter" style={{ color: "var(--sk-pri)" }}>
+                    <Icon name="sparkle" size={11} /> AI-drafted
                   </span>
                 ) : (
                   <span />
                 )}
-                <span
-                  className="mono"
-                  style={{ fontSize: 10.5, color: overLimit ? "var(--bad)" : "var(--rl-muted)" }}
-                >
-                  {caption.length}/{tightestLimit}
+                <span className={`sk-counter${overLimit ? " sk-counter--over" : ""}`}>
+                  {caption.length.toLocaleString()} / {tightestLimit.toLocaleString()}
                 </span>
               </div>
             </div>
 
             {/* hashtags */}
             <div>
-              <span className="lbl">Hashtags</span>
+              <span className="sk-lbl">Hashtags</span>
               <HashtagEditor value={hashtags} onChange={setHashtags} />
             </div>
 
             {/* media zone */}
             <div>
-              <span className="lbl">Media</span>
+              <span className="sk-lbl">Media</span>
               {/* biome-ignore lint/a11y/useKeyWithClickEvents: the zone is a convenience drop target; the explicit Upload + Library buttons below are the keyboard-accessible controls */}
               <div
+                className={`sk-drop${dragOver ? " is-drag" : ""}`}
                 onClick={() => fileRef.current?.click()}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -596,19 +454,11 @@ export function Composer({
                   setDragOver(false);
                   if (e.dataTransfer.files?.length) void uploadFiles(e.dataTransfer.files);
                 }}
-                style={{
-                  border: `1.5px dashed ${dragOver ? "var(--pri)" : "var(--line)"}`,
-                  borderRadius: 12,
-                  background: dragOver ? "var(--pri-50)" : "var(--surface-2)",
-                  padding: media.length ? 12 : 22,
-                  textAlign: "center",
-                  cursor: "pointer",
-                  transition: "border-color .15s, background .15s",
-                }}
+                style={{ padding: media.length ? 12 : 22 }}
               >
                 {media.length === 0 ? (
-                  <div style={{ color: "var(--rl-muted)" }}>
-                    <Icon name="upload" size={22} style={{ color: "var(--rl-muted-2)" }} />
+                  <div style={{ color: "var(--sk-muted)" }}>
+                    <Icon name="upload" size={22} style={{ color: "var(--sk-pri)" }} />
                     <p style={{ margin: "8px 0 0", fontSize: 12.5 }}>
                       {uploading ? "Uploading…" : "Drag & drop, or click to upload"}
                     </p>
@@ -630,8 +480,8 @@ export function Composer({
                           aspectRatio: "1 / 1",
                           borderRadius: 8,
                           overflow: "hidden",
-                          border: "1px solid var(--line)",
-                          background: "var(--surface-3)",
+                          border: "1px solid var(--sk-line)",
+                          background: "var(--sk-soft)",
                         }}
                       >
                         {/* biome-ignore lint/performance/noImgElement: media thumbnail (user/blob asset) */}
@@ -653,7 +503,7 @@ export function Composer({
                               top: 3,
                               fontSize: 8.5,
                               fontWeight: 700,
-                              background: "var(--pri)",
+                              background: "var(--sk-pri)",
                               color: "#fff",
                               padding: "1px 5px",
                               borderRadius: 4,
@@ -702,27 +552,142 @@ export function Composer({
                   e.target.value = "";
                 }}
               />
-              <div style={{ display: "flex", gap: 8, marginTop: 8, flexWrap: "wrap" }}>
-                <button type="button" className="btn btn--sm" onClick={() => setLibraryOpen(true)}>
-                  <Icon name="image" size={12} />
+              <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
+                <button type="button" className="sk-btn-out" style={{ height: 34 }} onClick={() => setLibraryOpen(true)}>
+                  <Icon name="image" size={13} />
                   Content library
                 </button>
                 <AiImageButton imageGen={imageGen} onClick={() => setCreativesOpen(true)} />
               </div>
             </div>
+
+            {/* location */}
+            {establishments.length > 0 && (
+              <label style={{ display: "block" }}>
+                <span className="sk-lbl">Location</span>
+                <select
+                  className="sk-select"
+                  value={establishmentId}
+                  onChange={(e) => setEstablishmentId(e.target.value)}
+                >
+                  <option value="">All locations</option>
+                  {establishments.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+
+            {/* scheduler */}
+            <div style={{ borderTop: "1px solid var(--sk-divider)", paddingTop: 16 }}>
+              <span className="sk-lbl">When to post</span>
+              <div className="sk-seg sk-seg--full" style={{ marginBottom: 10 }}>
+                <SegBtn label="Post now" active={scheduleMode === "now"} onClick={() => setScheduleMode("now")} />
+                <SegBtn
+                  label="Schedule"
+                  active={scheduleMode === "schedule"}
+                  onClick={() => setScheduleMode("schedule")}
+                />
+              </div>
+              {scheduleMode === "schedule" && (
+                <div style={{ display: "grid", gap: 8 }}>
+                  <input
+                    type="datetime-local"
+                    className="sk-input"
+                    aria-label="Schedule date and time"
+                    value={scheduledFor}
+                    onChange={(e) => setScheduledFor(e.target.value)}
+                  />
+                  {recommendTimes && (
+                    <div>
+                      <button
+                        type="button"
+                        className="sk-btn-out"
+                        style={{ height: 34 }}
+                        onClick={fetchBestTimes}
+                        disabled={btPending}
+                      >
+                        <Icon name="bolt" size={13} />
+                        {btPending ? "Finding…" : "Suggest best times"}
+                      </button>
+                      {bestTimes && bestTimes.length > 0 && (
+                        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
+                          {bestTimes.map((t) => (
+                            <button
+                              type="button"
+                              key={t}
+                              className="sk-chip is-active"
+                              onClick={() => setScheduledFor(toLocalInput(t))}
+                            >
+                              {fmtBestTime(t)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* mini content-calendar — month at a glance, deep-links to /social/calendar */}
+              {miniCal && <MiniCalendar posts={miniCal} />}
+            </div>
+
+            {/* actions */}
+            <div style={{ borderTop: "1px solid var(--sk-divider)", paddingTop: 16, display: "grid", gap: 10 }}>
+              <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <button
+                  type="button"
+                  className="btn btn--pri"
+                  style={{ flex: 1, minWidth: 150, justifyContent: "center", height: 44 }}
+                  onClick={() => submit(scheduleMode === "schedule" ? "save" : "publish")}
+                  disabled={pending || uploading}
+                >
+                  <Icon name={scheduleMode === "schedule" ? "clock" : "send"} size={14} />
+                  {pending ? "Working…" : scheduleMode === "schedule" ? "Schedule post" : "Publish now"}
+                </button>
+                <button
+                  type="button"
+                  className="sk-btn-out"
+                  style={{ height: 44 }}
+                  onClick={() => submit("save")}
+                  disabled={pending || uploading}
+                >
+                  <Icon name="edit" size={13} />
+                  Save as draft
+                </button>
+              </div>
+              <div style={{ minHeight: 18 }}>
+                {error && (
+                  <span className="row" style={{ fontSize: 12.5, color: "#c0344a", gap: 6 }} role="alert">
+                    <Icon name="alert" size={13} /> {error}
+                  </span>
+                )}
+                {success && !error && (
+                  <span className="row" style={{ fontSize: 12.5, color: "#0f8a4d", gap: 6 }}>
+                    <Icon name="checkCircle" size={13} /> {success}
+                  </span>
+                )}
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* ===================== RIGHT: live preview ===================== */}
-        <div className="ds-card" style={{ position: "sticky", top: 12 }}>
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Preview</h3>
+        {/* ===================== CENTER: live preview ===================== */}
+        <div className="sk-card">
+          <div className="sk-card__head">
+            <div>
+              <h3 className="sk-card__title">Preview</h3>
+              <div className="sk-card__sub">See how your post will look on each platform</div>
+            </div>
             <select
-              className="ds-select"
+              className="sk-select"
               aria-label="Preview platform"
               value={previewPlatform}
               onChange={(e) => setPreviewPlatform(e.target.value as PreviewPlatform)}
-              style={{ width: 130, height: 30, fontSize: 12 }}
+              style={{ width: 140, height: 36, fontSize: 12.5 }}
             >
               {PLATFORMS.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -731,7 +696,7 @@ export function Composer({
               ))}
             </select>
           </div>
-          <div className="ds-card__body" style={{ background: "var(--surface-2)" }}>
+          <div className="sk-card__body" style={{ background: "var(--sk-soft)" }}>
             <PhonePreview
               platform={previewPlatform}
               caption={caption}
@@ -742,76 +707,100 @@ export function Composer({
             />
           </div>
         </div>
-      </div>
 
-      {/* ===================== action bar ===================== */}
-      <div
-        className="ds-card"
-        style={{
-          marginTop: 14,
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 12,
-          flexWrap: "wrap",
-        }}
-      >
-        <div style={{ minHeight: 18 }}>
-          {error && (
-            <span style={{ fontSize: 12.5, color: "var(--bad)" }} role="alert">
-              <Icon name="alert" size={12} /> {error}
-            </span>
-          )}
-          {success && !error && (
-            <span style={{ fontSize: 12.5, color: "var(--ok)" }}>
-              <Icon name="checkCircle" size={12} /> {success}
-            </span>
-          )}
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button
-            type="button"
-            className="btn btn--sm"
-            onClick={() => submit("save")}
-            disabled={pending || uploading}
-          >
-            <Icon name={scheduleMode === "schedule" ? "clock" : "edit"} size={12} />
-            {scheduleMode === "schedule" ? "Schedule" : "Save draft"}
-          </button>
-          <button
-            type="button"
-            className="btn btn--pri btn--sm"
-            onClick={() => submit("publish")}
-            disabled={pending || uploading}
-          >
-            <Icon name="send" size={12} />
-            {pending ? "Working…" : "Publish now"}
-          </button>
+        {/* ===================== RIGHT: channels ===================== */}
+        <div className="sk-card">
+          <div className="sk-card__head">
+            <div>
+              <h3 className="sk-card__title">Channels</h3>
+              <div className="sk-card__sub">
+                {connectedPlatforms.length} connected
+              </div>
+            </div>
+            <Link href="/connections" className="sk-btn-out" style={{ height: 32 }}>
+              Manage
+            </Link>
+          </div>
+          <div className="sk-card__body" style={{ display: "grid", gap: 10 }}>
+            {PLATFORMS.map((p) => {
+              const connected = connectedSet.has(p.id);
+              const on = platforms.includes(p.id);
+              return (
+                <button
+                  type="button"
+                  key={p.id}
+                  onClick={() => togglePlatform(p.id)}
+                  disabled={!connected}
+                  aria-pressed={on}
+                  title={connected ? p.label : `Connect ${p.label} on Connections →`}
+                  className={`sk-channel${on ? " is-on" : ""}`}
+                >
+                  <span className="sk-channel__icon">
+                    <Icon name={p.icon} size={16} />
+                  </span>
+                  <span className="sk-channel__name">
+                    {p.label}
+                    {!connected && <span className="sk-channel__sub">Not connected</span>}
+                  </span>
+                  {connected ? (
+                    <span
+                      className="sk-status sk-status--published"
+                      style={{ height: 22, fontSize: 11 }}
+                    >
+                      <span className="sk-status__dot" />
+                      Connected
+                    </span>
+                  ) : (
+                    <Icon name="lock" size={14} style={{ color: "var(--sk-muted)" }} />
+                  )}
+                </button>
+              );
+            })}
+
+            <Link
+              href="/connections"
+              className="row"
+              style={{
+                gap: 8,
+                justifyContent: "center",
+                padding: "11px 12px",
+                borderRadius: 11,
+                background: "var(--sk-pri-soft)",
+                color: "var(--sk-pri)",
+                fontSize: 13,
+                fontWeight: 700,
+                textDecoration: "none",
+                marginTop: 4,
+              }}
+            >
+              <Icon name="plus" size={14} />
+              Connect channel
+            </Link>
+          </div>
         </div>
       </div>
 
       {/* ===================== creative idea tiles ===================== */}
-      <section className="ds-card soc-ideas" aria-label="Creative ideas">
-        <div className="ds-card__head">
+      <section className="sk-card sk-ideas" aria-label="Creative ideas">
+        <div className="sk-card__head">
           <div>
-            <h3 className="ds-card__title">Creative ideas</h3>
-            <p className="ds-card__sub" style={{ margin: "3px 0 0" }}>
+            <h3 className="sk-card__title">Creative ideas</h3>
+            <p className="sk-card__sub">
               Starter angles — tap one to prefill the editor, then make it yours.
             </p>
           </div>
         </div>
-        <div className="ds-card__body">
-          <div className="soc-ideas__grid">
+        <div className="sk-card__body">
+          <div className="sk-ideas__grid">
             {CREATIVE_IDEAS.map((idea) => (
-              <button key={idea.id} type="button" className="soc-idea" onClick={() => applyIdea(idea)}>
-                <span className="soc-idea__art" aria-hidden>
+              <button key={idea.id} type="button" className="sk-idea" onClick={() => applyIdea(idea)}>
+                <span className="sk-idea__art" aria-hidden>
                   {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
                   <img src={idea.art} alt="" loading="lazy" />
                 </span>
                 <span>
-                  <span className="soc-idea__name">{idea.name}</span>
-                  <span className="soc-idea__sub">{idea.sub}</span>
+                  <span className="sk-idea__name">{idea.name}</span>
+                  <span className="sk-idea__sub">{idea.sub}</span>
                 </span>
               </button>
             ))}
@@ -854,20 +843,8 @@ function SegBtn({ label, active, onClick }: { label: string; active: boolean; on
     <button
       type="button"
       onClick={onClick}
-      className="seg__b"
+      className={`sk-seg__b${active ? " is-active" : ""}`}
       aria-pressed={active}
-      style={{
-        flex: 1,
-        padding: "7px 10px",
-        fontSize: 12.5,
-        borderRadius: "calc(var(--r) - 3px)",
-        border: "none",
-        cursor: "pointer",
-        background: active ? "var(--surface)" : "transparent",
-        color: active ? "var(--ink)" : "var(--rl-muted)",
-        fontWeight: active ? 600 : 450,
-        boxShadow: active ? "var(--sh)" : "none",
-      }}
     >
       {label}
     </button>
@@ -897,7 +874,7 @@ function buildMiniCalView(posts: MiniCalPost[]): MiniCalView {
     const when = new Date(p.when);
     if (Number.isNaN(when.getTime())) continue;
     if (when.getFullYear() !== y || when.getMonth() !== m) continue; // user-local month
-    (p.status === "published" ? published : scheduled).add(when.getDate());
+    (p.status === "published" || p.status === "posted" ? published : scheduled).add(when.getDate());
   }
   return {
     ym: `${y}-${String(m + 1).padStart(2, "0")}`,
@@ -923,7 +900,7 @@ function MiniCalendar({ posts }: { posts: MiniCalPost[] }) {
   useEffect(() => {
     setData(buildMiniCalView(posts));
   }, [posts]);
-  if (!data) return <div className="soc-minical" aria-hidden style={{ minHeight: 196 }} />;
+  if (!data) return <div className="sk-minical" aria-hidden style={{ minHeight: 196 }} />;
   const scheduled = data.scheduled;
   const published = data.published;
   const monthName = data.label.split(" ")[0] ?? data.label;
@@ -933,36 +910,36 @@ function MiniCalendar({ posts }: { posts: MiniCalPost[] }) {
     ...Array.from({ length: data.daysInMonth }, (_, i) => i + 1),
   ];
   return (
-    <div className="soc-minical">
-      <div className="soc-minical__head">
-        <span className="soc-minical__title">{data.label}</span>
-        <Link href={href} className="soc-minical__link">
+    <div className="sk-minical">
+      <div className="sk-minical__head">
+        <span className="sk-minical__title">{data.label}</span>
+        <Link href={href} className="sk-minical__link">
           Open calendar →
         </Link>
       </div>
-      <div className="soc-minical__grid">
+      <div className="sk-minical__grid">
         {MINICAL_DOW.map((d, i) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: fixed 7-day header
-          <span key={`dow-${i}`} className="soc-minical__dow" aria-hidden>
+          <span key={`dow-${i}`} className="sk-minical__dow" aria-hidden>
             {d}
           </span>
         ))}
         {cells.map((day, i) =>
           day === null ? (
             // biome-ignore lint/suspicious/noArrayIndexKey: leading pad cells are positional
-            <span key={`pad-${i}`} className="soc-minical__day soc-minical__day--pad" aria-hidden />
+            <span key={`pad-${i}`} className="sk-minical__day sk-minical__day--pad" aria-hidden />
           ) : (
             <Link
               key={day}
               href={href}
               className={[
-                "soc-minical__day",
+                "sk-minical__day",
                 published.has(day)
-                  ? "soc-minical__day--published"
+                  ? "sk-minical__day--published"
                   : scheduled.has(day)
-                    ? "soc-minical__day--scheduled"
+                    ? "sk-minical__day--scheduled"
                     : "",
-                day === data.today ? "soc-minical__day--today" : "",
+                day === data.today ? "sk-minical__day--today" : "",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -974,13 +951,13 @@ function MiniCalendar({ posts }: { posts: MiniCalPost[] }) {
         )}
       </div>
       {(scheduled.size > 0 || published.size > 0) && (
-        <div className="soc-minical__legend">
+        <div className="sk-minical__legend">
           <span>
-            <span className="soc-minical__dot" style={{ background: "var(--pri)" }} />
+            <span className="sk-minical__dot" style={{ background: "var(--sk-scheduled)" }} />
             Scheduled
           </span>
           <span>
-            <span className="soc-minical__dot" style={{ background: "var(--trust)" }} />
+            <span className="sk-minical__dot" style={{ background: "var(--sk-published)" }} />
             Published
           </span>
         </div>
@@ -1003,7 +980,8 @@ function AiImageButton({
   return (
     <button
       type="button"
-      className="btn btn--sm"
+      className="sk-btn-out"
+      style={{ height: 34 }}
       onClick={onClick}
       title={
         imageGen.reason === "not_pro"
@@ -1012,11 +990,10 @@ function AiImageButton({
             ? "AI image generation isn’t enabled for this workspace"
             : "Generate on-brand images with AI"
       }
-      style={{ gap: 6 }}
     >
-      <Icon name="sparkle" size={12} style={{ color: locked ? "var(--gold)" : "var(--pri)" }} />
+      <Icon name="sparkle" size={13} style={{ color: locked ? "var(--gold)" : "var(--sk-pri)" }} />
       AI image
-      {locked && <Icon name="lock" size={11} style={{ color: "var(--gold)" }} />}
+      {locked && <Icon name="lock" size={12} style={{ color: "var(--gold)" }} />}
     </button>
   );
 }
@@ -1047,15 +1024,15 @@ function HashtagEditor({
         flexWrap: "wrap",
         gap: 6,
         alignItems: "center",
-        border: "1px solid var(--line)",
-        borderRadius: "var(--r)",
-        padding: "7px 10px",
-        background: "var(--surface)",
-        minHeight: 38,
+        border: "1px solid var(--sk-line)",
+        borderRadius: 10,
+        padding: "8px 10px",
+        background: "var(--sk-surface)",
+        minHeight: 42,
       }}
     >
       {value.map((t) => (
-        <span key={t} className="chip chip--info" style={{ gap: 4 }}>
+        <span key={t} className="sk-chip is-active" style={{ height: 24, gap: 4 }}>
           #{t}
           <button
             type="button"
@@ -1093,38 +1070,59 @@ function HashtagEditor({
   );
 }
 
+/** First-run "No posts yet" empty state (kit create-post empty mockup). The CTA
+    reveals the full composer so the user can compose their first post. */
+function NoPostsYet({ onCreate }: { onCreate: () => void }) {
+  return (
+    <div className="sk-card">
+      <div className="sk-empty">
+        <div className="sk-empty__art">
+          {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+          <img src="/assets/repulabs/post-creator/cp-post.svg" alt="" />
+        </div>
+        <div>
+          <h3 className="sk-empty__title">No posts yet</h3>
+          <p className="sk-empty__body">
+            Create your first post to connect your channels and start engaging with your audience.
+          </p>
+          <button type="button" className="btn btn--pri" style={{ height: 46 }} onClick={onCreate}>
+            <Icon name="edit" size={14} />
+            Create post
+          </button>
+          <div className="sk-empty__note">
+            <Icon name="lock" size={13} />
+            Your connections are secure and encrypted.
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function NothingConnected() {
   return (
-    <div
-      className="ds-card"
-      style={{ padding: "40px 24px", textAlign: "center", maxWidth: 560, margin: "0 auto" }}
-    >
-      <div
-        aria-hidden
-        style={{
-          display: "inline-flex",
-          width: 52,
-          height: 52,
-          borderRadius: 999,
-          background: "var(--pri-50)",
-          alignItems: "center",
-          justifyContent: "center",
-          marginBottom: 14,
-        }}
-      >
-        <Icon name="plug" size={24} style={{ color: "var(--pri)" }} />
+    <div className="sk-card">
+      <div className="sk-empty">
+        <div className="sk-empty__art">
+          {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+          <img src="/assets/repulabs/post-creator/cp-post.svg" alt="" />
+        </div>
+        <div>
+          <h3 className="sk-empty__title">Connect a channel to start posting</h3>
+          <p className="sk-empty__body">
+            Link Facebook, Instagram, X or LinkedIn and you’ll be able to compose, schedule, and
+            publish across all of them from here — with AI captions and a live preview.
+          </p>
+          <Link href="/connections" className="btn btn--pri" style={{ height: 46 }}>
+            <Icon name="plug" size={14} />
+            Go to Connections
+          </Link>
+          <div className="sk-empty__note">
+            <Icon name="lock" size={13} />
+            Your connections are secure and encrypted.
+          </div>
+        </div>
       </div>
-      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: "-0.02em" }}>
-        Connect a channel to start posting
-      </h3>
-      <p style={{ margin: "8px auto 18px", fontSize: 13, color: "var(--rl-muted)", maxWidth: 420, lineHeight: 1.6 }}>
-        Link Facebook, Instagram, X or LinkedIn and you’ll be able to compose, schedule, and publish
-        across all of them from here — with AI captions and a live preview.
-      </p>
-      <Link href="/connections" className="btn btn--pri">
-        <Icon name="plug" size={13} />
-        Go to Connections
-      </Link>
     </div>
   );
 }

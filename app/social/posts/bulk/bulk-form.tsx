@@ -1,25 +1,37 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { Icon, type IconName } from "@/components/shell/icon";
 import { createSocialPost } from "@/lib/social/post-actions";
+import { useState, useTransition } from "react";
+
+/**
+ * `<BulkScheduleForm>` (Module 10) — bulk-queue caption list, rebuilt to the kit
+ * (.sk-bulk-* / .sk-platform / .sk-queue-btn).
+ *
+ * One caption per line → queued across the selected platforms at a fixed
+ * interval starting from the chosen time. Preserves the original submission
+ * logic (parse rows → loop `createSocialPost` with per-row progress).
+ */
 
 type Establishment = { id: string; name: string };
 
-const PLATFORMS = [
-  { id: "facebook", label: "Facebook" },
-  { id: "instagram", label: "Instagram" },
-  { id: "twitter", label: "X (Twitter)" },
-  { id: "linkedin", label: "LinkedIn" },
-] as const;
+const PLATFORMS: { id: string; label: string; icon: IconName; color: string }[] = [
+  { id: "facebook", label: "Facebook", icon: "fb", color: "#1877F2" },
+  { id: "instagram", label: "Instagram", icon: "insta", color: "#E1306C" },
+  { id: "linkedin", label: "LinkedIn", icon: "linkedin", color: "#0A66C2" },
+  { id: "twitter", label: "X (Twitter)", icon: "twitter", color: "#0F1419" },
+];
 
 const MAX_ROWS = 100;
+// Tightest platform char limit (X) — the kit caption counter mirrors the composer.
+const MAX_CHARS = 2200;
 
 function defaultStartIso(): string {
   const d = new Date();
   d.setMinutes(d.getMinutes() + 60 - (d.getMinutes() % 15));
   d.setSeconds(0, 0);
-  return d.toISOString().slice(0, 16);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function BulkScheduleForm({ establishments }: { establishments: Establishment[] }) {
@@ -37,6 +49,8 @@ export function BulkScheduleForm({ establishments }: { establishments: Establish
     .split(/\r?\n/)
     .map((s) => s.trim())
     .filter(Boolean);
+  const longest = rows.reduce((max, r) => Math.max(max, r.length), 0);
+  const counterTone = longest > MAX_CHARS ? "over" : longest > MAX_CHARS * 0.9 ? "warn" : "";
 
   function togglePlatform(id: string) {
     setPlatforms((prev) => (prev.includes(id) ? prev.filter((p) => p !== id) : [...prev, id]));
@@ -96,132 +110,145 @@ export function BulkScheduleForm({ establishments }: { establishments: Establish
   }
 
   return (
-    <form onSubmit={handleSubmit} className="col" style={{ gap: 14 }}>
-      <div className="grid-2" style={{ gap: 12 }}>
-        {establishments.length > 0 && (
-          <label className="col" style={{ gap: 6 }}>
-            <span className="lbl">Post as</span>
-            <select
-              value={establishmentId}
-              onChange={(e) => setEstablishmentId(e.target.value)}
-              className="ds-select"
-            >
-              {establishments.map((e) => (
-                <option key={e.id} value={e.id}>
-                  {e.name}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
+    <form onSubmit={handleSubmit} style={{ display: "grid", gap: 22 }}>
+      {/* schedule settings — 3 columns */}
+      <div className="sk-bulk-grid">
+        <label>
+          <span className="sk-lbl">Post as</span>
+          <select
+            value={establishmentId}
+            onChange={(e) => setEstablishmentId(e.target.value)}
+            className="sk-select"
+            style={{ height: 54 }}
+          >
+            {establishments.length === 0 && <option value="">All locations</option>}
+            {establishments.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
+            ))}
+          </select>
+        </label>
 
-        <label className="col" style={{ gap: 6 }}>
-          <span className="lbl">First post at</span>
+        <label>
+          <span className="sk-lbl">First post at</span>
           <input
             type="datetime-local"
             value={startLocal}
             onChange={(e) => setStartLocal(e.target.value)}
-            className="ds-input"
+            className="sk-input"
+            style={{ height: 54 }}
           />
+        </label>
+
+        <label>
+          <span className="sk-lbl">Interval between posts</span>
+          <select
+            value={intervalMinutes}
+            onChange={(e) => setIntervalMinutes(Number(e.target.value))}
+            className="sk-select"
+            style={{ height: 54 }}
+          >
+            <option value={15}>Every 15 minutes</option>
+            <option value={60}>Hourly</option>
+            <option value={60 * 4}>Every 4 hours</option>
+            <option value={60 * 12}>Twice a day</option>
+            <option value={60 * 24}>Once a day</option>
+            <option value={60 * 24 * 7}>Once a week</option>
+          </select>
         </label>
       </div>
 
-      <label className="col" style={{ gap: 6 }}>
-        <span className="lbl">Interval between posts (minutes)</span>
-        <input
-          type="number"
-          min={15}
-          max={60 * 24 * 7}
-          value={intervalMinutes}
-          onChange={(e) => setIntervalMinutes(Math.max(15, Number(e.target.value) || 60))}
-          className="ds-input"
-          style={{ width: 160 }}
-        />
-        <span className="dim" style={{ fontSize: 11.5 }}>
-          15 = every 15 min · 60 = hourly · 240 = every 4h · 1440 = once a day
-        </span>
-      </label>
-
-      <div className="col" style={{ gap: 6 }}>
-        <span className="lbl">Platforms</span>
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          {PLATFORMS.map((p) => (
-            <label key={p.id} className="row" style={{ gap: 6, cursor: "pointer", fontSize: 13 }}>
-              <input
-                type="checkbox"
-                checked={platforms.includes(p.id)}
-                onChange={() => togglePlatform(p.id)}
-              />
-              {p.label}
-            </label>
-          ))}
+      {/* platforms — 4 columns */}
+      <div>
+        <span className="sk-lbl">Select platforms</span>
+        <div className="sk-platform-grid">
+          {PLATFORMS.map((p) => {
+            const on = platforms.includes(p.id);
+            return (
+              // biome-ignore lint/a11y/noLabelWithoutControl: the checkbox input is rendered inside this label
+              <label key={p.id} className={`sk-platform${on ? " is-on" : ""}`}>
+                <input
+                  type="checkbox"
+                  checked={on}
+                  onChange={() => togglePlatform(p.id)}
+                  style={{ position: "absolute", opacity: 0, pointerEvents: "none" }}
+                />
+                <span className="sk-platform__check" aria-hidden>
+                  <Icon name="check" size={13} />
+                </span>
+                <span className="sk-platform__icon" style={{ color: p.color }}>
+                  <Icon name={p.icon} size={22} />
+                </span>
+                <span className="sk-platform__label">{p.label}</span>
+              </label>
+            );
+          })}
         </div>
       </div>
 
-      <label className="col" style={{ gap: 6 }}>
-        <span className="lbl">Captions — one per line ({rows.length}/{MAX_ROWS})</span>
-        <textarea
-          value={bulkText}
-          onChange={(e) => setBulkText(e.target.value)}
-          rows={10}
-          placeholder={`Friday giveaway — comment your favorite menu item to enter!\nTip Tuesday: hidden bug in the booking flow that costs you tables\nWeekend hours change — open till 11pm now`}
-          className="ds-textarea"
-          style={{
-            fontFamily: "var(--f-mono)",
-            fontSize: 12.5,
-            lineHeight: 1.5,
-            minHeight: 200,
-          }}
-        />
-      </label>
-
-      <div
-        className="dim"
-        style={{ fontSize: 12, padding: 10, border: "1px solid var(--line)", borderRadius: 8 }}
-      >
-        Posts queue as <strong>scheduled</strong> drafts. They publish via your connected social
-        accounts at the times shown. Captions over the platform character limit (X: 280) will fail
-        — split those into shorter lines first.
+      {/* captions */}
+      <div>
+        <span className="sk-lbl">Captions (one per line)</span>
+        <div style={{ position: "relative" }}>
+          <textarea
+            value={bulkText}
+            onChange={(e) => setBulkText(e.target.value)}
+            rows={6}
+            placeholder={`Discover the future of productivity ⚡\nSimplify your workflow and save time.\nBuilt for teams that move fast. #Productivity`}
+            className="sk-textarea"
+            style={{ minHeight: 150, paddingBottom: 28 }}
+          />
+          <span
+            className={`sk-counter${counterTone ? ` sk-counter--${counterTone}` : ""}`}
+            style={{ position: "absolute", right: 14, bottom: 12 }}
+          >
+            {longest}/{MAX_CHARS}
+          </span>
+        </div>
+        <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--sk-muted)" }}>
+          {rows.length}/{MAX_ROWS} posts · captions over a platform’s limit (X: 280) will fail — split
+          those into shorter lines first.
+        </span>
       </div>
 
+      {/* AI optimization action bar */}
+      <div className="sk-bulk-ai">
+        <div className="sk-bulk-ai__info">
+          <span className="sk-bulk-ai__icon" aria-hidden>
+            <Icon name="sparkle" size={20} />
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <div className="sk-bulk-ai__title">AI will optimize each post for every platform</div>
+            <div className="sk-bulk-ai__body">
+              We’ll adjust formatting, hashtags, and media to match best practices for each channel
+              automatically.
+            </div>
+          </div>
+        </div>
+        <div className="sk-bulk-ai__actions">
+          <button type="submit" className="sk-queue-btn" disabled={pending || rows.length === 0}>
+            <Icon name="send" size={16} />
+            {pending ? "Queueing…" : "Queue posts"}
+          </button>
+        </div>
+      </div>
+
+      {/* status */}
       {error && (
-        <div
-          style={{
-            fontSize: 13,
-            padding: 10,
-            border: "1px solid var(--bad)",
-            borderRadius: 8,
-            color: "var(--bad)",
-          }}
-        >
+        <div className="sk-alert sk-alert--err" role="alert">
           {error}
         </div>
       )}
-
       {success && (
-        <div
-          style={{
-            fontSize: 13,
-            padding: 10,
-            border: "1px solid var(--ok)",
-            borderRadius: 8,
-            color: "var(--ok)",
-          }}
-        >
-          {success}
-        </div>
+        <div className="sk-alert sk-alert--ok">{success}</div>
       )}
-
       {pending && progress.total > 0 && (
-        <div className="dim" style={{ fontSize: 12 }}>
+        <div style={{ fontSize: 12.5, color: "var(--sk-muted)" }}>
           Queueing {progress.done}/{progress.total}…
           {progress.failed > 0 ? ` (${progress.failed} failed)` : ""}
         </div>
       )}
-
-      <Button type="submit" disabled={pending || rows.length === 0}>
-        {pending ? "Queueing…" : `Queue ${rows.length || ""} posts`.trim()}
-      </Button>
     </form>
   );
 }

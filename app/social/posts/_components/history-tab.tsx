@@ -1,4 +1,3 @@
-import { EmptyIllustration } from "@/components/empty-state";
 import { Icon, type IconName } from "@/components/shell/icon";
 import { retrySocialPost } from "@/lib/social/post-actions";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -6,12 +5,14 @@ import { logger } from "@/lib/logger";
 import Link from "next/link";
 
 /**
- * `<HistoryTab>` (Module 10) — Post History panel (server component).
+ * `<HistoryTab>` (Module 10) — Post History panel (server component), rebuilt to
+ * the delivered design kit (.sk-table).
  *
- * Paginated list of the org's posts with: status chip, platform icons,
- * scheduled/posted time, engagement metrics (Likes/Comments/Shares/Reach summed
- * across the post's latest `SocialPostMetric` rows), and a Retry action on
- * `failed` rows. Paged via `?hpage=`.
+ * Paginated table of the org's posts with: thumbnail + platform icon + caption,
+ * a colored status pill, engagement metrics (Likes/Comments/Shares/Reach summed
+ * across the post's latest `SocialPostMetric` rows), when, and a row action.
+ * Published posts show engagement; scheduled/queued/draft show dashes. Paged via
+ * `?hpage=`. Empty state uses the kit history illustration.
  *
  * FAIL SOFT: `social_post_metrics` may not exist pre-migration — the metric join
  * is wrapped so a 42P01/42703 degrades to "no metrics" instead of 500-ing the
@@ -19,14 +20,6 @@ import Link from "next/link";
  */
 
 const PAGE_SIZE = 20;
-
-const STATUS_TONE: Record<string, string> = {
-  draft: "chip--out",
-  scheduled: "chip--warn",
-  publishing: "chip--info",
-  published: "chip--ok",
-  failed: "chip--bad",
-};
 
 const PLATFORM_ICON: Record<string, IconName> = {
   facebook: "fb",
@@ -74,7 +67,15 @@ async function loadMetrics(orgId: string, postIds: string[]): Promise<Map<string
   return map;
 }
 
-export async function HistoryTab({ orgId, page }: { orgId: string; page: number }) {
+export async function HistoryTab({
+  orgId,
+  page,
+  forceEmpty,
+}: {
+  orgId: string;
+  page: number;
+  forceEmpty?: boolean;
+}) {
   const safePage = Math.max(1, page);
   const skip = (safePage - 1) * PAGE_SIZE;
 
@@ -106,122 +107,107 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
     throw err;
   });
 
+  // Demo seeds use "posted"; production publishes as "published" — treat both as
+  // the engagement-bearing published state.
+  const isPublished = (s: string) => s === "published" || s === "posted";
+
   const metrics = await loadMetrics(
     orgId,
-    posts.filter((p) => p.status === "published").map((p) => p.id),
+    posts.filter((p) => isPublished(p.status)).map((p) => p.id),
   );
 
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  if (total === 0) {
+  if (forceEmpty || total === 0) {
     return (
-      <div className="ds-card" style={{ padding: 40, textAlign: "center", color: "var(--rl-muted)" }}>
-        <EmptyIllustration name="social-empty" />
-        <p style={{ marginTop: 12, fontSize: 13 }}>
-          No posts yet. Head to <Link href="/social/posts?tab=create" style={{ color: "var(--pri)" }}>Create post</Link> to compose your first.
-        </p>
+      <div className="sk-card">
+        <div className="sk-table__head">
+          <span>Post</span>
+          <span>Status</span>
+          <span>Engagement</span>
+          <span style={{ textAlign: "right" }}>When</span>
+          <span />
+        </div>
+        <div className="sk-empty-center">
+          <div className="sk-empty-center__art">
+            {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+            <img src="/assets/repulabs/post-creator/history-main.svg" alt="" />
+          </div>
+          <h3 className="sk-empty-center__title">No post history yet</h3>
+          <p className="sk-empty-center__body">
+            You haven’t scheduled or published any posts yet. Create your first post and it will show
+            up here.
+          </p>
+          <Link href="/social/posts?tab=create" className="sk-btn-out" style={{ height: 46 }}>
+            <Icon name="plus" size={14} />
+            Create your first post
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-      {/* header row */}
-      <div
-        className="lbl-mono"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 2.4fr) 0.9fr 1.6fr 0.8fr",
-          gap: 12,
-          padding: "12px 16px",
-          margin: 0,
-          background: "var(--surface-2)",
-          borderBottom: "1px solid var(--line)",
-        }}
-      >
+    <div className="sk-card" style={{ overflow: "hidden" }}>
+      <div className="sk-table__head">
         <span>Post</span>
         <span>Status</span>
-        <span>Engagement</span>
+        <span className="row" style={{ gap: 5 }}>
+          Engagement <Icon name="info" size={12} style={{ color: "var(--sk-muted)" }} />
+        </span>
         <span style={{ textAlign: "right" }}>When</span>
+        <span />
       </div>
 
-      {posts.map((p, i) => {
+      {posts.map((p) => {
         const m = metrics.get(p.id);
         const when = p.postedAt ?? p.scheduledFor ?? p.createdAt;
         const whenLabel = p.postedAt ? "Posted" : p.scheduledFor ? "Scheduled" : "Created";
+        const statusTone =
+          p.status === "publishing" ? "queued" : p.status;
         return (
-          <div
-            key={p.id}
-            style={{
-              display: "grid",
-              gridTemplateColumns: "minmax(0, 2.4fr) 0.9fr 1.6fr 0.8fr",
-              gap: 12,
-              padding: "14px 16px",
-              borderTop: i ? "1px solid var(--line)" : "none",
-              alignItems: "center",
-            }}
-          >
+          <div key={p.id} className="sk-table__row">
             {/* post col */}
-            <div className="row" style={{ gap: 10, minWidth: 0 }}>
+            <div className="sk-post-cell">
               {p.mediaUrl ? (
                 // biome-ignore lint/performance/noImgElement: post thumbnail (user/blob asset)
-                <img
-                  src={p.mediaUrl}
-                  alt=""
-                  style={{ width: 38, height: 38, borderRadius: 7, objectFit: "cover", flexShrink: 0, border: "1px solid var(--line)" }}
-                />
+                <img src={p.mediaUrl} alt="" className="sk-post-cell__thumb" />
               ) : (
-                <span
-                  style={{
-                    width: 38,
-                    height: 38,
-                    borderRadius: 7,
-                    background: "var(--surface-3)",
-                    display: "grid",
-                    placeItems: "center",
-                    flexShrink: 0,
-                  }}
-                >
-                  <Icon name="chat" size={15} style={{ color: "var(--rl-muted-2)" }} />
+                <span className="sk-post-cell__thumb sk-post-cell__thumb--ph">
+                  <Icon name="chat" size={18} />
                 </span>
               )}
               <div style={{ minWidth: 0 }}>
-                <Link
-                  href={`/social/posts?tab=create&post=${p.id}`}
-                  style={{
-                    fontSize: 12.5,
-                    fontWeight: 500,
-                    color: "var(--ink)",
-                    textDecoration: "none",
-                    display: "block",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {p.caption ? truncate(p.caption, 70) : "(no caption)"}
+                <Link href={`/social/posts?tab=create&post=${p.id}`} className="sk-post-cell__title">
+                  {p.caption ? truncate(p.caption, 60) : "(no caption)"}
                 </Link>
-                <span className="row" style={{ gap: 5, marginTop: 3 }}>
+                <div className="row" style={{ gap: 6, marginTop: 4 }}>
                   {(p.platforms ?? []).map((pl) => (
                     <Icon
                       key={pl}
                       name={PLATFORM_ICON[pl.toLowerCase()] ?? "share"}
-                      size={11}
-                      style={{ color: "var(--rl-muted)" }}
+                      size={13}
+                      style={{ color: "var(--sk-muted)" }}
                       title={pl}
                     />
                   ))}
-                </span>
+                  <span className="sk-post-cell__excerpt" style={{ marginTop: 0 }}>
+                    {(p.platforms ?? []).map(cap).join(", ")}
+                  </span>
+                </div>
               </div>
             </div>
 
             {/* status col */}
             <div>
-              <span className={`chip ${STATUS_TONE[p.status] ?? "chip--out"}`}>{p.status}</span>
+              <span className={`sk-status sk-status--${statusTone}`}>
+                <span className="sk-status__dot" />
+                {p.status}
+              </span>
               {p.status === "failed" && (
                 <form action={retrySocialPost} style={{ marginTop: 6 }}>
                   <input type="hidden" name="id" value={p.id} />
-                  <button type="submit" className="btn btn--xs" title={p.error ?? undefined}>
+                  <button type="submit" className="sk-btn-out" style={{ height: 28, padding: "0 10px", fontSize: 11.5 }} title={p.error ?? undefined}>
                     <Icon name="refresh" size={11} />
                     Retry
                   </button>
@@ -230,28 +216,41 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
             </div>
 
             {/* engagement col */}
-            <div className="row" style={{ gap: 12, fontSize: 11.5, color: "var(--ink-2)" }}>
-              {p.status === "published" ? (
+            <div className="sk-engage">
+              {isPublished(p.status) ? (
                 <>
-                  <Metric icon="star" value={m?.likes ?? 0} label="likes" />
-                  <Metric icon="chat" value={m?.comments ?? 0} label="comments" />
-                  <Metric icon="share" value={m?.shares ?? 0} label="shares" />
-                  <Metric icon="eye" value={m?.reach ?? 0} label="reach" />
+                  <span className="sk-engage__item sk-engage--like" title={`${m?.likes ?? 0} likes`}>
+                    <Icon name="star" size={14} />
+                    {compact(m?.likes ?? 0)}
+                  </span>
+                  <span className="sk-engage__item sk-engage--comment" title={`${m?.comments ?? 0} comments`}>
+                    <Icon name="chat" size={14} />
+                    {compact(m?.comments ?? 0)}
+                  </span>
+                  <span className="sk-engage__item sk-engage--share" title={`${m?.shares ?? 0} shares`}>
+                    <Icon name="share" size={14} />
+                    {compact(m?.shares ?? 0)}
+                  </span>
+                  <span className="sk-engage__item sk-engage--reach" title={`${m?.reach ?? 0} reach`}>
+                    <Icon name="eye" size={14} />
+                    {compact(m?.reach ?? 0)}
+                  </span>
                 </>
               ) : (
-                <span className="dim" style={{ fontSize: 11 }}>
-                  —
-                </span>
+                <span style={{ color: "var(--sk-muted)", fontWeight: 500 }}>—</span>
               )}
             </div>
 
             {/* when col */}
-            <div style={{ textAlign: "right" }}>
-              <div style={{ fontSize: 11.5, color: "var(--ink-2)" }}>{fmtDate(when)}</div>
-              <div className="dim mono" style={{ fontSize: 9.5 }}>
-                {whenLabel}
-              </div>
+            <div className="sk-when">
+              <div className="sk-when__date">{fmtDate(when)}</div>
+              <div className="sk-when__label">{whenLabel}</div>
             </div>
+
+            {/* actions */}
+            <button type="button" className="sk-rowmore" aria-label="Post actions" title="Post actions">
+              <Icon name="sliders" size={15} />
+            </button>
           </div>
         );
       })}
@@ -262,12 +261,12 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
           className="row"
           style={{
             justifyContent: "space-between",
-            padding: "12px 16px",
-            borderTop: "1px solid var(--line)",
-            background: "var(--surface-2)",
+            padding: "14px 22px",
+            borderTop: "1px solid var(--sk-divider)",
+            background: "var(--sk-soft)",
           }}
         >
-          <span className="dim mono" style={{ fontSize: 11 }}>
+          <span style={{ fontSize: 12, color: "var(--sk-muted)" }}>
             Page {safePage} of {totalPages} · {total} posts
           </span>
           <div className="row" style={{ gap: 8 }}>
@@ -277,15 +276,6 @@ export async function HistoryTab({ orgId, page }: { orgId: string; page: number 
         </div>
       )}
     </div>
-  );
-}
-
-function Metric({ icon, value, label }: { icon: IconName; value: number; label: string }) {
-  return (
-    <span className="row" style={{ gap: 4 }} title={`${value} ${label}`}>
-      <Icon name={icon} size={12} style={{ color: "var(--rl-muted)" }} />
-      {compact(value)}
-    </span>
   );
 }
 
@@ -302,18 +292,22 @@ function PageLink({
 }) {
   if (disabled) {
     return (
-      <span className="btn btn--xs" style={{ opacity: 0.45, pointerEvents: "none" }}>
-        <Icon name={icon} size={11} />
+      <span className="sk-btn-out" style={{ height: 34, opacity: 0.45, pointerEvents: "none" }}>
+        <Icon name={icon} size={12} />
         {label}
       </span>
     );
   }
   return (
-    <Link href={`/social/posts?tab=history&hpage=${page}`} className="btn btn--xs">
-      <Icon name={icon} size={11} />
+    <Link href={`/social/posts?tab=history&hpage=${page}`} className="sk-btn-out" style={{ height: 34 }}>
+      <Icon name={icon} size={12} />
       {label}
     </Link>
   );
+}
+
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 function truncate(s: string, n: number): string {
