@@ -97,7 +97,7 @@ function ConversationsEmpty() {
   return (
     <div className="uik-card">
       <div style={{ textAlign: "center", padding: "64px 32px 72px", maxWidth: 620, marginInline: "auto" }}>
-        <EmptyIllustration name="messages-empty" size={300} />
+        <EmptyIllustration name="messages-empty" size={460} />
         <h3 className="uik-empty__title" style={{ marginTop: 18 }}>No conversations yet</h3>
         <p className="uik-empty__body" style={{ maxWidth: 470, marginInline: "auto" }}>
           Connect Facebook, Instagram, email, or embed the website chat widget to start receiving

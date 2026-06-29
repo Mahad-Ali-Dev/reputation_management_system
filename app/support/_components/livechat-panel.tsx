@@ -139,7 +139,7 @@ function SessionsEmpty() {
             alt=""
             aria-hidden="true"
             className="uik-empty__illus"
-            style={{ maxWidth: 380, mixBlendMode: "multiply" }}
+            style={{ maxWidth: 540, mixBlendMode: "multiply" }}
           />
         </div>
         <div>

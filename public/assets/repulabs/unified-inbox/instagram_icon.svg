@@ -1,0 +1,29 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="igA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(248 842) rotate(-55) scale(900 720)">
+      <stop offset="0" stop-color="#FFD600"/>
+      <stop offset="0.28" stop-color="#FF7A00"/>
+      <stop offset="0.50" stop-color="#FF0069"/>
+      <stop offset="0.75" stop-color="#D300C5"/>
+      <stop offset="1" stop-color="#7638FA"/>
+    </radialGradient>
+    <radialGradient id="igB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(745 200) rotate(140) scale(650 520)">
+      <stop offset="0" stop-color="#4A4AFF" stop-opacity="0.95"/>
+      <stop offset="0.45" stop-color="#9B35FF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="soft" x1="512" y1="112" x2="512" y2="912" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF" stop-opacity="0.08"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.04"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Transparent background; icon only -->
+  <rect x="112" y="112" width="800" height="800" rx="190" fill="url(#igA)"/>
+  <rect x="112" y="112" width="800" height="800" rx="190" fill="url(#igB)"/>
+  <rect x="112" y="112" width="800" height="800" rx="190" fill="url(#soft)"/>
+
+  <!-- Instagram camera mark -->
+  <rect x="282" y="282" width="460" height="460" rx="138" stroke="white" stroke-width="62"/>
+  <circle cx="512" cy="512" r="118" stroke="white" stroke-width="62"/>
+  <circle cx="655" cy="368" r="42" fill="white"/>
+</svg>

@@ -545,15 +545,17 @@
 }
 .uik-av__chan {
   position: absolute;
-  right: -2px;
-  bottom: -2px;
-  width: 18px;
-  height: 18px;
+  right: -3px;
+  bottom: -3px;
+  width: 22px;
+  height: 22px;
   border-radius: var(--uik-r-pill);
   border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(20, 24, 40, 0.16);
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
   color: #fff;
 }
 .uik-av__dot {

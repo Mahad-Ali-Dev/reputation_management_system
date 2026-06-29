@@ -258,9 +258,9 @@
   position: absolute;
   right: 16px;
   bottom: 12px;
-  width: 90px;
-  height: 90px;
-  opacity: 0.38;
+  width: 128px;
+  height: 128px;
+  opacity: 0.4;
   pointer-events: none;
   z-index: 0;
 }

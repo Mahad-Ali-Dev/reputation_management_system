@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <radialGradient id="softBg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(512 512) rotate(90) scale(430)">
+      <stop offset="0" stop-color="#E8F2FF"/>
+      <stop offset="0.72" stop-color="#F3F7FF"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="blueGrad" x1="300" y1="260" x2="730" y2="770" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00A6FF"/>
+      <stop offset="0.45" stop-color="#0079FF"/>
+      <stop offset="1" stop-color="#0057FF"/>
+    </linearGradient>
+    <filter id="shadow" x="180" y="190" width="670" height="670" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="18" stdDeviation="28" flood-color="#006CFF" flood-opacity="0.24"/>
+    </filter>
+  </defs>
+
+  <!-- Transparent outside; soft circular icon glow preserved -->
+  <circle cx="512" cy="512" r="420" fill="url(#softBg)"/>
+
+  <!-- Messenger bubble -->
+  <g filter="url(#shadow)">
+    <path d="M512 267C371.7 267 258 372.8 258 503.3c0 74.4 36.9 140.8 94.5 184.1v89.7c0 16.5 18.4 26.2 32 17l92.7-52.6c11.2 1.4 22.8 2.2 34.8 2.2 140.3 0 254-105.8 254-236.3C766 372.8 652.3 267 512 267Z" fill="url(#blueGrad)"/>
+  </g>
+
+  <!-- White Messenger mark -->
+  <path d="M347 567.5L458.2 449.2c18.5-19.7 48.4-20.6 68-2.1l64.5 60.7c8.9 8.4 22.6 9 32.2 1.4L710 440.3c11.5-9.1 27.3 5 19.6 17.5L614.7 615.1c-17.6 24.1-51.3 28.9-74.8 10.6L473.5 574c-9.2-7.2-22.2-7-31.2.5L374.6 631c-40.8 34.1-64.3-24.6-27.6-63.5Z" fill="#FFFFFF"/>
+</svg>

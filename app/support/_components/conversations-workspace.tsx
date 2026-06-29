@@ -239,7 +239,7 @@ export function ConversationsWorkspace({
                 aria-label={`${p.label}${count ? ` (${count})` : ""}`}
                 title={p.label}
               >
-                <ChannelGlyph channel={p.key} size={20} />
+                <ChannelGlyph channel={p.key} size={26} />
               </button>
             );
           })}

@@ -1,7 +1,7 @@
 "use client";
 
 import { Avatar } from "@/components/shell/avatar";
-import { ChannelGlyph, channelBrand } from "./channel-glyph";
+import { ChannelGlyph } from "./channel-glyph";
 import type { WorkThread } from "./conversations-workspace";
 
 /**
@@ -66,12 +66,8 @@ export function ThreadList({
             >
               <span className="uik-av">
                 <Avatar name={name} size={44} tone={toneFor(t.id)} />
-                <span
-                  className="uik-av__chan"
-                  style={{ background: channelBrand(t.channel) }}
-                  aria-hidden
-                >
-                  <ChannelGlyph channel={t.channel} size={11} mode="badge" />
+                <span className="uik-av__chan" style={{ background: "#fff" }} aria-hidden>
+                  <ChannelGlyph channel={t.channel} size={15} mode="badge" />
                 </span>
               </span>
 

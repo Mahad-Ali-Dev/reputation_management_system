@@ -513,7 +513,7 @@ function EmptyComments({
   return (
     <div className="uik-empty" style={{ borderTop: "1px solid var(--uik-divider)" }}>
       <div>
-        <EmptyIllustration name="/assets/repulabs/unified-inbox/comments-empty.svg" size={600} />
+        <EmptyIllustration name="/assets/repulabs/unified-inbox/comments-empty.svg" size={720} />
       </div>
       <div>
         <h3 className="uik-empty__title">{title}</h3>

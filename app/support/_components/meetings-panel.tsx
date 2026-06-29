@@ -315,7 +315,7 @@ function MeetingsEmpty() {
               src="/assets/repulabs/unified-inbox/meeting-empty.svg"
               alt=""
               aria-hidden="true"
-              style={{ width: "100%", maxWidth: 480, height: "auto", mixBlendMode: "multiply" }}
+              style={{ width: "100%", maxWidth: 640, height: "auto", mixBlendMode: "multiply" }}
             />
           </div>
         </div>

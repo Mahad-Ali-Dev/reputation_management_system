@@ -1,20 +1,29 @@
 "use client";
 
 /**
- * ChannelGlyph — brand channel mark for the Unified Inbox conversations view.
+ * ChannelGlyph — brand channel mark for the Unified Inbox.
  *
- * The shared Icon set has no brand channel glyphs (WhatsApp / Messenger / a
- * coloured Instagram, etc.), and the kit's channel rail + conversation badges
- * need actual brand colours so the rail is instantly scannable (handoff §11).
- * These are simplified single-letter / glyph marks in each platform's brand
- * colour — small, crisp, and dependency-free.
+ * Uses the REAL kit brand icons (designs/unified inbox/conversations/active state/
+ * illustration → public/assets/repulabs/unified-inbox/) for the platforms the kit
+ * ships: Facebook, Messenger, Instagram, WhatsApp, Email. These are full-colour,
+ * self-contained marks (their own disc/gradient), so they render identically in
+ * the channel rail, the conversation badges, and the contact panel.
  *
- * `mode="badge"` renders the tiny circular mark overlaid on an avatar (white
- * glyph on a brand-coloured disc). `mode="rail"` renders the larger rail glyph
- * (brand-coloured glyph on the white rail button).
+ * Channels the kit has no icon for (live chat, Google, SMS, phone) fall back to a
+ * crisp inline glyph in the brand colour. `mode` only affects that fallback.
  */
 
-type Mode = "rail" | "badge";
+const ASSET = "/assets/repulabs/unified-inbox";
+
+// channel → real kit brand icon (full-colour mark)
+const KIT_ICON: Record<string, string> = {
+  facebook: `${ASSET}/facebook_icon.svg`,
+  facebook_msg: `${ASSET}/messenger_icon.svg`,
+  instagram: `${ASSET}/instagram_icon.svg`,
+  instagram_dm: `${ASSET}/instagram_icon.svg`,
+  whatsapp: `${ASSET}/whatsapp_icon.svg`,
+  email: `${ASSET}/envelope_icon.svg`,
+};
 
 const BRAND: Record<string, string> = {
   facebook_msg: "#0084ff",
@@ -34,6 +43,8 @@ export function channelBrand(channel: string): string {
   return BRAND[channel] ?? "#657197";
 }
 
+type Mode = "rail" | "badge";
+
 export function ChannelGlyph({
   channel,
   size = 18,
@@ -43,11 +54,30 @@ export function ChannelGlyph({
   size?: number;
   mode?: Mode;
 }) {
-  const color = mode === "badge" ? "#fff" : channelBrand(channel);
-  const s = size;
+  // Real kit brand icons for the platforms the kit ships (full-colour marks).
+  const kit = KIT_ICON[channel];
+  if (kit) {
+    return (
+      // biome-ignore lint/performance/noImgElement: static kit brand icon
+      <img
+        src={kit}
+        alt=""
+        aria-hidden
+        width={size}
+        height={size}
+        style={{ display: "block", objectFit: "contain", flexShrink: 0 }}
+      />
+    );
+  }
+
+  // Fallback inline glyph for channels the kit has no icon for. Always brand-
+  // coloured so it reads on a white rail button or a white badge disc (the kit
+  // brand icons above are full-colour and sit on white too).
+  void mode;
+  const color = channelBrand(channel);
   const common = {
-    width: s,
-    height: s,
+    width: size,
+    height: size,
     viewBox: "0 0 24 24",
     fill: "none" as const,
     "aria-hidden": true as const,
@@ -55,45 +85,6 @@ export function ChannelGlyph({
   };
 
   switch (channel) {
-    case "facebook_msg":
-    case "facebook":
-      // Messenger-style chat bolt / "f"
-      return (
-        <svg {...common}>
-          <path
-            d="M12 3C6.9 3 3 6.8 3 11.7c0 2.6 1.1 4.9 3 6.5V22l2.8-1.5c.7.2 1.5.3 2.2.3 5.1 0 9-3.8 9-8.7S17.1 3 12 3Z"
-            fill={mode === "badge" ? "#fff" : channelBrand(channel)}
-            opacity={mode === "badge" ? 1 : 0.16}
-          />
-          <path
-            d="m7 13.5 2.7-2.8 1.9 1.4 2.4-1.6-2.6 2.8-1.9-1.3L7 13.5Z"
-            fill={mode === "badge" ? channelBrand("facebook_msg") : channelBrand(channel)}
-          />
-        </svg>
-      );
-    case "instagram_dm":
-    case "instagram":
-      return (
-        <svg {...common}>
-          <rect x="4" y="4" width="16" height="16" rx="5" stroke={color} strokeWidth="2" />
-          <circle cx="12" cy="12" r="3.6" stroke={color} strokeWidth="2" />
-          <circle cx="16.4" cy="7.6" r="1" fill={color} />
-        </svg>
-      );
-    case "whatsapp":
-      return (
-        <svg {...common}>
-          <path
-            d="M12 3.5a8.4 8.4 0 0 0-7.2 12.7L4 20.5l4.4-1.1A8.4 8.4 0 1 0 12 3.5Z"
-            fill={mode === "badge" ? "#fff" : channelBrand(channel)}
-            opacity={mode === "badge" ? 1 : 0.16}
-          />
-          <path
-            d="M9.4 8.3c-.2-.4-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.3.3-.9.9-.9 2.1s.9 2.4 1 2.6c.1.2 1.8 2.9 4.5 3.9 2.2.9 2.7.7 3.2.6.5 0 1.5-.6 1.7-1.2.2-.6.2-1.1.1-1.2-.1-.1-.3-.2-.6-.4l-1.5-.7c-.2-.1-.4-.1-.6.1l-.6.8c-.1.2-.3.2-.5.1-.3-.1-1.1-.4-2-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5l.4-.5c.1-.2.2-.3.3-.5 0-.2 0-.3 0-.5l-.7-1.6Z"
-            fill={mode === "badge" ? channelBrand("whatsapp") : channelBrand(channel)}
-          />
-        </svg>
-      );
     case "webchat":
       return (
         <svg {...common}>
@@ -116,13 +107,6 @@ export function ChannelGlyph({
             d="M21 12c0 5-3.6 8.5-9 8.5A8.5 8.5 0 1 1 17.9 5l-2.6 2.5A4.9 4.9 0 1 0 16.8 13H12v-3h8.7c.2.6.3 1.3.3 2Z"
             fill={color}
           />
-        </svg>
-      );
-    case "email":
-      return (
-        <svg {...common}>
-          <rect x="3" y="5.5" width="18" height="13" rx="2.5" stroke={color} strokeWidth="2" />
-          <path d="m4 7 8 5.5L20 7" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
       );
     case "sms":
@@ -150,7 +134,12 @@ export function ChannelGlyph({
     default:
       return (
         <svg {...common}>
-          <path d="M21 12a8 8 0 0 1-12.4 6.7L3 20l1.3-5.3A8 8 0 1 1 21 12Z" stroke={color} strokeWidth="2" strokeLinejoin="round" />
+          <path
+            d="M21 12a8 8 0 0 1-12.4 6.7L3 20l1.3-5.3A8 8 0 1 1 21 12Z"
+            stroke={color}
+            strokeWidth="2"
+            strokeLinejoin="round"
+          />
         </svg>
       );
   }

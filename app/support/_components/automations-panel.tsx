@@ -308,7 +308,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
           src="/assets/repulabs/unified-inbox/auto-empty-flow.svg"
           alt=""
           aria-hidden="true"
-          style={{ maxWidth: 520 }}
+          style={{ maxWidth: 680 }}
         />
       </div>
     </div>

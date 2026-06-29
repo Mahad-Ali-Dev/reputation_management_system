@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="Facebook icon">
+  <defs>
+    <linearGradient id="fbBlue" x1="178" y1="70" x2="846" y2="954" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#19A7FF"/>
+      <stop offset="0.45" stop-color="#1877F2"/>
+      <stop offset="1" stop-color="#0866D6"/>
+    </linearGradient>
+  </defs>
+  <circle cx="512" cy="512" r="512" fill="url(#fbBlue)"/>
+  <path fill="#FFFFFF" d="M682.7 527.4l24.3-158.6H554.9V265.9c0-43.4 21.3-85.7 89.5-85.7h69.2V45.1S650.8 34.4 590.8 34.4c-125.3 0-207.2 75.9-207.2 213.4v121H244.3v158.6h139.3V1024h171.3V527.4h127.8z"/>
+</svg>
