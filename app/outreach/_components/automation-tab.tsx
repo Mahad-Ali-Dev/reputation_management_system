@@ -73,7 +73,7 @@ export async function AutomationTab({ orgId }: { orgId: string }) {
     return (
       <div className="rr-card" style={{ padding: 32, textAlign: "center" }}>
         <Icon name="bolt" size={28} style={{ color: "var(--rr-pri)", marginBottom: 10 }} />
-        <div style={{ fontSize: 15, fontWeight: 800, color: "var(--rr-text)" }}>
+        <div style={{ fontSize: 15, fontWeight: 700, color: "var(--rr-text)" }}>
           Automation is a Pro feature
         </div>
         <p

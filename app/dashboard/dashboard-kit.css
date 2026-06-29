@@ -93,7 +93,7 @@
      tight tracking (handoff lists H1 24, but the mockup's hero is deliberately
      larger; the mockup wins per the brief). */
   font-size: 29px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.1;
   margin: 0 0 8px;
@@ -269,7 +269,7 @@
 
 .dk-stat__value {
   font-size: 25px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
@@ -405,7 +405,7 @@
 
 .dk-google__num {
   font-size: 38px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1;
   display: flex;
@@ -482,7 +482,7 @@
 
 .dk-donut__total {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -756,7 +756,7 @@
 
 .dk-insight__value {
   font-size: 23px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.025em;
   line-height: 1.15;
   margin-top: 3px;
@@ -830,7 +830,7 @@
 
 .dk-copilot__title {
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   margin: 0 0 4px;
 }

@@ -182,7 +182,7 @@
 .sk-kpi__value {
   font-size: 34px;
   line-height: 1;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.03em;
   color: var(--sk-ink);
   font-variant-numeric: tabular-nums;
@@ -241,7 +241,7 @@
 }
 .sk-card__title {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--sk-ink);
   margin: 0;
@@ -630,7 +630,7 @@ a.sk-minical__day:hover {
 .sk-empty__title {
   font-size: 27px;
   line-height: 1.15;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--sk-ink);
   margin: 0;
@@ -681,7 +681,7 @@ a.sk-minical__day:hover {
 }
 .sk-empty-center__title {
   font-size: 22px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--sk-ink);
   margin: 0;
@@ -1126,7 +1126,7 @@ a.sk-minical__day:hover {
 }
 .sk-cal-month {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--sk-ink);
   margin-left: 6px;
@@ -1328,7 +1328,7 @@ a.sk-minical__day:hover {
 }
 .sk-weekcol__day {
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   text-transform: uppercase;
   color: var(--sk-muted);
   letter-spacing: 0.03em;
@@ -1339,7 +1339,7 @@ a.sk-minical__day:hover {
   gap: 6px;
   margin-top: 4px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sk-ink);
 }
 .sk-weekcol__date--today {
@@ -1384,7 +1384,7 @@ a.sk-minical__day:hover {
 }
 .sk-weekcard__time {
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--sk-ink);
 }
 .sk-weekcard__copy {

@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist_Mono, Inter } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 import "./design-system.css";
@@ -20,10 +20,13 @@ export const viewport: Viewport = {
   ],
 };
 
-const geist = Geist({
+// Kit design font. Inter (variable) matches the delivered mockups and exposes the
+// full 100–900 weight range, so heading weights render as REAL weights instead of
+// the browser's synthetic faux-bold (which looked muddy/over-bold). Variable name
+// kept as --font-geist so globals.css (--f-ui) needs no change.
+const sans = Inter({
   subsets: ["latin"],
   variable: "--font-geist",
-  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -107,7 +110,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geist.variable} ${geistMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${geistMono.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

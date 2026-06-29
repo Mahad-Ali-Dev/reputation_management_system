@@ -227,7 +227,7 @@
 }
 .akb-hero__eyebrow {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #00aeca;
@@ -235,7 +235,7 @@
 .akb-hero__title {
   font-size: 37px;
   line-height: 1.08;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.015em;
   margin: 9px 0 0;
   color: var(--akb-ink);
@@ -314,20 +314,20 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--akb-muted);
 }
 .akb-readiness__metric {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.015em;
   margin: 8px 0 0;
   color: var(--akb-ink);
 }
 .akb-readiness__metric b {
-  font-weight: 800;
+  font-weight: 700;
 }
 .akb-readiness__copy {
   font-size: 12.5px;
@@ -368,7 +368,7 @@
   display: grid;
   place-items: center;
   font-size: 30px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--akb-ink);
 }
 
@@ -408,7 +408,7 @@
 }
 .akb-stat__label {
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--akb-muted);
@@ -423,7 +423,7 @@
 .akb-stat__value {
   font-size: 30px;
   line-height: 1;
-  font-weight: 800;
+  font-weight: 700;
   margin-top: 12px;
   color: var(--akb-ink);
 }
@@ -888,7 +888,7 @@
 }
 .akb-beh-head__title {
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0;
   color: var(--akb-ink);
@@ -932,7 +932,7 @@
 }
 .akb-summary-item__t {
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 700;
   color: var(--akb-ink);
 }
 .akb-summary-item__v {
@@ -955,7 +955,7 @@
 }
 .akb-beh-card__title {
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   margin: 0;
   color: var(--akb-ink);
@@ -1181,7 +1181,7 @@
 }
 .akb-perf__value {
   font-size: 26px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   color: var(--akb-ink);
 }

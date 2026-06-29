@@ -98,7 +98,7 @@ export function CustomerContext({
 
         <div style={{ marginTop: 10 }}>
           <div className="row" style={{ gap: 7, alignItems: "center" }}>
-            <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: "var(--uik-ink)" }}>{name}</h3>
+            <h3 style={{ fontSize: 17, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>{name}</h3>
             <ChannelGlyph channel={thread.channel} size={15} />
           </div>
           <p className="uik-mut" style={{ fontSize: 12, margin: "2px 0 0" }}>{handle}</p>
@@ -135,7 +135,7 @@ export function CustomerContext({
             padding: 13,
           }}
         >
-          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
             <Icon name="sparkle" size={14} style={{ color: "var(--uik-purple)" }} />
             AI assist
           </span>

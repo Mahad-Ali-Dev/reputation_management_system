@@ -154,7 +154,7 @@ function CustomizeView({ config }: { config: WidgetConfigView }) {
       {/* Live website preview */}
       <div className="uik-sec" style={{ padding: 12 }}>
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 10, padding: "2px 4px" }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: "var(--uik-ink)" }}>Live preview</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--uik-ink)" }}>Live preview</span>
           <div className="row" style={{ gap: 4 }}>
             {(["desktop", "tablet", "mobile"] as const).map((d) => (
               <button
@@ -240,11 +240,11 @@ function WebsitePreview({
       >
         {/* mock website */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--uik-divider)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 800, fontSize: 15 }}>repulabs</span>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>repulabs</span>
           <span className="uik-mut" style={{ fontSize: 12 }}>Products · Pricing · Resources</span>
         </div>
         <div style={{ padding: "32px 24px" }}>
-          <h4 style={{ fontSize: 22, fontWeight: 800, margin: 0, maxWidth: 360 }}>Build stronger customer connections</h4>
+          <h4 style={{ fontSize: 22, fontWeight: 700, margin: 0, maxWidth: 360 }}>Build stronger customer connections</h4>
           <p className="uik-mut" style={{ fontSize: 13, margin: "10px 0 0", maxWidth: 360, lineHeight: 1.5 }}>
             Repulabs helps businesses engage, convert, and grow with conversations that matter.
           </p>
@@ -271,7 +271,7 @@ function WebsitePreview({
           }}
         >
           <div style={{ background: brandColor, color: "#fff", padding: "12px 14px" }}>
-            <div style={{ fontSize: 13, fontWeight: 800 }}>{headerText || "Repulabs"}</div>
+            <div style={{ fontSize: 13, fontWeight: 700 }}>{headerText || "Repulabs"}</div>
             <div style={{ fontSize: 11, opacity: 0.85, marginTop: 2 }}>We typically reply in a few minutes</div>
           </div>
           <div style={{ padding: 12, background: "#f8fafc" }}>
@@ -338,7 +338,7 @@ function DeployView({ keyData }: { keyData: WidgetSettingsData["key"] }) {
         <div className="row" style={{ gap: 16, alignItems: "center" }}>
           <img src="/assets/repulabs/unified-inbox/deploy-launch.svg" alt="" aria-hidden="true" width={96} height={96} style={{ flexShrink: 0 }} />
           <div>
-            <h3 style={{ fontSize: 18, fontWeight: 800, margin: 0, color: "var(--uik-ink)" }}>Launch your live chat in 3 simple steps</h3>
+            <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>Launch your live chat in 3 simple steps</h3>
             <p className="uik-mut" style={{ fontSize: 13, margin: "6px 0 0", maxWidth: 460, lineHeight: 1.5 }}>
               Add the widget to your website, connect your platform, and verify everything works perfectly.
             </p>
@@ -386,14 +386,14 @@ function DeployView({ keyData }: { keyData: WidgetSettingsData["key"] }) {
         {/* Live preview */}
         <div className="uik-sec">
           <div className="row" style={{ justifyContent: "space-between", marginBottom: 12 }}>
-            <span style={{ fontSize: 13, fontWeight: 800, color: "var(--uik-ink)", display: "flex", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: "var(--uik-ink)", display: "flex", gap: 6, alignItems: "center" }}>
               <Icon name="eye" size={14} /> Live Preview
             </span>
             <span className="uik-pill uik-pill--ok">Ready to chat</span>
           </div>
           <div style={{ position: "relative", minHeight: 230, border: "1px solid var(--uik-line)", borderRadius: "var(--uik-r-md)", overflow: "hidden", background: "linear-gradient(180deg,#f8fafc,#eef2f7)" }}>
             <div style={{ position: "absolute", bottom: 56, right: 14, width: 190, background: "#fff", borderRadius: 12, boxShadow: "0 12px 30px rgba(0,0,0,0.16)", overflow: "hidden" }}>
-              <div style={{ background: keyData ? "var(--uik-purple)" : "var(--uik-purple)", color: "#fff", padding: "10px 12px", fontSize: 13, fontWeight: 800 }}>Hi there!</div>
+              <div style={{ background: keyData ? "var(--uik-purple)" : "var(--uik-purple)", color: "#fff", padding: "10px 12px", fontSize: 13, fontWeight: 700 }}>Hi there!</div>
               <div style={{ padding: 12, fontSize: 12, color: "#0f172a" }}>
                 How can we help you today?
                 <div style={{ marginTop: 10, background: "var(--uik-grad-purple)", color: "#fff", textAlign: "center", padding: "8px", borderRadius: 999, fontSize: 12, fontWeight: 700 }}>Chat with us</div>
@@ -474,7 +474,7 @@ function DeployView({ keyData }: { keyData: WidgetSettingsData["key"] }) {
 function HeroStep({ n, icon, label }: { n: number; icon: Parameters<typeof Icon>[0]["name"]; label: string }) {
   return (
     <div className="row" style={{ gap: 8, alignItems: "center" }}>
-      <span style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--uik-purple)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800 }}>
+      <span style={{ width: 30, height: 30, borderRadius: "50%", background: "var(--uik-purple)", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 700 }}>
         {n}
       </span>
       <span style={{ width: 34, height: 34, borderRadius: "50%", background: "#fff", color: "var(--uik-purple)", display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -569,7 +569,7 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
                   </span>
                 )}
                 <Icon name={p.icon} size={20} style={{ color: "var(--uik-purple)" }} />
-                <div style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)", marginTop: 8 }}>{p.label}</div>
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)", marginTop: 8 }}>{p.label}</div>
                 <div className="uik-mut" style={{ fontSize: 11, marginTop: 2, lineHeight: 1.4 }}>{p.help}</div>
               </label>
             ))}
@@ -585,7 +585,7 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
                   <Icon name={s.icon} size={18} style={{ color: "var(--uik-purple)" }} />
                   <Switch checked={!!sources[s.key]} onChange={(v) => setSources((p) => ({ ...p, [s.key]: v }))} />
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 800, color: "var(--uik-ink)", marginTop: 8 }}>{s.label}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--uik-ink)", marginTop: 8 }}>{s.label}</div>
                 <div className="uik-mut" style={{ fontSize: 10.5, marginTop: 2, lineHeight: 1.4 }}>{s.help}</div>
               </div>
             ))}

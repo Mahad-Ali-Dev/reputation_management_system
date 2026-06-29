@@ -290,7 +290,7 @@ function CommentDetail({ row }: { row: CommentRowView }) {
       {/* Selected comment card */}
       <div>
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
-          <span style={{ fontSize: 12, fontWeight: 800, color: "var(--uik-mut)", textTransform: "uppercase", letterSpacing: 0.4 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: "var(--uik-mut)", textTransform: "uppercase", letterSpacing: 0.4 }}>
             Selected comment
           </span>
           <span className={`uik-pill ${statusPill(row.status)}`}>{statusLabel(row.status)}</span>
@@ -348,7 +348,7 @@ function CommentDetail({ row }: { row: CommentRowView }) {
       {/* AI suggested replies */}
       <div className="uik-ai">
         <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
             <Icon name="sparkle" size={14} style={{ color: "var(--uik-purple)" }} />
             AI Suggested Replies
           </span>
@@ -443,7 +443,7 @@ function PostPreview({ row }: { row: CommentRowView }) {
     <div style={{ display: "grid", gap: 12 }}>
       <div style={{ border: "1px solid var(--uik-line)", borderRadius: "var(--uik-r-lg)", overflow: "hidden", background: "#fff" }}>
         <div className="row" style={{ justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--uik-divider)" }}>
-          <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)" }}>Post preview</span>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)" }}>Post preview</span>
           <ChannelGlyph channel={platformToChannel(row.platform)} size={15} />
         </div>
         <div style={{ padding: 14 }}>
@@ -467,7 +467,7 @@ function PostPreview({ row }: { row: CommentRowView }) {
       </div>
 
       <div style={{ border: "1px solid var(--uik-line)", borderRadius: "var(--uik-r-lg)", padding: 14, background: "#fff" }}>
-        <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)" }}>This comment</span>
+        <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)" }}>This comment</span>
         <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
           <PreviewStat label="Platform" value={platformLabel(row.platform)} />
           <PreviewStat label="Status" value={statusLabel(row.status)} />

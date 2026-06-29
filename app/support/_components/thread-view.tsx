@@ -132,7 +132,7 @@ export function ThreadView({
             <h3
               style={{
                 fontSize: 15,
-                fontWeight: 800,
+                fontWeight: 700,
                 margin: 0,
                 color: "var(--uik-ink)",
                 overflow: "hidden",

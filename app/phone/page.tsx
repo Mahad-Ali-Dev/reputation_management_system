@@ -266,7 +266,7 @@ export default async function PhoneDashboardPage() {
                 style={{ gap: 10, marginLeft: "auto", alignItems: "center" }}
               >
                 <span
-                  style={{ fontSize: 12, fontWeight: 800, color: "#252f67" }}
+                  style={{ fontSize: 12, fontWeight: 700, color: "#252f67" }}
                 >
                   Recent calls
                 </span>

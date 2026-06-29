@@ -126,7 +126,7 @@
 .cdm-head__title {
   margin: 0;
   font-size: 28px;
-  font-weight: 760;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: #0e1838;
 }
@@ -155,7 +155,7 @@
   display: grid;
   place-items: center;
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 700;
   flex: 0 0 34px;
 }
 .cdm-step.is-active {
@@ -185,7 +185,7 @@
   background: #f0edff;
   color: #245bff;
   font-size: 11px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.04em;
   white-space: nowrap;
 }
@@ -216,7 +216,7 @@
 .cdm-sec__title {
   margin: 0;
   font-size: 18px;
-  font-weight: 760;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: #111936;
 }
@@ -290,7 +290,7 @@
 }
 .cdm-callout__title {
   font-size: 14px;
-  font-weight: 760;
+  font-weight: 700;
   color: #202a48;
   margin-bottom: 2px;
 }
@@ -346,7 +346,7 @@
   background: transparent;
   color: #6c4dff;
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   font-family: var(--f-mono, monospace);
 }
@@ -503,7 +503,7 @@
   border-radius: 12px;
   color: #fff;
   font-size: 15px;
-  font-weight: 720;
+  font-weight: 700;
   cursor: pointer;
   background: linear-gradient(100deg, #172ecf 0%, #3955ff 48%, #7836dd 100%);
   box-shadow: 0 14px 26px rgba(66, 45, 192, 0.26);

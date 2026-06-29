@@ -86,7 +86,7 @@ export function AiSuggestBox({
     <div className="uik-ai">
       <div className="row" style={{ justifyContent: "space-between", marginBottom: 10, alignItems: "flex-start" }}>
         <div>
-          <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
             <Icon name="sparkle" size={14} style={{ color: "var(--uik-purple)" }} />
             AI Suggested Replies
           </span>

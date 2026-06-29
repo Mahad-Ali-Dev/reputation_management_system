@@ -81,7 +81,7 @@
   margin: 0;
   font-size: clamp(24px, 3vw, 30px);
   line-height: 1.12;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--md-ink);
 }
@@ -268,7 +268,7 @@
 }
 .md-metric__value {
   font-size: 24px;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--md-ink);
   margin-top: 8px;
@@ -397,7 +397,7 @@
   display: grid;
   place-items: center;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 700;
   margin-top: 1px;
 }
 
@@ -595,7 +595,7 @@
 }
 .md-qr__stat-num {
   font-size: 20px;
-  font-weight: 750;
+  font-weight: 700;
   color: var(--md-ink);
   font-variant-numeric: tabular-nums;
 }
@@ -890,7 +890,7 @@
 }
 .md-blank__title {
   font-size: 19px;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--md-ink);
   margin: 0;

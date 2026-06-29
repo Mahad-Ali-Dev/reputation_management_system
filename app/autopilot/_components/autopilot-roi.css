@@ -113,7 +113,7 @@
 .apr-title {
   margin: 0;
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   line-height: 1.25;
   color: var(--apr-ink);
@@ -203,7 +203,7 @@
   align-items: center;
   gap: 5px;
   font-size: 13px;
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--apr-ink);
 }
@@ -238,7 +238,7 @@
 
 .apr-kpi {
   font-size: 28px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
@@ -322,7 +322,7 @@
   align-items: center;
   gap: 6px;
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--apr-ink);
 }
@@ -498,7 +498,7 @@
 .apr-bysrc__value {
   margin-top: 6px;
   font-size: 19px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
   color: #121c30;
@@ -565,7 +565,7 @@
   display: grid;
   place-items: center;
   font-size: 9px;
-  font-weight: 800;
+  font-weight: 700;
   flex-shrink: 0;
 }
 
@@ -692,7 +692,7 @@ select.apr-input {
 
 .apr-sumrow__value {
   font-size: 14.5px;
-  font-weight: 800;
+  font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: #121c30;
 }

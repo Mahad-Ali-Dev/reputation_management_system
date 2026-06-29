@@ -86,7 +86,7 @@ export function LiveChatSessions({
           }}
         >
           <div style={{ padding: "16px 18px 10px" }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: "var(--ink)" }}>
+            <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
               Live sessions
             </h3>
             <p className="dim" style={{ fontSize: 12.5, margin: "2px 0 0" }}>
@@ -226,7 +226,7 @@ function SessionDetail({
         }}
       >
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: "var(--ink)" }}>
+          <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--ink)" }}>
             {session.name}
           </h3>
           <p className="dim" style={{ fontSize: 12.5, margin: "2px 0 0" }}>

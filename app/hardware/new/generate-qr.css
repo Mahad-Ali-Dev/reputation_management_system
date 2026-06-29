@@ -47,7 +47,7 @@
   margin: 12px 0 0;
   font-size: clamp(24px, 3.2vw, 30px);
   line-height: 1.1;
-  font-weight: 760;
+  font-weight: 700;
   letter-spacing: -0.02em;
   color: var(--gq-ink);
 }
@@ -121,7 +121,7 @@
 .gq-card__title {
   margin: 0;
   font-size: 17px;
-  font-weight: 720;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--gq-ink);
 }
@@ -147,7 +147,7 @@
   background: linear-gradient(145deg, var(--gq-blue) 0%, var(--gq-purple) 100%);
   color: #fff;
   font-size: 14px;
-  font-weight: 800;
+  font-weight: 700;
 }
 .gq-step__title {
   font-size: 14px;
@@ -238,7 +238,7 @@
   border-radius: 12px;
   color: #fff;
   font-size: 14px;
-  font-weight: 720;
+  font-weight: 700;
   cursor: pointer;
   background: linear-gradient(100deg, var(--gq-blue) 0%, var(--gq-purple) 100%);
   box-shadow: 0 14px 26px rgba(68, 33, 141, 0.24);

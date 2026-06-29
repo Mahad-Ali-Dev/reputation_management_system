@@ -204,7 +204,7 @@ function MeetingDetail({ row }: { row: MeetingRowView }) {
           <Avatar name={row.name} size={48} tone={((row.id.charCodeAt(0) % 7) + 1) as 1} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div className="row" style={{ gap: 7, alignItems: "center" }}>
-              <h3 style={{ fontSize: 16, fontWeight: 800, margin: 0, color: "var(--uik-ink)" }}>{row.name}</h3>
+              <h3 style={{ fontSize: 16, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>{row.name}</h3>
               <span className={`uik-pill ${meetingPill(row.status)}`}>{STATUS_LABEL[row.status] ?? row.status}</span>
             </div>
             <div className="row" style={{ gap: 14, marginTop: 6, flexWrap: "wrap", fontSize: 12.5, color: "var(--uik-ink-2)" }}>
@@ -322,7 +322,7 @@ function MeetingsEmpty() {
 
         {/* Steps card */}
         <div className="uik-steps-card">
-          <h3 style={{ fontSize: 20, fontWeight: 800, margin: "0 0 22px", color: "var(--uik-ink)", maxWidth: 260 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 700, margin: "0 0 22px", color: "var(--uik-ink)", maxWidth: 260 }}>
             Get meeting requests in 3 simple steps
           </h3>
           <Step n={1} icon="chat" title="Enable website chat" body="Add our chat widget to your website so visitors can start a conversation." />
@@ -342,7 +342,7 @@ function Step({ n, icon, title, body }: { n: number; icon: Parameters<typeof Ico
         <Icon name={icon} size={22} />
       </span>
       <div>
-        <p style={{ fontSize: 13, fontWeight: 800, margin: 0, color: "var(--uik-ink)" }}>{title}</p>
+        <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>{title}</p>
         <p className="uik-mut" style={{ fontSize: 11.5, margin: "3px 0 0", lineHeight: 1.5 }}>{body}</p>
       </div>
     </div>

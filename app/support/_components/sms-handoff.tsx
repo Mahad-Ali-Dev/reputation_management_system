@@ -236,7 +236,7 @@ export function SmsHandoff({ data }: { data: SmsHandoffData }) {
             <Icon name="help" size={18} />
           </span>
           <div style={{ flex: 1 }}>
-            <p style={{ fontSize: 13, fontWeight: 800, margin: 0, color: "var(--uik-ink)" }}>Need help setting up SMS handoff?</p>
+            <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>Need help setting up SMS handoff?</p>
             <p className="uik-mut" style={{ fontSize: 12, margin: "1px 0 0" }}>Our support team is here to help you get started.</p>
           </div>
           <a href="/contact" className="uik-btn uik-btn--sm uik-btn--purple">Contact Support</a>
