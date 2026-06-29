@@ -8,27 +8,25 @@ import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 
 /**
- * Send Request composer (Send tab body). Enhances the original one-off form:
- *   - template picker (fills greeting/body/subject from a saved OutreachTemplate),
- *   - merge-tag chips that insert {{tag}} at the cursor (canonical double-brace),
- *   - raised char limits (greeting ≤120, body ≤1000),
- *   - live email + SMS preview using the SAME `resolveMergeTags` the server sends with,
- *   - Now/Schedule timing + TCPA attestation (carried over),
- *   - a "Bulk CSV" deep link to /outreach/bulk.
+ * Send Request composer (Send tab body), rebuilt to the kit mockup
+ * (designs/Review Request/send request). Two columns: a 4-step form card with a
+ * vertical progress rail (Contact · Message · Delivery · Routing) on the left,
+ * and live Email + SMS previews (phone mock) on the right.
  *
- * FK note: when a template is chosen, we pass its OutreachTemplate id as
- * `outreachTemplateId` to the action (for subject/logo hydration) — it is NEVER
- * written to ReviewRequest.templateId.
+ * All original behaviour preserved:
+ *   - template picker (fills body/subject from a saved OutreachTemplate),
+ *   - merge-tag chips that insert {{tag}} at the cursor,
+ *   - char limits (greeting ≤120, body ≤1000),
+ *   - live email + SMS preview using the SAME `resolveMergeTags` the server uses,
+ *   - Now/Schedule timing + TCPA attestation,
+ *   - "Bulk CSV" deep link to /outreach/bulk.
+ *
+ * FK note: a chosen template's OutreachTemplate id is passed as
+ * `outreachTemplateId` (subject/logo hydration) — NEVER as ReviewRequest.templateId.
  */
 
 type Establishment = { id: string; name: string };
-type TemplateOpt = {
-  id: string;
-  name: string;
-  channel: string;
-  subject: string | null;
-  body: string;
-};
+type TemplateOpt = { id: string; name: string; channel: string; subject: string | null; body: string };
 
 const GREETING_MAX = 120;
 const BODY_MAX = 1000;
@@ -76,14 +74,9 @@ export function SendComposer({
     setTemplateId(id);
     const t = templates.find((x) => x.id === id);
     if (!t) return;
-    // Choosing a template fills the body (+ subject for email). Channel hint:
-    // toggle the matching channel on.
     setBody(t.body.slice(0, BODY_MAX));
-    if (t.channel === "email") {
-      setSendEmail(true);
-    } else if (t.channel === "sms") {
-      setSendSms(true);
-    }
+    if (t.channel === "email") setSendEmail(true);
+    else if (t.channel === "sms") setSendSms(true);
   }
 
   function insertTag(key: string) {
@@ -181,53 +174,76 @@ export function SendComposer({
     });
   }
 
+  const subjectLine = `How was your experience at ${businessName}?`;
+
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 18 }}>
-      {/* Left: form */}
-      <form onSubmit={handleSend} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        <section>
-          <h3 className="ds-card__title" style={{ marginBottom: 8 }}>1 · Contact</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <label className="lbl" style={{ gridColumn: "1 / -1" }}>
-              Customer name
-              <input
-                className="ds-input"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-                placeholder="Optional"
-              />
+    <div className="rr-send">
+      {/* ── Left: stepped form card ── */}
+      <form onSubmit={handleSend} className="rr-card rr-formcard">
+        <div className="rr-rail" aria-hidden />
+
+        {/* Step 1 — Contact */}
+        <section className="rr-step">
+          <span className="rr-step__node">
+            <Icon name="user" size={15} />
+          </span>
+          <h3 className="rr-step__title">1. Contact</h3>
+          <label className="rr-field">
+            <span className="rr-field__lbl">Customer name</span>
+            <input
+              className="rr-input"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              placeholder="Optional"
+            />
+          </label>
+          <div className="rr-2col">
+            <label className="rr-field">
+              <span className="rr-field__lbl">Phone (E.164)</span>
+              <div className="rr-inputwrap">
+                <span className="rr-inputwrap__icon">
+                  <Icon name="phone" size={14} />
+                </span>
+                <input
+                  className="rr-input"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="+1 555 123 4567"
+                />
+              </div>
             </label>
-            <label className="lbl">
-              Phone (E.164)
-              <input
-                className="ds-input"
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                placeholder="+15551234567"
-              />
-            </label>
-            <label className="lbl">
-              Email
-              <input
-                className="ds-input"
-                type="email"
-                value={customerEmail}
-                onChange={(e) => setCustomerEmail(e.target.value)}
-                placeholder="customer@example.com"
-              />
+            <label className="rr-field">
+              <span className="rr-field__lbl">Email</span>
+              <div className="rr-inputwrap">
+                <span className="rr-inputwrap__icon">
+                  <Icon name="mail" size={14} />
+                </span>
+                <input
+                  className="rr-input"
+                  type="email"
+                  value={customerEmail}
+                  onChange={(e) => setCustomerEmail(e.target.value)}
+                  placeholder="customer@example.com"
+                />
+              </div>
             </label>
           </div>
         </section>
 
-        <section>
-          <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
-            <h3 className="ds-card__title">2 · Message</h3>
+        {/* Step 2 — Message */}
+        <section className="rr-step">
+          <span className="rr-step__node">
+            <Icon name="chat" size={15} />
+          </span>
+          <h3 className="rr-step__title">
+            2. Message
             {templates.length > 0 && (
               <select
-                className="ds-input"
-                style={{ maxWidth: 220, height: 32 }}
+                className="rr-select"
+                style={{ maxWidth: 180, height: 36 }}
                 value={templateId}
                 onChange={(e) => applyTemplate(e.target.value)}
+                aria-label="Start from template"
               >
                 <option value="">Start from template…</option>
                 {templates.map((t) => (
@@ -237,232 +253,253 @@ export function SendComposer({
                 ))}
               </select>
             )}
-          </div>
+          </h3>
 
-          <label className="lbl">
-            Greeting
+          <label className="rr-field">
+            <span className="rr-field__lbl">Greeting</span>
             <input
-              className="ds-input"
+              className="rr-input"
               value={greeting}
               maxLength={GREETING_MAX}
               onChange={(e) => setGreeting(e.target.value)}
             />
           </label>
 
-          <div style={{ marginTop: 10 }}>
-            <div className="row" style={{ flexWrap: "wrap", gap: 6, marginBottom: 6 }}>
-              {OUTREACH_MERGE_TAGS.map((t) => (
-                <button
-                  key={t.key}
-                  type="button"
-                  className="chip chip--info"
-                  style={{ cursor: "pointer", border: "1px solid var(--line)" }}
-                  title={`Insert {{${t.key}}}`}
-                  onClick={() => insertTag(t.key)}
-                >
-                  + {t.label}
-                </button>
-              ))}
+          <div className="rr-mergechips">
+            {OUTREACH_MERGE_TAGS.map((t) => (
+              <button
+                key={t.key}
+                type="button"
+                className="rr-mergechip"
+                title={`Insert {{${t.key}}}`}
+                onClick={() => insertTag(t.key)}
+              >
+                + {t.label}
+              </button>
+            ))}
+          </div>
+
+          <label className="rr-field">
+            <span className="rr-field__lbl">Body</span>
+            <textarea
+              ref={bodyRef}
+              className="rr-textarea"
+              value={body}
+              maxLength={BODY_MAX}
+              rows={5}
+              onChange={(e) => setBody(e.target.value)}
+            />
+          </label>
+
+          <div className="rr-msgctrls">
+            <div className="row" style={{ gap: 8 }}>
+              <select
+                className="rr-select"
+                style={{ height: 38, maxWidth: 130 }}
+                value={tone}
+                onChange={(e) => setTone(e.target.value as typeof tone)}
+                aria-label="Tone"
+              >
+                <option value="friendly">Friendly</option>
+                <option value="formal">Formal</option>
+                <option value="brief">Brief</option>
+                <option value="warm">Warm</option>
+                <option value="playful">Playful</option>
+              </select>
+              <button type="button" className="rr-toolbtn" disabled={aiPending} onClick={handleGenerateAI}>
+                <Icon name="sparkle" size={13} />
+                {aiPending ? "Generating…" : "Generate with AI"}
+              </button>
             </div>
-            <label className="lbl">
-              Body
-              <textarea
-                ref={bodyRef}
-                className="ds-textarea"
-                value={body}
-                maxLength={BODY_MAX}
-                rows={6}
-                onChange={(e) => setBody(e.target.value)}
-                style={{ fontFamily: "var(--f-mono, monospace)" }}
-              />
-            </label>
-            <div className="row" style={{ justifyContent: "space-between", marginTop: 4 }}>
-              <div className="row" style={{ gap: 8 }}>
-                <select
-                  className="ds-input"
-                  style={{ height: 30, maxWidth: 130 }}
-                  value={tone}
-                  onChange={(e) => setTone(e.target.value as typeof tone)}
-                >
-                  <option value="friendly">Friendly</option>
-                  <option value="formal">Formal</option>
-                  <option value="brief">Brief</option>
-                  <option value="warm">Warm</option>
-                  <option value="playful">Playful</option>
-                </select>
-                <button
-                  type="button"
-                  className="btn"
-                  disabled={aiPending}
-                  onClick={handleGenerateAI}
-                >
-                  <Icon name="sparkle" size={12} />
-                  {aiPending ? "Generating…" : "Generate with AI"}
-                </button>
-              </div>
-              <span className="dim" style={{ fontSize: 11, fontVariantNumeric: "tabular-nums" }}>
-                {body.length}/{BODY_MAX}
-              </span>
-            </div>
+            <span className="rr-counter">
+              {body.length}/{BODY_MAX}
+            </span>
           </div>
         </section>
 
-        <section>
-          <h3 className="ds-card__title" style={{ marginBottom: 8 }}>3 · Delivery</h3>
-          <div className="row" style={{ gap: 16 }}>
-            <label className="row" style={{ gap: 6, fontSize: 13 }}>
+        {/* Step 3 — Delivery */}
+        <section className="rr-step">
+          <span className="rr-step__node">
+            <Icon name="send" size={15} />
+          </span>
+          <h3 className="rr-step__title">3. Delivery</h3>
+          <div className="rr-checks">
+            <label className="rr-check">
               <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
               Email
             </label>
-            <label className="row" style={{ gap: 6, fontSize: 13 }}>
+            <label className="rr-check">
               <input type="checkbox" checked={sendSms} onChange={(e) => setSendSms(e.target.checked)} />
               SMS
             </label>
           </div>
         </section>
 
-        <section>
-          <h3 className="ds-card__title" style={{ marginBottom: 8 }}>4 · Routing</h3>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <label className="lbl">
-              Business location
-              <select
-                className="ds-input"
-                value={establishmentId}
-                onChange={(e) => setEstablishmentId(e.target.value)}
-                required
-              >
-                {establishments.map((e) => (
-                  <option key={e.id} value={e.id}>{e.name}</option>
-                ))}
-              </select>
+        {/* Step 4 — Routing */}
+        <section className="rr-step">
+          <span className="rr-step__node">
+            <Icon name="move" size={15} />
+          </span>
+          <h3 className="rr-step__title">4. Routing</h3>
+          <div className="rr-2col">
+            <label className="rr-field">
+              <span className="rr-field__lbl">Business location</span>
+              <div className="rr-inputwrap">
+                <span className="rr-inputwrap__icon">
+                  <Icon name="building" size={14} />
+                </span>
+                <select
+                  className="rr-input rr-select"
+                  value={establishmentId}
+                  onChange={(e) => setEstablishmentId(e.target.value)}
+                  required
+                  style={{ paddingLeft: 36 }}
+                >
+                  {establishments.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </label>
-            <label className="lbl">
-              Send timing
-              <select
-                className="ds-input"
-                value={scheduleHours}
-                onChange={(e) => setScheduleHours(Number(e.target.value))}
-              >
-                <option value={0}>Now</option>
-                <option value={1}>In 1 hour</option>
-                <option value={24}>In 1 day</option>
-                <option value={72}>In 3 days</option>
-                <option value={168}>In 1 week</option>
-              </select>
+            <label className="rr-field">
+              <span className="rr-field__lbl">Send timing</span>
+              <div className="rr-inputwrap">
+                <span className="rr-inputwrap__icon">
+                  <Icon name="clock" size={14} />
+                </span>
+                <select
+                  className="rr-input rr-select"
+                  value={scheduleHours}
+                  onChange={(e) => setScheduleHours(Number(e.target.value))}
+                  style={{ paddingLeft: 36 }}
+                >
+                  <option value={0}>Now</option>
+                  <option value={1}>In 1 hour</option>
+                  <option value={24}>In 1 day</option>
+                  <option value={72}>In 3 days</option>
+                  <option value={168}>In 1 week</option>
+                </select>
+              </div>
             </label>
           </div>
         </section>
 
         {sendSms && (
-          <label
-            className="row"
-            style={{
-              gap: 8,
-              alignItems: "flex-start",
-              fontSize: 12,
-              background: "var(--surface-2)",
-              border: "1px solid var(--line)",
-              borderRadius: 8,
-              padding: 12,
-            }}
-          >
+          <label className="rr-consent">
             <input
               type="checkbox"
               checked={consentAttested}
               onChange={(e) => setConsentAttested(e.target.checked)}
-              style={{ marginTop: 2 }}
             />
             <span>
-              I attest this recipient has previously given written consent to receive marketing SMS
-              from my business (TCPA / A2P 10DLC compliance).
+              I attest this recipient has previously given written consent to receive marketing SMS from
+              my business (TCPA / A2P 10DLC compliance).
             </span>
           </label>
         )}
 
-        {error && <p style={{ color: "var(--bad)", fontSize: 13 }}>{error}</p>}
-        {success && <p style={{ color: "var(--ok)", fontSize: 13 }}>{success}</p>}
+        {error && <p className="rr-msgbad">{error}</p>}
+        {success && <p className="rr-msgok">{success}</p>}
 
-        <div className="row" style={{ gap: 10 }}>
-          <button type="submit" className="btn btn--pri" disabled={sendPending}>
-            <Icon name="send" size={12} />
+        <div className="rr-formactions">
+          <button type="submit" className="rr-actbtn rr-actbtn--pri" disabled={sendPending}>
+            <Icon name="send" size={14} />
             {sendPending ? "Sending…" : "Send request"}
           </button>
-          <Link href="/outreach/bulk" className="btn">
-            <Icon name="upload" size={12} />
+          <Link href="/outreach/bulk" className="rr-actbtn">
+            <Icon name="upload" size={14} />
             Bulk CSV
           </Link>
         </div>
       </form>
 
-      {/* Right: live preview */}
-      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-          <div
-            className="dim"
-            style={{
-              borderBottom: "1px solid var(--line)",
-              padding: "8px 14px",
-              fontSize: 10.5,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
-            Email preview
-          </div>
-          <div style={{ padding: 16 }}>
-            <div className="dim" style={{ fontSize: 11.5, marginBottom: 10, lineHeight: 1.6 }}>
-              <strong>From:</strong> {businessName}
-              <br />
-              <strong>To:</strong> {customerEmail || "customer@example.com"}
-              <br />
-              <strong>Subject:</strong> How was your experience at {businessName}?
+      {/* ── Right: live previews ── */}
+      <div className="rr-previewcol">
+        {/* Email preview */}
+        <div className="rr-card rr-preview">
+          <div className="rr-preview__head">
+            <div className="rr-preview__tile">
+              <Icon name="mail" size={16} />
             </div>
-            {logoUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={logoUrl} alt="" style={{ maxHeight: 40, marginBottom: 10, display: "block" }} />
-            )}
-            <p style={{ fontWeight: 600, color: "var(--ink)", fontSize: 13 }}>{filled(greeting)}</p>
-            <div style={{ whiteSpace: "pre-wrap", color: "var(--ink-2)", fontSize: 13, lineHeight: 1.6 }}>
-              {filled(body)}
+            <div className="rr-preview__title">Email preview</div>
+            <div className="rr-preview__aside">
+              <span className="rr-linkbtn" style={{ cursor: "default" }}>
+                <Icon name="ext" size={12} />
+                Open in new tab
+              </span>
             </div>
           </div>
+          <div className="rr-meta">
+            <div>
+              <span className="rr-meta__k">From:</span> {businessName}
+            </div>
+            <div>
+              <span className="rr-meta__k">To:</span> {customerEmail || "customer@example.com"}
+            </div>
+            <div>
+              <span className="rr-meta__k">Subject:</span> {subjectLine}
+            </div>
+          </div>
+          <div className="rr-preview__divider" />
+          {logoUrl && (
+            // biome-ignore lint/performance/noImgElement: org logo preview
+            <img src={logoUrl} alt="" style={{ maxHeight: 36, marginBottom: 10, display: "block" }} />
+          )}
+          <div className="rr-emailbody">
+            <strong>{filled(greeting)}</strong>
+            {"\n\n"}
+            {filled(body)}
+          </div>
+          {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
+          <img
+            src="/assets/repulabs/review-request/send-email-preview.svg"
+            alt=""
+            aria-hidden="true"
+            className="rr-preview__art"
+          />
         </div>
 
-        <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-          <div
-            className="dim"
-            style={{
-              borderBottom: "1px solid var(--line)",
-              padding: "8px 14px",
-              fontSize: 10.5,
-              textTransform: "uppercase",
-              letterSpacing: "0.05em",
-            }}
-          >
-            SMS preview
+        {/* SMS preview */}
+        <div className="rr-card rr-preview">
+          <div className="rr-preview__head">
+            <div className="rr-preview__tile rr-preview__tile--ok">
+              <Icon name="chat" size={16} />
+            </div>
+            <div className="rr-preview__title">SMS preview</div>
+            <div className="rr-preview__aside">
+              <span className="rr-linkbtn" style={{ cursor: "default" }}>
+                <Icon name="ext" size={12} />
+                View full size
+              </span>
+            </div>
           </div>
-          <div style={{ padding: 16 }}>
-            <div className="dim" style={{ fontSize: 11.5, marginBottom: 8 }}>
-              <strong>To:</strong> {customerPhone || "+15551234567"}
+          <div className="rr-meta" style={{ marginBottom: 4 }}>
+            <span className="rr-meta__k">To:</span> {customerPhone || "+1 555 123 4567"}
+          </div>
+          <div className="rr-phone">
+            <div className="rr-phone__bar">
+              <span>9:41</span>
+              <span className="row" style={{ gap: 4 }}>
+                <Icon name="sound" size={12} />
+                <Icon name="bars" size={12} />
+              </span>
             </div>
-            <div
-              style={{
-                background: "var(--surface-2)",
-                borderRadius: 10,
-                padding: 12,
-                fontSize: 13,
-                whiteSpace: "pre-wrap",
-                lineHeight: 1.5,
-              }}
-            >
-              {filled(greeting)}
-              {"\n"}
-              {filled(body)}
+            <div className="rr-phone__body">
+              <div className="rr-bubble">
+                {filled(greeting)}
+                {"\n"}
+                {filled(body)}
+                <span className="rr-bubble__time">9:41 AM ✓✓</span>
+              </div>
             </div>
-            <p className="dim" style={{ fontSize: 10.5, marginTop: 8 }}>
+          </div>
+          <div className="rr-callout">
+            <Icon name="info" size={14} />
+            <span>
               Reply STOP to opt out. SMS includes our standard unsubscribe footer automatically.
-            </p>
+            </span>
           </div>
         </div>
       </div>

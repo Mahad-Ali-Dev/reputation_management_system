@@ -44,8 +44,8 @@ export async function SendTab({ orgId }: { orgId: string }) {
 
   if (establishments.length === 0) {
     return (
-      <div className="ds-card" style={{ padding: 40, textAlign: "center" }}>
-        <p className="dim" style={{ fontSize: 13 }}>
+      <div className="rr-card" style={{ padding: 40, textAlign: "center" }}>
+        <p style={{ fontSize: 13, color: "var(--rr-muted)" }}>
           Add a business location first to send review requests.
         </p>
       </div>
@@ -53,13 +53,11 @@ export async function SendTab({ orgId }: { orgId: string }) {
   }
 
   return (
-    <div className="ds-card">
-      <SendComposer
-        establishments={establishments}
-        templates={templates}
-        businessName={org?.name ?? "Your Business"}
-        logoUrl={org?.logoUrl ?? null}
-      />
-    </div>
+    <SendComposer
+      establishments={establishments}
+      templates={templates}
+      businessName={org?.name ?? "Your Business"}
+      logoUrl={org?.logoUrl ?? null}
+    />
   );
 }

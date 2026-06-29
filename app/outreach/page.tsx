@@ -13,35 +13,46 @@ import { TemplatesTab } from "./_components/templates-tab";
 import "./outreach.css";
 
 /**
- * Review Requests hub — one route, 5 tabs (verifier fix #3: TabBar primitive).
+ * Review Requests hub — one route, 5 tabs (verifier fix #3: TabBar primitive),
+ * rebuilt to the delivered design kit (designs/Review Request/**).
  *
  * Overview (campaign hub: programs · template studio · deliverability · next
  * send queue) · Send Request · Templates · Automation Rules · Sent History —
  * selected via `?tab=`. Each panel is server-rendered; the `TabBar` writes the
- * query param. No "Go Back" affordance (AC). Old /outreach/send +
- * /outreach/templates index routes redirect here; the per-template editor lives
- * at /outreach/templates/[id].
+ * query param. Old /outreach/send + /outreach/templates index routes redirect
+ * here; the per-template editor lives at /outreach/templates/[id].
+ *
+ * All page content sits under a `.rr` scope so the kit's purple palette + flat
+ * canvas (outreach.css) never leak into the shared design system.
  */
 
 export const dynamic = "force-dynamic";
 
 const VALID = new Set(["overview", "send", "templates", "automation", "history"]);
-const TAB_META: Record<string, { title: string; description: string }> = {
+
+/** Per-tab page-header copy + decorative hero, mapped from each kit mockup. */
+const TAB_META: Record<
+  string,
+  { title: string; description: string; hero?: { src: string; w: number } }
+> = {
   overview: {
     title: "Send the right request at the right moment",
     description: "Campaigns, templates, and deliverability in one review request hub.",
+    hero: { src: "/assets/repulabs/review-request/hero-overview.svg", w: 200 },
   },
   send: {
     title: "Review requests",
     description: "Send a personalized review request by email or SMS — one-off or in bulk.",
+    hero: { src: "/assets/repulabs/review-request/send-review.svg", w: 230 },
   },
   templates: {
     title: "Templates",
     description: "Reusable email + SMS bodies with merge tags.",
+    hero: { src: "/assets/repulabs/review-request/hero-templates.svg", w: 260 },
   },
   automation: {
     title: "Automation rules",
-    description: "Automatically request reviews after a purchase or appointment.",
+    description: "Automate tasks and workflows to save time and stay consistent.",
   },
   history: {
     title: "Sent history",
@@ -62,28 +73,59 @@ export default async function OutreachPage({
     description: "Send a personalized review request by email or SMS.",
   };
 
+  const actions =
+    tab === "overview" ? (
+      <Link href="/outreach?tab=send" className="btn btn--pri">
+        <Icon name="plus" size={13} />
+        Create campaign
+      </Link>
+    ) : tab === "templates" ? (
+      <Link href="/outreach/templates/new" className="btn btn--pri btn--pill">
+        <Icon name="plus" size={13} />
+        New template
+      </Link>
+    ) : tab === "automation" ? (
+      <Link href="/outreach?tab=automation#create" className="btn btn--pri">
+        <Icon name="plus" size={13} />
+        Create automation
+      </Link>
+    ) : undefined;
+
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Requests"]}>
-      <PageHeader
-        kicker="Outreach"
-        title={meta.title}
-        description={meta.description}
-        actions={
-          tab === "overview" ? (
-            <Link href="/outreach?tab=send" className="btn btn--pri">
-              <Icon name="send" size={12} />
-              Create campaign
-            </Link>
-          ) : undefined
-        }
-      />
-      <HubTabs active={tab} />
+      <div className="rr">
+        <div className="rr-hero">
+          <PageHeader
+            kicker="Outreach"
+            title={meta.title}
+            description={meta.description}
+            actions={
+              <div className="row" style={{ gap: 14, alignItems: "center" }}>
+                {meta.hero && (
+                  // biome-ignore lint/performance/noImgElement: static brand SVG (decorative hero)
+                  <img
+                    src={meta.hero.src}
+                    alt=""
+                    aria-hidden="true"
+                    width={meta.hero.w}
+                    className="rr-hero__art"
+                    style={{ width: meta.hero.w }}
+                  />
+                )}
+                {actions}
+              </div>
+            }
+          />
+        </div>
 
-      {tab === "overview" && <OverviewTab orgId={orgId} />}
-      {tab === "send" && <SendTab orgId={orgId} />}
-      {tab === "templates" && <TemplatesTab orgId={orgId} />}
-      {tab === "automation" && <AutomationTab orgId={orgId} />}
-      {tab === "history" && <HistoryTab orgId={orgId} />}
+        <HubTabs active={tab} />
+
+        {tab === "overview" && <OverviewTab orgId={orgId} />}
+        {tab === "send" && <SendTab orgId={orgId} />}
+        {tab === "templates" && <TemplatesTab orgId={orgId} />}
+        {tab === "automation" && <AutomationTab orgId={orgId} />}
+        {tab === "history" && <HistoryTab orgId={orgId} />}
+      </div>
     </AppShellServer>
   );
 }

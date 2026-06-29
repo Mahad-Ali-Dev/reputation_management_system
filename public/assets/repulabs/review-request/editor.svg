@@ -1,0 +1,27 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="core" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#B59CFF"/>
+      <stop offset="100%" stop-color="#6D3CFF"/>
+    </radialGradient>
+
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="6" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- orbits -->
+  <g filter="url(#glow)" stroke="#7A4CFF" stroke-width="18" fill="none" stroke-linecap="round">
+    <ellipse cx="256" cy="256" rx="160" ry="90" transform="rotate(25 256 256)"/>
+    <ellipse cx="256" cy="256" rx="160" ry="90" transform="rotate(-25 256 256)"/>
+    <ellipse cx="256" cy="256" rx="140" ry="80" transform="rotate(90 256 256)"/>
+  </g>
+
+  <!-- core -->
+  <circle cx="256" cy="256" r="42" fill="url(#core)"/>
+
+</svg>

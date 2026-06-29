@@ -1,0 +1,40 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="none">
+<defs>
+  <linearGradient id="g" x1="100" y1="100" x2="420" y2="420">
+    <stop offset="0%" stop-color="#34D399"/>
+    <stop offset="100%" stop-color="#16A34A"/>
+  </linearGradient>
+
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="6" result="b"/>
+    <feMerge>
+      <feMergeNode in="b"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+</defs>
+
+<g filter="url(#glow)">
+  <!-- chat bubble -->
+  <path d="M120 140
+           Q120 100 160 100
+           H352
+           Q392 100 392 140
+           V300
+           Q392 340 352 340
+           H220
+           L160 400
+           V340
+           H160
+           Q120 340 120 300
+           Z"
+        fill="url(#g)"/>
+
+  <!-- check mark -->
+  <path d="M190 240 L240 290 L330 190"
+        stroke="white"
+        stroke-width="28"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+</g>
+</svg>

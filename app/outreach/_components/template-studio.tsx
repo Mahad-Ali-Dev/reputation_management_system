@@ -6,8 +6,9 @@ import Link from "next/link";
 import { Fragment, useMemo, useState } from "react";
 
 /**
- * Template studio (Overview hub, middle column) — a rich inline preview of the
- * org's REAL OutreachTemplates with the mockup's SMS / Email pill tabs.
+ * Template editor (Overview hub, middle column) — a rich inline preview of the
+ * org's REAL OutreachTemplates with the kit's SMS / Email pill tabs, soft-gray
+ * message preview panel, merge-tag chips, and Preview / Default / Edit footer.
  *
  * Read-mostly by design: full editing stays on /outreach/templates/[id] (the
  * existing editor with save/AI/validation) — the "Edit template" button deep-
@@ -58,15 +59,14 @@ export function TemplateStudio({
 
   if (templates.length === 0) {
     return (
-      <div className="orc-mini-empty">
-        <Icon name="edit" size={22} style={{ color: "var(--pri)", marginBottom: 8 }} />
-        <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>No templates yet</div>
-        <p className="dim" style={{ fontSize: 11.5, margin: "4px 0 12px" }}>
-          Create a reusable email or SMS body with merge tags.
-        </p>
+      <div className="rr-miniempty">
+        {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
+        <img src="/assets/repulabs/review-request/editor.svg" alt="" aria-hidden="true" />
+        <div className="rr-miniempty__title">No templates yet</div>
+        <p className="rr-miniempty__sub">Create your first template to get started</p>
         <Link href="/outreach/templates/new" className="btn btn--pri btn--sm">
-          <Icon name="plus" size={11} />
-          New template
+          <Icon name="edit" size={11} />
+          Edit template
         </Link>
       </div>
     );
@@ -76,14 +76,14 @@ export function TemplateStudio({
 
   return (
     <div>
-      <div className="orc-pills" role="tablist" aria-label="Template channel">
+      <div className="rr-pills" role="tablist" aria-label="Template channel">
         {channels.map((c) => (
           <button
             key={c}
             type="button"
             role="tab"
             aria-selected={channel === c}
-            className={channel === c ? "orc-pill is-active" : "orc-pill"}
+            className={channel === c ? "rr-pill is-active" : "rr-pill"}
             onClick={() => pickChannel(c)}
           >
             <Icon name={c === "email" ? "mail" : "smartphone"} size={12} />
@@ -93,12 +93,12 @@ export function TemplateStudio({
       </div>
 
       {inChannel.length > 1 && (
-        <div className="orc-tplpick" aria-label="Pick a template">
+        <div className="rr-tplpick" aria-label="Pick a template">
           {inChannel.map((t) => (
             <button
               key={t.id}
               type="button"
-              className={active?.id === t.id ? "orc-tplpick__t is-active" : "orc-tplpick__t"}
+              className={active?.id === t.id ? "rr-tplpick__t is-active" : "rr-tplpick__t"}
               onClick={() => setSelectedId(t.id)}
               title={t.name}
             >
@@ -110,9 +110,9 @@ export function TemplateStudio({
 
       {active && (
         <>
-          <div className="orc-body">
+          <div className="rr-msg">
             {active.channel === "email" && active.subject && (
-              <div className="orc-body__subject">Subject: {active.subject}</div>
+              <div className="rr-msg__subject">Subject: {active.subject}</div>
             )}
             {showFilled ? (
               resolveMergeTags(active.body, previewCtx, { keepUnknown: true })
@@ -121,30 +121,27 @@ export function TemplateStudio({
             )}
           </div>
 
-          <div className="orc-tags" aria-label="Available merge tags">
+          <div className="rr-tags" aria-label="Available merge tags">
             {OUTREACH_MERGE_TAGS.map((tag) => (
-              <span key={tag.key} className="orc-mergetag" title={`Example: ${tag.example}`}>
+              <span key={tag.key} className="rr-mergetag" title={`Example: ${tag.example}`}>
                 {`{{${tag.key}}}`}
               </span>
             ))}
           </div>
 
-          <div className="orc-studio__foot">
+          <div className="rr-studiofoot">
             <button
               type="button"
-              className="btn btn--sm"
+              className="rr-toolbtn"
               aria-pressed={showFilled}
               onClick={() => setShowFilled((v) => !v)}
             >
-              <Icon name={showFilled ? "eyeOff" : "eye"} size={11} />
-              {showFilled ? "Show tags" : "Preview filled"}
+              <Icon name={showFilled ? "eyeOff" : "eye"} size={12} />
+              {showFilled ? "Show tags" : "Preview"}
             </button>
-            <div className="row" style={{ gap: 6 }}>
-              {active.isDefault && <span className="chip chip--pri">Default</span>}
-              <Link
-                href={`/outreach/templates/${active.id}`}
-                className="btn btn--pri btn--sm"
-              >
+            <div className="row" style={{ gap: 8 }}>
+              {active.isDefault && <span className="rr-chip rr-chip--pri">Default</span>}
+              <Link href={`/outreach/templates/${active.id}`} className="btn btn--pri btn--sm">
                 <Icon name="edit" size={11} />
                 Edit template
               </Link>
@@ -164,7 +161,7 @@ function TaggedBody({ body }: { body: string }) {
       {parts.map((p, i) =>
         TAG_EXACT_RE.test(p) ? (
           // biome-ignore lint/suspicious/noArrayIndexKey: static split render
-          <span key={i} className="orc-mergetag">
+          <span key={i} className="rr-mergetag">
             {`{{${p.replace(/[{}\s]/g, "")}}}`}
           </span>
         ) : (

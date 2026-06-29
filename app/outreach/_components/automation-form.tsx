@@ -96,7 +96,7 @@ export function AutomationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="ds-card" style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 620 }}>
+    <form onSubmit={handleSubmit} className="rr-card" style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 620, padding: 22 }}>
       {/* Master toggle */}
       <label className="row" style={{ gap: 10, alignItems: "flex-start" }}>
         <input
