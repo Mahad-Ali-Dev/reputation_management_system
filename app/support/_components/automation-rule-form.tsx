@@ -7,23 +7,23 @@ import { MergeTagEditor } from "@/components/merge-tag/merge-tag-editor";
 import { upsertAutomationRule } from "@/lib/chat/automation-actions";
 import type { AiBehaviour, AutomationRuleView, RuleTrigger } from "@/lib/chat/automation-shared";
 import { COMMON_TAGS, sampleDataFromTags } from "@/lib/merge-tags";
+import "../support-ops.css";
 
 /**
- * AutomationRuleForm (Module 09 — Inbox, Automation tab) — client island.
+ * AutomationRuleForm (Module 09 — Inbox, Automation tab) — client island, rebuilt
+ * to the kit's "New automation rule" form-builder.
  *
- * The create/edit form for a single `ChatAutomationRule`. Driven entirely by
- * local state and submitted as FormData to the `upsertAutomationRule` server
- * action (which validates with the SAME `parseRuleForm` invariants — the inline
- * guards here are just early UX, not the source of truth).
- *
- * A rule says: when an inbound message arrives on the selected CHANNELS, matching
- * ALL messages or a KEYWORD, the assistant replies per the chosen AI BEHAVIOUR,
- * optionally with a merge-tag TEMPLATE, bounded by a per-conversation reply cap.
+ * Each setting is a large horizontal section card (left icon-tile + intro, right
+ * controls): Rule name + Enabled switch, When this runs (radio cards), Channels
+ * (toggle chips with check dots), How the assistant replies (radio cards), Safety
+ * limit (max auto-replies). Submits as FormData to `upsertAutomationRule`, which
+ * re-validates with the same `parseRuleForm` invariants — the inline guards here
+ * are early UX only, not the source of truth.
  *
  * Presentation + a tiny bit of conditional state only — no data fetching.
  */
 
-/** The six inbox channels, with a friendly label + brand icon for the chips. */
+/** The seven inbox channels, with a friendly label + brand icon for the chips. */
 const CHANNEL_OPTIONS: {
   key: string;
   label: string;
@@ -86,9 +86,7 @@ export function AutomationRuleForm({
   const [escalateAfter, setEscalateAfter] = useState<number>(rule?.escalateAfterTurns ?? 3);
 
   function toggleChannel(key: string) {
-    setChannels((prev) =>
-      prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key],
-    );
+    setChannels((prev) => (prev.includes(key) ? prev.filter((c) => c !== key) : [...prev, key]));
   }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -137,83 +135,107 @@ export function AutomationRuleForm({
   }
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <h3 className="ds-card__title">{editing ? "Edit rule" : "New automation rule"}</h3>
-        <span className="dim mono" style={{ fontSize: 10 }}>
+    <form onSubmit={onSubmit}>
+      {/* Header */}
+      <div className="sops-toprow" style={{ marginBottom: 14 }}>
+        <div style={{ display: "flex", gap: 14, alignItems: "center", minWidth: 0 }}>
+          <button
+            type="button"
+            className="sops-btn sops-btn--icon"
+            onClick={onDone}
+            aria-label="Back to automation"
+            style={{ width: 44, height: 44, borderRadius: 999, flexShrink: 0 }}
+          >
+            <Icon name="chevL" size={18} />
+          </button>
+          <div style={{ minWidth: 0 }}>
+            <h3 className="sops-toprow__h">{editing ? "Edit automation rule" : "New automation rule"}</h3>
+            <p className="sops-toprow__p">
+              Create smart auto-replies that engage customers and save time.
+            </p>
+          </div>
+        </div>
+        <span className="sops-chip sops-chip--pri" style={{ height: 24 }}>
           AUTO-REPLY
         </span>
       </div>
 
-      <form className="ds-card__body" onSubmit={onSubmit} style={{ display: "grid", gap: 16 }}>
-        {/* Name + active */}
-        <div className="row" style={{ gap: 12, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <label style={{ display: "grid", gap: 4, flex: 1, minWidth: 220 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 600 }}>Rule name</span>
+      <div className="sops-formstack">
+        {/* Rule name + Enabled */}
+        <Section ico="auto-sec-name.svg" tone="pri" title="Rule name" help="Give your rule a clear and short name.">
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 132px", gap: 12 }}>
             <input
-              className="ds-input"
+              className="sops-input"
               value={name}
               maxLength={120}
               onChange={(e) => setName(e.target.value)}
               placeholder="After-hours auto-reply"
-              style={{ fontSize: 12.5 }}
+              aria-label="Rule name"
             />
-          </label>
-          <label className="row" style={{ gap: 8, cursor: "pointer", fontSize: 12.5, paddingBottom: 8 }}>
-            <input
-              type="checkbox"
-              checked={isActive}
-              onChange={(e) => setIsActive(e.target.checked)}
-              style={{ width: 16, height: 16, accentColor: "var(--pri)" }}
-            />
-            Enabled
-          </label>
-        </div>
+            <button
+              type="button"
+              className="sops-switch"
+              onClick={() => setIsActive((v) => !v)}
+              role="switch"
+              aria-checked={isActive}
+              aria-label="Enabled"
+            >
+              <span className={`sops-switch__track${isActive ? " is-on" : ""}`}>
+                <span className="sops-switch__thumb" />
+              </span>
+              Enabled
+            </button>
+          </div>
+        </Section>
 
-        <Divider />
-
-        {/* Trigger */}
+        {/* When this runs */}
         <Section
+          ico="auto-sec-trigger.svg"
+          tone="blue"
           title="When this runs"
-          help="Pick whether the rule reacts to every inbound message or only ones containing a keyword."
+          help="Pick when the rule reacts to inbound messages."
         >
-          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-            <RadioChip
+          <div className="sops-optgrid">
+            <OptionCard
               name={`${formId}-trigger`}
               checked={trigger === "all"}
               onChange={() => setTrigger("all")}
-              label="All messages"
+              title="All messages"
+              desc="React to every inbound message."
             />
-            <RadioChip
+            <OptionCard
               name={`${formId}-trigger`}
               checked={trigger === "keyword"}
               onChange={() => setTrigger("keyword")}
-              label="Matches a keyword"
+              title="Matches a keyword"
+              desc="Only messages containing a keyword."
             />
           </div>
           {trigger === "keyword" && (
-            <label style={{ display: "grid", gap: 4, maxWidth: 360 }}>
-              <span style={{ fontSize: 11.5, fontWeight: 600 }}>Trigger keyword or phrase</span>
+            <label style={{ display: "grid", gap: 5, maxWidth: 380, marginTop: 12 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>Trigger keyword or phrase</span>
               <input
-                className="ds-input"
+                className="sops-input"
                 value={keyword}
                 maxLength={120}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="hours, pricing, refund"
-                style={{ fontSize: 12.5 }}
               />
-              <span style={{ fontSize: 11, color: "var(--ink-2)" }}>
+              <span style={{ fontSize: 11.5, color: "var(--sops-muted)" }}>
                 Case-insensitive. The rule fires when an inbound message contains this text.
               </span>
             </label>
           )}
         </Section>
 
-        <Divider />
-
         {/* Channels */}
-        <Section title="Channels" help="The rule only applies to inbound messages on the channels you select.">
-          <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+        <Section
+          ico="auto-sec-channels.svg"
+          tone="green"
+          title="Channels"
+          help="The rule only applies to inbound messages on the channels you select."
+        >
+          <div className="sops-chgrid">
             {CHANNEL_OPTIONS.map((c) => {
               const on = channels.includes(c.key);
               return (
@@ -221,38 +243,44 @@ export function AutomationRuleForm({
                   key={c.key}
                   type="button"
                   onClick={() => toggleChannel(c.key)}
-                  className={`chip ${on ? "chip--pri" : "chip--out"}`}
-                  style={{ cursor: "pointer", gap: 5, fontSize: 11 }}
+                  className={`sops-chchip${on ? " is-on" : ""}`}
                   aria-pressed={on}
                 >
-                  <Icon name={c.icon} size={11} />
+                  <Icon name={c.icon} size={14} />
                   {c.label}
-                  {on && <Icon name="check" size={10} />}
+                  {on && (
+                    <span className="sops-chchip__check">
+                      <Icon name="check" size={10} />
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
         </Section>
 
-        <Divider />
-
-        {/* AI behaviour */}
-        <Section title="How the assistant replies" help="Choose what the assistant does when the rule fires.">
-          <div style={{ display: "grid", gap: 8 }}>
+        {/* How the assistant replies */}
+        <Section
+          ico="auto-sparkles.svg"
+          tone="pri"
+          title="How the assistant replies"
+          help="Choose what the assistant does when the rule fires."
+        >
+          <div className="sops-optstack">
             {BEHAVIOUR_OPTIONS.map((b) => (
-              <BehaviourRow
+              <OptionCard
                 key={b.key}
                 name={`${formId}-behaviour`}
                 checked={behaviour === b.key}
                 onChange={() => setBehaviour(b.key)}
-                label={b.label}
-                help={b.help}
+                title={b.label}
+                desc={b.help}
               />
             ))}
           </div>
 
           {behaviour === "fixed_template" && (
-            <div style={{ marginTop: 6 }}>
+            <div style={{ marginTop: 12 }}>
               <MergeTagEditor
                 label="Reply template"
                 value={template}
@@ -265,159 +293,122 @@ export function AutomationRuleForm({
           )}
 
           {behaviour === "kb_then_escalate" && (
-            <label style={{ display: "grid", gap: 4, maxWidth: 320, marginTop: 4 }}>
-              <span style={{ fontSize: 11.5, fontWeight: 600 }}>Escalate to a human after</span>
-              <div className="row" style={{ gap: 8, alignItems: "center" }}>
+            <label style={{ display: "grid", gap: 5, maxWidth: 320, marginTop: 12 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 700 }}>Escalate to a human after</span>
+              <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <input
                   type="number"
-                  className="ds-input"
+                  className="sops-input"
                   min={0}
                   max={20}
                   value={escalateAfter}
                   onChange={(e) => setEscalateAfter(clampInt(e.target.value, 0, 20, 3))}
-                  style={{ fontSize: 12.5, width: 90 }}
+                  style={{ width: 90 }}
                 />
-                <span style={{ fontSize: 12, color: "var(--ink-2)" }}>assistant replies (0 = right away)</span>
+                <span style={{ fontSize: 12, color: "var(--sops-muted)" }}>
+                  assistant replies (0 = right away)
+                </span>
               </div>
             </label>
           )}
         </Section>
 
-        <Divider />
-
-        {/* Limits */}
-        <Section title="Safety limit" help="Caps how many times the assistant auto-replies in a single conversation so it never loops a customer.">
-          <label style={{ display: "grid", gap: 4, maxWidth: 320 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 600 }}>Max auto-replies per conversation</span>
+        {/* Safety limit */}
+        <Section
+          ico="auto-sec-safety.svg"
+          tone="red"
+          title="Safety limit"
+          help="Prevent infinite auto-replies in a single conversation."
+        >
+          <label style={{ display: "grid", gap: 5, maxWidth: 320 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700 }}>Max auto-replies per conversation</span>
             <input
               type="number"
-              className="ds-input"
+              className="sops-input"
               min={1}
               max={20}
               value={maxReplies}
               onChange={(e) => setMaxReplies(clampInt(e.target.value, 1, 20, 3))}
-              style={{ fontSize: 12.5, width: 90 }}
+              style={{ width: 90 }}
             />
-            <span style={{ fontSize: 11, color: "var(--ink-2)" }}>
+            <span style={{ fontSize: 11.5, color: "var(--sops-muted)" }}>
               After this, the conversation waits for a human.
             </span>
           </label>
         </Section>
+      </div>
 
-        {error && (
-          <div className="chip chip--bad" role="alert" style={{ display: "inline-flex" }}>
-            {error}
-          </div>
-        )}
-
-        <div className="row" style={{ gap: 8 }}>
-          <button type="submit" className="btn btn--pri btn--sm" disabled={pending}>
-            <Icon name="check" size={12} />
-            {pending ? "Saving…" : editing ? "Save changes" : "Create rule"}
-          </button>
-          <button type="button" className="btn btn--ghost btn--sm" onClick={onDone} disabled={pending}>
-            Cancel
-          </button>
+      {error && (
+        <div className="sops-error" role="alert" style={{ marginTop: 14 }}>
+          <Icon name="alert" size={13} />
+          {error}
         </div>
-      </form>
-    </div>
+      )}
+
+      <div style={{ display: "flex", gap: 14, marginTop: 16 }}>
+        <button type="submit" className="sops-btn sops-btn--pri" disabled={pending}>
+          <Icon name="check" size={14} />
+          {pending ? "Saving…" : editing ? "Save changes" : "Create rule"}
+        </button>
+        <button type="button" className="sops-btn" onClick={onDone} disabled={pending}>
+          Cancel
+        </button>
+      </div>
+    </form>
   );
 }
 
 /* -------------------------------------------------------------------------- */
 
 function Section({
+  ico,
+  tone,
   title,
   help,
   children,
 }: {
+  ico: string;
+  tone: "pri" | "blue" | "green" | "orange" | "red";
   title: string;
   help: string;
   children: React.ReactNode;
 }) {
   return (
-    <div style={{ display: "grid", gap: 8 }}>
-      <div>
-        <div style={{ fontSize: 12.5, fontWeight: 600 }}>{title}</div>
-        <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "var(--ink-2)", lineHeight: 1.45 }}>
-          {help}
-        </p>
+    <div className="sops-section">
+      <div className="sops-section__intro">
+        <span className={`sops-section__ico sops-section__ico--${tone}`}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/assets/repulabs/unified-inbox/${ico}`} alt="" aria-hidden="true" />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <div className="sops-section__t">{title}</div>
+          <p className="sops-section__help">{help}</p>
+        </div>
       </div>
-      {children}
+      <div style={{ minWidth: 0 }}>{children}</div>
     </div>
   );
 }
 
-function Divider() {
-  return <div style={{ height: 1, background: "var(--line)" }} />;
-}
-
-function RadioChip({
+function OptionCard({
   name,
   checked,
   onChange,
-  label,
+  title,
+  desc,
 }: {
   name: string;
   checked: boolean;
   onChange: () => void;
-  label: string;
+  title: string;
+  desc: string;
 }) {
   return (
-    <label
-      className={`chip ${checked ? "chip--ink" : "chip--out"}`}
-      style={{ cursor: "pointer", gap: 6, fontSize: 11.5 }}
-    >
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        style={{ width: 13, height: 13, accentColor: "var(--pri)" }}
-      />
-      {label}
-    </label>
-  );
-}
-
-function BehaviourRow({
-  name,
-  checked,
-  onChange,
-  label,
-  help,
-}: {
-  name: string;
-  checked: boolean;
-  onChange: () => void;
-  label: string;
-  help: string;
-}) {
-  return (
-    <label
-      className="row"
-      style={{
-        gap: 10,
-        alignItems: "flex-start",
-        cursor: "pointer",
-        padding: "10px 12px",
-        border: `1px solid ${checked ? "var(--pri)" : "var(--line)"}`,
-        borderRadius: "var(--r-sm)",
-        background: checked ? "var(--surface-2, #f8fafc)" : "transparent",
-      }}
-    >
-      <input
-        type="radio"
-        name={name}
-        checked={checked}
-        onChange={onChange}
-        style={{ marginTop: 2, width: 15, height: 15, accentColor: "var(--pri)" }}
-      />
-      <div style={{ flex: 1 }}>
-        <div style={{ fontSize: 12.5, fontWeight: 600 }}>{label}</div>
-        <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "var(--ink-2)", lineHeight: 1.45 }}>
-          {help}
-        </p>
+    <label className={`sops-opt${checked ? " is-on" : ""}`}>
+      <input type="radio" name={name} checked={checked} onChange={onChange} />
+      <div style={{ minWidth: 0 }}>
+        <div className="sops-opt__t">{title}</div>
+        <p className="sops-opt__d">{desc}</p>
       </div>
     </label>
   );

@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="redOuter" x1="156" y1="96" x2="872" y2="928" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF0B2F"/>
+      <stop offset="0.55" stop-color="#FF1234"/>
+      <stop offset="1" stop-color="#F2072A"/>
+    </linearGradient>
+    <linearGradient id="redInner" x1="296" y1="236" x2="728" y2="804" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF1739"/>
+      <stop offset="0.52" stop-color="#FA092E"/>
+      <stop offset="1" stop-color="#E90024"/>
+    </linearGradient>
+    <linearGradient id="navy" x1="200" y1="140" x2="824" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#141D43"/>
+      <stop offset="0.55" stop-color="#0C1536"/>
+      <stop offset="1" stop-color="#07102D"/>
+    </linearGradient>
+  </defs>
+
+  <!-- icon only, transparent background -->
+  <circle cx="512" cy="512" r="474" fill="url(#redOuter)"/>
+  <circle cx="512" cy="512" r="418" fill="url(#navy)"/>
+  <circle cx="512" cy="512" r="292" fill="url(#redInner)"/>
+  <rect x="476" y="300" width="72" height="282" rx="36" fill="url(#navy)"/>
+  <circle cx="512" cy="674" r="45" fill="url(#navy)"/>
+</svg>

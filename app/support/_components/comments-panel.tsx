@@ -6,6 +6,7 @@ import { useState, useTransition } from "react";
 import { EmptyIllustration } from "@/components/empty-state";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
+import { ChannelGlyph } from "./channel-glyph";
 import {
   deleteComment,
   favoriteComment,
@@ -17,15 +18,16 @@ import {
 } from "@/lib/inbox/comments-actions";
 
 /**
- * CommentsPanel (Module 09 — Inbox, Wave 3c-A) — client island.
+ * CommentsPanel (Unified Inbox — Comments tab) — client island, rebuilt to the
+ * delivered "comments / active state" + "empty state" kit.
  *
- * Lists SOCIAL comments (Facebook / Instagram) with reply / hide / unhide / flag
- * / favorite / delete actions. Google Q&A rows are shown but rendered REPLY-ONLY:
- * the Hide control is never offered for them and the panel labels them so no one
- * could think a Google review/comment is hideable.
+ * Lists SOCIAL comments (Facebook / Instagram) in a 3-column workspace: the
+ * comment list (status + channel filters), the selected comment workflow
+ * (reply / hide / star / flag + AI suggested replies + reply & internal-note
+ * composers), and a post-preview / context column. Google Q&A rows are rendered
+ * REPLY-ONLY (no Hide). Empty state shows the kit illustration + benefits card.
  *
- * Receives already-serialized rows + counts from the server panel (RSC-safe:
- * this island owns all interactivity; the page does the DB read).
+ * Receives already-serialized rows + counts from the server panel (RSC-safe).
  */
 
 export type CommentRowView = {
@@ -54,10 +56,9 @@ const STATUS_FILTERS = [
 const SOURCE_FILTERS = [
   { key: "all", label: "All sources" },
   { key: "organic", label: "Organic" },
-  { key: "ad", label: "Ad comments" },
+  { key: "ad", label: "Ads" },
 ] as const;
 
-/** Build a /support?tab=comments href preserving the other active filter. */
 function commentsHref(status: string, source: string): string {
   const params = new URLSearchParams({ tab: "comments" });
   if (status && status !== "all") params.set("status", status);
@@ -80,67 +81,65 @@ export function CommentsPanel({
 }) {
   const [selectedId, setSelectedId] = useState<string | null>(rows[0]?.id ?? null);
   const selected = rows.find((r) => r.id === selectedId) ?? null;
+  const total = Object.values(counts).reduce((a, b) => a + b, 0);
 
   return (
-    <div>
-      {/* Social-vs-review clarifier banner — always visible so the distinction is unmistakable. */}
+    <div className="uik-card">
+      {/* Info banner */}
       <div
-        className="row"
         style={{
-          gap: 8,
-          marginBottom: 12,
-          padding: "8px 12px",
-          borderRadius: "var(--r-sm)",
-          background: "var(--info-bg, #eff6ff)",
-          color: "var(--ink-2)",
-          fontSize: 12,
-          alignItems: "flex-start",
+          margin: 13,
+          padding: "10px 16px",
+          borderRadius: "var(--uik-r-pill)",
+          background: "#f3f7ff",
+          border: "1px solid #e7eef9",
+          display: "flex",
+          gap: 10,
+          alignItems: "center",
         }}
       >
-        <Icon name="info" size={14} style={{ marginTop: 1, flexShrink: 0 }} />
-        <span>
-          These are <strong>social comments</strong> on your Facebook &amp; Instagram posts — you can
-          reply to or hide them. Google reviews are <strong>reply-only</strong> and can never be
-          hidden.
+        <span
+          aria-hidden
+          style={{ width: 18, height: 18, borderRadius: "50%", background: "var(--uik-pri)", color: "#fff", display: "inline-flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}
+        >
+          <Icon name="info" size={12} />
         </span>
+        <span style={{ fontSize: 12, color: "#253550", lineHeight: 1.4 }}>
+          These are <strong>social comments</strong> on your Facebook &amp; Instagram posts — you can
+          reply to or hide them. Google reviews are <strong>reply-only</strong> and can never be hidden.
+        </span>
+        <div className="row" style={{ gap: 6, marginLeft: "auto", flexShrink: 0 }}>
+          {SOURCE_FILTERS.map((f) => {
+            const active = activeSource === f.key;
+            return (
+              <Link
+                key={f.key}
+                href={commentsHref(activeStatus, f.key)}
+                className={`uik-chip${active ? " uik-chip--pri is-active" : ""}`}
+                style={{ height: 26, background: active ? undefined : "#fff" }}
+              >
+                {f.key === "ad" && <Icon name="bolt" size={11} />}
+                {f.label}
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Source filter — Organic vs Ad (boosted-post) comments. */}
-      <div className="row" style={{ marginBottom: 8, gap: 6, flexWrap: "wrap" }}>
-        {SOURCE_FILTERS.map((f) => {
-          const active = activeSource === f.key;
-          return (
-            <Link
-              key={f.key}
-              href={commentsHref(activeStatus, f.key)}
-              className={`chip${active ? " chip--pri" : " chip--out"}`}
-              style={{ textDecoration: "none", gap: 4 }}
-            >
-              {f.key === "ad" && <Icon name="bolt" size={11} />}
-              {f.label}
-            </Link>
-          );
-        })}
-      </div>
-
-      {/* Status filter chips */}
-      <div className="row" style={{ marginBottom: 14, gap: 6, flexWrap: "wrap" }}>
+      {/* Status chips */}
+      <div className="row" style={{ gap: 8, flexWrap: "wrap", padding: "0 18px 14px" }}>
         {STATUS_FILTERS.map((f) => {
           const active = activeStatus === f.key;
-          const count = counts[f.key] ?? 0;
+          const count = f.key === "all" ? total : (counts[f.key] ?? 0);
           return (
             <Link
               key={f.key}
               href={commentsHref(f.key, activeSource)}
-              className={`chip${active ? " chip--ink" : " chip--out"}`}
-              style={{ textDecoration: "none" }}
+              className={`uik-chip${active ? " is-active" : ""}`}
+              style={{ height: 24 }}
             >
               {f.label}
-              {count > 0 && (
-                <span className="mono" style={{ marginLeft: 5, opacity: 0.7 }}>
-                  {count}
-                </span>
-              )}
+              {count > 0 && <span className="uik-chip__count">{count}</span>}
             </Link>
           );
         })}
@@ -152,35 +151,32 @@ export function CommentsPanel({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "minmax(0,1.2fr) minmax(0,1fr)",
-            gap: 14,
-            alignItems: "start",
+            gridTemplateColumns: "minmax(360px, 428px) minmax(0, 1fr) minmax(300px, 348px)",
+            borderTop: "1px solid var(--uik-divider)",
+            minHeight: 520,
           }}
         >
-          {/* List */}
-          <div className="ds-card" style={{ padding: 4 }}>
-            {rows.map((c, i) => (
-              <CommentRowItem
-                key={c.id}
-                row={c}
-                first={i === 0}
-                active={c.id === selectedId}
-                onSelect={() => setSelectedId(c.id)}
-              />
+          {/* Comment list */}
+          <div style={{ borderRight: "1px solid var(--uik-divider)", overflowY: "auto", padding: "8px 8px" }}>
+            {rows.map((c) => (
+              <CommentRowItem key={c.id} row={c} active={c.id === selectedId} onSelect={() => setSelectedId(c.id)} />
             ))}
           </div>
 
-          {/* Context + reply */}
-          <div style={{ position: "sticky", top: 12 }}>
+          {/* Selected comment workflow */}
+          <div style={{ borderRight: "1px solid var(--uik-divider)", overflowY: "auto", padding: "14px 16px" }}>
             {selected ? (
               <CommentDetail row={selected} />
             ) : (
-              <div className="ds-card">
-                <div className="ds-card__body dim" style={{ padding: 32, textAlign: "center" }}>
-                  Select a comment to reply.
-                </div>
-              </div>
+              <p className="uik-mut" style={{ fontSize: 13, textAlign: "center", padding: 40 }}>
+                Select a comment to reply.
+              </p>
             )}
+          </div>
+
+          {/* Post preview / context */}
+          <div style={{ overflowY: "auto", padding: 12 }}>
+            {selected ? <PostPreview row={selected} /> : null}
           </div>
         </div>
       )}
@@ -188,52 +184,42 @@ export function CommentsPanel({
   );
 }
 
-function CommentRowItem({
-  row,
-  first,
-  active,
-  onSelect,
-}: {
-  row: CommentRowView;
-  first: boolean;
-  active: boolean;
-  onSelect: () => void;
-}) {
+function CommentRowItem({ row, active, onSelect }: { row: CommentRowView; active: boolean; onSelect: () => void }) {
   return (
     <button
       type="button"
       onClick={onSelect}
-      className="row"
       style={{
         width: "100%",
         textAlign: "left",
-        padding: 12,
+        display: "grid",
+        gridTemplateColumns: "40px minmax(0, 1fr)",
         gap: 10,
-        alignItems: "flex-start",
-        border: "none",
-        borderTop: first ? "none" : "1px solid var(--line)",
-        background: active ? "var(--hover, #f8fafc)" : "transparent",
+        alignItems: "start",
+        padding: 12,
+        marginTop: 4,
         cursor: "pointer",
-        borderRadius: active ? "var(--r-sm)" : 0,
+        border: active ? "1.5px solid var(--uik-purple)" : "1px solid transparent",
+        background: active ? "#fbfbff" : "transparent",
+        borderRadius: "var(--uik-r-lg)",
       }}
     >
-      <Avatar name={row.authorName ?? "User"} size={30} tone={((row.id.charCodeAt(0) % 7) + 1) as 1} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="row" style={{ gap: 6, marginBottom: 3 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600 }}>{row.authorName ?? "Anonymous"}</span>
-          <PlatformBadge platform={row.platform} />
-          <span
-            className={`chip ${statusChip(row.status)}`}
-            style={{ marginLeft: "auto", fontSize: 10 }}
-          >
-            {row.status.replace("_", " ")}
+      <span className="uik-av">
+        <Avatar name={row.authorName ?? "User"} size={40} tone={((row.id.charCodeAt(0) % 7) + 1) as 1} />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div className="row" style={{ gap: 6, marginBottom: 3, alignItems: "center" }}>
+          <span style={{ fontSize: 13, fontWeight: 700, color: "var(--uik-ink)" }}>{row.authorName ?? "Anonymous"}</span>
+          <ChannelGlyph channel={platformToChannel(row.platform)} size={13} />
+          <span className={`uik-pill ${statusPill(row.status)}`} style={{ marginLeft: "auto" }}>
+            {statusLabel(row.status)}
           </span>
         </div>
         <p
           style={{
             margin: 0,
             fontSize: 12,
-            color: "var(--ink-2)",
+            color: "var(--uik-ink-2)",
             lineHeight: 1.5,
             overflow: "hidden",
             display: "-webkit-box",
@@ -243,6 +229,7 @@ function CommentRowItem({
         >
           {row.body}
         </p>
+        <span className="uik-mut" style={{ fontSize: 10.5, marginTop: 3, display: "block" }}>{relativeTime(row.postedAt)}</span>
       </div>
     </button>
   );
@@ -252,7 +239,9 @@ function CommentDetail({ row }: { row: CommentRowView }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [draft, setDraft] = useState(row.aiSuggested ?? "");
+  const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<{ tone: string; text: string }[]>([]);
   const [suggesting, setSuggesting] = useState(false);
 
   function run(action: (fd: FormData) => Promise<void>, extra?: Record<string, string>) {
@@ -283,8 +272,12 @@ function CommentDetail({ row }: { row: CommentRowView }) {
     setSuggesting(true);
     try {
       const { text } = await suggestCommentReply(row.id);
-      if (text) setDraft(text);
-      else setError("AI Suggest is unavailable right now.");
+      if (text) {
+        // Present one suggestion as the kit's "Use reply" card; primary one fills draft.
+        setSuggestions([{ tone: "Suggested", text }]);
+      } else {
+        setError("AI Suggest is unavailable right now.");
+      }
     } catch {
       setError("AI Suggest failed.");
     } finally {
@@ -293,147 +286,203 @@ function CommentDetail({ row }: { row: CommentRowView }) {
   }
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <h3 className="ds-card__title" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <PlatformBadge platform={row.platform} />
-          {row.isSocial ? "Social comment" : "Google Q&A"}
-        </h3>
-        <span className="dim mono" style={{ fontSize: 10 }}>
-          {relativeTime(row.postedAt)}
-        </span>
-      </div>
-      <div className="ds-card__body" style={{ display: "grid", gap: 12 }}>
-        {/* Original comment context */}
-        <div
-          style={{
-            padding: 12,
-            borderRadius: "var(--r-sm)",
-            background: "var(--surface-2, #f8fafc)",
-            border: "1px solid var(--line)",
-          }}
-        >
-          <div className="row" style={{ gap: 8, marginBottom: 6 }}>
-            <Avatar name={row.authorName ?? "User"} size={26} />
-            <span style={{ fontSize: 12.5, fontWeight: 600 }}>{row.authorName ?? "Anonymous"}</span>
+    <div style={{ display: "grid", gap: 14 }}>
+      {/* Selected comment card */}
+      <div>
+        <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
+          <span style={{ fontSize: 12, fontWeight: 800, color: "var(--uik-mut)", textTransform: "uppercase", letterSpacing: 0.4 }}>
+            Selected comment
+          </span>
+          <span className={`uik-pill ${statusPill(row.status)}`}>{statusLabel(row.status)}</span>
+        </div>
+        <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
+          <Avatar name={row.authorName ?? "User"} size={44} />
+          <div style={{ minWidth: 0, flex: 1 }}>
+            <div className="row" style={{ gap: 6, alignItems: "center" }}>
+              <span style={{ fontSize: 13.5, fontWeight: 700 }}>{row.authorName ?? "Anonymous"}</span>
+              <ChannelGlyph channel={platformToChannel(row.platform)} size={14} />
+              <span className="uik-mut" style={{ fontSize: 11, marginLeft: "auto" }}>{relativeTime(row.postedAt)}</span>
+            </div>
+            <p style={{ margin: "6px 0 0", fontSize: 13, color: "var(--uik-ink)", lineHeight: 1.55 }}>{row.body}</p>
           </div>
-          <p style={{ margin: 0, fontSize: 12.5, color: "var(--ink)", lineHeight: 1.55 }}>{row.body}</p>
         </div>
 
-        {!row.isSocial && (
-          <div
-            className="row"
-            style={{ gap: 6, fontSize: 11.5, color: "var(--ink-2)", alignItems: "flex-start" }}
-          >
-            <Icon name="info" size={13} style={{ marginTop: 1 }} />
-            <span>Google content is reply-only. It can&apos;t be hidden — reply publicly below.</span>
-          </div>
-        )}
-
-        {/* Reply composer */}
-        <div>
-          <div className="row" style={{ justifyContent: "space-between", marginBottom: 6 }}>
-            <label style={{ fontSize: 11.5, fontWeight: 600, color: "var(--ink-2)" }}>
-              Public reply
-            </label>
-            <button
-              type="button"
-              className="btn btn--ghost btn--sm"
-              onClick={aiSuggest}
-              disabled={suggesting || pending}
-              style={{ gap: 5 }}
-            >
-              <Icon name="sparkle" size={12} />
-              {suggesting ? "Thinking…" : "AI Suggest"}
-            </button>
-          </div>
-          <textarea
-            value={draft}
-            onChange={(e) => setDraft(e.target.value)}
-            rows={3}
-            placeholder="Write a reply…"
-            className="ds-input"
-            style={{ width: "100%", resize: "vertical", fontSize: 12.5, lineHeight: 1.5 }}
-          />
-        </div>
-
-        {error && (
-          <div className="chip chip--bad" role="alert" style={{ display: "inline-flex" }}>
-            {error}
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
-          <button type="button" className="btn btn--pri btn--sm" onClick={sendReply} disabled={pending}>
+        {/* Action row */}
+        <div className="row" style={{ gap: 8, flexWrap: "wrap", marginTop: 12 }}>
+          <button type="button" className="uik-btn uik-btn--sm uik-btn--pri" onClick={sendReply} disabled={pending}>
             <Icon name="reply" size={12} />
             Reply
           </button>
-
-          {/* Hide / Unhide — FB/IG ONLY. Never rendered for Google. */}
           {row.isHideable &&
             (row.status === "hidden" ? (
-              <button
-                type="button"
-                className="btn btn--out btn--sm"
-                onClick={() => run(unhideComment)}
-                disabled={pending}
-              >
+              <button type="button" className="uik-btn uik-btn--sm" onClick={() => run(unhideComment)} disabled={pending}>
                 <Icon name="eye" size={12} />
                 Unhide
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn btn--out btn--sm"
-                onClick={() => run(hideComment)}
-                disabled={pending}
-                title="Hide this comment from your Facebook/Instagram post"
-              >
+              <button type="button" className="uik-btn uik-btn--sm" onClick={() => run(hideComment)} disabled={pending} title="Hide from your post">
                 <Icon name="eyeOff" size={12} />
                 Hide
               </button>
             ))}
-
-          <button
-            type="button"
-            className="btn btn--out btn--sm"
-            onClick={() => run(favoriteComment)}
-            disabled={pending}
-          >
+          <button type="button" className="uik-btn uik-btn--sm" onClick={() => run(favoriteComment)} disabled={pending}>
             <Icon name="star" size={12} />
             {row.status === "starred" ? "Unstar" : "Star"}
           </button>
-
           {row.isSocial && (
-            <button
-              type="button"
-              className="btn btn--out btn--sm"
-              onClick={() => run(flagComment)}
-              disabled={pending}
-              title="Send to the Moderation queue for review"
-            >
+            <button type="button" className="uik-btn uik-btn--sm" onClick={() => run(flagComment)} disabled={pending} title="Send to Moderation">
               <Icon name="flag" size={12} />
               Flag
             </button>
           )}
+        </div>
+      </div>
 
+      {!row.isSocial && (
+        <div className="row" style={{ gap: 6, fontSize: 11.5, color: "var(--uik-mut)", alignItems: "flex-start" }}>
+          <Icon name="info" size={13} style={{ marginTop: 1 }} />
+          <span>Google content is reply-only. It can&apos;t be hidden — reply publicly below.</span>
+        </div>
+      )}
+
+      {/* AI suggested replies */}
+      <div className="uik-ai">
+        <div className="row" style={{ justifyContent: "space-between", marginBottom: 10 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)", display: "flex", alignItems: "center", gap: 6 }}>
+            <Icon name="sparkle" size={14} style={{ color: "var(--uik-purple)" }} />
+            AI Suggested Replies
+          </span>
+          <button type="button" className="uik-btn uik-btn--xs" onClick={aiSuggest} disabled={suggesting || pending}>
+            <Icon name="refresh" size={12} />
+            {suggesting ? "Thinking…" : "Generate"}
+          </button>
+        </div>
+        {suggestions.length > 0 ? (
+          <div style={{ display: "grid", gap: 8 }}>
+            {suggestions.map((s, i) => (
+              <div key={i} className="uik-ai__card" style={{ flexDirection: "column", alignItems: "stretch", gap: 8 }}>
+                <span className="uik-pill uik-pill--needs" style={{ width: "fit-content" }}>{s.tone}</span>
+                <span style={{ lineHeight: 1.5 }}>{s.text}</span>
+                <button type="button" className="uik-btn uik-btn--xs uik-btn--purple" style={{ width: "fit-content" }} onClick={() => setDraft(s.text)}>
+                  Use reply
+                </button>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="uik-mut" style={{ fontSize: 12, margin: 0 }}>
+            Generate on-brand reply ideas from this comment and your knowledge base.
+          </p>
+        )}
+      </div>
+
+      {error && (
+        <div className="uik-pill uik-pill--warn" role="alert" style={{ width: "fit-content" }}>{error}</div>
+      )}
+
+      {/* Composers: public reply + internal note */}
+      <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 180px", gap: 12 }}>
+        <div>
+          <span className="uik-field__label" style={{ marginBottom: 5 }}>Write a public reply</span>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            rows={3}
+            placeholder="Write a public reply…"
+            className="uik-textarea"
+          />
+          <div className="row" style={{ justifyContent: "space-between", marginTop: 6 }}>
+            <span className="uik-mut uik-mono" style={{ fontSize: 11 }}>{draft.length} / 2200</span>
+            <button type="button" className="uik-btn uik-btn--xs uik-btn--pri" onClick={sendReply} disabled={pending}>
+              <Icon name="send" size={12} />
+              Reply
+            </button>
+          </div>
+        </div>
+        <div>
+          <span className="uik-field__label" style={{ marginBottom: 5 }}>
+            <Icon name="lock" size={11} /> Internal note
+          </span>
+          <textarea
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            rows={3}
+            placeholder="Only visible to your team…"
+            className="uik-textarea"
+          />
           <button
             type="button"
-            className="btn btn--ghost btn--sm"
-            onClick={() => {
-              if (window.confirm("Remove this comment from your inbox queue? (It stays on the platform.)")) {
-                run(deleteComment);
-              }
-            }}
-            disabled={pending}
-            style={{ marginLeft: "auto", color: "var(--bad, #dc2626)" }}
+            className="uik-btn uik-btn--xs uik-btn--purple"
+            style={{ marginTop: 6, width: "100%" }}
+            disabled={!note.trim()}
+            title="Internal notes are private to your team"
           >
-            <Icon name="trash" size={12} />
-            Remove
+            Save note
           </button>
         </div>
       </div>
+
+      <button
+        type="button"
+        className="uik-btn uik-btn--ghost uik-btn--sm"
+        onClick={() => {
+          if (window.confirm("Remove this comment from your inbox queue? (It stays on the platform.)")) run(deleteComment);
+        }}
+        disabled={pending}
+        style={{ width: "fit-content", color: "var(--uik-bad)" }}
+      >
+        <Icon name="trash" size={12} />
+        Remove from queue
+      </button>
+    </div>
+  );
+}
+
+function PostPreview({ row }: { row: CommentRowView }) {
+  return (
+    <div style={{ display: "grid", gap: 12 }}>
+      <div style={{ border: "1px solid var(--uik-line)", borderRadius: "var(--uik-r-lg)", overflow: "hidden", background: "#fff" }}>
+        <div className="row" style={{ justifyContent: "space-between", padding: "10px 14px", borderBottom: "1px solid var(--uik-divider)" }}>
+          <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)" }}>Post preview</span>
+          <ChannelGlyph channel={platformToChannel(row.platform)} size={15} />
+        </div>
+        <div style={{ padding: 14 }}>
+          {row.externalPostId ? (
+            <p className="uik-mut" style={{ fontSize: 12, margin: 0, lineHeight: 1.5 }}>
+              Comment on post <span className="uik-mono" style={{ color: "var(--uik-ink-2)" }}>{row.externalPostId.slice(0, 18)}</span>
+            </p>
+          ) : (
+            <p className="uik-mut" style={{ fontSize: 12, margin: 0 }}>Source post details aren&apos;t synced for this comment.</p>
+          )}
+          {/* Highlighted selected comment */}
+          <div style={{ marginTop: 12, background: "#f6f7fb", borderRadius: "var(--uik-r-sm)", padding: 10 }}>
+            <div className="row" style={{ gap: 8, marginBottom: 4 }}>
+              <Avatar name={row.authorName ?? "User"} size={24} />
+              <span style={{ fontSize: 12, fontWeight: 600 }}>{row.authorName ?? "Anonymous"}</span>
+              <span className="uik-mut" style={{ fontSize: 10.5, marginLeft: "auto" }}>{relativeTime(row.postedAt)}</span>
+            </div>
+            <p style={{ margin: 0, fontSize: 12, color: "var(--uik-ink-2)", lineHeight: 1.5 }}>{row.body}</p>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ border: "1px solid var(--uik-line)", borderRadius: "var(--uik-r-lg)", padding: 14, background: "#fff" }}>
+        <span style={{ fontSize: 12.5, fontWeight: 800, color: "var(--uik-ink)" }}>This comment</span>
+        <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
+          <PreviewStat label="Platform" value={platformLabel(row.platform)} />
+          <PreviewStat label="Status" value={statusLabel(row.status)} />
+          <PreviewStat label="Type" value={row.isAd ? "Ad comment" : row.isSocial ? "Organic" : "Google Q&A"} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PreviewStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="row" style={{ justifyContent: "space-between" }}>
+      <span className="uik-mut" style={{ fontSize: 12 }}>{label}</span>
+      <span style={{ fontSize: 12, fontWeight: 600, color: "var(--uik-ink)" }}>{value}</span>
     </div>
   );
 }
@@ -448,79 +497,104 @@ function EmptyComments({
   activeSource?: string;
 }) {
   const adView = activeSource === "ad";
+  const title = connected
+    ? adView
+      ? "No ad comments yet"
+      : activeStatus === "all"
+        ? "No social comments yet"
+        : `No ${activeStatus.replace("_", " ")} comments`
+    : "Connect your social pages";
+  const body = connected
+    ? adView
+      ? "Comments on your boosted / promoted Facebook & Instagram posts will appear here once your ad account is connected with ads permissions."
+      : "Comments on your Facebook and Instagram posts will appear here once you connect your channels."
+    : "Connect Facebook and Instagram to sync and reply to comments in one place.";
+
   return (
-    <div className="ds-card">
-      <div className="ds-card__body dim" style={{ textAlign: "center", padding: 48 }}>
-        <EmptyIllustration name="social-empty" />
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
-          {connected
-            ? adView
-              ? "No ad comments yet"
-              : activeStatus === "all"
-                ? "No social comments yet"
-                : `No ${activeStatus.replace("_", " ")} comments`
-            : "Connect your social pages"}
-        </h3>
-        <p style={{ fontSize: 13, marginTop: 6 }}>
-          {connected
-            ? adView
-              ? "Comments on your boosted / promoted Facebook & Instagram posts will appear here once your ad account is connected with ads permissions."
-              : "Comments on your Facebook and Instagram posts will appear here."
-            : "Connect Facebook and Instagram to sync and reply to comments in one place."}
-        </p>
-        <Link href="/connections" className="btn btn--pri" style={{ marginTop: 14 }}>
-          <Icon name="plug" size={12} />
+    <div className="uik-empty" style={{ borderTop: "1px solid var(--uik-divider)" }}>
+      <div>
+        <EmptyIllustration name="/assets/repulabs/unified-inbox/comments-empty.svg" size={600} />
+      </div>
+      <div>
+        <h3 className="uik-empty__title">{title}</h3>
+        <p className="uik-empty__body">{body}</p>
+        <Link href="/connections" className="uik-btn uik-btn--purple">
+          <Icon name="plug" size={13} />
           {connected ? "Manage connections" : "Connect social pages"}
         </Link>
+
+        <div className="uik-benefits">
+          <Benefit icon="chat" title="Centralize conversations" body="See all comments from Facebook and Instagram in one unified inbox." />
+          <Benefit icon="reply" title="Respond with ease" body="Reply, react, or hide comments without leaving this dashboard." />
+          <Benefit icon="bell" title="Stay on top" body="Filter, sort, and prioritize comments that need your attention." />
+          <Benefit icon="bars" title="Drive engagement" body="Fast replies build trust and turn conversations into loyal customers." />
+        </div>
       </div>
     </div>
   );
 }
 
-function PlatformBadge({ platform }: { platform: string }) {
-  const map: Record<string, { icon: "fb" | "insta" | "google"; label: string; cls: string }> = {
-    facebook: { icon: "fb", label: "Facebook", cls: "chip--info" },
-    instagram: { icon: "insta", label: "Instagram", cls: "chip--pri" },
-    facebook_ad: { icon: "fb", label: "Facebook", cls: "chip--info" },
-    instagram_ad: { icon: "insta", label: "Instagram", cls: "chip--pri" },
-    google_qa: { icon: "google", label: "Google", cls: "chip--warn" },
-  };
-  const m = map[platform] ?? { icon: "chat" as never, label: platform, cls: "chip--out" };
-  const isAd = platform === "facebook_ad" || platform === "instagram_ad";
+function Benefit({ icon, title, body }: { icon: Parameters<typeof Icon>[0]["name"]; title: string; body: string }) {
   return (
-    <>
-      <span className={`chip ${m.cls}`} style={{ gap: 4, fontSize: 10 }}>
-        <Icon name={m.icon} size={11} />
-        {m.label}
+    <div className="uik-benefit">
+      <span className="uik-benefit__icon">
+        <Icon name={icon} size={15} />
       </span>
-      {isAd && (
-        <span
-          className="chip chip--warn"
-          style={{ gap: 3, fontSize: 10 }}
-          title="Comment on a boosted / promoted (ad) post"
-        >
-          <Icon name="bolt" size={10} />
-          Ad
-        </span>
-      )}
-    </>
+      <div>
+        <p className="uik-benefit__title">{title}</p>
+        <p className="uik-benefit__body">{body}</p>
+      </div>
+    </div>
   );
 }
 
-function statusChip(status: string): string {
+/* ---- helpers ---- */
+
+function platformToChannel(platform: string): string {
+  if (platform.startsWith("facebook")) return "facebook_msg";
+  if (platform.startsWith("instagram")) return "instagram_dm";
+  if (platform.startsWith("google")) return "gbp_qa";
+  return platform;
+}
+
+function platformLabel(platform: string): string {
+  if (platform.startsWith("facebook")) return "Facebook";
+  if (platform.startsWith("instagram")) return "Instagram";
+  if (platform.startsWith("google")) return "Google";
+  return platform;
+}
+
+function statusLabel(status: string): string {
   switch (status) {
     case "needs_reply":
-      return "chip--bad";
+      return "Needs reply";
     case "replied":
-      return "chip--ok";
+      return "Replied";
     case "hidden":
-      return "chip--warn";
+      return "Hidden";
     case "starred":
-      return "chip--pri";
+      return "Starred";
     case "live":
-      return "chip--info";
+      return "Live";
     default:
-      return "chip--out";
+      return status.replace("_", " ");
+  }
+}
+
+function statusPill(status: string): string {
+  switch (status) {
+    case "needs_reply":
+      return "uik-pill--needs";
+    case "replied":
+      return "uik-pill--replied";
+    case "hidden":
+      return "uik-pill--hidden";
+    case "starred":
+      return "uik-pill--starred";
+    case "live":
+      return "uik-pill--info";
+    default:
+      return "uik-pill--hidden";
   }
 }
 
@@ -529,10 +603,10 @@ function relativeTime(iso: string): string {
   const ms = Date.now() - d.getTime();
   const min = Math.floor(ms / 60000);
   if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
+  if (min < 60) return `${min}m`;
   const h = Math.floor(min / 60);
-  if (h < 24) return `${h}h ago`;
+  if (h < 24) return `${h}h`;
   const days = Math.floor(h / 24);
-  if (days < 7) return `${days}d ago`;
+  if (days < 7) return `${days}d`;
   return d.toLocaleDateString();
 }

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1248 1248" width="1248" height="1248">
+  <defs>
+    <linearGradient id="networkGradient" gradientUnits="userSpaceOnUse" x1="245" y1="905" x2="1010" y2="250">
+      <stop offset="0" stop-color="#09B9E2"/>
+      <stop offset="0.48" stop-color="#02CBB1"/>
+      <stop offset="1" stop-color="#02C850"/>
+    </linearGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#00a86b" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+  <g fill="none" stroke="url(#networkGradient)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round" filter="url(#softShadow)">
+    <!-- connectors -->
+    <path d="M574 486 L392 745"/>
+    <path d="M675 486 L856 745"/>
+    <!-- node rings -->
+    <circle cx="624" cy="340" r="110"/>
+    <circle cx="326" cy="872" r="110"/>
+    <circle cx="922" cy="872" r="110"/>
+  </g>
+</svg>

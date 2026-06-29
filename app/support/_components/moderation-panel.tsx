@@ -14,15 +14,25 @@ import {
   type KeywordRuleView,
   type ModerationConfigView,
 } from "./moderation-rule-form";
+import "../support-ops.css";
 
 /**
- * ModerationPanel (Module 09 — Inbox, Wave 3c-A) — client island.
+ * ModerationPanel (Module 09 — Inbox) — client island, rebuilt to the delivered
+ * "Moderation" design kit (queue + rules + empty states).
  *
  * Two sub-tabs (?sub=queue|rules):
- *   - Queue: the `ModerationItem` queue (pending / approved / hidden) showing AI
- *     confidence + reason + source badge, with per-item Approve / Hide / Reply
- *     and bulk Approve / Hide of the selected pending items.
- *   - Rules: the keyword blacklist + auto-moderation toggles (<ModerationRuleForm/>).
+ *   - Queue: a dark queue-summary band (live counts) + status-filter toolbar + a
+ *     dense queue table (accent bar, author/excerpt, rule, platform, AI
+ *     confidence, age) with per-item Approve / Hide / Reply and bulk Approve /
+ *     Hide of the selected pending items.
+ *   - Rules: the keyword blacklist + auto-moderation toggles (<ModerationRuleForm/>),
+ *     laid out as the kit's rule-builder workspace.
+ *
+ * LIVE DATA ONLY: everything binds to the real moderation queue/counts/rules
+ * already loaded by the shell. The queue's data model has no per-item priority /
+ * assignee / escalation FK, so those summary metrics show "—" rather than invent
+ * numbers; the metrics we CAN derive (needs-review = pending, total in queue) are
+ * real counts.
  *
  * The empty state spells out that Google reviews can't be hidden via API — only
  * replied to — so the moderation surface never implies otherwise.
@@ -60,27 +70,39 @@ export function ModerationPanel({
   const activeSub = sub === "rules" ? "rules" : "queue";
 
   return (
-    <div>
-      {/* Sub-tabs */}
-      <div className="tabs" style={{ marginBottom: 14 }}>
+    <div className="sops">
+      {/* Moderation view selector (Queue / Rules) */}
+      <div className="sops-subtabs">
         <Link
           href="/support?tab=moderation&sub=queue"
-          className={`tabs__t${activeSub === "queue" ? " is-active" : ""}`}
-          style={{ textDecoration: "none" }}
+          className={`sops-subtab${activeSub === "queue" ? " is-active" : ""}`}
+          aria-current={activeSub === "queue" ? "page" : undefined}
         >
-          Queue
+          <span className="sops-subtab__ico">
+            <Icon name="grid" size={18} />
+          </span>
+          <span>
+            <span className="sops-subtab__t">Queue</span>
+            <span className="sops-subtab__d">Review items in real-time</span>
+          </span>
           {(counts.pending ?? 0) > 0 && (
-            <span className="chip chip--bad" style={{ marginLeft: 6, fontSize: 9.5 }}>
+            <span className="sops-chip sops-chip--danger" style={{ marginLeft: "auto" }}>
               {counts.pending}
             </span>
           )}
         </Link>
         <Link
           href="/support?tab=moderation&sub=rules"
-          className={`tabs__t${activeSub === "rules" ? " is-active" : ""}`}
-          style={{ textDecoration: "none" }}
+          className={`sops-subtab${activeSub === "rules" ? " is-active" : ""}`}
+          aria-current={activeSub === "rules" ? "page" : undefined}
         >
-          Rules
+          <span className="sops-subtab__ico">
+            <Icon name="flag" size={18} />
+          </span>
+          <span>
+            <span className="sops-subtab__t">Rules</span>
+            <span className="sops-subtab__d">Create &amp; manage moderation rules</span>
+          </span>
         </Link>
       </div>
 
@@ -94,10 +116,10 @@ export function ModerationPanel({
 }
 
 const QUEUE_FILTERS = [
-  { key: "pending", label: "Pending" },
-  { key: "approved", label: "Approved" },
-  { key: "hidden", label: "Hidden" },
-  { key: "all", label: "All" },
+  { key: "pending", label: "Pending", dot: "var(--sops-danger)" },
+  { key: "approved", label: "Approved", dot: "var(--sops-ok)" },
+  { key: "hidden", label: "Hidden", dot: "var(--sops-warn)" },
+  { key: "all", label: "All", dot: "var(--sops-info)" },
 ] as const;
 
 function ModerationQueue({
@@ -169,10 +191,63 @@ function ModerationQueue({
     });
   }
 
+  // Live summary metrics. needsReview = pending; total = all queue rows. The
+  // queue model carries no per-item priority / assignee / escalation FK, so those
+  // three metrics show "—" rather than invent numbers (per data-only rule).
+  const totalInQueue = counts.all ?? counts.pending ?? items.length;
+  const needsReview = counts.pending ?? 0;
+
   return (
     <div>
-      {/* Status filter chips */}
-      <div className="row" style={{ marginBottom: 12, gap: 6, flexWrap: "wrap" }}>
+      {/* Queue summary band */}
+      <div className="sops-qsummary">
+        <div className="sops-qsummary__intro">
+          <h3>Queue</h3>
+          <p>Review flagged social &amp; chat content that needs your attention and take action.</p>
+          <div className="sops-qsummary__art">
+            <Icon name="archive" size={26} style={{ color: "rgba(255,255,255,0.85)" }} />
+            <span className="sops-qsummary__art-badge">{totalInQueue}</span>
+          </div>
+        </div>
+        <MetricCard
+          asset="mod-metric-needs-review.svg"
+          value={needsReview}
+          label="Needs Review"
+          desc="Require attention"
+          bar="var(--sops-danger)"
+        />
+        <MetricCard
+          asset="mod-metric-high-priority.svg"
+          value="—"
+          label="High Priority"
+          desc="High impact items"
+          bar="var(--sops-warn)"
+        />
+        <MetricCard
+          asset="mod-metric-assigned.svg"
+          value="—"
+          label="Assigned to Me"
+          desc="Awaiting your action"
+          bar="var(--sops-pri)"
+        />
+        <MetricCard
+          asset="mod-metric-escalated.svg"
+          value="—"
+          label="Escalated"
+          desc="Escalated by team"
+          bar="var(--sops-ok)"
+        />
+        <MetricCard
+          asset="mod-metric-total.svg"
+          value={totalInQueue}
+          label="Total in Queue"
+          desc="Across all platforms"
+          bar="var(--sops-info)"
+        />
+      </div>
+
+      {/* Toolbar: status filter chips */}
+      <div className="sops-toolbar" role="group" aria-label="Queue status">
         {QUEUE_FILTERS.map((f) => {
           const active = (status || "pending") === f.key;
           const count = counts[f.key] ?? 0;
@@ -180,15 +255,12 @@ function ModerationQueue({
             <Link
               key={f.key}
               href={`/support?tab=moderation&sub=queue&status=${f.key}`}
-              className={`chip${active ? " chip--ink" : " chip--out"}`}
-              style={{ textDecoration: "none" }}
+              className={`sops-fchip${active ? " is-active" : ""}`}
+              aria-pressed={active}
             >
+              {!active && <span className="sops-fchip__dot" style={{ background: f.dot }} />}
               {f.label}
-              {count > 0 && (
-                <span className="mono" style={{ marginLeft: 5, opacity: 0.7 }}>
-                  {count}
-                </span>
-              )}
+              {count > 0 && <span className="sops-fchip__count">{count}</span>}
             </Link>
           );
         })}
@@ -196,51 +268,41 @@ function ModerationQueue({
 
       {/* Bulk bar */}
       {pendingIds.length > 0 && (
-        <div
-          className="row"
-          style={{
-            gap: 8,
-            marginBottom: 12,
-            padding: "8px 12px",
-            border: "1px solid var(--line)",
-            borderRadius: "var(--r-sm)",
-            background: "var(--surface-2, #f8fafc)",
-            flexWrap: "wrap",
-          }}
-        >
-          <label className="row" style={{ gap: 6, cursor: "pointer", fontSize: 12 }}>
+        <div className="sops-bulkbar">
+          <label className="sops" style={{ display: "inline-flex", alignItems: "center", gap: 7, cursor: "pointer" }}>
             <input
               type="checkbox"
+              className="sops-checkbox"
               checked={selected.size > 0 && selected.size === pendingIds.length}
               onChange={toggleAll}
-              style={{ width: 15, height: 15, accentColor: "var(--pri)" }}
             />
             {selected.size > 0 ? `${selected.size} selected` : "Select all pending"}
           </label>
           <div style={{ flex: 1 }} />
           <button
             type="button"
-            className="btn btn--out btn--sm"
+            className="sops-btn sops-btn--sm sops-btn--outpri"
             onClick={() => bulk("approve")}
             disabled={pending || selected.size === 0}
           >
-            <Icon name="check" size={12} />
+            <Icon name="check" size={13} />
             Approve
           </button>
           <button
             type="button"
-            className="btn btn--out btn--sm"
+            className="sops-btn sops-btn--sm"
             onClick={() => bulk("hide")}
             disabled={pending || selected.size === 0}
           >
-            <Icon name="eyeOff" size={12} />
+            <Icon name="eyeOff" size={13} />
             Hide
           </button>
         </div>
       )}
 
       {error && (
-        <div className="chip chip--bad" role="alert" style={{ display: "inline-flex", marginBottom: 10 }}>
+        <div className="sops-error" role="alert" style={{ marginBottom: 10 }}>
+          <Icon name="alert" size={13} />
           {error}
         </div>
       )}
@@ -248,12 +310,20 @@ function ModerationQueue({
       {items.length === 0 ? (
         <EmptyQueue status={status} />
       ) : (
-        <div className="ds-card" style={{ padding: 4 }}>
-          {items.map((it, i) => (
+        <div className="sops-qtable">
+          <div className="sops-qrow__head" aria-hidden="true">
+            <span />
+            <span>Item</span>
+            <span className="sops-qcell-rule">Rule Matched</span>
+            <span className="sops-qcell-plat">Platform</span>
+            <span className="sops-qcell-conf">Confidence</span>
+            <span className="sops-qcell-time">Time</span>
+            <span style={{ textAlign: "right" }}>Actions</span>
+          </div>
+          {items.map((it) => (
             <QueueRow
               key={it.id}
               item={it}
-              first={i === 0}
               checked={selected.has(it.id)}
               onToggle={() => toggle(it.id)}
               onResolve={resolveOne}
@@ -266,88 +336,172 @@ function ModerationQueue({
   );
 }
 
+function MetricCard({
+  asset,
+  value,
+  label,
+  desc,
+  bar,
+}: {
+  asset: string;
+  value: number | string;
+  label: string;
+  desc: string;
+  bar: string;
+}) {
+  return (
+    <div className="sops-mcard">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        className="sops-mcard__ico"
+        src={`/assets/repulabs/unified-inbox/${asset}`}
+        alt=""
+        aria-hidden="true"
+        style={{ mixBlendMode: "normal" }}
+      />
+      <div className="sops-mcard__val">{value}</div>
+      <div>
+        <div className="sops-mcard__lab">{label}</div>
+        <div className="sops-mcard__desc">{desc}</div>
+      </div>
+      <div className="sops-mcard__bar" style={{ background: bar }} />
+    </div>
+  );
+}
+
 function QueueRow({
   item,
-  first,
   checked,
   onToggle,
   onResolve,
   busy,
 }: {
   item: QueueItemView;
-  first: boolean;
   checked: boolean;
   onToggle: () => void;
   onResolve: (id: string, action: "approve" | "hide" | "reply") => void;
   busy: boolean;
 }) {
   const isPending = item.status === "pending";
+  const accent = reasonAccent(item.reason);
   return (
-    <div
-      className="row"
-      style={{
-        padding: 12,
-        gap: 10,
-        alignItems: "flex-start",
-        borderTop: first ? "none" : "1px solid var(--line)",
-      }}
-    >
-      {isPending && (
-        <input
-          type="checkbox"
-          checked={checked}
-          onChange={onToggle}
-          style={{ marginTop: 8, width: 15, height: 15, accentColor: "var(--pri)" }}
-          aria-label="Select item"
-        />
-      )}
-      <Avatar name={item.authorName ?? "User"} size={30} tone={((item.id.charCodeAt(0) % 7) + 1) as 1} />
-      <div style={{ flex: 1, minWidth: 0 }}>
-        <div className="row" style={{ gap: 6, marginBottom: 4, flexWrap: "wrap" }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600 }}>{item.authorName ?? "Anonymous"}</span>
-          <SourceBadge source={item.source} />
-          <ReasonBadge reason={item.reason} matchedKeyword={item.matchedKeyword} />
-          <ConfidenceBadge confidence={item.aiConfidence} />
-          {!isPending && (
-            <span className={`chip ${statusChip(item.status)}`} style={{ fontSize: 10 }}>
-              {item.status}
-            </span>
-          )}
-        </div>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 }}>{item.body}</p>
+    <div className="sops-qrow">
+      <span className="sops-qrow__accent" style={{ background: accent }} />
+      <div>
+        {isPending ? (
+          <input
+            type="checkbox"
+            className="sops-checkbox"
+            checked={checked}
+            onChange={onToggle}
+            aria-label={`Select item from ${item.authorName ?? "Anonymous"}`}
+          />
+        ) : null}
+      </div>
 
-        {isPending && (
-          <div className="row" style={{ gap: 6, marginTop: 8, flexWrap: "wrap" }}>
+      {/* Item */}
+      <div className="sops-qcell-main">
+        <Avatar name={item.authorName ?? "User"} size={30} tone={((item.id.charCodeAt(0) % 7) + 1) as 1} />
+        <div className="sops-qcell-main__body">
+          <div className="sops-qcell-main__author">
+            <b>{item.authorName ?? "Anonymous"}</b>
+            <span className="sops-qcell-main__age">{relAge(item.createdAt)}</span>
+            {!isPending && (
+              <span className={`sops-chip ${statusChip(item.status)}`}>{item.status}</span>
+            )}
+          </div>
+          <p className="sops-qcell-main__excerpt" title={item.body}>
+            {item.body}
+          </p>
+          <p className="sops-qcell-main__meta">
+            {sourceLabel(item.source)}
+            {item.sourceType ? ` · ${item.sourceType}` : ""}
+          </p>
+        </div>
+      </div>
+
+      {/* Rule matched */}
+      <div className="sops-pill-stack sops-qcell-rule">
+        <span className={`sops-chip ${reasonChip(item.reason)}`} style={{ maxWidth: "100%" }}>
+          {reasonLabel(item.reason)}
+        </span>
+        {item.matchedKeyword ? (
+          <span className="sops-pill-stack__sub" title={`Matched “${item.matchedKeyword}”`}>
+            Rule: {item.matchedKeyword}
+          </span>
+        ) : (
+          <span className="sops-pill-stack__sub">Rule: {reasonLabel(item.reason)}</span>
+        )}
+      </div>
+
+      {/* Platform */}
+      <div className="sops-platcell sops-qcell-plat">
+        <Icon name={platformIcon(item.source)} size={18} />
+        <div style={{ minWidth: 0 }}>
+          <div className="sops-platcell__name">{sourceLabel(item.source)}</div>
+          <div className="sops-platcell__type">{item.sourceType || "—"}</div>
+        </div>
+      </div>
+
+      {/* Confidence */}
+      <div className="sops-conf sops-qcell-conf">
+        {item.aiConfidence == null ? (
+          <span className="sops-conf__v">—</span>
+        ) : (
+          <>
+            <span className="sops-conf__v">{Math.round(item.aiConfidence * 100)}%</span>
+            <span className="sops-conf__track">
+              <span
+                className="sops-conf__fill"
+                style={{ width: `${Math.round(item.aiConfidence * 100)}%`, background: accent }}
+              />
+            </span>
+          </>
+        )}
+      </div>
+
+      {/* Time */}
+      <div className="sops-qcell-time">
+        <span className="sops-time">{relAge(item.createdAt)}</span>
+      </div>
+
+      {/* Actions */}
+      <div className="sops-qactions">
+        {isPending ? (
+          <>
             <button
               type="button"
-              className="btn btn--out btn--sm"
+              className="sops-btn sops-btn--sm sops-btn--outpri"
               onClick={() => onResolve(item.id, "approve")}
               disabled={busy}
               title="Mark safe and restore visibility"
             >
-              <Icon name="check" size={12} />
+              <Icon name="check" size={13} />
               Approve
             </button>
             <button
               type="button"
-              className="btn btn--out btn--sm"
+              className="sops-btn sops-btn--icon"
               onClick={() => onResolve(item.id, "hide")}
               disabled={busy}
+              aria-label={`Hide item from ${item.authorName ?? "Anonymous"}`}
+              title="Hide"
             >
-              <Icon name="eyeOff" size={12} />
-              Hide
+              <Icon name="eyeOff" size={14} />
             </button>
             <button
               type="button"
-              className="btn btn--ghost btn--sm"
+              className="sops-btn sops-btn--icon"
               onClick={() => onResolve(item.id, "reply")}
               disabled={busy}
+              aria-label={`Mark replied for ${item.authorName ?? "Anonymous"}`}
               title="Mark handled — reply in the Comments tab"
             >
-              <Icon name="reply" size={12} />
-              Reply &amp; clear
+              <Icon name="reply" size={14} />
             </button>
-          </div>
+          </>
+        ) : (
+          <span className="sops-time">—</span>
         )}
       </div>
     </div>
@@ -357,87 +511,127 @@ function QueueRow({
 function EmptyQueue({ status }: { status: string }) {
   const isPending = (status || "pending") === "pending";
   return (
-    <div className="ds-card">
-      <div className="ds-card__body dim" style={{ textAlign: "center", padding: 44 }}>
-        <Icon name="checkCircle" size={26} style={{ color: "var(--ok, #16a34a)" }} />
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
-          {isPending ? "Nothing needs review" : `No ${status} items`}
-        </h3>
-        <p style={{ fontSize: 12.5, marginTop: 6, maxWidth: 420, marginInline: "auto", lineHeight: 1.55 }}>
-          Flagged Facebook, Instagram and live-chat content shows up here with an AI confidence score
-          for you to approve or hide.
-        </p>
-        <p
-          style={{
-            fontSize: 11.5,
-            marginTop: 10,
-            color: "var(--ink-2)",
-            maxWidth: 440,
-            marginInline: "auto",
-            lineHeight: 1.5,
-          }}
-        >
-          <Icon name="info" size={12} style={{ verticalAlign: -1, marginRight: 4 }} />
-          Google reviews can&apos;t be hidden through the API — they can only be replied to, so they
-          never appear in this queue.
-        </p>
+    <>
+      <div className="sops-empty">
+        <div className="sops-empty__art">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/repulabs/unified-inbox/mod-empty-flow.svg" alt="" aria-hidden="true" />
+        </div>
+        <div>
+          <h2 className="sops-empty__h">
+            {isPending ? "Nothing needs review" : `No ${status} items`}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/repulabs/unified-inbox/mod-sparkles.svg" alt="" aria-hidden="true" />
+          </h2>
+          <p className="sops-empty__p">
+            Flagged Facebook, Instagram, and live-chat content appears here with AI confidence support
+            for approval or hiding.
+          </p>
+          <div className="sops-empty__notice">
+            <Icon name="google" size={16} />
+            <span>
+              Google reviews can&apos;t be hidden through the API — they can only be replied to, so
+              they never appear in this queue.
+            </span>
+          </div>
+          <div className="sops-empty__actions">
+            <Link href="/support?tab=moderation&sub=rules" className="sops-btn sops-btn--pri">
+              <Icon name="flag" size={15} />
+              Set moderation rules
+            </Link>
+            <Link href="/support?tab=comments" className="sops-btn">
+              <Icon name="book" size={15} />
+              Go to comments
+            </Link>
+          </div>
+        </div>
       </div>
-    </div>
+      <div className="sops-helper">
+        <Icon name="flag" size={15} style={{ color: "var(--sops-muted)" }} />
+        Manage what gets flagged and how AI helps you decide.
+      </div>
+    </>
   );
 }
 
-function SourceBadge({ source }: { source: string }) {
-  const map: Record<string, { icon: "fb" | "insta" | "chat"; label: string; cls: string }> = {
-    facebook: { icon: "fb", label: "Facebook", cls: "chip--info" },
-    instagram: { icon: "insta", label: "Instagram", cls: "chip--pri" },
-    webchat: { icon: "chat", label: "Live chat", cls: "chip--out" },
+/* -------------------------------------------------------------------------- */
+
+function sourceLabel(source: string): string {
+  const map: Record<string, string> = {
+    facebook: "Facebook",
+    instagram: "Instagram",
+    webchat: "Live chat",
   };
-  const m = map[source] ?? { icon: "chat" as const, label: source, cls: "chip--out" };
-  return (
-    <span className={`chip ${m.cls}`} style={{ gap: 4, fontSize: 9.5 }}>
-      <Icon name={m.icon} size={10} />
-      {m.label}
-    </span>
-  );
+  return map[source] ?? source;
 }
 
-function ReasonBadge({ reason, matchedKeyword }: { reason: string; matchedKeyword: string | null }) {
-  const map: Record<string, { label: string; cls: string }> = {
-    keyword: { label: "Keyword", cls: "chip--bad" },
-    profanity: { label: "Profanity", cls: "chip--bad" },
-    spam: { label: "Spam", cls: "chip--warn" },
-    negativity: { label: "Negative", cls: "chip--info" },
+function platformIcon(source: string): "fb" | "insta" | "chat" {
+  if (source === "facebook") return "fb";
+  if (source === "instagram") return "insta";
+  return "chat";
+}
+
+function reasonLabel(reason: string): string {
+  const map: Record<string, string> = {
+    keyword: "Keyword Match",
+    profanity: "Profanity",
+    spam: "Spam Filter",
+    negativity: "Negative Sentiment",
   };
-  const m = map[reason] ?? { label: reason, cls: "chip--out" };
-  return (
-    <span className={`chip ${m.cls}`} style={{ fontSize: 9.5 }} title={matchedKeyword ? `Matched “${matchedKeyword}”` : undefined}>
-      {m.label}
-      {matchedKeyword && <span className="mono" style={{ marginLeft: 4, opacity: 0.8 }}>{matchedKeyword}</span>}
-    </span>
-  );
+  return map[reason] ?? reason;
 }
 
-function ConfidenceBadge({ confidence }: { confidence: number | null }) {
-  if (confidence == null) return null;
-  const pct = Math.round(confidence * 100);
-  const cls = pct >= 80 ? "chip--bad" : pct >= 50 ? "chip--warn" : "chip--out";
-  return (
-    <span className={`chip ${cls}`} style={{ fontSize: 9.5, gap: 3 }} title="AI confidence this content is harmful">
-      <Icon name="sparkle" size={9} />
-      {pct}%
-    </span>
-  );
+function reasonChip(reason: string): string {
+  switch (reason) {
+    case "keyword":
+    case "profanity":
+      return "sops-chip--danger";
+    case "spam":
+      return "sops-chip--warn";
+    case "negativity":
+      return "sops-chip--info";
+    default:
+      return "sops-chip--out";
+  }
+}
+
+function reasonAccent(reason: string): string {
+  switch (reason) {
+    case "keyword":
+    case "profanity":
+      return "var(--sops-danger)";
+    case "spam":
+      return "var(--sops-warn)";
+    case "negativity":
+      return "var(--sops-info)";
+    default:
+      return "var(--sops-pri)";
+  }
 }
 
 function statusChip(status: string): string {
   switch (status) {
     case "approved":
-      return "chip--ok";
+      return "sops-chip--ok";
     case "hidden":
-      return "chip--warn";
+      return "sops-chip--warn";
     case "replied":
-      return "chip--info";
+      return "sops-chip--info";
     default:
-      return "chip--out";
+      return "sops-chip--out";
   }
+}
+
+/** Compact relative age (e.g. "2m ago", "3h ago", "5d ago"). */
+function relAge(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "";
+  const s = Math.max(0, Math.round((Date.now() - then) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  return `${d}d ago`;
 }

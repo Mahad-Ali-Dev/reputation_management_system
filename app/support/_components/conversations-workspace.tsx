@@ -6,21 +6,23 @@ import { Icon } from "@/components/shell/icon";
 import { ThreadList } from "./thread-list";
 import { ThreadView } from "./thread-view";
 import { CustomerContext } from "./customer-context";
+import { ChannelGlyph } from "./channel-glyph";
 
 /**
- * Conversations workspace (client) — the 3-column hub matching the
- * 05_support-inbox artboard.
+ * Conversations workspace (client) — the 4-column hub matching the delivered
+ * "conversations / active state" kit artboard.
  *
- *   Left  : channel filter pills + search + the conversation queue (ThreadList).
- *   Center: the selected thread (ThreadView) — bubbles, status toggle, composer,
- *           AI Suggest.
- *   Right : CustomerContext (profile, AI assist summary, quick actions, timeline).
+ *   Rail  : 64px brand-channel filter strip (All + per-channel glyphs).
+ *   Left  : conversation queue (search + filter chip + ThreadList).
+ *   Center: the selected thread (ThreadView) — bubbles, AI suggested replies,
+ *           composer.
+ *   Right : CustomerContext (cover, profile, details, labels, recent, timeline).
  *
  * Owns:
  *   - URL-driven filters (`?channel=`, `?q=`, `?thread=`) via router.replace so
  *     the server re-fetches the list (RSC) — the queue stays server-rendered.
- *   - the polling hook (useInboxPoll) that refreshes the ACTIVE thread's messages
- *     every few seconds (Page-Visibility-paused), reconciling optimistic sends.
+ *   - the polling hook that refreshes the ACTIVE thread's messages every few
+ *     seconds (Page-Visibility-paused), reconciling optimistic sends.
  */
 
 export type WorkThread = {
@@ -58,13 +60,14 @@ export type Teammate = { id: string; name: string };
 
 const CHANNEL_PILLS: { key: string; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "gbp_qa", label: "Google" },
   { key: "facebook_msg", label: "Facebook" },
   { key: "instagram_dm", label: "Instagram" },
-  { key: "whatsapp", label: "WhatsApp" },
   { key: "email", label: "Email" },
-  { key: "sms", label: "SMS" },
+  { key: "whatsapp", label: "WhatsApp" },
   { key: "webchat", label: "Live Chat" },
+  { key: "gbp_qa", label: "Google" },
+  { key: "sms", label: "SMS" },
+  { key: "phone", label: "Phone" },
 ];
 
 const POLL_INTERVAL_MS = 6000;
@@ -99,11 +102,13 @@ export function ConversationsWorkspace({
   const [messages, setMessages] = useState<WorkMessage[]>(selectedMessages);
   const [threadStatus, setThreadStatus] = useState<string>(selectedThread?.status ?? "open");
   const [searchValue, setSearchValue] = useState(filters.q);
+  const [aiDraft, setAiDraft] = useState<string | null>(null);
 
   // Re-seed local state whenever the server hands us a different thread.
   useEffect(() => {
     setMessages(selectedMessages);
     setThreadStatus(selectedThread?.status ?? "open");
+    setAiDraft(null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedThreadId]);
 
@@ -117,7 +122,6 @@ export function ConversationsWorkspace({
       } else {
         params.set(key, value);
       }
-      // Changing filters resets the open thread to "first in list".
       if (key === "channel" || key === "q" || key === "status") params.delete("thread");
       const qs = params.toString();
       router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
@@ -144,8 +148,6 @@ export function ConversationsWorkspace({
   }, [searchValue]);
 
   // ---- Polling: refresh the active thread's messages (visibility-paused) ----
-  // Keep the latest "real" (server-confirmed) message timestamp in a ref so the
-  // poll closure always reads the current value (it isn't in the effect deps).
   const lastRealSentAtRef = useRef<string | null>(null);
   lastRealSentAtRef.current = messages.filter((m) => !m.optimistic).at(-1)?.sentAt ?? null;
 
@@ -157,7 +159,6 @@ export function ConversationsWorkspace({
       if (document.visibilityState !== "visible") return;
       try {
         const params = new URLSearchParams({ thread: selectedThreadId as string });
-        // Only fetch deltas newer than our last real (non-optimistic) message.
         const realLast = lastRealSentAtRef.current;
         if (realLast) params.set("since", realLast);
         const res = await fetch(`/api/inbox/poll?${params.toString()}`, {
@@ -173,7 +174,6 @@ export function ConversationsWorkspace({
           const known = new Set(prev.filter((m) => !m.optimistic).map((m) => m.id));
           const fresh = incoming.filter((m) => !known.has(m.id));
           if (fresh.length === 0) return prev;
-          // Drop optimistic rows that the server now confirms (match by body+dir).
           const confirmedBodies = new Set(fresh.map((m) => `${m.direction}:${m.body}`));
           const kept = prev.filter(
             (m) => !(m.optimistic && confirmedBodies.has(`${m.direction}:${m.body}`)),
@@ -201,40 +201,76 @@ export function ConversationsWorkspace({
   const activeChannel = filters.channel;
 
   return (
-    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
+    <div className="uik-card" style={{ padding: 0 }}>
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(280px, 320px) minmax(0, 1fr) minmax(280px, 340px)",
-          minHeight: 560,
+          gridTemplateColumns: "64px minmax(280px, 320px) minmax(0, 1fr) minmax(300px, 380px)",
+          minHeight: 620,
         }}
       >
+        {/* ---------- CHANNEL RAIL ---------- */}
+        <nav className="uik-rail" aria-label="Filter by channel">
+          {CHANNEL_PILLS.map((p) => {
+            const active = activeChannel === p.key;
+            if (p.key === "all") {
+              return (
+                <button
+                  key={p.key}
+                  type="button"
+                  onClick={() => setParam("channel", "all")}
+                  className={`uik-rail__all${active ? " is-active" : ""}`}
+                  aria-pressed={active}
+                  aria-label="All channels"
+                  title="All channels"
+                >
+                  All
+                </button>
+              );
+            }
+            const count = perChannel[p.key];
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => setParam("channel", p.key)}
+                className={`uik-rail__btn${active ? " is-active" : ""}`}
+                aria-pressed={active}
+                aria-label={`${p.label}${count ? ` (${count})` : ""}`}
+                title={p.label}
+              >
+                <ChannelGlyph channel={p.key} size={20} />
+              </button>
+            );
+          })}
+        </nav>
+
         {/* ---------- LEFT: queue ---------- */}
         <aside
           style={{
-            borderRight: "1px solid var(--line)",
-            background: "var(--bg-soft, #fbfcfa)",
+            borderRight: "1px solid var(--uik-line)",
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
           }}
         >
-          <div style={{ padding: "18px 18px 10px" }}>
-            <h3 style={{ fontSize: 17, fontWeight: 800, margin: 0, color: "var(--ink)" }}>
-              Priority queue
-            </h3>
-            <p className="dim" style={{ fontSize: 12.5, margin: "2px 0 0" }}>
-              {openCount} open · sorted by recency
-            </p>
-          </div>
+          <div style={{ padding: "16px 16px 10px" }}>
+            <div className="row" style={{ justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+              <span className="uik-chip is-active" style={{ cursor: "default" }}>
+                All conversations
+                <span className="uik-chip__count">{openCount}</span>
+              </span>
+              <button type="button" className="uik-quick" style={{ width: 36, height: 36 }} aria-label="Filter" title="Filter">
+                <Icon name="sliders" size={15} />
+              </button>
+            </div>
 
-          {/* Search */}
-          <div style={{ padding: "0 14px 10px" }}>
-            <div className="row" style={{ position: "relative" }}>
+            {/* Search */}
+            <div style={{ position: "relative", marginTop: 10 }}>
               <Icon
                 name="search"
                 size={14}
-                style={{ position: "absolute", left: 10, color: "var(--ink-3, #98a2b3)" }}
+                style={{ position: "absolute", left: 11, top: "50%", transform: "translateY(-50%)", color: "var(--uik-faint)" }}
               />
               <input
                 type="search"
@@ -242,43 +278,10 @@ export function ConversationsWorkspace({
                 onChange={(e) => setSearchValue(e.target.value)}
                 placeholder="Search conversations"
                 aria-label="Search conversations"
-                style={{
-                  width: "100%",
-                  padding: "8px 10px 8px 30px",
-                  fontSize: 13,
-                  borderRadius: 8,
-                  border: "1px solid var(--line)",
-                  background: "#fff",
-                }}
+                className="uik-input"
+                style={{ paddingLeft: 32 }}
               />
             </div>
-          </div>
-
-          {/* Channel pills */}
-          <div
-            className="row"
-            style={{ gap: 6, flexWrap: "wrap", padding: "0 14px 12px" }}
-          >
-            {CHANNEL_PILLS.map((p) => {
-              const active = activeChannel === p.key;
-              const count = p.key === "all" ? undefined : perChannel[p.key];
-              return (
-                <button
-                  key={p.key}
-                  type="button"
-                  onClick={() => setParam("channel", p.key)}
-                  className={`chip${active ? " chip--ink" : " chip--out"}`}
-                  style={{ cursor: "pointer", border: "none" }}
-                >
-                  {p.label}
-                  {count ? (
-                    <span className="mono" style={{ marginLeft: 5, opacity: 0.7 }}>
-                      {count}
-                    </span>
-                  ) : null}
-                </button>
-              );
-            })}
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", minHeight: 0 }}>
@@ -298,19 +301,15 @@ export function ConversationsWorkspace({
             status={threadStatus}
             teammates={teammates}
             aiEnabled={aiEnabled}
+            aiDraft={aiDraft}
             onSent={onSent}
             onStatusChange={setThreadStatus}
+            onUseAi={setAiDraft}
           />
         </section>
 
         {/* ---------- RIGHT: customer context ---------- */}
-        <aside
-          style={{
-            borderLeft: "1px solid var(--line)",
-            padding: 18,
-            overflowY: "auto",
-          }}
-        >
+        <aside style={{ borderLeft: "1px solid var(--uik-line)", overflowY: "auto", minWidth: 0 }}>
           <CustomerContext thread={selectedThread} messageCount={messages.length} />
         </aside>
       </div>

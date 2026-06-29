@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1000" viewBox="0 0 1600 1000" fill="none">
+  <defs>
+    <linearGradient id="purpleGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6D49FF"/>
+      <stop offset="100%" stop-color="#4C2BFF"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7BE0AE"/>
+      <stop offset="100%" stop-color="#58C98E"/>
+    </linearGradient>
+    <linearGradient id="paleCard" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#F7F4FF"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="160%">
+      <feDropShadow dx="0" dy="24" stdDeviation="24" flood-color="#B5ACD8" flood-opacity="0.28"/>
+    </filter>
+    <filter id="smallShadow" x="-30%" y="-30%" width="160%" height="180%">
+      <feDropShadow dx="0" dy="16" stdDeviation="14" flood-color="#A9A0D6" flood-opacity="0.25"/>
+    </filter>
+    <marker id="arrowHead" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M0 0L10 5L0 10" fill="#6A45FF"/>
+    </marker>
+  </defs>
+
+  <rect x="90" y="140" width="420" height="690" rx="44" fill="url(#paleCard)" filter="url(#shadow)"/>
+  <rect x="1090" y="140" width="420" height="690" rx="44" fill="url(#paleCard)" filter="url(#shadow)" opacity="0.96"/>
+
+  <rect x="140" y="190" width="32" height="32" rx="8" fill="url(#purpleGrad)" opacity="0.95"/>
+  <circle cx="190" cy="244" r="18" fill="#D7D2E9"/>
+  <rect x="222" y="226" width="180" height="18" rx="9" fill="#D7D2E9"/>
+  <rect x="140" y="294" width="238" height="18" rx="9" fill="#ECE9F6"/>
+  <rect x="140" y="354" width="210" height="18" rx="9" fill="#ECE9F6"/>
+  <rect x="140" y="414" width="196" height="18" rx="9" fill="#ECE9F6"/>
+  <rect x="140" y="634" width="318" height="104" rx="24" fill="url(#purpleGrad)" filter="url(#smallShadow)"/>
+  <text x="299" y="694" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="34" font-weight="700" fill="#FFFFFF">Browse the Website</text>
+  <path d="M405 686h26" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round"/>
+  <path d="M420 673l18 13-18 13" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <circle cx="1140" cy="204" r="12" fill="#B7A9FF"/>
+  <rect x="1170" y="188" width="180" height="16" rx="8" fill="#DDD8EA"/>
+  <rect x="1170" y="224" width="140" height="16" rx="8" fill="#E5E1EE"/>
+  <rect x="1162" y="332" width="244" height="126" rx="24" fill="url(#greenGrad)"/>
+  <rect x="1200" y="370" width="170" height="16" rx="8" fill="#FFFFFF" opacity="0.92"/>
+  <rect x="1200" y="406" width="116" height="16" rx="8" fill="#FFFFFF" opacity="0.78"/>
+  <circle cx="1140" cy="528" r="18" fill="#ECE9F6"/>
+  <rect x="1170" y="510" width="180" height="16" rx="8" fill="#ECE9F6"/>
+  <rect x="1170" y="560" width="148" height="16" rx="8" fill="#F1EFF7"/>
+  <rect x="1170" y="608" width="192" height="16" rx="8" fill="#F1EFF7"/>
+
+  <path d="M565 408C688 372 803 387 952 472" stroke="#6A45FF" stroke-width="14" stroke-dasharray="14 18" fill="none" marker-end="url(#arrowHead)"/>
+
+  <circle cx="1446" cy="560" r="88" fill="#FFFFFF" filter="url(#smallShadow)"/>
+  <rect x="1412" y="548" width="68" height="58" rx="14" stroke="#6A45FF" stroke-width="10"/>
+  <path d="M1428 548v-18c0-24 18-42 40-42s40 18 40 42v14" stroke="#6A45FF" stroke-width="10" stroke-linecap="round"/>
+</svg>

@@ -68,19 +68,18 @@ export function LiveChatSessions({
   const selected = sessions.find((s) => s.conversationId === selectedId) ?? null;
 
   return (
-    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
+    <div className="uik-card" style={{ padding: 0 }}>
       <div
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(260px, 320px) minmax(0, 1fr)",
-          minHeight: 520,
+          minHeight: 540,
         }}
       >
         {/* LEFT: sessions */}
         <aside
           style={{
-            borderRight: "1px solid var(--line)",
-            background: "var(--bg-soft, #fbfcfa)",
+            borderRight: "1px solid var(--uik-line)",
             display: "flex",
             flexDirection: "column",
             minWidth: 0,
@@ -120,8 +119,8 @@ export function LiveChatSessions({
                     gap: 10,
                     padding: "12px 16px",
                     border: "none",
-                    borderTop: i ? "1px solid var(--line)" : "none",
-                    background: active ? "var(--pri-tint, #eef2ff)" : "transparent",
+                    borderTop: i ? "1px solid var(--uik-divider)" : "none",
+                    background: active ? "var(--uik-soft)" : "transparent",
                     cursor: "pointer",
                     alignItems: "flex-start",
                   }}
@@ -157,7 +156,7 @@ export function LiveChatSessions({
                       >
                         {s.name}
                       </span>
-                      {s.handedOff && <span className="chip chip--warn">Handed off</span>}
+                      {s.handedOff && <span className="uik-pill uik-pill--warn">Handed off</span>}
                     </div>
                     {s.location && (
                       <p className="dim" style={{ margin: "2px 0 0", fontSize: 11.5 }}>
@@ -245,8 +244,7 @@ function SessionDetail({
           {selectedThreadId && (
             <Link
               href={`/support?tab=conversations&channel=webchat&thread=${selectedThreadId}`}
-              className="btn btn--sm btn--dark"
-              style={{ textDecoration: "none" }}
+              className="uik-btn uik-btn--sm uik-btn--pri"
             >
               <Icon name="reply" size={13} />
               Reply in Conversations
@@ -301,20 +299,7 @@ function TranscriptBubble({ msg }: { msg: TranscriptView }) {
         alignItems: isUser ? "flex-start" : "flex-end",
       }}
     >
-      <div
-        style={{
-          background: isUser ? "#f0f3f1" : "#101820",
-          color: isUser ? "var(--ink)" : "#fff",
-          borderRadius: 12,
-          padding: "10px 13px",
-          fontSize: 13,
-          lineHeight: 1.5,
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-        }}
-      >
-        {msg.content}
-      </div>
+      <div className={isUser ? "uik-bubble-in" : "uik-bubble-out"}>{msg.content}</div>
       <span className="mono dim" style={{ fontSize: 10, marginTop: 3 }}>
         {isUser ? "Visitor" : "AI"} ·{" "}
         {new Date(msg.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -373,7 +358,7 @@ function MoveToSmsBar({ session }: { session: SessionView }) {
       <button
         type="button"
         disabled={pending || !phone.trim()}
-        className="btn btn--sm"
+        className="uik-btn uik-btn--sm uik-btn--pri"
         onClick={() => {
           startTransition(async () => {
             const fd = new FormData();

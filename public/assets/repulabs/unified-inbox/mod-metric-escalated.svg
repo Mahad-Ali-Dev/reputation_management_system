@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Green notification bell icon">
+  <defs>
+    <linearGradient id="bellGreen" x1="250" y1="240" x2="780" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#25F08C"/>
+      <stop offset="1" stop-color="#19D86F"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#bellGreen)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M512 236v60"/>
+    <path d="M260 678h504"/>
+    <path d="M260 678c45-55 76-112 76-190 0-120 78-200 176-200s176 80 176 200c0 78 31 135 76 190"/>
+    <path d="M444 748c12 64 124 64 136 0"/>
+  </g>
+</svg>

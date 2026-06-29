@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 47 41" fill="none">
+  <defs>
+    <linearGradient id="gMain" x1="15" y1="10" x2="30" y2="29" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#9B86FF"/>
+      <stop offset="0.45" stop-color="#7250FF"/>
+      <stop offset="1" stop-color="#5B45F7"/>
+    </linearGradient>
+    <linearGradient id="gPurple" x1="10" y1="7" x2="16" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A698FF"/>
+      <stop offset="1" stop-color="#5545F5"/>
+    </linearGradient>
+    <linearGradient id="gCyan1" x1="27" y1="7" x2="33" y2="14" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#91E8F4"/>
+      <stop offset="1" stop-color="#25A6DF"/>
+    </linearGradient>
+    <linearGradient id="gCyan2" x1="10" y1="23" x2="17" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B2F0EA"/>
+      <stop offset="1" stop-color="#18B6D1"/>
+    </linearGradient>
+    <linearGradient id="gBlue" x1="26" y1="23" x2="33" y2="30" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#95F0EA"/>
+      <stop offset="0.55" stop-color="#2AA7F2"/>
+      <stop offset="1" stop-color="#4A66FF"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0.25" stdDeviation="0.35" flood-color="#5E56FF" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#soft)">
+    <path d="M22.3 8.6C23.1 13.9 26.3 17 31.4 18.8C26.4 20.1 23.1 23.6 22.2 29.2C21.4 23.8 18.1 20.5 12.8 18.8C18.0 17.3 21.3 13.8 22.3 8.6Z" fill="url(#gMain)"/>
+
+    <path d="M13.25 6.6C13.65 8.55 15.05 9.95 17.25 10.45C15.15 11.05 13.75 12.35 13.25 14.55C12.8 12.35 11.4 11.05 9.35 10.45C11.45 9.85 12.82 8.5 13.25 6.6Z" fill="url(#gPurple)"/>
+    <path d="M30.05 6.6C30.45 8.55 31.85 9.95 34.05 10.45C31.95 11.05 30.55 12.35 30.05 14.55C29.6 12.35 28.2 11.05 26.15 10.45C28.25 9.85 29.62 8.5 30.05 6.6Z" fill="url(#gCyan1)"/>
+    <path d="M13.05 22.4C13.45 24.35 14.85 25.75 17.0 26.3C14.95 26.9 13.55 28.15 13.05 30.35C12.6 28.15 11.2 26.9 9.15 26.3C11.25 25.65 12.62 24.3 13.05 22.4Z" fill="url(#gCyan2)"/>
+    <path d="M29.25 22.45C29.7 24.45 31.15 25.85 33.35 26.35C31.22 26.95 29.8 28.25 29.25 30.45C28.8 28.25 27.4 26.95 25.3 26.35C27.45 25.75 28.82 24.38 29.25 22.45Z" fill="url(#gBlue)"/>
+  </g>
+</svg>

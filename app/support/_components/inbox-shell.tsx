@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import "../support-kit.css";
 import { withTenant } from "@/lib/db/with-tenant";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { channelCounts, countNeedsAttention, countOpenThreads } from "@/lib/inbox/queries";
@@ -13,9 +14,11 @@ import { CommentsPanel, type CommentRowView } from "./comments-panel";
 import { ModerationPanel, type QueueItemView } from "./moderation-panel";
 import { LiveChatPanel } from "./livechat-panel";
 import { AutomationsPanel } from "./automations-panel";
-import { MeetingsPanel } from "./meetings-panel";
+import { MeetingsPanel, type MeetingRowView } from "./meetings-panel";
 import { AnalyticsPanel } from "./analytics-panel";
 import { countNewMeetingRequests } from "@/lib/inbox/meetings";
+import { isMissingRelation } from "@/lib/inbox/fail-soft";
+import { MEETING_STATUSES, type MeetingStatus } from "../meetings/constants";
 import type {
   KeywordRuleView,
   ModerationConfigView,
@@ -75,7 +78,7 @@ export async function InboxShell({
   ]);
 
   return (
-    <>
+    <div className="uinbox">
       <InboxTabsBar
         active={tab}
         needsAttention={needsAttention}
@@ -119,7 +122,7 @@ export async function InboxShell({
 
       {tab === "meetings" && (
         <Suspense fallback={<div className="ds-card" style={{ height: 480 }} />}>
-          <MeetingsPanel orgId={orgId} status={searchParams.status} />
+          <MeetingsTab orgId={orgId} status={searchParams.status} />
         </Suspense>
       )}
 
@@ -128,7 +131,7 @@ export async function InboxShell({
           <AnalyticsPanel orgId={orgId} />
         </Suspense>
       )}
-    </>
+    </div>
   );
 }
 
@@ -293,6 +296,65 @@ async function AutomationTab({ orgId: _orgId }: { orgId: string }) {
   // client-callable "use server" action and must not accept a client orgId).
   const rules = await listAutomationRules();
   return <AutomationsPanel rules={rules} />;
+}
+
+/**
+ * Meeting requests tab (server) — reads the org's MeetingRequest rows (fail-soft
+ * → [] pre-migration) + status counts and feeds the <MeetingsPanel/> client
+ * island (which owns row selection + the detail panel). Status writes use the
+ * `updateMeetingRequestStatus` "use server" action (RBAC-gated) via inline forms.
+ */
+async function MeetingsTab({ orgId, status }: { orgId: string; status?: string }) {
+  const active: "all" | MeetingStatus =
+    status && (MEETING_STATUSES as readonly string[]).includes(status)
+      ? (status as MeetingStatus)
+      : "all";
+
+  const rows = await withTenant(orgId, async (tx) =>
+    tx.meetingRequest.findMany({
+      where: active === "all" ? {} : { status: active },
+      orderBy: { createdAt: "desc" },
+      take: 200,
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        message: true,
+        preferredTime: true,
+        source: true,
+        status: true,
+        createdAt: true,
+      },
+    }),
+  ).catch((err: unknown) => {
+    if (isMissingRelation(err)) return [];
+    throw err;
+  });
+
+  const counts: Record<string, number> = await withTenant(orgId, async (tx) => {
+    const grouped = await tx.meetingRequest.groupBy({ by: ["status"], _count: { _all: true } });
+    const out: Record<string, number> = {};
+    for (const g of grouped) out[g.status] = g._count._all;
+    return out;
+  }).catch((err: unknown) => {
+    if (isMissingRelation(err)) return {} as Record<string, number>;
+    throw err;
+  });
+
+  const view: MeetingRowView[] = rows.map((r) => ({
+    id: r.id,
+    name: r.name,
+    email: r.email,
+    phone: r.phone,
+    message: r.message,
+    preferredTime: r.preferredTime,
+    source: r.source,
+    status: r.status,
+    createdAt: r.createdAt.toISOString(),
+  }));
+
+  return <MeetingsPanel rows={view} counts={counts} activeFilter={active} />;
 }
 
 /**

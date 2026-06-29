@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="clockStroke" x1="220" y1="160" x2="780" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#25396B"/>
+      <stop offset="1" stop-color="#16294F"/>
+    </linearGradient>
+  </defs>
+  <circle cx="512" cy="512" r="315" stroke="url(#clockStroke)" stroke-width="86" stroke-linecap="round"/>
+  <path d="M512 294V538L632 610" stroke="url(#clockStroke)" stroke-width="86" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

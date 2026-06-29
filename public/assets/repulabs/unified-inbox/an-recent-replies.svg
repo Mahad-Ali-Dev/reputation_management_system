@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 256 256" fill="none">
+  <defs>
+    <radialGradient id="faceGrad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(98 80) rotate(55) scale(150)">
+      <stop offset="0" stop-color="#FFFFFF"/>
+      <stop offset="0.45" stop-color="#F7F3FF"/>
+      <stop offset="1" stop-color="#ECE6FF"/>
+    </radialGradient>
+    <linearGradient id="rimGrad" x1="51" y1="38" x2="215" y2="223" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A684FF"/>
+      <stop offset="0.38" stop-color="#6D45FF"/>
+      <stop offset="0.74" stop-color="#4B21F4"/>
+      <stop offset="1" stop-color="#714CFF"/>
+    </linearGradient>
+    <linearGradient id="tickGrad" x1="50" y1="35" x2="207" y2="219" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#AA8BFF"/>
+      <stop offset="0.35" stop-color="#683EFF"/>
+      <stop offset="1" stop-color="#3D18E6"/>
+    </linearGradient>
+    <radialGradient id="dotGrad" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(119 116) rotate(45) scale(24)">
+      <stop offset="0" stop-color="#805DFF"/>
+      <stop offset="1" stop-color="#3519C9"/>
+    </radialGradient>
+    <linearGradient id="handGrad" x1="130" y1="72" x2="171" y2="137" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D1CEA"/>
+      <stop offset="1" stop-color="#6E50FF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- clock face -->
+  <circle cx="128" cy="128" r="108" fill="url(#faceGrad)"/>
+  <circle cx="128" cy="128" r="108" stroke="url(#rimGrad)" stroke-width="9"/>
+
+  <!-- soft purple highlight on upper-left edge -->
+  <path d="M42.5 102.5C52 63.8 87.4 34.8 129.2 34.8" stroke="#B89BFF" stroke-width="8" stroke-linecap="round" opacity="0.95"/>
+  <!-- darker arc on right/bottom edge -->
+  <path d="M151.5 36.6C199.2 47.2 222 86.4 222 128C222 183.2 181.7 222.8 127.8 222.8C89.7 222.8 59.1 202.9 42.8 174.8" stroke="#4B20F2" stroke-width="8" stroke-linecap="round" opacity="0.95"/>
+
+  <!-- hour marks -->
+  <g stroke="url(#tickGrad)" stroke-linecap="round">
+    <line x1="128" y1="40" x2="128" y2="56" stroke-width="7"/>
+    <line x1="172" y1="51.8" x2="164" y2="65.7" stroke-width="6" opacity="0.75"/>
+    <line x1="204.2" y1="84" x2="190.3" y2="92" stroke-width="6" opacity="0.78"/>
+    <line x1="216" y1="128" x2="200" y2="128" stroke-width="7"/>
+    <line x1="204.2" y1="172" x2="190.3" y2="164" stroke-width="6" opacity="0.75"/>
+    <line x1="172" y1="204.2" x2="164" y2="190.3" stroke-width="6" opacity="0.75"/>
+    <line x1="128" y1="216" x2="128" y2="198" stroke-width="7" opacity="0.85"/>
+    <line x1="84" y1="204.2" x2="92" y2="190.3" stroke-width="6" opacity="0.75"/>
+    <line x1="51.8" y1="172" x2="65.7" y2="164" stroke-width="6" opacity="0.8"/>
+    <line x1="40" y1="128" x2="59" y2="128" stroke-width="8"/>
+    <line x1="51.8" y1="84" x2="65.7" y2="92" stroke-width="6" opacity="0.78"/>
+    <line x1="84" y1="51.8" x2="92" y2="65.7" stroke-width="6" opacity="0.72"/>
+  </g>
+
+  <!-- clock hands -->
+  <g stroke="url(#handGrad)" stroke-linecap="round" stroke-linejoin="round">
+    <line x1="128" y1="128" x2="128" y2="78" stroke-width="9"/>
+    <line x1="128" y1="128" x2="165" y2="103" stroke-width="9"/>
+  </g>
+  <circle cx="128" cy="128" r="15" fill="url(#dotGrad)"/>
+  <circle cx="124" cy="123" r="5" fill="#856BFF" opacity="0.45"/>
+</svg>

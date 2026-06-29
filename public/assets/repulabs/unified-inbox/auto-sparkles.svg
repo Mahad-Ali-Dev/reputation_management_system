@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="purpleStroke" x1="220" y1="238" x2="820" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#786BFF"/>
+      <stop offset="0.55" stop-color="#5A3CFF"/>
+      <stop offset="1" stop-color="#704CFF"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Main sparkle -->
+  <path d="M448 284
+           C430 412 348 493 220 512
+           C348 531 430 612 448 740
+           C466 612 548 531 676 512
+           C548 493 466 412 448 284Z"
+        stroke="url(#purpleStroke)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Small sparkle -->
+  <path d="M736 188
+           C727 260 681 306 609 316
+           C681 326 727 372 736 444
+           C745 372 791 326 863 316
+           C791 306 745 260 736 188Z"
+        stroke="url(#purpleStroke)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

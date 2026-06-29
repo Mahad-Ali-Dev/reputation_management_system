@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024" role="img" aria-label="red shield sparkle icon">
+  <defs>
+    <linearGradient id="redGrad" x1="240" y1="160" x2="790" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff4055"/>
+      <stop offset="0.48" stop-color="#ff1f3d"/>
+      <stop offset="1" stop-color="#ff2446"/>
+    </linearGradient>
+    <linearGradient id="diamondGrad" x1="440" y1="360" x2="600" y2="650" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff334c"/>
+      <stop offset="1" stop-color="#ff1e41"/>
+    </linearGradient>
+    <filter id="softShadow" x="-12%" y="-12%" width="124%" height="124%">
+      <feDropShadow dx="0" dy="10" stdDeviation="9" flood-color="#ff1938" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <path fill="url(#redGrad)" fill-rule="evenodd" d="
+      M512 111
+      C450 164 376 197 279 206
+      C242 209 214 239 214 276
+      L214 552
+      C214 738 350 860 512 928
+      C674 860 810 738 810 552
+      L810 276
+      C810 239 782 209 745 206
+      C648 197 574 164 512 111
+      Z
+
+      M512 195
+      C455 240 384 268 307 276
+      C291 278 279 291 279 307
+      L279 548
+      C279 684 384 778 512 842
+      C640 778 745 684 745 548
+      L745 307
+      C745 291 733 278 717 276
+      C640 268 569 240 512 195
+      Z"/>
+
+    <path fill="url(#diamondGrad)" d="
+      M512 357
+      C527 410 560 444 614 459
+      C623 462 630 471 630 481
+      C630 490 623 499 614 502
+      C561 517 527 552 512 606
+      C509 616 501 622 491 622
+      C482 622 473 616 471 606
+      C456 552 422 517 369 502
+      C359 499 352 490 352 481
+      C352 471 359 462 369 459
+      C422 444 456 410 471 357
+      C474 347 482 340 491 340
+      C501 340 509 347 512 357
+      Z"/>
+  </g>
+</svg>

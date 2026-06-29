@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="purpleGrad" x1="195" y1="328" x2="875" y2="746" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6D63FF"/>
+      <stop offset="0.55" stop-color="#5B45F5"/>
+      <stop offset="1" stop-color="#4B34E9"/>
+    </linearGradient>
+    <filter id="soft" x="116" y="294" width="792" height="500" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#5B45F5" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+
+  <path filter="url(#soft)" d="M658 330C785 330 886 412 886 520C886 631 781 714 651 714H405C367 714 331 707 299 694L219 735C198 745 177 724 187 703L220 630C177 598 152 554 152 506C152 408 247 330 365 330H658Z"
+        stroke="url(#purpleGrad)" stroke-width="56" stroke-linejoin="round" stroke-linecap="round" fill="none"/>
+
+  <circle cx="428" cy="520" r="23" fill="url(#purpleGrad)"/>
+  <circle cx="512" cy="520" r="23" fill="url(#purpleGrad)"/>
+  <circle cx="596" cy="520" r="23" fill="url(#purpleGrad)"/>
+</svg>

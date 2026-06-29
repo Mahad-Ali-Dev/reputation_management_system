@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Purple document icon" fill="none">
+  <defs>
+    <linearGradient id="purple" x1="96" y1="64" x2="416" y2="480" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8A5CFF"/>
+      <stop offset="0.55" stop-color="#7C3EFF"/>
+      <stop offset="1" stop-color="#7647F4"/>
+    </linearGradient>
+  </defs>
+  <path d="M151 70H306L406 170V424C406 461 381 486 344 486H151C114 486 88 461 88 424V132C88 95 114 70 151 70Z" stroke="url(#purple)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M306 70V171H406" stroke="url(#purple)" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M183 268H306" stroke="url(#purple)" stroke-width="34" stroke-linecap="round"/>
+  <path d="M183 340H337" stroke="url(#purple)" stroke-width="34" stroke-linecap="round"/>
+</svg>

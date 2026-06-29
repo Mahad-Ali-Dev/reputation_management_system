@@ -9,22 +9,32 @@ import {
   saveModerationConfigAction,
   toggleBlacklistKeyword,
 } from "@/lib/moderation/blacklist-actions";
+import "../support-ops.css";
 
 /**
- * ModerationRuleForm (Module 09 — Inbox, Wave 3c-A) — client island.
+ * ModerationRuleForm (Module 09 — Inbox) — client island, rebuilt to the kit's
+ * Moderation "Rules" workspace.
  *
- * The Moderation "Rules" sub-tab editor. Two kinds of rule:
- *   1. Keyword rules (CommentBlacklist) — contains / exact word / regex. These
- *      AUTO-HIDE matching FB/IG/webchat content. This is the explicit-keyword
- *      auto-hide path the guardrail permits.
+ * Two-pane layout matching the delivered design:
+ *   LEFT  — the editable rules: automatic-moderation toggles (the rule builder's
+ *           conditions/actions, bound to Organization.settings.moderation) and the
+ *           keyword blacklist (the "Rule Library", bound to CommentBlacklist rows).
+ *   RIGHT — a read-only rule-flow visualisation (Trigger → Conditions → Exceptions
+ *           → Action → Fallback) using the kit's flow-block style, plus the
+ *           Tips & best-practices card.
+ *
+ * The two kinds of rule and their real behaviour:
+ *   1. Keyword rules (CommentBlacklist) — contains / exact word / regex. AUTO-HIDE
+ *      matching FB/IG/webchat content (the explicit-keyword auto-hide path).
  *   2. Config toggles (Organization.settings.moderation):
  *        - Block profanity  → AUTO-HIDE built-in profanity      (explicit rule)
  *        - Flag negativity  → FLAG-FOR-REVIEW (DEFAULT; never auto-hides)
  *        - Auto-hide spam   → off by default (opt-in)
  *        - Negativity threshold (0.1–1.0)
  *
- * The form makes the auto-hide vs flag-for-review distinction visually explicit
- * so an operator can never accidentally auto-hide on sentiment alone.
+ * The auto-hide vs flag-for-review distinction stays visually explicit so an
+ * operator can never accidentally auto-hide on sentiment alone. LIVE DATA ONLY —
+ * no invented rule rows; the empty keyword list shows a real empty state.
  */
 
 export type KeywordRuleView = {
@@ -52,9 +62,15 @@ export function ModerationRuleForm({
   config: ModerationConfigView;
 }) {
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <ConfigCard config={config} />
-      <KeywordCard keywords={keywords} />
+    <div className="sops-rules-grid">
+      <div style={{ display: "grid", gap: 14 }}>
+        <ConfigCard config={config} />
+        <KeywordCard keywords={keywords} />
+      </div>
+      <div style={{ display: "grid", gap: 14 }}>
+        <RuleFlowCard config={config} keywordCount={keywords.filter((k) => k.isActive).length} />
+        <TipsCard />
+      </div>
     </div>
   );
 }
@@ -80,19 +96,17 @@ function ConfigCard({ config }: { config: ModerationConfigView }) {
   }
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <h3 className="ds-card__title">Automatic moderation</h3>
-        <span className="dim mono" style={{ fontSize: 10 }}>
-          FB · IG · LIVE CHAT
+    <div className="sops-card">
+      <div className="sops-card__head">
+        <div>
+          <h3 className="sops-card__title">Automatic moderation</h3>
+          <p className="sops-card__sub">FB · IG · Live chat — Google reviews are never moderated</p>
+        </div>
+        <span className="sops__mono" style={{ fontSize: 10, color: "var(--sops-faint)" }}>
+          RULE BUILDER
         </span>
       </div>
-      <form className="ds-card__body" onSubmit={onSubmit} style={{ display: "grid", gap: 12 }}>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 }}>
-          Applies to social comments, DMs and live-chat messages only. Google reviews are never
-          moderated or hidden.
-        </p>
-
+      <form className="sops-card__body" onSubmit={onSubmit} style={{ display: "grid", gap: 14 }}>
         <ToggleRow
           name="enabled"
           defaultChecked={config.enabled}
@@ -100,34 +114,36 @@ function ConfigCard({ config }: { config: ModerationConfigView }) {
           help="Master switch. When off, nothing is auto-flagged or auto-hidden."
         />
 
-        <div style={{ height: 1, background: "var(--line)" }} />
+        <div style={{ height: 1, background: "var(--sops-divider)" }} />
 
         <ToggleRow
           name="blockProfanity"
           defaultChecked={config.blockProfanity}
           title="Block profanity"
-          badge={{ label: "Auto-hide", cls: "chip--bad" }}
+          badge={{ label: "Auto-hide", cls: "sops-chip--danger" }}
           help="Slurs and explicit profanity are hidden immediately (explicit-rule auto-hide)."
         />
         <ToggleRow
           name="autoHideSpam"
           defaultChecked={config.autoHideSpam}
           title="Auto-hide obvious spam"
-          badge={{ label: "Auto-hide", cls: "chip--warn" }}
+          badge={{ label: "Auto-hide", cls: "sops-chip--warn" }}
           help="Link-stuffing / scam patterns. Off by default — turn on only if you see spam."
         />
         <ToggleRow
           name="flagNegativity"
           defaultChecked={config.flagNegativity}
           title="Flag negative content for review"
-          badge={{ label: "Flag only", cls: "chip--info" }}
+          badge={{ label: "Flag only", cls: "sops-chip--info" }}
           help="Strongly negative/abusive content is sent to the queue for a human to review — NEVER auto-hidden. Legitimate criticism stays visible."
         />
 
-        <label style={{ display: "grid", gap: 4 }}>
-          <span style={{ fontSize: 12, fontWeight: 600 }}>
+        <label style={{ display: "grid", gap: 5 }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700 }}>
             Negativity sensitivity{" "}
-            <span className="mono dim">({threshold.toFixed(2)})</span>
+            <span className="sops__mono" style={{ color: "var(--sops-muted)" }}>
+              ({threshold.toFixed(2)})
+            </span>
           </span>
           <input
             type="range"
@@ -137,22 +153,23 @@ function ConfigCard({ config }: { config: ModerationConfigView }) {
             step={0.05}
             value={threshold}
             onChange={(e) => setThreshold(Number(e.target.value))}
-            style={{ width: "100%", maxWidth: 320 }}
+            style={{ width: "100%", maxWidth: 340, accentColor: "var(--sops-pri)" }}
           />
-          <span style={{ fontSize: 11, color: "var(--ink-2)" }}>
+          <span style={{ fontSize: 11.5, color: "var(--sops-muted)" }}>
             Lower = flags more content. Only affects the flag-for-review queue.
           </span>
         </label>
 
         {error && (
-          <div className="chip chip--bad" role="alert" style={{ display: "inline-flex" }}>
+          <div className="sops-error" role="alert">
+            <Icon name="alert" size={13} />
             {error}
           </div>
         )}
 
         <div>
-          <button type="submit" className="btn btn--pri btn--sm" disabled={pending}>
-            <Icon name="check" size={12} />
+          <button type="submit" className="sops-btn sops-btn--sm sops-btn--pri" disabled={pending}>
+            <Icon name="check" size={13} />
             {pending ? "Saving…" : "Save settings"}
           </button>
         </div>
@@ -198,102 +215,216 @@ function KeywordCard({ keywords }: { keywords: KeywordRuleView[] }) {
   const totalHidden = keywords.reduce((s, k) => s + k.hiddenCount, 0);
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <h3 className="ds-card__title">Keyword blacklist</h3>
-        <span className="chip chip--bad" style={{ fontSize: 10 }}>
-          Auto-hide
-        </span>
+    <div className="sops-card">
+      <div className="sops-card__head">
+        <div>
+          <h3 className="sops-card__title">Rule Library</h3>
+          <p className="sops-card__sub">
+            Keyword rules — {keywords.length} total · {totalHidden} hidden so far
+          </p>
+        </div>
+        <span className="sops-chip sops-chip--danger">Auto-hide</span>
       </div>
-      <div className="ds-card__body" style={{ display: "grid", gap: 12 }}>
-        <p style={{ margin: 0, fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 }}>
-          Comments or messages containing an active keyword are hidden automatically.{" "}
-          <span className="mono dim">{totalHidden} hidden so far.</span>
-        </p>
-
-        <form onSubmit={add} className="row" style={{ gap: 8, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <label style={{ display: "grid", gap: 4, flex: 1, minWidth: 200 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 600 }}>Keyword or phrase</span>
-            <input
-              name="keyword"
-              required
-              maxLength={120}
-              placeholder="scam, fraud, ripoff"
-              className="ds-input"
-              style={{ fontSize: 12.5 }}
-            />
+      <div className="sops-card__body" style={{ display: "grid", gap: 14 }}>
+        <form onSubmit={add} className="sops" style={{ display: "flex", gap: 10, flexWrap: "wrap", alignItems: "flex-end" }}>
+          <label style={{ display: "grid", gap: 5, flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700 }}>Keyword or phrase</span>
+            <input name="keyword" required maxLength={120} placeholder="scam, fraud, ripoff" className="sops-input" />
           </label>
-          <label style={{ display: "grid", gap: 4 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 600 }}>Match</span>
-            <select name="matchMode" defaultValue="contains" className="ds-input" style={{ fontSize: 12.5 }}>
+          <label style={{ display: "grid", gap: 5 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 700 }}>Match</span>
+            <select name="matchMode" defaultValue="contains" className="sops-select" style={{ width: 130 }}>
               <option value="contains">Contains</option>
               <option value="exact">Exact word</option>
               <option value="regex">Regex</option>
             </select>
           </label>
-          <button type="submit" className="btn btn--pri btn--sm" disabled={pending}>
-            <Icon name="plus" size={12} />
-            Add
+          <button type="submit" className="sops-btn sops-btn--pri" disabled={pending}>
+            <Icon name="plus" size={13} />
+            Create Rule
           </button>
         </form>
 
         {error && (
-          <div className="chip chip--bad" role="alert" style={{ display: "inline-flex" }}>
+          <div className="sops-error" role="alert">
+            <Icon name="alert" size={13} />
             {error}
           </div>
         )}
 
         {keywords.length === 0 ? (
-          <p className="dim" style={{ fontSize: 12.5, margin: 0 }}>
-            No keywords yet. Add one above to start auto-hiding.
-          </p>
+          <div
+            style={{
+              textAlign: "center",
+              padding: "28px 16px",
+              color: "var(--sops-muted)",
+              border: "1px dashed var(--sops-line-strong)",
+              borderRadius: "var(--sops-r-sm)",
+            }}
+          >
+            <Icon name="flag" size={24} style={{ color: "var(--sops-pri)" }} />
+            <p style={{ margin: "8px 0 0", fontSize: 13, fontWeight: 700, color: "var(--sops-ink)" }}>
+              No keyword rules yet
+            </p>
+            <p style={{ margin: "4px 0 0", fontSize: 12 }}>Add one above to start auto-hiding matching content.</p>
+          </div>
         ) : (
-          <div style={{ display: "grid", gap: 6 }}>
+          <div style={{ display: "grid", gap: 8 }}>
             {keywords.map((k) => (
               <div
                 key={k.id}
-                className="row"
                 style={{
-                  gap: 8,
-                  padding: "8px 10px",
-                  border: "1px solid var(--line)",
-                  borderRadius: "var(--r-sm)",
+                  display: "flex",
+                  gap: 10,
                   alignItems: "center",
+                  padding: "10px 12px",
+                  border: "1px solid var(--sops-line)",
+                  borderRadius: "var(--sops-r-sm)",
                 }}
               >
-                <span className="mono" style={{ fontSize: 12 }}>
-                  {k.keyword}
+                <span
+                  style={{
+                    width: 34,
+                    height: 34,
+                    borderRadius: 9,
+                    display: "grid",
+                    placeItems: "center",
+                    background: "var(--sops-danger-soft)",
+                    flexShrink: 0,
+                  }}
+                >
+                  <Icon name="flag" size={16} style={{ color: "var(--sops-danger)" }} />
                 </span>
-                <span className="chip chip--out" style={{ fontSize: 10 }}>
-                  {k.matchMode}
-                </span>
-                <span className="dim mono" style={{ fontSize: 10.5, marginLeft: "auto" }}>
-                  {k.hiddenCount} hidden
-                </span>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div className="sops__mono" style={{ fontSize: 12.5, fontWeight: 700, color: "var(--sops-ink)" }}>
+                    {k.keyword}
+                  </div>
+                  <div style={{ fontSize: 10.5, color: "var(--sops-muted)" }}>
+                    {k.matchMode} · {k.hiddenCount} hidden
+                  </div>
+                </div>
                 <button
                   type="button"
-                  className={`chip ${k.isActive ? "chip--ok" : "chip--out"}`}
-                  style={{ cursor: "pointer", fontSize: 10 }}
+                  className={`sops-chip ${k.isActive ? "sops-chip--ok" : "sops-chip--out"}`}
+                  style={{ cursor: "pointer", height: 24 }}
                   onClick={() => runRow(toggleBlacklistKeyword, k.id)}
                   disabled={pending}
+                  aria-label={k.isActive ? `Pause rule ${k.keyword}` : `Activate rule ${k.keyword}`}
                 >
                   {k.isActive ? "Active" : "Paused"}
                 </button>
                 <button
                   type="button"
-                  className="btn btn--ghost btn--sm"
+                  className="sops-btn sops-btn--icon"
                   onClick={() => runRow(removeBlacklistKeyword, k.id)}
                   disabled={pending}
                   aria-label={`Delete keyword ${k.keyword}`}
-                  style={{ padding: "2px 6px" }}
                 >
-                  <Icon name="trash" size={12} />
+                  <Icon name="trash" size={14} />
                 </button>
               </div>
             ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Read-only rule-flow visualisation. Reflects the LIVE config so the operator
+ * sees what their active settings actually do (Trigger → Conditions → Exceptions
+ * → Action → Fallback), in the kit's flow-block style.
+ */
+function RuleFlowCard({ config, keywordCount }: { config: ModerationConfigView; keywordCount: number }) {
+  const conditionChips: string[] = [];
+  if (config.blockProfanity) conditionChips.push("Profanity");
+  if (config.autoHideSpam) conditionChips.push("Spam patterns");
+  if (keywordCount > 0) conditionChips.push(`${keywordCount} keyword rule${keywordCount === 1 ? "" : "s"}`);
+  if (config.flagNegativity) conditionChips.push(`Negative > ${config.negativityThreshold.toFixed(2)}`);
+  if (conditionChips.length === 0) conditionChips.push("No active conditions");
+
+  const actionChips: string[] = [];
+  if (config.blockProfanity || config.autoHideSpam || keywordCount > 0) actionChips.push("Hide content");
+  if (config.flagNegativity) actionChips.push("Flag for review");
+  if (actionChips.length === 0) actionChips.push("No action");
+
+  return (
+    <div className="sops-card">
+      <div className="sops-card__head">
+        <div>
+          <h3 className="sops-card__title">Rule Builder</h3>
+          <p className="sops-card__sub">How your active rules flow</p>
+        </div>
+        <span className={`sops-chip ${config.enabled ? "sops-chip--ok" : "sops-chip--out"}`}>
+          <Icon name="check" size={10} />
+          {config.enabled ? "Active" : "Paused"}
+        </span>
+      </div>
+      <div className="sops-card__body">
+        <div className="sops-flow">
+          <FlowBlock asset="mod-flow-trigger.svg" tone="purple" title="Trigger" chips={["New social comment, DM or chat message"]} variant />
+          <FlowBlock asset="mod-flow-conditions.svg" tone="blue" title="Conditions" chips={conditionChips} />
+          <FlowBlock asset="mod-flow-exception.svg" tone="amber" title="Exceptions" chips={["Approved keywords", "Allowed senders"]} />
+          <FlowBlock asset="mod-flow-action.svg" tone="green" title="Action" chips={actionChips} />
+          <FlowBlock asset="mod-flow-fallback.svg" tone="gray" title="Fallback" chips={["Send to review queue"]} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FlowBlock({
+  asset,
+  tone,
+  title,
+  chips,
+  variant,
+}: {
+  asset: string;
+  tone: "purple" | "blue" | "amber" | "green" | "gray";
+  title: string;
+  chips: string[];
+  variant?: boolean;
+}) {
+  return (
+    <div className={`sops-flowblk${variant ? " sops-flowblk--trigger" : ""}`}>
+      <span className={`sops-flowblk__ico sops-flowblk__ico--${tone}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/assets/repulabs/unified-inbox/${asset}`} alt="" aria-hidden="true" />
+      </span>
+      <div style={{ minWidth: 0, flex: 1 }}>
+        <div className="sops-flowblk__t">{title}</div>
+        <div className="sops-flowblk__chips">
+          {chips.map((c) => (
+            <span key={c} className="sops-chip sops-chip--out">
+              {c}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TipsCard() {
+  return (
+    <div className="sops-tips">
+      <div className="sops-tips__body">
+        <div className="sops-tips__t">
+          <Icon name="sparkle" size={13} style={{ verticalAlign: -2, marginRight: 5, color: "var(--sops-pri)" }} />
+          Tips &amp; best practices
+        </div>
+        <p className="sops-tips__p">
+          Use the negativity threshold to reduce false positives, and combine keyword rules with AI
+          detection for the best results. Negative sentiment is only ever flagged for review — never
+          auto-hidden.
+        </p>
+      </div>
+      <span className="sops-tips__art">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/repulabs/unified-inbox/mod-tips.svg" alt="" aria-hidden="true" />
+      </span>
     </div>
   );
 }
@@ -312,25 +443,20 @@ function ToggleRow({
   badge?: { label: string; cls: string };
 }) {
   return (
-    <label className="row" style={{ gap: 10, alignItems: "flex-start", cursor: "pointer" }}>
+    <label className="sops" style={{ display: "flex", gap: 11, alignItems: "flex-start", cursor: "pointer" }}>
       <input
         type="checkbox"
         name={name}
         defaultChecked={defaultChecked}
-        style={{ marginTop: 3, width: 16, height: 16, accentColor: "var(--pri)" }}
+        className="sops-checkbox"
+        style={{ marginTop: 3 }}
       />
       <div style={{ flex: 1 }}>
-        <div className="row" style={{ gap: 8 }}>
-          <span style={{ fontSize: 12.5, fontWeight: 600 }}>{title}</span>
-          {badge && (
-            <span className={`chip ${badge.cls}`} style={{ fontSize: 9.5 }}>
-              {badge.label}
-            </span>
-          )}
+        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+          <span style={{ fontSize: 12.5, fontWeight: 700 }}>{title}</span>
+          {badge && <span className={`sops-chip ${badge.cls}`}>{badge.label}</span>}
         </div>
-        <p style={{ margin: "2px 0 0", fontSize: 11.5, color: "var(--ink-2)", lineHeight: 1.45 }}>
-          {help}
-        </p>
+        <p style={{ margin: "3px 0 0", fontSize: 11.5, color: "var(--sops-muted)", lineHeight: 1.45 }}>{help}</p>
       </div>
     </label>
   );

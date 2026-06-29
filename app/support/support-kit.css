@@ -1,0 +1,1007 @@
+/* ============================================================================
+   Unified Inbox design kit — page-scoped styles (.uinbox / .uik- prefix only).
+
+   Source of truth: designs/unified inbox/** (+ designs/meeting request/**)
+   handoff reports + delivered mockup.png artboards. Kit language: bright white
+   panels on a flat near-white canvas, thin cool-gray borders, pale lavender/blue
+   active states, blue→purple gradient primary actions, Inter type scale.
+
+   Palette (sampled from the kit): primary blue #2547ff, primary purple #4b45f6 /
+   #6c4df6, facebook #1877f2, whatsapp #25d366, success #15c76f, danger #ff244b.
+
+   Everything here is scoped under `.uinbox` (the shell wrapper) so it never
+   leaks into other pages. The other agent owns moderation/automation/analytics
+   + support-ops.css — nothing here touches those.
+   ============================================================================ */
+
+.uinbox {
+  /* ---- color tokens ---- */
+  --uik-bg: #f8faff;
+  --uik-panel: #ffffff;
+  --uik-soft: #f6f8ff;
+  --uik-hover: #f2f5ff;
+  --uik-active: #eef1ff;
+  --uik-chip: #f4f6ff;
+
+  --uik-line: #e5e9f7;
+  --uik-line-strong: #d7ddf0;
+  --uik-divider: #eef1f8;
+
+  --uik-ink: #090f2f;
+  --uik-ink-2: #263764;
+  --uik-mut: #657197;
+  --uik-faint: #8a94b8;
+
+  --uik-pri: #2547ff; /* conversations blue */
+  --uik-pri-strong: #1834e8;
+  --uik-pri-soft: #eef2ff;
+  --uik-purple: #5b3dff; /* live-chat / comments / meetings purple */
+  --uik-purple-soft: #efedff;
+
+  --uik-ok: #15c76f;
+  --uik-ok-soft: #e8fbf1;
+  --uik-warn: #f59e0b;
+  --uik-warn-soft: #fff4d8;
+  --uik-bad: #ff244b;
+  --uik-bad-soft: #ffecef;
+
+  --uik-fb: #1877f2;
+  --uik-ig: #e4405f;
+  --uik-wa: #25d366;
+  --uik-msgr: #006aff;
+
+  --uik-grad-pri: linear-gradient(135deg, #6c35ff 0%, #2447ff 100%);
+  --uik-grad-msg: linear-gradient(135deg, #6578ff 0%, #2447ff 100%);
+  --uik-grad-purple: linear-gradient(135deg, #5d4af6 0%, #7a55f7 100%);
+  --uik-grad-cover: radial-gradient(circle at 15% 20%, rgba(121, 91, 255, 0.24), transparent 32%),
+    radial-gradient(circle at 82% 8%, rgba(255, 157, 216, 0.28), transparent 34%),
+    linear-gradient(135deg, #e9edff 0%, #f7efff 50%, #ffeef8 100%);
+
+  --uik-sh-card: 0 8px 20px rgba(30, 45, 110, 0.06);
+  --uik-sh-soft: 0 10px 30px rgba(35, 55, 130, 0.08);
+  --uik-sh-btn: 0 12px 24px rgba(37, 71, 255, 0.22);
+  --uik-sh-btn-purple: 0 12px 24px rgba(97, 76, 246, 0.26);
+
+  /* ---- radius ---- */
+  --uik-r-sm: 8px;
+  --uik-r-md: 10px;
+  --uik-r-lg: 12px;
+  --uik-r-xl: 16px;
+  --uik-r-2xl: 20px;
+  --uik-r-pill: 999px;
+
+  max-width: 1240px;
+  margin: 0 auto;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--uik-ink);
+}
+
+/* CANVAS — the app shell paints a teal/gold radial gradient that bleeds through.
+   The kit mockups are flat near-white. `.app--canvas` is an ANCESTOR of `.uinbox`
+   (see components/app-shell.tsx → div.app.app--canvas), so scope the override via
+   :has() so only the inbox swaps the canvas; every other page keeps the app one. */
+.app--canvas:has(.uinbox) {
+  background-image: linear-gradient(180deg, #fbfcff 0%, #f8faff 60%, #f6f9ff 100%);
+  background-color: #f8faff;
+}
+
+/* ============================================================================
+   Shared chrome
+   ============================================================================ */
+
+/* The big white module card that wraps a tab's workspace. */
+.uik-card {
+  background: var(--uik-panel);
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-2xl);
+  box-shadow: var(--uik-sh-card);
+  overflow: hidden;
+}
+
+/* Tab bar (the 7 module tabs) — underline style, flat white container. */
+.uinbox .tabs {
+  height: 50px;
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  padding: 0 12px;
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-xl);
+  background: var(--uik-panel);
+  box-shadow: var(--uik-sh-card);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.uinbox .tabs::-webkit-scrollbar {
+  display: none;
+}
+.uinbox .tabs__t {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 16px;
+  border: 0;
+  background: transparent;
+  color: var(--uik-ink-2);
+  font-size: 12.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  border-radius: 0;
+}
+.uinbox .tabs__t:hover {
+  color: var(--uik-pri);
+}
+.uinbox .tabs__t.is-active {
+  color: var(--uik-pri);
+  font-weight: 700;
+}
+.uinbox .tabs__t.is-active::after {
+  content: "";
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 0;
+  height: 3px;
+  border-radius: 3px 3px 0 0;
+  background: var(--uik-grad-msg);
+}
+.uinbox .tabs__t svg {
+  opacity: 0.85;
+}
+
+/* Live-chat inner sub-tabs (Customize / Deploy / AI / SMS) — underline. */
+.uik-subtabs {
+  display: flex;
+  align-items: stretch;
+  gap: 26px;
+  height: 50px;
+  padding: 0 6px;
+  border-bottom: 1px solid var(--uik-line);
+  margin-bottom: 18px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.uik-subtabs::-webkit-scrollbar {
+  display: none;
+}
+.uik-subtab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  background: transparent;
+  color: var(--uik-mut);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  text-decoration: none;
+}
+.uik-subtab:hover {
+  color: var(--uik-ink-2);
+}
+.uik-subtab.is-active {
+  color: var(--uik-purple);
+}
+.uik-subtab.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--uik-purple);
+}
+
+/* ---- buttons ---- */
+.uik-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 18px;
+  border: 1px solid var(--uik-line-strong);
+  border-radius: var(--uik-r-pill);
+  background: var(--uik-panel);
+  color: var(--uik-ink);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.14s, border-color 0.14s, box-shadow 0.14s;
+}
+.uik-btn:hover {
+  background: var(--uik-hover);
+  border-color: var(--uik-line-strong);
+}
+.uik-btn--sm {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12.5px;
+}
+.uik-btn--xs {
+  height: 28px;
+  padding: 0 11px;
+  font-size: 12px;
+  gap: 5px;
+}
+.uik-btn--pri {
+  border: 0;
+  color: #fff;
+  background: var(--uik-grad-pri);
+  box-shadow: var(--uik-sh-btn);
+}
+.uik-btn--pri:hover {
+  filter: brightness(1.04);
+  background: var(--uik-grad-pri);
+}
+.uik-btn--purple {
+  border: 0;
+  color: #fff;
+  background: var(--uik-grad-purple);
+  box-shadow: var(--uik-sh-btn-purple);
+}
+.uik-btn--purple:hover {
+  filter: brightness(1.04);
+  background: var(--uik-grad-purple);
+}
+.uik-btn--ghost {
+  border-color: transparent;
+  background: transparent;
+}
+.uik-btn--ghost:hover {
+  background: var(--uik-hover);
+}
+.uik-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ---- chips / pills ---- */
+.uik-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 13px;
+  border-radius: var(--uik-r-pill);
+  border: 1px solid var(--uik-line);
+  background: var(--uik-chip);
+  color: var(--uik-ink-2);
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.uik-chip:hover {
+  background: var(--uik-hover);
+}
+.uik-chip.is-active {
+  background: #09122f;
+  border-color: #09122f;
+  color: #fff;
+}
+.uik-chip--pri.is-active {
+  background: var(--uik-pri-soft);
+  border-color: #c7d2ff;
+  color: var(--uik-pri);
+}
+.uik-chip__count {
+  font-weight: 700;
+  opacity: 0.7;
+}
+
+/* small status pill (needs reply / replied / starred…) */
+.uik-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 9px;
+  border-radius: var(--uik-r-pill);
+  font-size: 10.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.uik-pill--needs {
+  background: var(--uik-purple-soft);
+  color: #5a3dff;
+}
+.uik-pill--replied {
+  background: var(--uik-ok-soft);
+  color: #099a5a;
+}
+.uik-pill--starred {
+  background: var(--uik-warn-soft);
+  color: #b45309;
+}
+.uik-pill--hidden {
+  background: #f1f4fa;
+  color: #64748b;
+}
+.uik-pill--ok {
+  background: var(--uik-ok-soft);
+  color: #099a5a;
+}
+.uik-pill--info {
+  background: var(--uik-pri-soft);
+  color: var(--uik-pri);
+}
+.uik-pill--warn {
+  background: var(--uik-warn-soft);
+  color: #b45309;
+}
+
+/* ---- inputs ---- */
+.uik-input,
+.uik-textarea,
+.uik-select {
+  width: 100%;
+  padding: 9px 11px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--uik-ink);
+  background: var(--uik-panel);
+  border: 1px solid var(--uik-line-strong);
+  border-radius: var(--uik-r-md);
+  outline: none;
+}
+.uik-input:focus,
+.uik-textarea:focus,
+.uik-select:focus {
+  border-color: var(--uik-pri);
+  box-shadow: 0 0 0 3px rgba(37, 71, 255, 0.12);
+}
+.uik-textarea {
+  resize: vertical;
+  line-height: 1.5;
+}
+.uik-input::placeholder,
+.uik-textarea::placeholder {
+  color: var(--uik-faint);
+}
+
+/* focus ring for everything interactive */
+.uinbox :focus-visible {
+  outline: 2px solid rgba(37, 71, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.uik-mut {
+  color: var(--uik-mut);
+}
+.uik-mono {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* ============================================================================
+   Channel rail (conversations) — 64px vertical strip of brand channels
+   ============================================================================ */
+.uik-rail {
+  width: 64px;
+  background: #f7f9ff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0;
+  border-right: 1px solid var(--uik-line);
+}
+.uik-rail__btn {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--uik-r-pill);
+  border: 1px solid transparent;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: var(--uik-mut);
+  box-shadow: 0 1px 2px rgba(30, 45, 110, 0.05);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.uik-rail__btn:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--uik-sh-card);
+}
+.uik-rail__btn.is-active {
+  border-color: #c7d2ff;
+  box-shadow: 0 0 0 2px rgba(37, 71, 255, 0.18);
+}
+.uik-rail__all {
+  width: 42px;
+  height: 34px;
+  border-radius: var(--uik-r-md);
+  background: var(--uik-pri-soft);
+  color: var(--uik-pri);
+  font-size: 12px;
+  font-weight: 800;
+  border: 0;
+}
+.uik-rail__all.is-active {
+  box-shadow: 0 0 0 2px rgba(37, 71, 255, 0.18);
+}
+
+/* ============================================================================
+   Conversation list rows (left column)
+   ============================================================================ */
+.uik-convo {
+  width: 100%;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: start;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-left: 3px solid transparent;
+  border-radius: var(--uik-r-lg);
+  background: transparent;
+  cursor: pointer;
+}
+.uik-convo:hover {
+  background: #f8faff;
+}
+.uik-convo.is-active {
+  background: var(--uik-soft);
+  border-left-color: var(--uik-pri);
+}
+.uik-convo__name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--uik-ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uik-convo__preview {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--uik-mut);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.uik-convo__time {
+  font-size: 10.5px;
+  color: var(--uik-faint);
+  white-space: nowrap;
+}
+.uik-convo__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--uik-r-pill);
+  background: var(--uik-bad);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  margin-top: 4px;
+  margin-left: auto;
+}
+
+/* avatar wrapper + channel mini-badge + online dot */
+.uik-av {
+  position: relative;
+  flex: 0 0 auto;
+}
+.uik-av__chan {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--uik-r-pill);
+  border: 2px solid #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+.uik-av__dot {
+  position: absolute;
+  right: -1px;
+  top: -1px;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--uik-ok);
+  border: 2px solid #fff;
+}
+
+/* ============================================================================
+   Thread bubbles (center column)
+   ============================================================================ */
+.uik-bubble-in {
+  align-self: flex-start;
+  max-width: 78%;
+  background: #f8faff;
+  border: 1px solid #e3e8f6;
+  color: var(--uik-ink-2);
+  border-radius: var(--uik-r-xl);
+  padding: 11px 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.uik-bubble-out {
+  align-self: flex-end;
+  max-width: 78%;
+  background: var(--uik-grad-msg);
+  color: #fff;
+  border-radius: var(--uik-r-xl);
+  padding: 11px 15px;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-shadow: 0 10px 22px rgba(37, 71, 255, 0.18);
+}
+.uik-bubble-note {
+  align-self: center;
+  max-width: 86%;
+  background: #fff7da;
+  border: 1px solid #f4e3a1;
+  color: #7a5b00;
+  border-radius: var(--uik-r-lg);
+  padding: 9px 12px;
+  font-size: 12.5px;
+}
+.uik-date-divider {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  padding: 0 14px;
+  background: #fff;
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-pill);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--uik-mut);
+}
+
+/* ============================================================================
+   AI suggested replies panel (above composer)
+   ============================================================================ */
+.uik-ai {
+  border: 1px solid #e1e6ff;
+  border-radius: var(--uik-r-xl);
+  background: linear-gradient(180deg, #f3f1ff 0%, #f7f9ff 100%);
+  padding: 13px 15px;
+}
+.uik-ai__card {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  background: #fff;
+  border: 1px solid #dce3fb;
+  border-radius: var(--uik-r-md);
+  padding: 10px 12px;
+  font-size: 12px;
+  line-height: 1.45;
+  color: var(--uik-ink-2);
+}
+
+/* ============================================================================
+   Contact detail panel (right column)
+   ============================================================================ */
+.uik-cover {
+  position: relative;
+  height: 116px;
+  background: var(--uik-grad-cover);
+}
+.uik-cover__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.85);
+  border: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uik-ink-2);
+  cursor: pointer;
+}
+.uik-quick {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid var(--uik-line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--uik-pri);
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(30, 45, 110, 0.08);
+  text-decoration: none;
+}
+.uik-quick:hover {
+  background: var(--uik-hover);
+}
+.uik-sect {
+  padding: 14px 18px;
+  border-top: 1px solid var(--uik-divider);
+}
+.uik-sect__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.uik-sect__title {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--uik-ink);
+  margin: 0;
+}
+.uik-sect__action {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--uik-pri);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-decoration: none;
+}
+.uik-field__label {
+  font-size: 11px;
+  color: var(--uik-mut);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.uik-field__value {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--uik-ink);
+  margin-top: 2px;
+}
+.uik-tl {
+  position: relative;
+  padding-left: 18px;
+}
+.uik-tl::before {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 4px;
+  bottom: 4px;
+  width: 1.5px;
+  background: var(--uik-line);
+}
+.uik-tl__item {
+  position: relative;
+  padding: 0 0 12px;
+}
+.uik-tl__item:last-child {
+  padding-bottom: 0;
+}
+.uik-tl__dot {
+  position: absolute;
+  left: -18px;
+  top: 3px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+}
+
+/* ============================================================================
+   Setup-form cards (live chat sub-views, meeting active stat tiles)
+   ============================================================================ */
+.uik-sec {
+  background: var(--uik-panel);
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-lg);
+  box-shadow: var(--uik-sh-card);
+  padding: 18px 20px;
+}
+.uik-sec__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  background: var(--uik-purple-soft);
+  color: var(--uik-purple);
+  font-size: 11px;
+  font-weight: 800;
+  flex: 0 0 auto;
+}
+.uik-sec__title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--uik-ink);
+  margin: 0;
+}
+.uik-sec__help {
+  font-size: 12px;
+  color: var(--uik-mut);
+  margin: 2px 0 0;
+  line-height: 1.45;
+}
+
+/* option card (personality / availability / radio tiles) */
+.uik-opt {
+  display: block;
+  border: 1px solid var(--uik-line-strong);
+  border-radius: var(--uik-r-md);
+  background: #fff;
+  padding: 14px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s;
+}
+.uik-opt:hover {
+  border-color: var(--uik-line-strong);
+  background: var(--uik-soft);
+}
+.uik-opt.is-selected {
+  border-color: var(--uik-purple);
+  background: var(--uik-purple-soft);
+}
+
+/* toggle switch */
+.uik-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex: 0 0 auto;
+}
+.uik-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.uik-switch__track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--uik-r-pill);
+  background: #d7dce8;
+  transition: background 0.15s;
+}
+.uik-switch__track::before {
+  content: "";
+  position: absolute;
+  left: 3px;
+  top: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.15s;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.uik-switch input:checked + .uik-switch__track {
+  background: var(--uik-purple);
+}
+.uik-switch input:checked + .uik-switch__track::before {
+  transform: translateX(18px);
+}
+
+/* code block (deploy) */
+.uik-code {
+  position: relative;
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-md);
+  background: #0f172a;
+  color: #e2e8f0;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  padding: 14px 16px;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+/* ============================================================================
+   Empty states
+   ============================================================================ */
+.uik-empty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 36px;
+  align-items: center;
+  padding: 28px 56px 48px;
+}
+.uik-empty__illus {
+  display: block;
+  width: 100%;
+  max-width: 620px;
+  height: auto;
+  margin: 0 auto;
+}
+.uik-empty__title {
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--uik-ink);
+  margin: 0 0 12px;
+  line-height: 1.2;
+}
+.uik-empty__body {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--uik-ink-2);
+  line-height: 1.6;
+  margin: 0 0 18px;
+  max-width: 330px;
+}
+
+/* benefits card */
+.uik-benefits {
+  margin-top: 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-lg);
+  background: #fff;
+  box-shadow: var(--uik-sh-card);
+}
+.uik-benefit {
+  display: grid;
+  grid-template-columns: 32px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding: 13px 0;
+}
+.uik-benefit + .uik-benefit {
+  border-top: 1px solid var(--uik-divider);
+}
+.uik-benefit__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--uik-r-sm);
+  background: var(--uik-purple-soft);
+  color: var(--uik-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.uik-benefit__title {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--uik-ink);
+  margin: 0;
+}
+.uik-benefit__body {
+  font-size: 11px;
+  color: var(--uik-mut);
+  line-height: 1.5;
+  margin: 2px 0 0;
+}
+
+/* meeting empty: illustration card + steps card */
+.uik-mempty {
+  position: relative;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 380px 1fr;
+  align-items: center;
+  padding: 48px 52px;
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-xl);
+  background: radial-gradient(circle at 78% 24%, rgba(103, 83, 255, 0.12), transparent 22%),
+    radial-gradient(circle at 68% 82%, rgba(103, 83, 255, 0.09), transparent 26%),
+    linear-gradient(105deg, #fbfdff 0%, #f7faff 42%, #eff3ff 100%);
+}
+.uik-steps-card {
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-xl);
+  background: #fff;
+  box-shadow: var(--uik-sh-card);
+  padding: 26px 24px;
+}
+.uik-step {
+  position: relative;
+  display: grid;
+  grid-template-columns: 22px 52px 1fr;
+  gap: 14px;
+  align-items: start;
+  padding-bottom: 18px;
+}
+.uik-step:last-child {
+  padding-bottom: 0;
+}
+.uik-step__num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid #aebbd1;
+  background: #fff;
+  color: var(--uik-ink);
+  font-size: 11px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.uik-step__icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--uik-r-lg);
+  background: var(--uik-purple-soft);
+  color: var(--uik-purple);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ============================================================================
+   Meeting requests active — table + detail panel
+   ============================================================================ */
+.uik-mr-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 440px;
+  min-height: 560px;
+}
+.uik-mr-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) 110px 130px 120px;
+  gap: 10px;
+  align-items: center;
+  padding: 14px 18px;
+  border-top: 1px solid var(--uik-divider);
+  cursor: pointer;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  border-left: 3px solid transparent;
+}
+.uik-mr-row:hover {
+  background: #f8faff;
+}
+.uik-mr-row.is-active {
+  background: var(--uik-soft);
+  border-left-color: var(--uik-purple);
+}
+.uik-stat {
+  border: 1px solid var(--uik-line);
+  border-radius: var(--uik-r-lg);
+  background: #fff;
+  padding: 14px 16px;
+}
+.uik-stat__num {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--uik-ink);
+  line-height: 1;
+}
+.uik-stat__label {
+  font-size: 11.5px;
+  color: var(--uik-mut);
+  margin-top: 4px;
+}
+
+/* ============================================================================
+   Responsive — preserve density ≥1280, graceful collapse below
+   ============================================================================ */
+@media (max-width: 1180px) {
+  .uik-empty,
+  .uik-mempty {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+  .uik-mempty {
+    padding: 36px 28px;
+  }
+}

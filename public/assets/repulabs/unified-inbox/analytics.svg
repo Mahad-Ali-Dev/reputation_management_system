@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="barFill" x1="512" y1="218" x2="512" y2="804" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#BDA7FF"/>
+      <stop offset="0.46" stop-color="#8D63FF"/>
+      <stop offset="1" stop-color="#6236F4"/>
+    </linearGradient>
+    <linearGradient id="innerFill" x1="512" y1="268" x2="512" y2="755" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#EEE8FF"/>
+      <stop offset="1" stop-color="#C6B7FF"/>
+    </linearGradient>
+    <filter id="softGlow" x="72" y="80" width="880" height="880" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="44" result="blur"/>
+      <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0.45  0 0 0 0 0.25  0 0 0 0 1  0 0 0 0.55 0" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="shadow" x="170" y="190" width="684" height="664" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="22" stdDeviation="24" flood-color="#4E2AD5" flood-opacity="0.24"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softGlow)">
+    <g filter="url(#shadow)">
+      <!-- left bar -->
+      <rect x="252" y="520" width="150" height="252" rx="75" fill="url(#barFill)"/>
+      <rect x="292" y="571" width="70" height="150" rx="35" fill="url(#innerFill)" opacity="0.92"/>
+      <path d="M327 520C285.579 520 252 553.579 252 595V697C252 738.421 285.579 772 327 772" stroke="#D8CCFF" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+
+      <!-- middle bar -->
+      <rect x="437" y="403" width="150" height="369" rx="75" fill="url(#barFill)"/>
+      <rect x="477" y="468" width="70" height="239" rx="35" fill="url(#innerFill)" opacity="0.92"/>
+      <path d="M512 403C470.579 403 437 436.579 437 478V697C437 738.421 470.579 772 512 772" stroke="#D8CCFF" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+
+      <!-- right bar -->
+      <rect x="622" y="260" width="150" height="512" rx="75" fill="url(#barFill)"/>
+      <rect x="662" y="337" width="70" height="358" rx="35" fill="url(#innerFill)" opacity="0.92"/>
+      <path d="M697 260C655.579 260 622 293.579 622 335V697C622 738.421 655.579 772 697 772" stroke="#D8CCFF" stroke-width="10" stroke-linecap="round" opacity="0.55"/>
+    </g>
+  </g>
+</svg>

@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="p1" x1="297" y1="161" x2="735" y2="852" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#EEEAFE"/>
+    </linearGradient>
+    <linearGradient id="p2" x1="225" y1="149" x2="784" y2="876" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5A3BFF"/>
+      <stop offset="1" stop-color="#8B79FF"/>
+    </linearGradient>
+    <linearGradient id="p3" x1="398" y1="643" x2="526" y2="873" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4428D8"/>
+      <stop offset="1" stop-color="#8A6DFF"/>
+    </linearGradient>
+  </defs>
+  <g transform="rotate(25 512 512)">
+    <path d="M575 170C689 222 766 385 720 580L648 745H434L362 580C316 385 393 222 507 170H575Z" fill="url(#p1)"/>
+    <path d="M507 170H575C629 194 675 246 707 316L375 316C407 246 453 194 507 170Z" fill="url(#p2)"/>
+    <path d="M434 745H648L614 812H468L434 745Z" fill="url(#p2)"/>
+    <ellipse cx="541" cy="435" rx="72" ry="72" fill="#5A3BFF"/>
+    <ellipse cx="541" cy="435" rx="88" ry="88" stroke="#CEC6FF" stroke-width="22"/>
+    <path d="M362 480L283 548L362 596V480Z" fill="url(#p2)"/>
+    <path d="M720 480L799 548L720 596V480Z" fill="url(#p2)"/>
+    <path d="M492 812C478 868 492 918 541 952C590 918 604 868 590 812H492Z" fill="url(#p3)"/>
+    <path d="M517 826C507 860 512 894 541 920C570 894 575 860 565 826H517Z" fill="#8D77FF" opacity=".7"/>
+  </g>
+</svg>

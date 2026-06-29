@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bubbleGradient" x1="260" y1="150" x2="760" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C7A6FF"/>
+      <stop offset="0.45" stop-color="#9B63FF"/>
+      <stop offset="1" stop-color="#6C2CFF"/>
+    </linearGradient>
+    <linearGradient id="innerGradient" x1="316" y1="225" x2="722" y2="642" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#D8C5FF" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#8F5CFF" stop-opacity="0.72"/>
+    </linearGradient>
+    <radialGradient id="highlight" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(348 250) rotate(122) scale(78 35)">
+      <stop stop-color="#FFFFFF" stop-opacity="0.78"/>
+      <stop offset="1" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softGlow" x="95" y="105" width="835" height="785" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="0" stdDeviation="46" flood-color="#8B5CFF" flood-opacity="0.55"/>
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#4E2AEF" flood-opacity="0.20"/>
+    </filter>
+    <filter id="innerShadow" x="220" y="170" width="595" height="564" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feOffset dx="0" dy="6"/>
+      <feGaussianBlur stdDeviation="8" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+
+  <!-- transparent background intentionally omitted -->
+
+  <g filter="url(#softGlow)">
+    <path d="M281.5 173.5H676.5C754.1 173.5 817 236.4 817 314V503.8C817 581.4 754.1 644.3 676.5 644.3H548.6C531.8 644.3 515.6 651.1 503.8 663.1L425.5 742.4C399.2 769 353.8 750.4 353.8 713V673.8C353.8 657.5 340.6 644.3 324.3 644.3H281.5C203.9 644.3 141 581.4 141 503.8V314C141 236.4 203.9 173.5 281.5 173.5Z" fill="url(#bubbleGradient)"/>
+    <path d="M281.5 173.5H676.5C754.1 173.5 817 236.4 817 314V503.8C817 581.4 754.1 644.3 676.5 644.3H548.6C531.8 644.3 515.6 651.1 503.8 663.1L425.5 742.4C399.2 769 353.8 750.4 353.8 713V673.8C353.8 657.5 340.6 644.3 324.3 644.3H281.5C203.9 644.3 141 581.4 141 503.8V314C141 236.4 203.9 173.5 281.5 173.5Z" fill="url(#highlight)"/>
+    <path d="M281.5 173.5H676.5C754.1 173.5 817 236.4 817 314V503.8C817 581.4 754.1 644.3 676.5 644.3H548.6C531.8 644.3 515.6 651.1 503.8 663.1L425.5 742.4C399.2 769 353.8 750.4 353.8 713V673.8C353.8 657.5 340.6 644.3 324.3 644.3H281.5C203.9 644.3 141 581.4 141 503.8V314C141 236.4 203.9 173.5 281.5 173.5Z" stroke="#8C55FF" stroke-width="4" stroke-opacity="0.55"/>
+  </g>
+
+  <g filter="url(#innerShadow)">
+    <path d="M319 270H653C715.4 270 766 320.6 766 383V489C766 551.4 715.4 602 653 602H520.6C505.2 602 490.5 608.3 479.9 619.5L429.5 672.3C412.5 690.1 382.5 678.1 382.5 653.5V624C382.5 611.9 372.6 602 360.5 602H319C256.6 602 206 551.4 206 489V383C206 320.6 256.6 270 319 270Z" fill="url(#innerGradient)" fill-opacity="0.92"/>
+    <path d="M319 270H653C715.4 270 766 320.6 766 383V489C766 551.4 715.4 602 653 602H520.6C505.2 602 490.5 608.3 479.9 619.5L429.5 672.3C412.5 690.1 382.5 678.1 382.5 653.5V624C382.5 611.9 372.6 602 360.5 602H319C256.6 602 206 551.4 206 489V383C206 320.6 256.6 270 319 270Z" stroke="#6530EF" stroke-width="4" stroke-opacity="0.45"/>
+  </g>
+
+  <circle cx="444" cy="435" r="42" fill="#8F5CFF" opacity="0.95"/>
+  <circle cx="444" cy="435" r="41" fill="url(#innerGradient)" opacity="0.72"/>
+  <circle cx="580" cy="435" r="42" fill="#8F5CFF" opacity="0.95"/>
+  <circle cx="580" cy="435" r="41" fill="url(#innerGradient)" opacity="0.72"/>
+</svg>

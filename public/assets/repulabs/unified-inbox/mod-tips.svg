@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1254" height="1254" viewBox="0 0 1254 1254" fill="none">
+  <defs>
+    <linearGradient id="purpleStroke" x1="383" y1="249" x2="823" y2="979" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7647FF"/>
+      <stop offset="0.48" stop-color="#5A27F2"/>
+      <stop offset="1" stop-color="#6F31FF"/>
+    </linearGradient>
+    <filter id="softDepth" x="250" y="140" width="760" height="940" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="2" stdDeviation="1.5" flood-color="#4D23D9" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softDepth)" stroke="url(#purpleStroke)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- light rays -->
+    <path d="M624 237 L624 277" stroke-width="45"/>
+    <path d="M389 323 L424 359" stroke-width="45"/>
+    <path d="M859 323 L823 359" stroke-width="45"/>
+
+    <!-- bulb outline -->
+    <path d="M545 866 L545 810
+             C545 750 519 721 481 676
+             C433 620 406 563 407 502
+             C410 407 494 361 624 361
+             C754 361 838 407 841 502
+             C842 563 815 620 767 676
+             C729 721 704 750 704 810
+             L704 866
+             L545 866" stroke-width="55"/>
+
+    <!-- lower base ring -->
+    <path d="M571 892
+             C560 937 584 971 624 971
+             C664 971 688 937 677 892" stroke-width="55"/>
+  </g>
+</svg>

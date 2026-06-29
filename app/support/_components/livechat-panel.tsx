@@ -18,17 +18,27 @@ import { LiveChatSessions, type SessionView } from "./livechat-sessions";
 import { WidgetSettings, type WidgetSettingsData } from "./widget-settings";
 
 /**
- * Live Chat tab (server loader) — Module 09, Wave 3c-B.
+ * Live Chat tab (server loader) — rebuilt to the delivered live-chat kit.
  *
- * The real-time face of the `webchat` channel. Two sub-views (driven by `?sub=`):
- *   - `sessions` (default): live visitor sessions (LiveChatVisitor + the widget
- *     AiConversation) with a read-only transcript and an "Open in Conversations"
- *     hand-off to reply (the unified composer lives there).
- *   - `widget`: the widget Customize / Deploy / AI / SMS settings.
+ * Five sub-views (driven by `?sub=`) shown as kit underline sub-tabs:
+ *   - `sessions` (default): live visitor sessions + read-only transcript +
+ *     "Reply in Conversations" hand-off. Empty → the kit live-chat empty state.
+ *   - `customize` | `deploy` | `ai` | `sms`: the widget setup forms (the kit's
+ *     four "active state" screens), all client-side from the same loader data.
  *
- * RSC-safe: DB reads only here; interactivity lives in the client islands
- * (<LiveChatSessions/>, <WidgetSettings/>). Everything is fail-soft.
+ * RSC-safe: DB reads only here; interactivity lives in the client islands.
+ * Everything is fail-soft.
  */
+
+const SUB_TABS = [
+  { key: "sessions", label: "Live sessions" },
+  { key: "customize", label: "Customize" },
+  { key: "deploy", label: "Deploy" },
+  { key: "ai", label: "AI Settings" },
+  { key: "sms", label: "SMS Handoff" },
+] as const;
+
+type SubKey = (typeof SUB_TABS)[number]["key"];
 
 export async function LiveChatPanel({
   orgId,
@@ -39,39 +49,27 @@ export async function LiveChatPanel({
   sub?: string;
   sessionId?: string;
 }) {
-  const view = sub === "widget" ? "widget" : "sessions";
+  const view: SubKey = (SUB_TABS.some((t) => t.key === sub) ? sub : "sessions") as SubKey;
 
   return (
     <div>
-      <LiveChatSubTabs active={view} />
-      {view === "widget" ? (
-        <WidgetSettingsLoader orgId={orgId} />
-      ) : (
+      <div className="uik-subtabs">
+        {SUB_TABS.map((t) => (
+          <Link
+            key={t.key}
+            href={t.key === "sessions" ? "/support?tab=live-chat" : `/support?tab=live-chat&sub=${t.key}`}
+            className={`uik-subtab${view === t.key ? " is-active" : ""}`}
+          >
+            {t.label}
+          </Link>
+        ))}
+      </div>
+
+      {view === "sessions" ? (
         <SessionsLoader orgId={orgId} sessionId={sessionId} />
+      ) : (
+        <WidgetSettingsLoader orgId={orgId} initialSub={view} />
       )}
-    </div>
-  );
-}
-
-/* ----------------------------- Sub-tab nav ------------------------------- */
-
-function LiveChatSubTabs({ active }: { active: "sessions" | "widget" }) {
-  const tabs: { key: "sessions" | "widget"; label: string; sub?: string }[] = [
-    { key: "sessions", label: "Live sessions" },
-    { key: "widget", label: "Widget settings", sub: "widget" },
-  ];
-  return (
-    <div className="tabs" style={{ marginBottom: 14 }}>
-      {tabs.map((t) => (
-        <Link
-          key={t.key}
-          href={t.sub ? `/support?tab=live-chat&sub=${t.sub}` : "/support?tab=live-chat"}
-          className={`tabs__t${active === t.key ? " is-active" : ""}`}
-          style={{ textDecoration: "none" }}
-        >
-          {t.label}
-        </Link>
-      ))}
     </div>
   );
 }
@@ -133,26 +131,53 @@ function toSessionView(s: LiveSession): SessionView {
 
 function SessionsEmpty() {
   return (
-    <div className="ds-card">
-      <div className="ds-card__body dim" style={{ textAlign: "center", padding: 48 }}>
-        <Icon name="bot" size={28} style={{ color: "var(--pri)" }} />
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
-          No website chats yet
-        </h3>
-        <p style={{ fontSize: 13, marginTop: 6, maxWidth: 460, marginInline: "auto" }}>
-          Embed the chat widget on your website and conversations will appear here in real time.
-          Customize and grab the embed snippet under Widget settings.
-        </p>
-        <div className="row" style={{ justifyContent: "center", gap: 8, marginTop: 16 }}>
-          <Link
-            href="/support?tab=live-chat&sub=widget"
-            className="btn btn--pri"
-            style={{ textDecoration: "none" }}
-          >
-            <Icon name="settings" size={13} />
-            Set up the widget
-          </Link>
+    <div className="uik-card">
+      <div className="uik-empty">
+        <div>
+          <img
+            src="/assets/repulabs/unified-inbox/livechat-empty.svg"
+            alt=""
+            aria-hidden="true"
+            className="uik-empty__illus"
+            style={{ maxWidth: 380, mixBlendMode: "multiply" }}
+          />
         </div>
+        <div>
+          <h3 className="uik-empty__title">No live chat sessions yet</h3>
+          <p className="uik-empty__body">
+            When visitors start a chat on your website or connected channels, they&apos;ll appear here.
+          </p>
+          <div className="row" style={{ gap: 10, flexWrap: "wrap" }}>
+            <Link href="/connections" className="uik-btn uik-btn--purple">
+              <Icon name="chat" size={13} />
+              Connect channels
+            </Link>
+            <Link href="/support?tab=live-chat&sub=deploy" className="uik-btn">
+              <Icon name="settings" size={13} />
+              Install website chat
+            </Link>
+          </div>
+
+          <div className="uik-benefits">
+            <Benefit icon="chat" title="Live chat, made simple" body="Talk to your website visitors in real time and close more conversations." />
+            <Benefit icon="plug" title="Connect your website" body="Add the live chat widget to your site in a couple of minutes." />
+            <Benefit icon="bot" title="Proactive chat" body="Automatically start conversations based on rules and behavior." />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Benefit({ icon, title, body }: { icon: Parameters<typeof Icon>[0]["name"]; title: string; body: string }) {
+  return (
+    <div className="uik-benefit">
+      <span className="uik-benefit__icon">
+        <Icon name={icon} size={15} />
+      </span>
+      <div>
+        <p className="uik-benefit__title">{title}</p>
+        <p className="uik-benefit__body">{body}</p>
       </div>
     </div>
   );
@@ -160,7 +185,13 @@ function SessionsEmpty() {
 
 /* ----------------------------- Widget settings --------------------------- */
 
-async function WidgetSettingsLoader({ orgId }: { orgId: string }) {
+async function WidgetSettingsLoader({
+  orgId,
+  initialSub,
+}: {
+  orgId: string;
+  initialSub: "customize" | "deploy" | "ai" | "sms";
+}) {
   const [config, key, handoffNumbers] = await Promise.all([
     getWidgetConfig(orgId),
     getPrimaryWidgetKey(orgId),
@@ -186,7 +217,5 @@ async function WidgetSettingsLoader({ orgId }: { orgId: string }) {
     })),
   };
 
-  // The `sub` param routes to the Widget settings view; the inner Customize /
-  // Deploy / AI / SMS sub-tabs are client-side (no extra server round-trips).
-  return <WidgetSettings data={data} />;
+  return <WidgetSettings data={data} sub={initialSub} />;
 }

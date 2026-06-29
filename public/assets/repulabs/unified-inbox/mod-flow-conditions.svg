@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="blueGrad" x1="175" y1="210" x2="849" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0A8DFF"/>
+      <stop offset="0.55" stop-color="#006DFF"/>
+      <stop offset="1" stop-color="#0064E8"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#blueGrad)" stroke-width="64" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M210 230 H814 L590 500 V744 H434 V500 Z"/>
+    <path d="M320 382 H704"/>
+  </g>
+</svg>

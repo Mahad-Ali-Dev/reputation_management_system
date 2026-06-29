@@ -6,19 +6,26 @@ import { Icon, type IconName } from "@/components/shell/icon";
 import { deleteAutomationRule, toggleAutomationRule } from "@/lib/chat/automation-actions";
 import type { AiBehaviour, AutomationRuleView } from "@/lib/chat/automation-shared";
 import { AutomationRuleForm } from "./automation-rule-form";
+import "../support-ops.css";
 
 /**
- * AutomationsPanel (Module 09 — Inbox, Automation tab) — client island.
+ * AutomationsPanel (Module 09 — Inbox, Automation tab) — client island, rebuilt
+ * to the delivered "Automation" design kit.
  *
- * The rule-builder home: lists every `ChatAutomationRule` for the org with its
- * trigger, channels, AI behaviour and reply cap, and lets a Manager+ enable/
- * disable, edit, delete, or create a rule. The create/edit form is the sibling
- * <AutomationRuleForm/>; this component owns the list + which row (if any) is
- * being edited.
+ * Active state: a KPI strip + a workflow table of every `ChatAutomationRule` (its
+ * trigger as "launch logic", channels, AI behaviour as "response path", reply cap,
+ * a Live/Paused mode pill, and last-updated), with enable/disable, edit, delete,
+ * and create. Empty state: the kit's workflow-diagram canvas + quick-start rail.
  *
- * The shell does the (fail-soft) server read and feeds us serialized `rules`.
- * If the delta columns aren't migrated yet, `rules` is simply [] and the empty
- * state shows — the inbox never 500s.
+ * LIVE DATA ONLY. Active-rules KPI is a real count. The other KPIs (triggered
+ * today, auto-resolved, avg response time) have no execution-log FK to attribute
+ * yet, so they render "—" rather than invent numbers — the table itself is fully
+ * real. The create/edit form is the sibling <AutomationRuleForm/>; this component
+ * owns the list + which row (if any) is being edited.
+ *
+ * The shell does the (fail-soft) server read and feeds us serialized `rules`; if
+ * the delta columns aren't migrated yet `rules` is [] and the empty state shows —
+ * the inbox never 500s.
  */
 
 const CHANNEL_LABELS: Record<string, { label: string; icon: IconName }> = {
@@ -31,10 +38,19 @@ const CHANNEL_LABELS: Record<string, { label: string; icon: IconName }> = {
   gbp_qa: { label: "Google Q&A", icon: "google" },
 };
 
-const BEHAVIOUR_LABELS: Record<AiBehaviour, { label: string; cls: string }> = {
-  kb_reply: { label: "AI knowledge base", cls: "chip--info" },
-  fixed_template: { label: "Fixed reply", cls: "chip--out" },
-  kb_then_escalate: { label: "AI, then human", cls: "chip--pri" },
+const BEHAVIOUR_LABELS: Record<AiBehaviour, { label: string; steps: string[] }> = {
+  kb_reply: {
+    label: "AI knowledge base",
+    steps: ["Draft reply from knowledge base", "Send instantly"],
+  },
+  fixed_template: {
+    label: "Fixed reply",
+    steps: ["Send the saved template", "Merge customer details"],
+  },
+  kb_then_escalate: {
+    label: "AI, then human",
+    steps: ["Reply from knowledge base", "Escalate to an agent"],
+  },
 };
 
 /** Sentinel for "create a new rule" mode (vs editing an existing id). */
@@ -46,47 +62,87 @@ export function AutomationsPanel({ rules }: { rules: AutomationRuleView[] }) {
 
   if (editing) {
     const rule = editing === NEW ? null : (rules.find((r) => r.id === editing) ?? null);
-    return <AutomationRuleForm rule={rule} onDone={() => setEditing(null)} />;
+    return (
+      <div className="sops">
+        <AutomationRuleForm rule={rule} onDone={() => setEditing(null)} />
+      </div>
+    );
   }
 
+  const activeCount = rules.filter((r) => r.isActive).length;
+
   return (
-    <div style={{ display: "grid", gap: 14 }}>
-      <div className="row" style={{ justifyContent: "space-between", gap: 8, flexWrap: "wrap" }}>
+    <div className="sops">
+      <div className="sops-toprow">
         <div>
-          <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 600 }}>Automation rules</h3>
-          <p style={{ margin: "3px 0 0", fontSize: 12, color: "var(--ink-2)", lineHeight: 1.5 }}>
+          <h3 className="sops-toprow__h">Automation rules</h3>
+          <p className="sops-toprow__p">
             Auto-reply to inbound messages and hand off to a human on your terms. Rules apply to the
             channels you choose and respect a per-conversation reply limit.
           </p>
         </div>
-        <button type="button" className="btn btn--pri btn--sm" onClick={() => setEditing(NEW)}>
-          <Icon name="plus" size={12} />
+        <button type="button" className="sops-btn sops-btn--pri" onClick={() => setEditing(NEW)}>
+          <Icon name="plus" size={14} />
           New rule
         </button>
+      </div>
+
+      {/* KPI strip — Active rules is a live count; the rest need an execution log
+          to attribute, so they show "—" rather than fabricate numbers. */}
+      <div className="sops-kpis">
+        <Kpi tone="pri" asset="auto-stat-active.svg" label="Active rules" value={String(activeCount)} />
+        <Kpi tone="blue" asset="auto-kpi-chat.svg" label="Triggered today" value="—" />
+        <Kpi tone="green" asset="auto-stat-templates.svg" label="Auto-resolved" value="—" />
+        <Kpi tone="orange" asset="auto-kpi-clock.svg" label="Avg response time" value="—" />
       </div>
 
       {rules.length === 0 ? (
         <EmptyState onCreate={() => setEditing(NEW)} />
       ) : (
-        <div className="ds-card" style={{ padding: 4 }}>
-          {rules.map((r, i) => (
-            <RuleRow key={r.id} rule={r} first={i === 0} onEdit={() => setEditing(r.id)} />
-          ))}
+        <div className="sops-card" style={{ overflow: "hidden" }}>
+          <div className="sops-card__head">
+            <h3 className="sops-card__title">Workflows</h3>
+            <span className="sops__mono" style={{ fontSize: 11, color: "var(--sops-muted)" }}>
+              {rules.length} {rules.length === 1 ? "rule" : "rules"}
+            </span>
+          </div>
+          <div>
+            {rules.map((r) => (
+              <RuleRow key={r.id} rule={r} onEdit={() => setEditing(r.id)} />
+            ))}
+          </div>
         </div>
       )}
     </div>
   );
 }
 
-function RuleRow({
-  rule,
-  first,
-  onEdit,
+function Kpi({
+  tone,
+  asset,
+  label,
+  value,
 }: {
-  rule: AutomationRuleView;
-  first: boolean;
-  onEdit: () => void;
+  tone: "pri" | "blue" | "green" | "orange";
+  asset: string;
+  label: string;
+  value: string;
 }) {
+  return (
+    <div className="sops-kpi">
+      <span className={`sops-kpi__tile sops-kpi__tile--${tone}`}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/assets/repulabs/unified-inbox/${asset}`} alt="" aria-hidden="true" />
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <div className="sops-kpi__lab">{label}</div>
+        <div className="sops-kpi__val">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+function RuleRow({ rule, onEdit }: { rule: AutomationRuleView; onEdit: () => void }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -111,112 +167,104 @@ function RuleRow({
   }
 
   const behaviour = BEHAVIOUR_LABELS[rule.aiBehaviour] ?? BEHAVIOUR_LABELS.kb_reply;
+  const tile = ruleTile(rule.aiBehaviour);
 
   return (
-    <div
-      style={{
-        padding: 12,
-        borderTop: first ? "none" : "1px solid var(--line)",
-      }}
-    >
-      <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
-        <Icon
-          name="bolt"
-          size={16}
-          style={{ marginTop: 2, color: rule.isActive ? "var(--pri)" : "var(--ink-3, #94a3b8)" }}
-        />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="row" style={{ gap: 8, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: 13, fontWeight: 600 }}>{rule.name}</span>
-            <span className={`chip ${rule.isActive ? "chip--ok" : "chip--out"}`} style={{ fontSize: 9.5 }}>
-              {rule.isActive ? "Active" : "Paused"}
-            </span>
-            <span className={`chip ${behaviour.cls}`} style={{ fontSize: 9.5, gap: 3 }}>
-              <Icon name="sparkle" size={9} />
-              {behaviour.label}
-            </span>
-          </div>
-
-          {/* Trigger + channels summary */}
-          <div className="row" style={{ gap: 6, marginTop: 6, flexWrap: "wrap", alignItems: "center" }}>
-            <span className="chip chip--out" style={{ fontSize: 9.5, gap: 3 }} title="Trigger">
-              <Icon name="filter" size={9} />
-              {rule.trigger === "keyword" && rule.triggerKeyword ? (
-                <>
-                  Keyword
-                  <span className="mono" style={{ opacity: 0.8 }}>
-                    {rule.triggerKeyword}
-                  </span>
-                </>
-              ) : (
-                "All messages"
-              )}
-            </span>
-            <span style={{ fontSize: 11, color: "var(--ink-3, #94a3b8)" }}>·</span>
+    <div className="sops-wfrow">
+      {/* Workflow + channels */}
+      <div className="sops-wfrow__main">
+        <span
+          className="sops-wfrow__tile"
+          style={{ background: tile.bg }}
+        >
+          <Icon name={tile.icon} size={20} style={{ color: tile.fg }} />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <div className="sops-wfrow__name">{rule.name}</div>
+          <p className="sops-wfrow__desc">
+            {behaviour.label} · max {rule.maxRepliesPerConversation}/conversation
+            {rule.aiBehaviour === "kb_then_escalate" ? ` · escalate after ${rule.escalateAfterTurns}` : ""}
+          </p>
+          <div className="sops-wfrow__chips">
             {rule.channels.length === 0 ? (
-              <span className="chip chip--out" style={{ fontSize: 9.5 }}>
-                No channels
-              </span>
+              <span className="sops-chip sops-chip--out">No channels</span>
             ) : (
               rule.channels.map((c) => {
                 const meta = CHANNEL_LABELS[c] ?? { label: c, icon: "chat" as IconName };
                 return (
-                  <span key={c} className="chip chip--out" style={{ fontSize: 9.5, gap: 3 }}>
-                    <Icon name={meta.icon} size={9} />
+                  <span key={c} className="sops-chip sops-chip--out">
+                    <Icon name={meta.icon} size={10} />
                     {meta.label}
                   </span>
                 );
               })
             )}
-            <span style={{ fontSize: 11, color: "var(--ink-3, #94a3b8)" }}>·</span>
-            <span className="dim mono" style={{ fontSize: 10 }} title="Max auto-replies per conversation">
-              max {rule.maxRepliesPerConversation}/conv
-            </span>
-            {rule.aiBehaviour === "kb_then_escalate" && (
-              <span className="dim mono" style={{ fontSize: 10 }} title="Escalates to a human after N replies">
-                escalate after {rule.escalateAfterTurns}
-              </span>
-            )}
           </div>
-
           {error && (
-            <div className="chip chip--bad" role="alert" style={{ display: "inline-flex", marginTop: 8 }}>
+            <div className="sops-error" role="alert" style={{ marginTop: 8 }}>
+              <Icon name="alert" size={12} />
               {error}
             </div>
           )}
         </div>
+      </div>
 
-        {/* Actions */}
-        <div className="row" style={{ gap: 4, alignItems: "center" }}>
+      {/* Launch logic + response path */}
+      <div style={{ display: "grid", gap: 8, minWidth: 0 }}>
+        <div className="sops-wfrow__logic">
+          <b>Starts when</b>
+          {rule.trigger === "keyword" && rule.triggerKeyword
+            ? `An inbound message contains “${rule.triggerKeyword}”.`
+            : "Any inbound message arrives on a selected channel."}
+        </div>
+        <div className="sops-wfrow__chips">
+          {behaviour.steps.map((s) => (
+            <span key={s} className="sops-chip sops-chip--pri">
+              {s}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* Mode + actions */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "flex-end" }}>
+        <span className={`sops-mode ${rule.isActive ? "sops-mode--live" : "sops-mode--off"}`}>
+          <span
+            className="sops-mode__dot"
+            style={{ background: rule.isActive ? "var(--sops-ok)" : "var(--sops-faint)" }}
+          />
+          {rule.isActive ? "Live" : "Paused"}
+        </span>
+        <span style={{ fontSize: 10.5, color: "var(--sops-faint)" }}>Updated {relAge(rule.updatedAt)}</span>
+        <div className="sops-wfrow__actions">
           <button
             type="button"
-            className={`chip ${rule.isActive ? "chip--ok" : "chip--out"}`}
-            style={{ cursor: "pointer", fontSize: 10 }}
+            className={`sops-chip ${rule.isActive ? "sops-chip--ok" : "sops-chip--out"}`}
+            style={{ cursor: "pointer", height: 26 }}
             onClick={() => run(toggleAutomationRule)}
             disabled={pending}
+            aria-pressed={rule.isActive}
             title={rule.isActive ? "Pause this rule" : "Activate this rule"}
           >
             {rule.isActive ? "On" : "Off"}
           </button>
           <button
             type="button"
-            className="btn btn--ghost btn--sm"
+            className="sops-btn sops-btn--icon"
             onClick={onEdit}
             disabled={pending}
             aria-label={`Edit rule ${rule.name}`}
-            style={{ padding: "3px 7px" }}
           >
-            <Icon name="edit" size={12} />
+            <Icon name="edit" size={14} />
           </button>
           <button
             type="button"
-            className="btn btn--ghost btn--sm"
+            className="sops-btn sops-btn--icon"
             onClick={onDelete}
             disabled={pending}
             aria-label={`Delete rule ${rule.name}`}
-            style={{ padding: "3px 7px" }}
           >
-            <Icon name="trash" size={12} />
+            <Icon name="trash" size={14} />
           </button>
         </div>
       </div>
@@ -224,26 +272,59 @@ function RuleRow({
   );
 }
 
+function ruleTile(b: AiBehaviour): { icon: IconName; bg: string; fg: string } {
+  switch (b) {
+    case "fixed_template":
+      return { icon: "chat", bg: "var(--sops-info-soft)", fg: "var(--sops-info)" };
+    case "kb_then_escalate":
+      return { icon: "users", bg: "var(--sops-warn-soft)", fg: "#c56a00" };
+    default:
+      return { icon: "sparkle", bg: "var(--sops-pri-soft)", fg: "var(--sops-pri)" };
+  }
+}
+
 function EmptyState({ onCreate }: { onCreate: () => void }) {
   return (
-    <div className="ds-card">
-      <div className="ds-card__body dim" style={{ textAlign: "center", padding: 44 }}>
-        <Icon name="bolt" size={26} style={{ color: "var(--pri)" }} />
-        <h3 style={{ fontSize: 15, fontWeight: 600, marginTop: 12, color: "var(--ink)" }}>
+    <div className="sops-empty" style={{ gridTemplateColumns: "minmax(300px, 360px) minmax(0, 1fr)" }}>
+      <div>
+        <h2 className="sops-empty__h">
           No automation rules yet
-        </h3>
-        <p style={{ fontSize: 12.5, marginTop: 6, maxWidth: 440, marginInline: "auto", lineHeight: 1.55 }}>
-          Create a rule to auto-reply to inbound messages — answer from your knowledge base, send a
-          fixed template, or reply then hand off to a human. You stay in control with a
-          per-conversation reply cap.
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/repulabs/unified-inbox/auto-sparkles.svg" alt="" aria-hidden="true" />
+        </h2>
+        <p className="sops-empty__p">
+          Create rules to auto-reply, route conversations, send templates, and hand off to your team.
         </p>
-        <div className="row" style={{ justifyContent: "center", marginTop: 16 }}>
-          <button type="button" className="btn btn--pri btn--sm" onClick={onCreate}>
-            <Icon name="plus" size={12} />
-            Create your first rule
+        <div className="sops-empty__actions">
+          <button type="button" className="sops-btn sops-btn--pri" onClick={onCreate}>
+            <Icon name="plus" size={15} />
+            Create first rule
           </button>
         </div>
       </div>
+      <div className="sops-empty__art">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/assets/repulabs/unified-inbox/auto-empty-flow.svg"
+          alt=""
+          aria-hidden="true"
+          style={{ maxWidth: 520 }}
+        />
+      </div>
     </div>
   );
+}
+
+/** Compact relative age (e.g. "2m ago", "3h ago", "5d ago"). */
+function relAge(iso: string): string {
+  const then = new Date(iso).getTime();
+  if (Number.isNaN(then)) return "recently";
+  const s = Math.max(0, Math.round((Date.now() - then) / 1000));
+  if (s < 60) return `${s}s ago`;
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.round(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.round(h / 24);
+  return `${d}d ago`;
 }

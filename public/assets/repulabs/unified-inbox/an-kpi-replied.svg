@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="656" height="625" viewBox="0 0 656 625" fill="none">
+  <defs>
+    <linearGradient id="blueGrad" x1="98.4" y1="112.5" x2="537.9" y2="537.5" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#178BFF"/>
+      <stop offset="0.48" stop-color="#006BFF"/>
+      <stop offset="1" stop-color="#0060E8"/>
+    </linearGradient>
+    <radialGradient id="softBlue" cx="35%" cy="25%" r="70%">
+      <stop offset="0" stop-color="#45A5FF" stop-opacity="0.55"/>
+      <stop offset="0.55" stop-color="#087CFF" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#005BE4" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softShadow" x="-10%" y="-10%" width="120%" height="120%" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="8" flood-color="#006BFF" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <path d="M 641 12 L 633 9 L 621 8 L 614 9 L 598 15 L 310 139 L 26 259 L 19 263 L 12 271 L 8 280 L 8 294 L 12 303 L 25 314 L 95 339 L 179 372 L 192 372 L 202 367 L 261 321 L 481 157 L 487 158 L 487 162 L 371 290 L 287 379 L 247 418 L 243 426 L 241 434 L 241 448 L 244 467 L 278 595 L 283 605 L 289 611 L 298 615 L 307 616 L 315 614 L 322 610 L 328 604 L 373 543 L 377 543 L 430 591 L 449 606 L 460 609 L 475 608 L 485 603 L 495 592 L 501 578 L 504 563 L 515 527 L 523 493 L 528 479 L 543 419 L 552 390 L 556 371 L 562 353 L 573 308 L 576 301 L 641 59 L 647 32 L 646 20 Z" fill="url(#blueGrad)" filter="url(#softShadow)"/>
+  <path d="M 641 12 L 633 9 L 621 8 L 614 9 L 598 15 L 310 139 L 26 259 L 19 263 L 12 271 L 8 280 L 8 294 L 12 303 L 25 314 L 95 339 L 179 372 L 192 372 L 202 367 L 261 321 L 481 157 L 487 158 L 487 162 L 371 290 L 287 379 L 247 418 L 243 426 L 241 434 L 241 448 L 244 467 L 278 595 L 283 605 L 289 611 L 298 615 L 307 616 L 315 614 L 322 610 L 328 604 L 373 543 L 377 543 L 430 591 L 449 606 L 460 609 L 475 608 L 485 603 L 495 592 L 501 578 L 504 563 L 515 527 L 523 493 L 528 479 L 543 419 L 552 390 L 556 371 L 562 353 L 573 308 L 576 301 L 641 59 L 647 32 L 646 20 Z" fill="url(#softBlue)" opacity="0.75"/>
+</svg>

@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1254 1254" width="1254" height="1254">
+  <defs>
+    <linearGradient id="greenGrad" x1="166" y1="1088" x2="1014" y2="166" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#07B934"/>
+      <stop offset="0.52" stop-color="#02C225"/>
+      <stop offset="1" stop-color="#07D541"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="url(#greenGrad)" stroke-linecap="round" stroke-linejoin="round">
+    <!-- outer target ring with the same top-right opening -->
+    <path d="M 830 282 A 418 418 0 1 0 987 424" stroke-width="96"/>
+    <!-- inner target ring -->
+    <circle cx="627" cy="646" r="168" stroke-width="98"/>
+    <!-- diagonal dart / impact mark -->
+    <path d="M 758 505 L 977 286" stroke-width="94"/>
+  </g>
+</svg>

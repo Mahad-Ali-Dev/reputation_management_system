@@ -1,0 +1,28 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="goldStroke" x1="164" y1="110" x2="880" y2="934" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FDCB32"/>
+      <stop offset="0.48" stop-color="#F5A400"/>
+      <stop offset="1" stop-color="#D88A00"/>
+    </linearGradient>
+    <filter id="softShadow" x="60" y="40" width="904" height="940" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#D89400" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+
+  <g filter="url(#softShadow)">
+    <path d="M512 72
+             C610 145 735 185 854 204
+             C881 208 902 232 902 260
+             V454
+             C902 676 759 855 512 954
+             C265 855 122 676 122 454
+             V260
+             C122 232 143 208 170 204
+             C289 185 414 145 512 72Z"
+          stroke="url(#goldStroke)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+
+    <path d="M325 510 L461 646 L706 399"
+          stroke="url(#goldStroke)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+</svg>

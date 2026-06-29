@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 24 22" fill="none">
+  <title>Sliders control icon</title>
+  <g stroke="#5B35FF" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M5.7 6H12.05"/>
+    <path d="M18.05 6H18.9"/>
+    <circle cx="15.05" cy="6" r="2.35"/>
+    <path d="M5.7 13H6.65"/>
+    <path d="M11.65 13H18.9"/>
+    <circle cx="9.15" cy="13" r="2.35"/>
+  </g>
+</svg>

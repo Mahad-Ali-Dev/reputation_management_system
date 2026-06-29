@@ -95,22 +95,21 @@ export async function ConversationsPanel({
 
 function ConversationsEmpty() {
   return (
-    <div className="ds-card">
-      <div className="ds-card__body dim" style={{ textAlign: "center", padding: 56 }}>
-        <EmptyIllustration name="messages-empty" />
-        <h3 style={{ fontSize: 16, fontWeight: 700, marginTop: 14, color: "var(--ink)" }}>
-          No conversations yet
-        </h3>
-        <p style={{ fontSize: 13, marginTop: 6, maxWidth: 460, marginInline: "auto" }}>
-          Connect Facebook, Instagram, email, or embed the website chat widget to start
-          receiving messages. Every DM, chat, and callback lands in this one queue.
+    <div className="uik-card">
+      <div style={{ textAlign: "center", padding: "64px 32px 72px", maxWidth: 620, marginInline: "auto" }}>
+        <EmptyIllustration name="messages-empty" size={300} />
+        <h3 className="uik-empty__title" style={{ marginTop: 18 }}>No conversations yet</h3>
+        <p className="uik-empty__body" style={{ maxWidth: 470, marginInline: "auto" }}>
+          Connect Facebook, Instagram, email, or embed the website chat widget to start receiving
+          messages. Every DM, chat, and callback lands in this one queue.
         </p>
-        <div className="row" style={{ justifyContent: "center", gap: 8, marginTop: 18 }}>
-          <Link href="/connections" className="btn btn--pri" style={{ textDecoration: "none" }}>
-            <Icon name="plug" size={13} />
+        <div className="row" style={{ justifyContent: "center", gap: 10, marginTop: 20 }}>
+          <Link href="/connections" className="uik-btn uik-btn--pri">
+            <Icon name="plug" size={14} />
             Connect channels
           </Link>
-          <Link href="/support?tab=live-chat" className="btn btn--sm" style={{ textDecoration: "none" }}>
+          <Link href="/support?tab=live-chat&sub=widget" className="uik-btn">
+            <Icon name="chat" size={14} />
             Set up website chat
           </Link>
         </div>
