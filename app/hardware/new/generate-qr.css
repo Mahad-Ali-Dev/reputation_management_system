@@ -4,6 +4,9 @@
 ============================================================ */
 
 .gq {
+  /* Contain the page on ultra-wide screens — the kit centers the content. */
+  max-width: 1240px;
+  margin-inline: auto;
   --gq-purple: #5b35f5;
   --gq-purple-deep: #44218d;
   --gq-blue: #245bff;
@@ -323,23 +326,40 @@
 .gq-promo__cta:hover {
   filter: brightness(1.06);
 }
-/* Analytics art — real kit charts: a bar group (top-right) over a line chart. */
-.gq-promo__chart {
-  position: relative;
-  margin-top: 14px;
-  min-height: 118px;
+/* Analytics — kit composition: intro copy + small bar thumbnail (top-right),
+   then a [bar chart | line chart] row, then the CTA. */
+.gq-promo__intro {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 12px;
 }
-.gq-promo__line {
+.gq-promo__intro .gq-promo__copy {
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+.gq-promo__thumb {
+  flex-shrink: 0;
+  width: 96px;
+  height: auto;
+  filter: drop-shadow(0 8px 16px rgba(68, 33, 141, 0.14));
+}
+.gq-promo__charts {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+  gap: 18px;
+  align-items: end;
+  margin-top: 18px;
+}
+.gq-promo__bar,
+.gq-promo__linechart {
   display: block;
   width: 100%;
   height: auto;
 }
-.gq-promo__bars {
-  position: absolute;
-  top: -6px;
-  right: 0;
-  width: 42%;
-  max-width: 150px;
-  height: auto;
-  filter: drop-shadow(0 8px 16px rgba(68, 33, 141, 0.16));
+@media (max-width: 520px) {
+  .gq-promo__charts {
+    grid-template-columns: 1fr;
+  }
 }

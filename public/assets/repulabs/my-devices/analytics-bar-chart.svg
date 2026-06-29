@@ -1,0 +1,44 @@
+<svg width="1400" height="800" viewBox="0 0 1400 800" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purple" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C5CFF"/>
+      <stop offset="100%" stop-color="#3B1FD6"/>
+    </linearGradient>
+
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FFD36A"/>
+      <stop offset="100%" stop-color="#F4A52E"/>
+    </linearGradient>
+
+    <style>
+      .label { font: 600 28px Inter, Arial; fill: #2B2B2B; }
+      .grid { stroke: #D9D9E3; stroke-width: 2; stroke-dasharray: 8 10; }
+    </style>
+  </defs>
+
+  <!-- transparent bg -->
+  <rect width="1400" height="800" fill="transparent"/>
+
+  <!-- grid lines -->
+  <line x1="120" y1="120" x2="1350" y2="120" class="grid"/>
+  <line x1="120" y1="260" x2="1350" y2="260" class="grid"/>
+  <line x1="120" y1="420" x2="1350" y2="420" class="grid"/>
+  <line x1="120" y1="580" x2="1350" y2="580" class="grid"/>
+  <line x1="120" y1="720" x2="1350" y2="720" class="grid"/>
+
+  <!-- axis labels -->
+  <text x="40" y="125" class="label">10K</text>
+  <text x="40" y="265" class="label">9K</text>
+  <text x="40" y="425" class="label">4K</text>
+  <text x="40" y="585" class="label">2K</text>
+  <text x="40" y="725" class="label">0</text>
+
+  <!-- bars -->
+  <rect x="200" y="520" width="90" height="200" rx="18" fill="url(#purple)"/>
+  <rect x="380" y="300" width="90" height="420" rx="18" fill="url(#purple)"/>
+  <rect x="560" y="420" width="90" height="300" rx="18" fill="url(#purple)"/>
+  <rect x="740" y="140" width="90" height="580" rx="18" fill="url(#gold)"/>
+  <rect x="920" y="460" width="90" height="260" rx="18" fill="url(#purple)"/>
+  <rect x="1100" y="340" width="90" height="380" rx="18" fill="url(#purple)"/>
+
+</svg>

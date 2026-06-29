@@ -279,25 +279,35 @@ export default async function NewQrPage({
                 <h2 className="gq-card__title">Analytics</h2>
               </div>
               <div className="gq-card__body">
-                <p className="gq-promo__copy">
-                  Track which QR codes drive scans and reviews. Understand performance by placement,
-                  campaign, and business location.
-                </p>
-                <div className="gq-promo__chart" aria-hidden>
-                  {/* Real kit analytics art: purple/gold bars + a line-chart overlay. */}
+                {/* Intro copy + small bar-chart thumbnail top-right (kit). */}
+                <div className="gq-promo__intro">
+                  <p className="gq-promo__copy">
+                    Track which QR codes drive scans and reviews. Understand performance by
+                    placement, campaign, and business location.
+                  </p>
                   {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
                   <img
-                    src="/assets/repulabs/my-devices/analytics-chart.svg"
+                    src="/assets/repulabs/my-devices/analytics-thumb.svg"
                     alt=""
                     aria-hidden
-                    className="gq-promo__bars"
+                    className="gq-promo__thumb"
+                  />
+                </div>
+                {/* Charts row — kit bar chart (Y-axis) + line chart. */}
+                <div className="gq-promo__charts" aria-hidden>
+                  {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+                  <img
+                    src="/assets/repulabs/my-devices/analytics-bar-chart.svg"
+                    alt=""
+                    aria-hidden
+                    className="gq-promo__bar"
                   />
                   {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
                   <img
-                    src="/assets/repulabs/my-devices/analytics-line.svg"
+                    src="/assets/repulabs/my-devices/analytics-line-chart.svg"
                     alt=""
                     aria-hidden
-                    className="gq-promo__line"
+                    className="gq-promo__linechart"
                   />
                 </div>
                 {isPro ? (

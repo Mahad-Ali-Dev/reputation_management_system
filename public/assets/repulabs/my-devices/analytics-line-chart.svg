@@ -1,0 +1,58 @@
+<svg width="1400" height="700" viewBox="0 0 1400 700" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="purple" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#4F46E5"/>
+      <stop offset="100%" stop-color="#7C3AED"/>
+    </linearGradient>
+
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="100%" stop-color="#FBBF24"/>
+    </linearGradient>
+
+    <style>
+      .grid { stroke: #E5E7EB; stroke-width: 2; }
+      .axis { stroke: #CBD5E1; stroke-width: 2; }
+      .line {
+        fill: none;
+        stroke-width: 10;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+    </style>
+  </defs>
+
+  <!-- transparent bg -->
+  <rect width="1400" height="700" fill="transparent"/>
+
+  <!-- vertical grid -->
+  <line x1="200" y1="80" x2="200" y2="620" class="grid"/>
+  <line x1="420" y1="80" x2="420" y2="620" class="grid"/>
+  <line x1="640" y1="80" x2="640" y2="620" class="grid"/>
+  <line x1="860" y1="80" x2="860" y2="620" class="grid"/>
+  <line x1="1080" y1="80" x2="1080" y2="620" class="grid"/>
+  <line x1="1300" y1="80" x2="1300" y2="620" class="grid"/>
+
+  <!-- horizontal grid -->
+  <line x1="120" y1="150" x2="1320" y2="150" class="grid"/>
+  <line x1="120" y1="260" x2="1320" y2="260" class="grid"/>
+  <line x1="120" y1="370" x2="1320" y2="370" class="grid"/>
+  <line x1="120" y1="480" x2="1320" y2="480" class="grid"/>
+  <line x1="120" y1="590" x2="1320" y2="590" class="grid"/>
+
+  <!-- lines only (no labels) -->
+  <path class="line" stroke="url(#purple)"
+        d="M120 520
+           C260 420, 340 460, 420 380
+           C520 280, 620 320, 720 260
+           C820 200, 920 300, 1020 340
+           C1120 380, 1220 300, 1320 260"/>
+
+  <path class="line" stroke="url(#gold)"
+        d="M120 560
+           C260 500, 340 520, 420 480
+           C520 420, 620 420, 720 360
+           C820 300, 920 340, 1020 300
+           C1120 260, 1220 220, 1320 200"/>
+
+</svg>
