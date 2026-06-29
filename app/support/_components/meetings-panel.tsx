@@ -91,10 +91,10 @@ export function MeetingsPanel({
         <>
           {/* Stat tiles */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 16 }}>
-            <StatTile icon="cal" tint="#eef1ff" iconColor="var(--uik-pri)" num={totalAll} label="Total requests" />
-            <StatTile icon="bell" tint="#fff4d8" iconColor="#b45309" num={counts.new ?? 0} label="New" />
-            <StatTile icon="reply" tint="#eef2ff" iconColor="var(--uik-purple)" num={counts.contacted ?? 0} label="Contacted" />
-            <StatTile icon="checkCircle" tint="#e8fbf1" iconColor="#099a5a" num={counts.scheduled ?? 0} label="Scheduled" />
+            <StatTile asset="ttl req.svg" tint="#eef1ff" num={totalAll} label="Total requests" />
+            <StatTile asset="pending.svg" tint="#fff4d8" num={counts.new ?? 0} label="New" />
+            <StatTile asset="schedule.svg" tint="#eef2ff" num={counts.contacted ?? 0} label="Contacted" />
+            <StatTile asset="meetng chk.svg" tint="#e8fbf1" num={counts.scheduled ?? 0} label="Scheduled" />
           </div>
 
           {/* Table + detail */}
@@ -143,22 +143,21 @@ export function MeetingsPanel({
 }
 
 function StatTile({
-  icon,
+  asset,
   tint,
-  iconColor,
   num,
   label,
 }: {
-  icon: Parameters<typeof Icon>[0]["name"];
+  asset: string;
   tint: string;
-  iconColor: string;
   num: number;
   label: string;
 }) {
   return (
     <div className="uik-stat row" style={{ gap: 12, alignItems: "center" }}>
-      <span style={{ width: 38, height: 38, borderRadius: 10, background: tint, color: iconColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Icon name={icon} size={18} />
+      <span style={{ width: 48, height: 48, borderRadius: 12, background: tint, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/assets/repulabs/unified-inbox/${asset}`} alt="" aria-hidden="true" className="uik-illo uik-illo--34" />
       </span>
       <div>
         <div className="uik-stat__num">{num}</div>

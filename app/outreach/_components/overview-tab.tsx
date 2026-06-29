@@ -207,7 +207,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           {programs.length === 0 ? (
             <div className="rr-miniempty">
               {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-              <img src="/assets/repulabs/review-request/campaigns.svg" alt="" aria-hidden="true" />
+              <img src="/assets/repulabs/review-request/ov-empty-campaigns.svg" alt="" aria-hidden="true" />
               <div className="rr-miniempty__title">No campaigns yet</div>
               <p className="rr-miniempty__sub">Create your first campaign to get started</p>
               <Link href="/outreach?tab=send" className="btn btn--pri btn--sm">
@@ -343,7 +343,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
         {queueRows.length === 0 ? (
           <div className="rr-emptybig">
             {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-            <img src="/assets/repulabs/review-request/recipients.svg" alt="" aria-hidden="true" />
+            <img src="/assets/repulabs/review-request/ov-empty-recipients.svg" alt="" aria-hidden="true" />
             <div className="rr-emptybig__title">No recipients yet</div>
             <p className="rr-emptybig__sub">Your review request recipients will appear here</p>
             <Link href="/outreach?tab=send" className="btn btn--pri btn--sm">
@@ -417,7 +417,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
       <div className="rr-metrics">
         <MetricCard
           tile="pri"
-          icon="send"
+          img="/assets/repulabs/review-request/metric-plane.svg"
           label="Total queued"
           value={totalQueued.toLocaleString()}
           delta={
@@ -432,7 +432,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
         />
         <MetricCard
           tile="ok"
-          icon="mail"
+          img="/assets/repulabs/review-request/metric-email.svg"
           label="Email"
           value={liveEmail.toLocaleString()}
           delta={totalCh > 0 ? `${fmtPct(emailPct)}%` : "No data yet"}
@@ -441,7 +441,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
         />
         <MetricCard
           tile="blue"
-          icon="chat"
+          img="/assets/repulabs/review-request/metric-sms.svg"
           label="SMS"
           value={liveSms.toLocaleString()}
           delta={totalCh > 0 ? `${fmtPct(smsPct)}%` : "No data yet"}
@@ -450,7 +450,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
         />
         <MetricCard
           tile="orange"
-          icon="clock"
+          img="/assets/repulabs/review-request/metric-time.svg"
           label="Avg. response time"
           value={liveAvg != null ? fmtDuration(liveAvg) : "—"}
           delta={respDelta.text}
@@ -561,7 +561,7 @@ function LegendRow({
 
 function MetricCard({
   tile,
-  icon,
+  img,
   label,
   value,
   delta,
@@ -569,7 +569,7 @@ function MetricCard({
   color,
 }: {
   tile: "pri" | "ok" | "blue" | "orange";
-  icon: IconName;
+  img: string;
   label: string;
   value: string;
   delta: string;
@@ -580,7 +580,8 @@ function MetricCard({
     <div className="rr-card rr-metric">
       <div className="rr-metric__top">
         <div className={`rr-metric__tile rr-metric__tile--${tile}`}>
-          <Icon name={icon} size={22} stroke={1.7} />
+          {/* biome-ignore lint/performance/noImgElement: static brand SVG (kit metric illustration) */}
+          <img src={img} alt="" aria-hidden="true" className="rr-metric__art" />
         </div>
         <div className="rr-metric__label">{label}</div>
       </div>

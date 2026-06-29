@@ -284,16 +284,17 @@ function KeywordCard({ keywords }: { keywords: KeywordRuleView[] }) {
               >
                 <span
                   style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 9,
+                    width: 42,
+                    height: 42,
+                    borderRadius: 11,
                     display: "grid",
                     placeItems: "center",
                     background: "var(--sops-danger-soft)",
                     flexShrink: 0,
                   }}
                 >
-                  <Icon name="flag" size={16} style={{ color: "var(--sops-danger)" }} />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/assets/repulabs/unified-inbox/mod-rule-shield.svg" alt="" aria-hidden="true" style={{ width: 26, height: 26 }} />
                 </span>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div className="sops__mono" style={{ fontSize: 12.5, fontWeight: 700, color: "var(--sops-ink)" }}>

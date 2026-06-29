@@ -84,12 +84,15 @@ type CreativeIdea = {
   hashtags: string[];
 };
 
+// Each tile uses a REAL create-post kit illustration (designs/post creator/
+// create post/illustrations/*) — copied to public as cp-*.svg — not an Icon or a
+// borrowed asset from another module.
 const CREATIVE_IDEAS: CreativeIdea[] = [
   {
     id: "review",
     name: "Share a five-star review",
     sub: "Turn your latest praise into proof.",
-    art: "/assets/repulabs/illustrations/feat-reviews.png",
+    art: "/assets/repulabs/post-creator/cp-publish.svg",
     caption:
       "⭐⭐⭐⭐⭐ Review of the week!\n\n“[paste your favorite recent review here]”\n\nThank you, [customer name] — feedback like this is why we do what we do.",
     hashtags: ["fivestars", "customerlove"],
@@ -98,7 +101,7 @@ const CREATIVE_IDEAS: CreativeIdea[] = [
     id: "offer",
     name: "Promote an offer",
     sub: "A limited-time deal with a clear CTA.",
-    art: "/assets/repulabs/illustrations/feat-qr-nfc.png",
+    art: "/assets/repulabs/post-creator/cp-scheduled.svg",
     caption:
       "🎉 This week only: [your offer].\n\nMention this post in store or book online to claim it — ends [date].",
     hashtags: ["offer", "local"],
@@ -107,7 +110,7 @@ const CREATIVE_IDEAS: CreativeIdea[] = [
     id: "milestone",
     name: "Celebrate a milestone",
     sub: "Reviews, years, customers — mark the moment.",
-    art: "/assets/repulabs/illustrations/feat-analytics.png",
+    art: "/assets/repulabs/post-creator/cp-published.svg",
     caption:
       "Milestone unlocked 🚀 We just hit [X reviews / X years / X customers].\n\nA huge thank-you to every one of you who got us here.",
     hashtags: ["milestone", "thankyou"],
@@ -116,7 +119,7 @@ const CREATIVE_IDEAS: CreativeIdea[] = [
     id: "thanks",
     name: "Thank your customers",
     sub: "A simple gratitude post that invites replies.",
-    art: "/assets/repulabs/illustrations/voice-review.png",
+    art: "/assets/repulabs/post-creator/cp-drafts.svg",
     caption:
       "To everyone who shared feedback with us this month — thank you. We read every single review, and it shapes what we do next.\n\nHad a great experience? We'd love to hear about it too.",
     hashtags: ["thankyou", "community"],

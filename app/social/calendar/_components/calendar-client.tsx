@@ -498,8 +498,9 @@ function WeekBoard({
 
       {!hasAny && (
         <div className="sk-week-empty">
-          <span className="sk-week-empty__badge" aria-hidden>
-            <Icon name="cal" size={28} />
+          <span className="sk-week-empty__art" aria-hidden>
+            {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+            <img src="/assets/repulabs/post-creator/cal-calendar.svg" alt="" />
           </span>
           <h3 className="sk-empty-center__title" style={{ fontSize: 20 }}>
             Your calendar is empty

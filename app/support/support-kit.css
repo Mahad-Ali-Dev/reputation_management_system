@@ -879,6 +879,35 @@
   line-height: 1.45;
 }
 
+/* ---- kit illustrations (real delivered SVG art, used prominently) ---- */
+/* Line-art kit SVGs render transparent — no white box, so no blend needed.
+   Sizes are deliberately generous to match the mockup proportions. */
+.uik-illo {
+  display: block;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+.uik-illo--34 { width: 34px; height: 34px; }
+.uik-illo--40 { width: 40px; height: 40px; }
+.uik-illo--48 { width: 48px; height: 48px; }
+.uik-illo--56 { width: 56px; height: 56px; }
+.uik-illo--64 { width: 64px; height: 64px; }
+.uik-illo--120 { width: 120px; height: 120px; }
+/* soft rounded tile behind a small illustration (preview/help headers) */
+.uik-illo-tile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--uik-r-lg);
+  flex-shrink: 0;
+}
+.uik-illo-tile--purple { background: var(--uik-purple-soft); }
+.uik-illo-tile--blue { background: var(--uik-pri-soft); }
+
 /* option card (personality / availability / radio tiles) */
 .uik-opt {
   display: block;

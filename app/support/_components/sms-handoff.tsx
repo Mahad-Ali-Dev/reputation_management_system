@@ -69,14 +69,28 @@ export function SmsHandoff({ data }: { data: SmsHandoffData }) {
               </label>
             </label>
           </div>
-          <div className="row" style={{ gap: 14, marginTop: 14, flexWrap: "wrap" }}>
-            <SmsBenefit icon="refresh" title="Seamless continuation" />
-            <SmsBenefit icon="lock" title="Secure & verified" />
-            <SmsBenefit icon="chat" title="Context is preserved" />
-          </div>
-          <div className="row" style={{ gap: 8, marginTop: 14, padding: "10px 12px", borderRadius: "var(--uik-r-md)", background: "var(--uik-ok-soft)", fontSize: 12, color: "#099a5a" }}>
-            <Icon name="checkCircle" size={14} style={{ flexShrink: 0 }} />
-            <span>SMS handoff is available for US, CA, UK, AU and selected countries.</span>
+          <div style={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 240px", gap: 20, marginTop: 14, alignItems: "center" }}>
+            <div>
+              <div style={{ display: "grid", gap: 14 }}>
+                <SmsBenefit asset="seemless.svg" title="Seamless continuation" />
+                <SmsBenefit asset="secure.svg" title="Secure & verified" />
+                <SmsBenefit asset="context.svg" title="Context is preserved" />
+              </div>
+              <div className="row" style={{ gap: 8, marginTop: 14, padding: "10px 12px", borderRadius: "var(--uik-r-md)", background: "var(--uik-ok-soft)", fontSize: 12, color: "#099a5a" }}>
+                <Icon name="checkCircle" size={14} style={{ flexShrink: 0 }} />
+                <span>SMS handoff is available for US, CA, UK, AU and selected countries.</span>
+              </div>
+            </div>
+            {/* Real kit SMS-handoff flow illustration (phone) */}
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/repulabs/unified-inbox/sms_.svg"
+                alt=""
+                aria-hidden="true"
+                style={{ width: "100%", maxWidth: 240, height: "auto", mixBlendMode: "multiply" }}
+              />
+            </div>
           </div>
         </div>
 
@@ -231,9 +245,10 @@ export function SmsHandoff({ data }: { data: SmsHandoffData }) {
         </div>
 
         {/* support banner */}
-        <div className="row" style={{ gap: 12, padding: 16, borderRadius: "var(--uik-r-lg)", background: "var(--uik-purple-soft)", alignItems: "center" }}>
-          <span style={{ width: 40, height: 40, borderRadius: "50%", background: "#fff", color: "var(--uik-purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <Icon name="help" size={18} />
+        <div className="row" style={{ gap: 14, padding: 16, borderRadius: "var(--uik-r-lg)", background: "var(--uik-purple-soft)", alignItems: "center" }}>
+          <span style={{ width: 52, height: 52, borderRadius: "var(--uik-r-lg)", background: "#fff", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/repulabs/unified-inbox/need help.svg" alt="" aria-hidden="true" className="uik-illo uik-illo--40" />
           </span>
           <div style={{ flex: 1 }}>
             <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>Need help setting up SMS handoff?</p>
@@ -276,6 +291,10 @@ export function SmsHandoff({ data }: { data: SmsHandoffData }) {
         </div>
 
         <div className="uik-sec" style={{ background: "var(--uik-purple-soft)", border: 0 }}>
+          <div style={{ display: "flex", justifyContent: "center", marginBottom: 10 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/assets/repulabs/unified-inbox/tip.svg" alt="" aria-hidden="true" className="uik-illo uik-illo--120" style={{ width: "100%", maxWidth: 220, height: "auto" }} />
+          </div>
           <h4 className="uik-sec__title">Pro tip</h4>
           <p style={{ fontSize: 12, color: "var(--uik-ink-2)", margin: "6px 0 0", lineHeight: 1.5 }}>
             Place the SMS handoff option at the natural end of the chat to increase conversion.
@@ -286,11 +305,12 @@ export function SmsHandoff({ data }: { data: SmsHandoffData }) {
   );
 }
 
-function SmsBenefit({ icon, title }: { icon: Parameters<typeof Icon>[0]["name"]; title: string }) {
+function SmsBenefit({ asset, title }: { asset: string; title: string }) {
   return (
-    <div className="row" style={{ gap: 8, alignItems: "center" }}>
-      <span style={{ width: 30, height: 30, borderRadius: 8, background: "var(--uik-purple-soft)", color: "var(--uik-purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-        <Icon name={icon} size={15} />
+    <div className="row" style={{ gap: 10, alignItems: "center" }}>
+      <span className="uik-illo-tile uik-illo-tile--purple" style={{ width: 44, height: 44 }}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/assets/repulabs/unified-inbox/${asset}`} alt="" aria-hidden="true" className="uik-illo uik-illo--34" />
       </span>
       <span style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)" }}>{title}</span>
     </div>

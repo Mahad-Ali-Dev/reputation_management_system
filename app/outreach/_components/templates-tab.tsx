@@ -71,7 +71,7 @@ export async function TemplatesTab({ orgId }: { orgId: string }) {
         />
         <SummaryCard
           tone="orange"
-          img="/assets/repulabs/review-request/hist-reviews.svg"
+          img="/assets/repulabs/review-request/tpl-most-used.svg"
           label="Most Used"
           value={mostUsed}
           help={mostUsed === "—" ? "No data yet" : "Default template"}

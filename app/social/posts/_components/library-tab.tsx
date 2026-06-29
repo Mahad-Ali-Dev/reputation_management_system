@@ -89,7 +89,10 @@ export async function LibraryTab({
             <LibraryUploader variant="dropzone" folder={folder} />
           ) : (
             <div className="sk-empty-center" style={{ padding: "32px 28px" }}>
-              <Icon name="image" size={30} style={{ color: "var(--sk-pri)" }} />
+              <div className="sk-empty-center__art" style={{ maxWidth: 220 }}>
+                {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
+                <img src="/assets/repulabs/post-creator/lib-library.svg" alt="" />
+              </div>
               <p className="sk-empty-center__body" style={{ marginTop: 12 }}>
                 No media in “{folder}” yet.
               </p>

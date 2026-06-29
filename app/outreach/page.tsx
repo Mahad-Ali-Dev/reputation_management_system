@@ -38,7 +38,7 @@ const TAB_META: Record<
   overview: {
     title: "Send the right request at the right moment",
     description: "Campaigns, templates, and deliverability in one review request hub.",
-    hero: { src: "/assets/repulabs/review-request/hero-overview.svg", w: 270 },
+    hero: { src: "/assets/repulabs/review-request/hero-overview.svg", w: 312 },
   },
   send: {
     title: "Review requests",
@@ -48,7 +48,7 @@ const TAB_META: Record<
   templates: {
     title: "Templates",
     description: "Reusable email + SMS bodies with merge tags.",
-    hero: { src: "/assets/repulabs/review-request/hero-templates.svg", w: 340 },
+    hero: { src: "/assets/repulabs/review-request/hero-templates.svg", w: 300 },
   },
   automation: {
     title: "Automation rules",

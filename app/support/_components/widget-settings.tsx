@@ -335,8 +335,9 @@ function DeployView({ keyData }: { keyData: WidgetSettingsData["key"] }) {
           padding: 24,
         }}
       >
-        <div className="row" style={{ gap: 16, alignItems: "center" }}>
-          <img src="/assets/repulabs/unified-inbox/deploy-launch.svg" alt="" aria-hidden="true" width={96} height={96} style={{ flexShrink: 0 }} />
+        <div className="row" style={{ gap: 20, alignItems: "center" }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/repulabs/unified-inbox/deploy-launch.svg" alt="" aria-hidden="true" className="uik-illo uik-illo--120" style={{ flexShrink: 0 }} />
           <div>
             <h3 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>Launch your live chat in 3 simple steps</h3>
             <p className="uik-mut" style={{ fontSize: 13, margin: "6px 0 0", maxWidth: 460, lineHeight: 1.5 }}>
@@ -459,8 +460,16 @@ function DeployView({ keyData }: { keyData: WidgetSettingsData["key"] }) {
         </div>
 
         <div className="uik-sec" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <h4 className="uik-sec__title">Need help getting set up?</h4>
-          <p className="uik-sec__help">Our support team is here to help you at every step.</p>
+          <div className="row" style={{ gap: 12, alignItems: "center" }}>
+            <span className="uik-illo-tile uik-illo-tile--purple">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/repulabs/unified-inbox/need help.svg" alt="" aria-hidden="true" className="uik-illo uik-illo--40" />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <h4 className="uik-sec__title">Need help getting set up?</h4>
+              <p className="uik-sec__help">Our support team is here to help you at every step.</p>
+            </div>
+          </div>
           <a href="/contact" className="uik-btn uik-btn--sm" style={{ width: "fit-content", color: "var(--uik-purple)", borderColor: "#d9d0ff" }}>
             <Icon name="help" size={13} />
             Contact Support
@@ -538,17 +547,17 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
   const [mode, setMode] = useState(currentMode);
   const [sources, setSources] = useState<Record<string, boolean>>({ kb: true, website: true, files: true, url: false });
 
-  const PERSONALITIES: { key: string; icon: Parameters<typeof Icon>[0]["name"]; label: string; help: string }[] = [
-    { key: "friendly", icon: "chat", label: "Friendly", help: "Warm, helpful and conversational." },
-    { key: "professional", icon: "box", label: "Professional", help: "Polite, clear and business-focused." },
-    { key: "casual", icon: "sparkle", label: "Casual", help: "Relaxed and easy going tone." },
-    { key: "custom", icon: "edit", label: "Custom", help: "Define your own tone and style." },
+  const PERSONALITIES: { key: string; asset: string; label: string; help: string }[] = [
+    { key: "friendly", asset: "friendly.svg", label: "Friendly", help: "Warm, helpful and conversational." },
+    { key: "professional", asset: "professional.svg", label: "Professional", help: "Polite, clear and business-focused." },
+    { key: "casual", asset: "casual.svg", label: "Casual", help: "Relaxed and easy going tone." },
+    { key: "custom", asset: "custom.svg", label: "Custom", help: "Define your own tone and style." },
   ];
-  const SOURCES: { key: string; icon: Parameters<typeof Icon>[0]["name"]; label: string; help: string }[] = [
-    { key: "kb", icon: "book", label: "Knowledge Base", help: "Use your uploaded articles and FAQs." },
-    { key: "website", icon: "grid", label: "Website Content", help: "Pull information from your website pages." },
-    { key: "files", icon: "upload", label: "File Uploads", help: "Use PDFs, docs and other files." },
-    { key: "url", icon: "share", label: "Custom URL", help: "Allow AI to fetch info from a specific URL." },
+  const SOURCES: { key: string; asset: string; label: string; help: string }[] = [
+    { key: "kb", asset: "knowledge.svg", label: "Knowledge Base", help: "Use your uploaded articles and FAQs." },
+    { key: "website", asset: "webiste content.svg", label: "Website Content", help: "Pull information from your website pages." },
+    { key: "files", asset: "file upload.svg", label: "File Uploads", help: "Use PDFs, docs and other files." },
+    { key: "url", asset: "url.svg", label: "Custom URL", help: "Allow AI to fetch info from a specific URL." },
   ];
 
   return (
@@ -568,8 +577,9 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
                     <Icon name="check" size={10} />
                   </span>
                 )}
-                <Icon name={p.icon} size={20} style={{ color: "var(--uik-purple)" }} />
-                <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)", marginTop: 8 }}>{p.label}</div>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={`/assets/repulabs/unified-inbox/${p.asset}`} alt="" aria-hidden="true" className="uik-illo uik-illo--56" />
+                <div style={{ fontSize: 12.5, fontWeight: 700, color: "var(--uik-ink)", marginTop: 10 }}>{p.label}</div>
                 <div className="uik-mut" style={{ fontSize: 11, marginTop: 2, lineHeight: 1.4 }}>{p.help}</div>
               </label>
             ))}
@@ -581,11 +591,12 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12 }}>
             {SOURCES.map((s) => (
               <div key={s.key} className={`uik-opt${sources[s.key] ? " is-selected" : ""}`} style={{ cursor: "default" }}>
-                <div className="row" style={{ justifyContent: "space-between" }}>
-                  <Icon name={s.icon} size={18} style={{ color: "var(--uik-purple)" }} />
+                <div className="row" style={{ justifyContent: "space-between", alignItems: "flex-start" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={`/assets/repulabs/unified-inbox/${s.asset}`} alt="" aria-hidden="true" className="uik-illo uik-illo--48" />
                   <Switch checked={!!sources[s.key]} onChange={(v) => setSources((p) => ({ ...p, [s.key]: v }))} />
                 </div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--uik-ink)", marginTop: 8 }}>{s.label}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: "var(--uik-ink)", marginTop: 10 }}>{s.label}</div>
                 <div className="uik-mut" style={{ fontSize: 10.5, marginTop: 2, lineHeight: 1.4 }}>{s.help}</div>
               </div>
             ))}
@@ -598,21 +609,21 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
 
         {/* 03 Response behavior */}
         <Section num={3} title="Response Behavior" help="Control how AI responds in different situations.">
-          <RowControl icon="help" title="When AI can't find an answer" desc="Choose how AI should handle unknown questions.">
+          <RowControl asset="handoff.svg" title="When AI can't find an answer" desc="Choose how AI should handle unknown questions.">
             <select className="uik-select" defaultValue="apologize" style={{ maxWidth: 240 }} aria-label="Unknown-answer behavior">
               <option value="apologize">Apologize and suggest contact</option>
               <option value="handoff">Hand off to a human</option>
               <option value="fallback">Show a fallback message</option>
             </select>
           </RowControl>
-          <RowControl icon="bars" title="Response length" desc="Set the default length for AI responses.">
+          <RowControl asset="response.svg" title="Response length" desc="Set the default length for AI responses.">
             <select className="uik-select" defaultValue="medium" style={{ maxWidth: 140 }} aria-label="Response length">
               <option value="short">Short</option>
               <option value="medium">Medium</option>
               <option value="long">Long</option>
             </select>
           </RowControl>
-          <RowControl icon="sparkle" title="Follow-up suggestions" desc="Let AI suggest relevant follow-up questions.">
+          <RowControl asset="ai assistat.svg" title="Follow-up suggestions" desc="Let AI suggest relevant follow-up questions.">
             <Switch checked onChange={() => {}} />
           </RowControl>
         </Section>
@@ -661,9 +672,15 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
       {/* AI assistant preview rail */}
       <div style={{ display: "grid", gap: 16 }}>
         <div className="uik-sec" style={{ padding: 0, overflow: "hidden" }}>
-          <div style={{ padding: "14px 16px", borderBottom: "1px solid var(--uik-divider)" }}>
-            <h4 className="uik-sec__title">AI Assistant Preview</h4>
-            <p className="uik-sec__help">See how your AI assistant will appear to visitors.</p>
+          <div className="row" style={{ gap: 12, padding: "14px 16px", borderBottom: "1px solid var(--uik-divider)", alignItems: "center" }}>
+            <span className="uik-illo-tile uik-illo-tile--purple">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/repulabs/unified-inbox/robot_.svg" alt="" aria-hidden="true" className="uik-illo uik-illo--40" />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <h4 className="uik-sec__title">AI Assistant Preview</h4>
+              <p className="uik-sec__help">See how your AI assistant will appear to visitors.</p>
+            </div>
           </div>
           <div style={{ padding: 14, display: "grid", gap: 8, background: "#fafbff" }}>
             <PreviewBubble role="bot">Hi there! How can I help you today?</PreviewBubble>
@@ -676,8 +693,16 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
         </div>
 
         <div className="uik-sec">
-          <h4 className="uik-sec__title">Need help setting this up?</h4>
-          <p className="uik-sec__help" style={{ marginBottom: 10 }}>Learn how to get the most out of AI in live chat.</p>
+          <div className="row" style={{ gap: 12, marginBottom: 10, alignItems: "center" }}>
+            <span className="uik-illo-tile uik-illo-tile--purple">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/assets/repulabs/unified-inbox/support.svg" alt="" aria-hidden="true" className="uik-illo uik-illo--40" />
+            </span>
+            <div style={{ minWidth: 0 }}>
+              <h4 className="uik-sec__title">Need help setting this up?</h4>
+              <p className="uik-sec__help">Learn how to get the most out of AI in live chat.</p>
+            </div>
+          </div>
           <div style={{ display: "grid", gap: 6 }}>
             {["How AI works", "Best practices for AI responses", "Smart handoff explained", "View documentation"].map((l) => (
               <a key={l} href="/ai" className="row" style={{ justifyContent: "space-between", padding: "8px 10px", borderRadius: 8, fontSize: 12.5, color: "var(--uik-ink-2)", textDecoration: "none", border: "1px solid var(--uik-divider)" }}>
@@ -770,12 +795,13 @@ function ToggleRow({ label, defaultChecked }: { label: string; defaultChecked: b
   );
 }
 
-function RowControl({ icon, title, desc, children }: { icon: Parameters<typeof Icon>[0]["name"]; title: string; desc: string; children: React.ReactNode }) {
+function RowControl({ asset, title, desc, children }: { asset: string; title: string; desc: string; children: React.ReactNode }) {
   return (
     <div className="row" style={{ justifyContent: "space-between", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
-      <div className="row" style={{ gap: 10, alignItems: "flex-start", minWidth: 0 }}>
-        <span style={{ width: 32, height: 32, borderRadius: 8, background: "var(--uik-purple-soft)", color: "var(--uik-purple)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-          <Icon name={icon} size={15} />
+      <div className="row" style={{ gap: 11, alignItems: "center", minWidth: 0 }}>
+        <span className="uik-illo-tile uik-illo-tile--purple">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`/assets/repulabs/unified-inbox/${asset}`} alt="" aria-hidden="true" className="uik-illo uik-illo--34" />
         </span>
         <div>
           <p style={{ fontSize: 13, fontWeight: 700, margin: 0, color: "var(--uik-ink)" }}>{title}</p>

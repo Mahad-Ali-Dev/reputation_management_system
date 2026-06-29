@@ -1,0 +1,47 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="none">
+<defs>
+  <linearGradient id="g" x1="120" y1="120" x2="420" y2="420">
+    <stop offset="0%" stop-color="#B6A0FF"/>
+    <stop offset="50%" stop-color="#8B5CF6"/>
+    <stop offset="100%" stop-color="#5B21B6"/>
+  </linearGradient>
+
+  <filter id="glow" x="-40%" y="-40%" width="180%" height="180%">
+    <feGaussianBlur stdDeviation="6"/>
+  </filter>
+</defs>
+
+<g>
+
+  <!-- envelope body (more accurate rounded square) -->
+  <rect x="110" y="140" width="292" height="260" rx="48"
+        fill="url(#g)"/>
+
+  <!-- subtle inner shadow separation -->
+  <path d="M130 170 H382 V370 Q382 390 362 390 H150 Q130 390 130 370 Z"
+        fill="none" stroke="#3B1B8F" stroke-width="3" opacity="0.25"/>
+
+  <!-- flap top triangle (more centered like original) -->
+  <path d="M110 190 L256 285 L402 190"
+        stroke="#F5F3FF"
+        stroke-width="20"
+        stroke-linecap="round"
+        stroke-linejoin="round"/>
+
+  <!-- bottom fold -->
+  <path d="M110 370 L256 285 L402 370"
+        stroke="#6D28D9"
+        stroke-width="16"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        opacity="0.65"/>
+
+  <!-- soft highlight line -->
+  <path d="M130 160 H382"
+        stroke="#E9D5FF"
+        stroke-width="10"
+        opacity="0.25"
+        stroke-linecap="round"/>
+
+</g>
+</svg>

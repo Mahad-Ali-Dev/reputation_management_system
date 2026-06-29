@@ -1,0 +1,31 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg" fill="none">
+<defs>
+  <linearGradient id="plane" x1="200" y1="200" x2="900" y2="900">
+    <stop offset="0%" stop-color="#B18CFF"/>
+    <stop offset="50%" stop-color="#7A4CFF"/>
+    <stop offset="100%" stop-color="#3A14E0"/>
+  </linearGradient>
+
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+    <feGaussianBlur stdDeviation="10" result="b"/>
+    <feMerge>
+      <feMergeNode in="b"/>
+      <feMergeNode in="SourceGraphic"/>
+    </feMerge>
+  </filter>
+</defs>
+
+<g filter="url(#glow)">
+  <!-- main plane -->
+  <path d="M180 520 L880 200 L520 860 Z" fill="url(#plane)"/>
+
+  <!-- inner fold -->
+  <path d="M180 520 L520 860 L470 600 Z" fill="#5E2BFF" opacity="0.95"/>
+
+  <!-- highlight face -->
+  <path d="M180 520 L880 200 L470 600 Z" fill="#8C63FF" opacity="0.85"/>
+
+  <!-- edge outline -->
+  <path d="M180 520 L880 200 L520 860 Z" stroke="#2A0FB0" stroke-width="4" opacity="0.5"/>
+</g>
+</svg>

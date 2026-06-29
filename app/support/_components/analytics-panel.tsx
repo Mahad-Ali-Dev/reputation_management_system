@@ -136,9 +136,9 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
     <div className="sops">
       {/* KPI strip */}
       <div className="sops-an-kpis">
+        {/* Open Threads — source illustration is a baked raster, keep inline icon. */}
         <AnKpi
           tone="pri"
-          asset="an-kpi-replied.svg"
           icon="chat"
           label="Open Threads"
           value={String(data.openComments)}
@@ -158,9 +158,9 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
           spark={[2, 3, 4, 5, 4, 6, data.repliedLast24h || 5]}
           sparkColor="#2457ff"
         />
+        {/* Avg first response — source illustration is a baked raster, keep inline icon. */}
         <AnKpi
           tone="green"
-          asset="an-kpi-sla.svg"
           icon="clock"
           label="Avg first response"
           value={avgFirstReply !== null ? formatMinutes(avgFirstReply) : "—"}
@@ -376,6 +376,7 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
 
 function AnKpi({
   tone,
+  asset,
   icon,
   label,
   value,
@@ -386,7 +387,10 @@ function AnKpi({
   sparkColor,
 }: {
   tone: "pri" | "blue" | "green" | "orange";
-  asset: string;
+  /** Real kit illustration filename; when omitted the inline `icon` is used
+   *  (the Open-Threads / Avg-time KPI sources are huge baked rasters, so those
+   *  intentionally keep a crisp inline icon). */
+  asset?: string;
   icon: "chat" | "send" | "clock" | "target";
   label: string;
   value: string;
@@ -405,7 +409,12 @@ function AnKpi({
   return (
     <div className="sops-ankpi">
       <span className={`sops-ankpi__tile ${tileClass[tone]}`}>
-        <Icon name={icon} size={24} />
+        {asset ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/assets/repulabs/unified-inbox/${asset}`} alt="" aria-hidden="true" className="sops-ankpi__illo" />
+        ) : (
+          <Icon name={icon} size={24} />
+        )}
       </span>
       <div className="sops-ankpi__lab">{label}</div>
       <div className="sops-ankpi__val">

@@ -314,8 +314,8 @@
   overflow: hidden;
 }
 .sops-mcard__ico {
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
 }
 .sops-mcard__val {
   font-size: 23px;
@@ -592,15 +592,15 @@
   box-shadow: var(--sops-shadow-card);
 }
 .sops-kpi__tile {
-  width: 46px;
-  height: 46px;
-  border-radius: 11px;
+  width: 54px;
+  height: 54px;
+  border-radius: 13px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
   color: #fff;
 }
-.sops-kpi__tile img { width: 26px; height: 26px; }
+.sops-kpi__tile img { width: 32px; height: 32px; }
 .sops-kpi__tile--pri    { background: linear-gradient(135deg, #8f6cff, #5b3dff); }
 .sops-kpi__tile--blue   { background: linear-gradient(135deg, #4f8bff, #2457ff); }
 .sops-kpi__tile--green  { background: linear-gradient(135deg, #34d399, #13ae62); }
@@ -666,14 +666,14 @@
 }
 .sops-section__intro { display: flex; gap: 16px; align-items: flex-start; }
 .sops-section__ico {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  width: 58px;
+  height: 58px;
+  border-radius: 15px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-.sops-section__ico img { width: 26px; height: 26px; }
+.sops-section__ico img { width: 32px; height: 32px; }
 .sops-section__ico--pri    { background: var(--sops-pri-soft); }
 .sops-section__ico--blue   { background: var(--sops-info-soft); }
 .sops-section__ico--green  { background: var(--sops-ok-soft); }
@@ -802,14 +802,14 @@
   background: var(--sops-surface);
 }
 .sops-flowblk__ico {
-  width: 44px;
-  height: 44px;
-  border-radius: 11px;
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
 }
-.sops-flowblk__ico img { width: 24px; height: 24px; }
+.sops-flowblk__ico img { width: 30px; height: 30px; }
 .sops-flowblk__t { font-size: 12.5px; font-weight: 700; color: var(--sops-ink); }
 .sops-flowblk__chips { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
 .sops-flowblk--trigger    { background: #faf9ff; }
@@ -832,7 +832,7 @@
 .sops-tips__body { flex: 1; min-width: 0; }
 .sops-tips__t { font-size: 13px; font-weight: 700; color: var(--sops-ink); }
 .sops-tips__p { margin: 4px 0 0; font-size: 12px; line-height: 1.5; color: var(--sops-muted); }
-.sops-tips__art { width: 64px; height: 64px; flex-shrink: 0; }
+.sops-tips__art { width: 80px; height: 80px; flex-shrink: 0; }
 .sops-tips__art img { width: 100%; height: 100%; }
 
 /* moderation rules: two-pane workspace --------------------------------------*/
@@ -872,6 +872,13 @@
   color: #fff;
 }
 .sops-ankpi__tile img { width: 26px; height: 26px; }
+/* When a KPI tile shows a real (colourful) kit illustration, drop the gradient
+   fill so the art reads cleanly on a soft surface; enlarge the art. */
+.sops-ankpi__tile:has(.sops-ankpi__illo) {
+  background: var(--sops-soft);
+  border: 1px solid var(--sops-line);
+}
+.sops-ankpi__illo { width: 34px !important; height: 34px !important; }
 .sops-ankpi__lab { font-size: 12.5px; font-weight: 600; color: var(--sops-ink-2); }
 .sops-ankpi__val { font-size: 30px; font-weight: 700; line-height: 1; color: var(--sops-ink); font-variant-numeric: tabular-nums; }
 .sops-ankpi__val em { font-size: 17px; font-style: normal; font-weight: 700; color: var(--sops-muted); }
