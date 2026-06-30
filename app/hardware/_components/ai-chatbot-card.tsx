@@ -33,7 +33,7 @@ export function AiChatbotCard({ orbSrc }: { orbSrc: string }) {
   return (
     <section className="md-card md-chat" aria-label="AI Chatbot">
       {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG, not inlined) */}
-      <img src={orbSrc} alt="" aria-hidden className="md-chat__orb" width={56} height={56} />
+      <img src={orbSrc} alt="" aria-hidden className="md-chat__orb" width={64} height={64} />
       <div className="md-card__head" style={{ padding: 0 }}>
         <h3 className="md-card__title">AI Chatbot</h3>
         <span className="chip chip--pri" style={{ height: 18, fontSize: 10, marginLeft: 8 }}>

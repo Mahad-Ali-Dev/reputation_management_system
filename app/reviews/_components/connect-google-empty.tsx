@@ -56,7 +56,7 @@ function BenefitStrip() {
         <div key={b.title} className="rf-benefit">
           <span className={`rf-benefit__icon ${b.tint}`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={b.icon} alt="" width={38} height={38} />
+            <img src={b.icon} alt="" width={48} height={48} />
           </span>
           <div className="rf-benefit__text">
             <h3 className="rf-benefit__title">{b.title}</h3>
@@ -78,8 +78,8 @@ export function ConnectGoogleEmpty({ hasGoogle }: { hasGoogle: boolean }) {
             <img
               src="/assets/repulabs/review-feed/review-inbox.svg"
               alt="An empty review inbox"
-              width={420}
-              height={420}
+              width={1394}
+              height={644}
               className="rf-hero__art"
             />
           </div>
@@ -91,9 +91,9 @@ export function ConnectGoogleEmpty({ hasGoogle }: { hasGoogle: boolean }) {
               <img
                 src="/assets/repulabs/review-feed/party-icon.svg"
                 alt=""
-                width={26}
-                height={26}
-                style={{ display: "inline-block", verticalAlign: "-4px" }}
+                width={32}
+                height={32}
+                style={{ display: "inline-block", verticalAlign: "-5px" }}
               />
             </h2>
             <p className="rf-body__text">
@@ -170,8 +170,8 @@ export function ConnectGoogleEmpty({ hasGoogle }: { hasGoogle: boolean }) {
           <img
             src="/assets/repulabs/review-feed/review-inbox.svg"
             alt="An empty review inbox"
-            width={264}
-            height={264}
+            width={1394}
+            height={644}
             className="rf-syncing__art"
           />
           <h2 className="rf-syncing__title">All caught up!</h2>

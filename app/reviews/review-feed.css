@@ -110,11 +110,13 @@
 /* Illustration / hero area.
  * Mockup wash: soft lavender glow tucked in the top-left corner → soft warm
  * peach top-right, fading to a near-white center (NOT an edge-to-edge tint).
- * Generous top padding (~162px) drops the illustration low and airy, matching
- * the mockup where the title lands at ~614px from the card top (measured). */
+ * The illustration is the hero of this empty state, so it runs LARGE (≈86% of
+ * the card width — matching the mockup, where the cluster spans ~90% of the
+ * card). With a big illustration the band needs far less top padding to read
+ * full and airy. */
 .rf-hero {
   position: relative;
-  padding: 162px 24px 0;
+  padding: 64px 24px 8px;
   text-align: center;
   background:
     radial-gradient(circle at 12% 10%, rgba(111, 73, 255, 0.12), transparent 34%),
@@ -149,10 +151,12 @@
 .rf-hero__art {
   position: relative;
   display: inline-block;
-  /* SVG is now content-cropped (viewBox 1394×644, aspect ≈2.165) so width drives
-   * the visible size with no phantom vertical space. Sized to the mockup's
-   * illustration footprint. */
-  width: min(496px, 46%);
+  /* SVG is content-cropped (viewBox 1394×644, aspect ≈2.165) and its background
+   * is transparent, so width drives the visible size with no phantom space and
+   * no white box on the gradient. Enlarged to ~86% of the card width to match
+   * the kit mockup (cluster ≈90% of the card) — the founder asked for the
+   * illustrations BIGGER and used to their full presence. */
+  width: min(980px, 88%);
   height: auto;
   z-index: 1;
 }
@@ -265,14 +269,16 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 68px;
-  height: 68px;
+  width: 80px;
+  height: 80px;
   border-radius: 50%;
 }
 
 .rf-benefit__icon img {
-  width: 38px;
-  height: 38px;
+  /* The kit benefit glyphs are detailed 3D icons; render them large within the
+   * tinted circle so they're legible (was 38px → cramped). */
+  width: 48px;
+  height: 48px;
   object-fit: contain;
 }
 
@@ -311,7 +317,7 @@
 
 .rf-syncing__art {
   display: inline-block;
-  width: 132px;
+  width: min(420px, 64%);
   height: auto;
 }
 

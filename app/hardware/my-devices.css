@@ -106,30 +106,33 @@
   position: relative;
   justify-self: end;
   width: 100%;
-  max-width: 520px;
+  max-width: 600px;
   aspect-ratio: 16 / 9;
 }
 .md-hero__person {
   position: absolute;
   top: 50%;
-  left: 50%;
+  left: 52%;
   transform: translate(-50%, -50%);
-  width: 56%;
+  width: 64%;
   height: auto;
 }
+/* Real kit "5.0 ★★★★★" badge (reviews.svg, ~1.56:1 landscape, transparent
+   bg) — floats top-left over the scene, enlarged to match the mockup's
+   prominent badge. Soft shape-hugging shadow only (no boxy halo). */
 .md-hero__rating {
   position: absolute;
-  top: 4%;
-  left: 2%;
-  width: 40%;
+  top: 1%;
+  left: -4%;
+  width: 47%;
   height: auto;
-  filter: drop-shadow(0 14px 28px rgba(15, 23, 42, 0.14));
+  filter: drop-shadow(0 10px 18px rgba(15, 23, 42, 0.1));
 }
 .md-hero__chart {
   position: absolute;
-  bottom: 2%;
-  right: 0;
-  width: 42%;
+  bottom: 0%;
+  right: -2%;
+  width: 48%;
   height: auto;
 }
 @media (max-width: 920px) {
@@ -256,8 +259,8 @@
   background: var(--md-soft-green);
 }
 .md-metric__icon {
-  width: 24px;
-  height: 24px;
+  width: 27px;
+  height: 27px;
   object-fit: contain;
 }
 .md-metric__label {
@@ -411,7 +414,7 @@
 }
 .md-empty__art {
   width: 100%;
-  max-width: 150px;
+  max-width: 188px;
   height: auto;
   margin-bottom: 12px;
 }
@@ -668,8 +671,8 @@
   position: absolute;
   top: 12px;
   right: 14px;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
   pointer-events: none;
 }
 @media (max-width: 560px) {
@@ -879,9 +882,9 @@
 }
 .md-blank__art {
   width: 100%;
-  max-width: 620px;
+  max-width: 760px;
   height: auto;
-  margin: 0 auto 6px;
+  margin: 0 auto 10px;
   display: block;
   /* devices-empty.svg's near-white baked background was knocked out to genuine
      transparency (see .pdf-build/_knockout-devices.mjs), so the devices-network

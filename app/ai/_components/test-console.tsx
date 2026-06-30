@@ -43,6 +43,45 @@ const PROMPT_CHIPS = [
   "Can I book an appointment?",
 ];
 
+/**
+ * "Or try asking about" topic chips — each uses a real kit AI-agent
+ * illustration and seeds the composer with a representative question.
+ * `blend` flags the one piece of art that ships a baked white background.
+ */
+const TOPIC_CHIPS: Array<{
+  icon: string;
+  label: string;
+  question: string;
+  blend?: boolean;
+}> = [
+  {
+    icon: "test-topic-business.svg",
+    label: "Business information",
+    question: "Tell me about your business.",
+  },
+  {
+    icon: "test-topic-policies.svg",
+    label: "Policies & procedures",
+    question: "What is your refund and cancellation policy?",
+  },
+  {
+    icon: "test-topic-pricing.svg",
+    label: "Services & pricing",
+    question: "What services do you offer and how much do they cost?",
+  },
+  {
+    icon: "test-topic-appointments.svg",
+    label: "Appointments & support",
+    question: "How do I book an appointment?",
+  },
+  {
+    icon: "test-topic-inquiries.svg",
+    label: "General inquiries",
+    question: "What are your business hours?",
+    blend: true,
+  },
+];
+
 export function TestConsole({
   suggestions,
   openGaps,
@@ -337,6 +376,29 @@ export function TestConsole({
             </div>
           )}
 
+          {/* "Or try asking about" — colorful kit topic chips */}
+          <div className="akb-try-label">Or try asking about</div>
+          <div className="akb-topics">
+            {TOPIC_CHIPS.map((t) => (
+              <button
+                key={t.label}
+                type="button"
+                className="akb-topic"
+                onClick={() => void send(t.question)}
+                disabled={pending}
+                title={t.question}
+              >
+                <span
+                  className={`akb-topic__icon ${t.blend ? "akb-topic__icon--blend" : ""}`}
+                  aria-hidden="true"
+                >
+                  <Image src={`${ASSET}/${t.icon}`} alt="" width={30} height={30} unoptimized />
+                </span>
+                <span className="akb-topic__t">{t.label}</span>
+              </button>
+            ))}
+          </div>
+
           {/* prompt chips */}
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
             {PROMPT_CHIPS.map((c) => (
@@ -380,7 +442,15 @@ export function TestConsole({
               }}
             />
             <button type="submit" className="akb-btn-primary" disabled={pending || !input.trim()}>
-              <Icon name="send" size={13} />
+              <Image
+                src={`${ASSET}/test-send.svg`}
+                alt=""
+                width={16}
+                height={16}
+                unoptimized
+                aria-hidden="true"
+                className="akb-send-illo"
+              />
               Send
             </button>
           </form>

@@ -1120,6 +1120,73 @@
   flex-shrink: 0;
   color: var(--akb-muted);
 }
+
+/* "Or try asking about" colorful topic chips (kit AI-agent illustrations) */
+.akb-try-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--akb-ink-2);
+  margin: 2px 0 10px;
+}
+.akb-topics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.akb-topic {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px 8px 10px;
+  border: 1px solid var(--akb-line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--akb-ink);
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.akb-topic:hover {
+  border-color: var(--akb-hero-border);
+  background: var(--akb-lavender);
+}
+.akb-topic:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+.akb-topic__icon {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+}
+.akb-topic__icon img {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+/* general-inquiries art ships a baked white bg — blend it onto the chip. */
+.akb-topic__icon--blend img {
+  mix-blend-mode: multiply;
+}
+.akb-topic__t {
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+/* paper-plane send illustration inside the primary Send button */
+.akb-send-illo {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  /* art is transparent; invert to read as white on the purple button */
+  filter: brightness(0) invert(1);
+}
+
 .akb-callout {
   display: flex;
   gap: 8px;
