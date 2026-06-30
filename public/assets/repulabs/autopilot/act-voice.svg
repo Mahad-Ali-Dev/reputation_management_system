@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Blue microphone icon">
+  <defs>
+    <linearGradient id="blueMic" x1="132" y1="52" x2="372" y2="452" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#3157FF"/>
+      <stop offset="0.55" stop-color="#203EFF"/>
+      <stop offset="1" stop-color="#0923F6"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Transparent background: no rectangle or backdrop included -->
+  <g fill="none" stroke="url(#blueMic)" stroke-linecap="round" stroke-linejoin="round" shape-rendering="geometricPrecision">
+    <!-- microphone body -->
+    <rect x="190" y="58" width="132" height="250" rx="66" ry="66" stroke-width="50"/>
+
+    <!-- lower curved microphone support -->
+    <path d="M130 205 C130 300 183 365 256 365 C329 365 382 300 382 205" stroke-width="50"/>
+
+    <!-- center stem -->
+    <path d="M256 365 L256 424" stroke-width="50" stroke-linecap="butt"/>
+
+    <!-- rounded base -->
+    <path d="M208 424 L304 424" stroke-width="50"/>
+  </g>
+</svg>

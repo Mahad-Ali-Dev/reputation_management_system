@@ -147,8 +147,8 @@ export function ControlsPanel({
                         className="apc-row__icon"
                         src={row.asset}
                         alt=""
-                        width={30}
-                        height={30}
+                        width={40}
+                        height={40}
                         loading="lazy"
                       />
                       <div className="apc-row__copy">

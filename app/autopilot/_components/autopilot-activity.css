@@ -116,7 +116,7 @@
 
 .apa-row {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   gap: 14px;
   align-items: center;
   padding: 13px 8px;
@@ -142,13 +142,21 @@ a.apa-row:hover {
 }
 
 .apa-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+}
+
+/* Real kit illustration inside the tile — fills it prominently (kit mockup). */
+.apa-icon__art {
+  width: 42px;
+  height: 42px;
+  object-fit: contain;
+  display: block;
 }
 
 .apa-icon--primary {
@@ -273,12 +281,12 @@ a.apa-row:hover {
 }
 
 .apa-empty__img {
-  width: 184px;
+  width: 260px;
   height: auto;
 }
 
 .apa-empty__img--check {
-  width: 84px;
+  width: 150px;
 }
 
 .apa-empty__text {
@@ -344,6 +352,6 @@ a.apa-row:hover {
   }
 
   .apa-empty__img {
-    width: 150px;
+    width: 200px;
   }
 }

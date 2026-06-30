@@ -106,11 +106,12 @@
   line-height: 1.5;
 }
 
-/* Kit illustration floats free on the card (no containing tile), wider than
-   tall (~160×130). */
+/* Kit illustration floats free on the card (no containing tile). Shown large
+   per the founder brief — the real "dashboard/dashboard.svg" growth board fills
+   the hero's right third as in the mockup. Transparent asset, no blend needed. */
 .dk-hero__art {
   width: auto;
-  height: 126px;
+  height: 158px;
   flex-shrink: 0;
   margin-left: auto;
 }
@@ -125,11 +126,12 @@
   flex-wrap: wrap;
 }
 
+/* Kit "train ur agent" stack glyph — bare (no tile), shown larger per brief. */
 .dk-train__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .dk-train__body {
@@ -197,11 +199,12 @@
   box-shadow: 0 4px 12px -4px rgba(37, 99, 235, 0.25);
 }
 
+/* Kit quick-training glyphs ("train your agent/*.svg") — bare, enlarged. */
 .dk-quick__icon {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
+  width: 34px;
+  height: 34px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .dk-quick__title {
@@ -247,11 +250,13 @@
   gap: 10px;
 }
 
+/* Kit stat glyphs ("ratings/*.svg") — bare colored 3D icons (gold star, green
+   bubble, purple magnifier, orange star), shown large per the brief. */
 .dk-stat__icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .dk-stat__hcol {
@@ -668,10 +673,18 @@
   padding: 18px 10px;
 }
 
+/* Kit empty-state illustrations ("Google reviews/reviews overview.svg",
+   "Recent reviews/recent reviews.svg") — shown large per the brief. */
 .dk-cardempty__art {
-  width: 120px;
-  height: 120px;
-  margin-bottom: 12px;
+  width: 168px;
+  height: auto;
+  margin-bottom: 14px;
+}
+
+/* The recent-reviews asset ships with a baked near-white background; multiply
+   melts it into the white card cleanly. */
+.dk-cardempty__art--blend {
+  mix-blend-mode: multiply;
 }
 
 .dk-cardempty__title {
@@ -730,22 +743,14 @@
   min-width: 0;
 }
 
+/* Kit insight glyphs ("Key insight/*.svg") — bare colored icons (blue users,
+   purple clock, green smiley, red trend arrow), shown large per the brief.
+   The clock is now the real kit asset (was an <Icon> substitute before). */
 .dk-insight__icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
+  width: 52px;
+  height: 52px;
   flex-shrink: 0;
-}
-
-.dk-insight__icontile {
-  width: 44px;
-  height: 44px;
-  border-radius: 12px;
-  background: var(--dk-purple-soft);
-  color: var(--dk-purple);
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
+  object-fit: contain;
 }
 
 .dk-insight__label {
@@ -805,7 +810,7 @@
   position: relative;
   z-index: 1;
   min-width: 0;
-  padding-right: 288px;
+  padding-right: 336px;
 }
 
 .dk-copilot__kicker {
@@ -920,19 +925,17 @@
   background: #fff;
 }
 
-/* Kit (v2): the robot + its chat bubble float inside the panel's right side,
-   vertically centered. The robot is cropped from the mockup PNG, so we feather
-   its left edge so the rectangular crop melts into the panel gradient. The
-   bubble sits above-left of the robot (matching both mockups). */
+/* Kit copilot mascot ("Ai assistant/robot_exact.svg") floats on the panel's
+   right, vertically centered, in BOTH states. The single asset already bakes in
+   the chat bubble + sparkles, so no separate layers. Shown large per the brief. */
 .dk-copilot__bot {
   position: absolute;
-  right: 26px;
+  right: 18px;
   top: 50%;
   transform: translateY(-50%);
-  /* Mockup robot is smaller than full-width; a tighter box also reduces upscale
-     blur of the 195×170 asset. Aspect preserved (195/170 ≈ 1.147). */
-  width: 250px;
-  height: 218px;
+  /* Extracted asset is 680×453 (aspect ≈ 1.5). */
+  width: 318px;
+  height: 212px;
 }
 
 .dk-copilot__art {
@@ -945,26 +948,9 @@
 }
 
 .dk-copilot__art--3d {
-  /* The robot is cropped from the delivered PNG and its baked background is not a
-     perfectly uniform panel tint (corners drift toward white). Feather ALL four
-     edges (intersected) so the rectangular crop melts into the panel gradient on
-     every side, not just the left. */
-  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 92%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 8%, #000 93%, transparent 100%);
-  -webkit-mask-composite: source-in;
-  mask-image: linear-gradient(to right, transparent 0%, #000 9%, #000 92%, transparent 100%),
-    linear-gradient(to bottom, transparent 0%, #000 8%, #000 93%, transparent 100%);
-  mask-composite: intersect;
-}
-
-.dk-copilot__bubble {
-  position: absolute;
-  left: 8px;
-  top: 30px;
-  width: 44px;
-  height: auto;
-  z-index: 1;
-  filter: drop-shadow(0 4px 10px rgba(37, 99, 235, 0.18));
+  /* The kit asset ships with a baked near-white background; multiply melts it
+     into the lavender panel on every edge (replaces the old crop/feather mask). */
+  mix-blend-mode: multiply;
 }
 
 /* ============================================================
@@ -981,15 +967,15 @@
 
 @media (max-width: 860px) {
   .dk-cols { grid-template-columns: 1fr; }
-  .dk-hero__art { height: 104px; }
+  .dk-hero__art { height: 128px; }
   .dk-copilot__main { padding-right: 0; }
   .dk-copilot__bot {
     position: relative;
     right: auto;
     top: auto;
     transform: none;
-    width: 210px;
-    height: 150px;
+    width: 260px;
+    height: 173px;
     margin: 12px 0 0 auto;
   }
   .dk-quick__chip { flex: 1 1 45%; }

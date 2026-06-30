@@ -7,6 +7,13 @@ import type { RoiByChannel } from "@/lib/roi/estimate";
 import "./autopilot-roi.css";
 
 /**
+ * Real kit illustrations (designs/autopilot/ROI section/illustrations/*),
+ * extracted to /assets/repulabs/autopilot/roi-*. Each is a glyph in a soft
+ * rounded tile baked into the asset — so the wrapper just sizes it, no CSS tint.
+ */
+const ASSETS = "/assets/repulabs/autopilot";
+
+/**
  * ROI panel (Module 15) — design-kit rebuild (tasks/autopilot/autopilot/
  * ROI section, active + empty handoffs).
  *
@@ -65,20 +72,6 @@ function fmtMoneyCompact(currency: string, n: number): string {
     return `${currency} ${(n / 1000).toLocaleString(undefined, { maximumFractionDigits: 1 })}k`;
   }
   return fmtMoney(currency, n);
-}
-
-/** Decorative label glyph for the assumptions form ("Rs", "$", "PKR"…). */
-function currencyGlyph(code: string): string {
-  const trimmed = code.trim();
-  if (!trimmed) return "$";
-  try {
-    const part = new Intl.NumberFormat("en", { style: "currency", currency: trimmed.toUpperCase() })
-      .formatToParts(1)
-      .find((p) => p.type === "currency");
-    return (part?.value ?? trimmed).slice(0, 3);
-  } catch {
-    return trimmed.slice(0, 3).toUpperCase();
-  }
 }
 
 function capitalize(s: string): string {
@@ -236,10 +229,10 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
   ];
 
   const bySource = [
-    { key: "bookings", label: "Bookings", value: data.byChannel.bookings, icon: "cal", tone: "green" as const },
-    { key: "outreach", label: "Review requests", value: data.byChannel.outreachReviews, icon: "send", tone: "purple" as const },
-    { key: "voice", label: "Voice → Review", value: data.byChannel.voiceReviews, icon: "phone", tone: "indigo" as const },
-    { key: "qr", label: "QR plaques", value: data.byChannel.qrReviews, icon: "qr", tone: "blue" as const },
+    { key: "bookings", label: "Bookings", value: data.byChannel.bookings, art: `${ASSETS}/roi-by-bookings.png`, tone: "green" as const },
+    { key: "outreach", label: "Review requests", value: data.byChannel.outreachReviews, art: `${ASSETS}/roi-by-reqreview.png`, tone: "purple" as const },
+    { key: "voice", label: "Voice → Review", value: data.byChannel.voiceReviews, art: `${ASSETS}/roi-by-voice.png`, tone: "indigo" as const },
+    { key: "qr", label: "QR plaques", value: data.byChannel.qrReviews, art: `${ASSETS}/roi-by-qr.png`, tone: "blue" as const },
   ] as const;
   const maxChannel = Math.max(...bySource.map((c) => c.value), 1);
 
@@ -258,8 +251,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
         <section className="apr-card apr-rev" aria-label="Estimated booked revenue">
           <div className="apr-rev__top">
             <div className="apr-head">
-              <span className="apr-badge apr-badge--green">
-                <Icon name="trend" size={17} />
+              <span className="apr-badge">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="apr-badge__art" src={`${ASSETS}/roi-book-revenue.png`} alt="" />
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Estimated booked revenue</h3>
@@ -317,11 +311,8 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
             </div>
             <div className="apr-rev__chart">
               {isEmpty ? (
-                <img
-                  className="apr-emptyart"
-                  src="/assets/repulabs/autopilot/roi-trend-empty.svg"
-                  alt=""
-                />
+                // eslint-disable-next-line @next/next/no-img-element
+                <img className="apr-emptyart" src={`${ASSETS}/roi-empty-rev.png`} alt="" />
               ) : (
                 <RevenueMiniChart
                   values={[
@@ -338,8 +329,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
 
         <section className="apr-card apr-funnel" aria-label="The funnel">
           <div className="apr-head">
-            <span className="apr-badge apr-badge--purple">
-              <Icon name="filter" size={17} />
+            <span className="apr-badge">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img className="apr-badge__art" src={`${ASSETS}/roi-funnel.png`} alt="" />
             </span>
             <div className="apr-head__text">
               <h3 className="apr-title">The funnel</h3>
@@ -393,8 +385,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
         <div className="apr-stack">
           <section className="apr-card" aria-label="Where reviews came from">
             <div className="apr-head">
-              <span className="apr-badge apr-badge--cyan">
-                <Icon name="share" size={17} />
+              <span className="apr-badge">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="apr-badge__art" src={`${ASSETS}/roi-came-reviews.png`} alt="" />
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Where reviews came from</h3>
@@ -406,10 +399,12 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
               {sources.map((s) => (
                 <div key={s.key} className="apr-source">
                   <div className="apr-source__top">
-                    <span className={`apr-srcicon apr-srcicon--${s.tone}`}>
-                      <Icon
-                        name={s.key === "voice" ? "phone" : s.key === "outreach" ? "send" : s.key === "qr" ? "qr" : "star"}
-                        size={13}
+                    <span className="apr-srcicon">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        className="apr-srcicon__art"
+                        src={`${ASSETS}/roi-src-${s.key === "outreach" ? "reqreview" : s.key === "organic" ? "organic" : s.key === "qr" ? "qr" : "voice"}.png`}
+                        alt=""
                       />
                     </span>
                     <span className="apr-source__label">{s.label}</span>
@@ -444,8 +439,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
 
           <section className="apr-card" aria-label="Estimated revenue by source">
             <div className="apr-head">
-              <span className="apr-badge apr-badge--green">
-                <Icon name="card" size={17} />
+              <span className="apr-badge">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="apr-badge__art" src={`${ASSETS}/roi-bysrc-header.png`} alt="" />
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Estimated revenue by source</h3>
@@ -457,8 +453,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
               {bySource.map((c) => (
                 <div key={c.key} className="apr-bysrc__cell">
                   <div className="apr-bysrc__top">
-                    <span className={`apr-srcicon apr-srcicon--${c.tone}`}>
-                      <Icon name={c.icon} size={13} />
+                    <span className="apr-srcicon">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img className="apr-srcicon__art" src={c.art} alt="" />
                     </span>
                     <span className="apr-bysrc__label">{c.label}</span>
                   </div>
@@ -558,8 +555,9 @@ function RoiSettingsEditor({
   return (
     <section className="apr-card apr-assume" aria-label="Revenue assumptions">
       <div className="apr-head">
-        <span className="apr-badge apr-badge--blue">
-          <Icon name="sliders" size={17} />
+        <span className="apr-badge">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img className="apr-badge__art" src={`${ASSETS}/roi-assume.png`} alt="" />
         </span>
         <div className="apr-head__text">
           <h3 className="apr-title">Revenue assumptions</h3>
@@ -573,8 +571,9 @@ function RoiSettingsEditor({
         <div className="apr-form">
           <div className="apr-field">
             <label className="apr-field__label" htmlFor="apr-input-location">
-              <span className="apr-glyph apr-glyph--blue" aria-hidden="true">
-                <Icon name="pin" size={11} />
+              <span className="apr-glyph" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="apr-glyph__art" src={`${ASSETS}/roi-loc.png`} alt="" />
               </span>
               Location
             </label>
@@ -606,8 +605,9 @@ function RoiSettingsEditor({
 
           <div className="apr-field">
             <label className="apr-field__label" htmlFor="apr-input-avg">
-              <span className="apr-glyph apr-glyph--green" aria-hidden="true">
-                {currencyGlyph(cur || currency)}
+              <span className="apr-glyph" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="apr-glyph__art" src={`${ASSETS}/roi-avgjob.png`} alt="" />
               </span>
               Average job value
             </label>
@@ -624,8 +624,9 @@ function RoiSettingsEditor({
 
           <div className="apr-field">
             <label className="apr-field__label" htmlFor="apr-input-rate">
-              <span className="apr-glyph apr-glyph--purple" aria-hidden="true">
-                %
+              <span className="apr-glyph" aria-hidden="true">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img className="apr-glyph__art" src={`${ASSETS}/roi-rate.png`} alt="" />
               </span>
               Booking rate (0–1)
             </label>

@@ -248,8 +248,16 @@ export function AssistantConfigForm({ assistant }: { assistant: Assistant }) {
           </span>
           <h2 className="pr-step-title">Custom instructions</h2>
           <span style={{ marginLeft: "auto" }}>
-            <a href="/ai/training" className="pr-btn pr-btn--sec pr-btn--xs">
-              <Icon name="info" size={13} style={{ color: "var(--pr-warn)" }} />
+            <a href="/ai/training" className="pr-btn pr-btn--sec pr-btn--xs pr-tips-btn">
+              {/* real kit lightbulb illustration (Phone Assistant/illustrations/tips.svg),
+                  the exact glyph the mockup uses on this "View tips" button. */}
+              {/* biome-ignore lint/performance/noImgElement: real kit raster-in-SVG illustration */}
+              <img
+                className="pr-tips-btn__icon"
+                src="/assets/repulabs/phone/tips-lightbulb.svg"
+                alt=""
+                aria-hidden="true"
+              />
               View tips
             </a>
           </span>

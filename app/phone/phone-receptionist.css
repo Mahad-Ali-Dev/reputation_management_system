@@ -206,7 +206,7 @@
 /* hero — copy left, actions top-right, headset illustration lower-right */
 .pr-hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 480px);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 520px);
   gap: 28px;
   align-items: start;
   margin-bottom: 18px;
@@ -262,12 +262,15 @@
 }
 .pr-hero__art {
   width: 100%;
-  max-width: 470px;
+  max-width: 510px;
   /* The kit raster (1536×1024) frames a WIDE, short composition with generous
      vertical padding; left unbounded it renders ~307px tall and inflates the
      hero to ~360px vs the mockup's ~220px. Cap the height so the artwork scales
-     to the mockup's compact proportion (no distortion — contain). */
-  max-height: 208px;
+     to the mockup's compact proportion (no distortion — contain). Enlarged from
+     470×208 → 510×226 per founder "use illustrations BIGGER" directive; the hero
+     grid column is `minmax(0, 480px)` but the art is allowed to bleed wider here
+     since it sits flush-right against the canvas edge. */
+  max-height: 226px;
   height: auto;
   object-fit: contain;
   object-position: right center;
@@ -786,12 +789,28 @@
   overflow: hidden;
 }
 
+/* "View tips" button — real kit lightbulb illustration (tips.svg) in place of a
+   flat icon. The 1024² raster centers the bulb with generous transparent padding,
+   so scale it up + clip the box so the visible bulb reads at ~18px on the chip. */
+.pr-tips-btn {
+  gap: 5px;
+}
+.pr-tips-btn__icon {
+  width: 28px;
+  height: 28px;
+  margin: -6px -4px -6px -6px;
+  object-fit: contain;
+  flex-shrink: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* header robot illustration (assistant page) — floats in the header */
 .pr-header-robot {
-  width: 150px;
+  width: 176px;
   height: auto;
   display: block;
-  margin-top: -8px;
+  margin-top: -10px;
   pointer-events: none;
   user-select: none;
 }
@@ -804,16 +823,16 @@
   z-index: 0;
 }
 .pr-card-art--behavior {
-  right: 16px;
-  bottom: 10px;
-  width: 232px;
+  right: 14px;
+  bottom: 8px;
+  width: 260px;
   height: auto;
   opacity: 0.96;
 }
 .pr-card-art--shield {
-  right: 22px;
-  top: 14px;
-  width: 168px;
+  right: 20px;
+  top: 10px;
+  width: 204px;
   height: auto;
 }
 /* keep form content above decorative art */
@@ -932,10 +951,10 @@
   user-select: none;
 }
 .pr-setup-art--keypad {
-  width: 230px;
+  width: 248px;
 }
 .pr-setup-art--robot {
-  width: 190px;
+  width: 212px;
 }
 .pr-setup-icon {
   position: relative;

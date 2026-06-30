@@ -123,15 +123,15 @@ export default async function DashboardPage({
                 <h1 className="dk-hero__title">Your reputation, your edge.</h1>
                 <p className="dk-hero__sub">Track reviews, engage customers and grow your brand trust.</p>
               </div>
-              <img
-                className="dk-hero__art"
-                src={`${ASSETS}/${isEmpty ? "empty-hero.svg" : "hero-growth-board.png"}`}
-                alt=""
-              />
+              {/* Kit hero illustration ("dashboard/dashboard.svg" — the colorful
+                  growth board). Same asset in BOTH states (the kit reuses it),
+                  extracted from the delivered kit SVG at full resolution and
+                  shown large per the brief. */}
+              <img className="dk-hero__art" src={`${ASSETS}/kit-hero-board.png`} alt="" />
             </div>
 
             <div className="dk-card dk-train">
-              <img className="dk-train__icon" src={`${ASSETS}/train-agent-stack.png`} alt="" />
+              <img className="dk-train__icon" src={`${ASSETS}/kit-train-stack.png`} alt="" />
               <div className="dk-train__body">
                 <h2 className="dk-train__title">Train your agent</h2>
                 <p className="dk-train__sub">
@@ -144,18 +144,18 @@ export default async function DashboardPage({
             </div>
 
             <div className="dk-quick">
-              <QuickChip icon="chip-upload-faq.png" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
-              <QuickChip icon="chip-add-business.png" title="Add business info" sub="Services, hours, etc." href="/ai" />
-              <QuickChip icon="chip-train-reviews.png" title="Train from reviews" sub="Learn from feedback" href="/ai?tab=test" />
-              <QuickChip icon="chip-brand-voice.png" title="Brand voices" sub="Tone and style" href="/ai?tab=behaviour" />
-              <QuickChip icon="chip-knowledge.png" title="Knowledge sources" sub="Docs, URLs & more" href="/ai?tab=knowledge" />
+              <QuickChip icon="kit-chip-upload-faq.png" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
+              <QuickChip icon="kit-chip-add-business.png" title="Add business info" sub="Services, hours, etc." href="/ai" />
+              <QuickChip icon="kit-chip-train-reviews.png" title="Train from reviews" sub="Learn from feedback" href="/ai?tab=test" />
+              <QuickChip icon="kit-chip-brand-voice.png" title="Brand voices" sub="Tone and style" href="/ai?tab=behaviour" />
+              <QuickChip icon="kit-chip-knowledge.png" title="Knowledge sources" sub="Docs, URLs & more" href="/ai?tab=knowledge" />
             </div>
           </div>
 
           <div className="dk-stats">
             <StatChip
               label="Average Rating"
-              icon="stat-rating-star.png"
+              icon="kit-stat-rating.png"
               value={total > 0 ? avgRating.toFixed(1) : null}
               star={total > 0}
               delta={
@@ -170,7 +170,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="Total Reviews"
-              icon="stat-reviews-chat.png"
+              icon="kit-stat-reviews.png"
               value={total > 0 ? total.toLocaleString() : null}
               delta={
                 d.deltas30d.reviewsPct !== null && d.deltas30d.reviewsPct !== 0
@@ -184,7 +184,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="AI Replies Sent"
-              icon="stat-ai-replies.png"
+              icon="kit-stat-ai-replies.png"
               value={d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null}
               delta={
                 d.deltas30d.aiRepliesPct !== null && d.deltas30d.aiRepliesPct !== 0
@@ -199,7 +199,7 @@ export default async function DashboardPage({
             />
             <StatChip
               label="5-star Reviews"
-              icon="stat-five-star.png"
+              icon="kit-stat-five-star.png"
               value={fiveStarCount > 0 ? fiveStarCount.toLocaleString() : null}
               delta={
                 d.deltas30d.fiveStarPct !== null && d.deltas30d.fiveStarPct !== 0
@@ -243,17 +243,17 @@ export default async function DashboardPage({
           <div className="dk-insights__grid">
             <InsightCard
               label="Response Rate"
-              art="insight-users.png"
+              art="kit-insight-response-rate.png"
               value={total > 0 ? `${responseRate}%` : null}
             />
             <InsightCard
               label="Avg. Response Time"
-              clockTile
+              art="kit-insight-response-time.png"
               value={d.avgResponseHours !== null ? fmtHours(d.avgResponseHours) : null}
             />
             <InsightCard
               label="Sentiment"
-              art="insight-sentiment.png"
+              art="kit-insight-sentiment.png"
               value={total > 0 ? sentimentLabel(d.sentiment).label : null}
               chip={
                 total > 0
@@ -263,7 +263,7 @@ export default async function DashboardPage({
             />
             <InsightCard
               label="Trend"
-              art="insight-trend.png"
+              art="kit-insight-trend.png"
               value={total > 0 ? (d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0 ? "Improving" : "Steady") : null}
               chip={
                 total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
@@ -289,13 +289,13 @@ export default async function DashboardPage({
           {/* Kit: the 4 suggestion chips sit on a full-width row BELOW the
               input, clear of the illustration column. */}
           <CopilotChips />
-          {/* Kit (v2): the SAME 3D robot floats vertically centered on the
-              panel's right in BOTH states — sparkles baked into the asset, with
-              the chat bubble tucked above-left. The robot is cropped from the
-              delivered mockup, so we feather its left edge into the panel wash. */}
+          {/* Kit "Ai assistant/robot_exact.svg" — the complete 3D copilot mascot
+              (robot + chat bubble + sparkles all baked into ONE asset, exactly as
+              the mockup). Extracted from the delivered kit SVG at full resolution.
+              The asset ships with a baked near-white background, so multiply melts
+              it into the lavender panel on every edge (no crop/feather hacks). */}
           <div className="dk-copilot__bot" aria-hidden>
-            <img className="dk-copilot__bubble" src={`${ASSETS}/copilot-chat-bubble.png`} alt="" />
-            <img className="dk-copilot__art dk-copilot__art--3d" src={`${ASSETS}/copilot-robot-3d.png`} alt="" />
+            <img className="dk-copilot__art dk-copilot__art--3d" src={`${ASSETS}/kit-copilot-robot.png`} alt="" />
           </div>
         </section>
       </div>
@@ -467,7 +467,7 @@ function GoogleOverviewCard({
       </div>
       {total === 0 ? (
         <div className="dk-cardempty">
-          <img className="dk-cardempty__art" src={`${ASSETS}/empty-reviews-chart.svg`} alt="" />
+          <img className="dk-cardempty__art" src={`${ASSETS}/kit-empty-google-reviews.png`} alt="" />
           <h4 className="dk-cardempty__title">No review data yet</h4>
           <p className="dk-cardempty__sub">Reviews and ratings will appear here once you start receiving reviews.</p>
           <Link href="/connections" className="dk-btn-outline">
@@ -585,7 +585,9 @@ function RecentReviewsCard({
       </div>
       {reviews.length === 0 ? (
         <div className="dk-cardempty">
-          <img className="dk-cardempty__art" src={`${ASSETS}/empty-recent-reviews.svg`} alt="" />
+          {/* Kit "Recent reviews/recent reviews.svg" — the asset ships with a baked
+              near-white background, so multiply blends it cleanly onto the card. */}
+          <img className="dk-cardempty__art dk-cardempty__art--blend" src={`${ASSETS}/kit-empty-recent-reviews.png`} alt="" />
           <h4 className="dk-cardempty__title">No reviews yet</h4>
           <p className="dk-cardempty__sub">Reviews from your customers will appear here.</p>
         </div>
@@ -687,14 +689,12 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
 function InsightCard({
   label,
   art,
-  clockTile = false,
   value,
   chip,
 }: {
   label: string;
+  /** Kit insight illustration ("Key insight/*.svg"), extracted to a crisp PNG. */
   art?: string;
-  /** Purple clock tile (the one kit insight without a shipped illustration). */
-  clockTile?: boolean;
   /** null → the kit's designed "-- / No data yet" empty insight. */
   value: string | null;
   /** arrow:false → kit's plain percentage chip (Sentiment card). */
@@ -702,13 +702,7 @@ function InsightCard({
 }) {
   return (
     <div className="dk-card dk-insight">
-      {clockTile ? (
-        <span className="dk-insight__icontile">
-          <Icon name="clock" size={17} />
-        </span>
-      ) : (
-        art && <img className="dk-insight__icon" src={`${ASSETS}/${art}`} alt="" />
-      )}
+      {art && <img className="dk-insight__icon" src={`${ASSETS}/${art}`} alt="" />}
       <div style={{ minWidth: 0 }}>
         <div className="dk-insight__label">{label}</div>
         {value === null ? (

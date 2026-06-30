@@ -1,6 +1,6 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/shell/icon";
+import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import { type JSX, useState } from "react";
 import type { ActivityFeedItem } from "@/lib/autopilot/queries";
@@ -8,26 +8,35 @@ import "./autopilot-activity.css";
 
 /**
  * Activity tab (Module 15) — presentational. Built to the design kit in
- * tasks/autopilot/autopilot/Activity section/ (report-active-state.md +
- * report-empty-state.md): a two-column "Activity" + "Needs you" card grid with
- * pastel icon tiles, status chips and relative timestamps. Pure props; no
- * data fetching — rows come from getAutopilotActivityFeed / getNeedsHumanQueue.
+ * designs/autopilot/Activity section/ (active + empty state): a two-column
+ * "Activity" + "Needs you" card grid where each row carries a REAL kit
+ * illustration (designs/autopilot/Activity section/active state/illustrations/*),
+ * extracted to /assets/repulabs/autopilot/{act,needs}-*.png — not line icons.
+ * Pure props; rows come from getAutopilotActivityFeed / getNeedsHumanQueue.
  */
+
+const ASSETS = "/assets/repulabs/autopilot";
 
 type Tone = "primary" | "purple" | "success" | "warning" | "danger";
 
-const LOOP_META: Record<string, { label: string; icon: IconName; tone: Tone }> = {
-  auto_reply: { label: "AI reply published", icon: "chat", tone: "success" },
-  low_star_draft: { label: "Low-star reply drafted", icon: "edit", tone: "warning" },
-  review_request: { label: "Review request sent", icon: "send", tone: "purple" },
-  voice_review: { label: "Voice → Review request", icon: "phone", tone: "primary" },
-  dispute: { label: "Review dispute drafted", icon: "flag", tone: "warning" },
-  geo_post: { label: "Geo post published", icon: "pin", tone: "primary" },
-  inbox_reply: { label: "Inbox reply sent", icon: "reply", tone: "success" },
-  escalation: { label: "Escalated to you", icon: "alert", tone: "warning" },
+/**
+ * Per-loop label + REAL kit illustration. `art` points at the extracted kit
+ * asset (see designs/autopilot/Activity section/.../illustrations). The mockup
+ * pairs: AI reply→chat, review request→paper plane, voice→mic, digest→envelope,
+ * rating→trend; loops without a dedicated kit illo reuse the nearest one.
+ */
+const LOOP_META: Record<string, { label: string; art: string; tone: Tone }> = {
+  auto_reply: { label: "AI reply published", art: `${ASSETS}/act-ai-reply.png`, tone: "success" },
+  low_star_draft: { label: "Low-star reply drafted", art: `${ASSETS}/act-ai-reply.png`, tone: "warning" },
+  review_request: { label: "Review request sent", art: `${ASSETS}/act-review-req.png`, tone: "purple" },
+  voice_review: { label: "Voice → Review request", art: `${ASSETS}/act-voice.svg`, tone: "primary" },
+  dispute: { label: "Review dispute drafted", art: `${ASSETS}/needs-reviews.png`, tone: "warning" },
+  geo_post: { label: "Geo post published", art: `${ASSETS}/act-rating.svg`, tone: "primary" },
+  inbox_reply: { label: "Inbox reply sent", art: `${ASSETS}/needs-approve.png`, tone: "success" },
+  escalation: { label: "Escalated to you", art: `${ASSETS}/needs-reviews.png`, tone: "warning" },
 };
 
-const FALLBACK_META = { label: "Autopilot action", icon: "bolt" as IconName, tone: "primary" as Tone };
+const FALLBACK_META = { label: "Autopilot action", art: `${ASSETS}/act-ai-reply.png`, tone: "primary" as Tone };
 
 /** How many rows each card shows before "View all" expands it. */
 const VISIBLE_ROWS = 7;
@@ -136,13 +145,14 @@ export function ActivityPanel({
 
         {feed.length === 0 ? (
           <div className="apa-empty">
+            {/* Real kit empty-state illustration (Activity section/empty state). */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/assets/repulabs/autopilot/activity-empty.svg"
+              src={`${ASSETS}/empty-activity.png`}
               alt=""
               className="apa-empty__img"
-              width={240}
-              height={132}
+              width={300}
+              height={183}
             />
             <p className="apa-empty__text">
               Nothing yet. When Autopilot is on, everything it does shows up here.
@@ -177,13 +187,14 @@ export function ActivityPanel({
 
         {needsYou.length === 0 ? (
           <div className="apa-empty">
+            {/* Real kit "all caught up" illustration (Needs you, empty state). */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/assets/repulabs/autopilot/needs-caught-up.svg"
+              src={`${ASSETS}/empty-needs.png`}
               alt=""
               className="apa-empty__img apa-empty__img--check"
-              width={96}
-              height={96}
+              width={150}
+              height={150}
             />
             <p className="apa-empty__text">All caught up — nothing needs your attention right now.</p>
           </div>
@@ -210,7 +221,8 @@ function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const body = (
     <>
       <span className={`apa-icon apa-icon--${tone}`} aria-hidden="true">
-        <Icon name={meta.icon} size={18} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="apa-icon__art" src={meta.art} alt="" loading="lazy" />
       </span>
       <div style={{ minWidth: 0 }}>
         <div className="apa-row__title">{meta.label}</div>
@@ -249,7 +261,8 @@ function NeedsRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const body = (
     <>
       <span className={`apa-icon apa-icon--${failed ? "danger" : meta.tone}`} aria-hidden="true">
-        <Icon name={meta.icon} size={18} />
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className="apa-icon__art" src={meta.art} alt="" loading="lazy" />
       </span>
       <div style={{ minWidth: 0 }}>
         <div className="apa-row__title">{meta.label}</div>

@@ -82,32 +82,22 @@
 }
 
 .apr-badge {
-  width: 34px;
-  height: 34px;
-  border-radius: 10px;
+  /* Holds a REAL kit illustration (soft tile baked into the asset) — bigger
+     than the old line-icon chip to match the kit mockup's prominent glyphs. */
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.apr-badge--green {
-  background: var(--apr-green-soft);
-  color: var(--apr-green);
-}
-
-.apr-badge--purple {
-  background: var(--apr-purple-soft);
-  color: var(--apr-purple);
-}
-
-.apr-badge--cyan {
-  background: var(--apr-cyan-soft);
-  color: var(--apr-cyan);
-}
-
-.apr-badge--blue {
-  background: var(--apr-blue-soft);
-  color: var(--apr-blue);
+.apr-badge__art {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  display: block;
 }
 
 .apr-title {
@@ -262,9 +252,10 @@
 }
 
 .apr-emptyart {
-  width: 104px;
-  height: 104px;
+  width: 132px;
+  height: 132px;
   flex-shrink: 0;
+  object-fit: contain;
 }
 
 .apr-cta {
@@ -382,37 +373,22 @@
 }
 
 .apr-srcicon {
-  width: 24px;
-  height: 24px;
-  border-radius: 8px;
+  /* Real kit per-source illustration (tile baked in) — enlarged from the old
+     24px line-icon chip so the glyphs read clearly, per the kit mockup. */
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
   display: grid;
   place-items: center;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.apr-srcicon--green {
-  background: var(--apr-green-soft);
-  color: var(--apr-green);
-}
-
-.apr-srcicon--purple {
-  background: var(--apr-purple-soft);
-  color: var(--apr-purple);
-}
-
-.apr-srcicon--blue {
-  background: var(--apr-blue-soft);
-  color: var(--apr-blue);
-}
-
-.apr-srcicon--indigo {
-  background: var(--apr-blue-soft);
-  color: var(--apr-indigo);
-}
-
-.apr-srcicon--orange {
-  background: var(--apr-yellow-soft);
-  color: var(--apr-orange);
+.apr-srcicon__art {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
 }
 
 .apr-source__label {
@@ -559,31 +535,25 @@
 }
 
 .apr-glyph {
-  width: 20px;
-  height: 20px;
-  border-radius: 6px;
+  width: 26px;
+  height: 26px;
+  border-radius: 8px;
   display: grid;
   place-items: center;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
+  overflow: hidden;
 }
 
-.apr-glyph--blue {
-  background: var(--apr-blue-soft);
-  color: var(--apr-blue);
+.apr-glyph__art {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  display: block;
 }
 
-.apr-glyph--green {
-  background: var(--apr-green-soft);
-  color: var(--apr-green);
-}
-
-.apr-glyph--purple {
-  background: var(--apr-purple-soft);
-  color: var(--apr-purple);
-}
-
+/* The Currency field has no dedicated kit illustration — keep a tinted "$". */
 .apr-glyph--yellow {
   background: var(--apr-yellow-soft);
   color: var(--apr-orange);
