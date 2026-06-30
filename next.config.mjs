@@ -1,6 +1,11 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  // Build output dir. Defaults to ".next"; override via NEXT_DIST_DIR so multiple
+  // concurrent `next dev` instances (e.g. parallel screenshot/verification jobs)
+  // each get an ISOLATED build dir and can't corrupt each other's manifests.
+  // No effect on normal dev/prod (env unset → ".next").
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   // Force-inline these env vars into EVERY bundle (server + client + RSC) via
   // webpack DefinePlugin. Next.js's `env` field alone didn't reliably reach
   // next-auth's internal module which has a literal `S(process.env.NEXTAUTH_URL)`

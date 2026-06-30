@@ -5,6 +5,7 @@ node_modules/
 
 # next.js
 .next/
+.next-*/
 out/
 build/
 
@@ -147,5 +148,10 @@ desktop.ini
 
 /Program Files/
 /tasks/*.zip
+
+/designs/
+/tasks/ui-kit2-final/
+/tasks/ui-fidelity-3001/
+/tasks/ui-fidelity-3002/
 
 /outputs/
