@@ -135,6 +135,13 @@ else
   warn "  DIRECT_URL=... pnpm db:migrate:deploy"
 fi
 
+# Clear the previous build output BEFORE rebuilding. `next build` overwrites most
+# of .next, but orphaned CSS/JS chunks from a prior build can survive and get
+# served alongside fresh HTML — the classic "deploy looks unchanged / unstyled
+# page" bug. A clean dir guarantees the served chunks match this build.
+log "Clearing previous .next build dir"
+run "rm -rf .next"
+
 log "Building Next.js production bundle"
 # Call `pnpm build` (which itself runs `prisma generate && next build`)
 # instead of `pnpm exec next build` directly. Belt-and-suspenders with the
