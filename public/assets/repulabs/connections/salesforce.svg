@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="sf" x1="170" y1="250" x2="850" y2="760">
+      <stop offset="0" stop-color="#00A1E0"/>
+      <stop offset="1" stop-color="#0085C7"/>
+    </linearGradient>
+  </defs>
+  <path d="M818 441c-24-111-121-192-238-192-76 0-145 34-190 88-31-20-68-32-108-32-110 0-199 89-199 199 0 107 84 194 190 199 36 58 100 96 173 96 63 0 119-29 157-73 24 9 50 14 77 14 127 0 231-103 231-231 0-23-3-46-10-67-24 7-51 7-83-1Z"
+        fill="url(#sf)"/>
+  <text x="512" y="555" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="125" font-weight="500" fill="#fff">salesforce</text>
+</svg>

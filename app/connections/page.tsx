@@ -1,5 +1,4 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
@@ -16,11 +15,11 @@ import Link from "next/link";
 import { getLatestRun } from "@/lib/onboarding/run-store";
 import type { ConnectionSuggestion } from "@/lib/onboarding/constants";
 import { disconnectConnection, resyncConnection } from "./_components/actions";
-import { ConnectionsAccordion } from "./_components/connections-accordion";
+import { ConnectionsBrowser } from "./_components/connections-browser";
 import { CsvImportPanel } from "./_components/csv-import-panel";
 import { type ConnectedRow, ConnectedSystemsTable } from "./_components/connected-systems-table";
-import { GetStartedCard } from "./_components/get-started-card";
-import { type SuggestedCard, SuggestedBand } from "./_components/suggested-band";
+import { SuggestedBand, type SuggestedCard } from "./_components/suggested-band";
+import "./connections-kit.css";
 import {
   type SerializedConnection,
   type SerializedProviderRow,
@@ -31,26 +30,25 @@ import {
 } from "./_lib/format";
 
 /**
- * Connections — accordion layout (module 14_connections, Wave 3a).
+ * Connections — hub + browse, redesigned to the delivered design kit.
  *
  * SERVER component: it owns every DB read (tenant-scoped connections + the
  * admin-cached provider_apps) and resolves the provider catalog. All
- * interactivity (accordion toggles, connect/disconnect/re-sync, the confirm
- * modal) lives in the `'use client'` islands under `_components/`, which
+ * interactivity (category filter, search, connect/disconnect/reauth, the
+ * confirm modal) lives in `'use client'` islands under `_components/`, which
  * receive ONLY serialized, JSON-safe props (Date → ISO string) — preserving
  * the server-authoritative pattern and avoiding the RSC onClick crash.
  *
- * Layout: four grouped accordion sections (Reviews · Social · POS · Email &
- * CRM), an always-visible Connected Systems table, and a Get-Started empty
- * state when nothing is connected.
+ * Layout (kit): eyebrow → hero header → 4 stat cards w/ sparklines →
+ * "Bring your systems together" constellation panel → 3-step explainer →
+ * live-status banner → Connected systems (live table) → All integrations
+ * (category cards + searchable list). The empty (0-connected) state renders
+ * the same shell with zeroed stats + neutral banner copy.
  */
 
 export const dynamic = "force-dynamic";
 
-/**
- * Cached 5-min per pod — provider_apps only changes when an admin pastes creds
- * (invalidated via `revalidateTag("provider-apps")` from the admin save).
- */
+/** Cached 5-min per pod — provider_apps only changes on an admin creds paste. */
 const getProviderApps = unstable_cache(
   async () =>
     prisma.providerApp.findMany({
@@ -60,7 +58,6 @@ const getProviderApps = unstable_cache(
   { revalidate: 300, tags: ["provider-apps"] },
 );
 
-/** The connection row shape this page consumes (DB Dates kept until serialize). */
 type ConnectionRow = {
   id: string;
   provider: string;
@@ -78,10 +75,9 @@ function isMissingRelation(err: unknown): boolean {
 
 /**
  * Tenant-scoped connection load, FAIL-SOFT on the not-yet-migrated `sync_error`
- * column (Wave-0 delta). Mirrors `lib/connections/status.ts`: on a brand-new
- * deploy the column is absent (42703) — degrade to a read WITHOUT it instead of
- * 500-ing the page; on any other transient DB error, degrade to "nothing
- * connected" (the conservative direction).
+ * column (Wave-0 delta). On a brand-new deploy the column is absent (42703) —
+ * degrade to a read WITHOUT it; on any other transient DB error, degrade to
+ * "nothing connected" (the conservative direction).
  */
 async function loadConnections(orgId: string): Promise<ConnectionRow[]> {
   try {
@@ -100,7 +96,6 @@ async function loadConnections(orgId: string): Promise<ConnectionRow[]> {
     );
   } catch (err) {
     if (isMissingRelation(err)) {
-      // The `sync_error` column doesn't exist yet — retry without it.
       try {
         const rows = await withTenant(orgId, async (tx) =>
           tx.connection.findMany({
@@ -124,46 +119,22 @@ async function loadConnections(orgId: string): Promise<ConnectionRow[]> {
 }
 
 /**
- * The accordion's four groups, each a curated list of provider ids in display
- * order. `meta` is the combined entry from the overlay (not the registry).
+ * The browse view's category groups, each a curated list of provider ids in
+ * display order. `meta` is the combined entry from the overlay (not registry).
  * Anything connected but outside these groups still surfaces in the Connected
- * Systems table, so no live connection is ever hidden.
+ * table, so no live connection is ever hidden.
  */
 type SectionDef = {
   key: string;
-  label: string;
-  subline: string;
-  icon: string;
   providerIds: string[];
 };
 
 const SECTION_DEFS: SectionDef[] = [
-  {
-    key: "reviews",
-    label: "Reviews & Google",
-    subline: "Sync reviews and post AI-drafted replies where customers leave them.",
-    icon: "star",
-    providerIds: ["google_business"],
-  },
-  {
-    key: "social",
-    label: "Social — Meta",
-    subline: "One connection for Facebook Pages + Instagram: comments, DMs, and posts.",
-    icon: "share",
-    providerIds: ["meta", "whatsapp", "linkedin", "twitter"],
-  },
-  {
-    key: "pos",
-    label: "Point of sale",
-    subline: "Trigger a review request after every transaction.",
-    icon: "card",
-    providerIds: ["square_pos", "toast_pos", "clover_pos", "lightspeed_pos"],
-  },
+  { key: "reviews", providerIds: ["google_business"] },
+  { key: "social", providerIds: ["meta", "whatsapp", "linkedin", "twitter"] },
+  { key: "pos", providerIds: ["square_pos", "toast_pos", "clover_pos", "lightspeed_pos"] },
   {
     key: "crm",
-    label: "Email & CRM",
-    subline: "Find your customers wherever they live and sync them automatically.",
-    icon: "users",
     providerIds: [
       "hubspot",
       "salesforce",
@@ -173,7 +144,6 @@ const SECTION_DEFS: SectionDef[] = [
       "xero",
       "mailchimp",
       "klaviyo",
-      // API-key paste providers — connectable today via the manage-page form.
       "activecampaign",
       "brevo",
       "convertkit",
@@ -190,13 +160,7 @@ function resolveProvider(id: string): ProviderEntry | null {
   return PROVIDERS[id] ?? null;
 }
 
-/**
- * Map a raw orchestrator suggestion `provider` string (google | yelp | facebook
- * | …) to the catalog provider id the Connections UI connects through. The
- * orchestrator emits short slugs; the UI tiles use fuller ids (`google` →
- * `google_business`, `facebook`/`instagram` → the combined `meta` entry).
- * Returns null for slugs we can't yet connect (the suggestion is then dropped).
- */
+/** Map an orchestrator suggestion slug to the catalog provider id we connect. */
 function suggestionToProviderId(raw: string): string | null {
   const s = raw.trim().toLowerCase();
   switch (s) {
@@ -209,20 +173,10 @@ function suggestionToProviderId(raw: string): string | null {
     case "meta":
       return "meta";
     default:
-      // Anything that already matches a catalog tile (e.g. linkedin) passes
-      // through; unknown slugs (yelp, tripadvisor — no tile yet) are dropped.
       return resolveProvider(s) ? s : null;
   }
 }
 
-/**
- * Resolve the connect destination for a suggested provider, mirroring the
- * accordion's RowAction precedence so a "Connect" click lands in the same flow:
- *   - api-key / embed providers   → the manage detail page (secure form)
- *   - configured OAuth providers  → the authorize route (no prefetch)
- *   - everything else             → the manage detail page (admin/setup hint)
- * `prefetch` is false for the authorize route since it redirects.
- */
 function suggestionConnectHref(
   providerId: string,
   connType: string,
@@ -243,8 +197,6 @@ export default async function ConnectionsPage({
   const { orgId } = await getOrgContext();
   const sp = (await searchParams) ?? {};
   const showImport = sp.import === "1";
-  // The Google authorize route redirects here with ?connect_error= when the
-  // OAuth client isn't configured — previously nothing rendered it (silent).
   const connectError =
     sp.connect_error === "google_not_configured"
       ? "Google connection isn't configured on this server yet (missing OAuth client). Contact support — nothing is wrong with your account."
@@ -253,8 +205,6 @@ export default async function ConnectionsPage({
   const [connections, providerApps, latestRun] = await Promise.all([
     loadConnections(orgId),
     getProviderApps(),
-    // Band 1 source. FAIL-SOFT: getLatestRun already swallows the unmigrated
-    // onboarding_runs table (returns null) — Band 1 is then simply omitted.
     getLatestRun(orgId).catch(() => null),
   ]);
 
@@ -279,8 +229,6 @@ export default async function ConnectionsPage({
   );
 
   // ── Band 1: "Suggested for you" — orchestrator-detected candidates. ───────
-  // Resolve each suggestion to a connectable catalog tile, de-dupe by provider
-  // id (a site may link both FB + IG → one Meta card), and drop unknown slugs.
   const rawSuggestions: ConnectionSuggestion[] = latestRun?.suggestions ?? [];
   const suggestedCards: SuggestedCard[] = [];
   const seenSuggested = new Set<string>();
@@ -310,8 +258,8 @@ export default async function ConnectionsPage({
     });
   }
 
-  // A registry id may differ from the connection's provider string (the Square
-  // POS tile is `square_pos`, the callback writes `square`). Surface both.
+  // A registry id may differ from the connection's provider string (Square POS
+  // tile is `square_pos`, the callback writes `square`). Surface both.
   const connsForProvider = (providerId: string): SerializedConnection[] => {
     const direct = connByProvider.get(providerId) ?? [];
     if (providerId === "square_pos") {
@@ -337,7 +285,7 @@ export default async function ConnectionsPage({
     };
   };
 
-  // ── Build the accordion sections. ────────────────────────────────────────
+  // ── Build the browse sections. ───────────────────────────────────────────
   const sections: SerializedSection[] = SECTION_DEFS.map((def) => {
     const providers = def.providerIds
       .filter((id) => !isLegacyProvider(id))
@@ -348,24 +296,20 @@ export default async function ConnectionsPage({
     ).length;
     return {
       key: def.key,
-      label: def.label,
-      subline: def.subline,
-      icon: def.icon,
+      label: def.key,
+      subline: "",
+      icon: "grid",
       providers,
       connectedCount,
       total: providers.length,
     };
   });
 
-  // ── Flatten ALL active/known connections into the table (one row each). ──
+  // ── Flatten ALL active/known connections into the Connected table. ───────
   const knownProviderIds = new Set(SECTION_DEFS.flatMap((d) => d.providerIds));
   const tableRows: ConnectedRow[] = connections
-    // The table mirrors live systems: show active/error/expired rows (hide the
-    // ones the user explicitly revoked — those live only in audit history).
     .filter((c) => c.status !== "revoked")
     .map((c) => {
-      // Map the connection's provider string to a catalog entry for labelling.
-      // `square` (callback) resolves via the `square_pos` tile.
       const tileId = c.provider === "square" ? "square_pos" : c.provider;
       const entry = resolveProvider(tileId) ?? resolveProvider(c.provider);
       const meta = getProviderMeta(c.provider);
@@ -381,7 +325,6 @@ export default async function ConnectionsPage({
         syncError: c.syncError ?? null,
       };
     });
-  // Keep deterministic ordering: known providers first, then the rest.
   tableRows.sort((a, b) => {
     const ak = knownProviderIds.has(a.provider) ? 0 : 1;
     const bk = knownProviderIds.has(b.provider) ? 0 : 1;
@@ -390,6 +333,7 @@ export default async function ConnectionsPage({
 
   const activeConns = connections.filter((c) => c.status === "active");
   const connectedCount = activeConns.length;
+  const errorCount = connections.filter((c) => c.status === "error").length;
   const totalAvailable = SECTION_DEFS.reduce(
     (sum, d) => sum + d.providerIds.filter((id) => !isLegacyProvider(id)).length,
     0,
@@ -399,112 +343,385 @@ export default async function ConnectionsPage({
       lastSyncedAt: c.lastSyncedAt ? c.lastSyncedAt.toISOString() : null,
     })),
   );
+  const isEmpty = connectedCount === 0;
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Connections"]}>
-      <PageHeader
-        kicker={`${connectedCount} of ${totalAvailable} connected`}
-        title="Connections"
-        description="Pull customer data from your CRM and POS, listen on social, and let repulabs ship review requests at the moment of truth."
-        actions={
-          <>
-            <Link href="/connections?import=1#csv-import" className="btn">
-              <Icon name="upload" size={13} />
+      <div className="conn-page">
+        {/* ── Hero header ─────────────────────────────────────────────── */}
+        <div className="ph">
+          <div style={{ minWidth: 0 }}>
+            <div className="conn-eyebrow">
+              <span className="conn-eyebrow__dot" aria-hidden="true" />
+              <b>{connectedCount}</b> OF <b>{totalAvailable}</b> CONNECTED
+            </div>
+            <h1 className="ph__title">Connections</h1>
+            <p className="ph__sub">
+              Pull customer data from your CRM and POS, listen on social, and let repulabs ship
+              review requests at the moment of truth.
+            </p>
+          </div>
+          <div className="row" style={{ flexShrink: 0, gap: 10, flexWrap: "wrap" }}>
+            <Link href="/connections?import=1#csv-import" className="conn-btn">
+              <Icon name="upload" size={15} />
               Import CSV
             </Link>
             <a
               href="mailto:hello@repulabs.com?subject=Integration%20request"
-              className="btn btn--pri"
+              className="conn-btn conn-btn--pri"
             >
-              <Icon name="plus" size={13} />
+              <Icon name="plus" size={15} />
               Request integration
             </a>
-          </>
-        }
-      />
-
-      {connectError && (
-        <div
-          className="ds-card row"
-          role="alert"
-          style={{
-            padding: "10px 14px",
-            marginBottom: 14,
-            gap: 8,
-            borderColor: "var(--bad)",
-            background: "var(--bad-soft, #fee2e2)",
-            fontSize: 13,
-          }}
-        >
-          <Icon name="alert" size={13} style={{ color: "var(--bad)" }} />
-          {connectError}
+          </div>
         </div>
-      )}
 
-      <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>
-        <Kpi l="Connected" v={String(connectedCount)} d={`of ${totalAvailable} available`} />
-        <Kpi
-          l="Last sync"
-          v={relativeTime(newest)}
-          d={connectedCount > 0 ? "Across all providers" : "—"}
-        />
-        <Kpi
-          l="Active integrations"
-          v={String(connectedCount)}
-          d={
-            activeConns
-              .map((c) => prettyProvider(c.provider))
-              .slice(0, 3)
-              .join(" · ") || "Not connected"
-          }
-        />
-        <Kpi
-          l="Sync errors"
-          v={String(connections.filter((c) => c.status === "error").length)}
-          d={connections.some((c) => c.status === "error") ? "Needs attention" : "All healthy"}
-          up={!connections.some((c) => c.status === "error")}
-        />
-      </div>
+        {connectError && (
+          <div
+            className="conn-card row"
+            role="alert"
+            style={{
+              padding: "12px 16px",
+              marginBottom: 20,
+              gap: 8,
+              borderColor: "var(--bad)",
+              background: "var(--bad-soft, #fee2e2)",
+              fontSize: 13,
+            }}
+          >
+            <Icon name="alert" size={14} style={{ color: "var(--bad)" }} />
+            {connectError}
+          </div>
+        )}
 
-      {connectedCount === 0 && (
-        <div style={{ marginBottom: 18 }}>
-          <GetStartedCard />
+        {/* ── Row A · 4 stat cards with sparklines ────────────────────── */}
+        <div className="conn-stats">
+          <StatCard
+            tile="violet"
+            asset="connection-plug.svg"
+            label="Connected"
+            value={String(connectedCount)}
+            sub={`of ${totalAvailable} available`}
+            spark="violet"
+          />
+          <StatCard
+            tile="green"
+            asset="calendar-icon.svg"
+            label="Last sync"
+            value={isEmpty ? "—" : relativeTime(newest)}
+            valueMuted={isEmpty}
+            pill={isEmpty ? undefined : { tone: "green", label: "Synced just now" }}
+            sub={isEmpty ? "—" : undefined}
+            smallValue={!isEmpty}
+            spark="green"
+          />
+          <StatCard
+            tile="violet"
+            asset="puzzle-icon.svg"
+            label="Active integrations"
+            value={String(connectedCount)}
+            pill={
+              isEmpty
+                ? { tone: "grey", label: "Not connected" }
+                : { tone: "indigo", label: "All connected" }
+            }
+            spark="blue"
+          />
+          <StatCard
+            tile="green"
+            asset="shield-icon.svg"
+            label="Sync health"
+            value={isEmpty ? "0" : String(connectedCount)}
+            pill={
+              errorCount > 0
+                ? { tone: "grey", label: "Needs attention" }
+                : isEmpty
+                  ? { tone: "grey", label: "No data" }
+                  : { tone: "green", label: "All healthy" }
+            }
+            spark="green"
+          />
         </div>
-      )}
 
-      {showImport && (
-        <div id="csv-import" style={{ marginBottom: 18, scrollMarginTop: 24 }}>
-          <CsvImportPanel />
+        {/* ── "Bring your systems together" constellation panel ──────── */}
+        <div className="conn-panel">
+          <div style={{ minWidth: 0 }}>
+            <h2 className="conn-panel__title">Bring your systems together</h2>
+            <p className="conn-panel__text">
+              Connect the tools you already use. We&apos;ll sync your customers and send review
+              requests automatically at the right moment.
+            </p>
+            <div className="conn-panel__cta">
+              <a
+                href="mailto:hello@repulabs.com?subject=Integration%20request"
+                className="conn-btn conn-btn--pri"
+              >
+                <Icon name="plus" size={15} />
+                Request integration
+              </a>
+              <a href="#browse" className="conn-btn">
+                <Icon name="grid" size={15} />
+                Browse all sources
+              </a>
+            </div>
+          </div>
+          <Constellation />
         </div>
-      )}
 
-      <div id="connection-sources" className="col" style={{ gap: 18, scrollMarginTop: 24 }}>
-        {/* Band 1 — Suggested for you (hidden entirely when no suggestions). */}
-        {suggestedCards.length > 0 && <SuggestedBand cards={suggestedCards} />}
+        {/* ── 3-step explainer ────────────────────────────────────────── */}
+        <div className="conn-card conn-steps">
+          <Step
+            n={1}
+            tone="violet"
+            asset="link-icon.svg"
+            title="Connect a source"
+            body="Link your CRM, POS, e-commerce, or accounting tool — or just bring a CSV. This is where customer contacts come from."
+          />
+          <Step
+            n={2}
+            tone="green"
+            asset="lock-icon.svg"
+            title="Authorize securely"
+            body="A one-time OAuth consent (tokens are encrypted at rest). Social platforms like Meta connect Facebook + Instagram in a single step."
+          />
+          <Step
+            n={3}
+            tone="violet"
+            asset="paper-plane-icon.svg"
+            title="Requests fire automatically"
+            body="New customers sync every 15 minutes and flow into review requests at the perfect moment — no manual work."
+          />
+        </div>
 
-        {/* Band 2 — Connected (the org's live connection rows). */}
-        <ConnectedSystemsTable
-          rows={tableRows}
-          disconnectAction={disconnectConnection}
-          resyncAction={resyncConnection}
+        {/* ── Live-status banner ──────────────────────────────────────── */}
+        <StatusBanner
+          empty={isEmpty}
+          hasError={errorCount > 0}
+          activeCount={connectedCount}
         />
 
-        {/* Band 3 — All integrations (full catalog, by category + search). */}
-        <ConnectionsAccordion sections={sections} disconnectAction={disconnectConnection} />
+        {/* ── CSV import pre-flight (opened via ?import=1) ────────────── */}
+        {showImport && (
+          <div id="csv-import" style={{ marginBottom: 20, scrollMarginTop: 24 }}>
+            <CsvImportPanel />
+          </div>
+        )}
+
+        {/* ── Bands ───────────────────────────────────────────────────── */}
+        <div id="browse" className="col" style={{ gap: 20, scrollMarginTop: 24 }}>
+          {/* Suggested for you (hidden entirely when no suggestions). */}
+          {suggestedCards.length > 0 && <SuggestedBand cards={suggestedCards} />}
+
+          {/* Connected — the org's live connection rows (kept, live table). */}
+          <ConnectedSystemsTable
+            rows={tableRows}
+            disconnectAction={disconnectConnection}
+            resyncAction={resyncConnection}
+          />
+
+          {/* All integrations — category cards + searchable list. */}
+          <ConnectionsBrowser sections={sections} disconnectAction={disconnectConnection} />
+        </div>
       </div>
     </AppShellServer>
   );
 }
 
-function Kpi({ l, v, d, up }: { l: string; v: string; d: string; up?: boolean }) {
+/* ── Presentational, server-safe hub pieces ──────────────────────────────── */
+
+const SPARKS = {
+  violet: {
+    d: "M2 32 L18 28 L34 30 L50 20 L66 24 L82 14 L98 18 L116 8",
+    color: "#6366f1",
+  },
+  green: {
+    d: "M2 30 L18 26 L34 28 L50 22 L66 24 L82 16 L98 18 L116 10",
+    color: "#10b981",
+  },
+  blue: {
+    d: "M2 34 L18 24 L34 26 L50 28 L66 18 L82 20 L98 12 L116 14",
+    color: "#3b82f6",
+  },
+} satisfies Record<string, { d: string; color: string }>;
+
+function Sparkline({ kind }: { kind: keyof typeof SPARKS }) {
+  const s = SPARKS[kind];
+  const id = `conn-spark-${kind}`;
   return (
-    <div className="ds-card">
-      <div className="stat">
-        <div className="stat__label">{l}</div>
-        <div className="stat__value" style={{ fontSize: 28 }}>
-          {v}
+    <svg className="conn-stat__spark" viewBox="0 0 118 40" fill="none" aria-hidden="true">
+      <defs>
+        <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor={s.color} stopOpacity="0.18" />
+          <stop offset="1" stopColor={s.color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path d={`${s.d} L116 40 L2 40 Z`} fill={`url(#${id})`} />
+      <path d={s.d} stroke={s.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+function StatCard({
+  tile,
+  icon,
+  asset,
+  label,
+  value,
+  valueMuted,
+  smallValue,
+  sub,
+  pill,
+  spark,
+}: {
+  tile: "violet" | "green";
+  icon?: string;
+  /** Kit glyph asset under /assets/repulabs/connections (preferred). */
+  asset?: string;
+  label: string;
+  value: string;
+  valueMuted?: boolean;
+  smallValue?: boolean;
+  sub?: string;
+  pill?: { tone: "green" | "indigo" | "grey"; label: string };
+  spark: keyof typeof SPARKS;
+}) {
+  return (
+    <div className="conn-card conn-stat">
+      <div className={`conn-stat__tile conn-stat__tile--${tile}`} aria-hidden="true">
+        {asset ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={`/assets/repulabs/connections/${asset}`} alt="" />
+        ) : (
+          // biome-ignore lint/suspicious/noExplicitAny: Icon name union is exhaustive at call sites.
+          <Icon name={icon as any} size={22} />
+        )}
+      </div>
+      <div className="conn-stat__label">{label}</div>
+      <div
+        className={`conn-stat__value${valueMuted ? " conn-stat__value--muted" : ""}${
+          smallValue ? " conn-stat__value--sm" : ""
+        }`}
+      >
+        {value}
+      </div>
+      {pill ? (
+        <span className={`conn-stat__pill conn-stat__pill--${pill.tone}`}>{pill.label}</span>
+      ) : (
+        sub && <div className="conn-stat__sub">{sub}</div>
+      )}
+      {sub && pill && <div className="conn-stat__sub">{sub}</div>}
+      <Sparkline kind={spark} />
+    </div>
+  );
+}
+
+/** Central plug + 4 orbiting brand cards (Shopify, Zapier, Salesforce, Sheets). */
+function Constellation() {
+  const B = "/assets/repulabs/connections/";
+  return (
+    <div className="conn-constel" aria-hidden="true">
+      <span className="conn-constel__orbit conn-constel__orbit--2" />
+      <span className="conn-constel__orbit conn-constel__orbit--1" />
+      <span className="conn-constel__node conn-constel__node--green" />
+      <span className="conn-constel__node conn-constel__node--blue" />
+      <span className="conn-constel__node conn-constel__node--orange" />
+      <span className="conn-constel__core">
+        <Icon name="plug" size={52} />
+      </span>
+      <span className="conn-constel__logo conn-constel__logo--tl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${B}shopify.svg`} alt="" />
+      </span>
+      <span className="conn-constel__logo conn-constel__logo--tr">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${B}salesforce.svg`} alt="" />
+      </span>
+      <span className="conn-constel__logo conn-constel__logo--bl">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${B}hubspot.svg`} alt="" />
+      </span>
+      <span className="conn-constel__logo conn-constel__logo--br">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`${B}mailchimp.svg`} alt="" />
+      </span>
+    </div>
+  );
+}
+
+function Step({
+  n,
+  tone,
+  asset,
+  title,
+  body,
+}: {
+  n: number;
+  tone: "violet" | "green";
+  asset: string;
+  title: string;
+  body: string;
+}) {
+  return (
+    <div className="conn-step">
+      <span className={`conn-step__ico conn-step__ico--${tone}`} aria-hidden="true">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={`/assets/repulabs/connections/${asset}`} alt="" />
+        <span className="conn-step__badge">{n}</span>
+      </span>
+      <div style={{ minWidth: 0 }}>
+        <h3 className="conn-step__title">{title}</h3>
+        <p className="conn-step__body">{body}</p>
+      </div>
+    </div>
+  );
+}
+
+function StatusBanner({
+  empty,
+  hasError,
+  activeCount,
+}: {
+  empty: boolean;
+  hasError: boolean;
+  activeCount: number;
+}) {
+  // Guard the success language on activeCount>0 so the empty state stays
+  // neutral (per the file-17 QA flag — no green "Connected" while 0 connected).
+  const neutral = empty || hasError;
+  return (
+    <div className={`conn-banner${neutral ? " conn-banner--neutral" : ""}`} role="status">
+      <div className="conn-banner__top">
+        <span className="conn-banner__check" aria-hidden="true">
+          {neutral ? (
+            <Icon name="plug" size={26} />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src="/assets/repulabs/connections/connected.svg" alt="" />
+          )}
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <div className="conn-banner__title">
+            {empty ? "Not connected yet" : hasError ? "Attention needed" : "Connected"}
+          </div>
+          <div className="conn-banner__sub">
+            Everything currently feeding your data spine — status and last sync.
+          </div>
         </div>
-        <div className={`stat__delta${up ? " up" : ""}`}>{d}</div>
+        <span className="conn-banner__active">
+          {!neutral && <span className="conn-banner__active-dot" aria-hidden="true" />}
+          {activeCount} ACTIVE
+        </span>
+      </div>
+      <div className="conn-banner__inner">
+        <span className="conn-banner__box" aria-hidden="true">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/assets/repulabs/connections/open-box.svg" alt="" />
+        </span>
+        {empty
+          ? "No systems connected yet. Connect one above and it will appear here with live status."
+          : hasError
+            ? "A source needs attention. Reconnect it above to resume live syncing."
+            : "All systems connected and syncing live. New data will appear here with real-time updates."}
       </div>
     </div>
   );

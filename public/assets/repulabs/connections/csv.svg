@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="g" x1="180" y1="120" x2="850" y2="920" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B7CFF"/>
+      <stop offset="1" stop-color="#6D57F6"/>
+    </linearGradient>
+  </defs>
+  <path d="M235 115h420l145 145v620c0 32-26 58-58 58H235c-32 0-58-26-58-58V173c0-32 26-58 58-58Z"
+        fill="none" stroke="url(#g)" stroke-width="42" stroke-linejoin="round"/>
+  <path d="M655 115v146c0 23 18 41 41 41h104" fill="none" stroke="url(#g)" stroke-width="42" stroke-linejoin="round" stroke-linecap="round"/>
+  <text x="512" y="625" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="170" font-weight="800" fill="#7764F7">CSV</text>
+</svg>

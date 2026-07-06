@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="purple" x1="250" y1="240" x2="760" y2="800">
+      <stop offset="0" stop-color="#7D4DFF"/>
+      <stop offset="1" stop-color="#4B21F2"/>
+    </linearGradient>
+  </defs>
+  <path d="M458 272C470 226 536 226 548 272L596 452C601 471 616 486 635 491L810 538C856 550 856 616 810 628L635 675C616 680 601 695 596 714L548 892C536 938 470 938 458 892L410 714C405 695 390 680 371 675L196 628C150 616 150 550 196 538L371 491C390 486 405 471 410 452L458 272Z"
+        fill="none" stroke="url(#purple)" stroke-width="72" stroke-linejoin="round"/>
+  <path d="M710 208C722 163 786 163 798 208L815 272C820 291 835 306 854 311L918 328C963 340 963 404 918 416L854 433C835 438 820 453 815 472L798 536C786 581 722 581 710 536L693 472C688 453 673 438 654 433L590 416C545 404 545 340 590 328L654 311C673 306 688 291 693 272L710 208Z"
+        fill="none" stroke="url(#purple)" stroke-width="52" stroke-linejoin="round"/>
+  <path d="M650 765V875M595 820H705" stroke="url(#purple)" stroke-width="60" stroke-linecap="round"/>
+</svg>

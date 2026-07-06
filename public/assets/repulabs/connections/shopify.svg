@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1254" height="1254" viewBox="0 0 1254 1254" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="frontGrad" x1="268" y1="370" x2="690" y2="790" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#94C83D"/>
+      <stop offset="0.55" stop-color="#8BC63F"/>
+      <stop offset="1" stop-color="#74B332"/>
+    </linearGradient>
+    <linearGradient id="sideGrad" x1="690" y1="365" x2="920" y2="820" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5F9F35"/>
+      <stop offset="1" stop-color="#3F7D2F"/>
+    </linearGradient>
+    <linearGradient id="handleGrad" x1="390" y1="210" x2="720" y2="400" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#93C93E"/>
+      <stop offset="1" stop-color="#73AD33"/>
+    </linearGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="7" stdDeviation="8" flood-color="#000000" flood-opacity="0.10"/>
+    </filter>
+  </defs>
+
+  <!-- handles -->
+  <path d="M448 382C475 235 585 176 655 218C724 259 742 347 746 395" stroke="url(#handleGrad)" stroke-width="30" stroke-linecap="round" fill="none"/>
+  <path d="M542 370C560 258 632 207 687 238C741 268 762 345 768 392" stroke="url(#handleGrad)" stroke-width="27" stroke-linecap="round" fill="none"/>
+
+  <!-- bag -->
+  <g filter="url(#soft)">
+    <path d="M348 397L694 338L695 875L278 790L348 397Z" fill="url(#frontGrad)"/>
+    <path d="M694 338L814 392L894 790L695 875L694 338Z" fill="url(#sideGrad)"/>
+    <path d="M694 338L762 330L814 392L694 338Z" fill="#5A9734"/>
+  </g>
+
+  <!-- white S -->
+  <text x="475" y="700"
+        transform="rotate(-5 520 650)"
+        font-family="Arial Black, Arial, Helvetica, sans-serif"
+        font-size="355"
+        font-weight="900"
+        fill="#FFFFFF">S</text>
+</svg>

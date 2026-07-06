@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <linearGradient id="tile" x1="210" y1="170" x2="815" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A78BFA"/>
+      <stop offset="0.48" stop-color="#7C5CFF"/>
+      <stop offset="1" stop-color="#6C4DF6"/>
+    </linearGradient>
+    <linearGradient id="tile2" x1="245" y1="590" x2="480" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#B79CFF"/>
+      <stop offset="1" stop-color="#6A4CF4"/>
+    </linearGradient>
+  </defs>
+  <rect x="210" y="185" width="285" height="285" rx="56" fill="url(#tile)"/>
+  <rect x="530" y="185" width="285" height="285" rx="56" fill="url(#tile)"/>
+  <path fill-rule="evenodd" clip-rule="evenodd" d="M210 550H495V835H210V550ZM315 655H390C411.539 655 429 672.461 429 694V769C429 790.539 411.539 808 390 808H315C293.461 808 276 790.539 276 769V694C276 672.461 293.461 655 315 655Z" fill="url(#tile2)"/>
+  <rect x="530" y="550" width="285" height="285" rx="56" fill="url(#tile)"/>
+</svg>

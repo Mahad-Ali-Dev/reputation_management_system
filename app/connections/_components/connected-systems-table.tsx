@@ -97,9 +97,9 @@ export function ConnectedSystemsTable({
             <Icon name="plug" size={14} />
           </span>
           <div>
-            <h3 className="ds-card__title">Connected</h3>
+            <h3 className="ds-card__title">Connected systems</h3>
             <div className="ds-card__sub">
-              Everything currently feeding your data spine — status and last sync.
+              Your live connections — manage, re-sync, or disconnect.
             </div>
           </div>
         </div>

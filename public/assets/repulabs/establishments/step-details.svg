@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="badge" x1="220" y1="145" x2="810" y2="880" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#665BFF"/>
+      <stop offset="1" stop-color="#4330F4"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="18" flood-color="#4B37FF" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <circle cx="512" cy="512" r="370" fill="url(#badge)" filter="url(#shadow)"/>
+  <path d="M334 343h356l52 151c10 30-12 61-44 61-30 0-47-21-55-48-11 30-39 53-73 53s-62-23-73-53c-11 30-39 53-73 53s-62-23-73-53c-8 27-25 48-55 48-32 0-54-31-44-61l52-151Z" fill="white"/>
+  <path d="M323 558v210c0 21 17 38 38 38h302c21 0 38-17 38-38V558c-16 17-39 27-64 27-29 0-55-13-72-33-17 20-43 33-72 33s-55-13-72-33c-17 20-43 33-72 33-25 0-48-10-64-27Z" fill="white"/>
+  <path d="M463 803V665c0-16 13-29 29-29h40c16 0 29 13 29 29v138H463Z" fill="url(#badge)"/>
+  <rect x="335" y="294" width="354" height="43" rx="21.5" fill="white"/>
+</svg>

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="b" x1="185" y1="160" x2="850" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#215DFF"/>
+      <stop offset="1" stop-color="#6F55FF"/>
+    </linearGradient>
+  </defs>
+  <rect x="190" y="230" width="644" height="564" rx="92" stroke="url(#b)" stroke-width="58" stroke-linejoin="round"/>
+  <path d="M320 382H430C477 382 515 420 515 467V467C515 514 477 552 430 552H320C273 552 235 514 235 467V467C235 420 273 382 320 382Z" stroke="url(#b)" stroke-width="58" stroke-linejoin="round"/>
+  <path d="M594 382H704C751 382 789 420 789 467V467C789 514 751 552 704 552H594C547 552 509 514 509 467V467C509 420 547 382 594 382Z" stroke="url(#b)" stroke-width="58" stroke-linejoin="round"/>
+  <path d="M320 570H430C477 570 515 608 515 655V655C515 702 477 740 430 740H320C273 740 235 702 235 655V655C235 608 273 570 320 570Z" stroke="url(#b)" stroke-width="58" stroke-linejoin="round"/>
+  <path d="M594 570H704C751 570 789 608 789 655V655C789 702 751 740 704 740H594C547 740 509 702 509 655V655C509 608 547 570 594 570Z" stroke="url(#b)" stroke-width="58" stroke-linejoin="round"/>
+  <path d="M512 467L512 655" stroke="url(#b)" stroke-width="58" stroke-linecap="round"/>
+</svg>

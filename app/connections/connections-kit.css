@@ -1,0 +1,986 @@
+/* ============================================================
+   Connections — route-local styles for the delivered design kit.
+   Prefix: .conn-   (parallel-agent CSS isolation rule).
+   Kit palette (sampled from the mockups): indigo #4F46E5 / violet
+   #7C3AED, lavender panel #F5F5FE, near-white canvas #FBFCFF, green
+   success #16A34A on #EEF7F3, amber #B45309 / grey #64748B.
+   Co-exists with the shared design-system tokens; never touches globals.
+   ============================================================ */
+
+/* Kit canvas — the Connections mockups use a flat near-white (#FBFCFF), not
+   the product-wide teal/gold app-shell gradient. Page-scoped override (no
+   shared-file edit), same technique as the dashboard / My Devices. */
+.app--canvas:has(.conn-page) {
+  background-image: none;
+  background-color: #fbfcff;
+}
+
+.conn-page {
+  --conn-indigo: #4f46e5;
+  --conn-indigo-ink: #4338ca;
+  --conn-violet: #7c3aed;
+  --conn-lav: #f5f5fe;
+  --conn-lav-tile: #ede9fe;
+  --conn-blue-tile: #eef2ff;
+  --conn-green-tile: #dcfce7;
+  --conn-ink: #1e293b;
+  --conn-ink-2: #334155;
+  --conn-muted: #64748b;
+  --conn-muted-2: #94a3b8;
+  --conn-line: #e2e8f0;
+  --conn-line-soft: #eef1f6;
+  --conn-ok: #16a34a;
+  --conn-ok-dot: #22c55e;
+  --conn-warn: #b45309;
+  --conn-warn-dot: #f59e0b;
+  --conn-warn-line: #fdba74;
+  --conn-warn-bg: #fff7ed;
+  --conn-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+/* ── Eyebrow "N OF M CONNECTED" (green dot · indigo numbers) ──────────── */
+.conn-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--f-mono);
+  font-size: 11px;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--conn-muted-2);
+  margin-bottom: 12px;
+}
+.conn-eyebrow__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--conn-ok-dot);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
+}
+.conn-eyebrow b {
+  color: var(--conn-indigo);
+  font-weight: 700;
+}
+
+/* ── Generic kit card ────────────────────────────────────────────────── */
+.conn-card {
+  background: #fff;
+  border: 1px solid var(--conn-line);
+  border-radius: 16px;
+  box-shadow: var(--conn-card-shadow);
+}
+
+/* ── Header action buttons (kit indigo primary) ──────────────────────── */
+.conn-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 18px;
+  border-radius: 11px;
+  border: 1px solid var(--conn-line);
+  background: #fff;
+  color: var(--conn-ink-2);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease,
+    transform 0.14s ease;
+}
+.conn-btn:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07);
+}
+.conn-btn:active {
+  transform: translateY(0.5px);
+}
+.conn-btn--pri {
+  background: linear-gradient(180deg, #5b52ec 0%, var(--conn-indigo) 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 6px 16px -4px rgba(79, 70, 229, 0.45);
+}
+.conn-btn--pri:hover {
+  filter: brightness(1.04);
+  border-color: transparent;
+  box-shadow: 0 8px 20px -4px rgba(79, 70, 229, 0.5);
+  transform: translateY(-0.5px);
+}
+.conn-btn--sm {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 12.5px;
+  border-radius: 9px;
+}
+.conn-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--conn-indigo);
+}
+
+/* ── Row A · 4 stat cards with sparklines ────────────────────────────── */
+.conn-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 18px;
+  margin-bottom: 20px;
+}
+.conn-stat {
+  position: relative;
+  padding: 20px 20px 18px;
+  overflow: hidden;
+}
+.conn-stat__tile {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 14px;
+}
+.conn-stat__tile svg {
+  width: 22px;
+  height: 22px;
+}
+.conn-stat__tile--violet {
+  background: var(--conn-lav-tile);
+  color: var(--conn-violet);
+}
+.conn-stat__tile--green {
+  background: var(--conn-green-tile);
+  color: #10b981;
+}
+.conn-stat__label {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--conn-ink);
+}
+.conn-stat__value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--conn-ink);
+  margin-top: 6px;
+  font-variant-numeric: tabular-nums;
+}
+.conn-stat__value--muted {
+  color: var(--conn-muted-2);
+}
+.conn-stat__value--sm {
+  font-size: 23px;
+}
+.conn-stat__sub {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--conn-muted-2);
+}
+.conn-stat__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 8px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.conn-stat__pill--green {
+  background: var(--conn-green-tile);
+  color: var(--conn-ok);
+}
+.conn-stat__pill--indigo {
+  background: var(--conn-blue-tile);
+  color: var(--conn-indigo);
+}
+.conn-stat__pill--grey {
+  background: #f1f5f9;
+  color: var(--conn-muted);
+}
+/* Decorative sparkline pinned bottom-right */
+.conn-stat__spark {
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: 118px;
+  height: 40px;
+  pointer-events: none;
+}
+
+/* ── "Bring your systems together" constellation panel ───────────────── */
+.conn-panel {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 560px);
+  gap: 24px;
+  align-items: center;
+  padding: 32px;
+  border-radius: 20px;
+  background: var(--conn-lav);
+  border: 1px solid #eae8fb;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+.conn-panel__title {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--conn-ink);
+}
+.conn-panel__text {
+  margin: 12px 0 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--conn-muted);
+  max-width: 430px;
+}
+.conn-panel__cta {
+  display: flex;
+  gap: 12px;
+  margin-top: 22px;
+  flex-wrap: wrap;
+}
+
+/* Constellation illustration — central plug + 4 orbiting brand cards */
+.conn-constel {
+  position: relative;
+  justify-self: end;
+  width: 100%;
+  max-width: 540px;
+  aspect-ratio: 1.5 / 1;
+}
+.conn-constel__orbit {
+  position: absolute;
+  border-radius: 999px;
+  border: 1.5px dashed #cbd5e1;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.conn-constel__orbit--1 {
+  width: 46%;
+  aspect-ratio: 1;
+}
+.conn-constel__orbit--2 {
+  width: 72%;
+  aspect-ratio: 1;
+  opacity: 0.6;
+}
+.conn-constel__core {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 130px;
+  height: 130px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 35% 30%, #8b6dff 0%, #7c3aed 55%, #6d28d9 100%);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 18px 40px -8px rgba(124, 58, 237, 0.55), inset 0 2px 6px rgba(255, 255, 255, 0.35);
+}
+.conn-constel__core svg {
+  width: 52px;
+  height: 52px;
+  color: #fff;
+}
+.conn-constel__logo {
+  position: absolute;
+  width: 66px;
+  height: 66px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--conn-line);
+  display: grid;
+  place-items: center;
+  box-shadow: 0 10px 24px -8px rgba(15, 23, 42, 0.18);
+}
+.conn-constel__logo img {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+.conn-constel__logo--tl {
+  top: 6%;
+  left: 20%;
+}
+.conn-constel__logo--tr {
+  top: 6%;
+  right: 8%;
+}
+.conn-constel__logo--bl {
+  bottom: 8%;
+  left: 8%;
+}
+.conn-constel__logo--br {
+  bottom: 8%;
+  right: 20%;
+}
+.conn-constel__node {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  border: 2px solid #fff;
+}
+.conn-constel__node--green {
+  background: #22c55e;
+  top: 30%;
+  left: 39%;
+}
+.conn-constel__node--blue {
+  background: #3b82f6;
+  bottom: 34%;
+  left: 33%;
+}
+.conn-constel__node--orange {
+  background: #f97316;
+  top: 33%;
+  right: 30%;
+}
+
+/* ── 3-step explainer ────────────────────────────────────────────────── */
+.conn-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 26px 8px;
+  margin-bottom: 20px;
+}
+.conn-step {
+  display: flex;
+  gap: 16px;
+  padding: 4px 24px;
+  border-left: 1px solid var(--conn-line-soft);
+}
+.conn-step:first-child {
+  border-left: 0;
+}
+.conn-step__ico {
+  position: relative;
+  flex-shrink: 0;
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+}
+.conn-step__ico img {
+  width: 30px;
+  height: 30px;
+}
+.conn-step__ico--violet {
+  background: #ede9fe;
+}
+.conn-step__ico--green {
+  background: #dcfce7;
+}
+.conn-step__badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid var(--conn-line);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--conn-indigo);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+}
+.conn-step__title {
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--conn-ink);
+  margin: 4px 0 0;
+}
+.conn-step__body {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--conn-muted);
+}
+
+/* ── Live-status banner (green success surface) ──────────────────────── */
+.conn-banner {
+  border-radius: 16px;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+  padding: 22px 24px;
+  margin-bottom: 20px;
+}
+.conn-banner--neutral {
+  border-color: var(--conn-line);
+  background: #f8fafc;
+}
+.conn-banner__top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.conn-banner__check {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: #dcfce7;
+  display: grid;
+  place-items: center;
+}
+.conn-banner__check img,
+.conn-banner__check svg {
+  width: 30px;
+  height: 30px;
+}
+.conn-banner--neutral .conn-banner__check {
+  background: #eef2f6;
+  color: var(--conn-muted);
+}
+.conn-banner__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--conn-ok);
+}
+.conn-banner--neutral .conn-banner__title {
+  color: var(--conn-ink-2);
+}
+.conn-banner__sub {
+  font-size: 13px;
+  color: var(--conn-muted);
+  margin-top: 1px;
+}
+.conn-banner__active {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--conn-ok);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.conn-banner--neutral .conn-banner__active {
+  color: var(--conn-muted);
+}
+.conn-banner__active-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--conn-ok-dot);
+}
+.conn-banner__inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #bbf7d0;
+  font-size: 13px;
+  color: var(--conn-ink-2);
+}
+.conn-banner--neutral .conn-banner__inner {
+  border-top-color: var(--conn-line);
+}
+.conn-banner__box {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+}
+.conn-banner__box img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* ── Section header (Connected / All integrations) ───────────────────── */
+.conn-sec {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.conn-sec__ico {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: var(--conn-blue-tile);
+  color: var(--conn-indigo);
+  display: grid;
+  place-items: center;
+}
+.conn-sec__title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--conn-ink);
+}
+.conn-sec__sub {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--conn-muted);
+}
+.conn-sec__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--conn-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.conn-sec__spacer {
+  margin-left: auto;
+}
+.conn-search {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 9px;
+  border: 1px solid var(--conn-line);
+  background: #fff;
+  color: var(--conn-muted-2);
+}
+.conn-search input {
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13px;
+  color: var(--conn-ink);
+  width: 175px;
+}
+
+/* ── Category filter cards (5-up) ─────────────────────────────────────── */
+.conn-cats {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.conn-cat {
+  position: relative;
+  text-align: left;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--conn-line);
+  background: #fff;
+  cursor: pointer;
+  box-shadow: var(--conn-card-shadow);
+  transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
+  font: inherit;
+  color: inherit;
+}
+.conn-cat:hover {
+  border-color: #c7d2fe;
+  box-shadow: 0 6px 16px -6px rgba(79, 70, 229, 0.18);
+}
+.conn-cat--active {
+  border-color: #c7d2fe;
+  box-shadow: 0 0 0 1px #c7d2fe, 0 6px 16px -6px rgba(79, 70, 229, 0.2);
+}
+.conn-cat__tile {
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  background: var(--conn-blue-tile);
+  color: var(--conn-indigo);
+}
+.conn-cat__tile img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.conn-cat__tile--plain {
+  background: #fff;
+  border: 1px solid var(--conn-line);
+}
+.conn-cat__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--conn-ink);
+  padding-right: 26px;
+}
+.conn-cat__desc {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--conn-muted-2);
+}
+.conn-cat__count {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--conn-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.conn-cat--active .conn-cat__count {
+  background: var(--conn-blue-tile);
+  color: var(--conn-indigo);
+}
+
+/* ── Integration list rows ───────────────────────────────────────────── */
+.conn-list {
+  border-top: 1px solid var(--conn-line-soft);
+}
+.conn-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--conn-line-soft);
+  transition: background 0.12s ease;
+}
+.conn-row:last-child {
+  border-bottom: 0;
+}
+.conn-row:hover {
+  background: #fafbff;
+}
+.conn-row__logo {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: #fff;
+  border: 1px solid var(--conn-line);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+}
+.conn-row__logo img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+}
+.conn-row__logo svg {
+  width: 20px;
+  height: 20px;
+}
+.conn-row__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--conn-ink);
+  white-space: nowrap;
+}
+.conn-row__tag {
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 999px;
+  background: #f1f5f9;
+  color: var(--conn-muted);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.conn-row__namewrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  width: 272px;
+  min-width: 0;
+  overflow: hidden;
+}
+.conn-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.conn-row__desc {
+  flex: 1 1 0;
+  min-width: 0;
+  font-size: 13px;
+  color: var(--conn-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-left: 4px;
+}
+.conn-row__right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+/* Status pill (3-state) — text + dot, never color-only */
+.conn-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  min-width: 108px;
+}
+.conn-status__dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  flex-shrink: 0;
+}
+.conn-status--ok {
+  color: var(--conn-ok);
+}
+.conn-status--ok .conn-status__dot {
+  background: var(--conn-ok-dot);
+}
+.conn-status--warn {
+  color: var(--conn-warn);
+}
+.conn-status--warn .conn-status__dot {
+  background: var(--conn-warn-dot);
+}
+.conn-status--neutral {
+  color: var(--conn-muted);
+}
+.conn-status--neutral .conn-status__dot {
+  background: var(--conn-muted-2);
+}
+.conn-status--bad {
+  color: var(--bad, #e14d62);
+}
+.conn-status--bad .conn-status__dot {
+  background: var(--bad, #e14d62);
+}
+
+/* Action buttons by status */
+.conn-act {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  border: 1px solid var(--conn-line);
+  background: #fff;
+  color: var(--conn-ink-2);
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.conn-act:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+.conn-act--connect {
+  border-color: #c7d2fe;
+  color: var(--conn-indigo);
+  background: #fff;
+}
+.conn-act--connect:hover {
+  background: var(--conn-blue-tile);
+}
+.conn-act--reconnect {
+  border-color: var(--conn-warn-line);
+  color: var(--conn-warn);
+  background: #fff;
+}
+.conn-act--reconnect:hover {
+  background: var(--conn-warn-bg);
+}
+.conn-act--pri {
+  background: linear-gradient(180deg, #5b52ec 0%, var(--conn-indigo) 100%);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 4px 10px -3px rgba(79, 70, 229, 0.4);
+}
+.conn-act--pri:hover {
+  filter: brightness(1.04);
+  background: linear-gradient(180deg, #5b52ec 0%, var(--conn-indigo) 100%);
+}
+.conn-act:focus-visible,
+.conn-cat:focus-visible,
+.conn-kebab:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--conn-indigo);
+}
+.conn-kebab {
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  border: none;
+  background: transparent;
+  color: var(--conn-muted-2);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.conn-kebab:hover {
+  background: #f1f5f9;
+  color: var(--conn-ink-2);
+}
+
+/* ── CSV toggle + dropzone (browse view) ─────────────────────────────── */
+.conn-toggle {
+  display: inline-flex;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--conn-line);
+}
+.conn-toggle__seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 38px;
+  padding: 0 16px;
+  border-radius: 9px;
+  border: none;
+  background: transparent;
+  color: var(--conn-muted);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: none;
+}
+.conn-toggle__seg--active {
+  background: var(--conn-blue-tile);
+  color: var(--conn-indigo);
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.08);
+}
+.conn-drop {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 16px;
+  padding: 20px;
+  border-radius: 16px;
+  border: 1.5px dashed #cbd5e1;
+  background: #fff;
+}
+.conn-drop__ico {
+  width: 52px;
+  height: 60px;
+  flex-shrink: 0;
+}
+.conn-drop__ico img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.conn-drop__mid {
+  flex: 1;
+  text-align: center;
+}
+.conn-drop__title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--conn-ink);
+}
+.conn-drop__hint {
+  font-size: 13px;
+  color: var(--conn-muted-2);
+  margin-top: 2px;
+}
+
+/* ── Empty-state hero (0 connected, primary CTA) ─────────────────────── */
+.conn-empty {
+  text-align: center;
+  padding: 34px 24px 30px;
+  border-bottom: 1px solid var(--conn-line);
+}
+.conn-empty__art {
+  width: 128px;
+  height: auto;
+  margin: 0 auto 14px;
+  display: block;
+}
+.conn-empty__title {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--conn-ink);
+  margin: 0;
+}
+.conn-empty__body {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--conn-muted);
+  max-width: 520px;
+  margin: 10px auto 0;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────── */
+@media (max-width: 1180px) {
+  .conn-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .conn-cats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 1000px) {
+  .conn-panel {
+    grid-template-columns: 1fr;
+  }
+  .conn-constel {
+    order: -1;
+    justify-self: center;
+    max-width: 440px;
+  }
+  .conn-steps {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .conn-step {
+    border-left: 0;
+    padding: 0 8px;
+  }
+  .conn-row__desc {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .conn-stats {
+    grid-template-columns: 1fr;
+  }
+  .conn-cats {
+    grid-template-columns: 1fr;
+  }
+  .conn-row__namewrap {
+    width: auto;
+  }
+  .conn-row__tag {
+    display: none;
+  }
+}

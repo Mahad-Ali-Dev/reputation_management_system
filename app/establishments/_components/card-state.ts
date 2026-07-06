@@ -23,10 +23,9 @@ export type DeviceSummary = {
 };
 
 /**
- * Fully-resolved props for one establishment card. Everything the
- * `EstablishmentCard` server component needs is precomputed here so it never
- * touches Prisma and stays a server component (the only client island is the
- * "…" menu).
+ * Fully-resolved props for one establishment. Everything the list-page server
+ * components (`SummaryCards`, `BusinessList`, `DevicesStrip`) need is
+ * precomputed here so they never touch Prisma and stay server components.
  */
 export type EstablishmentCardState = {
   id: string;
@@ -153,4 +152,47 @@ export function deriveCardState(est: EstablishmentCardData): EstablishmentCardSt
  */
 export function shouldShowDevicePrompt(est: { devices: { length: number } }): boolean {
   return est.devices.length === 0;
+}
+
+/** Kit avatar/tile tints, cycled by list position (mockup order). */
+export const EST_TINTS = ["violet", "peach", "teal", "indigo"] as const;
+export type EstTint = (typeof EST_TINTS)[number];
+
+/** Deterministic tile tint for an establishment at a given index. */
+export function tintForIndex(i: number): EstTint {
+  return EST_TINTS[i % EST_TINTS.length] as EstTint;
+}
+
+/** Two-letter avatar initials (e.g. "Bloom & Co." → "BC"). */
+export function initialsFor(name: string): string {
+  const words = name.split(/\s+/).filter((w) => /[a-z0-9]/i.test(w));
+  if (words.length === 0) return name.slice(0, 2).toUpperCase();
+  if (words.length === 1) return (words[0] as string).slice(0, 2).toUpperCase();
+  return ((words[0]?.[0] ?? "") + (words[1]?.[0] ?? "")).toUpperCase();
+}
+
+/**
+ * Signed review-volume trend, this trailing 30 days vs the prior 30 days.
+ * Returns null when there is no prior-period baseline to compare against
+ * (avoids a misleading "+100%" when a business is brand-new). Positive =
+ * more reviews recently.
+ */
+export function reviewTrendPct(
+  reviews: Array<{ postedAt?: Date }>,
+  now: Date = new Date(),
+): number | null {
+  const end = now.getTime();
+  const day = 24 * 60 * 60 * 1000;
+  const mid = end - 30 * day;
+  const start = end - 60 * day;
+  let recent = 0;
+  let prior = 0;
+  for (const r of reviews) {
+    const t = r.postedAt?.getTime();
+    if (t === undefined) continue;
+    if (t > mid && t <= end) recent += 1;
+    else if (t > start && t <= mid) prior += 1;
+  }
+  if (prior === 0) return null;
+  return Math.round(((recent - prior) / prior) * 100);
 }

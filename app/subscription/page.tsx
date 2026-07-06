@@ -1,6 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { CancelSubscriptionButton } from "@/components/cancel-subscription";
-import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { auth } from "@/lib/auth/config";
@@ -9,21 +8,25 @@ import { createCheckoutSession, createPortalSession } from "@/lib/billing/action
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { redirect } from "next/navigation";
+import "./subscription-bill.css";
 
 /**
- * Subscription & plans — repulabs v2 design.
+ * Account & Billing → "Plans & billing" — repulabs design-kit surface.
+ * Source of truth: designs/billing/ (mockup.png + 18-account-billing-plans.md).
  *
- * Real data: org.plan, subscription, trialEndsAt, usage counts. Billing
- * actions kept on Stripe (createCheckoutSession + createPortalSession) —
- * Shopify-subscription pivot is a future re-platform task, not a same-day
- * rip-and-replace.
+ * Real data: org.plan (canonical entitlement state), Stripe subscription row,
+ * rolling-30-day usage counts. Billing MUTATIONS stay on Stripe
+ * (createCheckoutSession + createPortalSession) — do NOT re-platform here.
  *
- * Usage gauges pulled from real models when available; falls back to "—" for
- * counters we don't track yet.
+ * org.plan is the canonical billing state (pro | trial | free | past_due |
+ * suspended) — NOT the 3 pricing-TIER names shown on the cards. We map it onto
+ * the tiers: an active trial has full Pro features but no Stripe sub to manage;
+ * only a paid `pro` plan has a subscription to manage/cancel/auto-renew.
  */
 
 export const dynamic = "force-dynamic";
 
+/** Plan-config source drives the 3 cards — features are not hardcoded in JSX. */
 const PLAN_FEATURES: Record<"standard" | "pro" | "scale", Array<[string, boolean]>> = {
   standard: [
     ["QR review cards & plaques", true],
@@ -35,17 +38,15 @@ const PLAN_FEATURES: Record<"standard" | "pro" | "scale", Array<[string, boolean
     ["AI phone receptionist", false],
   ],
   pro: [
-    ["Everything in Standard", true],
     ["Unlimited review requests (Email + SMS)", true],
     ["AI-drafted replies in your brand voice", true],
     ["Cross-channel social scheduler", true],
     ["Surveys with AI polish", true],
     ["Premium dispute service", true],
-    ["AI phone receptionist · 200 min", true],
+    ["AI phone receptionist – 200 min", true],
     ["Priority support", true],
   ],
   scale: [
-    ["Everything in Pro", true],
     ["SSO + SAML + audit logs", true],
     ["Multi-brand workspaces", true],
     ["Volume API access", true],
@@ -53,6 +54,8 @@ const PLAN_FEATURES: Record<"standard" | "pro" | "scale", Array<[string, boolean
     ["Custom voice clone", true],
   ],
 };
+
+const ASSET = "/assets/repulabs/billing";
 
 export default async function SubscriptionPage({
   searchParams,
@@ -80,395 +83,422 @@ export default async function SubscriptionPage({
   ]);
   if (!org) return null;
 
-  // org.plan is the canonical billing state (pro | trial | free | past_due |
-  // suspended) — NOT the pricing-tier names shown on this page. Map it onto the
-  // two real tiers. An active trial includes full Pro features, but only a paid
-  // plan has a Stripe subscription to manage/cancel/auto-renew.
   const realPlan = org.plan ?? "free";
-  const hasPaidPlan = realPlan === "pro";
-  const onProTier = realPlan === "pro" || realPlan === "trial";
-  const tier: "standard" | "pro" = onProTier ? "pro" : "standard";
+  const hasPaidPlan = realPlan === "pro"; // real Stripe subscription exists
+  const onProTier = realPlan === "pro" || realPlan === "trial"; // Pro features active
   const isPro = onProTier;
 
   const billingEmail = org.ownerEmail ?? userEmail ?? "—";
+  const country = org.country ?? "—";
   const renewsAt = org.subscription?.currentPeriodEnd;
   const nextCharge = renewsAt
     ? `${renewsAt.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} · A$79.00 AUD`
-    : org.plan === "pro"
+    : hasPaidPlan
       ? "—"
       : "No active subscription";
+  const subId = org.subscription?.stripeSubscriptionId ?? null;
+
+  // Card brand/last4 are NOT stored in our DB (the Subscription model holds no
+  // PCI data — it lives in Stripe). So the "Payment method" row links out to the
+  // portal rather than fabricating a masked card the mockup happens to show.
+
+  const eyebrow =
+    realPlan === "pro"
+      ? ["PRO", "BILLED MONTHLY", "A$79/MO PER LOCATION"]
+      : realPlan === "trial"
+        ? ["FREE TRIAL", "PRO FEATURES ACTIVE"]
+        : realPlan === "past_due"
+          ? ["PAST DUE", "UPDATE YOUR PAYMENT METHOD"]
+          : ["STANDARD", "FREE FOREVER", "1 LOCATION"];
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Subscription"]}>
-      <PageHeader
-        kicker={
-          realPlan === "pro"
-            ? "Pro · billed monthly · A$79/mo per location"
-            : realPlan === "trial"
-              ? "Free trial · Pro features active"
-              : `${prettyPlan(realPlan)} plan`
-        }
-        title="Plans & billing"
-        description="Start free, level up when reviews start rolling. No per-seat surprises."
-        actions={
-          hasPaidPlan ? (
+    <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Account & Billing"]}>
+      <div className="bill">
+        {/* ── Header ──────────────────────────────────────────────── */}
+        <header className="bill-head">
+          <div style={{ minWidth: 0 }}>
+            <div className="bill-eyebrow">
+              {eyebrow.map((chip, i) => (
+                <span key={chip} style={{ display: "inline-flex", gap: 8 }}>
+                  {i > 0 && <span className="sep">·</span>}
+                  {chip}
+                </span>
+              ))}
+            </div>
+            <h1 className="bill-title">Plans &amp; billing</h1>
+            <p className="bill-sub">
+              Start free, level up when reviews start rolling. No per-seat surprises.
+            </p>
+          </div>
+          {hasPaidPlan ? (
             <form action={portalAction}>
-              <button type="submit" className="btn btn--pri">
-                <Icon name="card" size={12} />
+              <button type="submit" className="bill-btn-primary">
+                <Icon name="card" size={15} />
                 Manage billing
               </button>
             </form>
           ) : (
             <form action={upgradeAction}>
-              <button type="submit" className="btn btn--pri">
-                <Icon name="arrowUR" size={12} />
+              <button type="submit" className="bill-btn-primary">
+                <Icon name="arrowUR" size={15} />
                 Upgrade to Pro
               </button>
             </form>
-          )
-        }
-      />
+          )}
+        </header>
 
-      {params.cancel === "submitted" && (
-        <div
-          className="ds-card"
-          style={{
-            padding: "12px 16px",
-            marginBottom: 16,
-            background: "var(--ok-soft, #dcfce7)",
-            border: "1px solid var(--ok, #16a34a)",
-            color: "var(--ok, #166534)",
-            fontSize: 13,
-          }}
-        >
-          <strong>Cancellation request received.</strong> Our billing team will reach out within 1
-          business day. Your Pro features stay active until your team confirms the cancellation
-          date.
-        </div>
-      )}
-
-      <div className="grid-3" style={{ gap: 16 }}>
-          <PlanCard
-            name="Standard"
-            price="Free"
-            period="forever · 1 location"
-            // If the user is on Pro, the Standard column shows a "Cancel
-            // subscription" CTA that opens a reason form (server action records
-            // a cancel request for the billing team to process).
-            ctaLabel={tier === "standard" ? "Current plan" : "Downgrade"}
-            ctaDisabled={tier === "standard"}
-            customCta={hasPaidPlan ? <CancelSubscriptionButton /> : undefined}
-            features={PLAN_FEATURES.standard}
-          />
-          <PlanCard
-            name="Pro"
-            badge="MOST POPULAR"
-            price="A$79"
-            priceSuffix="/mo"
-            period="per location · billed monthly"
-            ctaLabel={hasPaidPlan ? "Current plan" : "Continue on Pro"}
-            ctaActive={!hasPaidPlan}
-            ctaDisabled={hasPaidPlan}
-            accent
-            isUpgrade={!hasPaidPlan}
-            features={PLAN_FEATURES.pro}
-          />
-          <PlanCard
-            name="Scale"
-            price="Custom"
-            period="10+ locations · multi-brand"
-            ctaLabel="Talk to sales"
-            ctaHref="mailto:sales@repulabs.com"
-            features={PLAN_FEATURES.scale}
-          />
-      </div>
-
-      <div className="grid-2" style={{ gap: 16, marginTop: 26 }}>
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">This month's usage</h3>
-            <span className="mono dim" style={{ fontSize: 10.5 }}>
-              ROLLING 30 DAYS
-            </span>
+        {params.cancel === "submitted" && (
+          <div className="bill-notice">
+            <strong>Cancellation request received.</strong> Our billing team will reach out within 1
+            business day. Your Pro features stay active until your team confirms the cancellation
+            date.
           </div>
-          <div className="ds-card__body">
-            <UsageRow
-              l="Review requests"
+        )}
+
+        {/* ── Pricing cards ───────────────────────────────────────── */}
+        <div className="bill-plans">
+          {/* STANDARD */}
+          <section className="bill-card bill-card--standard" aria-label="Standard plan — Free">
+            <span className="bill-card__tier bill-card__tier--standard">Standard</span>
+            {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+            <img className="bill-card__art" src={`${ASSET}/plan-free.svg`} alt="" aria-hidden="true" />
+            <div className="bill-card__pricewrap">
+              <span className="bill-card__price">Free</span>
+            </div>
+            <div className="bill-card__period">Forever · 1 location</div>
+
+            {hasPaidPlan ? (
+              // On Pro → Standard column offers the cancel/downgrade flow.
+              <CancelSubscriptionButton />
+            ) : (
+              <button
+                type="button"
+                className="bill-card__cta bill-card__cta--current"
+                aria-current="true"
+                aria-disabled="true"
+              >
+                Your current plan
+              </button>
+            )}
+
+            <div className="bill-card__sep" />
+            <FeatureList features={PLAN_FEATURES.standard} />
+          </section>
+
+          {/* PRO — highlighted */}
+          <section className="bill-card bill-card--pro" aria-label="Pro plan — A$79 per month">
+            <span className="bill-card__tier bill-card__tier--pro">Pro</span>
+            <span className="bill-card__badge">
+              <Icon name="star" size={11} style={{ color: "#8b5cf6" }} />
+              MOST POPULAR
+            </span>
+            {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+            <img className="bill-card__art" src={`${ASSET}/plan-pro.svg`} alt="" aria-hidden="true" />
+            <div className="bill-card__pricewrap">
+              <span className="bill-card__price">A$79</span>
+              <span className="bill-card__price-suffix">/mo</span>
+            </div>
+            <div className="bill-card__period">per location · billed monthly</div>
+
+            {hasPaidPlan ? (
+              <button
+                type="button"
+                className="bill-card__cta bill-card__cta--lav"
+                aria-current="true"
+                aria-disabled="true"
+              >
+                Current plan
+              </button>
+            ) : (
+              <form action={upgradeAction}>
+                <button type="submit" className="bill-card__cta bill-card__cta--purple">
+                  {realPlan === "trial" ? "Continue on Pro" : "Upgrade to Pro"}
+                </button>
+              </form>
+            )}
+
+            <div className="bill-card__sep" />
+            <div className="bill-card__section">Everything in Standard, plus:</div>
+            <FeatureList features={PLAN_FEATURES.pro} />
+
+            {hasPaidPlan && (
+              <form action={portalAction} style={{ marginTop: "auto", paddingTop: 16 }}>
+                <button type="submit" className="bill-card__cta bill-card__cta--purple">
+                  Manage plan
+                </button>
+              </form>
+            )}
+          </section>
+
+          {/* SCALE */}
+          <section className="bill-card bill-card--scale" aria-label="Scale plan — Custom pricing">
+            <span className="bill-card__tier bill-card__tier--scale">Scale</span>
+            {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
+            <img
+              className="bill-card__art"
+              src={`${ASSET}/plan-custom.svg`}
+              alt=""
+              aria-hidden="true"
+            />
+            <div className="bill-card__pricewrap">
+              <span className="bill-card__price">Custom</span>
+            </div>
+            <div className="bill-card__period">10+ locations · multi-brand</div>
+
+            <a
+              href="mailto:sales@repulabs.com?subject=Scale%20plan%20enquiry"
+              className="bill-card__cta"
+            >
+              Talk to sales
+            </a>
+
+            <div className="bill-card__sep" />
+            <div className="bill-card__section">Everything in Pro, plus:</div>
+            <FeatureList features={PLAN_FEATURES.scale} />
+          </section>
+        </div>
+
+        {/* ── Bottom panels ───────────────────────────────────────── */}
+        <div className="bill-panels">
+          {/* This month's usage */}
+          <section className="bill-panel" aria-label="This month's usage">
+            <div className="bill-panel__head">
+              {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+              <img className="bill-panel__ic" src={`${ASSET}/ic-plan.svg`} alt="" aria-hidden="true" />
+              <h2 className="bill-panel__title">This month&apos;s usage</h2>
+              <span className="bill-pill bill-pill--neutral">
+                <Icon name="cal" size={12} />
+                ROLLING 30 DAYS
+              </span>
+            </div>
+
+            <UsageMeter
+              icon="meter-review-requests"
+              tile="blue"
+              label="Review requests"
               used={usage.requestsSent}
               max={isPro ? null : 50}
-              color="var(--pri)"
+              fill="#3b82f6"
+              infColor="#3b82f6"
             />
-            <UsageRow
-              l="AI replies drafted"
+            <UsageMeter
+              icon="meter-ai-replies"
+              tile="purple"
+              label="AI replies drafted"
               used={usage.repliesDrafted}
-              max={isPro ? 500 : 50}
-              color="#5EEAD4"
+              max={500}
+              fill="#4f46e5"
+              infColor="#7c3aed"
             />
-            <UsageRow
-              l="Survey responses"
+            <UsageMeter
+              icon="meter-survey-responses"
+              tile="orange"
+              label="Survey responses"
               used={usage.surveyResponses}
               max={isPro ? null : 100}
-              color="#F59E0B"
+              fill="#f97316"
+              infColor="#f97316"
             />
-            <UsageRow
-              l="Social posts published"
+            <UsageMeter
+              icon="meter-social-posts"
+              tile="green"
+              label="Social posts published"
               used={usage.socialPosts}
-              max={isPro ? 100 : 0}
-              color="var(--ok)"
+              max={100}
+              fill="#10b981"
+              infColor="#10b981"
             />
-          </div>
-        </div>
 
-        <div className="ds-card">
-          <div className="ds-card__head">
-            <h3 className="ds-card__title">Billing</h3>
-            {hasPaidPlan && (
-              <span className="chip chip--ok">
-                <Icon name="checkCircle" size={9} stroke={2.4} />
-                Auto-renew
+            <div className="bill-banner bill-banner--lav">
+              {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+              <img
+                className="bill-banner__ic"
+                src={`${ASSET}/needs-star.svg`}
+                alt=""
+                aria-hidden="true"
+              />
+              <span className="bill-banner__txt">
+                Need more capacity? Upgrade your plan or reach out — we&apos;re here to help you grow.
               </span>
-            )}
-          </div>
-          <div className="ds-card__body">
-            <BillingRow l="Next charge" v={nextCharge} />
-            <BillingRow l="Plan" v={prettyPlan(realPlan)} />
-            <BillingRow l="Billing email" v={billingEmail} />
-            <BillingRow l="Country" v={org.country ?? "—"} />
-            {org.subscription?.stripeSubscriptionId && (
-              <BillingRow l="Subscription ID" v={org.subscription.stripeSubscriptionId} mono />
-            )}
-            <div className="divider" />
-            <div className="lbl-mono" style={{ margin: 0, marginBottom: 8 }}>
-              ACCOUNT
+              <a
+                href="mailto:sales@repulabs.com?subject=More%20capacity"
+                className="bill-banner__cta"
+              >
+                Talk to sales
+              </a>
             </div>
-            <p className="dim" style={{ fontSize: 12, lineHeight: 1.55 }}>
-              Card details and invoices are managed through the Stripe billing portal. Click "Manage
-              billing" above to update payment methods or download invoices.
-            </p>
-          </div>
+          </section>
+
+          {/* Billing overview */}
+          <section className="bill-panel" aria-label="Billing overview">
+            <div className="bill-panel__head">
+              {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+              <img
+                className="bill-panel__ic"
+                src={`${ASSET}/ic-billing-overview.svg`}
+                alt=""
+                aria-hidden="true"
+              />
+              <h2 className="bill-panel__title">Billing overview</h2>
+              {hasPaidPlan && (
+                <span className="bill-pill bill-pill--ok">
+                  <Icon name="refresh" size={12} />
+                  Auto-renew on
+                </span>
+              )}
+            </div>
+
+            <dl className="bill-dl">
+              <BillingRow icon="ic-next-charge" label="Next charge" value={nextCharge} />
+              <BillingRow icon="ic-plan" label="Plan" value={prettyPlan(realPlan)} />
+              <BillingRow icon="ic-mail" label="Billing email" value={billingEmail} />
+              <BillingRow icon="ic-country" label="Country" value={country} />
+              <BillingRow
+                icon="ic-payment"
+                label="Payment method"
+                value={hasPaidPlan ? "Managed in Stripe portal" : "—"}
+              />
+              {subId && (
+                <BillingRow icon="ic-subscription" label="Subscription ID" value={subId} mono />
+              )}
+            </dl>
+
+            <div className="bill-banner bill-banner--green">
+              {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+              <img
+                className="bill-banner__ic"
+                src={`${ASSET}/ic-card-lock.svg`}
+                alt=""
+                aria-hidden="true"
+              />
+              <span className="bill-banner__txt">
+                Card details and invoices are managed through the Stripe billing portal.
+              </span>
+              {hasPaidPlan ? (
+                <form action={portalAction}>
+                  <button type="submit" className="bill-banner__cta">
+                    <Icon name="card" size={12} />
+                    Manage billing
+                  </button>
+                </form>
+              ) : (
+                <form action={upgradeAction}>
+                  <button type="submit" className="bill-banner__cta">
+                    <Icon name="arrowUR" size={12} />
+                    Upgrade
+                  </button>
+                </form>
+              )}
+            </div>
+          </section>
         </div>
       </div>
     </AppShellServer>
   );
 }
 
-function PlanCard({
-  name,
-  badge,
-  price,
-  priceSuffix,
-  period,
-  monthly,
-  features,
-  ctaLabel,
-  ctaActive,
-  ctaDisabled,
-  accent,
-  isUpgrade,
-  ctaHref,
-  customCta,
-}: {
-  name: string;
-  badge?: string;
-  price: string;
-  priceSuffix?: string;
-  period: string;
-  /** Optional monthly-billing price variant (renders with the
-   *  BillingPeriodSection toggle). UNUSED until a real monthly Stripe price
-   *  (e.g. STRIPE_PRO_MONTHLY_PRICE_ID) exists AND checkout honors the chosen
-   *  period — a display-only variant the buyer can't actually purchase is
-   *  dishonest (removed 2026-06-11 review). */
-  monthly?: { price: string; priceSuffix?: string; period: string };
-  features: Array<[string, boolean]>;
-  ctaLabel: string;
-  ctaActive?: boolean;
-  ctaDisabled?: boolean;
-  accent?: boolean;
-  isUpgrade?: boolean;
-  ctaHref?: string;
-  customCta?: React.ReactNode;
-}) {
-  const cta = customCta ? (
-    customCta
-  ) : ctaHref ? (
-    <a
-      href={ctaHref}
-      className={`btn${ctaActive ? " btn--pri" : ""}`}
-      style={{
-        width: "100%",
-        justifyContent: "center",
-        marginTop: 16,
-      }}
-    >
-      {ctaLabel}
-    </a>
-  ) : isUpgrade ? (
-    <form action={upgradeAction} style={{ marginTop: 16 }}>
-      <button
-        type="submit"
-        className={`btn${ctaActive ? " btn--pri" : ""}${ctaDisabled ? " btn--ghost" : ""}`}
-        disabled={ctaDisabled}
-        style={{
-          width: "100%",
-          justifyContent: "center",
-          cursor: ctaDisabled ? "default" : "pointer",
-        }}
-      >
-        {ctaLabel}
-      </button>
-    </form>
-  ) : (
-    <button
-      type="button"
-      className={`btn${ctaActive ? " btn--pri" : ""}${ctaDisabled ? " btn--ghost" : ""}`}
-      disabled={ctaDisabled}
-      style={{
-        width: "100%",
-        justifyContent: "center",
-        marginTop: 16,
-        cursor: ctaDisabled ? "default" : "pointer",
-      }}
-    >
-      {ctaLabel}
-    </button>
-  );
+/* ── Feature list (✓ included / ✗ excluded, with text equivalents) ────── */
+function FeatureList({ features }: { features: Array<[string, boolean]> }) {
   return (
-    <div
-      style={{
-        position: "relative",
-        borderRadius: 14,
-        padding: accent ? 1.5 : 0,
-        background: accent ? "linear-gradient(155deg, var(--pri) 0%, #06B6D4 100%)" : "transparent",
-      }}
-    >
-      <div
-        style={{
-          background: "var(--surface)",
-          borderRadius: accent ? 13 : 14,
-          padding: 24,
-          border: accent ? "none" : "1px solid var(--line)",
-          height: "100%",
-        }}
-      >
-        <div className="row" style={{ marginBottom: 12 }}>
-          <span
-            className="lbl-mono"
-            style={{ margin: 0, color: accent ? "var(--pri)" : "var(--rl-muted)" }}
-          >
-            {name}
+    <div className="bill-feats">
+      {features.map(([label, on]) => (
+        <div key={label} className={`bill-feat${on ? "" : " bill-feat--off"}`}>
+          <span className="bill-feat__ic">
+            {on ? (
+              <Icon name="check" size={14} stroke={2.6} style={{ color: "#10b981" }} />
+            ) : (
+              <Icon name="x" size={13} stroke={2.2} style={{ color: "#94a3b8" }} />
+            )}
           </span>
-          {badge && (
-            <span className="chip chip--pri" style={{ marginLeft: "auto", fontSize: 9.5 }}>
-              {badge}
+          <span className="bill-feat__txt-hidden">{on ? "Included:" : "Not included:"}</span>
+          {label}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/* ── Usage meter (supports the "Unlimited ∞" state) ───────────────────── */
+function UsageMeter({
+  icon,
+  tile,
+  label,
+  used,
+  max,
+  fill,
+  infColor,
+}: {
+  icon: string;
+  tile: "blue" | "purple" | "orange" | "green";
+  label: string;
+  used: number;
+  max: number | null;
+  fill: string;
+  infColor: string;
+}) {
+  const unlimited = max === null;
+  const pct = !unlimited && max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
+  const warn = !unlimited && pct >= 90;
+  return (
+    <div className="bill-meter">
+      <span className={`bill-meter__tile bill-meter__tile--${tile}`}>
+        {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+        <img src={`${ASSET}/${icon}.svg`} alt="" aria-hidden="true" />
+      </span>
+      <div className="bill-meter__body">
+        <div className="bill-meter__row">
+          <span className="bill-meter__label">{label}</span>
+          {unlimited ? (
+            <span className="bill-meter__val">Unlimited</span>
+          ) : (
+            <span className="bill-meter__val">
+              {used.toLocaleString()} / {max.toLocaleString()}
+            </span>
+          )}
+          {unlimited ? (
+            <span className="bill-meter__inf" style={{ color: infColor }} aria-hidden="true">
+              ∞
+            </span>
+          ) : (
+            <span className="bill-meter__pct" style={{ color: warn ? "#d97706" : "#94a3b8" }}>
+              {pct}%
             </span>
           )}
         </div>
-        <div data-when={monthly ? "annual" : undefined}>
-          <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-            <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: "-0.025em" }}>{price}</span>
-            {priceSuffix && (
-              <span style={{ fontSize: 15, color: "var(--rl-muted)", fontWeight: 500 }}>
-                {priceSuffix}
-              </span>
-            )}
-          </div>
-          <div className="dim" style={{ fontSize: 11.5 }}>
-            {period}
-          </div>
-        </div>
-        {monthly && (
-          <div data-when="monthly">
-            <div style={{ display: "flex", alignItems: "baseline", gap: 4, marginBottom: 4 }}>
-              <span style={{ fontSize: 36, fontWeight: 600, letterSpacing: "-0.025em" }}>
-                {monthly.price}
-              </span>
-              {monthly.priceSuffix && (
-                <span style={{ fontSize: 15, color: "var(--rl-muted)", fontWeight: 500 }}>
-                  {monthly.priceSuffix}
-                </span>
-              )}
-            </div>
-            <div className="dim" style={{ fontSize: 11.5 }}>
-              {monthly.period}
-            </div>
-          </div>
-        )}
-        {cta}
-        <div className="divider" />
-        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-          {features.map(([f, on]) => (
-            <div
-              key={f}
-              className="row"
-              style={{
-                gap: 8,
-                fontSize: 12.5,
-                color: on ? "var(--ink-2)" : "var(--rl-muted)",
-              }}
-            >
-              {on ? (
-                <Icon name="check" size={12} stroke={2.4} style={{ color: "var(--ok)" }} />
-              ) : (
-                <Icon name="x" size={11} stroke={2} style={{ color: "var(--rl-muted-2)" }} />
-              )}
-              {f}
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function UsageRow({
-  l,
-  used,
-  max,
-  color,
-}: {
-  l: string;
-  used: number;
-  max: number | null;
-  color: string;
-}) {
-  const pct = max && max > 0 ? Math.min(100, Math.round((used / max) * 100)) : 0;
-  return (
-    <div style={{ marginBottom: 14 }}>
-      <div className="row" style={{ marginBottom: 5 }}>
-        <span style={{ fontSize: 12.5, fontWeight: 500, flex: 1 }}>{l}</span>
-        <span className="mono" style={{ fontSize: 12 }}>
-          {used.toLocaleString()}
-          {max !== null && <span className="dim"> / {max.toLocaleString()}</span>}
-        </span>
-        <span
-          className="mono"
-          style={{ fontSize: 11.5, fontWeight: 500, width: 56, textAlign: "right" }}
+        <div
+          className="bill-track"
+          role="progressbar"
+          aria-label={label}
+          aria-valuenow={unlimited ? undefined : pct}
+          aria-valuemin={0}
+          aria-valuemax={unlimited ? undefined : 100}
+          aria-valuetext={unlimited ? "Unlimited" : `${pct}%`}
         >
-          {max === null ? "Unlimited" : `${pct}%`}
-        </span>
-      </div>
-      <div className="gauge">
-        <i style={{ width: `${max === null ? 100 : pct}%`, background: color }} />
+          <i style={{ width: `${unlimited ? 100 : pct}%`, background: warn ? "#f59e0b" : fill }} />
+        </div>
       </div>
     </div>
   );
 }
 
-function BillingRow({ l, v, mono }: { l: string; v: string; mono?: boolean }) {
+/* ── Billing-overview key/value row ───────────────────────────────────── */
+function BillingRow({
+  icon,
+  label,
+  value,
+  mono,
+}: {
+  icon: string;
+  label: string;
+  value: React.ReactNode;
+  mono?: boolean;
+}) {
   return (
-    <div className="row" style={{ padding: "8px 0", borderBottom: "1px solid var(--line)" }}>
-      <span className="dim" style={{ fontSize: 11.5, flex: 1 }}>
-        {l}
-      </span>
-      <span
-        style={{
-          fontSize: 12,
-          fontFamily: mono ? "var(--f-mono)" : undefined,
-          wordBreak: "break-all",
-        }}
-      >
-        {v}
-      </span>
+    <div className="bill-dl__row">
+      {/* biome-ignore lint/performance/noImgElement: static kit icon */}
+      <img className="bill-dl__ic" src={`${ASSET}/${icon}.svg`} alt="" aria-hidden="true" />
+      <dt className="bill-dl__label">{label}</dt>
+      <dd className={`bill-dl__value${mono ? " bill-dl__value--mono" : ""}`}>{value}</dd>
     </div>
   );
 }
