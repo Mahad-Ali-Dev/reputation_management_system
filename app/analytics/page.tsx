@@ -125,14 +125,11 @@ export default async function AnalyticsPage({
       }
     : null;
 
-  // SEO + Competitors panels: only build their data when entitled. When not,
-  // the tab is padlocked and we render an UpgradeCard placeholder.
-  const seoNode = entitled
-    ? await renderSeoPanel(orgId, establishmentId, metrics)
-    : <UpgradeCard feature="rank_tracking" />;
-  const competitorsNode = entitled
-    ? await renderCompetitorsPanel(orgId, establishmentId, metrics, competitors)
-    : <UpgradeCard feature="competitor_intel" />;
+  // SEO + Competitors panels hit external Google APIs (GBP Insights / GA4 /
+  // PageSpeed) that can be slow in prod. They are NOT awaited on the critical
+  // path — each streams inside its own <Suspense> below (see the panels map), so
+  // the report shell is never blocked by a slow third-party call. Non-entitled
+  // orgs get an UpgradeCard (no fetch, no gated data serialized).
 
   // Overview compare chart reuses the Competitors tab's `listCompetitors` rows
   // (already fetched above) — gated data is only serialized for entitled orgs.
@@ -181,8 +178,25 @@ export default async function AnalyticsPage({
     ),
     weekly: <WeeklyReportsPanel snapshots={snapshots} entitled={entitled} />,
     score: <ReputationScorePanel score={latestSnapshot?.reputationScore ?? metrics.seo.reputationScore} factors={pickFactors(latestSnapshot?.scoreFactors, scoreFactors)} />,
-    seo: seoNode,
-    competitors: competitorsNode,
+    seo: entitled ? (
+      <Suspense fallback={<div className="ds-card" style={{ height: 360 }} />}>
+        <SeoPanelAsync orgId={orgId} establishmentId={establishmentId} metrics={metrics} />
+      </Suspense>
+    ) : (
+      <UpgradeCard feature="rank_tracking" />
+    ),
+    competitors: entitled ? (
+      <Suspense fallback={<div className="ds-card" style={{ height: 360 }} />}>
+        <CompetitorsPanelAsync
+          orgId={orgId}
+          establishmentId={establishmentId}
+          metrics={metrics}
+          competitors={competitors}
+        />
+      </Suspense>
+    ) : (
+      <UpgradeCard feature="competitor_intel" />
+    ),
     recommendations: (
       <RecommendationsPanel
         recommendations={recommendationsRaw}
@@ -253,6 +267,36 @@ async function ExecSummaryAsync({
       canRegenerate={entitled}
     />
   );
+}
+
+/** Streamed SEO & Visibility panel — wraps renderSeoPanel in a component so its
+ *  external Google/PageSpeed calls run inside a <Suspense> boundary, never on the
+ *  page's critical path. */
+async function SeoPanelAsync({
+  orgId,
+  establishmentId,
+  metrics,
+}: {
+  orgId: string;
+  establishmentId: string | null;
+  metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>;
+}) {
+  return await renderSeoPanel(orgId, establishmentId, metrics);
+}
+
+/** Streamed Competitors panel — same rationale as SeoPanelAsync. */
+async function CompetitorsPanelAsync({
+  orgId,
+  establishmentId,
+  metrics,
+  competitors,
+}: {
+  orgId: string;
+  establishmentId: string | null;
+  metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>;
+  competitors: Awaited<ReturnType<typeof listCompetitors>>;
+}) {
+  return await renderCompetitorsPanel(orgId, establishmentId, metrics, competitors);
 }
 
 async function renderSeoPanel(orgId: string, establishmentId: string | null, metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>) {
