@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="purpleGrad" x1="160" y1="130" x2="860" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B72FF"/>
+      <stop offset="1" stop-color="#5438F6"/>
+    </linearGradient>
+    <linearGradient id="pinkGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF386E"/>
+      <stop offset="1" stop-color="#ED174F"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#23DB58"/>
+      <stop offset="1" stop-color="#06B833"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB12A"/>
+      <stop offset="1" stop-color="#FF8A00"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#168BFF"/>
+      <stop offset="1" stop-color="#005EFF"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17D7C2"/>
+      <stop offset="1" stop-color="#02AFA2"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#263AD6" flood-opacity=".14"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)" fill="url(#greenGrad)">
+    <rect x="230" y="246" width="154" height="604" rx="42"/>
+    <rect x="435" y="480" width="154" height="370" rx="42"/>
+    <rect x="640" y="344" width="154" height="506" rx="42"/>
+  </g>
+
+</svg>

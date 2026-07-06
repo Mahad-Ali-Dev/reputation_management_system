@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="purpleGrad" x1="160" y1="130" x2="860" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B72FF"/>
+      <stop offset="1" stop-color="#5438F6"/>
+    </linearGradient>
+    <linearGradient id="pinkGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF386E"/>
+      <stop offset="1" stop-color="#ED174F"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#23DB58"/>
+      <stop offset="1" stop-color="#06B833"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB12A"/>
+      <stop offset="1" stop-color="#FF8A00"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#168BFF"/>
+      <stop offset="1" stop-color="#005EFF"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17D7C2"/>
+      <stop offset="1" stop-color="#02AFA2"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#263AD6" flood-opacity=".14"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)" fill="url(#pinkGrad)">
+    <path d="M320 232H590C688 232 744 301 744 395V555C744 588 734 619 714 646L595 810C559 859 484 839 476 779L458 648C454 618 428 596 398 596H295C220 596 162 529 176 456L213 324C225 270 265 232 320 232Z"/>
+    <rect x="774" y="258" width="96" height="318" rx="48"/>
+  </g>
+
+</svg>

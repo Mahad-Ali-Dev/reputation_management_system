@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="blueGrad" x1="150" y1="150" x2="870" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E7BFF"/>
+      <stop offset="1" stop-color="#004DFF"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="150" y1="150" x2="870" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8A45FF"/>
+      <stop offset="1" stop-color="#5A20FF"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="150" y1="150" x2="870" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#35D953"/>
+      <stop offset="1" stop-color="#0BAA38"/>
+    </linearGradient>
+    <linearGradient id="visaGrad" x1="150" y1="350" x2="860" y2="680" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1647B8"/>
+      <stop offset="1" stop-color="#005BFF"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#1F5BFF" flood-opacity=".12"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)">
+    <path d="M268 160H620L810 350V760C810 826 756 880 690 880H268C202 880 148 826 148 760V280C148 214 202 160 268 160Z"
+          stroke="url(#greenGrad)" stroke-width="64" stroke-linejoin="round"/>
+    <path d="M620 164V330C620 363 647 390 680 390H808" stroke="url(#greenGrad)" stroke-width="64" stroke-linejoin="round"/>
+    <path d="M300 430H510M300 520H570M300 610H430" stroke="url(#greenGrad)" stroke-width="52" stroke-linecap="round"/>
+    <circle cx="704" cy="692" r="148" stroke="url(#greenGrad)" stroke-width="58"/>
+    <path d="M624 694L686 756L790 650" stroke="url(#greenGrad)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+</svg>

@@ -1,91 +1,87 @@
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { inviteTeammate, removeMember } from "@/lib/account/actions";
+import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
 import { prettyPlan } from "../_lib/sections";
 
 /**
- * Team & roles — membership table + invite flow. Bound to the existing
- * inviteTeammate / removeMember server actions.
+ * Team & roles (designs/settings/team n roles/team n roles.png) — membership
+ * table + invite flow. Bound to the existing inviteTeammate / removeMember
+ * server actions.
  */
 export const dynamic = "force-dynamic";
+
+const ROLE_ACCESS: Record<string, string> = {
+  owner: "Full control",
+  admin: "Manage data",
+  manager: "Reply + edit",
+  viewer: "Read-only",
+};
 
 export default async function TeamSettingsPage() {
   const { org, members, sessionUser } = await loadSettingsData();
 
   return (
-    <section className="ds-card">
-      <div className="ds-card__head">
-        <div>
-          <h3 className="ds-card__title">Team · {members.length} members</h3>
-          <div className="ds-card__sub">{prettyPlan(org.plan)} includes unlimited seats</div>
+    <SettingsFrame>
+      <section className="set-card">
+        <div className="set-sec-head" style={{ alignItems: "center" }}>
+          <span className="set-tile set-tile--sm set-tile--indigo">
+            <Icon name="users" size={16} />
+        </span>
+        <div style={{ flex: 1 }}>
+          <h2 className="set-card__title set-card__title--sm">
+            Team · {members.length} {members.length === 1 ? "member" : "members"}
+          </h2>
+          <p className="set-card__sub">{prettyPlan(org.plan)} includes unlimited seats</p>
         </div>
-        <details className="relative">
+        <details style={{ position: "relative" }}>
           <summary
-            className="btn btn--sm btn--pri"
+            className="set-btn set-btn--primary set-btn--sm"
             style={{ listStyle: "none", cursor: "pointer" }}
           >
-            <Icon name="plus" size={11} />
+            <Icon name="plus" size={13} className="set-btn__ic" />
             Invite teammate
           </summary>
           <form
             action={inviteTeammate}
-            className="ds-card"
+            className="set-card"
             style={{
               position: "absolute",
               right: 0,
-              top: "calc(100% + 6px)",
+              top: "calc(100% + 8px)",
               zIndex: 10,
               width: 320,
-              padding: 14,
-              boxShadow: "0 10px 30px -10px rgba(0,0,0,.25)",
+              padding: 16,
+              boxShadow: "0 12px 34px -10px rgba(15,23,42,.25)",
             }}
           >
-            <div className="col" style={{ gap: 10 }}>
-              <label className="col" style={{ gap: 4 }}>
-                <span className="lbl">Email</span>
+            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+              <label className="set-field">
+                <span className="set-field__label">Email</span>
                 <input
+                  className="set-input"
                   type="email"
                   name="email"
                   required
                   maxLength={200}
                   placeholder="teammate@business.com"
-                  style={{
-                    height: 36,
-                    padding: "0 12px",
-                    borderRadius: "var(--r)",
-                    border: "1px solid var(--line)",
-                    background: "var(--surface)",
-                    fontSize: 13,
-                    outline: "none",
-                  }}
                 />
               </label>
-              <label className="col" style={{ gap: 4 }}>
-                <span className="lbl">Role</span>
-                <select
-                  name="role"
-                  defaultValue="admin"
-                  style={{
-                    height: 36,
-                    padding: "0 12px",
-                    borderRadius: "var(--r)",
-                    border: "1px solid var(--line)",
-                    background: "var(--surface)",
-                    fontSize: 13,
-                  }}
-                >
+              <label className="set-field">
+                <span className="set-field__label">Role</span>
+                <select className="set-select" name="role" defaultValue="admin">
                   <option value="admin">Admin · can manage data</option>
                   <option value="manager">Manager · can reply + edit</option>
                   <option value="viewer">Viewer · read-only</option>
                   <option value="owner">Owner · full control</option>
                 </select>
               </label>
-              <button type="submit" className="btn btn--pri">
-                <Icon name="send" size={11} />
+              <button type="submit" className="set-btn set-btn--primary">
+                <Icon name="send" size={15} className="set-btn__ic" />
                 Send invitation
               </button>
-              <p className="dim" style={{ fontSize: 11, margin: 0 }}>
+              <p className="set-field__hint">
                 The invite link is valid for 14 days. We&apos;ll log it for now — email delivery
                 ships next release.
               </p>
@@ -93,17 +89,18 @@ export default async function TeamSettingsPage() {
           </form>
         </details>
       </div>
+
       {members.length === 0 ? (
-        <div className="ds-card__body dim" style={{ fontSize: 12.5 }}>
+        <p className="set-dim" style={{ fontSize: 13, marginTop: 16 }}>
           No team members yet.
-        </div>
+        </p>
       ) : (
-        <table className="tbl tbl--compact">
+        <table className="set-mini" style={{ marginTop: 16 }}>
           <thead>
             <tr>
-              <th style={{ paddingLeft: 18 }}>Member</th>
+              <th>Member</th>
               <th>Role</th>
-              <th>Last active</th>
+              <th>Access</th>
               <th />
             </tr>
           </thead>
@@ -113,46 +110,45 @@ export default async function TeamSettingsPage() {
               const isYou = m.user.email === sessionUser.email;
               return (
                 <tr key={m.id}>
-                  <td style={{ paddingLeft: 18 }}>
-                    <div className="row" style={{ gap: 10 }}>
-                      <Avatar name={m.user.name ?? m.user.email ?? "User"} size={28} tone={tone} />
-                      <div>
-                        <div style={{ fontWeight: 500 }}>
+                  <td>
+                    <div className="set-nrow" style={{ gap: 10 }}>
+                      <Avatar name={m.user.name ?? m.user.email ?? "User"} size={30} tone={tone} />
+                      <div style={{ minWidth: 0 }}>
+                        <div className="set-mini__name">
                           {m.user.name ?? m.user.email}
                           {isYou && (
                             <span
-                              className="chip chip--out"
-                              style={{ marginLeft: 4, fontSize: 9.5 }}
+                              className="set-pill set-pill--muted"
+                              style={{ marginLeft: 6, height: 18, fontSize: 9.5 }}
                             >
                               YOU
                             </span>
                           )}
                         </div>
-                        <div className="dim" style={{ fontSize: 11 }}>
-                          {m.user.email}
-                        </div>
+                        <div className="set-mini__email">{m.user.email}</div>
                       </div>
                     </div>
                   </td>
                   <td>
-                    <span className="chip" style={{ textTransform: "capitalize" }}>
+                    <span
+                      className="set-pill set-pill--neutral"
+                      style={{ textTransform: "capitalize" }}
+                    >
                       {m.role}
                     </span>
                   </td>
-                  <td className="mono dim" style={{ fontSize: 11.5 }}>
-                    —
-                  </td>
-                  <td>
+                  <td className="set-mini__access">{ROLE_ACCESS[m.role] ?? "Member"}</td>
+                  <td style={{ textAlign: "right" }}>
                     {isYou ? null : (
                       <form action={removeMember}>
                         <input type="hidden" name="membershipId" value={m.id} />
                         <button
                           type="submit"
-                          className="btn btn--xs btn--ghost"
+                          className="set-btable__dl"
                           aria-label="Remove member"
                           title="Remove member"
                         >
-                          <Icon name="trash" size={11} />
+                          <Icon name="trash" size={15} />
                         </button>
                       </form>
                     )}
@@ -163,6 +159,7 @@ export default async function TeamSettingsPage() {
           </tbody>
         </table>
       )}
-    </section>
+      </section>
+    </SettingsFrame>
   );
 }

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Orange calendar icon">
+  <defs>
+    <linearGradient id="calGrad" x1="145" y1="84" x2="365" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF7A1A"/>
+      <stop offset="1" stop-color="#FF5A00"/>
+    </linearGradient>
+    <filter id="calShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#FF6A00" flood-opacity="0.20"/>
+    </filter>
+  </defs>
+  <path fill="url(#calGrad)" filter="url(#calShadow)" fill-rule="evenodd" d="M155 91c16.6 0 30 13.4 30 30v15h142v-15c0-16.6 13.4-30 30-30s30 13.4 30 30v15h14c35.3 0 64 28.7 64 64v185c0 35.3-28.7 64-64 64H111c-35.3 0-64-28.7-64-64V200c0-35.3 28.7-64 64-64h14v-15c0-16.6 13.4-30 30-30zm-46 168v126c0 10 8 18 18 18h258c10 0 18-8 18-18V259H109zm72 68a24 24 0 1 0 0-48 24 24 0 0 0 0 48zm75 0a24 24 0 1 0 0-48 24 24 0 0 0 0 48zm75 0a24 24 0 1 0 0-48 24 24 0 0 0 0 48zm-150 83a24 24 0 1 0 0-48 24 24 0 0 0 0 48zm75 0a24 24 0 1 0 0-48 24 24 0 0 0 0 48zm75 0a24 24 0 1 0 0-48 24 24 0 0 0 0 48z"/>
+  <path d="M125 136h60v42c0 16.6-13.4 30-30 30s-30-13.4-30-30v-42zm202 0h60v42c0 16.6-13.4 30-30 30s-30-13.4-30-30v-42z" fill="#fff" opacity=".96"/>
+  <path d="M138 136h34v42c0 9.4-7.6 17-17 17s-17-7.6-17-17v-42zm202 0h34v42c0 9.4-7.6 17-17 17s-17-7.6-17-17v-42z" fill="url(#calGrad)"/>
+</svg>

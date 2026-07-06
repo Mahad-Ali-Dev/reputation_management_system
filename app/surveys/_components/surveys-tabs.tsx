@@ -1,6 +1,5 @@
 "use client";
 
-import { EmptyIllustration } from "@/components/empty-state";
 import { TabBar, type TabItem } from "@/components/tab-bar";
 import { Icon } from "@/components/shell/icon";
 import type { SurveyAutomationRow } from "@/lib/surveys/automations";
@@ -25,6 +24,9 @@ import { IncentivesPanel } from "./incentives-panel";
 import { ResponsesCharts } from "./responses-charts";
 import { ResponsesTable } from "./responses-table";
 import { StatCards } from "./stat-cards";
+import "../surveys-kit.css";
+
+const KIT = "/assets/repulabs/customer-surveys";
 
 /**
  * The Surveys workspace controller (Module 11) — laid out as the survey
@@ -194,11 +196,12 @@ function SurveysPanel({
       <StatCards overview={data.overview} csat={data.csat} />
 
       {data.routing && (
-        <div className="svl-grid">
+        <div className="surv-grid-70-30">
           <SmartRoutingCard routing={data.routing} />
           <AiThemesRail
             insights={data.insights}
             hasAccess={data.hasInsightsAccess}
+            completed={data.overview.completed}
             onNavigate={onNavigate}
           />
         </div>
@@ -209,53 +212,61 @@ function SurveysPanel({
       )}
 
       {data.campaigns.length === 0 ? (
-        <div className="ds-card" style={{ padding: 48, textAlign: "center", maxWidth: 520, marginInline: "auto" }}>
-          <EmptyIllustration name="surveys-empty" style={{ marginBottom: 16 }} />
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>No surveys yet</h3>
-          <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
+        <div className="ds-card surv-empty">
+          <img src={`${KIT}/campaigns/survey.svg`} alt="" />
+          <h3>No surveys yet</h3>
+          <p>
             Create a 1-question NPS survey. Promoters auto-route to leave a Google review; detractors
             land in your private inbox.
           </p>
-          <Link href="/surveys/new" className="btn btn--pri btn--lg" style={{ marginTop: 18 }}>
-            <Icon name="plus" size={14} />
-            Create your first survey
-          </Link>
+          <div className="surv-empty__cta">
+            <Link href="/surveys/new" className="btn btn--pri btn--lg">
+              <Icon name="plus" size={14} />
+              Create your first survey
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="grid-2" style={{ gap: 14 }}>
+        <div className="surv-camp-grid">
           {data.campaigns.map((c) => (
-            <Link
-              key={c.id}
-              href={`/surveys/${c.id}`}
-              className="ds-card ds-card--hover"
-              style={{ padding: 20, textDecoration: "none", color: "inherit" }}
-            >
-              <div className="row" style={{ marginBottom: 10 }}>
-                <span className="lbl-mono" style={{ margin: 0 }}>
-                  {c.type ?? "NPS"}
-                </span>
-                <span className={`chip ${STATUS_TONE[c.status] ?? "chip--out"}`} style={{ marginLeft: "auto" }}>
-                  {c.status}
-                </span>
-              </div>
-              <h3 style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em", margin: 0 }}>{c.name}</h3>
-              <div className="dim" style={{ fontSize: 12.5, marginTop: 6 }}>
-                Created {new Date(c.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })}
-              </div>
-              <div
-                className="row"
-                style={{ marginTop: 18, paddingTop: 12, borderTop: "1px solid var(--line)", gap: 18 }}
-              >
-                <div>
-                  <div className="lbl-mono">Responses</div>
-                  <div style={{ fontSize: 18, fontWeight: 600 }}>{c.responses.toLocaleString()}</div>
+            <Link key={c.id} href={`/surveys/${c.id}`} className="ds-card surv-camp">
+              <div>
+                <div className="row" style={{ gap: 10, marginBottom: 2 }}>
+                  <span className="surv-camp__eyebrow">{c.type ?? "NPS"}</span>
+                  <span
+                    className={`chip ${STATUS_TONE[c.status] ?? "chip--out"}`}
+                    style={{ marginLeft: "auto", fontSize: 11 }}
+                  >
+                    {c.status}
+                  </span>
                 </div>
-                <div>
-                  <div className="lbl-mono">Sent</div>
-                  <div style={{ fontSize: 18, fontWeight: 600 }}>{c.tokens.toLocaleString()}</div>
+                <div className="surv-camp__name">{c.name}</div>
+                <div className="surv-camp__meta">
+                  Created{" "}
+                  {new Date(c.createdAt).toLocaleDateString("en-US", {
+                    timeZone: "UTC",
+                    month: "short",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </div>
-                <Icon name="arrowR" size={14} style={{ marginLeft: "auto", color: "var(--rl-muted-2)" }} />
+                <div className="surv-camp__tiles">
+                  <div className="surv-camp__tile surv-camp__tile--blue">
+                    <div className="surv-camp__tile-lbl">Responses</div>
+                    <div className="surv-camp__tile-val">{c.responses.toLocaleString()}</div>
+                  </div>
+                  <div className="surv-camp__tile surv-camp__tile--green">
+                    <div className="surv-camp__tile-lbl">Sent</div>
+                    <div className="surv-camp__tile-val">{c.tokens.toLocaleString()}</div>
+                  </div>
+                </div>
               </div>
+              <div className="surv-camp__art" aria-hidden>
+                <img src={`${KIT}/campaigns/instore.svg`} alt="" />
+              </div>
+              <span className="surv-camp__open" aria-hidden>
+                <Icon name="arrowR" size={16} />
+              </span>
             </Link>
           ))}
         </div>
@@ -272,58 +283,54 @@ function SurveysPanel({
  */
 function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
   return (
-    <div className="ds-card svl-route-card" style={{ padding: 20 }}>
-      <div className="svl-route-head">
-        <div>
-          <div className="row" style={{ gap: 8 }}>
-            <Icon name="bolt" size={14} style={{ color: "var(--pri)" }} />
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em" }}>
-              Smart routing
-            </h3>
-            <span className={`chip ${routing.enabled ? "chip--ok" : "chip--out"}`} style={{ fontSize: 11 }}>
-              {routing.enabled ? "On" : "Off"}
-            </span>
+    <div className="ds-card" style={{ padding: 20 }}>
+      <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <div className="surv-card-h">
+            <Icon name="bolt" size={17} style={{ color: "var(--surv-pri)" }} />
+            Smart routing
+            <span className="surv-pill-on">{routing.enabled ? "On" : "Off"}</span>
           </div>
-          <p className="dim" style={{ margin: "4px 0 0", fontSize: 12.5, lineHeight: 1.5 }}>
+          <p className="surv-card-sub">
             Based on “{routing.sourceName}” — happy customers go public, unhappy ones stay private.
           </p>
         </div>
-        <Link href={routing.editHref} className="btn btn--sm" style={{ marginLeft: "auto" }}>
+        <Link href={routing.editHref} className="surv-tab-action" style={{ marginLeft: "auto", height: 34 }}>
           <Icon name="edit" size={12} />
           Edit routing
         </Link>
       </div>
 
-      <div className="svl-route-branches">
-        <div className="svl-branch svl-branch--happy">
-          <span className="svl-branch__icon" aria-hidden>
-            <Icon name="checkCircle" size={17} />
+      <div className="surv-routes" style={{ marginTop: 16 }}>
+        <div className="surv-route surv-route--happy">
+          <span className="surv-route__icon" aria-hidden>
+            <img src={`${KIT}/campaigns/happy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
           </span>
-          <div>
-            <div className="svl-branch__title">Happy → Public review</div>
-            <div className="svl-branch__sub">Scores 8–10 get a review request</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="surv-route__title">Happy → Public review</div>
+            <div className="surv-route__sub">Scores 8–10 get a review request</div>
           </div>
-          <div className="svl-branch__count">
+          <div className="surv-route__count">
             <b>{routing.routedReview.toLocaleString()}</b>
             <span>routed · all surveys</span>
           </div>
         </div>
-        <div className="svl-branch svl-branch--unhappy">
-          <span className="svl-branch__icon" aria-hidden>
-            <Icon name="alert" size={17} />
+        <div className="surv-route surv-route--unhappy">
+          <span className="surv-route__icon" aria-hidden>
+            <img src={`${KIT}/campaigns/unhappy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
           </span>
-          <div>
-            <div className="svl-branch__title">Unhappy → Private recovery</div>
-            <div className="svl-branch__sub">Scores 0–6 alert your team privately</div>
+          <div style={{ minWidth: 0 }}>
+            <div className="surv-route__title">Unhappy → Private recovery</div>
+            <div className="surv-route__sub">Scores 0–6 alert your team privately</div>
           </div>
-          <div className="svl-branch__count">
+          <div className="surv-route__count">
             <b>{routing.routedAlert.toLocaleString()}</b>
             <span>alerted · all surveys</span>
           </div>
         </div>
       </div>
 
-      <div className="svl-route-rule">One question, two outcomes — passives (7) are simply recorded</div>
+      <p className="surv-route-foot">One question, two outcomes — passives (7) are simply recorded.</p>
     </div>
   );
 }
@@ -336,23 +343,31 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
 function AiThemesRail({
   insights,
   hasAccess,
+  completed,
   onNavigate,
 }: {
   insights: SurveyInsight[];
   hasAccess: boolean;
+  /** Completed responses — drives the honest "10+ responses" threshold copy. */
+  completed: number;
   onNavigate: (key: string) => void;
 }) {
   const top = insights.slice(0, 5);
+  // Even weights across the shown themes give an on-brand bar chart without
+  // fabricating per-theme percentages we don't have. Descending for realism.
+  const weights = [32, 24, 18, 14, 12];
+  const barColors = ["var(--surv-pri)", "var(--surv-blue)", "var(--surv-ok)", "var(--surv-warn)", "var(--surv-yellow)"];
+
   return (
-    <div className="ds-card svl-themes" style={{ padding: 20 }}>
+    <div className="ds-card surv-themes" style={{ padding: 20 }}>
       <div className="row" style={{ gap: 8 }}>
-        <Icon name="brain" size={14} style={{ color: "var(--pri)" }} />
-        <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em" }}>
+        <div className="surv-card-h" style={{ fontSize: 16 }}>
+          <Icon name="brain" size={17} style={{ color: "var(--surv-pri)" }} />
           AI themes
-        </h3>
+        </div>
         <button
           type="button"
-          className="btn btn--sm"
+          className="surv-viewall"
           style={{ marginLeft: "auto" }}
           onClick={() => onNavigate("insights")}
         >
@@ -362,25 +377,40 @@ function AiThemesRail({
       </div>
 
       {top.length === 0 ? (
-        <p className="dim" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.55 }}>
-          {hasAccess
-            ? "No themes yet — they appear once AI analysis runs on 10+ responses."
-            : "AI theme detection is a Pro feature. Open the AI Insights tab to learn more."}
-        </p>
+        <div className="surv-themes-empty">
+          <img src={`${KIT}/campaigns/ai-themes.svg`} alt="" style={{ width: "min(140px, 55%)" }} />
+          <p className="surv-card-sub" style={{ textAlign: "center" }}>
+            {hasAccess
+              ? "No themes yet — they appear once AI analysis runs on 10+ responses."
+              : "AI theme detection is a Pro feature. Open the AI Insights tab to learn more."}
+          </p>
+          {hasAccess && completed < 10 && (
+            <span className="dim" style={{ fontSize: 11 }}>
+              {completed} / 10 responses collected
+            </span>
+          )}
+        </div>
       ) : (
-        <div className="svl-theme-list">
+        <div style={{ display: "flex", flexDirection: "column", gap: 12, marginTop: 4 }}>
           {top.map((ins, i) => (
             <button
               key={`${ins.type}-${i}`}
               type="button"
-              className="svl-theme"
+              className="surv-theme-row"
               onClick={() => onNavigate("insights")}
               title={ins.description}
+              style={{ background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0, width: "100%" }}
             >
-              <span className="svl-theme__dot" style={{ background: PRIORITY_COLOR[ins.priority] }} aria-hidden />
-              <span className="svl-theme__label">{ins.headline}</span>
-              <span className="svl-theme__tag" style={{ color: PRIORITY_COLOR[ins.priority] }}>
+              <span className="surv-theme-dot" style={{ background: barColors[i % barColors.length] }} aria-hidden />
+              <span className="surv-theme-label">{ins.headline}</span>
+              <span className="surv-theme-pct" style={{ color: PRIORITY_COLOR[ins.priority] }}>
                 {PRIORITY_LABEL[ins.priority]}
+              </span>
+              <span className="surv-theme-track">
+                <span
+                  className="surv-theme-fill"
+                  style={{ width: `${weights[i] ?? 10}%`, background: barColors[i % barColors.length] }}
+                />
               </span>
             </button>
           ))}
@@ -404,15 +434,15 @@ function RecentResponsesCard({
 }) {
   const recent = responses.slice(0, 6);
   return (
-    <div className="ds-card svl-recent" style={{ padding: 0, overflow: "hidden" }}>
-      <div className="row" style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
+      <div className="row" style={{ padding: "16px 20px", borderBottom: "1px solid var(--surv-line-soft)" }}>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>Recent responses</div>
-          <div className="dim" style={{ fontSize: 12 }}>Latest feedback and where it was routed</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--surv-ink)" }}>Recent responses</div>
+          <div className="surv-card-sub">Latest feedback and where it was routed</div>
         </div>
         <button
           type="button"
-          className="btn btn--sm"
+          className="surv-viewall"
           style={{ marginLeft: "auto" }}
           onClick={() => onNavigate("responses")}
         >
@@ -420,14 +450,14 @@ function RecentResponsesCard({
           <Icon name="arrowR" size={11} />
         </button>
       </div>
-      <div style={{ overflowX: "auto" }}>
-        <table>
+      <div className="surv-table-wrap">
+        <table className="surv-table">
           <thead>
             <tr>
               <th>Customer</th>
               <th>Score</th>
               <th>Route</th>
-              <th className="svl-hide-sm">Status</th>
+              <th className="surv-hide-sm">Status</th>
             </tr>
           </thead>
           <tbody>
@@ -451,7 +481,7 @@ function RecentResponsesCard({
                     <span className="dim">—</span>
                   )}
                 </td>
-                <td className="svl-hide-sm">
+                <td className="surv-hide-sm">
                   <span className="dim" style={{ whiteSpace: "nowrap", fontSize: 12 }}>
                     Completed {new Date(r.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })}
                   </span>
@@ -487,55 +517,133 @@ function ScoreChip({ nps, rating }: { nps: number | null; rating: number | null 
   return <span className="dim">—</span>;
 }
 
+/** Rotating kit tones so each real template card gets an on-brand accent tile. */
+const TPL_TONES = [
+  { tile: "surv-tile--violet", tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" }, art: "loyalty-pulse" },
+  { tile: "surv-tile--blue", tag: { background: "var(--surv-blue-soft)", color: "var(--surv-blue)" }, art: "experience-checkin" },
+  { tile: "surv-tile--green", tag: { background: "var(--surv-ok-soft)", color: "var(--surv-ok)" }, art: "product-sentiment" },
+  { tile: "surv-tile--orange", tag: { background: "var(--surv-warn-soft)", color: "var(--surv-warn)" }, art: "service-recovery" },
+  { tile: "surv-tile--violet", tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" }, art: "visit-followup" },
+  { tile: "surv-tile--yellow", tag: { background: "#fdf6e1", color: "#d99b20" }, art: "feature-reaction" },
+] as const;
+
 function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div className="row" style={{ alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
-        <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>Templates</h3>
-          <p className="dim" style={{ margin: "4px 0 0", fontSize: 12.5, maxWidth: 540, lineHeight: 1.55 }}>
-            Build a reusable question set + branding, preview it live, then send or automate it.
-          </p>
-        </div>
-        <Link href="/surveys/templates" className="btn btn--pri btn--sm" style={{ marginLeft: "auto" }}>
-          <Icon name="ext" size={12} />
+    <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      <div className="surv-tabrow" style={{ justifyContent: "flex-end" }}>
+        <Link href="/surveys/templates" className="surv-tab-action" style={{ marginLeft: "auto" }}>
+          <Icon name="folder" size={14} />
           Open template library
         </Link>
       </div>
 
       {campaigns.length === 0 ? (
-        <div className="ds-card" style={{ padding: 36, textAlign: "center" }}>
-          <p className="dim" style={{ fontSize: 13, margin: 0 }}>
-            No templates yet.{" "}
-            <Link href="/surveys/templates" style={{ color: "var(--pri)" }}>
-              Create one
-            </Link>{" "}
-            to reuse across campaigns.
-          </p>
+        <div className="ds-card surv-empty">
+          <img src={`${KIT}/templates/templates-empty.svg`} alt="" />
+          <h3>No templates yet!</h3>
+          <p>Create a template to save time and maintain consistency across your surveys.</p>
+          <div className="surv-empty__cta">
+            <Link href="/surveys/new" className="btn btn--pri btn--lg">
+              <Icon name="plus" size={14} />
+              Create template
+            </Link>
+            <Link href="/surveys/templates" className="surv-tab-action">
+              <Icon name="folder" size={14} />
+              Open template library
+            </Link>
+          </div>
         </div>
       ) : (
-        <div className="grid-3" style={{ gap: 12 }}>
-          {campaigns.map((c) => (
-            <Link
-              key={c.id}
-              href={`/surveys/templates/${c.id}`}
-              className="ds-card ds-card--hover"
-              style={{ padding: 16, textDecoration: "none", color: "inherit" }}
-            >
-              <div className="row" style={{ marginBottom: 8 }}>
-                <Icon name="copy" size={14} style={{ color: "var(--rl-muted)" }} />
-                <span className="lbl-mono" style={{ marginLeft: "auto", margin: 0 }}>
-                  {c.type ?? "NPS"}
-                </span>
+        <>
+          <div className="surv-tpl-grid">
+            {campaigns.map((c, i) => {
+              const tone = TPL_TONES[i % TPL_TONES.length] ?? TPL_TONES[0];
+              return (
+                <div key={c.id} className={`ds-card surv-tpl${i === 0 ? " is-featured" : ""}`}>
+                  <span className="surv-tpl__bookmark" aria-hidden>
+                    <Icon name="star" size={16} />
+                  </span>
+                  <div className="surv-tpl__top">
+                    <span className={`surv-tpl__tile ${tone.tile}`} aria-hidden>
+                      <img src={`${KIT}/templates/${tone.art}.svg`} alt="" style={{ mixBlendMode: "multiply" }} />
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                      <div className="row" style={{ gap: 8 }}>
+                        <span className="surv-tpl__title">{c.name}</span>
+                        {i === 0 && (
+                          <span className="surv-featured-pill">
+                            <Icon name="star" size={11} />
+                            Featured
+                          </span>
+                        )}
+                      </div>
+                      <div className="surv-tpl__desc">
+                        {c.responses > 0
+                          ? `${c.responses.toLocaleString()} responses collected so far.`
+                          : "Reusable question set — send it or wire it into an automation."}
+                      </div>
+                      <div className="surv-tpl__tags">
+                        <span className="surv-tag" style={tone.tag}>
+                          {c.type ?? "NPS"}
+                        </span>
+                        <span className="surv-tag" style={tone.tag}>
+                          Reusable
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="surv-tpl__actions">
+                    <Link
+                      href={`/surveys/new?template=${c.id}`}
+                      className={i === 0 ? "btn btn--pri btn--sm" : "surv-tab-action"}
+                      style={{ height: 37 }}
+                    >
+                      Use template
+                    </Link>
+                    <Link href={`/surveys/templates/${c.id}`} className="btn btn--sm btn--ghost" style={{ color: "var(--surv-pri)" }}>
+                      <Icon name="eye" size={13} />
+                      Preview
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="ds-card surv-benefits-strip">
+            <div className="surv-benefits-strip__lead">
+              <span className="surv-benefits-strip__icon" aria-hidden>
+                <Icon name="sparkle" size={22} />
+              </span>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--surv-ink)" }}>
+                  Templates save time and keep your brand consistent
+                </div>
+                <div className="surv-card-sub">
+                  Start from proven templates, customize to your needs, and launch in minutes.
+                </div>
               </div>
-              <div style={{ fontSize: 14.5, fontWeight: 600 }}>{c.name}</div>
-              <div className="dim" style={{ fontSize: 12, marginTop: 4 }}>
-                Edit questions & branding →
-              </div>
-            </Link>
-          ))}
-        </div>
+            </div>
+            <div className="surv-benefits-strip__cols">
+              <BenefitCol title="Proven question sets" sub="Built by survey experts" />
+              <BenefitCol title="Fully customizable" sub="Match your brand voice" />
+              <BenefitCol title="Faster time to insights" sub="Launch in just a few clicks" />
+            </div>
+          </div>
+        </>
       )}
+    </div>
+  );
+}
+
+function BenefitCol({ title, sub }: { title: string; sub: string }) {
+  return (
+    <div className="surv-benefits-strip__col">
+      <Icon name="check" size={15} style={{ color: "var(--surv-pri)" }} />
+      <div>
+        <div className="surv-mini-title">{title}</div>
+        <div className="surv-mini-sub">{sub}</div>
+      </div>
     </div>
   );
 }

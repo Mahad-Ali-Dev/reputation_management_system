@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="blueGrad" x1="150" y1="150" x2="870" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2E7BFF"/>
+      <stop offset="1" stop-color="#004DFF"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="150" y1="150" x2="870" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8A45FF"/>
+      <stop offset="1" stop-color="#5A20FF"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="150" y1="150" x2="870" y2="870" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#35D953"/>
+      <stop offset="1" stop-color="#0BAA38"/>
+    </linearGradient>
+    <linearGradient id="visaGrad" x1="150" y1="350" x2="860" y2="680" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#1647B8"/>
+      <stop offset="1" stop-color="#005BFF"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#1F5BFF" flood-opacity=".12"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)">
+    <rect x="190" y="250" width="644" height="584" rx="80" stroke="url(#purpleGrad)" stroke-width="64"/>
+    <path d="M190 405H834" stroke="url(#purpleGrad)" stroke-width="64" stroke-linecap="round"/>
+    <path d="M370 175V305M654 175V305" stroke="url(#purpleGrad)" stroke-width="64" stroke-linecap="round"/>
+    <rect x="385" y="520" width="92" height="92" rx="18" stroke="url(#purpleGrad)" stroke-width="50"/>
+    <rect x="552" y="520" width="92" height="92" rx="18" stroke="url(#purpleGrad)" stroke-width="50"/>
+    <rect x="385" y="675" width="92" height="92" rx="18" stroke="url(#purpleGrad)" stroke-width="50"/>
+    <rect x="552" y="675" width="92" height="92" rx="18" stroke="url(#purpleGrad)" stroke-width="50"/>
+  </g>
+
+</svg>

@@ -6,12 +6,16 @@ import { CouponRedeemForm } from "../coupons/form";
 
 /**
  * Incentives tab (Module 11) — the coupons workspace folded into the Surveys
- * lifecycle. Promoters (NPS ≥ 9) get a one-time code; staff redeem it here.
+ * lifecycle, re-skinned to the "Customer Surveys" kit. Promoters (NPS ≥ 9) get a
+ * one-time code; staff redeem it here.
  *
  * Reuses the existing `<CouponRedeemForm>` server action and reads its data
- * (stats + recent codes) from the workspace's server fetch. Pure presentation,
- * design-system styled to match the other Surveys tabs.
+ * (stats + recent codes) from the workspace's server fetch. All metrics derive
+ * from authoritative counts; the table shows a recent subset only.
  */
+
+const KIT = "/assets/repulabs/customer-surveys/incentives";
+
 export function IncentivesPanel({
   stats,
   coupons,
@@ -20,37 +24,59 @@ export function IncentivesPanel({
   coupons: IncentiveCoupon[];
 }) {
   const redemptionRate =
-    stats.issued > 0 ? `${((stats.redeemed / stats.issued) * 100).toFixed(0)}%` : "—";
+    stats.issued > 0 ? `${Math.round((stats.redeemed / stats.issued) * 100)}% redemption rate` : "Awaiting redemptions";
+  const expiredRate =
+    stats.issued > 0 ? `${Math.round((stats.expired / stats.issued) * 100)}% of issued` : "Lapsed before use";
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="grid-3" style={{ gap: 12 }}>
-        <Stat label="Issued" value={stats.issued.toLocaleString()} sub="One-time codes · all time" />
-        <Stat
+      <div className="surv-kpis" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+        <Kpi
+          tone="violet"
+          icon={`${KIT}/issued.svg`}
+          label="Issued"
+          value={stats.issued.toLocaleString()}
+          pillClass="surv-kpi__pill--violet"
+          pill="One-time codes · all time"
+        />
+        <Kpi
+          tone="green"
+          icon={`${KIT}/redeemed.svg`}
           label="Redeemed"
           value={stats.redeemed.toLocaleString()}
-          sub={stats.issued > 0 ? `${redemptionRate} redemption rate` : "Awaiting redemptions"}
-          accent
+          pillClass="surv-kpi__pill--green"
+          pill={redemptionRate}
         />
-        <Stat
+        <Kpi
+          tone="orange"
+          icon={`${KIT}/expired.svg`}
           label="Expired unredeemed"
           value={stats.expired.toLocaleString()}
-          sub="Lapsed before use"
+          pillClass="surv-kpi__pill--orange"
+          pill={expiredRate}
         />
       </div>
 
-      <div className="ds-card" style={{ padding: 20 }}>
-        <div style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.015em" }}>Redeem a coupon</div>
-        <p className="dim" style={{ fontSize: 12.5, marginTop: 4, marginBottom: 14, lineHeight: 1.55, maxWidth: 560 }}>
-          Customer hands you a code at the counter — enter it here and the system marks it used. Codes
-          are single-use.
-        </p>
-        <CouponRedeemForm />
+      <div className="ds-card surv-redeem">
+        <div className="surv-redeem__art" aria-hidden>
+          <img src={`${KIT}/coupon.svg`} alt="" />
+        </div>
+        <div style={{ minWidth: 0 }}>
+          <h2 className="surv-card-h">Redeem a coupon</h2>
+          <p className="surv-card-sub" style={{ maxWidth: 620 }}>
+            A customer hands you a code at the counter — enter it here and the system marks it used.
+            Codes are single-use.
+          </p>
+          <CouponRedeemForm />
+        </div>
       </div>
 
-      <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-        <div className="row" style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>Recent coupons</div>
+      <div className="ds-card surv-card--tinted" style={{ padding: 0, overflow: "hidden", position: "relative" }}>
+        <div className="surv-card-deco" aria-hidden>
+          <img src={`${KIT}/coupon.svg`} alt="" />
+        </div>
+        <div className="row" style={{ padding: "16px 20px" }}>
+          <h2 className="surv-card-h">Recent coupons</h2>
           {coupons.length > 0 && (
             <span className="dim" style={{ marginLeft: "auto", fontSize: 12 }}>
               {coupons.length.toLocaleString()} shown
@@ -59,65 +85,57 @@ export function IncentivesPanel({
         </div>
 
         {coupons.length === 0 ? (
-          <div style={{ padding: 40, textAlign: "center" }}>
-            <div
-              aria-hidden
-              style={{
-                width: 46,
-                height: 46,
-                borderRadius: 13,
-                margin: "0 auto 12px",
-                background: "var(--surface-3)",
-                color: "var(--rl-muted)",
-                display: "grid",
-                placeItems: "center",
-              }}
-            >
-              <Icon name="star" size={20} />
-            </div>
-            <p className="dim" style={{ fontSize: 13, margin: 0, lineHeight: 1.6, maxWidth: 420, marginInline: "auto" }}>
-              No coupons issued yet. Enable an incentive on a survey campaign to start rewarding
-              promoters automatically.
-            </p>
+          <div className="surv-empty" style={{ paddingTop: 8 }}>
+            <img src={`${KIT}/coupon.svg`} alt="" style={{ width: "min(180px, 60%)" }} />
+            <h3 style={{ fontSize: 18 }}>No coupons issued yet</h3>
+            <p>Enable an incentive on a survey campaign to start rewarding promoters automatically.</p>
           </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+          <div className="surv-table-wrap">
+            <table className="surv-table">
+              <caption className="sr-only">Recent incentive coupons</caption>
               <thead>
-                <tr style={{ textAlign: "left", color: "var(--rl-muted)" }}>
-                  <Th>Code</Th>
-                  <Th>Value</Th>
-                  <Th>Issued</Th>
-                  <Th>Expires</Th>
-                  <Th>Status</Th>
+                <tr>
+                  <th scope="col">Coupon code</th>
+                  <th scope="col">Reward</th>
+                  <th scope="col">Issued</th>
+                  <th scope="col">Expires</th>
+                  <th scope="col">Status</th>
                 </tr>
               </thead>
               <tbody>
                 {coupons.map((c) => {
-                  const status = c.redeemedAt
+                  const status: "redeemed" | "expired" | "active" = c.redeemedAt
                     ? "redeemed"
                     : new Date(c.expiresAt).getTime() < Date.now()
                       ? "expired"
                       : "active";
                   return (
-                    <tr key={c.id} style={{ borderTop: "1px solid var(--line)" }}>
-                      <Td>
-                        <span style={{ fontFamily: "var(--mono, monospace)", fontSize: 12 }}>{c.code}</span>
-                      </Td>
-                      <Td>${(c.valueCents / 100).toFixed(2)}</Td>
-                      <Td>
-                        <span className="dim" style={{ whiteSpace: "nowrap" }}>
-                          {new Date(c.createdAt).toLocaleDateString()}
+                    <tr key={c.id}>
+                      <td>
+                        <span className="surv-code-chip">{c.code}</span>
+                      </td>
+                      <td>
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                          <Icon name="tag" size={13} style={{ color: "var(--surv-pri)" }} />
+                          <span style={{ color: "var(--surv-ink)", fontWeight: 500 }}>
+                            ${(c.valueCents / 100).toFixed(2)} off
+                          </span>
                         </span>
-                      </Td>
-                      <Td>
-                        <span className="dim" style={{ whiteSpace: "nowrap" }}>
-                          {new Date(c.expiresAt).toLocaleDateString()}
+                      </td>
+                      <td>
+                        <span className="dim" style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+                          {fmt(c.createdAt)}
                         </span>
-                      </Td>
-                      <Td>
-                        <CouponStatusBadge status={status} />
-                      </Td>
+                      </td>
+                      <td>
+                        <span className="dim" style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+                          {fmt(c.expiresAt)}
+                        </span>
+                      </td>
+                      <td>
+                        <span className={`surv-status surv-status--${status}`}>{status}</span>
+                      </td>
                     </tr>
                   );
                 })}
@@ -130,62 +148,39 @@ export function IncentivesPanel({
   );
 }
 
-function CouponStatusBadge({ status }: { status: "redeemed" | "expired" | "active" }) {
-  if (status === "active") {
-    return <span className="chip chip--ok">active</span>;
-  }
-  if (status === "expired") {
-    return (
-      <span
-        className="chip"
-        style={{ background: "var(--bad-soft, rgba(220,38,38,0.1))", color: "var(--bad)" }}
-      >
-        expired
-      </span>
-    );
-  }
-  return <span className="chip chip--out">redeemed</span>;
+function fmt(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "2-digit",
+    year: "numeric",
+  });
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th
-      style={{
-        padding: "8px 14px",
-        fontSize: 11,
-        fontWeight: 600,
-        textTransform: "uppercase",
-        letterSpacing: "0.03em",
-      }}
-    >
-      {children}
-    </th>
-  );
-}
-
-function Td({ children }: { children: React.ReactNode }) {
-  return <td style={{ padding: "10px 14px", verticalAlign: "middle" }}>{children}</td>;
-}
-
-function Stat({
+function Kpi({
+  tone,
+  icon,
   label,
   value,
-  sub,
-  accent,
+  pill,
+  pillClass,
 }: {
+  tone: "violet" | "green" | "orange";
+  icon: string;
   label: string;
   value: string;
-  sub: string;
-  accent?: boolean;
+  pill: string;
+  pillClass: string;
 }) {
   return (
-    <div className="ds-card">
-      <div className="stat">
-        <div className="stat__label">{label}</div>
-        <div className="stat__value" style={{ fontSize: 28, color: accent ? "var(--pri)" : undefined }}>
-          {value}
-        </div>
-        <div className="stat__delta">{sub}</div>
+    <div className={`ds-card surv-kpi surv-kpi--${tone}`}>
+      <span className="surv-kpi__icon" aria-hidden>
+        <img src={icon} alt="" style={{ mixBlendMode: "multiply" }} />
+      </span>
+      <div>
+        <div className="surv-kpi__label">{label}</div>
+        <div className="surv-kpi__value">{value}</div>
+        <span className={`surv-kpi__pill ${pillClass}`}>{pill}</span>
       </div>
     </div>
   );

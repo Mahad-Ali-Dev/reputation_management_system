@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+
+  <defs>
+    <linearGradient id="purple" x1="80" y1="60" x2="430" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7257FF"/>
+      <stop offset="1" stop-color="#3E17F5"/>
+    </linearGradient>
+    <linearGradient id="green" x1="90" y1="80" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#42E3A6"/>
+      <stop offset="1" stop-color="#00B980"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="100" y1="70" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF3A9E"/>
+      <stop offset="1" stop-color="#ED0F62"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="90" y1="80" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB02E"/>
+      <stop offset="1" stop-color="#FF7900"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#211566" flood-opacity=".18"/>
+    </filter>
+  </defs>
+
+  <path fill="url(#orange)" filter="url(#softShadow)" d="M249 70h54c18 0 32 14 32 32v31c15 6 29 14 41 24l27-15c16-9 36-4 45 12l27 47c9 16 4 35-12 44l-27 16c1 8 2 16 2 25s-1 17-2 25l27 16c16 9 21 28 12 44l-27 47c-9 16-29 21-45 12l-27-15c-12 10-26 18-41 24v31c0 18-14 32-32 32h-54c-18 0-32-14-32-32v-31c-15-6-29-14-41-24l-27 15c-16 9-36 4-45-12l-27-47c-9-16-4-35 12-44l27-16c-1-8-2-16-2-25s1-17 2-25l-27-16c-16-9-21-28-12-44l27-47c9-16 29-21 45-12l27 15c12-10 26-18 41-24v-31c0-18 14-32 32-32Zm27 136a80 80 0 1 0 0 160 80 80 0 0 0 0-160Z"/>
+  <rect x="338" y="342" width="112" height="112" rx="28" transform="rotate(45 394 398)" fill="url(#orange)" filter="url(#softShadow)"/>
+  <rect x="372" y="376" width="44" height="44" rx="8" transform="rotate(45 394 398)" fill="white"/>
+</svg>

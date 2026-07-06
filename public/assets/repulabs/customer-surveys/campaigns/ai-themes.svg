@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Purple waveform icon">
+  <defs>
+    <linearGradient id="waveGrad" x1="150" y1="150" x2="370" y2="370" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5E2BFF"/>
+      <stop offset="1" stop-color="#3512DF"/>
+    </linearGradient>
+    <filter id="waveShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#3512DF" flood-opacity="0.14"/>
+    </filter>
+  </defs>
+  <g fill="none" stroke="url(#waveGrad)" stroke-width="32" stroke-linecap="round" stroke-linejoin="round" filter="url(#waveShadow)">
+    <path d="M83 230v52"/>
+    <path d="M151 194v124"/>
+    <path d="M256 154v204"/>
+    <path d="M361 194v124"/>
+    <path d="M429 230v52"/>
+  </g>
+</svg>

@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+<defs>
+  <linearGradient id="violet" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#7D6BFF"/>
+    <stop offset="1" stop-color="#2D3BFF"/>
+  </linearGradient>
+  <linearGradient id="blueviolet" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#4A8BFF"/>
+    <stop offset="1" stop-color="#6737F8"/>
+  </linearGradient>
+  <linearGradient id="green" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#14C98B"/>
+    <stop offset="1" stop-color="#05875F"/>
+  </linearGradient>
+  <linearGradient id="orange" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FFB045"/>
+    <stop offset="1" stop-color="#FF5B00"/>
+  </linearGradient>
+  <linearGradient id="cyan" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#08D5D8"/>
+    <stop offset="1" stop-color="#2F55FF"/>
+  </linearGradient>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#4857D9" flood-opacity=".18"/>
+  </filter>
+  <filter id="tinyShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="10" stdDeviation="13" flood-color="#2E4BD6" flood-opacity=".18"/>
+  </filter>
+</defs>
+
+  <path d="M448 142C462 95 529 95 543 142L594 315C601 338 619 356 642 363L815 414C862 428 862 495 815 509L642 560C619 567 601 585 594 608L543 881C529 928 462 928 448 881L397 608C390 585 372 567 349 560L176 509C129 495 129 428 176 414L349 363C372 356 390 338 397 315L448 142Z" stroke="url(#violet)" stroke-width="76" stroke-linejoin="round" filter="url(#tinyShadow)"/>
+  <path d="M730 140L748 198L806 216L748 234L730 292L712 234L654 216L712 198L730 140Z" fill="url(#violet)" opacity=".75"/>
+</svg>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="bluePurple" x1="180" y1="140" x2="850" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#5B7CFF"/>
+      <stop offset="1" stop-color="#4434FF"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#334BFF" flood-opacity=".12"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)">
+    <path d="M358 682H296C202 682 126 606 126 512C126 425 191 352 276 343C311 242 407 170 520 170C659 170 774 278 784 415C854 435 906 500 906 578C906 672 830 748 736 748H640"
+          stroke="url(#bluePurple)" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M512 742V458" stroke="url(#bluePurple)" stroke-width="62" stroke-linecap="round"/>
+    <path d="M402 568L512 458L622 568" stroke="url(#bluePurple)" stroke-width="62" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+</svg>

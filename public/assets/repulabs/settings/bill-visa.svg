@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 240" width="760" height="240" fill="none">
+  <g transform="translate(20,18)">
+    <!-- orange accent on V -->
+    <polygon points="42,26 168,26 132,82 8,82" fill="#F7A531"/>
+    <!-- wordmark -->
+    <text x="0" y="170"
+          font-family="Arial, Helvetica, sans-serif"
+          font-size="178"
+          font-style="italic"
+          font-weight="700"
+          letter-spacing="-10"
+          fill="#1A49C5">VISA</text>
+  </g>
+</svg>

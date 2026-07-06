@@ -220,9 +220,16 @@ export async function listResponsesDetailed(
     });
     return rows.map((r): DetailedResponse => {
       const npsAns = r.answers.find((a) => a.question.type === "nps");
-      const npsScore = (npsAns?.value as { number?: number } | null)?.number ?? null;
+      // Prefer an explicit NPS answer; fall back to the stored 1–5 ratingSummary
+      // mapped to the 0–10 NPS scale (seed data stores ratingSummary, not a
+      // per-answer nps value) so the table's rating/sentiment columns populate.
+      const npsFromAnswer = (npsAns?.value as { number?: number } | null)?.number ?? null;
+      const npsScore =
+        npsFromAnswer ?? (r.ratingSummary != null ? Math.round((Number(r.ratingSummary) / 5) * 10) : null);
       const ratingAns = r.answers.find((a) => a.question.type === "rating");
-      const rating = (ratingAns?.value as { number?: number } | null)?.number ?? null;
+      const rating =
+        (ratingAns?.value as { number?: number } | null)?.number ??
+        (r.ratingSummary != null ? Number(r.ratingSummary) : null);
       const textAns = r.answers.find((a) => a.question.type === "text");
       const comment = (textAns?.value as { text?: string } | null)?.text ?? null;
       return {

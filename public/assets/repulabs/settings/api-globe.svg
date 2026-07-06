@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="globeGrad" x1="160" y1="140" x2="860" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8E96C8"/>
+      <stop offset="1" stop-color="#59638F"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="150" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D479"/>
+      <stop offset="1" stop-color="#079957"/>
+    </linearGradient>
+    <linearGradient id="purpleGrad" x1="150" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7B64FF"/>
+      <stop offset="1" stop-color="#4430FF"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#2539C8" flood-opacity=".12"/>
+    </filter>
+    <filter id="greenShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#079957" flood-opacity=".14"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)">
+    <circle cx="512" cy="512" r="330" stroke="url(#globeGrad)" stroke-width="64"/>
+    <path d="M182 512H842" stroke="url(#globeGrad)" stroke-width="58" stroke-linecap="round"/>
+    <path d="M246 330H778M246 694H778" stroke="url(#globeGrad)" stroke-width="52" stroke-linecap="round" opacity=".95"/>
+    <path d="M512 182C418 286 370 398 370 512C370 626 418 738 512 842" stroke="url(#globeGrad)" stroke-width="58" stroke-linecap="round"/>
+    <path d="M512 182C606 286 654 398 654 512C654 626 606 738 512 842" stroke="url(#globeGrad)" stroke-width="58" stroke-linecap="round"/>
+  </g>
+
+</svg>

@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Purple paper plane icon">
+  <defs>
+    <linearGradient id="planeGrad" x1="95" y1="120" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B63FF"/>
+      <stop offset="0.48" stop-color="#6E3DFF"/>
+      <stop offset="1" stop-color="#3317CC"/>
+    </linearGradient>
+    <linearGradient id="planeFold" x1="190" y1="305" x2="310" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#4A23E8"/>
+      <stop offset="1" stop-color="#2410A5"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#3514C8" flood-opacity="0.23"/>
+    </filter>
+  </defs>
+  <g filter="url(#softShadow)">
+    <path d="M88 237.5c-18.7-7-17.9-33.7 1.2-39.6L410.5 99.2c22.5-6.9 42.9 14.6 34.7 36.6L326.9 450.7c-7.4 19.6-35.1 20.1-43.2.8l-50.3-120.4L88 237.5z" fill="url(#planeGrad)"/>
+    <path d="M233.5 331.1l-25.7 91.7c-5.1 18.2 17.4 30.8 30.1 16.7l66.8-74.4-71.2-34z" fill="url(#planeFold)" opacity=".96"/>
+    <path d="M173.6 286.2l80.8 38.5 129.7-154c6.1-7.3-2.7-17.1-10.6-11.7L173.6 286.2z" fill="#FFFFFF" opacity=".98"/>
+  </g>
+</svg>

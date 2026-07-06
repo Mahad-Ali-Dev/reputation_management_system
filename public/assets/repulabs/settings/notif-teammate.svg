@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="purpleGrad" x1="160" y1="130" x2="860" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#8B72FF"/>
+      <stop offset="1" stop-color="#5438F6"/>
+    </linearGradient>
+    <linearGradient id="pinkGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF386E"/>
+      <stop offset="1" stop-color="#ED174F"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#23DB58"/>
+      <stop offset="1" stop-color="#06B833"/>
+    </linearGradient>
+    <linearGradient id="orangeGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB12A"/>
+      <stop offset="1" stop-color="#FF8A00"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#168BFF"/>
+      <stop offset="1" stop-color="#005EFF"/>
+    </linearGradient>
+    <linearGradient id="tealGrad" x1="170" y1="130" x2="850" y2="890" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#17D7C2"/>
+      <stop offset="1" stop-color="#02AFA2"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#263AD6" flood-opacity=".14"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)" fill="url(#tealGrad)">
+    <circle cx="410" cy="364" r="130"/>
+    <path d="M170 798C170 660 274 566 410 566C546 566 650 660 650 798C650 831 623 858 590 858H230C197 858 170 831 170 798Z"/>
+    <circle cx="690" cy="392" r="106"/>
+    <path d="M616 593C656 574 702 565 750 570C854 582 934 668 934 777C934 821 898 858 854 858H688C708 802 700 716 656 660C645 647 632 633 616 593Z"/>
+  </g>
+
+</svg>

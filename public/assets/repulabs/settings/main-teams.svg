@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="purpleBlue" x1="180" y1="140" x2="850" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#215DFF"/>
+      <stop offset="1" stop-color="#6F2CFF"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="180" y1="160" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B978"/>
+      <stop offset="1" stop-color="#008F61"/>
+    </linearGradient>
+    <linearGradient id="navyGrad" x1="210" y1="170" x2="810" y2="850" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#243F7D"/>
+      <stop offset="1" stop-color="#0B1D4A"/>
+    </linearGradient>
+    <linearGradient id="softPurple" x1="185" y1="185" x2="840" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#814DFF"/>
+      <stop offset="1" stop-color="#244CFF"/>
+    </linearGradient>
+    <linearGradient id="cyanBlue" x1="180" y1="180" x2="840" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C8D8"/>
+      <stop offset="1" stop-color="#215DFF"/>
+    </linearGradient>
+  </defs>
+
+  <circle cx="410" cy="352" r="116" stroke="url(#greenGrad)" stroke-width="58"/>
+  <path d="M174 790C198 660 297 586 410 586C523 586 622 660 646 790C653 826 624 858 587 858H233C196 858 167 826 174 790Z"
+        stroke="url(#greenGrad)" stroke-width="58" stroke-linejoin="round"/>
+  <circle cx="676" cy="365" r="94" stroke="url(#greenGrad)" stroke-width="58"/>
+  <path d="M622 594C696 587 785 631 821 727C835 763 808 801 769 801H705"
+        stroke="url(#greenGrad)" stroke-width="58" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

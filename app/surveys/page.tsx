@@ -17,7 +17,6 @@ import {
   surveysOverview,
 } from "@/lib/surveys/queries";
 import { Suspense } from "react";
-import { SurveysGettingStarted } from "./_components/surveys-getting-started";
 import {
   SurveysTabs,
   type SurveyCampaignCard,
@@ -25,7 +24,6 @@ import {
   type SurveyRoutingSnapshot,
   type SurveysTabsData,
 } from "./_components/surveys-tabs";
-import "./surveys-landing.css";
 
 /**
  * Customer Surveys hub (Module 11) — the 5-tab shell host.
@@ -111,9 +109,6 @@ export default async function SurveysPage({
   }));
 
   const responseCount = overview.completed;
-  const hasContacts = await orgHasContacts(orgId);
-
-  const showGettingStarted = campaigns.length === 0 && automations.length === 0;
 
   // Smart-routing snapshot for the landing branch tiles. `smartRouteEnabled` is
   // per-campaign; surface the first ACTIVE campaign's config (fall back to the
@@ -156,55 +151,37 @@ export default async function SurveysPage({
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Surveys"]}>
-      <PageHeader
-        kicker="Campaigns · Builder · Results · Incentives"
-        title="Surveys"
-        description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters — all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
-        actions={
-          <a href="/surveys/new" className="btn btn--pri">
-            <Icon name="plus" size={12} />
-            New survey
-          </a>
-        }
-      />
-
-      {showGettingStarted && (
-        <div style={{ marginBottom: 18 }}>
-          <SurveysGettingStarted
-            facts={{
-              hasCampaign: campaigns.length > 0,
-              hasContacts,
-              hasSent: overview.totalSent > 0,
-              hasAutomation: automations.length > 0,
-            }}
+      <div className="surv">
+        <div className="surv-hero">
+          <div className="surv-hero__art" aria-hidden>
+            <img src="/assets/repulabs/customer-surveys/campaigns/survey.svg" alt="" />
+          </div>
+          <PageHeader
+            kicker="Campaigns · Builder · Results · Incentives"
+            title="Surveys"
+            description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters — all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
+            actions={
+              <a href="/surveys/new" className="btn btn--pri">
+                <Icon name="plus" size={12} />
+                New survey
+              </a>
+            }
           />
         </div>
-      )}
 
-      <Suspense fallback={<div className="ds-card" style={{ height: 240 }} />}>
-        <SurveysTabs initialTab={initialTab} data={data} />
-      </Suspense>
+        <Suspense fallback={<div className="ds-card" style={{ height: 240 }} />}>
+          <SurveysTabs initialTab={initialTab} data={data} />
+        </Suspense>
+      </div>
     </AppShellServer>
   );
-}
-
-/** Cheap "has any contacts" check for the checklist (fail-soft → false). */
-async function orgHasContacts(orgId: string): Promise<boolean> {
-  try {
-    return await withTenant(orgId, async (tx) => {
-      const n = await tx.contact.count();
-      return n > 0;
-    });
-  } catch {
-    return false;
-  }
 }
 
 /**
  * Org-wide CSAT from rating-type answers (1–5 stars): % of ratings ≥ 4.
  * Walks recent responses (tenant-scoped) and flattens their rating answers.
  * `null` when no rating answers exist → the landing KPI tile is omitted.
- * Fail-soft like `orgHasContacts` (un-migrated/RLS issues → null).
+ * Fail-soft (un-migrated/RLS issues → null).
  */
 async function surveysCsat(orgId: string): Promise<SurveyCsat | null> {
   try {

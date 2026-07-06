@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="purpleGrad" x1="160" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7B63FF"/>
+      <stop offset="1" stop-color="#3D26FF"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="160" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#16C978"/>
+      <stop offset="1" stop-color="#079E55"/>
+    </linearGradient>
+    <linearGradient id="blueGrad" x1="160" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#217BFF"/>
+      <stop offset="1" stop-color="#142BFF"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#273AD6" flood-opacity=".14"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#softShadow)">
+    <circle cx="512" cy="212" r="110" stroke="url(#greenGrad)" stroke-width="68"/>
+    <circle cx="258" cy="690" r="118" stroke="url(#greenGrad)" stroke-width="68"/>
+    <circle cx="766" cy="690" r="118" stroke="url(#greenGrad)" stroke-width="68"/>
+    <path d="M512 322V448C512 480 490 508 460 518L350 556" stroke="url(#greenGrad)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M512 448C512 480 534 508 564 518L674 556" stroke="url(#greenGrad)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M372 690H652" stroke="url(#greenGrad)" stroke-width="72" stroke-linecap="round"/>
+  </g>
+
+</svg>

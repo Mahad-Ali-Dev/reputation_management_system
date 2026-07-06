@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+
+  <defs>
+    <linearGradient id="purple" x1="80" y1="60" x2="430" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#7257FF"/>
+      <stop offset="1" stop-color="#3E17F5"/>
+    </linearGradient>
+    <linearGradient id="green" x1="90" y1="80" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#42E3A6"/>
+      <stop offset="1" stop-color="#00B980"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="100" y1="70" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF3A9E"/>
+      <stop offset="1" stop-color="#ED0F62"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="90" y1="80" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFB02E"/>
+      <stop offset="1" stop-color="#FF7900"/>
+    </linearGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="12" stdDeviation="12" flood-color="#211566" flood-opacity=".18"/>
+    </filter>
+  </defs>
+
+  <circle cx="256" cy="256" r="190" fill="url(#green)" filter="url(#softShadow)"/>
+  <ellipse cx="186" cy="205" rx="26" ry="40" fill="white"/>
+  <ellipse cx="326" cy="205" rx="26" ry="40" fill="white"/>
+  <path d="M160 296c34 55 158 55 192 0" fill="none" stroke="white" stroke-width="34" stroke-linecap="round"/>
+</svg>

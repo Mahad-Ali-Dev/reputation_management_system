@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="greenGrad" x1="150" y1="120" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#18B879"/>
+      <stop offset="1" stop-color="#087F59"/>
+    </linearGradient>
+    <linearGradient id="csvGreen" x1="180" y1="150" x2="850" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#37C98A"/>
+      <stop offset="1" stop-color="#13A866"/>
+    </linearGradient>
+    <linearGradient id="navyStroke" x1="180" y1="130" x2="850" y2="880" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#30415E"/>
+      <stop offset="1" stop-color="#17243A"/>
+    </linearGradient>
+    <linearGradient id="redGrad" x1="160" y1="130" x2="860" y2="900" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E93045"/>
+      <stop offset="1" stop-color="#B61728"/>
+    </linearGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#2539C8" flood-opacity=".10"/>
+    </filter>
+    <filter id="greenShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#009B68" flood-opacity=".12"/>
+    </filter>
+    <filter id="redShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="18" stdDeviation="18" flood-color="#C61831" flood-opacity=".13"/>
+    </filter>
+  </defs>
+
+
+  <g filter="url(#greenShadow)">
+    <path d="M512 150V612" stroke="url(#greenGrad)" stroke-width="72" stroke-linecap="round"/>
+    <path d="M330 452L512 634L694 452" stroke="url(#greenGrad)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M234 720V822H790V720" stroke="url(#greenGrad)" stroke-width="72" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+
+</svg>

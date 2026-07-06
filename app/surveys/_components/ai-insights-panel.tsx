@@ -126,44 +126,74 @@ export function AiInsightsPanel({
   );
 }
 
+const KIT = "/assets/repulabs/customer-surveys/ai-insight";
+
+/**
+ * Kit "Unlock smart insights" card — two columns: value-prop benefits on the
+ * left, analytics-illustration + honest threshold/progress on the right. Shown
+ * below the 10-response minimum. Progress + copy come from the real response
+ * count; the illustration is decorative (never presented as real analysis).
+ */
 function GatedState({ responseCount }: { responseCount: number }) {
   const remaining = Math.max(0, MIN_RESPONSES_FOR_INSIGHTS - responseCount);
   const pct = Math.min(100, Math.round((responseCount / MIN_RESPONSES_FOR_INSIGHTS) * 100));
   return (
-    <div className="ds-card" style={{ padding: 40, textAlign: "center", maxWidth: 520, marginInline: "auto" }}>
-      <div
-        aria-hidden
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: 14,
-          margin: "0 auto 16px",
-          background: "var(--pri-50, rgba(37,99,235,0.08))",
-          color: "var(--pri)",
-          display: "grid",
-          placeItems: "center",
-        }}
-      >
-        <Icon name="brain" size={24} />
+    <div className="ds-card surv-ai-unlock">
+      <div className="surv-ai-unlock__left">
+        <span className="surv-eyebrow">
+          <Icon name="sparkle" size={11} />
+          AI INSIGHTS
+        </span>
+        <h2 className="surv-ai-h">
+          Unlock smart <em>insights</em>
+          <br />
+          from your surveys
+        </h2>
+        <p className="surv-ai-intro">
+          Our AI analyzes responses and highlights what matters most — so you can take action with
+          confidence.
+        </p>
+        <div className="surv-ai-benefits">
+          <AiBenefit art="discover" tile="surv-tile--violet" title="Discover key themes" body="Understand the top topics your customers care about." />
+          <AiBenefit art="green-smiley" tile="surv-tile--green" title="Spot strengths" body="See what's working well and worth celebrating." />
+          <AiBenefit art="improve" tile="surv-tile--orange" title="Find areas to improve" body="Identify pain points and fix issues faster." />
+        </div>
       </div>
-      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>
-        Collect at least {MIN_RESPONSES_FOR_INSIGHTS} responses to unlock AI Insights
-      </h3>
-      <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
-        You have <strong>{responseCount}</strong> so far — {remaining} more to go. Insights get more
-        accurate the more responses you gather.
-      </p>
-      <div
-        style={{
-          height: 8,
-          maxWidth: 280,
-          margin: "16px auto 0",
-          borderRadius: 999,
-          background: "var(--surface-3)",
-          overflow: "hidden",
-        }}
-      >
-        <div style={{ height: "100%", width: `${pct}%`, background: "var(--pri)", borderRadius: 999 }} />
+      <div className="surv-ai-unlock__right">
+        <img src="/assets/repulabs/customer-surveys/results/over-time.svg" alt="" aria-hidden style={{ width: "min(300px, 80%)" }} />
+        <h3 className="surv-ai-threshold-h">Collect at least {MIN_RESPONSES_FOR_INSIGHTS} responses</h3>
+        <p className="surv-ai-threshold-copy">
+          You have <strong>{responseCount}</strong> so far — {remaining} more to go. Insights get more
+          accurate the more responses you gather.
+        </p>
+        <span className="surv-ai-pill">
+          <Icon name="plus" size={12} />
+          {responseCount} / {MIN_RESPONSES_FOR_INSIGHTS} responses
+        </span>
+        <div
+          className="surv-ai-track"
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={MIN_RESPONSES_FOR_INSIGHTS}
+          aria-valuenow={responseCount}
+          aria-label="Responses collected for AI Insights"
+        >
+          <div className="surv-ai-track__fill" style={{ width: `${pct}%` }} />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AiBenefit({ art, tile, title, body }: { art: string; tile: string; title: string; body: string }) {
+  return (
+    <div className="surv-ai-benefit">
+      <span className={`surv-ai-benefit__tile ${tile}`} aria-hidden>
+        <img src={`${KIT}/${art}.svg`} alt="" />
+      </span>
+      <div>
+        <div className="surv-ai-benefit__title">{title}</div>
+        <div className="surv-ai-benefit__body">{body}</div>
       </div>
     </div>
   );

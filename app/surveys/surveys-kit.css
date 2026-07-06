@@ -1,0 +1,1601 @@
+/*
+ * Customer Surveys — design-kit re-skin (Module 11).
+ *
+ * The delivered "Customer Surveys" kit uses a clean light violet/lavender system
+ * (primary #3B17FD, canvas #F8FAFF, cool borders, restrained shadows). We keep
+ * OUR AppShellServer sidebar + topbar; only the page CONTENT is re-themed here.
+ *
+ * The kit :root palette is mapped onto a `.surv` scope so these values never
+ * leak into the shared design system. Every class is prefixed `.surv-`. Shared
+ * design-system blocks (.ph / .tabbar / .ds-card / .btn / .chip / .stat) are
+ * re-skinned ONLY under `.surv` via descendant selectors — no shared-file edit.
+ *
+ * Class prefix: `surv-`. All custom props are `--surv-*`.
+ */
+
+.surv {
+  /* ── kit palette (from the campaigns/incentives/results handoffs) ───────── */
+  --surv-canvas: #f8faff;
+  --surv-surface: #ffffff;
+  --surv-surface-soft: #fbfbfd;
+  --surv-ink: #0a0e27;
+  --surv-text: #30324b;
+  --surv-text-2: #565a6f;
+  --surv-muted: #6d7092;
+  --surv-muted-2: #8a90a8;
+  --surv-line: #e1e1e9;
+  --surv-line-soft: #e8eaf1;
+  --surv-divider: #eef1f6;
+
+  --surv-pri: #3b17fd;
+  --surv-pri-bright: #4727fb;
+  --surv-pri-mid: #645afb;
+  --surv-pri-soft: #eae9fb; /* active tab / nav pill */
+  --surv-pri-pale: #f0eefc; /* icon tiles / chips */
+  --surv-pri-border: #c9c5fb;
+  --surv-lavender: #dad7fc;
+
+  --surv-ok: #1ba965;
+  --surv-ok-soft: #d8f4e4;
+  --surv-ok-pale: #e3f8ec;
+  --surv-warn: #fb6316;
+  --surv-warn-soft: #fdeae2;
+  --surv-warn-pale: #fee7dc;
+  --surv-blue: #195dfa;
+  --surv-blue-soft: #dae5fc;
+  --surv-yellow: #fdcc72;
+  --surv-pink: #ec3476;
+  --surv-pink-soft: #fce5ef;
+  --surv-bad: #f13a36;
+  --surv-bad-soft: #fde9e7;
+
+  --surv-r-card: 14px;
+  --surv-r-ctrl: 8px;
+  --surv-shadow: 0 4px 14px rgba(17, 24, 39, 0.045);
+  --surv-shadow-pri: 0 5px 12px rgba(59, 23, 253, 0.18);
+
+  color: var(--surv-text);
+}
+
+/* Page-scoped flat-canvas override (Surveys only).
+ * The shared app-shell paints `.app--canvas` with a teal/gold `--grad-canvas`
+ * wash. The Surveys kit uses a FLAT cool-white canvas. Suppress the gradient
+ * only when this page's `.surv` content is present — :has keeps it page-scoped
+ * with no shared-file edit. Verified flat gutters left+right of the content. */
+.app--canvas:has(.surv) {
+  background-image: none;
+  background-color: var(--surv-canvas);
+}
+
+/* ── Page header re-skin (kit hero) ─────────────────────────────────────── */
+.surv .ph__title {
+  color: var(--surv-ink);
+  letter-spacing: -0.02em;
+}
+.surv .ph__sub {
+  color: var(--surv-text);
+  max-width: 560px;
+  font-size: 13.5px;
+  line-height: 1.6;
+}
+.surv .ph__kicker {
+  font-family: inherit;
+  color: var(--surv-pri);
+  background: transparent;
+  padding: 0;
+  font-weight: 700;
+  font-size: 10.5px;
+  letter-spacing: 0.06em;
+  gap: 6px;
+}
+.surv .ph__kicker::before {
+  background: var(--surv-pri);
+  box-shadow: none;
+  width: 5px;
+  height: 5px;
+}
+
+/* Hero clipboard illustration — sits behind/right of the header, decorative. */
+.surv-hero {
+  position: relative;
+}
+.surv-hero__art {
+  position: absolute;
+  right: -8px;
+  top: -14px;
+  width: min(430px, 38%);
+  height: 236px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+.surv-hero__art img {
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  display: block;
+  /* the kit hero PNG has a transparent bg already; multiply guards any halo */
+  mix-blend-mode: multiply;
+}
+/* keep hero copy clear of the artwork on wide screens */
+@media (min-width: 901px) {
+  .surv .ph {
+    padding-right: 380px;
+  }
+}
+.surv .ph {
+  position: relative;
+  z-index: 1;
+}
+@media (max-width: 900px) {
+  .surv-hero__art {
+    display: none;
+  }
+}
+
+/* ── Primary + navy buttons (kit) ───────────────────────────────────────── */
+.surv .btn--pri {
+  background: linear-gradient(135deg, var(--surv-pri-bright) 0%, #3119fb 100%);
+  box-shadow: var(--surv-shadow-pri);
+  border-radius: var(--surv-r-ctrl);
+}
+.surv .btn--pri::before {
+  display: none;
+}
+.surv .btn--pri:hover {
+  filter: brightness(1.06);
+}
+/* dark "New survey" pill used on some kit sub-views */
+.surv-btn-navy {
+  background: #020827;
+  color: #fff;
+  border-radius: 999px;
+}
+.surv-btn-navy:hover {
+  background: #151b3b;
+}
+
+/* ── Tab bar re-skin (lavender active pill, kit) ────────────────────────── */
+.surv .tabbar {
+  background: var(--surv-surface);
+  border: 1px solid var(--surv-line);
+  border-radius: 13px;
+  box-shadow: var(--surv-shadow);
+  padding: 9px 12px;
+  gap: 10px;
+}
+.surv .tabbar .tabs__t {
+  color: var(--surv-text);
+  font-weight: 550;
+  font-size: 13px;
+  padding: 8px 14px;
+  border-radius: var(--surv-r-ctrl);
+}
+.surv .tabbar .tabs__t:hover {
+  background: var(--surv-pri-pale);
+  color: var(--surv-ink);
+}
+.surv .tabbar .tabs__t.is-active {
+  background: var(--surv-pri-soft);
+  color: var(--surv-pri);
+  font-weight: 600;
+}
+.surv .tabbar .tabs__t.is-active svg {
+  color: var(--surv-pri);
+}
+.surv .tabbar .chip--info {
+  background: var(--surv-pri-pale);
+  color: var(--surv-muted);
+}
+
+/* right-aligned outlined action inside the tab row (New automation / library) */
+.surv-tab-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--surv-pri-border);
+  border-radius: var(--surv-r-ctrl);
+  background: var(--surv-surface);
+  color: var(--surv-pri);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.surv-tab-action:hover {
+  background: var(--surv-pri-pale);
+}
+
+/* ── Cards (kit surface) ────────────────────────────────────────────────── */
+.surv .ds-card {
+  background: var(--surv-surface);
+  border-color: var(--surv-line);
+  border-radius: var(--surv-r-card);
+  box-shadow: var(--surv-shadow);
+}
+.surv-card--tinted {
+  border-color: var(--surv-pri-border) !important;
+}
+
+/* ── KPI metric cards (icon tile + value + helper pill) ─────────────────── */
+.surv-kpis {
+  display: grid;
+  gap: 15px;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+.surv-kpi {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 18px;
+  padding: 20px 22px;
+  min-height: 118px;
+  position: relative;
+  overflow: hidden;
+}
+.surv-kpi__icon {
+  flex: none;
+  width: 61px;
+  height: 61px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+}
+.surv-kpi__icon img,
+.surv-kpi__icon svg {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+}
+.surv-kpi--violet .surv-kpi__icon {
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+}
+.surv-kpi--green .surv-kpi__icon {
+  background: var(--surv-ok-pale);
+  color: var(--surv-ok);
+}
+.surv-kpi--blue .surv-kpi__icon {
+  background: var(--surv-blue-soft);
+  color: var(--surv-blue);
+}
+.surv-kpi--orange .surv-kpi__icon {
+  background: var(--surv-warn-soft);
+  color: var(--surv-warn);
+}
+.surv-kpi__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surv-text);
+}
+.surv-kpi__value {
+  font-size: 30px;
+  line-height: 1.1;
+  font-weight: 700;
+  color: var(--surv-ink);
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  margin: 2px 0 6px;
+}
+.surv-kpi__sub {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--surv-muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.surv-kpi__sub--up {
+  color: var(--surv-ok);
+}
+.surv-kpi__pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.surv-kpi__pill--violet {
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+}
+.surv-kpi__pill--green {
+  background: var(--surv-ok-soft);
+  color: var(--surv-ok);
+}
+.surv-kpi__pill--orange {
+  background: var(--surv-warn-soft);
+  color: var(--surv-warn);
+}
+
+/* ── Section heading (card titles) ──────────────────────────────────────── */
+.surv-card-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--surv-ink);
+}
+.surv-card-sub {
+  margin: 4px 0 0;
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--surv-muted);
+}
+
+/* small status pill (On) */
+.surv-pill-on {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--surv-ok-soft);
+  color: var(--surv-ok);
+}
+
+/* ── Campaigns landing: routing + AI themes row ─────────────────────────── */
+.surv-grid-70-30 {
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+@media (max-width: 1100px) {
+  .surv-grid-70-30 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.surv-routes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+@media (max-width: 620px) {
+  .surv-routes {
+    grid-template-columns: 1fr;
+  }
+}
+.surv-route {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 11px;
+  border: 1px solid transparent;
+  text-decoration: none;
+  color: inherit;
+}
+.surv-route--happy {
+  background: #f2fcf6;
+  border-color: #c4ecd4;
+}
+.surv-route--unhappy {
+  background: #fff4f2;
+  border-color: #f8d4cd;
+}
+.surv-route__icon {
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+}
+.surv-route--happy .surv-route__icon {
+  background: var(--surv-ok-pale);
+  color: var(--surv-ok);
+}
+.surv-route--unhappy .surv-route__icon {
+  background: var(--surv-bad-soft);
+  color: var(--surv-bad);
+}
+.surv-route__title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--surv-ink);
+}
+.surv-route__sub {
+  font-size: 10.5px;
+  color: var(--surv-muted);
+  margin-top: 2px;
+}
+.surv-route__count {
+  margin-left: auto;
+  text-align: right;
+  flex: none;
+}
+.surv-route__count b {
+  display: block;
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--surv-ink);
+  font-variant-numeric: tabular-nums;
+}
+.surv-route__count span {
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--surv-muted-2);
+}
+.surv-route-foot {
+  text-align: center;
+  font-size: 11.5px;
+  color: var(--surv-muted);
+  margin: 12px 0 0;
+}
+
+/* ── AI themes rail (bars + donut) ──────────────────────────────────────── */
+.surv-themes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.surv-theme-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.surv-theme-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: none;
+}
+.surv-theme-label {
+  color: var(--surv-text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.surv-theme-track {
+  grid-column: 2;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--surv-divider);
+  overflow: hidden;
+}
+.surv-theme-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.surv-theme-pct {
+  font-weight: 600;
+  color: var(--surv-ink);
+  font-variant-numeric: tabular-nums;
+}
+.surv-themes-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
+  padding: 8px 4px;
+}
+.surv-themes-empty img {
+  width: min(240px, 90%);
+  height: auto;
+  mix-blend-mode: multiply;
+}
+
+/* donut center label overlay */
+.surv-donut {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  flex: none;
+}
+.surv-donut__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.surv-donut__center b {
+  font-size: 20px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--surv-ink);
+}
+.surv-donut__center span {
+  font-size: 9px;
+  color: var(--surv-muted);
+}
+
+/* ── Campaign / survey card (kit) ───────────────────────────────────────── */
+.surv-camp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.surv-camp {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 20px 22px;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  overflow: hidden;
+}
+.surv-camp__eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--surv-muted);
+}
+.surv-camp__name {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--surv-ink);
+  margin: 4px 0 2px;
+}
+.surv-camp__meta {
+  font-size: 11px;
+  color: var(--surv-muted);
+}
+.surv-camp__tiles {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+.surv-camp__tile {
+  min-width: 96px;
+  padding: 10px 12px;
+  border-radius: 10px;
+}
+.surv-camp__tile--blue {
+  background: var(--surv-blue-soft);
+}
+.surv-camp__tile--green {
+  background: var(--surv-ok-soft);
+}
+.surv-camp__tile-lbl {
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--surv-muted);
+}
+.surv-camp__tile-val {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--surv-ink);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.1;
+}
+.surv-camp__art {
+  align-self: center;
+  width: 120px;
+  flex: none;
+}
+.surv-camp__art img {
+  width: 100%;
+  height: auto;
+  mix-blend-mode: multiply;
+}
+.surv-camp__open {
+  position: absolute;
+  right: 18px;
+  bottom: 18px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: 1px solid var(--surv-line);
+  background: var(--surv-surface);
+  display: grid;
+  place-items: center;
+  color: var(--surv-pri);
+}
+
+/* ── Generic kit empty state (illustration + copy centered) ─────────────── */
+.surv-empty {
+  text-align: center;
+  padding: 44px 24px;
+}
+.surv-empty img {
+  width: min(300px, 80%);
+  height: auto;
+  margin: 0 auto 8px;
+  display: block;
+  mix-blend-mode: multiply;
+}
+.surv-empty h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--surv-ink);
+}
+.surv-empty p {
+  margin: 8px auto 0;
+  max-width: 420px;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--surv-muted);
+}
+.surv-empty__cta {
+  margin-top: 22px;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+/* ── Incentives: redeem form + coupons table ────────────────────────────── */
+.surv-redeem {
+  display: grid;
+  grid-template-columns: 118px minmax(0, 1fr);
+  gap: 28px;
+  padding: 22px 25px;
+  align-items: start;
+}
+@media (max-width: 900px) {
+  .surv-redeem {
+    grid-template-columns: 96px minmax(0, 1fr);
+    gap: 18px;
+  }
+}
+.surv-redeem__art {
+  width: 118px;
+  height: 118px;
+  border-radius: 999px;
+  background: var(--surv-pri-pale);
+  display: grid;
+  place-items: center;
+}
+.surv-redeem__art img {
+  width: 76px;
+  height: 76px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.surv-redeem__fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 15px;
+  margin-top: 14px;
+}
+@media (max-width: 900px) {
+  .surv-redeem__fields {
+    grid-template-columns: 1fr;
+  }
+}
+.surv-field-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surv-ink);
+  margin-bottom: 4px;
+  display: block;
+}
+.surv-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid var(--surv-line);
+  border-radius: var(--surv-r-ctrl);
+  background: var(--surv-surface);
+  font-size: 13px;
+  color: var(--surv-text);
+}
+.surv-input:focus-visible {
+  outline: 2px solid var(--surv-pri);
+  outline-offset: 1px;
+  border-color: var(--surv-pri);
+}
+
+/* kit-styled tables (incentives / results / automations) */
+.surv-table-wrap {
+  overflow-x: auto;
+}
+.surv-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+}
+.surv-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--surv-text-2);
+  background: var(--surv-surface-soft);
+  white-space: nowrap;
+}
+.surv-table td {
+  padding: 11px 14px;
+  border-top: 1px solid var(--surv-line-soft);
+  color: var(--surv-text);
+  vertical-align: middle;
+}
+.surv-table tbody tr:hover {
+  background: var(--surv-surface-soft);
+}
+.surv-code-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  font-family: var(--f-mono, monospace);
+}
+.surv-status {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 9px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.surv-status--redeemed,
+.surv-status--active {
+  background: var(--surv-ok-soft);
+  color: var(--surv-ok);
+}
+.surv-status--expired {
+  background: var(--surv-warn-soft);
+  color: var(--surv-warn);
+}
+.surv-status--scheduled {
+  background: var(--surv-pri-soft);
+  color: var(--surv-pri);
+}
+
+/* decorative ticket mark top-right of recent-coupons card */
+.surv-card-deco {
+  position: absolute;
+  top: 14px;
+  right: 18px;
+  width: 74px;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.surv-card-deco img {
+  width: 100%;
+  height: auto;
+  mix-blend-mode: multiply;
+}
+
+/* ── Automations table (kit) ────────────────────────────────────────────── */
+.surv-auto-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.surv-auto-tile {
+  flex: none;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+}
+.surv-auto-tile img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.surv-auto-primary {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surv-ink);
+}
+.surv-auto-secondary {
+  font-size: 10.5px;
+  color: var(--surv-muted);
+}
+.surv-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+.surv-status--dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 9px;
+  border-radius: 999px;
+  background: var(--surv-ok-soft);
+  color: var(--surv-ok);
+  font-size: 10.5px;
+  font-weight: 600;
+}
+.surv-status--dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.surv-status--dot.is-paused {
+  background: var(--surv-warn-soft);
+  color: var(--surv-warn);
+}
+
+.surv-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.surv-toolbar .surv-input {
+  height: 36px;
+}
+.surv-viewall {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--surv-pri);
+  font-size: 12.5px;
+  font-weight: 600;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+  text-decoration: none;
+}
+
+/* ── Performance / benefit cards (automation empty + active) ────────────── */
+.surv-section-head {
+  text-align: center;
+  margin: 6px 0 4px;
+}
+.surv-section-head h3 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 700;
+  color: var(--surv-ink);
+  letter-spacing: -0.01em;
+}
+.surv-section-head p {
+  margin: 4px 0 0;
+  font-size: 13px;
+  color: var(--surv-muted);
+}
+.surv-perf-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 1100px) {
+  .surv-perf-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .surv-perf-grid {
+    grid-template-columns: 1fr;
+  }
+}
+.surv-perf {
+  padding: 18px 20px;
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+}
+.surv-perf__tile {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 12px;
+}
+.surv-perf__tile img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.surv-perf__label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--surv-text);
+}
+.surv-perf__value {
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--surv-ink);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.surv-perf__meta {
+  font-size: 10px;
+  color: var(--surv-muted);
+}
+
+/* benefit cards (icon tile top-left) */
+.surv-benefits {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+@media (max-width: 1100px) {
+  .surv-benefits {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .surv-benefits {
+    grid-template-columns: 1fr;
+  }
+}
+.surv-benefit {
+  padding: 17px;
+}
+.surv-benefit__tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+  margin-bottom: 10px;
+}
+.surv-benefit__tile img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.surv-benefit__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--surv-ink);
+}
+.surv-benefit__body {
+  font-size: 11px;
+  line-height: 1.55;
+  color: var(--surv-muted);
+  margin-top: 4px;
+}
+
+.surv-tile--violet {
+  background: var(--surv-pri-pale);
+}
+.surv-tile--green {
+  background: var(--surv-ok-pale);
+}
+.surv-tile--yellow {
+  background: #fdf2d6;
+}
+.surv-tile--blue {
+  background: var(--surv-blue-soft);
+}
+.surv-tile--orange {
+  background: var(--surv-warn-soft);
+}
+
+/* ── Automation empty-state split card (workflow + copy) ────────────────── */
+.surv-auto-empty {
+  display: grid;
+  grid-template-columns: 52% 48%;
+  align-items: center;
+  min-height: 400px;
+  overflow: hidden;
+  position: relative;
+  background:
+    radial-gradient(circle at 24% 51%, rgba(118, 103, 247, 0.08), transparent 34%),
+    linear-gradient(180deg, #ffffff 0%, #fcfbff 100%);
+}
+@media (max-width: 900px) {
+  .surv-auto-empty {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+.surv-auto-empty__art {
+  padding: 32px;
+  display: grid;
+  place-items: center;
+}
+.surv-auto-empty__art img {
+  width: min(360px, 100%);
+  height: auto;
+  mix-blend-mode: multiply;
+}
+.surv-auto-empty__body {
+  padding: 32px 40px 32px 8px;
+}
+@media (max-width: 900px) {
+  .surv-auto-empty__body {
+    padding: 8px 24px 32px;
+  }
+}
+.surv-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.surv-auto-empty__title {
+  margin: 14px 0 0;
+  font-size: 29px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--surv-ink);
+}
+.surv-auto-empty__desc {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--surv-text);
+}
+.surv-auto-empty__cta {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  align-items: flex-start;
+  max-width: 280px;
+}
+@media (max-width: 900px) {
+  .surv-auto-empty__cta {
+    align-items: center;
+    margin-inline: auto;
+  }
+}
+.surv-auto-empty__cta .btn,
+.surv-auto-empty__cta .surv-tab-action {
+  width: 100%;
+  justify-content: center;
+}
+
+/* ── AI Insights unlock card (two-column) ───────────────────────────────── */
+.surv-ai-unlock {
+  display: grid;
+  grid-template-columns: 425px minmax(0, 1fr);
+  min-height: 520px;
+  background:
+    radial-gradient(circle at 69% 37%, rgba(105, 90, 229, 0.08), transparent 30%),
+    linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+  overflow: hidden;
+}
+@media (max-width: 980px) {
+  .surv-ai-unlock {
+    grid-template-columns: 1fr;
+  }
+}
+.surv-ai-unlock__left {
+  padding: 40px 42px;
+  border-right: 1px solid var(--surv-line-soft);
+}
+@media (max-width: 980px) {
+  .surv-ai-unlock__left {
+    border-right: 0;
+    border-bottom: 1px solid var(--surv-line-soft);
+  }
+}
+.surv-ai-h {
+  margin: 14px 0 0;
+  font-size: 25px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: var(--surv-ink);
+}
+.surv-ai-h em {
+  color: var(--surv-pri);
+  font-style: normal;
+}
+.surv-ai-intro {
+  margin: 13px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--surv-text-2);
+}
+.surv-ai-benefits {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.surv-ai-benefit {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid var(--surv-line-soft);
+  border-radius: 11px;
+  background: var(--surv-surface);
+}
+.surv-ai-benefit__tile {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  display: grid;
+  place-items: center;
+}
+.surv-ai-benefit__tile img {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.surv-ai-benefit__title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--surv-ink);
+}
+.surv-ai-benefit__body {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--surv-muted);
+  margin-top: 2px;
+}
+.surv-ai-unlock__right {
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.surv-ai-unlock__right img {
+  width: min(443px, 100%);
+  height: auto;
+  mix-blend-mode: multiply;
+}
+.surv-ai-threshold-h {
+  margin: 8px 0 0;
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--surv-ink);
+  letter-spacing: -0.01em;
+}
+.surv-ai-threshold-copy {
+  margin: 8px auto 0;
+  max-width: 460px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--surv-muted);
+}
+.surv-ai-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 18px 0 0;
+  padding: 7px 16px;
+  border-radius: 999px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  font-size: 12px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.surv-ai-track {
+  width: min(432px, 100%);
+  height: 8px;
+  margin: 17px auto 0;
+  border-radius: 999px;
+  background: var(--surv-pri-pale);
+  overflow: hidden;
+}
+.surv-ai-track__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--surv-pri);
+}
+
+/* ── Results: chart cards + sentiment KPIs ──────────────────────────────── */
+.surv-charts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch;
+}
+@media (max-width: 1000px) {
+  .surv-charts {
+    grid-template-columns: 1fr;
+  }
+}
+.surv-chart-card {
+  padding: 20px 22px;
+  position: relative;
+}
+.surv-chart-h {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--surv-ink);
+}
+.surv-chart-tile {
+  position: absolute;
+  top: 18px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  display: grid;
+  place-items: center;
+}
+.surv-chart-tile img {
+  width: 22px;
+  height: 22px;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+.surv-foot-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 14px;
+  border-radius: 999px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  font-size: 11.5px;
+  font-weight: 600;
+  margin: 14px auto 0;
+}
+.surv-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.surv-legend-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+.surv-legend-row b {
+  color: var(--surv-ink);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* sentiment KPI cards (AI Insights active) — tinted surfaces */
+.surv-sentiment {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+@media (max-width: 900px) {
+  .surv-sentiment {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+.surv-sent {
+  padding: 18px 20px;
+  border-radius: var(--surv-r-card);
+  border: 1px solid var(--surv-line);
+  position: relative;
+}
+.surv-sent--total {
+  background: var(--surv-pri-pale);
+  border-color: var(--surv-pri-border);
+}
+.surv-sent--pos {
+  background: var(--surv-ok-pale);
+  border-color: #bfe9d3;
+}
+.surv-sent--neu {
+  background: var(--surv-warn-pale);
+  border-color: #f9d3bf;
+}
+.surv-sent--neg {
+  background: var(--surv-pink-soft);
+  border-color: #f6c9dc;
+}
+.surv-sent__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--surv-text);
+}
+.surv-sent__value {
+  font-size: 27px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--surv-ink);
+  font-variant-numeric: tabular-nums;
+  margin-top: 2px;
+}
+.surv-sent__value small {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--surv-text-2);
+}
+.surv-sent__delta {
+  font-size: 10.5px;
+  font-weight: 500;
+  margin-top: 6px;
+}
+.surv-sent__icon {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  width: 44px;
+  height: 44px;
+}
+.surv-sent__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  mix-blend-mode: multiply;
+}
+
+/* individual-responses summary chips row */
+.surv-chips {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.surv-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--surv-line-soft);
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--surv-surface);
+}
+.surv-chip b {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* rating stars */
+.surv-stars {
+  display: inline-flex;
+  gap: 1px;
+  vertical-align: middle;
+}
+.surv-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #fff;
+  flex: none;
+}
+.surv-view-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  border: 1px solid var(--surv-pri-border);
+  border-radius: 7px;
+  background: var(--surv-surface);
+  color: var(--surv-pri);
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.surv-view-btn:hover {
+  background: var(--surv-pri-pale);
+}
+
+/* results empty: dashed panel */
+.surv-dashed {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+  align-items: center;
+  gap: 24px;
+  border: 1px dashed var(--surv-pri-border);
+  border-radius: 12px;
+  padding: 24px;
+  margin: 14px 16px 16px;
+}
+@media (max-width: 820px) {
+  .surv-dashed {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}
+.surv-dashed__art {
+  display: grid;
+  place-items: center;
+}
+.surv-dashed__art img {
+  width: min(340px, 100%);
+  height: auto;
+  mix-blend-mode: multiply;
+}
+.surv-dashed h3 {
+  margin: 0;
+  font-size: 25px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--surv-ink);
+}
+.surv-dashed p {
+  margin: 8px 0 16px;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--surv-muted);
+}
+
+/* ── Templates: card grid + benefits strip ──────────────────────────────── */
+.surv-tpl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+.surv-tpl {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.surv-tpl.is-featured {
+  border: 2px solid var(--surv-pri) !important;
+  box-shadow: 0 4px 16px rgba(67, 33, 253, 0.1) !important;
+}
+.surv-tpl__top {
+  display: flex;
+  gap: 16px;
+}
+.surv-tpl__tile {
+  flex: none;
+  width: 60px;
+  height: 60px;
+  border-radius: 14px;
+  display: grid;
+  place-items: center;
+}
+.surv-tpl__tile img,
+.surv-tpl__tile svg {
+  width: 30px;
+  height: 30px;
+  object-fit: contain;
+}
+.surv-tpl__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--surv-ink);
+  letter-spacing: -0.01em;
+}
+.surv-tpl__desc {
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--surv-text-2);
+  margin-top: 4px;
+}
+.surv-tpl__tags {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+}
+.surv-tag {
+  display: inline-flex;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.surv-tpl__actions {
+  display: flex;
+  gap: 4px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--surv-line-soft);
+  align-items: center;
+}
+.surv-featured-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 8px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  font-size: 11px;
+  font-weight: 600;
+}
+.surv-tpl__bookmark {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  color: var(--surv-pri);
+}
+.surv-benefits-strip {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 18px 24px;
+  flex-wrap: wrap;
+}
+.surv-benefits-strip__lead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 320px;
+  flex: 1;
+}
+.surv-benefits-strip__icon {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: var(--surv-pri-pale);
+  display: grid;
+  place-items: center;
+  color: var(--surv-pri);
+}
+.surv-benefits-strip__cols {
+  display: flex;
+  gap: 28px;
+  flex-wrap: wrap;
+}
+.surv-benefits-strip__col {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.surv-mini-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--surv-pri);
+}
+.surv-mini-sub {
+  font-size: 11px;
+  color: var(--surv-muted);
+}
+
+/* hide low-priority cells on narrow viewports (recent-responses status col) */
+@media (max-width: 560px) {
+  .surv-hide-sm {
+    display: none;
+  }
+}
+
+/* ── tab-row wrapper (tabs + right action share a line) ─────────────────── */
+.surv-tabrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.surv-tabrow .surv-tabbar-slot {
+  flex: 1;
+  min-width: 0;
+}

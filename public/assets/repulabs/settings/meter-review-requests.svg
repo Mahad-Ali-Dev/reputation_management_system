@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+<defs>
+  <linearGradient id="violet" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#7D6BFF"/>
+    <stop offset="1" stop-color="#2D3BFF"/>
+  </linearGradient>
+  <linearGradient id="blueviolet" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#4A8BFF"/>
+    <stop offset="1" stop-color="#6737F8"/>
+  </linearGradient>
+  <linearGradient id="green" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#14C98B"/>
+    <stop offset="1" stop-color="#05875F"/>
+  </linearGradient>
+  <linearGradient id="orange" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FFB045"/>
+    <stop offset="1" stop-color="#FF5B00"/>
+  </linearGradient>
+  <linearGradient id="cyan" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#08D5D8"/>
+    <stop offset="1" stop-color="#2F55FF"/>
+  </linearGradient>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#4857D9" flood-opacity=".18"/>
+  </filter>
+  <filter id="tinyShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="10" stdDeviation="13" flood-color="#2E4BD6" flood-opacity=".18"/>
+  </filter>
+</defs>
+
+  <rect x="148" y="150" width="728" height="728" rx="170" fill="#E9FFF5" opacity=".75"/>
+  <path d="M292 306H602C676 306 736 366 736 440V535C736 609 676 669 602 669H472L330 765V668H292C218 668 158 608 158 534V440C158 366 218 306 292 306Z" stroke="url(#green)" stroke-width="70" stroke-linejoin="round" stroke-linecap="round" filter="url(#tinyShadow)"/>
+  <path d="M370 475H595" stroke="url(#green)" stroke-width="58" stroke-linecap="round"/>
+  <path d="M370 555H510" stroke="url(#green)" stroke-width="58" stroke-linecap="round"/>
+</svg>

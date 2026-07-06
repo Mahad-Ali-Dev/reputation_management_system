@@ -1,12 +1,14 @@
 import type { SurveysOverview } from "@/lib/surveys/queries";
 
 /**
- * Server-friendly presentational stat-card row for the Surveys tab (Module 11).
- * Pure props; reuses the `.ds-card` / `.stat` classes used across the app. Shows
- * Total Sent, Completed (+ rate), Avg NPS (0–100), CSAT (when rating-type
- * answers exist — tile is omitted otherwise), and Scheduled. The `.svl-kpis`
- * auto-fit grid absorbs the 4-vs-5 tile difference.
+ * KPI metric row for the Campaigns tab (Module 11), styled to the "Customer
+ * Surveys" kit: a coloured icon tile + big value + helper line per card
+ * (Total sent / Completed / Avg NPS / Scheduled), plus an optional CSAT tile
+ * when rating-type answers exist. Icons are the real kit assets. Pure props.
  */
+
+const ASSET = "/assets/repulabs/customer-surveys/campaigns";
+
 export function StatCards({
   overview,
   csat,
@@ -16,54 +18,70 @@ export function StatCards({
   csat?: { score: number; count: number } | null;
 }) {
   return (
-    <div className="svl-kpis">
-      <Stat label="Total sent" value={overview.totalSent.toLocaleString()} sub="Survey invites · all time" />
-      <Stat
+    <div className="surv-kpis">
+      <Kpi
+        tone="violet"
+        icon={`${ASSET}/total-sent.svg`}
+        label="Total sent"
+        value={overview.totalSent.toLocaleString()}
+        sub="Survey invites · all time"
+      />
+      <Kpi
+        tone="green"
+        icon={`${ASSET}/completed.svg`}
         label="Completed"
         value={overview.completed.toLocaleString()}
         sub={`${overview.completionRate}% completion rate`}
       />
-      <Stat
+      <Kpi
+        tone="blue"
+        icon={`${ASSET}/avg-nps.svg`}
         label="Avg NPS"
         value={overview.avgNps === null ? "—" : String(overview.avgNps)}
         sub="% promoters − % detractors"
-        accent
       />
       {csat ? (
-        <Stat
+        <Kpi
+          tone="green"
+          icon={`${ASSET}/completed.svg`}
           label="CSAT"
           value={`${csat.score}%`}
           sub={`${csat.count.toLocaleString()} rating answer${csat.count === 1 ? "" : "s"} · 4–5★`}
-          accent
         />
       ) : null}
-      <Stat label="Scheduled" value={overview.scheduled.toLocaleString()} sub="Awaiting response" />
+      <Kpi
+        tone="orange"
+        icon={`${ASSET}/scheduled.svg`}
+        label="Scheduled"
+        value={overview.scheduled.toLocaleString()}
+        sub="Awaiting response"
+      />
     </div>
   );
 }
 
-function Stat({
+function Kpi({
+  tone,
+  icon,
   label,
   value,
   sub,
-  accent,
 }: {
+  tone: "violet" | "green" | "blue" | "orange";
+  icon: string;
   label: string;
   value: string;
   sub: string;
-  accent?: boolean;
 }) {
   return (
-    <div className="ds-card">
-      <div className="stat">
-        <div className="stat__label">{label}</div>
-        <div
-          className="stat__value"
-          style={{ fontSize: 28, color: accent ? "var(--pri)" : undefined }}
-        >
-          {value}
-        </div>
-        <div className="stat__delta">{sub}</div>
+    <div className={`ds-card surv-kpi surv-kpi--${tone}`}>
+      <span className="surv-kpi__icon" aria-hidden>
+        <img src={icon} alt="" />
+      </span>
+      <div>
+        <div className="surv-kpi__label">{label}</div>
+        <div className="surv-kpi__value">{value}</div>
+        <div className="surv-kpi__sub">{sub}</div>
       </div>
     </div>
   );

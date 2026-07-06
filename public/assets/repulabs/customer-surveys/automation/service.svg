@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+
+  <defs>
+    <linearGradient id="purple" x1="80" y1="60" x2="430" y2="450" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#6B49FF"/>
+      <stop offset="1" stop-color="#4A21F5"/>
+    </linearGradient>
+    <linearGradient id="green" x1="90" y1="70" x2="430" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#18C991"/>
+      <stop offset="1" stop-color="#04B47D"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="100" y1="60" x2="400" y2="440" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFC947"/>
+      <stop offset="1" stop-color="#FFAA00"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="90" y1="70" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2D8CFF"/>
+      <stop offset="1" stop-color="#0967F2"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="90" y1="70" x2="420" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#F64F93"/>
+      <stop offset="1" stop-color="#E92870"/>
+    </linearGradient>
+    <filter id="softShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#22145C" flood-opacity=".16"/>
+    </filter>
+  </defs>
+
+  <path fill="url(#green)" filter="url(#softShadow)" d="M256 92c111 0 201 75 201 167s-90 167-201 167c-29 0-57-5-82-15l-83 42c-17 9-35-9-26-26l35-70c-28-28-45-62-45-98 0-92 90-167 201-167z"/>
+  <circle cx="186" cy="258" r="23" fill="#fff"/>
+  <circle cx="256" cy="258" r="23" fill="#fff"/>
+  <circle cx="326" cy="258" r="23" fill="#fff"/>
+</svg>

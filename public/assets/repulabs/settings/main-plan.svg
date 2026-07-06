@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1200" viewBox="0 0 1800 1200" fill="none">
+
+<defs>
+  <linearGradient id="violet" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#7D6BFF"/>
+    <stop offset="1" stop-color="#2D3BFF"/>
+  </linearGradient>
+  <linearGradient id="blueviolet" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#4A8BFF"/>
+    <stop offset="1" stop-color="#6737F8"/>
+  </linearGradient>
+  <linearGradient id="green" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#14C98B"/>
+    <stop offset="1" stop-color="#05875F"/>
+  </linearGradient>
+  <linearGradient id="orange" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#FFB045"/>
+    <stop offset="1" stop-color="#FF5B00"/>
+  </linearGradient>
+  <linearGradient id="cyan" x1="0" y1="0" x2="1024" y2="1024" gradientUnits="userSpaceOnUse">
+    <stop offset="0" stop-color="#08D5D8"/>
+    <stop offset="1" stop-color="#2F55FF"/>
+  </linearGradient>
+  <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="20" stdDeviation="24" flood-color="#4857D9" flood-opacity=".18"/>
+  </filter>
+  <filter id="tinyShadow" x="-30%" y="-30%" width="160%" height="160%">
+    <feDropShadow dx="0" dy="10" stdDeviation="13" flood-color="#2E4BD6" flood-opacity=".18"/>
+  </filter>
+</defs>
+
+  <defs>
+    <linearGradient id="cardGrad" x1="380" y1="210" x2="1390" y2="720" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#775DFF"/>
+      <stop offset=".55" stop-color="#4658F7"/>
+      <stop offset="1" stop-color="#3725C8"/>
+    </linearGradient>
+    <linearGradient id="cube" x1="170" y1="620" x2="560" y2="1040" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#DAD7FF"/>
+      <stop offset="1" stop-color="#8579FF"/>
+    </linearGradient>
+    <linearGradient id="leaf" x1="1220" y1="565" x2="1580" y2="1040" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#23D5B4"/>
+      <stop offset="1" stop-color="#0C7F5E"/>
+    </linearGradient>
+  </defs>
+  <g filter="url(#soft)">
+    <rect x="430" y="205" width="930" height="560" rx="70" transform="rotate(7 430 205)" fill="url(#cardGrad)"/>
+    <rect x="535" y="335" width="88" height="72" rx="14" transform="rotate(7 535 335)" fill="#FFD45B"/>
+    <rect x="705" y="352" width="395" height="38" rx="19" transform="rotate(7 705 352)" fill="#B9C0FF"/>
+    <rect x="705" y="448" width="525" height="38" rx="19" transform="rotate(7 705 448)" fill="#A1AAFF"/>
+    <rect x="705" y="548" width="285" height="38" rx="19" transform="rotate(7 705 548)" fill="#C8CEFF"/>
+  </g>
+  <g filter="url(#soft)">
+    <path d="M248 760L430 658L610 760L429 864L248 760Z" fill="#E9E7FF"/>
+    <path d="M248 760L430 864V1068L248 962V760Z" fill="url(#cube)"/>
+    <path d="M610 760L430 864V1068L610 962V760Z" fill="#A9A0FF"/>
+    <path d="M430 658V864" stroke="#FFFFFF" stroke-width="12" opacity=".65"/>
+  </g>
+  <g filter="url(#soft)">
+    <ellipse cx="1372" cy="1020" rx="205" ry="58" fill="#C7D9FF" opacity=".45"/>
+    <path d="M1368 965C1324 840 1307 724 1320 620" stroke="#12946F" stroke-width="24" stroke-linecap="round"/>
+    <path d="M1342 784C1226 743 1192 617 1260 517C1370 582 1405 700 1342 784Z" fill="url(#leaf)"/>
+    <path d="M1386 806C1498 728 1640 735 1712 827C1595 905 1480 895 1386 806Z" fill="url(#leaf)"/>
+    <path d="M1372 716C1460 640 1497 524 1448 423C1357 502 1322 615 1372 716Z" fill="#26C5A7"/>
+    <path d="M1220 957H1540L1498 1140H1263L1220 957Z" fill="#D7E3FF"/>
+    <path d="M1263 1140H1498C1458 1180 1323 1180 1263 1140Z" fill="#B8C9FF"/>
+  </g>
+</svg>

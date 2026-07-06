@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Red unhappy badge icon">
+  <defs>
+    <radialGradient id="pinkBg" cx="50%" cy="45%" r="70%">
+      <stop offset="0" stop-color="#FFE6E8"/>
+      <stop offset="1" stop-color="#FFD6DA"/>
+    </radialGradient>
+    <linearGradient id="redGrad" x1="180" y1="160" x2="330" y2="360" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FF1D1D"/>
+      <stop offset="1" stop-color="#EF0000"/>
+    </linearGradient>
+    <filter id="sadShadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="15" stdDeviation="16" flood-color="#F01824" flood-opacity="0.15"/>
+    </filter>
+  </defs>
+  <circle cx="256" cy="256" r="205" fill="url(#pinkBg)" stroke="#FF8F9C" stroke-width="18"/>
+  <path d="M185 199c23-43 119-43 142 0 10 19-2 42-24 42h-94c-22 0-34-23-24-42z" fill="url(#redGrad)"/>
+  <path d="M155 333c0-63 45-107 101-107s101 44 101 107c0 29-23 52-52 52h-98c-29 0-52-23-52-52z" fill="url(#redGrad)" filter="url(#sadShadow)"/>
+  <path d="M194 325c31-43 93-43 124 0" fill="none" stroke="#fff" stroke-width="33" stroke-linecap="round"/>
+</svg>

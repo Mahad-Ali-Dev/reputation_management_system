@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { Icon } from "@/components/shell/icon";
 import { redeemCouponAction } from "@/lib/surveys/coupon-actions";
+import { useState, useTransition } from "react";
 
+/**
+ * Coupon redemption form — "Customer Surveys" kit styling.
+ *
+ * Two-column field layout (coupon code + optional staff note), a scan-line
+ * affordance inside the code field, and a violet Redeem button with a trailing
+ * arrow. Wraps the existing `redeemCouponAction` server action unchanged;
+ * announces the result in a polite live region. Preserves entered values on a
+ * recoverable failure (only clears on success).
+ */
 export function CouponRedeemForm() {
   const [code, setCode] = useState("");
   const [note, setNote] = useState("");
@@ -37,41 +46,81 @@ export function CouponRedeemForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="grid grid-cols-3 gap-3">
-        <label className="block text-sm col-span-2">
-          <span className="font-medium">Coupon code</span>
+    <form onSubmit={handleSubmit}>
+      <div className="surv-redeem__fields">
+        <div>
+          <label htmlFor="coupon-code" className="surv-field-lbl">
+            Coupon code
+          </label>
+          <div style={{ position: "relative" }}>
+            <input
+              id="coupon-code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="Enter coupon code"
+              maxLength={20}
+              autoComplete="off"
+              spellCheck={false}
+              required
+              className="surv-input"
+              style={{ textTransform: "uppercase", paddingRight: 40, fontFamily: "var(--f-mono, monospace)" }}
+            />
+            <span
+              aria-hidden
+              style={{
+                position: "absolute",
+                right: 12,
+                top: "50%",
+                transform: "translateY(-50%)",
+                color: "var(--surv-muted)",
+              }}
+            >
+              <Icon name="qr" size={18} />
+            </span>
+          </div>
+        </div>
+        <div>
+          <label htmlFor="coupon-note" className="surv-field-lbl">
+            Staff note (optional)
+          </label>
           <input
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="ABCD1234EF"
-            maxLength={20}
-            autoFocus
-            required
-            className="mt-1 w-full rounded-md border border-input px-3 py-2 font-mono text-base uppercase"
-          />
-        </label>
-        <label className="block text-sm">
-          <span className="font-medium">Staff note (optional)</span>
-          <input
+            id="coupon-note"
             value={note}
             onChange={(e) => setNote(e.target.value)}
             maxLength={280}
-            placeholder="Receipt #..."
-            className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm"
+            placeholder="Receipt #, customer name, notes…"
+            className="surv-input"
           />
-        </label>
+        </div>
       </div>
-      <Button type="submit" disabled={pending || code.length < 8}>
+
+      <button
+        type="submit"
+        className="btn btn--pri btn--sm"
+        style={{ marginTop: 12 }}
+        disabled={pending || code.trim().length < 4}
+      >
         {pending ? "Checking…" : "Redeem"}
-      </Button>
+        <Icon name="arrowR" size={13} />
+      </button>
+
       {result && (
         <div
-          className={`rounded-md p-3 text-sm ${result.ok ? "bg-emerald-50 text-emerald-900" : "bg-red-50 text-red-900"}`}
+          role="status"
+          className="surv-status"
+          style={{
+            display: "block",
+            marginTop: 12,
+            padding: "10px 14px",
+            fontSize: 12.5,
+            fontWeight: 500,
+            background: result.ok ? "var(--surv-ok-soft)" : "var(--surv-bad-soft)",
+            color: result.ok ? "var(--surv-ok)" : "var(--surv-bad)",
+          }}
         >
           {result.message}
           {result.ok && result.description && (
-            <div className="text-xs mt-1 opacity-80">{result.description}</div>
+            <div style={{ fontSize: 11, marginTop: 3, opacity: 0.85 }}>{result.description}</div>
           )}
         </div>
       )}

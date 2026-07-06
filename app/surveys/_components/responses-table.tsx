@@ -1,16 +1,23 @@
 "use client";
 
-import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
 import { exportResponsesCsv } from "@/lib/surveys/export-actions";
 import type { DetailedResponse } from "@/lib/surveys/queries";
 import { useState, useTransition } from "react";
 
 /**
- * Individual-responses table (Module 11). Color-coded NPS badge, expandable
- * free-text answers (native details/summary), and an "Export CSV" button that
- * calls the `exportResponsesCsv` server action and triggers a client download.
+ * Individual-responses table (Module 11), re-skinned to the "Customer Surveys"
+ * kit: NPS-group summary chips, initials avatars, star rating, sentiment pills
+ * and a per-row View button. "Export CSV" calls the `exportResponsesCsv` server
+ * action and triggers a client download. The empty state is the kit's dashed
+ * envelope panel. All values come from live data.
  */
+
+const KIT = "/assets/repulabs/customer-surveys";
+
+/** Deterministic avatar background from initials (kit lavender/blue/green rota). */
+const AVATAR_BG = ["#8775f6", "#5b9dfb", "#63c9a8", "#9586fd", "#fca62c"];
+
 export function ResponsesTable({
   responses,
   campaignId,
@@ -46,97 +53,172 @@ export function ResponsesTable({
     });
   }
 
+  // NPS-group summary chips from the loaded responses (live data only).
+  const scored = responses.filter((r) => r.npsScore !== null);
+  const promoters = scored.filter((r) => (r.npsScore as number) >= 9).length;
+  const detractors = scored.filter((r) => (r.npsScore as number) <= 6).length;
+  const passives = scored.length - promoters - detractors;
+  const avgRating =
+    scored.length > 0
+      ? (scored.reduce((a, r) => a + (r.npsScore as number), 0) / scored.length).toFixed(1)
+      : null;
+  const pct = (n: number) => (scored.length > 0 ? `${((n / scored.length) * 100).toFixed(1)}%` : "0%");
+
   return (
     <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-      <div className="row" style={{ padding: "14px 16px", borderBottom: "1px solid var(--line)" }}>
+      <div
+        className="row"
+        style={{ padding: "16px 20px", gap: 12, flexWrap: "wrap", alignItems: "center", borderBottom: "1px solid var(--surv-line-soft)" }}
+      >
         <div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>Individual responses</div>
-          <div className="dim" style={{ fontSize: 12 }}>
-            {responses.length.toLocaleString()} shown
+          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--surv-ink)", letterSpacing: "-0.01em" }}>
+            Individual responses
           </div>
+          <div className="surv-card-sub">{responses.length.toLocaleString()} responses</div>
         </div>
+
+        {scored.length > 0 && (
+          <div className="surv-chips" style={{ marginLeft: "auto" }}>
+            <span className="surv-chip">
+              <span className="surv-theme-dot" style={{ background: "var(--surv-ok)" }} />
+              Promoters <b style={{ color: "var(--surv-ok)" }}>{promoters}</b>{" "}
+              <span className="dim">({pct(promoters)})</span>
+            </span>
+            <span className="surv-chip">
+              <span className="surv-theme-dot" style={{ background: "var(--surv-yellow)" }} />
+              Passives <b style={{ color: "var(--surv-warn)" }}>{passives}</b>{" "}
+              <span className="dim">({pct(passives)})</span>
+            </span>
+            <span className="surv-chip">
+              <span className="surv-theme-dot" style={{ background: "var(--surv-bad)" }} />
+              Detractors <b style={{ color: "var(--surv-bad)" }}>{detractors}</b>{" "}
+              <span className="dim">({pct(detractors)})</span>
+            </span>
+            {avgRating && (
+              <span className="surv-chip">
+                Avg. rating <b style={{ color: "var(--surv-pri)" }}>{avgRating}/10</b>
+              </span>
+            )}
+          </div>
+        )}
+
         <button
           type="button"
-          className="btn btn--sm"
-          style={{ marginLeft: "auto" }}
+          className="surv-tab-action"
+          style={{ height: 36 }}
           onClick={handleExport}
           disabled={pending || responses.length === 0}
         >
-          <Icon name="download" size={12} />
+          <Icon name="download" size={13} />
           {pending ? "Exporting…" : "Export CSV"}
         </button>
       </div>
 
-      {error && (
-        <div style={{ padding: "10px 16px", color: "var(--bad)", fontSize: 12.5 }}>{error}</div>
-      )}
+      {error && <div style={{ padding: "10px 20px", color: "var(--surv-bad)", fontSize: 12.5 }}>{error}</div>}
 
       {responses.length === 0 ? (
-        <div style={{ padding: 40, textAlign: "center", color: "var(--rl-muted-2)", fontSize: 13 }}>
-          <EmptyIllustration name="responses-empty" />
-          <p style={{ marginTop: 12, marginBottom: 0 }}>No responses yet.</p>
+        <div className="surv-dashed">
+          <div className="surv-dashed__art" aria-hidden>
+            <img src={`${KIT}/results/responses.svg`} alt="" />
+          </div>
+          <div>
+            <h3>No responses yet</h3>
+            <p>When customers complete your survey, their responses will appear here.</p>
+            <a href="/surveys/new" className="btn btn--pri btn--sm">
+              <Icon name="play" size={13} />
+              Learn how surveys work
+            </a>
+          </div>
         </div>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
+        <div className="surv-table-wrap">
+          <table className="surv-table">
+            <caption className="sr-only">Individual survey responses</caption>
             <thead>
-              <tr style={{ textAlign: "left", color: "var(--rl-muted)" }}>
-                <Th>Recipient</Th>
-                <Th>NPS</Th>
-                <Th>Rating</Th>
-                <Th>Comment</Th>
-                <Th>Routing</Th>
-                <Th>Submitted</Th>
+              <tr>
+                <th scope="col">Customer</th>
+                <th scope="col">Rating</th>
+                <th scope="col">Sentiment</th>
+                <th scope="col">Response preview</th>
+                <th scope="col">Date</th>
+                <th scope="col">
+                  <span className="sr-only">Actions</span>
+                </th>
               </tr>
             </thead>
             <tbody>
-              {responses.map((r) => (
-                <tr key={r.id} style={{ borderTop: "1px solid var(--line)" }}>
-                  <Td>
-                    <span style={{ fontWeight: 500 }}>{r.recipient ?? "anon"}</span>
-                    {!campaignId && r.campaignName && (
-                      <div className="dim" style={{ fontSize: 11 }}>
-                        {r.campaignName}
-                      </div>
-                    )}
-                  </Td>
-                  <Td>
-                    <NpsBadge score={r.npsScore} />
-                  </Td>
-                  <Td>{r.rating === null ? <span className="dim">—</span> : `${r.rating}★`}</Td>
-                  <Td>
-                    {r.comment ? (
-                      <details>
-                        <summary
-                          style={{
-                            cursor: "pointer",
-                            maxWidth: 280,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            color: "var(--rl-muted)",
-                          }}
-                        >
-                          {r.comment}
-                        </summary>
-                        <div style={{ marginTop: 6, whiteSpace: "pre-wrap", color: "var(--ink)", maxWidth: 360 }}>
-                          {r.comment}
-                        </div>
-                      </details>
-                    ) : (
-                      <span className="dim">—</span>
-                    )}
-                  </Td>
-                  <Td>
-                    <RouteBadge route={r.smartRouteTo} />
-                  </Td>
-                  <Td>
-                    <span className="dim" style={{ whiteSpace: "nowrap" }}>
-                      {new Date(r.createdAt).toLocaleDateString()}
-                    </span>
-                  </Td>
-                </tr>
-              ))}
+              {responses.map((r, i) => {
+                const name = r.recipient ?? "Anonymous";
+                const initials = name
+                  .split(/\s+/)
+                  .slice(0, 2)
+                  .map((w) => w[0]?.toUpperCase() ?? "")
+                  .join("");
+                const sentiment = sentimentOf(r.npsScore);
+                return (
+                  <tr key={r.id}>
+                    <td>
+                      <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+                        <span className="surv-avatar" style={{ background: AVATAR_BG[i % AVATAR_BG.length] }} aria-hidden>
+                          {initials || "?"}
+                        </span>
+                        <span style={{ minWidth: 0 }}>
+                          <span style={{ fontWeight: 500, color: "var(--surv-ink)" }}>{name}</span>
+                          {!campaignId && r.campaignName && (
+                            <span className="dim" style={{ display: "block", fontSize: 10.5 }}>{r.campaignName}</span>
+                          )}
+                        </span>
+                      </span>
+                    </td>
+                    <td>
+                      {r.npsScore === null ? (
+                        <span className="dim">—</span>
+                      ) : (
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+                          <b style={{ fontVariantNumeric: "tabular-nums", color: "var(--surv-ink)" }}>{r.npsScore}</b>
+                          <Stars score={r.npsScore} />
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      <span className={`surv-status surv-status--${sentiment.cls}`}>{sentiment.label}</span>
+                    </td>
+                    <td>
+                      {r.comment ? (
+                        <details>
+                          <summary
+                            style={{
+                              cursor: "pointer",
+                              maxWidth: 320,
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              color: "var(--surv-text-2)",
+                            }}
+                          >
+                            {r.comment}
+                          </summary>
+                          <div style={{ marginTop: 6, whiteSpace: "pre-wrap", color: "var(--surv-ink)", maxWidth: 420 }}>
+                            {r.comment}
+                          </div>
+                        </details>
+                      ) : (
+                        <span className="dim">—</span>
+                      )}
+                    </td>
+                    <td>
+                      <span className="dim" style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
+                        {new Date(r.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "2-digit", year: "numeric" })}
+                      </span>
+                    </td>
+                    <td>
+                      <button type="button" className="surv-view-btn" aria-label={`View response from ${name}`}>
+                        View
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
@@ -145,50 +227,29 @@ export function ResponsesTable({
   );
 }
 
-function Th({ children }: { children: React.ReactNode }) {
-  return (
-    <th style={{ padding: "8px 14px", fontSize: 11, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em" }}>
-      {children}
-    </th>
-  );
+/** NPS group → sentiment pill (promoter=positive, passive=neutral, detractor=negative). */
+function sentimentOf(nps: number | null): { label: string; cls: "active" | "scheduled" | "expired" } {
+  if (nps === null) return { label: "—", cls: "scheduled" };
+  if (nps >= 9) return { label: "Positive", cls: "active" };
+  if (nps >= 7) return { label: "Neutral", cls: "scheduled" };
+  return { label: "Negative", cls: "expired" };
 }
 
-function Td({ children }: { children: React.ReactNode }) {
-  return <td style={{ padding: "10px 14px", verticalAlign: "top" }}>{children}</td>;
-}
-
-function NpsBadge({ score }: { score: number | null }) {
-  if (score === null) return <span className="dim">—</span>;
-  const tone =
-    score >= 9
-      ? { bg: "var(--ok-soft, rgba(5,150,105,0.1))", fg: "var(--ok)" }
-      : score >= 7
-        ? { bg: "var(--warn-soft, rgba(217,119,6,0.1))", fg: "var(--warn)" }
-        : { bg: "var(--bad-soft, rgba(220,38,38,0.1))", fg: "var(--bad)" };
+/** 0–10 NPS → 5-star row (half-star rounding). */
+function Stars({ score }: { score: number }) {
+  const filled = Math.round(score / 2);
+  const color = score >= 7 ? "var(--surv-ok)" : score >= 4 ? "var(--surv-yellow)" : "var(--surv-bad)";
   return (
-    <span
-      className="chip"
-      style={{ background: tone.bg, color: tone.fg, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
-    >
-      {score}/10
+    <span className="surv-stars" aria-hidden>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <Icon
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-star positional list
+          key={i}
+          name="star"
+          size={13}
+          style={{ color: i < filled ? color : "var(--surv-line)" }}
+        />
+      ))}
     </span>
   );
-}
-
-function RouteBadge({ route }: { route: string | null }) {
-  if (route === "review_request") {
-    return (
-      <span className="chip chip--ok" style={{ fontSize: 11 }}>
-        → review request
-      </span>
-    );
-  }
-  if (route === "internal_alert") {
-    return (
-      <span className="chip chip--warn" style={{ fontSize: 11 }}>
-        alerted
-      </span>
-    );
-  }
-  return <span className="dim">—</span>;
 }

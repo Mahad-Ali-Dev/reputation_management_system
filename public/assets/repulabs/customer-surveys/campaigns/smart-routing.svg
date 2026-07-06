@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Purple lightning icon">
+  <defs>
+    <linearGradient id="boltGrad" x1="152" y1="88" x2="370" y2="430" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#632BFF"/>
+      <stop offset="1" stop-color="#3510E8"/>
+    </linearGradient>
+    <filter id="boltShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="#3A11D7" flood-opacity="0.16"/>
+    </filter>
+  </defs>
+  <path d="M294 55L124 287h139l-45 170L388 225H249L294 55z" fill="none" stroke="url(#boltGrad)" stroke-width="38" stroke-linejoin="round" stroke-linecap="round" filter="url(#boltShadow)"/>
+</svg>

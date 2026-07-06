@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+
+  <defs>
+    <linearGradient id="purpleBlue" x1="180" y1="140" x2="850" y2="860" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#215DFF"/>
+      <stop offset="1" stop-color="#6F2CFF"/>
+    </linearGradient>
+    <linearGradient id="greenGrad" x1="180" y1="160" x2="850" y2="850" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#10B978"/>
+      <stop offset="1" stop-color="#008F61"/>
+    </linearGradient>
+    <linearGradient id="navyGrad" x1="210" y1="170" x2="810" y2="850" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#243F7D"/>
+      <stop offset="1" stop-color="#0B1D4A"/>
+    </linearGradient>
+    <linearGradient id="softPurple" x1="185" y1="185" x2="840" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#814DFF"/>
+      <stop offset="1" stop-color="#244CFF"/>
+    </linearGradient>
+    <linearGradient id="cyanBlue" x1="180" y1="180" x2="840" y2="840" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#00C8D8"/>
+      <stop offset="1" stop-color="#215DFF"/>
+    </linearGradient>
+  </defs>
+
+  <path d="M376 646L287 735C211 811 89 811 13 735C-63 659-63 537 13 461L222 252C298 176 420 176 496 252"
+        transform="translate(134 18)"
+        stroke="url(#purpleBlue)" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M648 378L737 289C813 213 935 213 1011 289C1087 365 1087 487 1011 563L802 772C726 848 604 848 528 772"
+        transform="translate(-134 -18)"
+        stroke="url(#purpleBlue)" stroke-width="64" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M402 622L622 402" stroke="url(#purpleBlue)" stroke-width="64" stroke-linecap="round"/>
+</svg>

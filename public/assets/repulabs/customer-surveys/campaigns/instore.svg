@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" role="img" aria-label="Purple storefront icon">
+  <defs>
+    <radialGradient id="bg" cx="36%" cy="24%" r="80%">
+      <stop offset="0%" stop-color="#7257ff"/>
+      <stop offset="55%" stop-color="#4c2ff2"/>
+      <stop offset="100%" stop-color="#3b20d7"/>
+    </radialGradient>
+    <filter id="soft" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#2c1d9d" flood-opacity=".16"/>
+    </filter>
+  </defs>
+  <circle cx="512" cy="512" r="456" fill="url(#bg)"/>
+  <g fill="#fff" filter="url(#soft)">
+    <path d="M349 302h326c15 0 28 11 31 26l16 68H302l18-68c3-15 16-26 29-26z"/>
+    <path d="M289 420h446l28 105c6 37-23 72-62 72-29 0-53-18-62-43-9 25-33 43-62 43s-53-18-62-43c-9 25-33 43-62 43s-53-18-62-43c-9 25-33 43-62 43-40 0-69-36-62-74l27-103z"/>
+    <path d="M326 620h372v130c0 22-18 40-40 40H548V692c0-18-15-33-33-33h-48c-18 0-33 15-33 33v98H366c-22 0-40-18-40-40V620z"/>
+  </g>
+</svg>
