@@ -135,12 +135,15 @@ else
   warn "  DIRECT_URL=... pnpm db:migrate:deploy"
 fi
 
-# Clear the previous build output BEFORE rebuilding. `next build` overwrites most
-# of .next, but orphaned CSS/JS chunks from a prior build can survive and get
-# served alongside fresh HTML — the classic "deploy looks unchanged / unstyled
-# page" bug. A clean dir guarantees the served chunks match this build.
-log "Clearing previous .next build dir"
-run "rm -rf .next"
+# Clear the previous build OUTPUT before rebuilding so no orphaned CSS/JS chunks
+# survive and get served alongside fresh HTML (the "deploy looks unchanged /
+# unstyled page" bug). We target ONLY the served output + manifests — NOT
+# `.next/cache`, whose image/fetch entries are written at runtime by the service
+# process (often a different user) and would make a blanket `rm -rf .next` fail
+# with EACCES. `2>/dev/null || true` keeps a permission hiccup from aborting the
+# deploy; `next build` regenerates everything below regardless.
+log "Clearing previous build output (keeping runtime cache)"
+run "rm -rf .next/static .next/server .next/BUILD_ID .next/*.json .next/*.js .next/types 2>/dev/null || true"
 
 log "Building Next.js production bundle"
 # Call `pnpm build` (which itself runs `prisma generate && next build`)
