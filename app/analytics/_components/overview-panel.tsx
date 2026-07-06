@@ -1,8 +1,8 @@
+import type { ReactNode } from "react";
 import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-state";
 import type { OverviewMetrics } from "@/lib/seo/overview";
-import { ExecSummaryCard } from "./exec-summary-card";
 
 /** Minimal competitor slice for the Overview compare chart (built by the page
  *  from the same `listCompetitors` query the Competitors tab uses; `null` when
@@ -24,13 +24,15 @@ export type CompetitorCompareData = {
  */
 export function OverviewPanel({
   metrics,
-  execSummary,
+  execSummarySlot,
   entitled,
   orgName,
   competitorCompare,
 }: {
   metrics: OverviewMetrics;
-  execSummary: { summary: string; generatedAt: string | null; ai: boolean };
+  /** AI Executive Summary, streamed from the page inside a <Suspense> boundary
+   *  so the ~15s Anthropic call never blocks the report shell. */
+  execSummarySlot: ReactNode;
   entitled: boolean;
   /** Org display name — labels the "You" slot in the local 3-pack visual. */
   orgName: string;
@@ -42,13 +44,8 @@ export function OverviewPanel({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      {/* AI Executive Summary (date range now lives in the report header) */}
-      <ExecSummaryCard
-        summary={execSummary.summary}
-        generatedAt={execSummary.generatedAt}
-        ai={execSummary.ai}
-        canRegenerate={entitled}
-      />
+      {/* AI Executive Summary — streamed (date range lives in the report header) */}
+      {execSummarySlot}
 
       {/* KPI tiles — reputation + SEO */}
       <div

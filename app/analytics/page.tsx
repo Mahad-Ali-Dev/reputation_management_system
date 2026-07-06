@@ -27,6 +27,7 @@ import "./analytics-overview.css";
 import { ReportsTabs, type ReportTabKey } from "./_components/reports-tabs";
 import { RangeSelector } from "./_components/range-selector";
 import { OverviewPanel } from "./_components/overview-panel";
+import { ExecSummaryCard } from "./_components/exec-summary-card";
 import { WeeklyReportsPanel } from "./_components/weekly-reports-panel";
 import { ReputationScorePanel } from "./_components/reputation-score-panel";
 import { SeoPanel } from "./_components/seo-panel";
@@ -98,7 +99,11 @@ export default async function AnalyticsPage({
     getGeoGridLatest(orgId, establishmentId),
   ]);
 
-  const execSummary = await generateExecSummary(orgId, rangeDays, metrics);
+  // The AI executive summary (generateExecSummary → Anthropic, ~15s) is NOT
+  // awaited on the critical path — it blocked the entire report render and blew
+  // past the prod reverse-proxy timeout ("Business Reports not working"). It now
+  // streams inside <Suspense> via <ExecSummaryAsync/>, so the page shell + every
+  // panel render in ~3s and the summary fills in when ready.
   const scoreFactors: ScoreFactor[] = metrics.seo.scoreFactors;
   const recommendationsRaw = computeRecommendations({
     establishmentId,
@@ -150,7 +155,25 @@ export default async function AnalyticsPage({
     overview: (
       <OverviewPanel
         metrics={metrics}
-        execSummary={serializeSummary(execSummary)}
+        execSummarySlot={
+          <Suspense
+            fallback={
+              <ExecSummaryCard
+                summary="Generating your executive summary…"
+                generatedAt={null}
+                ai={false}
+                canRegenerate={false}
+              />
+            }
+          >
+            <ExecSummaryAsync
+              orgId={orgId}
+              rangeDays={rangeDays}
+              metrics={metrics}
+              entitled={entitled}
+            />
+          </Suspense>
+        }
         entitled={entitled}
         orgName={ctx.org.name}
         competitorCompare={competitorCompare}
@@ -202,6 +225,34 @@ function pickFactors(stored: unknown, fresh: ScoreFactor[]): ScoreFactor[] {
     if (valid.length > 0) return valid;
   }
   return fresh;
+}
+
+/**
+ * Streamed AI executive summary. Rendered inside a <Suspense> boundary so the
+ * ~15s Anthropic call never blocks the report shell (previously it did, causing
+ * prod proxy timeouts). generateExecSummary is fail-soft (returns a deterministic
+ * fallback, never throws), so a slow/absent model only delays this one card.
+ */
+async function ExecSummaryAsync({
+  orgId,
+  rangeDays,
+  metrics,
+  entitled,
+}: {
+  orgId: string;
+  rangeDays: number;
+  metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>;
+  entitled: boolean;
+}) {
+  const s = serializeSummary(await generateExecSummary(orgId, rangeDays, metrics));
+  return (
+    <ExecSummaryCard
+      summary={s.summary}
+      generatedAt={s.generatedAt}
+      ai={s.ai}
+      canRegenerate={entitled}
+    />
+  );
 }
 
 async function renderSeoPanel(orgId: string, establishmentId: string | null, metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>) {
