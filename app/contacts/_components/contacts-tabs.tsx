@@ -2,13 +2,12 @@ import Link from "next/link";
 import { Icon, type IconName } from "@/components/shell/icon";
 
 /**
- * Persistent 3-tab nav for the Contacts directory (server `<Link>` row).
+ * Persistent 3-tab nav for the Contacts directory (kit underline style).
  *
- * Renders the design-system `.tabs` / `.tabs__t` bar, driven by `?tab=` on
- * `/contacts` (`contacts` default | `segments` | `import`). Always visible (AC:
- * "3 persistent tabs"). Mirrors the `app/support/comments/page.tsx` tab markup
- * so this stays a pure server component (no client island needed — each tab is a
- * server-rendered panel and a full navigation is fine here).
+ * Renders the `.cd-tabs` / `.cd-tab` bar, driven by `?tab=` on `/contacts`
+ * (`contacts` default | `segments` | `import`). Always visible (AC: "3
+ * persistent tabs"). Pure server component (each tab is a server-rendered panel,
+ * so a full navigation is fine here — no client island needed).
  */
 
 const TABS: { key: string; label: string; icon: IconName }[] = [
@@ -20,7 +19,7 @@ const TABS: { key: string; label: string; icon: IconName }[] = [
 export function ContactsTabs({ active }: { active: string }) {
   const current = TABS.some((t) => t.key === active) ? active : "contacts";
   return (
-    <div className="tabs" role="tablist" aria-label="Contacts views" style={{ marginBottom: 16 }}>
+    <div className="cd-tabs" role="tablist" aria-label="Contacts views">
       {TABS.map((t) => {
         const isActive = t.key === current;
         return (
@@ -29,10 +28,11 @@ export function ContactsTabs({ active }: { active: string }) {
             href={t.key === "contacts" ? "/contacts" : `/contacts?tab=${t.key}`}
             role="tab"
             aria-selected={isActive}
-            className={`tabs__t${isActive ? " is-active" : ""}`}
-            style={{ textDecoration: "none" }}
+            className={`cd-tab${isActive ? " is-active" : ""}`}
           >
-            <Icon name={t.icon} size={14} />
+            <span className="cd-tab__ico">
+              <Icon name={t.icon} size={15} />
+            </span>
             <span>{t.label}</span>
           </Link>
         );

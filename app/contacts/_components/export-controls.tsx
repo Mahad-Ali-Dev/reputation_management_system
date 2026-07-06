@@ -5,14 +5,16 @@ import { exportContacts } from "@/lib/contacts/actions";
 import { useState, useTransition } from "react";
 
 /**
- * Export controls (client). Scope (All / Current filter / a chosen Segment) →
- * `exportContacts` server action, which returns a downloadable data-URL built
- * from the SAME `listContacts` predicate the directory uses (so exports match
- * the on-screen rows). CSV is the supported format (XLSX falls back to CSV in
- * the export lib when no writer is present); we surface CSV only.
+ * Export controls (client) — re-skinned to the kit. Scope (All / Current filter
+ * / a chosen Segment) → `exportContacts` server action, which returns a
+ * downloadable data-URL built from the SAME `listContacts` predicate the
+ * directory uses (so exports match the on-screen rows). CSV only (the export lib
+ * falls back to CSV when no XLSX writer is present).
  */
 
 type Scope = "all" | "filter" | "segment";
+
+const ART = "/assets/repulabs/contact-directory";
 
 export function ExportControls({ segments }: { segments: { key: string; label: string }[] }) {
   const [scope, setScope] = useState<Scope>("all");
@@ -30,8 +32,6 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
     if (scope === "segment") {
       fd.set("seg", segKey);
     } else if (scope === "filter") {
-      // Carry the directory's current filters from the URL so "current filter"
-      // exports exactly what the user is looking at.
       const sp = new URLSearchParams(window.location.search);
       for (const k of ["q", "source", "tag", "seg"]) {
         const v = sp.get(k);
@@ -50,52 +50,69 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
   }
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
+    <div className="cd-card" style={{ marginTop: 16 }}>
+      <div className="cd-sec-head" style={{ borderBottom: "none" }}>
         <div>
-          <h3 className="ds-card__title">Export contacts</h3>
-          <p className="ds-card__sub">Download a CSV of all contacts, your current filter, or a segment.</p>
+          <h3 className="cd-sec-title">Export contacts</h3>
+          <p className="cd-sec-sub">Download a CSV of all contacts, your current filter, or a segment.</p>
         </div>
-        <Icon name="download" size={18} style={{ color: "var(--rl-muted-2)" }} />
       </div>
-      <div className="ds-card__body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-        <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-          <legend className="lbl" style={{ marginBottom: 8 }}>Scope</legend>
-          <div className="row" style={{ gap: 16, flexWrap: "wrap" }}>
-            <ScopeRadio value="all" current={scope} onChange={setScope} label="All contacts" />
-            <ScopeRadio value="filter" current={scope} onChange={setScope} label="Current filter" />
-            <ScopeRadio value="segment" current={scope} onChange={setScope} label="A segment" />
+      <div className="cd-export">
+        <div className="cd-export__art">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${ART}/export-list.svg`} alt="" aria-hidden className="cd-illus cd-illus--export" />
+        </div>
+        <div className="cd-export__ctrls">
+          <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
+            <legend
+              style={{
+                fontSize: 10.5,
+                fontWeight: 700,
+                letterSpacing: "0.05em",
+                textTransform: "uppercase",
+                color: "var(--cd-muted)",
+                marginBottom: 10,
+              }}
+            >
+              Export scope
+            </legend>
+            <div className="row" style={{ gap: 20, flexWrap: "wrap" }}>
+              <ScopeRadio value="all" current={scope} onChange={setScope} label="All contacts" />
+              <ScopeRadio value="filter" current={scope} onChange={setScope} label="Current filter" />
+              <ScopeRadio value="segment" current={scope} onChange={setScope} label="A segment" />
+            </div>
+          </fieldset>
+
+          {scope === "segment" && (
+            <label style={{ display: "block", maxWidth: 280, marginTop: 12 }}>
+              <span className="lbl">Segment</span>
+              <select className="ds-select" value={segKey} onChange={(e) => setSegKey(e.target.value)}>
+                {segments.map((s) => (
+                  <option key={s.key} value={s.key}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
+          <div className="row" style={{ gap: 12, alignItems: "center", marginTop: 16 }}>
+            <button type="button" className="btn btn--pri btn--sm" disabled={pending} onClick={run}>
+              <Icon name="download" size={13} />
+              {pending ? "Preparing…" : "Export CSV"}
+            </button>
+            <span className="cd-fmt">.csv file · UTF-8</span>
+            {note && (
+              <span className="cd-badge cd-badge--ok" role="status">
+                {note}
+              </span>
+            )}
+            {error && (
+              <span className="cd-badge cd-badge--warn" role="alert">
+                {error}
+              </span>
+            )}
           </div>
-        </fieldset>
-
-        {scope === "segment" && (
-          <label style={{ display: "block", maxWidth: 280 }}>
-            <span className="lbl">Segment</span>
-            <select className="ds-select" value={segKey} onChange={(e) => setSegKey(e.target.value)}>
-              {segments.map((s) => (
-                <option key={s.key} value={s.key}>
-                  {s.label}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
-
-        <div className="row" style={{ gap: 10, alignItems: "center" }}>
-          <button type="button" className="btn btn--pri btn--sm" disabled={pending} onClick={run}>
-            <Icon name="download" size={13} />
-            {pending ? "Preparing…" : "Export CSV"}
-          </button>
-          {note && (
-            <span className="chip chip--ok" role="status">
-              {note}
-            </span>
-          )}
-          {error && (
-            <span className="chip chip--bad" role="alert">
-              {error}
-            </span>
-          )}
         </div>
       </div>
     </div>
@@ -114,7 +131,7 @@ function ScopeRadio({
   label: string;
 }) {
   return (
-    <label className="row" style={{ gap: 7, cursor: "pointer", fontSize: 13 }}>
+    <label className="row" style={{ gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--cd-ink-2)" }}>
       <input type="radio" name="export-scope" checked={current === value} onChange={() => onChange(value)} />
       {label}
     </label>

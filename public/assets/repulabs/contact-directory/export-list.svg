@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2400" height="1191" viewBox="0 0 552 274" fill="none">
+  <defs>
+    <linearGradient id="purpleHeader" x1="154" y1="44" x2="431" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A793FF"/>
+      <stop offset="1" stop-color="#8B75F2"/>
+    </linearGradient>
+    <linearGradient id="buttonPurple" x1="363" y1="134" x2="454" y2="221" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#785BFF"/>
+      <stop offset="1" stop-color="#3419D9"/>
+    </linearGradient>
+    <linearGradient id="avatarMain" x1="138" y1="70" x2="162" y2="94" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7660FF"/>
+      <stop offset="1" stop-color="#3A24CA"/>
+    </linearGradient>
+    <linearGradient id="plant" x1="31" y1="112" x2="81" y2="211" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9DE8B3"/>
+      <stop offset="1" stop-color="#3B9D68"/>
+    </linearGradient>
+    <linearGradient id="pot" x1="24" y1="211" x2="73" y2="247" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F5F7FF"/>
+      <stop offset="1" stop-color="#B9BEE8"/>
+    </linearGradient>
+    <radialGradient id="softCircle" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(421 86) rotate(93) scale(92 102)">
+      <stop stop-color="#EFEAFF"/>
+      <stop offset="1" stop-color="#EAE4FF" stop-opacity=".42"/>
+    </radialGradient>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="9" stdDeviation="9" flood-color="#5038C9" flood-opacity=".14"/>
+    </filter>
+    <filter id="purpleGlow" x="-35%" y="-35%" width="170%" height="170%">
+      <feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#3E22E9" flood-opacity=".33"/>
+    </filter>
+    <filter id="plantShadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="6" stdDeviation="5" flood-color="#4E6B76" flood-opacity=".16"/>
+    </filter>
+    <linearGradient id="lineFade" x1="199" y1="80" x2="407" y2="159" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#D9D8F6"/>
+      <stop offset="1" stop-color="#EEF0FA"/>
+    </linearGradient>
+  </defs>
+
+  <!-- transparent canvas: no background rect -->
+
+  <!-- tiny sparkles -->
+  <path d="M29 22c1.5 5 2.8 6.3 7.8 7.8-5 1.5-6.3 2.8-7.8 7.8-1.5-5-2.8-6.3-7.8-7.8 5-1.5 6.3-2.8 7.8-7.8Z" fill="#DCD5FF"/>
+  <path d="M515 102c1.1 3.9 2.2 5 6.1 6.1-3.9 1.1-5 2.2-6.1 6.1-1.1-3.9-2.2-5-6.1-6.1 3.9-1.1 5-2.2 6.1-6.1Z" fill="#E5DFFF"/>
+  <path d="M493 188c.9 3.1 1.8 4 4.9 4.9-3.1.9-4 1.8-4.9 4.9-.9-3.1-1.8-4-4.9-4.9 3.1-.9 4-1.8 4.9-4.9Z" fill="#DAD4FF"/>
+
+  <!-- soft abstract back blobs from original illustration -->
+  <ellipse cx="349" cy="138" rx="151" ry="94" fill="#F3F1FF" opacity=".55"/>
+  <circle cx="436" cy="62" r="45" fill="url(#softCircle)" opacity=".8"/>
+  <circle cx="495" cy="83" r="27" fill="#F6F4FF" opacity=".62"/>
+  <ellipse cx="300" cy="241" rx="229" ry="14" fill="#EFECFF" opacity=".82"/>
+
+  <!-- plant -->
+  <g filter="url(#plantShadow)">
+    <ellipse cx="50" cy="248" rx="43" ry="6" fill="#E3E5F9"/>
+    <path d="M44 207c-8-20-7-39-1-59" stroke="#3A459D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M58 211c1-26 6-47 24-65" stroke="#3A459D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M34 214c-8-23-18-37-32-49" stroke="#3A459D" stroke-width="4" stroke-linecap="round"/>
+    <path d="M43 147c-19 15-28 39-17 62 19-13 28-38 17-62Z" fill="url(#plant)"/>
+    <path d="M82 146c-22 5-41 23-42 50 25-2 43-23 42-50Z" fill="url(#plant)"/>
+    <path d="M1 165c4 25 22 42 47 44-5-26-21-42-47-44Z" fill="url(#plant)"/>
+    <path d="M28 188c-20 3-31 17-30 34 20 1 34-12 30-34Z" fill="url(#plant)" opacity=".9"/>
+    <path d="M75 178c-17 8-27 23-23 43 20-7 29-24 23-43Z" fill="url(#plant)" opacity=".96"/>
+    <path d="M22 211h55l-7 36c-.9 4.4-4.8 7.6-9.3 7.6H38.4c-4.5 0-8.4-3.2-9.3-7.6L22 211Z" fill="url(#pot)"/>
+    <path d="M20 209c0-4 3.2-7.2 7.2-7.2h44.6c4 0 7.2 3.2 7.2 7.2v5H20v-5Z" fill="#9A9EC7"/>
+    <path d="M25 214h49" stroke="#7B80B0" stroke-opacity=".5" stroke-width="2"/>
+  </g>
+
+  <!-- contact table UI -->
+  <g filter="url(#softShadow)">
+    <rect x="113" y="45" width="322" height="171" rx="16" fill="white"/>
+    <rect x="113" y="45" width="322" height="38" rx="16" fill="url(#purpleHeader)"/>
+    <path d="M113 67h322" stroke="#DBD7FF" opacity=".7"/>
+    <circle cx="133" cy="64" r="5.3" fill="#FBFBFF" opacity=".95"/>
+    <circle cx="151" cy="64" r="5.3" fill="#FBFBFF" opacity=".95"/>
+    <circle cx="169" cy="64" r="5.3" fill="#FBFBFF" opacity=".95"/>
+
+    <!-- row cards -->
+    <rect x="132" y="95" width="270" height="26" rx="8" fill="#FBFCFF" opacity=".72"/>
+    <rect x="132" y="135" width="270" height="26" rx="8" fill="#FBFCFF" opacity=".62"/>
+    <rect x="132" y="175" width="270" height="26" rx="8" fill="#FBFCFF" opacity=".56"/>
+
+    <!-- avatars -->
+    <g>
+      <circle cx="145" cy="108" r="12" fill="#EEF0FF" stroke="#DAD9FF"/>
+      <circle cx="145" cy="103" r="5.2" fill="url(#avatarMain)"/>
+      <path d="M135.5 116.5c1.6-5 5-7.8 9.5-7.8s7.9 2.8 9.5 7.8" fill="url(#avatarMain)"/>
+    </g>
+    <g>
+      <circle cx="145" cy="148" r="12" fill="#EEF0FF" stroke="#DAD9FF"/>
+      <circle cx="145" cy="143" r="5.2" fill="#1C225D"/>
+      <path d="M135.5 156.5c1.6-5 5-7.8 9.5-7.8s7.9 2.8 9.5 7.8" fill="#1C225D"/>
+    </g>
+    <g>
+      <circle cx="145" cy="188" r="12" fill="#EEF0FF" stroke="#DAD9FF"/>
+      <circle cx="145" cy="183" r="5.2" fill="#2D2573"/>
+      <path d="M135.5 196.5c1.6-5 5-7.8 9.5-7.8s7.9 2.8 9.5 7.8" fill="#2D2573"/>
+    </g>
+
+    <!-- row lines -->
+    <rect x="173" y="99" width="84" height="8" rx="4" fill="url(#lineFade)"/>
+    <rect x="284" y="99" width="96" height="8" rx="4" fill="url(#lineFade)" opacity=".8"/>
+    <rect x="173" y="111" width="147" height="7" rx="3.5" fill="#EEF0FA"/>
+    <rect x="173" y="139" width="84" height="8" rx="4" fill="url(#lineFade)"/>
+    <rect x="284" y="139" width="96" height="8" rx="4" fill="url(#lineFade)" opacity=".8"/>
+    <rect x="173" y="151" width="147" height="7" rx="3.5" fill="#EEF0FA"/>
+    <rect x="173" y="179" width="84" height="8" rx="4" fill="url(#lineFade)"/>
+    <rect x="284" y="179" width="96" height="8" rx="4" fill="url(#lineFade)" opacity=".75"/>
+    <rect x="173" y="191" width="147" height="7" rx="3.5" fill="#EEF0FA"/>
+  </g>
+
+  <!-- download button -->
+  <g filter="url(#purpleGlow)">
+    <circle cx="405" cy="198" r="40" fill="url(#buttonPurple)"/>
+    <circle cx="405" cy="198" r="39" stroke="white" stroke-opacity=".2" stroke-width="2"/>
+    <path d="M405 175v34" stroke="white" stroke-width="6.5" stroke-linecap="round"/>
+    <path d="M389 196l16 16 16-16" stroke="white" stroke-width="6.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <path d="M386 217v7c0 3.3 2.7 6 6 6h26c3.3 0 6-2.7 6-6v-7" stroke="white" stroke-width="6.5" stroke-linecap="round"/>
+  </g>
+</svg>

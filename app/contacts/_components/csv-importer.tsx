@@ -135,16 +135,20 @@ export function CsvImporter() {
   }
 
   return (
-    <div className="ds-card">
-      <div className="ds-card__head">
-        <div>
-          <h3 className="ds-card__title">Import from CSV</h3>
-          <p className="ds-card__sub">Map columns, preview, dedupe — up to {MAX_IMPORT_ROWS.toLocaleString()} rows.</p>
+    <div className="cd-card">
+      <div className="cd-ie-head">
+        <span className="cd-ie-head__tile cd-ie-head__tile--vio">
+          <Icon name="file" size={22} />
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 className="cd-ie-head__title">Import from CSV</h3>
+          <p className="cd-ie-head__sub">
+            Map columns, preview, and import up to {MAX_IMPORT_ROWS.toLocaleString()} rows.
+          </p>
         </div>
-        <Icon name="upload" size={18} style={{ color: "var(--rl-muted-2)" }} />
       </div>
 
-      <div className="ds-card__body">
+      <div style={{ padding: 20 }}>
         {step === "upload" && (
           <div>
             <button
@@ -163,21 +167,39 @@ export function CsvImporter() {
               }}
               style={{
                 width: "100%",
-                border: `2px dashed ${dragOver ? "var(--pri)" : "var(--line-2)"}`,
-                background: dragOver ? "var(--pri-50)" : "var(--surface-2)",
-                borderRadius: "var(--r-md)",
-                padding: "32px 16px",
+                display: "flex",
+                alignItems: "center",
+                gap: 20,
+                justifyContent: "center",
+                border: `1.6px dashed ${dragOver ? "var(--cd-vio)" : "var(--cd-lav-border)"}`,
+                background: dragOver ? "#f5f2ff" : "#fdfdff",
+                borderRadius: 12,
+                padding: "26px 20px",
                 cursor: "pointer",
-                textAlign: "center",
-                color: "var(--rl-muted)",
+                textAlign: "left",
+                color: "var(--cd-muted)",
               }}
             >
-              <Icon name="upload" size={26} style={{ color: "var(--pri)" }} />
-              <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)", marginTop: 10 }}>
-                Drop a CSV here, or click to browse
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/assets/repulabs/contact-directory/csv-import.svg"
+                alt=""
+                aria-hidden
+                className="cd-illus cd-illus--csv"
+              />
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--cd-ink)" }}>
+                  Drag &amp; drop your CSV file here
+                </div>
+                <div style={{ fontSize: 13, marginTop: 4 }}>
+                  or <span style={{ color: "var(--cd-vio)", fontWeight: 600 }}>click to browse</span>
+                </div>
               </div>
-              <div style={{ fontSize: 12, marginTop: 4 }}>First row is treated as headers.</div>
             </button>
+            <div className="cd-info" style={{ marginTop: 16 }}>
+              <span className="cd-info__ico">i</span>
+              <span>We support .csv files up to 10MB and {MAX_IMPORT_ROWS.toLocaleString()} rows.</span>
+            </div>
             <input
               ref={fileRef}
               type="file"

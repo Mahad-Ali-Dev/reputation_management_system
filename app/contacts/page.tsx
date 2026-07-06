@@ -7,8 +7,8 @@ import { getContactStats } from "@/lib/contacts/queries";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ContactsTabs } from "./_components/contacts-tabs";
-import { ContactsGettingStarted } from "./_components/getting-started";
 import { ContactsPanel } from "./_components/contacts-panel";
+import { ContactsEmpty } from "./_components/contacts-empty";
 import { SegmentsPanel } from "./_components/segments-panel";
 import { SegmentsRail } from "./_components/segments-rail";
 import { ImportExportPanel } from "./_components/import-export-panel";
@@ -17,15 +17,19 @@ import { StatCards } from "./_components/stat-cards";
 import "./contacts.css";
 
 /**
- * Contact Directory — the CRM workspace (Module 12).
+ * Contact Directory — the CRM workspace (Module 12), re-skinned to the delivered
+ * design kit (designs/contact directory/**). Prefix `.cd-`; flat #FBFCFF canvas.
  *
- * Server component: reads org context + stat counts, then renders the
- * Getting-Started zero-state (only at 0 contacts), the persistent 3-tab nav,
- * and the matching panel. The default Contacts tab is a 3-column workspace:
- * Segments rail (live, self-counting filters → `?seg=`) | Contacts table |
- * Profile drawer (driven by `?contact=<id>`, server-rendered). All
- * interactivity (search/filter/select/edit/modals) lives in `'use client'`
- * islands under `_components/` — this file does DB reads only (RSC-safe).
+ * Server component: reads org context + stat counts, then renders the kit header
+ * (title + breadcrumb + violet "Import contacts"), the persistent 3-tab
+ * underline nav (`?tab=`), and the matching panel:
+ *   - contacts (default): kit KPI row + the live 3-column workspace
+ *     (Segments rail | Contacts table | Profile drawer). When the directory is
+ *     empty it swaps to the kit onboarding panel (`<ContactsEmpty/>`).
+ *   - segments: the 7 self-counting segment cards + live custom-segments table.
+ *   - import:   CSV import + Shopify sync + export controls.
+ * All interactivity (search/filter/select/edit/import/export/modals) lives in
+ * `'use client'` islands under `_components/`; this file does DB reads only.
  */
 
 export const dynamic = "force-dynamic";
@@ -50,69 +54,78 @@ export default async function ContactsPage({
   const sp = await searchParams;
   const tab = sp.tab === "segments" || sp.tab === "import" ? sp.tab : "contacts";
 
-  const stats = await getContactStats(orgId);
-  const isEmpty = stats.total === 0;
+  const realStats = await getContactStats(orgId);
+  // Dev-only zero-state preview (?cdEmpty=1) — lets QA shoot the empty states
+  // without mutating the DB. No effect in production.
+  const forceEmpty =
+    process.env.NODE_ENV !== "production" &&
+    (sp as Record<string, string | undefined>).cdEmpty === "1";
+  const stats = forceEmpty ? { total: 0, newThisMonth: 0, active30d: 0, vip: 0 } : realStats;
+  const isEmpty = forceEmpty || stats.total === 0;
 
   return (
     <AppShellServer topBar={<TopBar title="Contacts" />} crumbs={["CRM", "Contacts"]}>
-      <PageHeader
-        kicker={`${stats.total.toLocaleString()} contact${stats.total === 1 ? "" : "s"}`}
-        title="Contacts"
-        description="Your cross-channel customer directory — every person who interacts with your business, in one place."
-        breadcrumb={[{ label: "CRM" }, { label: "Contacts" }]}
-        actions={
-          <Link href="/contacts?tab=import" className="btn btn--pri btn--sm">
-            <Icon name="upload" size={13} />
-            Import contacts
-          </Link>
-        }
-      />
+      <div className="cd-page">
+        <PageHeader
+          title="Contacts"
+          description="Your cross-channel customer directory — every person who interacts with your business, in one place."
+          breadcrumb={[{ label: "CRM" }, { label: "Contacts" }]}
+          actions={
+            <Link href="/contacts?tab=import" className="btn btn--pri btn--sm">
+              <Icon name="upload" size={13} />
+              Import contacts
+            </Link>
+          }
+        />
 
-      {isEmpty && <ContactsGettingStarted />}
+        <ContactsTabs active={tab} />
 
-      <ContactsTabs active={tab} />
-
-      <Suspense fallback={<div className="ds-card" style={{ height: 320 }} />}>
-        {tab === "contacts" && (
-          <>
-            <StatCards stats={stats} />
-            <div className="crm-workspace">
-              <div className="crm-rail-col">
-                <SegmentsRail
-                  orgId={orgId}
-                  total={stats.total}
-                  currentSeg={sp.seg}
-                  baseParams={{ q: sp.q, source: sp.source, tag: sp.tag, contact: sp.contact }}
-                />
-              </div>
-              <div className="crm-main">
-                <ContactsPanel
-                  orgId={orgId}
-                  q={sp.q}
-                  source={sp.source}
-                  tag={sp.tag}
-                  seg={sp.seg}
-                  sort={sp.sort}
-                  page={sp.page}
-                />
-              </div>
-              <div className="crm-drawer-col">
-                {sp.contact ? (
-                  <ProfileDrawer
-                    orgId={orgId}
-                    contactId={sp.contact}
-                    closeHref={buildCloseHref(sp)}
-                  />
-                ) : (
-                  <ProfileDrawerPlaceholder />
-                )}
-              </div>
-            </div>
-          </>
-        )}
-        {tab === "segments" && <SegmentsPanel orgId={orgId} />}
-        {tab === "import" && <ImportExportPanel orgId={orgId} />}
-      </Suspense>
+        <Suspense fallback={<div className="cd-card" style={{ height: 320 }} />}>
+          {tab === "contacts" && (
+            <>
+              <StatCards stats={stats} />
+              {isEmpty ? (
+                <ContactsEmpty />
+              ) : (
+                <div className="crm-workspace">
+                  <div className="crm-rail-col">
+                    <SegmentsRail
+                      orgId={orgId}
+                      total={stats.total}
+                      currentSeg={sp.seg}
+                      baseParams={{ q: sp.q, source: sp.source, tag: sp.tag, contact: sp.contact }}
+                    />
+                  </div>
+                  <div className="crm-main">
+                    <ContactsPanel
+                      orgId={orgId}
+                      q={sp.q}
+                      source={sp.source}
+                      tag={sp.tag}
+                      seg={sp.seg}
+                      sort={sp.sort}
+                      page={sp.page}
+                    />
+                  </div>
+                  <div className="crm-drawer-col">
+                    {sp.contact ? (
+                      <ProfileDrawer
+                        orgId={orgId}
+                        contactId={sp.contact}
+                        closeHref={buildCloseHref(sp)}
+                      />
+                    ) : (
+                      <ProfileDrawerPlaceholder />
+                    )}
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+          {tab === "segments" && <SegmentsPanel orgId={orgId} isEmptyDirectory={isEmpty} />}
+          {tab === "import" && <ImportExportPanel orgId={orgId} />}
+        </Suspense>
+      </div>
     </AppShellServer>
   );
 }

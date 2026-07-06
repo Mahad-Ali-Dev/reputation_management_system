@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1434" height="912" viewBox="0 0 239 152" fill="none">
+  <defs>
+    <linearGradient id="paper" x1="45" y1="18" x2="180" y2="130" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FBFAFF"/>
+      <stop offset="1" stop-color="#F0ECFF"/>
+    </linearGradient>
+    <linearGradient id="fold" x1="180" y1="5" x2="203" y2="29" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#B6A5FF"/>
+      <stop offset="1" stop-color="#7A60FF"/>
+    </linearGradient>
+    <linearGradient id="lens" x1="36" y1="77" x2="86" y2="77" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#7F68FF"/>
+      <stop offset="1" stop-color="#644CFF"/>
+    </linearGradient>
+    <linearGradient id="handle" x1="79" y1="105" x2="102" y2="125" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#8A75FF"/>
+      <stop offset="1" stop-color="#7964FF"/>
+    </linearGradient>
+  </defs>
+  <g transform="rotate(-16 125 74)">
+    <rect x="55" y="14" width="142" height="110" rx="12" fill="url(#paper)" stroke="#E7E1FF"/>
+    <path d="M168 14h18a11 11 0 0 1 11 11v15" fill="url(#fold)"/>
+    <path d="M168 14l29 26" stroke="#C0B1FF" stroke-width="1.5"/>
+    <rect x="78" y="37" width="50" height="6" rx="3" fill="#DDD4FF"/>
+    <rect x="102" y="61" width="78" height="6" rx="3" fill="#DDD4FF"/>
+    <rect x="90" y="84" width="84" height="6" rx="3" fill="#DDD4FF"/>
+    <rect x="118" y="107" width="52" height="6" rx="3" fill="#DDD4FF"/>
+  </g>
+  <circle cx="55" cy="79" r="29" fill="none" stroke="url(#lens)" stroke-width="8"/>
+  <rect x="80" y="98" width="26" height="12" rx="6" transform="rotate(38 80 98)" fill="url(#handle)"/>
+  <path d="M201 24c1 3 2 4 5 5-3 1-4 2-5 5-1-3-2-4-5-5 3-1 4-2 5-5Z" fill="#8D79FF"/>
+  <path d="M219 38c0.8 2.5 1.6 3.3 4.1 4.1-2.5 0.8-3.3 1.6-4.1 4.1-0.8-2.5-1.6-3.3-4.1-4.1 2.5-0.8 3.3-1.6 4.1-4.1Z" fill="#9B89FF"/>
+  <path d="M212 112c0.8 2.5 1.6 3.3 4.1 4.1-2.5 0.8-3.3 1.6-4.1 4.1-0.8-2.5-1.6-3.3-4.1-4.1 2.5-0.8 3.3-1.6 4.1-4.1Z" fill="#A494FF"/>
+  <path d="M23 112c0.7 2.3 1.5 3.1 3.8 3.8-2.3 0.7-3.1 1.5-3.8 3.8-0.7-2.3-1.5-3.1-3.8-3.8 2.3-0.7 3.1-1.5 3.8-3.8Z" fill="#B2A5FF"/>
+  <path d="M8 72c0.6 2 1.2 2.6 3.2 3.2-2 0.6-2.6 1.2-3.2 3.2-0.6-2-1.2-2.6-3.2-3.2 2-0.6 2.6-1.2 3.2-3.2Z" fill="#D3CBFF"/>
+</svg>

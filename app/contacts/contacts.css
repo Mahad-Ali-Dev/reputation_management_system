@@ -1,3 +1,756 @@
+/* ============================================================
+   Contact Directory — route-local styles for the delivered design kit.
+   Prefix: .cd-   (parallel-agent CSS isolation rule).
+   Source of truth: designs/contact directory/** (contacts / import & export /
+   segments, each active + empty). Kit palette sampled from the mockups:
+     primary violet   #4020FF  (gradient #5635FF → #3417DD)
+     active lavender  #EEE9FF  · lavender border #C8BCFF
+     deep ink navy    #070B2F  · body #34446D · muted #6A7592
+     card border      #E1E6F3  · divider #E8ECF5  · canvas #FBFCFF
+     blue #1C78FF · green #10B981 · orange #F97316 · pink #EC4C89
+     tints: mint #DDF8EB · blue #E4F1FF · peach #FFF0E0 · purple #EFEAFF
+   Type: Inter (already the app font). All weights capped at 700.
+   Co-exists with the shared design-system tokens; never touches globals.
+   ============================================================ */
+
+/* Kit canvas — the Contact Directory mockups use a flat near-white (#FBFCFF),
+   not the product-wide teal/gold app-shell gradient. Page-scoped override
+   (no shared-file edit), same technique as dashboard / connections / devices. */
+.app--canvas:has(.cd-page) {
+  background-image: none;
+  background-color: #fbfcff;
+}
+
+.cd-page {
+  --cd-vio: #4020ff;
+  --cd-vio-2: #5635ff;
+  --cd-vio-3: #3417dd;
+  --cd-vio-grad: linear-gradient(135deg, #5635ff, #3417dd);
+  --cd-lav: #eee9ff;
+  --cd-lav-2: #efeaff;
+  --cd-lav-border: #c8bcff;
+  --cd-ink: #070b2f;
+  --cd-ink-2: #34446d;
+  --cd-muted: #6a7592;
+  --cd-muted-2: #94a1bd;
+  --cd-line: #e1e6f3;
+  --cd-line-2: #e8ecf5;
+  --cd-blue: #1c78ff;
+  --cd-blue-tile: #e4f1ff;
+  --cd-green: #10b981;
+  --cd-green-ink: #047857;
+  --cd-green-tile: #ddf8eb;
+  --cd-orange: #f97316;
+  --cd-orange-tile: #fff0e0;
+  --cd-pink: #ec4c89;
+  --cd-pink-tile: #fce7f0;
+  --cd-shadow: 0 1px 2px rgba(20, 28, 70, 0.04), 0 8px 24px rgba(20, 28, 70, 0.05);
+  --cd-shadow-lg: 0 10px 28px rgba(20, 28, 70, 0.06);
+  display: block;
+  color: var(--cd-ink);
+}
+
+/* The kit page owns the header + tabs + panels; keep the section rhythm loose. */
+.cd-page .ph__title,
+.cd-page h1,
+.cd-page h2,
+.cd-page h3,
+.cd-page h4 {
+  font-family: "Inter", var(--f-ui), system-ui, sans-serif;
+  color: var(--cd-ink);
+}
+
+/* ── Card primitive (kit) ─────────────────────────────────────────────── */
+.cd-card {
+  background: #fff;
+  border: 1px solid var(--cd-line);
+  border-radius: 14px;
+  box-shadow: var(--cd-shadow);
+}
+.cd-card--pad {
+  padding: 20px;
+}
+
+/* ── Tabs (kit): underline active, muted inactive ─────────────────────── */
+.cd-tabs {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--cd-line-2);
+  margin-bottom: 20px;
+}
+.cd-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px 12px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--cd-muted);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 120ms ease, border-color 120ms ease;
+  white-space: nowrap;
+}
+.cd-tab:hover {
+  color: var(--cd-ink-2);
+}
+.cd-tab.is-active {
+  color: var(--cd-vio);
+  border-bottom-color: var(--cd-vio);
+}
+.cd-tab__ico {
+  display: inline-flex;
+  opacity: 0.9;
+}
+
+/* ── KPI cards (Contacts tab) ─────────────────────────────────────────── */
+.cd-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.cd-kpi {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px;
+}
+.cd-kpi__tile {
+  width: 56px;
+  height: 56px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cd-kpi__tile--vio {
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+}
+.cd-kpi__tile--blue {
+  background: var(--cd-blue-tile);
+  color: var(--cd-blue);
+}
+.cd-kpi__tile--green {
+  background: var(--cd-green-tile);
+  color: var(--cd-green);
+}
+.cd-kpi__tile--orange {
+  background: var(--cd-orange-tile);
+  color: var(--cd-orange);
+}
+.cd-kpi__body {
+  min-width: 0;
+}
+.cd-kpi__label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cd-muted);
+  margin: 0 0 3px;
+}
+.cd-kpi__value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cd-ink);
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+.cd-kpi__sub {
+  font-size: 11.5px;
+  color: var(--cd-muted-2);
+  margin: 4px 0 0;
+}
+
+/* ── Section heads inside cards ───────────────────────────────────────── */
+.cd-sec-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--cd-line-2);
+}
+.cd-sec-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--cd-ink);
+  margin: 0;
+}
+.cd-sec-sub {
+  font-size: 12.5px;
+  color: var(--cd-muted);
+  margin: 2px 0 0;
+  line-height: 1.5;
+}
+.cd-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cd-vio);
+  text-decoration: none;
+  white-space: nowrap;
+}
+.cd-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Buttons (kit variants layered on the shared .btn base) ───────────── */
+.cd-page .btn--pri,
+.cd-btn-pri {
+  background: var(--cd-vio-grad);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: 0 8px 20px rgba(64, 32, 255, 0.22);
+}
+.cd-page .btn--pri:hover,
+.cd-btn-pri:hover {
+  filter: brightness(1.04);
+}
+.cd-btn-ghost-vio {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 14px;
+  border-radius: 11px;
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cd-btn-ghost-vio:hover {
+  background: #e6dfff;
+}
+.cd-btn-out {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 8px 13px;
+  border-radius: 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #fff;
+  color: var(--cd-vio);
+  border: 1px solid var(--cd-lav-border);
+  text-decoration: none;
+  cursor: pointer;
+}
+.cd-btn-out:hover {
+  background: var(--cd-lav);
+}
+
+/* ── Segment metric cards (Segments tab: 7-up row) ────────────────────── */
+.cd-seg-cards {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+.cd-seg-card {
+  display: flex;
+  flex-direction: column;
+  padding: 16px 16px 14px;
+  min-width: 0;
+}
+.cd-seg-card__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.cd-seg-card__tile {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+}
+.cd-seg-card__val {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cd-ink);
+  font-variant-numeric: tabular-nums;
+}
+.cd-seg-card__name {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--cd-ink);
+  margin: 0 0 4px;
+}
+.cd-seg-card__desc {
+  font-size: 12px;
+  color: var(--cd-muted);
+  line-height: 1.45;
+  margin: 0 0 14px;
+  flex: 1;
+}
+.cd-seg-card__cta {
+  margin-top: auto;
+}
+.cd-seg-card__cta .cd-btn-out {
+  width: 100%;
+}
+
+/* ── Import & Export tiles ────────────────────────────────────────────── */
+.cd-ie-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.16fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.cd-ie-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 20px 0;
+}
+.cd-ie-head__tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+.cd-ie-head__tile--vio {
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+}
+.cd-ie-head__tile--green {
+  background: var(--cd-green-tile);
+  color: #4baa3d;
+}
+.cd-ie-head__title {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--cd-ink);
+  margin: 2px 0 4px;
+}
+.cd-ie-head__sub {
+  font-size: 13px;
+  color: var(--cd-ink-2);
+  line-height: 1.5;
+  margin: 0;
+  max-width: 40ch;
+}
+
+/* Illustration frames — the kit rasters carry their own transparent bg. */
+.cd-illus {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+.cd-illus--book {
+  width: 300px;
+}
+.cd-illus--edu {
+  width: 210px;
+}
+.cd-illus--csv {
+  width: 176px;
+}
+.cd-illus--sync {
+  width: 100%;
+  max-width: 420px;
+}
+.cd-illus--export {
+  width: 250px;
+}
+
+/* Info strip (lavender) */
+.cd-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  background: #f5f2ff;
+  border: 1px solid var(--cd-line-2);
+  font-size: 12.5px;
+  color: var(--cd-ink-2);
+}
+.cd-info__ico {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: var(--cd-vio);
+  color: #fff;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+/* Empty-state onboarding panel (Contacts + Segments empty) */
+.cd-empty {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 24px;
+  padding: 36px 40px;
+  min-height: 420px;
+}
+.cd-empty--center {
+  grid-template-columns: minmax(0, 1fr);
+  justify-items: center;
+  text-align: center;
+}
+.cd-empty__art {
+  display: grid;
+  place-items: center;
+}
+.cd-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 12px;
+  border-radius: 999px;
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+  font-size: 11.5px;
+  font-weight: 700;
+  margin-bottom: 14px;
+}
+.cd-empty__title {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cd-ink);
+  margin: 0 0 10px;
+  line-height: 1.1;
+}
+.cd-empty__body {
+  font-size: 14px;
+  color: var(--cd-ink-2);
+  line-height: 1.6;
+  margin: 0 0 20px;
+  max-width: 46ch;
+}
+.cd-empty--center .cd-empty__body {
+  margin-left: auto;
+  margin-right: auto;
+}
+.cd-empty__actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.cd-empty--center .cd-empty__actions {
+  justify-content: center;
+}
+.cd-or {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 22px 0 16px;
+  color: var(--cd-muted-2);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+.cd-or::before,
+.cd-or::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--cd-line-2);
+}
+.cd-sources {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cd-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid var(--cd-line);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cd-ink-2);
+  text-decoration: none;
+  cursor: pointer;
+}
+.cd-source:hover {
+  border-color: var(--cd-lav-border);
+  background: #fbfaff;
+}
+
+/* Right education panel (checklist) */
+.cd-edu__title {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--cd-ink);
+  margin: 16px 0 6px;
+}
+.cd-edu__body {
+  font-size: 13px;
+  color: var(--cd-ink-2);
+  line-height: 1.55;
+  margin: 0 0 18px;
+}
+.cd-check {
+  list-style: none;
+  margin: 0 0 20px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+.cd-check li {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  font-size: 13px;
+  color: var(--cd-ink-2);
+}
+.cd-check__ico {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+/* Shopify connected/not-connected panels (Import tab) */
+.cd-shop {
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+.cd-shop--ok {
+  background: #f5fcf7;
+  border: 1px solid #cdeedb;
+}
+.cd-shop--off {
+  background: #f8fbf8;
+  border: 1px solid #dceade;
+}
+.cd-shop__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cd-shop__metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 14px 0;
+  padding-top: 14px;
+  border-top: 1px solid #d7eadf;
+}
+.cd-shop__metric-v {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--cd-green-ink);
+  font-variant-numeric: tabular-nums;
+}
+.cd-shop__metric-l {
+  font-size: 11.5px;
+  color: var(--cd-muted);
+  margin-top: 2px;
+}
+
+/* Kit status pills */
+.cd-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.cd-badge--ok {
+  background: var(--cd-green-tile);
+  color: var(--cd-green-ink);
+}
+.cd-badge--warn {
+  background: #fff0d6;
+  color: #b45309;
+}
+.cd-badge--info {
+  background: var(--cd-blue-tile);
+  color: #1554b3;
+}
+
+/* ── Export card layout (Import & Export tab) ─────────────────────────── */
+.cd-export {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  padding: 8px 20px 22px;
+}
+.cd-export__art {
+  flex-shrink: 0;
+  padding-right: 28px;
+  border-right: 1px solid var(--cd-line-2);
+}
+.cd-export__ctrls {
+  flex: 1;
+  min-width: 0;
+}
+.cd-fmt {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 12px;
+  border-radius: 9px;
+  background: #f4f5fa;
+  color: var(--cd-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .cd-export {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  .cd-export__art {
+    border-right: none;
+    padding-right: 0;
+  }
+}
+
+/* ── Segments tab layout (main + right analytics) ─────────────────────── */
+.cd-seg-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 16px;
+  align-items: start;
+}
+.cd-seg-left {
+  min-width: 0;
+}
+.cd-seg-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* Custom-segments table (kit) */
+.cd-seg-tbl th {
+  font-size: 10.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--cd-muted);
+  font-weight: 700;
+}
+.cd-seg-tbl td {
+  vertical-align: middle;
+}
+.cd-seg-tbl__ico {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  background: var(--cd-lav);
+  color: var(--cd-vio);
+}
+
+/* Right analytics: performance 2×2 */
+.cd-perf-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.cd-perf__l {
+  font-size: 11.5px;
+  color: var(--cd-muted);
+  margin-bottom: 4px;
+}
+.cd-perf__v {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--cd-ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Right analytics: suggestions */
+.cd-sugg {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.cd-sugg li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  justify-content: space-between;
+}
+.cd-sugg__t {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--cd-ink);
+}
+.cd-sugg__s {
+  font-size: 11.5px;
+  color: var(--cd-muted);
+  margin-top: 2px;
+}
+
+/* ── Responsive collapse for kit grids ────────────────────────────────── */
+@media (max-width: 1180px) {
+  .cd-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cd-seg-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .cd-ie-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cd-seg-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 720px) {
+  .cd-kpis {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cd-seg-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cd-empty {
+    grid-template-columns: minmax(0, 1fr);
+    text-align: center;
+  }
+  .cd-empty__art {
+    order: -1;
+  }
+  .cd-empty__body {
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .cd-empty__actions {
+    justify-content: center;
+  }
+}
+
 /*
  * Contacts CRM workspace — route-scoped styles (imported by app/contacts/page.tsx).
  * All classes are .crm- prefixed; tokens come from globals.css / design-system.css.
