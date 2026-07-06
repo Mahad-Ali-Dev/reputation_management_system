@@ -53,18 +53,28 @@ export type ThreadListItem = {
   unreadCount: number;
 };
 
-/** Pull a display name + the widget-origin marker out of `participant` JSON. */
-function readParticipant(p: unknown): { name: string | null; startedViaWidget: boolean } {
-  if (!p || typeof p !== "object") return { name: null, startedViaWidget: false };
+/** Pull a display name, widget-origin marker, + contact email/phone out of
+ *  `participant` JSON (used by the contact-panel Details grid). */
+function readParticipant(p: unknown): {
+  name: string | null;
+  startedViaWidget: boolean;
+  email: string | null;
+  phone: string | null;
+} {
+  if (!p || typeof p !== "object") {
+    return { name: null, startedViaWidget: false, email: null, phone: null };
+  }
   const obj = p as Record<string, unknown>;
+  const email = typeof obj.email === "string" ? obj.email : null;
+  const phone = typeof obj.phone === "string" ? obj.phone : null;
   const name =
     (typeof obj.name === "string" && obj.name) ||
     (typeof obj.displayName === "string" && obj.displayName) ||
-    (typeof obj.email === "string" && obj.email) ||
-    (typeof obj.phone === "string" && obj.phone) ||
+    email ||
+    phone ||
     null;
   const startedViaWidget = obj.startedViaWidget === true;
-  return { name, startedViaWidget };
+  return { name, startedViaWidget, email, phone };
 }
 
 function toListItem(t: {
@@ -158,7 +168,14 @@ export type ThreadMessage = {
 };
 
 export type ThreadDetail = {
-  thread: ThreadListItem & { externalThreadId: string | null; establishmentId: string | null };
+  thread: ThreadListItem & {
+    externalThreadId: string | null;
+    establishmentId: string | null;
+    /** Contact fields for the panel Details grid (from participant JSON + row). */
+    email: string | null;
+    phone: string | null;
+    customerSince: string | null;
+  };
   messages: ThreadMessage[];
 };
 
@@ -188,6 +205,7 @@ export async function getThreadWithMessages(args: {
             status: true,
             assigneeId: true,
             participant: true,
+            createdAt: true,
             externalThreadId: true,
             establishmentId: true,
             lastMessageAt: true,
@@ -217,11 +235,15 @@ export async function getThreadWithMessages(args: {
         });
 
         const base = toListItem(t);
+        const ident = readParticipant(t.participant);
         return {
           thread: {
             ...base,
             externalThreadId: t.externalThreadId,
             establishmentId: t.establishmentId,
+            email: ident.email,
+            phone: ident.phone,
+            customerSince: t.createdAt ? t.createdAt.toISOString() : null,
           },
           messages: messages.map((m) => ({
             id: m.id,

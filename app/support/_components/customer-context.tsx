@@ -31,6 +31,14 @@ function relativeTime(iso: string): string {
   return `${d}d ago`;
 }
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+/** Deterministic (UTC) date format — avoids server/client hydration mismatch. */
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`;
+}
+
 export function CustomerContext({
   thread,
   messageCount,
@@ -119,10 +127,15 @@ export function CustomerContext({
           <Link href="/contacts" className="uik-sect__action">Edit</Link>
         </div>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", rowGap: 14, columnGap: 18 }}>
-          <Detail icon="cal" label="Channel" value={channelLabel(thread.channel)} />
-          <Detail icon="chat" label="Messages" value={String(messageCount)} />
+          {thread.customerSince && (
+            <Detail icon="cal" label="Customer since" value={formatDate(thread.customerSince)} />
+          )}
+          <Detail icon="chat" label="Channel" value={channelLabel(thread.channel)} />
+          {thread.email && <Detail icon="mail" label="Email" value={thread.email} wide />}
+          {thread.phone && <Detail icon="phone" label="Phone" value={thread.phone} />}
+          <Detail icon="reply" label="Messages" value={String(messageCount)} />
           <Detail icon="info" label="Status" value={thread.status === "resolved" ? "Resolved" : "Open"} />
-          {thread.startedViaWidget && <Detail icon="plug" label="Origin" value="Website widget" />}
+          {thread.startedViaWidget && <Detail icon="plug" label="Origin" value="Website widget" wide />}
         </div>
       </div>
 
@@ -247,14 +260,31 @@ function LabelPill({ tone, label }: { tone: keyof typeof LABEL_TONES; label: str
   );
 }
 
-function Detail({ icon, label, value }: { icon: Parameters<typeof Icon>[0]["name"]; label: string; value: string }) {
+function Detail({
+  icon,
+  label,
+  value,
+  wide,
+}: {
+  icon: Parameters<typeof Icon>[0]["name"];
+  label: string;
+  value: string;
+  /** Span both grid columns (for long values like an email address). */
+  wide?: boolean;
+}) {
   return (
-    <div>
+    <div style={wide ? { gridColumn: "1 / -1", minWidth: 0 } : { minWidth: 0 }}>
       <span className="uik-field__label">
         <Icon name={icon} size={12} />
         {label}
       </span>
-      <span className="uik-field__value">{value}</span>
+      <span
+        className="uik-field__value"
+        style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}
+        title={value}
+      >
+        {value}
+      </span>
     </div>
   );
 }

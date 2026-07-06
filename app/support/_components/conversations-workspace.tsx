@@ -42,6 +42,9 @@ export type WorkThread = {
 export type WorkThreadDetail = WorkThread & {
   externalThreadId: string | null;
   establishmentId: string | null;
+  email: string | null;
+  phone: string | null;
+  customerSince: string | null;
 };
 
 export type WorkMessage = {
