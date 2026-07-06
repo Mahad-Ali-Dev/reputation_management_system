@@ -114,10 +114,20 @@ async function SessionsLoader({ orgId, sessionId }: { orgId: string; sessionId?:
   );
 }
 
+/** A clean anonymous-visitor label. The old `Visitor ${visitorId.slice(0,6)}`
+ *  produced ugly partial IDs like "Visitor owner-" (slicing across a hyphen);
+ *  use the last 4 alphanumerics as a short code, or a plain fallback. */
+function visitorLabel(displayName: string | null, email: string | null, visitorId: string): string {
+  if (displayName?.trim()) return displayName.trim();
+  if (email?.trim()) return email.trim();
+  const code = visitorId.replace(/[^a-zA-Z0-9]/g, "").slice(-4).toUpperCase();
+  return code ? `Website visitor ${code}` : "Website visitor";
+}
+
 function toSessionView(s: LiveSession): SessionView {
   return {
     conversationId: s.conversationId,
-    name: s.displayName || (s.email ?? `Visitor ${s.visitorId.slice(0, 6)}`),
+    name: visitorLabel(s.displayName, s.email, s.visitorId),
     email: s.email,
     phone: s.phone,
     location: s.location,
