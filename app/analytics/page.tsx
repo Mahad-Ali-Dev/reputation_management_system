@@ -70,9 +70,13 @@ export default async function AnalyticsPage({
   const requestedTab = (sp.tab ?? "overview") as ReportTabKey;
   const activeTab: ReportTabKey = VALID_TABS.has(requestedTab) ? requestedTab : "overview";
 
+  // Every critical-path fetch is fail-soft (.catch → default): a missing SEO
+  // table (unmigrated prod), an RLS grant gap, or a slow/broken query must NOT
+  // reject the Promise.all and crash the whole report. Worst case the report
+  // renders with empty panels instead of the error boundary ("not working").
   const [entitled, establishmentId] = await Promise.all([
-    isOrgEntitled(orgId),
-    getPrimaryEstablishmentId(orgId),
+    isOrgEntitled(orgId).catch(() => false),
+    getPrimaryEstablishmentId(orgId).catch(() => null),
   ]);
 
   const header = (
@@ -92,11 +96,11 @@ export default async function AnalyticsPage({
   // Reputation-first data (always available). SEO/competitor data only when
   // entitled — we never fetch+send gated panel content to a non-entitled client.
   const [metrics, snapshots, latestSnapshot, competitors, geoGrid] = await Promise.all([
-    buildOverviewMetrics(orgId, rangeDays, establishmentId),
-    listSeoSnapshots(orgId, { establishmentId }),
-    getSeoSnapshotLatest(orgId, establishmentId),
-    listCompetitors(orgId, establishmentId),
-    getGeoGridLatest(orgId, establishmentId),
+    buildOverviewMetrics(orgId, rangeDays, establishmentId), // already fail-soft internally
+    listSeoSnapshots(orgId, { establishmentId }).catch(() => []),
+    getSeoSnapshotLatest(orgId, establishmentId).catch(() => null),
+    listCompetitors(orgId, establishmentId).catch(() => []),
+    getGeoGridLatest(orgId, establishmentId).catch(() => null),
   ]);
 
   // The AI executive summary (generateExecSummary → Anthropic, ~15s) is NOT
@@ -258,7 +262,24 @@ async function ExecSummaryAsync({
   metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>;
   entitled: boolean;
 }) {
-  const s = serializeSummary(await generateExecSummary(orgId, rangeDays, metrics));
+  // Hard-bound the Anthropic call so the streamed response can't hang for 15s+
+  // (which, behind a buffering reverse proxy, reads as "report never loads").
+  // On timeout / error → a neutral card the user can Regenerate.
+  const s = await withTimeout(
+    generateExecSummary(orgId, rangeDays, metrics).then(serializeSummary).catch(() => null),
+    9000,
+    null,
+  );
+  if (!s) {
+    return (
+      <ExecSummaryCard
+        summary="Your executive summary is taking longer than usual to generate. Hit Regenerate to try again."
+        generatedAt={null}
+        ai={false}
+        canRegenerate={entitled}
+      />
+    );
+  }
   return (
     <ExecSummaryCard
       summary={s.summary}
@@ -267,6 +288,15 @@ async function ExecSummaryAsync({
       canRegenerate={entitled}
     />
   );
+}
+
+/** Race a promise against a timeout that resolves to a fallback — bounds any
+ *  slow external call so a streamed Suspense boundary can't hang the response. */
+function withTimeout<T>(p: Promise<T>, ms: number, onTimeout: T): Promise<T> {
+  return Promise.race([
+    p,
+    new Promise<T>((resolve) => setTimeout(() => resolve(onTimeout), ms)),
+  ]);
 }
 
 /** Streamed SEO & Visibility panel — wraps renderSeoPanel in a component so its
@@ -281,7 +311,11 @@ async function SeoPanelAsync({
   establishmentId: string | null;
   metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>;
 }) {
-  return await renderSeoPanel(orgId, establishmentId, metrics);
+  try {
+    return await renderSeoPanel(orgId, establishmentId, metrics);
+  } catch {
+    return <PanelUnavailable label="SEO & Visibility" />;
+  }
 }
 
 /** Streamed Competitors panel — same rationale as SeoPanelAsync. */
@@ -296,7 +330,25 @@ async function CompetitorsPanelAsync({
   metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>;
   competitors: Awaited<ReturnType<typeof listCompetitors>>;
 }) {
-  return await renderCompetitorsPanel(orgId, establishmentId, metrics, competitors);
+  try {
+    return await renderCompetitorsPanel(orgId, establishmentId, metrics, competitors);
+  } catch {
+    return <PanelUnavailable label="Competitors" />;
+  }
+}
+
+/** Tiny degraded-state card for a panel whose data source failed (missing table,
+ *  RLS grant gap, external API down) — keeps the report shell alive. */
+function PanelUnavailable({ label }: { label: string }) {
+  return (
+    <div
+      className="ds-card"
+      style={{ padding: 28, textAlign: "center", color: "var(--ink-3, #667085)", fontSize: 13.5 }}
+    >
+      {label} data is temporarily unavailable. It’ll appear here once the
+      integration is connected and syncing.
+    </div>
+  );
 }
 
 async function renderSeoPanel(orgId: string, establishmentId: string | null, metrics: Awaited<ReturnType<typeof buildOverviewMetrics>>) {
