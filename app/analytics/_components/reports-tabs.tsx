@@ -3,6 +3,7 @@
 import { TabBar, type TabItem } from "@/components/tab-bar";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, type ReactNode } from "react";
+import { PanelBoundary } from "./panel-boundary";
 
 /**
  * Reports tab shell (Module 13) — the 6-tab persistent controller.
@@ -75,7 +76,7 @@ export function ReportsTabs({
       <div>
         {REPORT_TABS.map((t) => (
           <div key={t.key} hidden={t.key !== effectiveActive} id={`panel-${t.key}`} role="tabpanel" aria-labelledby={`tab-${t.key}`}>
-            {panels[t.key]}
+            <PanelBoundary label={t.label}>{panels[t.key]}</PanelBoundary>
           </div>
         ))}
       </div>

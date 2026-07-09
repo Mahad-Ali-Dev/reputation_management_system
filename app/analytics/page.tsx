@@ -109,14 +109,21 @@ export default async function AnalyticsPage({
   // streams inside <Suspense> via <ExecSummaryAsync/>, so the page shell + every
   // panel render in ~3s and the summary fills in when ready.
   const scoreFactors: ScoreFactor[] = metrics.seo.scoreFactors;
-  const recommendationsRaw = computeRecommendations({
-    establishmentId,
-    ourRecentReviewVelocity: metrics.reputation.recentReviewVelocity,
-    // A competitor's TOTAL review count isn't a velocity; down-scale to a
-    // comparable recent-window signal (≈ per-month) for the benchmark.
-    competitorVelocities: competitors.map((c) => Math.round((c.reviewCount ?? 0) / 12)),
-    geoGrid: geoGrid ? { keyword: geoGrid.keyword, areaLabel: null, cells: geoGrid.cells } : null,
-  });
+  // Guarded: computeRecommendations is a pure fn on the critical path (runs
+  // before the tab boundaries), so a throw here would crash the whole page.
+  let recommendationsRaw: ReturnType<typeof computeRecommendations> = [];
+  try {
+    recommendationsRaw = computeRecommendations({
+      establishmentId,
+      ourRecentReviewVelocity: metrics.reputation.recentReviewVelocity,
+      // A competitor's TOTAL review count isn't a velocity; down-scale to a
+      // comparable recent-window signal (≈ per-month) for the benchmark.
+      competitorVelocities: competitors.map((c) => Math.round((c.reviewCount ?? 0) / 12)),
+      geoGrid: geoGrid ? { keyword: geoGrid.keyword, areaLabel: null, cells: geoGrid.cells } : null,
+    });
+  } catch {
+    recommendationsRaw = [];
+  }
 
   // Geo grid props for the Recommendations + (future) geo views.
   const geoGridProps = geoGrid
