@@ -3,32 +3,29 @@
 /**
  * LandingCommandCenter — "Every location. One pane of glass."
  *
- * The ONE product-data section of the dark repulabs marketing home: a single
- * mega-bento on the shared #070b16 canvas that absorbs the old metrics-cards
- * section. Twelve-column dark glass grid —
- *   Row 1: WorldMap (7 cols)   → dotted-map@3 world dots re-tinted for dark +
- *           motion/react cyan→blue glowing arcs (stroke + blurred glow copy,
- *           comet heads, pulsing endpoints, dark-glass city labels) with a
- *           floating live-review chip,
- *          InboxFeed (5 cols)  → live unified-inbox feed, dark rows, same
- *           scaleUp stagger + gradient avatar tiles,
- *   Row 2: VolumeChart (5 cols)→ recharts AreaChart re-tinted (blue/cyan 45%→0
- *           vertical gradients, dark tooltip),
- *          Metric cells (7 cols)→ three compact Visual3 hover-layer cells
- *           ported from metrics-cards.tsx (Average rating / Reviews / Bookings)
- *           with #4a7dff / #a78bfa / #34d399 colorways glowing on dark,
- *   Row 3: two wide hover FeatureCards (Autopilot / Weekly digest) with the
- *           corner preview panel + arrow chip that rotates -45° on hover.
+ * The multi-location proof section of the repulabs marketing home, ported from
+ * the founder's `hero section.txt` CombinedFeaturedSection + WorldMap: a 2×2
+ * command-center grid of white panels —
+ *   1. WorldMap    → dotted-map@3 world dots + motion/react animated connection
+ *                    arcs (blue→cyan gradient, comet heads, pulsing endpoints,
+ *                    hoverable city labels) with a floating live-review chip,
+ *   2. InboxFeed   → the RuixenFeaturedMessageCard message stack re-cast as a
+ *                    live unified-inbox feed (same scaleUp stagger keyframes,
+ *                    gradient avatar tiles, bottom fade),
+ *   3. VolumeChart → the MonitoringChart AreaChart on recharts@3 (two series,
+ *                    dual vertical gradient fills, hidden axes, rounded tooltip),
+ *   4. FeatureCards→ two ported hover cards with the corner preview panel and
+ *                    the arrow chip that rotates -45° on hover.
  *
  * Animation primitives (from `@/components/landing/anim`):
- *   - Reveal   → staggered scroll-in fade-up for the header and each cell
- *   - ShinyText→ sheen sweep across the COMMAND CENTER eyebrow
- *   - DotGrid  → interactive dot matrix accent in the section background
+ *   - Reveal   → staggered scroll-in fade-up for the header and each panel
+ *   - ShinyText→ premium sheen sweep across the COMMAND CENTER badge label
+ *   - DotGrid  → interactive dot matrix in the section background
  *   - Float    → gentle idle bob on the floating "new 5-star" chip
  *
- * Dark design system: bg #070b16 (seamless canvas — glow accent only), glass
- * cards rgba(255,255,255,0.035) with rgba(255,255,255,0.09) borders, white
- * headings ≤700, body #9db0d6, muted #6b7ba3, cyan #22d3ee eyebrow.
+ * Brand: light premium — white / very-light-blue surface, 1px #e7ecf6 card
+ * borders, blue #2563eb primary, cyan #22d3ee + violet #7c3aed accents,
+ * Inter ≤700 (no faux-bold).
  */
 
 import DottedMap from "dotted-map";
@@ -41,18 +38,18 @@ import {
   MapPin,
 } from "lucide-react";
 import { AnimatePresence, motion, useInView } from "motion/react";
-import { useId, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { DotGrid, Float, Reveal, ShinyText } from "@/components/landing/anim";
 
-/* ─────────────────────────── shared dark glass shell ─────────────────────────── */
+/* ─────────────────────────── shared panel shell ─────────────────────────── */
 
-const PANEL_SHADOW = "0 24px 60px -36px rgba(2,6,23,0.9)";
+const PANEL_SHADOW = "0 14px 34px -18px rgba(26,43,95,0.16)";
 
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
     <div
-      className={`relative h-full overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.035] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/[0.16] ${className}`}
+      className={`relative h-full overflow-hidden rounded-2xl border border-[#e7ecf6] bg-white ${className}`}
       style={{ boxShadow: PANEL_SHADOW }}
     >
       {children}
@@ -60,21 +57,20 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
   );
 }
 
-/** Small icon+label kicker row shared by every panel. */
+/** Small icon+label kicker row shared by every panel (original tag row). */
 function PanelKicker({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <span className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b7ba3]">
-      <span className="text-[#22d3ee]">{icon}</span>
+    <span className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7a86a3]">
+      {icon}
       {label}
     </span>
   );
 }
 
-/* ─────────────────────────── 1. WorldMap (dark) ───────────────────────────
-   dotted-map + motion arcs re-tinted for the dark canvas: rgba(158,180,255,.35)
-   dots, arcs sweep cyan #22d3ee → blue #4a7dff with a blurred glow copy under
-   the stroke, comet heads ride each arc via CSS offset-path, endpoints pulse,
-   labels are dark-glass chips. */
+/* ─────────────────────────── 1. WorldMap ───────────────────────────
+   Port of the founder's WorldMap (dotted-map + motion arcs). Light-only:
+   #94a3c8 dots, arcs sweep blue #2563eb → cyan #22d3ee, comet heads ride
+   each arc via CSS offset-path, endpoints pulse, labels fade in. */
 
 type Arc = {
   start: { lat: number; lng: number; label?: string };
@@ -89,7 +85,7 @@ const ARCS: Arc[] = [
   { start: { lat: -33.87, lng: 151.21, label: "Sydney" }, end: { lat: 1.35, lng: 103.82 } },
 ];
 
-const ARC_BLUE = "#4a7dff";
+const ARC_BLUE = "#2563eb";
 const ARC_CYAN = "#22d3ee";
 
 function projectPoint(lat: number, lng: number) {
@@ -114,7 +110,7 @@ function MapLabel({ x, y, text, delay }: { x: number; y: number; text: string; d
     >
       <foreignObject x={x - 50} y={y - 35} width="100" height="30" className="block">
         <div className="flex h-full items-center justify-center">
-          <span className="rounded-md border border-white/10 bg-[#0d1526]/90 px-2 py-0.5 text-xs font-medium text-[#e6ecff] backdrop-blur-sm">
+          <span className="rounded-md border border-[#e7ecf6] bg-white/95 px-2 py-0.5 text-sm font-medium text-[#0b1220] shadow-sm">
             {text}
           </span>
         </div>
@@ -138,9 +134,9 @@ function WorldMap({
     () =>
       map.getSVG({
         radius: 0.22,
-        color: "rgba(158,180,255,0.35)",
+        color: "#94a3c8",
         shape: "circle",
-        backgroundColor: "transparent",
+        backgroundColor: "white",
       }),
     [map],
   );
@@ -152,7 +148,7 @@ function WorldMap({
   const fullCycleDuration = totalAnimationTime + pauseTime;
 
   return (
-    <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg font-sans">
+    <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-white font-sans">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
@@ -170,10 +166,10 @@ function WorldMap({
       >
         <defs>
           <linearGradient id={`${uid}-arc`} x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={ARC_CYAN} stopOpacity="0" />
-            <stop offset="5%" stopColor={ARC_CYAN} stopOpacity="1" />
-            <stop offset="95%" stopColor={ARC_BLUE} stopOpacity="1" />
-            <stop offset="100%" stopColor={ARC_BLUE} stopOpacity="0" />
+            <stop offset="0%" stopColor="white" stopOpacity="0" />
+            <stop offset="5%" stopColor={ARC_BLUE} stopOpacity="1" />
+            <stop offset="95%" stopColor={ARC_CYAN} stopOpacity="1" />
+            <stop offset="100%" stopColor="white" stopOpacity="0" />
           </linearGradient>
 
           <filter id={`${uid}-glow`}>
@@ -183,10 +179,6 @@ function WorldMap({
               <feMergeNode in="coloredBlur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
-          </filter>
-
-          <filter id={`${uid}-arcblur`} x="-20%" y="-20%" width="140%" height="140%">
-            <feGaussianBlur stdDeviation="2.4" />
           </filter>
         </defs>
 
@@ -200,29 +192,9 @@ function WorldMap({
           const endTime = (i * staggerDelay + animationDuration) / fullCycleDuration;
           const resetTime = totalAnimationTime / fullCycleDuration;
 
-          const arcTransition = {
-            duration: fullCycleDuration,
-            times: [0, startTime, endTime, resetTime, 1],
-            ease: "easeInOut" as const,
-            repeat: Number.POSITIVE_INFINITY,
-            repeatDelay: 0,
-          };
-
           return (
             // biome-ignore lint/suspicious/noArrayIndexKey: static decorative arc list
             <g key={`path-group-${i}`}>
-              {/* blurred glow copy under the stroke — makes the arc bloom on dark */}
-              <motion.path
-                d={path}
-                fill="none"
-                stroke={`url(#${uid}-arc)`}
-                strokeWidth="3.5"
-                opacity="0.55"
-                filter={`url(#${uid}-arcblur)`}
-                initial={{ pathLength: 0 }}
-                animate={{ pathLength: [0, 0, 1, 1, 0] }}
-                transition={arcTransition}
-              />
               <motion.path
                 d={path}
                 fill="none"
@@ -230,20 +202,31 @@ function WorldMap({
                 strokeWidth="1"
                 initial={{ pathLength: 0 }}
                 animate={{ pathLength: [0, 0, 1, 1, 0] }}
-                transition={arcTransition}
+                transition={{
+                  duration: fullCycleDuration,
+                  times: [0, startTime, endTime, resetTime, 1],
+                  ease: "easeInOut",
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatDelay: 0,
+                }}
               />
 
               {/* comet head riding the arc */}
               <motion.circle
                 r="4"
                 fill={ARC_CYAN}
-                filter={`url(#${uid}-glow)`}
                 initial={{ offsetDistance: "0%", opacity: 0 }}
                 animate={{
                   offsetDistance: [null, "0%", "100%", "100%", "100%"],
                   opacity: [0, 0, 1, 0, 0],
                 }}
-                transition={arcTransition}
+                transition={{
+                  duration: fullCycleDuration,
+                  times: [0, startTime, endTime, resetTime, 1],
+                  ease: "easeInOut",
+                  repeat: Number.POSITIVE_INFINITY,
+                  repeatDelay: 0,
+                }}
                 style={{ offsetPath: `path('${path}')` }}
               />
             </g>
@@ -278,7 +261,7 @@ function WorldMap({
                       filter={`url(#${uid}-glow)`}
                       className="drop-shadow-lg"
                     />
-                    <circle cx={point.x} cy={point.y} r="3" fill={ARC_CYAN} opacity="0.5">
+                    <circle cx={point.x} cy={point.y} r="3" fill={ARC_BLUE} opacity="0.5">
                       <animate attributeName="r" from="3" to="12" dur="2s" begin={begin} repeatCount="indefinite" />
                       <animate attributeName="opacity" from="0.6" to="0" dur="2s" begin={begin} repeatCount="indefinite" />
                     </circle>
@@ -298,7 +281,7 @@ function WorldMap({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-4 left-4 rounded-lg border border-white/10 bg-[#0d1526]/90 px-3 py-2 text-sm font-medium text-[#e6ecff] backdrop-blur-sm sm:hidden"
+            className="absolute bottom-4 left-4 rounded-lg border border-[#e7ecf6] bg-white/90 px-3 py-2 text-sm font-medium text-[#0b1220] backdrop-blur-sm sm:hidden"
           >
             {hoveredLocation}
           </motion.div>
@@ -308,9 +291,9 @@ function WorldMap({
   );
 }
 
-/* ─────────────────────────── 2. Unified-inbox feed (dark) ───────────────────────────
-   Same scaleUp stagger (keyframes inlined, 300ms per row, fill forwards) with
-   dark glass rows — the gradient avatar tiles pop on the dark canvas. Rows only
+/* ─────────────────────────── 2. Unified-inbox feed ───────────────────────────
+   Port of RuixenFeaturedMessageCard — same scaleUp stagger (keyframes inlined,
+   300ms per row, fill forwards), gradient avatar tiles, bottom fade. Rows only
    start animating once scrolled into view. */
 
 type FeedMessage = {
@@ -364,15 +347,15 @@ function InboxFeed() {
   const inView = useInView(ref, { once: true, margin: "0px 0px -10% 0px" });
 
   return (
-    <div ref={ref} className="relative h-full min-h-[280px] w-full overflow-hidden">
-      {/* fade shadow overlay — fades to the composite glass-card surface */}
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-14 bg-gradient-to-t from-[#10141e] to-transparent" />
+    <div ref={ref} className="relative h-[280px] w-full overflow-hidden">
+      {/* fade shadow overlay */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-14 bg-gradient-to-t from-white to-transparent" />
 
       <div className="relative z-0 space-y-2">
         {FEED.map((msg, i) => (
           <div
             key={msg.title}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border border-white/[0.08] bg-white/[0.04] p-3 transition duration-300 ease-in-out hover:-translate-y-0.5 hover:border-white/[0.14] hover:bg-white/[0.07]"
+            className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#e7ecf6] bg-white p-3 transition duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-sm"
             style={{
               opacity: 0,
               animation: inView
@@ -384,13 +367,13 @@ function InboxFeed() {
               className={`h-8 w-8 min-h-[2rem] min-w-[2rem] rounded-lg bg-gradient-to-br ${msg.color}`}
             />
             <div className="flex flex-col">
-              <div className="flex items-center gap-2 text-xs font-semibold text-[#e8eeff]">
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#0b1220]">
                 {msg.title}
-                <span className="text-xs font-normal text-[#6b7ba3] before:mr-1 before:content-['•']">
+                <span className="text-xs font-normal text-[#8b93a7] before:mr-1 before:content-['•']">
                   {msg.time}
                 </span>
               </div>
-              <p className="mt-0.5 line-clamp-1 text-xs text-[#9db0d6]">{msg.content}</p>
+              <p className="mt-0.5 line-clamp-1 text-xs text-[#5b6473]">{msg.content}</p>
             </div>
           </div>
         ))}
@@ -406,9 +389,9 @@ function InboxFeed() {
   );
 }
 
-/* ─────────────────────────── 3. Volume chart (dark) ───────────────────────────
-   recharts AreaChart re-tinted — blue #4a7dff / cyan #22d3ee series, vertical
-   gradient fills 45% → 0%, hidden axes, no grid, dark #0d1526 tooltip. */
+/* ─────────────────────────── 3. Volume chart ───────────────────────────
+   Port of MonitoringChart to recharts@3 — AreaChart, two series, dual vertical
+   gradient fills, hidden axes, rounded white tooltip. */
 
 const CHART_DATA = [
   { month: "Feb", reviews: 42, requests: 118 },
@@ -420,8 +403,8 @@ const CHART_DATA = [
 ];
 
 const SERIES = {
-  reviews: { label: "Reviews collected", color: "#4a7dff" },
-  requests: { label: "Requests sent", color: "#22d3ee" },
+  reviews: { label: "Reviews collected", color: "#2563eb" },
+  requests: { label: "Requests sent", color: "#60a5fa" },
 } as const;
 
 type TipItem = {
@@ -442,15 +425,15 @@ function ChartTip({
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="rounded-xl border border-white/10 bg-[#0d1526] px-3 py-2"
-      style={{ boxShadow: "0 14px 34px -14px rgba(2,6,23,0.9)" }}
+      className="rounded-xl border border-[#e7ecf6] bg-white px-3 py-2"
+      style={{ boxShadow: "0 10px 26px -12px rgba(26,43,95,0.28)" }}
     >
-      <div className="text-xs font-semibold text-white">{label}</div>
+      <div className="text-xs font-semibold text-[#0b1220]">{label}</div>
       {payload.map((p) => (
-        <div key={String(p.name)} className="mt-1 flex items-center gap-2 text-xs text-[#9db0d6]">
+        <div key={String(p.name)} className="mt-1 flex items-center gap-2 text-xs text-[#5b6473]">
           <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />
           {p.name}
-          <span className="ml-auto pl-3 font-semibold text-white">{p.value}</span>
+          <span className="ml-auto pl-3 font-semibold text-[#0b1220]">{p.value}</span>
         </div>
       ))}
     </div>
@@ -462,7 +445,7 @@ function VolumeChart() {
   return (
     <div>
       {/* mini legend */}
-      <div className="mb-2 flex items-center gap-4 text-xs text-[#9db0d6]">
+      <div className="mb-2 flex items-center gap-4 text-xs text-[#5b6473]">
         {Object.values(SERIES).map((s) => (
           <span key={s.label} className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full" style={{ background: s.color }} />
@@ -476,12 +459,12 @@ function VolumeChart() {
           <AreaChart data={CHART_DATA} margin={{ top: 6, right: 0, bottom: 0, left: 0 }}>
             <defs>
               <linearGradient id={`${uid}-reviews`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={SERIES.reviews.color} stopOpacity={0.45} />
-                <stop offset="100%" stopColor={SERIES.reviews.color} stopOpacity={0} />
+                <stop offset="0%" stopColor={SERIES.reviews.color} stopOpacity={0.8} />
+                <stop offset="55%" stopColor={SERIES.reviews.color} stopOpacity={0.08} />
               </linearGradient>
               <linearGradient id={`${uid}-requests`} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={SERIES.requests.color} stopOpacity={0.45} />
-                <stop offset="100%" stopColor={SERIES.requests.color} stopOpacity={0} />
+                <stop offset="0%" stopColor={SERIES.requests.color} stopOpacity={0.8} />
+                <stop offset="55%" stopColor={SERIES.requests.color} stopOpacity={0.08} />
               </linearGradient>
             </defs>
             <XAxis dataKey="month" hide />
@@ -510,262 +493,9 @@ function VolumeChart() {
   );
 }
 
-/* ─────────────────────────── 4. Visual3 metric cells (dark) ───────────────────────────
-   Compact port of the metrics-cards Visual3 layer stack — GridLayer (masked
-   grid, rgba(255,255,255,0.07) lines) → EllipseGradient (radial tint) →
-   Layer1 (stat pills, fade OUT on hover) → Layer2 (info chip, slides UP) →
-   Layer3 (bottom wash) → Layer4 (layered bars: base white/10, colored bars
-   with a drop-shadow glow; scales to 150% while every bar re-tweens). Same
-   cubic-bezier(0.6,0.6,0,1) 500ms choreography, made fluid-width via viewBox. */
-
-const CELL_VB = "0 0 356 180";
-
-const MetricGridLayer = () => (
-  <div
-    style={{ "--grid-color": "rgba(255,255,255,0.07)" } as CSSProperties}
-    className="pointer-events-none absolute inset-0 z-[4] h-full w-full bg-transparent bg-[linear-gradient(to_right,var(--grid-color)_1px,transparent_1px),linear-gradient(to_bottom,var(--grid-color)_1px,transparent_1px)] bg-[size:20px_20px] bg-center opacity-70 [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_60%,transparent_100%)]"
-  />
-);
-
-const MetricEllipse = ({ color }: { color: string }) => {
-  const gid = `lp-cc-radial-${color.replace("#", "")}`;
-  return (
-    <div className="absolute inset-0 z-[5] h-full w-full">
-      <svg
-        className="h-full w-full"
-        viewBox={CELL_VB}
-        preserveAspectRatio="none"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <rect width="356" height="180" fill={`url(#${gid})`} />
-        <defs>
-          <radialGradient
-            id={gid}
-            cx="0"
-            cy="0"
-            r="1"
-            gradientUnits="userSpaceOnUse"
-            gradientTransform="translate(178 98) rotate(90) scale(98 178)"
-          >
-            <stop stopColor={color} stopOpacity="0.28" />
-            <stop offset="0.34" stopColor={color} stopOpacity="0.15" />
-            <stop offset="1" stopOpacity="0" />
-          </radialGradient>
-        </defs>
-      </svg>
-    </div>
-  );
-};
-
-const MetricPills = ({
-  color,
-  secondaryColor,
-  pillPrimary,
-  pillSecondary,
-}: {
-  color: string;
-  secondaryColor: string;
-  pillPrimary: string;
-  pillSecondary: string;
-}) => (
-  <div
-    className="absolute left-3 top-3 z-[8] flex items-center gap-1"
-    style={{ "--color": color, "--secondary-color": secondaryColor } as CSSProperties}
-  >
-    <div className="flex shrink-0 items-center rounded-full border border-white/10 bg-white/[0.06] px-1.5 py-0.5 backdrop-blur-sm transition-opacity duration-300 ease-in-out group-hover/animated-card:opacity-0">
-      <div className="h-1.5 w-1.5 rounded-full bg-[var(--color)]" />
-      <span className="ml-1 text-[10px] font-semibold text-[#e8eeff]">{pillPrimary}</span>
-    </div>
-    <div className="flex shrink-0 items-center rounded-full border border-white/10 bg-white/[0.06] px-1.5 py-0.5 backdrop-blur-sm transition-opacity duration-300 ease-in-out group-hover/animated-card:opacity-0">
-      <div className="h-1.5 w-1.5 rounded-full bg-[var(--secondary-color)]" />
-      <span className="ml-1 text-[10px] font-semibold text-[#e8eeff]">{pillSecondary}</span>
-    </div>
-  </div>
-);
-
-const MetricHoverChip = ({ color, title, sub }: { color: string; title: string; sub: string }) => (
-  <div className="group relative h-full w-full" style={{ "--color": color } as CSSProperties}>
-    <div className="ease-[cubic-bezier(0.6,0.6,0,1)] absolute inset-0 z-[7] flex w-full translate-y-full items-start justify-center bg-transparent p-3 transition-transform duration-500 group-hover/animated-card:translate-y-0">
-      <div className="ease-[cubic-bezier(0.6,0.6,0,1)] rounded-md border border-white/10 bg-[#0d1526]/85 p-1.5 opacity-0 backdrop-blur-sm transition-opacity duration-500 group-hover/animated-card:opacity-100">
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-2 shrink-0 rounded-full bg-[var(--color)]" />
-          <p className="text-xs font-semibold text-white">{title}</p>
-        </div>
-        <p className="text-xs text-[#9db0d6]">{sub}</p>
-      </div>
-    </div>
-  </div>
-);
-
-const MetricWash = ({ color }: { color: string }) => {
-  const gid = `lp-cc-linear-${color.replace("#", "")}`;
-  return (
-    <div className="ease-[cubic-bezier(0.6,0.6,0,1)] absolute inset-0 z-[6] translate-y-full opacity-0 transition-all duration-500 group-hover/animated-card:translate-y-0 group-hover/animated-card:opacity-100">
-      <svg
-        className="h-full w-full"
-        viewBox={CELL_VB}
-        preserveAspectRatio="none"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden
-      >
-        <rect width="356" height="180" fill={`url(#${gid})`} />
-        <defs>
-          <linearGradient id={gid} x1="178" y1="0" x2="178" y2="180" gradientUnits="userSpaceOnUse">
-            <stop offset="0.35" stopColor={color} stopOpacity="0" />
-            <stop offset="1" stopColor={color} stopOpacity="0.3" />
-          </linearGradient>
-        </defs>
-      </svg>
-    </div>
-  );
-};
-
-const MetricBars = ({
-  color,
-  secondaryColor,
-  hovered,
-}: {
-  color: string;
-  secondaryColor: string;
-  hovered: boolean;
-}) => {
-  const rectsData = [
-    { width: 15, height: 20, y: 110, hoverHeight: 20, hoverY: 130, x: 40, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 20, y: 90, hoverHeight: 20, hoverY: 130, x: 60, fill: color, hoverFill: color },
-    { width: 15, height: 40, y: 70, hoverHeight: 30, hoverY: 120, x: 80, fill: color, hoverFill: color },
-    { width: 15, height: 30, y: 80, hoverHeight: 50, hoverY: 100, x: 100, fill: color, hoverFill: color },
-    { width: 15, height: 30, y: 110, hoverHeight: 40, hoverY: 110, x: 120, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 50, y: 110, hoverHeight: 20, hoverY: 130, x: 140, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 50, y: 60, hoverHeight: 30, hoverY: 120, x: 160, fill: color, hoverFill: color },
-    { width: 15, height: 30, y: 80, hoverHeight: 20, hoverY: 130, x: 180, fill: color, hoverFill: color },
-    { width: 15, height: 20, y: 110, hoverHeight: 40, hoverY: 110, x: 200, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 40, y: 70, hoverHeight: 60, hoverY: 90, x: 220, fill: color, hoverFill: color },
-    { width: 15, height: 30, y: 110, hoverHeight: 70, hoverY: 80, x: 240, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 50, y: 110, hoverHeight: 50, hoverY: 100, x: 260, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 20, y: 110, hoverHeight: 80, hoverY: 70, x: 280, fill: "currentColor", hoverFill: secondaryColor },
-    { width: 15, height: 30, y: 80, hoverHeight: 90, hoverY: 60, x: 300, fill: color, hoverFill: color },
-  ];
-
-  return (
-    <div className="ease-[cubic-bezier(0.6,0.6,0,1)] absolute inset-0 z-[8] h-full w-full text-white/10 transition-transform duration-500 group-hover/animated-card:scale-150">
-      <svg
-        className="h-full w-full"
-        viewBox={CELL_VB}
-        preserveAspectRatio="none"
-        xmlns="http://www.w3.org/2000/svg"
-        aria-hidden="true"
-      >
-        {rectsData.map((rect, index) => {
-          const fill = hovered ? rect.hoverFill : rect.fill;
-          const colored = fill !== "currentColor";
-          return (
-            <rect
-              // biome-ignore lint/suspicious/noArrayIndexKey: static bar chart
-              key={index}
-              width={rect.width}
-              height={hovered ? rect.hoverHeight : rect.height}
-              x={rect.x}
-              y={hovered ? rect.hoverY : rect.y}
-              fill={fill}
-              rx="2"
-              ry="2"
-              className="ease-[cubic-bezier(0.6,0.6,0,1)] transition-all duration-500"
-              style={colored ? { filter: `drop-shadow(0 0 5px ${fill}80)` } : undefined}
-            />
-          );
-        })}
-      </svg>
-    </div>
-  );
-};
-
-type MetricCell = {
-  mainColor: string;
-  secondaryColor: string;
-  value: string;
-  label: string;
-  pillPrimary: string;
-  pillSecondary: string;
-  hoverTitle: string;
-  hoverSub: string;
-};
-
-const METRIC_CELLS: MetricCell[] = [
-  {
-    mainColor: "#4a7dff",
-    secondaryColor: "#22d3ee",
-    value: "4.8",
-    label: "Average rating",
-    pillPrimary: "4.8 avg",
-    pillSecondary: "+0.3 QoQ",
-    hoverTitle: "Rating trend",
-    hoverSub: "Climbing across every location.",
-  },
-  {
-    mainColor: "#a78bfa",
-    secondaryColor: "#f0abfc",
-    value: "+47/mo",
-    label: "Reviews",
-    pillPrimary: "+47 new",
-    pillSecondary: "96% replied",
-    hoverTitle: "Review velocity",
-    hoverSub: "New reviews vs. responses.",
-  },
-  {
-    mainColor: "#34d399",
-    secondaryColor: "#22d3ee",
-    value: "+31",
-    label: "Bookings",
-    pillPrimary: "+31 booked",
-    pillSecondary: "0 missed",
-    hoverTitle: "Call conversions",
-    hoverSub: "AI answers, callers become visits.",
-  },
-];
-
-function MetricCellCard({ cell }: { cell: MetricCell }) {
-  const [hovered, setHovered] = useState(false);
-
-  return (
-    <div
-      className="group/animated-card relative flex h-full flex-col overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.035] transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/[0.16]"
-      style={{ boxShadow: PANEL_SHADOW }}
-    >
-      {/* layered visual — hover captured on the top layer */}
-      <div className="relative min-h-[140px] w-full flex-1 overflow-hidden">
-        <div
-          className="absolute inset-0 z-20"
-          onMouseEnter={() => setHovered(true)}
-          onMouseLeave={() => setHovered(false)}
-        />
-        <MetricBars color={cell.mainColor} secondaryColor={cell.secondaryColor} hovered={hovered} />
-        <MetricWash color={cell.mainColor} />
-        <MetricHoverChip color={cell.mainColor} title={cell.hoverTitle} sub={cell.hoverSub} />
-        <MetricPills
-          color={cell.mainColor}
-          secondaryColor={cell.secondaryColor}
-          pillPrimary={cell.pillPrimary}
-          pillSecondary={cell.pillSecondary}
-        />
-        <MetricEllipse color={cell.mainColor} />
-        <MetricGridLayer />
-      </div>
-
-      {/* metric readout */}
-      <div className="border-t border-white/[0.08] p-4">
-        <div className="text-lg font-bold leading-none tracking-[-0.01em] text-white">{cell.value}</div>
-        <p className="mt-1.5 text-xs text-[#9db0d6]">{cell.label}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ─────────────────────────── 5. Feature cards (dark) ───────────────────────────
-   Wide flat hover cells — corner preview panel pinned bottom-right behind a
-   thick dark frame, arrow chip that rotates -45° on hover. */
+/* ─────────────────────────── 4. Feature cards ───────────────────────────
+   Port of FeatureCard — corner preview panel pinned bottom-right behind a
+   thick pale frame, arrow chip that rotates -45° on hover. */
 
 function FeatureCard({
   icon,
@@ -784,38 +514,38 @@ function FeatureCard({
 }) {
   return (
     <div
-      className="group relative flex h-full min-h-[200px] flex-col gap-3 overflow-hidden rounded-2xl border border-white/[0.09] bg-white/[0.035] p-5 pb-24 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/[0.16] sm:p-6 sm:pb-24"
+      className="group relative flex h-full min-h-[220px] flex-col gap-3 overflow-hidden rounded-2xl border border-[#e7ecf6] bg-white p-5 pb-28 transition-transform duration-300 ease-out hover:-translate-y-1"
       style={{ boxShadow: PANEL_SHADOW }}
     >
-      <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#6b7ba3]">
-        <span className="text-[#22d3ee]">{icon}</span>
+      <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7a86a3]">
+        {icon}
         {title}
       </span>
-      <h4 className="text-lg font-bold leading-snug text-white">
+      <h4 className="text-lg font-bold leading-snug text-[#0b1220]">
         {subtitle}{" "}
-        <span className="font-normal text-[#9db0d6]">{description}</span>
+        <span className="font-normal text-[#5b6473]">{description}</span>
       </h4>
 
       {/* capability chips — pinned above the corner panel, clear of the art */}
-      <div className="mt-auto flex flex-wrap items-start gap-1.5 pr-40">
+      <div className="mt-auto flex flex-col items-start gap-1.5 pr-32">
         {chips.map((chip) => (
           <span
             key={chip}
-            className="whitespace-nowrap rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-medium text-[#cdd8f2]"
+            className="whitespace-nowrap rounded-full border border-[#e7ecf6] bg-[#f6f9ff] px-2.5 py-1 text-[11px] font-medium text-[#5b6473]"
           >
             {chip}
           </span>
         ))}
       </div>
 
-      {/* preview panel pinned to bottom right (thick-framed corner card) */}
-      <div className="absolute bottom-0 right-0 h-24 w-28 overflow-hidden rounded-tl-xl border-8 border-b-0 border-r-0 border-[#101a30] sm:h-28 sm:w-40">
+      {/* preview panel pinned to bottom right (original thick-framed Card) */}
+      <div className="absolute bottom-0 right-0 h-24 w-28 overflow-hidden rounded-tl-xl border-8 border-b-0 border-r-0 border-[#eef3fc] sm:h-28 sm:w-36">
         {art}
       </div>
 
       {/* arrow chip on top — rotates on hover */}
-      <div className="absolute bottom-2.5 right-2.5 z-10 grid h-10 w-10 place-items-center rounded-full border border-white/10 bg-[#0d1526]/90 backdrop-blur-sm transition-transform duration-300 group-hover:-rotate-45">
-        <ArrowRight className="h-4 w-4 text-[#22d3ee]" />
+      <div className="absolute bottom-2.5 right-2.5 z-10 grid h-10 w-10 place-items-center rounded-full border border-[#e7ecf6] bg-white shadow-sm transition-transform duration-300 group-hover:-rotate-45">
+        <ArrowRight className="h-4 w-4 text-[#2563eb]" />
       </div>
     </div>
   );
@@ -823,10 +553,10 @@ function FeatureCard({
 
 function AutopilotArt() {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-1.5 bg-gradient-to-br from-[#4f46e5] to-[#22d3ee] p-3">
+    <div className="flex h-full w-full flex-col justify-center gap-1.5 bg-gradient-to-br from-[#2563eb] to-[#22d3ee] p-3">
       <div className="h-1.5 w-3/4 rounded-full bg-white/70" />
       <div className="h-1.5 w-1/2 rounded-full bg-white/45" />
-      <div className="mt-1 inline-flex w-max items-center gap-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-[#4f46e5]">
+      <div className="mt-1 inline-flex w-max items-center gap-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-[#2563eb]">
         ✓ Approved
       </div>
     </div>
@@ -835,7 +565,7 @@ function AutopilotArt() {
 
 function DigestArt() {
   return (
-    <div className="flex h-full w-full items-end gap-1.5 bg-gradient-to-br from-[#7c3aed] to-[#4a7dff] p-3">
+    <div className="flex h-full w-full items-end gap-1.5 bg-gradient-to-br from-[#7c3aed] to-[#2563eb] p-3">
       {[35, 55, 45, 70, 88, 100].map((h) => (
         <div key={h} className="w-full rounded-t-sm bg-white/70" style={{ height: `${h}%` }} />
       ))}
@@ -851,17 +581,13 @@ export function LandingCommandCenter() {
       id="command"
       aria-labelledby="command-heading"
       className="relative isolate overflow-hidden py-24 sm:py-28"
-      style={{ background: "#070b16" }}
+      style={{
+        background:
+          "radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #f0f5ff 45%, #f8faff 100%)",
+      }}
     >
-      {/* ── decorative background (aria-hidden) — faint glow, seamless canvas ── */}
+      {/* ── decorative background (aria-hidden) ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(900px 500px at 80% 0%, rgba(59,90,255,0.10), transparent 70%)",
-          }}
-        />
         <div
           className="absolute right-0 top-0 h-[360px] w-[460px]"
           style={{
@@ -869,7 +595,7 @@ export function LandingCommandCenter() {
             maskImage: "radial-gradient(100% 100% at 100% 0%, #000 0%, transparent 72%)",
           }}
         >
-          <DotGrid color="90, 130, 255" spacing={22} />
+          <DotGrid color="37, 99, 235" spacing={22} />
         </div>
       </div>
 
@@ -877,90 +603,90 @@ export function LandingCommandCenter() {
         {/* ── header ── */}
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
-            <ShinyText
-              text="✦ COMMAND CENTER"
-              className="text-xs font-bold uppercase tracking-[0.22em] text-[#22d3ee]"
-            />
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
+              style={{ borderColor: "#D9DDF7", background: "rgba(255,255,255,0.65)" }}
+            >
+              <ShinyText
+                text="✦ COMMAND CENTER"
+                className="text-[13px] font-bold tracking-[0.16em] text-[#2563eb]"
+              />
+            </span>
           </Reveal>
 
           <Reveal delay={0.06}>
             <h2
               id="command-heading"
-              className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.02em] text-white sm:text-[56px]"
+              className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.025em] text-[#0b1220] sm:text-[56px]"
             >
               Every location.{" "}
-              <span className="bg-gradient-to-r from-[#4a7dff] via-[#22d3ee] to-[#22d3ee] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#2563eb] to-[#7c3aed] bg-clip-text text-transparent">
                 One pane of glass.
               </span>
             </h2>
           </Reveal>
 
           <Reveal delay={0.12}>
-            <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#9db0d6] sm:text-[19px]">
+            <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#5b6473] sm:text-[19px]">
               Reviews, messages, calls and reports from every storefront stream
               into one live command center — so nothing slips, anywhere.
             </p>
           </Reveal>
         </div>
 
-        {/* ── mega-bento grid ── */}
-        <div className="mt-14 grid grid-cols-1 gap-5 lg:grid-cols-12">
-          {/* Row 1 — world map (7) */}
-          <Reveal className="lg:col-span-7">
-            <Panel className="flex flex-col p-5 sm:p-6">
+        {/* ── 2×2 command grid ── */}
+        <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2">
+          {/* 1. World map — top left */}
+          <Reveal className="h-full">
+            <Panel className="p-5 sm:p-6">
               <PanelKicker icon={<MapPin className="h-4 w-4" />} label="Live locations" />
-              <h3 className="text-xl font-bold leading-snug text-white">
+              <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
                 Reviews landing from every location.{" "}
-                <span className="font-normal text-[#9db0d6]">
+                <span className="font-normal text-[#5b6473]">
                   Watch feedback stream in across the map, live.
                 </span>
               </h3>
 
-              <div className="mt-4 flex flex-1 items-center">
-                <div className="relative w-full">
-                  <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2">
-                    <Float amount={5} duration={4.4}>
-                      <div
-                        className="flex items-center gap-2 whitespace-nowrap rounded-full border border-white/10 bg-[#0d1526]/90 px-3 py-1 text-xs font-medium text-[#e6ecff] backdrop-blur-sm"
-                        style={{ boxShadow: "0 10px 30px -10px rgba(59,90,255,0.5)" }}
-                      >
-                        🌟 New 5-star from Austin, TX
-                      </div>
-                    </Float>
-                  </div>
-                  <WorldMap />
+              <div className="relative mt-4">
+                <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2">
+                  <Float amount={5} duration={4.4}>
+                    <div className="flex items-center gap-2 whitespace-nowrap rounded-full border border-[#e7ecf6] bg-white px-3 py-1 text-xs font-medium text-[#0b1220] shadow-md">
+                      🌟 New 5-star from Austin, TX
+                    </div>
+                  </Float>
                 </div>
+                <WorldMap />
               </div>
             </Panel>
           </Reveal>
 
-          {/* Row 1 — unified inbox feed (5) */}
-          <Reveal delay={0.08} className="lg:col-span-5">
+          {/* 2. Unified inbox feed — top right */}
+          <Reveal delay={0.08} className="h-full">
             <Panel className="flex flex-col justify-between gap-4 p-5 sm:p-6">
               <div>
                 <PanelKicker icon={<Inbox className="h-4 w-4" />} label="Unified inbox" />
-                <h3 className="text-xl font-bold leading-snug text-white">
+                <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
                   Every channel, one inbox.{" "}
-                  <span className="font-normal text-[#9db0d6]">
+                  <span className="font-normal text-[#5b6473]">
                     Google, WhatsApp, SMS, socials and your AI phone line.
                   </span>
                 </h3>
               </div>
-              <div className="flex w-full flex-1 items-stretch justify-center">
-                <div className="flex w-full max-w-sm flex-col">
+              <div className="flex w-full items-center justify-center">
+                <div className="w-full max-w-sm">
                   <InboxFeed />
                 </div>
               </div>
             </Panel>
           </Reveal>
 
-          {/* Row 2 — monitoring chart (5) */}
-          <Reveal delay={0.12} className="lg:col-span-5">
+          {/* 3. Monitoring chart — bottom left */}
+          <Reveal delay={0.12} className="h-full">
             <Panel className="space-y-4 p-5 sm:p-6">
               <PanelKicker icon={<Activity className="h-4 w-4" />} label="repulabs analytics" />
-              <h3 className="text-xl font-bold leading-snug text-white">
+              <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
                 Watch the volume climb.{" "}
-                <span className="font-normal text-[#9db0d6]">
+                <span className="font-normal text-[#5b6473]">
                   Requests out, reviews in — trending up every month.
                 </span>
               </h3>
@@ -968,35 +694,26 @@ export function LandingCommandCenter() {
             </Panel>
           </Reveal>
 
-          {/* Row 2 — three Visual3 metric cells (7) */}
-          <Reveal delay={0.16} className="lg:col-span-7">
-            <div className="grid h-full grid-cols-1 gap-5 sm:grid-cols-3">
-              {METRIC_CELLS.map((cell) => (
-                <MetricCellCard key={cell.label} cell={cell} />
-              ))}
+          {/* 4. Feature cards — bottom right */}
+          <Reveal delay={0.18} className="h-full">
+            <div className="grid h-full gap-5 sm:grid-cols-2">
+              <FeatureCard
+                icon={<Bot className="h-4 w-4" />}
+                title="Autopilot"
+                subtitle="Approval gates on every loop."
+                description="AI drafts every reply and request — nothing ships without your yes."
+                chips={["Draft → approve", "Escalation rules", "Tone controls"]}
+                art={<AutopilotArt />}
+              />
+              <FeatureCard
+                icon={<Mail className="h-4 w-4" />}
+                title="Weekly digest"
+                subtitle="A report your team will read."
+                description="Wins, trends and to-dos in one Monday-morning email."
+                chips={["Rating trend", "Reply times", "Leaderboard"]}
+                art={<DigestArt />}
+              />
             </div>
-          </Reveal>
-
-          {/* Row 3 — wide feature cells (6 + 6) */}
-          <Reveal delay={0.2} className="lg:col-span-6">
-            <FeatureCard
-              icon={<Bot className="h-4 w-4" />}
-              title="Autopilot"
-              subtitle="Approval gates on every loop."
-              description="AI drafts every reply and request — nothing ships without your yes."
-              chips={["Draft → approve", "Escalation rules", "Tone controls"]}
-              art={<AutopilotArt />}
-            />
-          </Reveal>
-          <Reveal delay={0.24} className="lg:col-span-6">
-            <FeatureCard
-              icon={<Mail className="h-4 w-4" />}
-              title="Weekly digest"
-              subtitle="A report your team will read."
-              description="Wins, trends and to-dos in one Monday-morning email."
-              chips={["Rating trend", "Reply times", "Leaderboard"]}
-              art={<DigestArt />}
-            />
           </Reveal>
         </div>
       </div>

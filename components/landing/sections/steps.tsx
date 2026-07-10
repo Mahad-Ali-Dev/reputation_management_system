@@ -3,49 +3,47 @@
 /**
  * LandingSteps — "Three steps. No consultant required." (How it works)
  *
- * The process-explainer section for the repulabs marketing home, restyled for
- * the ONE dark cinematic canvas: cyan "✦ HOW IT WORKS" eyebrow + white
- * headline with a blue→violet gradient close, then a single large dark-glass
- * "flow" panel holding an animated blue→violet→cyan timeline with three
- * numbered steps. Each step is a live product-mockup card (Connect · Automate
- * · Grow) re-tinted for dark — inner surfaces #0d1526, hairline white borders,
- * body #9db0d6 — while the small colored elements (accent pills, green checks,
- * amber stars, the mini growth chart) keep their accent colors so they pop.
+ * The process-explainer section for the repulabs marketing home: eyebrow +
+ * gradient headline + subhead, then a single large white "flow" panel holding
+ * an animated blue→violet→teal timeline with three numbered steps. Each step is
+ * a live product-mockup card (Connect · Automate · Grow) with its title + body
+ * beneath.
  *
  * Animation primitives (all from `@/components/landing/anim`):
  *   - Reveal   → staggered scroll-in fade-up for the header, each step card and copy
  *   - Float    → gentle idle bob on every product-mockup card (varied delay)
- *   - ShinyText→ premium sheen sweep across the ✦ HOW IT WORKS eyebrow label
+ *   - ShinyText→ premium sheen sweep across the HOW IT WORKS eyebrow label
  *   - DotGrid  → interactive dot matrix in the section background
  * plus a `motion/react` clip-path "draw-in" for the gradient connector line and a
  * spring pop-in for the numbered step circles (synced to the line as it advances).
  *
- * Brand: repulabs DARK — seamless #070b16 canvas (section transparent, faint
- * radial glow accents only), blue #4a7dff → violet #a855f7 → cyan #22d3ee
- * timeline, Inter ≤700. Source/workflow logos live in
- * /public/assets/repulabs/landing/steps and sit on small light plates so they
- * stay legible on dark.
+ * Brand: light premium — white / very-light-blue surface, blue #2563eb → violet
+ * #7c3aed → teal #14b8a6 timeline, Inter ≤700. Real product-kit SVGs live in
+ * /public/assets/repulabs/landing/steps.
  */
 
 import { motion, useInView } from "motion/react";
 import { useRef } from "react";
-import { ChevronDown, Plus, Sparkles, Star, TrendingUp } from "lucide-react";
+import {
+  ChevronDown,
+  Plus,
+  Sparkles,
+  Star,
+  TrendingUp,
+  Workflow,
+} from "lucide-react";
 import { DotGrid, Float, Reveal, ShinyText } from "@/components/landing/anim";
 
 const ART = "/assets/repulabs/landing/steps";
 
-/* brand accents — one per step, in timeline order (brightened for dark) */
-const BLUE = "#4a7dff";
-const VIOLET = "#a855f7";
-const TEAL = "#22d3ee";
+/* brand accents — one per step, in timeline order */
+const BLUE = "#2563eb";
+const VIOLET = "#7c3aed";
+const TEAL = "#14b8a6";
+const INK = "#0b1220";
+const MUTED = "#5b6473";
 const GREEN = "#16b875";
 const AMBER = "#f5a300";
-
-/* dark-surface tokens */
-const CARD_BG = "#0d1526"; // mini-dashboard inner surface
-const TITLE = "#eef2ff"; // card titles (near-white)
-const BODY = "#9db0d6"; // body text
-const MUTED = "#6b7ba3"; // muted small text
 
 const LINE_H = `linear-gradient(90deg, ${BLUE} 0%, ${VIOLET} 50%, ${TEAL} 100%)`;
 const LINE_V = `linear-gradient(180deg, ${BLUE} 0%, ${VIOLET} 50%, ${TEAL} 100%)`;
@@ -122,7 +120,7 @@ function Pill({ children, color }: { children: React.ReactNode; color: string })
   return (
     <span
       className="inline-flex items-center rounded-full px-2 py-[3px] text-[10.5px] font-semibold leading-none"
-      style={{ color, background: `${color}1f` }}
+      style={{ color, background: `${color}14` }}
     >
       {children}
     </span>
@@ -131,12 +129,9 @@ function Pill({ children, color }: { children: React.ReactNode; color: string })
 
 function Dropdown({ label }: { label: string }) {
   return (
-    <span
-      className="inline-flex items-center gap-1 rounded-md border border-white/10 bg-white/5 px-2 py-[4px] text-[10.5px] font-medium"
-      style={{ color: BODY }}
-    >
+    <span className="inline-flex items-center gap-1 rounded-md border border-[#E6EAF2] bg-white px-2 py-[4px] text-[10.5px] font-medium text-[#6b7488]">
       {label}
-      <ChevronDown size={11} style={{ color: MUTED }} />
+      <ChevronDown size={11} className="text-[#9aa3b2]" />
     </span>
   );
 }
@@ -150,8 +145,8 @@ function CardChrome({
 }) {
   return (
     <div
-      className="group/card relative w-full overflow-hidden rounded-[14px] border border-white/[0.08] p-3.5 transition-transform duration-300 ease-out hover:-translate-y-1.5 sm:p-4"
-      style={{ background: CARD_BG, boxShadow: "0 18px 44px -20px rgba(0,0,0,0.65)" }}
+      className="group/card relative w-full overflow-hidden rounded-[14px] border border-[#EAEEF6] bg-white p-3.5 transition-transform duration-300 ease-out hover:-translate-y-1.5 sm:p-4"
+      style={{ boxShadow: "0 16px 38px -20px rgba(26,43,95,0.28)" }}
     >
       {/* top accent hairline that widens on hover */}
       <span
@@ -173,7 +168,7 @@ function CardHeader({
 }) {
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[12.5px] font-bold tracking-[-0.01em]" style={{ color: TITLE }}>
+      <span className="text-[12.5px] font-bold tracking-[-0.01em] text-[#0b1220]">
         {title}
       </span>
       {right}
@@ -195,7 +190,7 @@ function ConnectCard() {
       <CardHeader
         title="Connected sources"
         right={
-          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium" style={{ color: GREEN }}>
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-[#16b875]">
             <span className="h-1.5 w-1.5 rounded-full" style={{ background: GREEN }} />
             Connected
           </span>
@@ -206,10 +201,9 @@ function ConnectCard() {
         {SOURCES.map((s) => (
           <div
             key={s.name}
-            className="flex items-center gap-2.5 rounded-[10px] border border-white/[0.07] bg-white/[0.04] px-2.5 py-2"
+            className="flex items-center gap-2.5 rounded-[10px] border border-[#EEF1F7] bg-white px-2.5 py-2"
           >
-            {/* light plate so the source logos (drawn for light UI) stay legible */}
-            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-[#f4f7ff]">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-[#EEF1F7] bg-[#FBFCFF]">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`${ART}/${s.file}`}
@@ -223,13 +217,10 @@ function ConnectCard() {
               />
             </span>
             <span className="min-w-0 flex-1">
-              <span
-                className="block truncate text-[12px] font-semibold leading-tight"
-                style={{ color: TITLE }}
-              >
+              <span className="block truncate text-[12px] font-semibold leading-tight text-[#0b1220]">
                 {s.name}
               </span>
-              <span className="block truncate text-[10.5px] leading-tight" style={{ color: MUTED }}>
+              <span className="block truncate text-[10.5px] leading-tight text-[#8a94a6]">
                 {s.detail}
               </span>
             </span>
@@ -241,12 +232,7 @@ function ConnectCard() {
       <button
         type="button"
         tabIndex={-1}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-[10px] py-2 text-[12px] font-semibold"
-        style={{
-          border: "1px solid rgba(74,125,255,0.32)",
-          background: "rgba(74,125,255,0.10)",
-          color: "#8fb0ff",
-        }}
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-[10px] border border-[#D7E1F7] bg-[#F6F9FF] py-2 text-[12px] font-semibold text-[#2563eb]"
       >
         <Plus size={14} strokeWidth={2.6} />
         Add another source
@@ -258,37 +244,30 @@ function ConnectCard() {
 /* ── Step 2 · Automate — "Review inbox" ───────────────────────────── */
 
 const REVIEWS = [
-  { initials: "SR", name: "Sarah J.", time: "2m ago", text: "Great service and friendly team!", tint: "#7ea2ff" },
-  { initials: "NB", name: "Niko B.", time: "15m ago", text: "Quick response and very helpful.", tint: "#c084fc" },
-  { initials: "AN", name: "Anna L.", time: "1h ago", text: "Highly recommend!", tint: "#5eead4" },
+  { initials: "SR", name: "Sarah J.", time: "2m ago", text: "Great service and friendly team!", tint: BLUE },
+  { initials: "NB", name: "Niko B.", time: "15m ago", text: "Quick response and very helpful.", tint: VIOLET },
+  { initials: "AN", name: "Anna L.", time: "1h ago", text: "Highly recommend!", tint: TEAL },
 ];
 
 function ReviewRow({ r }: { r: (typeof REVIEWS)[number] }) {
   return (
-    <div className="rounded-[10px] border border-white/[0.07] bg-white/[0.04] px-2.5 py-2">
+    <div className="rounded-[10px] border border-[#EEF1F7] bg-white px-2.5 py-2">
       <div className="flex items-center gap-2">
         <span
           className="grid h-6 w-6 shrink-0 place-items-center rounded-full text-[9px] font-bold"
-          style={{ background: `${r.tint}24`, color: r.tint }}
+          style={{ background: `${r.tint}16`, color: r.tint }}
         >
           {r.initials}
         </span>
-        <span
-          className="min-w-0 flex-1 truncate text-[11.5px] font-semibold"
-          style={{ color: TITLE }}
-        >
+        <span className="min-w-0 flex-1 truncate text-[11.5px] font-semibold text-[#0b1220]">
           {r.name}
         </span>
-        <span className="shrink-0 text-[9.5px]" style={{ color: MUTED }}>
-          {r.time}
-        </span>
+        <span className="shrink-0 text-[9.5px] text-[#9aa3b2]">{r.time}</span>
       </div>
       <div className="mt-1.5">
         <Stars size={10} />
       </div>
-      <p className="mt-1 truncate text-[10.5px] leading-tight" style={{ color: BODY }}>
-        {r.text}
-      </p>
+      <p className="mt-1 truncate text-[10.5px] leading-tight text-[#6b7488]">{r.text}</p>
     </div>
   );
 }
@@ -303,18 +282,16 @@ function WorkflowRow({
   sub: string;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-[10px] border border-white/[0.07] bg-white/[0.04] px-2.5 py-2">
-      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md bg-[#f4f7ff]">
+    <div className="flex items-center gap-2 rounded-[10px] border border-[#EEF1F7] bg-white px-2.5 py-2">
+      <span className="grid h-6 w-6 shrink-0 place-items-center rounded-md border border-[#EEF1F7] bg-[#FBFCFF]">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`${ART}/${file}`} alt="" aria-hidden width={14} height={14} draggable={false} loading="lazy" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[11px] font-semibold leading-tight" style={{ color: TITLE }}>
+        <span className="block truncate text-[11px] font-semibold leading-tight text-[#0b1220]">
           {label}
         </span>
-        <span className="block truncate text-[9.5px] leading-tight" style={{ color: MUTED }}>
-          {sub}
-        </span>
+        <span className="block truncate text-[9.5px] leading-tight text-[#9aa3b2]">{sub}</span>
       </span>
       <GreenCheck size={17} />
     </div>
@@ -328,7 +305,7 @@ function AutomateCard() {
         title="Review inbox"
         right={
           <span className="flex items-center gap-1.5">
-            <Pill color="#c084fc">3 new</Pill>
+            <Pill color={VIOLET}>3 new</Pill>
             <Dropdown label="All locations" />
           </span>
         }
@@ -341,7 +318,7 @@ function AutomateCard() {
           className="pointer-events-none absolute inset-y-2 left-1/2 w-px -translate-x-1/2"
           style={{
             background:
-              "repeating-linear-gradient(180deg, rgba(255,255,255,0.14) 0 4px, transparent 4px 9px)",
+              "repeating-linear-gradient(180deg, #d7ddea 0 4px, transparent 4px 9px)",
           }}
         />
 
@@ -354,28 +331,19 @@ function AutomateCard() {
 
         {/* right — AI workflow */}
         <div className="space-y-2">
-          <div
-            className="rounded-[10px] px-2.5 py-2"
-            style={{
-              border: "1px solid rgba(168,85,247,0.28)",
-              background: "rgba(168,85,247,0.10)",
-            }}
-          >
+          <div className="rounded-[10px] border border-[#EAE2FF] bg-[#FBFAFF] px-2.5 py-2">
             <div className="flex items-center gap-1.5">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src={`${ART}/ai.svg`} alt="" aria-hidden width={13} height={13} draggable={false} loading="lazy" />
-              <span className="text-[10.5px] font-bold" style={{ color: "#c084fc" }}>
+              <span className="text-[10.5px] font-bold" style={{ color: VIOLET }}>
                 AI draft reply
               </span>
             </div>
-            <p className="mt-1 text-[10px] leading-snug" style={{ color: BODY }}>
+            <p className="mt-1 text-[10px] leading-snug text-[#6b7488]">
               Thank you for the kind words! We appreciate your support.
             </p>
-            <div
-              className="mt-1.5 flex items-center gap-1 text-[9px] font-medium"
-              style={{ color: MUTED }}
-            >
-              <Sparkles size={9} style={{ color: "#c084fc" }} />
+            <div className="mt-1.5 flex items-center gap-1 text-[9px] font-medium text-[#a3abba]">
+              <Sparkles size={9} style={{ color: VIOLET }} />
               Generated in seconds
             </div>
           </div>
@@ -402,13 +370,9 @@ function Metric({
   stars?: boolean;
 }) {
   return (
-    <div className="rounded-[10px] border border-white/[0.07] bg-white/[0.04] px-2.5 py-2">
-      <div className="truncate text-[9.5px] font-medium" style={{ color: MUTED }}>
-        {label}
-      </div>
-      <div className="mt-0.5 text-[17px] font-bold leading-none" style={{ color: TITLE }}>
-        {value}
-      </div>
+    <div className="rounded-[10px] border border-[#EEF1F7] bg-white px-2.5 py-2">
+      <div className="truncate text-[9.5px] font-medium text-[#8a94a6]">{label}</div>
+      <div className="mt-0.5 text-[17px] font-bold leading-none text-[#0b1220]">{value}</div>
       {stars ? (
         <div className="mt-1">
           <Stars size={9} />
@@ -425,140 +389,6 @@ function Metric({
   );
 }
 
-/** "Reviews over time" mini-chart, drawn inline and tinted for dark: hairline
- *  grid rgba(255,255,255,0.07), muted axis labels, mint bars + green trend
- *  line keep their accent colors so they pop on #0d1526. */
-function GrowChart() {
-  const bars: Array<[number, number]> = [
-    [70, 15],
-    [110, 37],
-    [150, 31],
-    [190, 37],
-    [230, 59],
-    [270, 47],
-    [310, 50],
-    [350, 72],
-    [390, 60],
-    [430, 59],
-    [470, 85],
-    [510, 103],
-  ];
-  const line =
-    "M67 137L105 127L141 102L178 113L215 82L251 92L288 101L325 87L361 63L398 73L434 74L471 54L508 54L543 29";
-  const dots: Array<[number, number]> = [
-    [67, 137],
-    [105, 127],
-    [141, 102],
-    [178, 113],
-    [215, 82],
-    [251, 92],
-    [288, 101],
-    [361, 63],
-    [434, 74],
-    [471, 54],
-    [508, 54],
-  ];
-  const days: Array<[string, number]> = [
-    ["Mon", 58],
-    ["Tue", 136],
-    ["Wed", 212],
-    ["Thu", 289],
-    ["Fri", 367],
-    ["Sat", 442],
-    ["Sun", 516],
-  ];
-  return (
-    <svg
-      viewBox="0 0 560 190"
-      className="mt-1 h-auto w-full"
-      role="img"
-      aria-label="Reviews over time — an upward trend across the week"
-    >
-      <defs>
-        <linearGradient id="steps-bar-mint" x1="0" y1="60" x2="0" y2="152" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#7bdcbb" stopOpacity="0.4" />
-          <stop offset="1" stopColor="#7bdcbb" stopOpacity="0.06" />
-        </linearGradient>
-        <linearGradient id="steps-line-green" x1="60" y1="60" x2="545" y2="70" gradientUnits="userSpaceOnUse">
-          <stop offset="0" stopColor="#12b978" />
-          <stop offset="1" stopColor="#0aa66c" />
-        </linearGradient>
-      </defs>
-
-      {/* baseline + dashed grid — hairline white on dark */}
-      <line x1="45" y1="152" x2="545" y2="152" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5" />
-      {[112, 72, 32].map((y) => (
-        <line
-          key={y}
-          x1="45"
-          y1={y}
-          x2="545"
-          y2={y}
-          stroke="rgba(255,255,255,0.07)"
-          strokeWidth="1"
-          strokeDasharray="3 4"
-        />
-      ))}
-
-      {/* axis labels */}
-      {([["0", 156], ["50", 116], ["100", 76], ["150", 36]] as Array<[string, number]>).map(
-        ([t, y]) => (
-          <text
-            key={t}
-            x="38"
-            y={y}
-            textAnchor="end"
-            fontSize="11"
-            fontWeight="700"
-            fill={MUTED}
-            fontFamily="inherit"
-          >
-            {t}
-          </text>
-        ),
-      )}
-
-      {/* mint volume bars */}
-      <g fill="url(#steps-bar-mint)">
-        {bars.map(([x, h]) => (
-          <rect key={x} x={x} y={152 - h} width="18" height={h} rx="2" />
-        ))}
-      </g>
-
-      {/* green trend line + dots */}
-      <path
-        d={line}
-        fill="none"
-        stroke="url(#steps-line-green)"
-        strokeWidth="3"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <g fill="#10b878">
-        {dots.map(([x, y]) => (
-          <circle key={`${x}-${y}`} cx={x} cy={y} r="3.5" />
-        ))}
-        <circle cx="543" cy="29" r="4.5" fill="#eafff5" stroke="#10b878" strokeWidth="2.5" />
-      </g>
-
-      {/* day labels */}
-      {days.map(([d, x]) => (
-        <text
-          key={d}
-          x={x}
-          y="176"
-          fontSize="11.5"
-          fontWeight="700"
-          fill={MUTED}
-          fontFamily="inherit"
-        >
-          {d}
-        </text>
-      ))}
-    </svg>
-  );
-}
-
 function GrowCard() {
   return (
     <CardChrome accent={TEAL}>
@@ -570,11 +400,18 @@ function GrowCard() {
         <Metric label="Response rate" value="96%" delta="12%" />
       </div>
 
-      <div className="mt-2.5 rounded-[10px] border border-white/[0.07] bg-white/[0.04] px-2.5 pt-2 pb-1">
-        <div className="text-[10.5px] font-semibold" style={{ color: BODY }}>
-          Reviews over time
-        </div>
-        <GrowChart />
+      <div className="mt-2.5 rounded-[10px] border border-[#EEF1F7] bg-white px-2.5 pt-2 pb-1">
+        <div className="text-[10.5px] font-semibold text-[#6b7488]">Reviews over time</div>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`${ART}/chart.svg`}
+          alt="Reviews over time — an upward trend across the week"
+          className="mt-1 h-auto w-full"
+          width={2200}
+          height={800}
+          draggable={false}
+          loading="lazy"
+        />
       </div>
     </CardChrome>
   );
@@ -625,7 +462,7 @@ function DesktopTimeline() {
     <div ref={ref} className="relative mb-1 hidden lg:block">
       {/* connector track between the centres of circle 1 and circle 3 (16.6% → 83.3%) */}
       <div className="absolute left-[16.666%] right-[16.666%] top-1/2 h-[2px] -translate-y-1/2">
-        <div className="absolute inset-0 rounded-full" style={{ background: LINE_H, opacity: 0.22 }} />
+        <div className="absolute inset-0 rounded-full" style={{ background: LINE_H, opacity: 0.16 }} />
         <motion.div
           className="absolute inset-0 rounded-full"
           style={{ background: LINE_H }}
@@ -658,7 +495,7 @@ function StepColumn({ step, index }: { step: Step; index: number }) {
       </div>
 
       {/* desktop breathing room beneath the timeline row */}
-      <div className="hidden lg:block lg:h-6" aria-hidden />
+      <div className="hidden lg:block lg:h-7" aria-hidden />
 
       <Reveal delay={index * 0.12} y={20} className="w-full">
         <Float amount={5} duration={5.4 + index * 0.5} delay={index * 0.4}>
@@ -667,13 +504,10 @@ function StepColumn({ step, index }: { step: Step; index: number }) {
       </Reveal>
 
       <Reveal delay={index * 0.12 + 0.08} y={16} className="w-full">
-        <h3 className="mt-6 text-center text-[23px] font-bold leading-none tracking-[-0.02em] text-white sm:text-[25px]">
+        <h3 className="mt-7 text-center text-[23px] font-bold leading-none tracking-[-0.02em] text-[#0b1220] sm:text-[25px]">
           {step.title}
         </h3>
-        <p
-          className="mx-auto mt-3 max-w-[360px] text-center text-[15px] leading-[1.55] sm:text-[15.5px]"
-          style={{ color: BODY }}
-        >
+        <p className="mx-auto mt-3 max-w-[360px] text-center text-[15px] leading-[1.55] text-[#5b6473] sm:text-[16px]">
           {step.body}
         </p>
       </Reveal>
@@ -688,21 +522,14 @@ export function LandingSteps() {
     <section
       id="how-it-works"
       aria-labelledby="how-it-works-heading"
-      className="relative isolate overflow-hidden py-20 sm:py-[88px]"
+      className="relative isolate overflow-hidden py-24 sm:py-28"
+      style={{
+        background:
+          "radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #f5f8ff 46%, #f8faff 100%)",
+      }}
     >
-      {/* ── decorative background (aria-hidden) — seamless #070b16 canvas ── */}
+      {/* ── decorative background (aria-hidden) ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute inset-0"
-          style={{
-            background:
-              "radial-gradient(900px 500px at 15% 0%, rgba(59,90,255,0.08), transparent 70%)",
-            /* fade the glow in from the top so the section blends seamlessly
-               into whatever sits above it (no hard stripe edge) */
-            WebkitMaskImage: "linear-gradient(180deg, transparent 0, #000 160px)",
-            maskImage: "linear-gradient(180deg, transparent 0, #000 160px)",
-          }}
-        />
         <div
           className="absolute right-0 top-0 h-[340px] w-[440px]"
           style={{
@@ -710,12 +537,16 @@ export function LandingSteps() {
             maskImage: "radial-gradient(100% 100% at 100% 0%, #000 0%, transparent 72%)",
           }}
         >
-          <DotGrid color="90, 130, 255" spacing={24} />
+          <DotGrid color="37, 99, 235" spacing={24} />
         </div>
         {/* soft brand glows */}
         <div
+          className="absolute -left-24 top-40 h-72 w-72 rounded-full opacity-60 blur-3xl"
+          style={{ background: "radial-gradient(circle, rgba(37,99,235,0.10), transparent 70%)" }}
+        />
+        <div
           className="absolute -right-20 bottom-24 h-72 w-72 rounded-full opacity-60 blur-3xl"
-          style={{ background: "radial-gradient(circle, rgba(34,211,238,0.07), transparent 70%)" }}
+          style={{ background: "radial-gradient(circle, rgba(20,184,166,0.10), transparent 70%)" }}
         />
       </div>
 
@@ -723,44 +554,50 @@ export function LandingSteps() {
         {/* ── header ── */}
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
-            <ShinyText
-              text="✦ HOW IT WORKS"
-              className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#22d3ee]"
-            />
+            <span
+              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
+              style={{ borderColor: "#D4E0FB", background: "rgba(255,255,255,0.7)" }}
+            >
+              <Workflow size={17} className="text-[#2563eb]" strokeWidth={2.5} />
+              <ShinyText
+                text="HOW IT WORKS"
+                className="text-[13px] font-bold tracking-[0.18em] text-[#2563eb]"
+              />
+            </span>
           </Reveal>
 
           <Reveal delay={0.06}>
             <h2
               id="how-it-works-heading"
-              className="mx-auto mt-6 max-w-[18ch] text-balance text-[38px] font-bold leading-[1.04] tracking-[-0.02em] text-white sm:text-[54px]"
+              className="mx-auto mt-6 max-w-[18ch] text-balance text-[38px] font-bold leading-[1.03] tracking-[-0.028em] text-[#0b1220] sm:text-[54px]"
             >
               Three steps. No{" "}
-              <span className="bg-gradient-to-r from-[#6d8bff] to-[#a855f7] bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-[#2563eb] via-[#5b4ff0] to-[#7c3aed] bg-clip-text text-transparent">
                 consultant required.
               </span>
             </h2>
           </Reveal>
 
           <Reveal delay={0.12}>
-            <p className="mx-auto mt-5 max-w-[620px] text-[16.5px] leading-[1.55] text-[#9db0d6] sm:text-[18px]">
+            <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.5] text-[#5b6473] sm:text-[19px]">
               Just your name and website — no engineer, no 40-field setup form.
               Most teams are sending automated requests within six minutes.
             </p>
           </Reveal>
         </div>
 
-        {/* ── flow panel — dark glass ── */}
+        {/* ── flow panel ── */}
         <Reveal delay={0.14} y={26}>
           <div
-            className="relative mt-11 rounded-[26px] border border-white/[0.09] bg-white/[0.035] p-3 backdrop-blur-sm sm:p-5 lg:p-6"
-            style={{ boxShadow: "0 24px 60px -30px rgba(0,0,0,0.7)" }}
+            className="relative mt-14 rounded-[26px] border border-[#E1E7F3] bg-white p-3 sm:p-5 lg:p-6"
+            style={{ boxShadow: "0 18px 46px rgba(35,51,102,0.10)" }}
           >
-            <div className="relative overflow-hidden rounded-[20px] border border-white/[0.07] px-4 py-6 sm:px-6 lg:px-8 lg:pt-6 lg:pb-8">
-              {/* soft violet glow behind the centre step */}
+            <div className="relative overflow-hidden rounded-[20px] border border-[#E7EEFB] px-4 py-7 sm:px-6 lg:px-8 lg:pt-7 lg:pb-9">
+              {/* soft lavender glow behind the centre step */}
               <div
                 aria-hidden
                 className="pointer-events-none absolute left-1/2 top-4 hidden h-[88%] w-[38%] -translate-x-1/2 rounded-[18px] lg:block"
-                style={{ background: "radial-gradient(58% 62% at 50% 38%, rgba(168,85,247,0.08), transparent 72%)" }}
+                style={{ background: "radial-gradient(58% 62% at 50% 38%, rgba(124,58,237,0.06), transparent 72%)" }}
               />
 
               <DesktopTimeline />
@@ -772,7 +609,7 @@ export function LandingSteps() {
                 style={{ background: LINE_V }}
               />
 
-              <ol className="relative grid grid-cols-1 gap-10 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-white/[0.06]">
+              <ol className="relative grid grid-cols-1 gap-12 lg:grid-cols-3 lg:gap-0 lg:divide-x lg:divide-[#E2E7F0]">
                 {STEPS.map((step, i) => (
                   <StepColumn key={step.key} step={step} index={i} />
                 ))}

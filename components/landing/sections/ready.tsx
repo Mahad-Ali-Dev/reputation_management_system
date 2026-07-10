@@ -3,20 +3,19 @@
 /**
  * LandingReady — "Ready to run your reputation like a system?"
  *
- * The closing call-to-action for the repulabs marketing home. The page is one
- * dark cinematic canvas (#070b16); this card is its glowing centerpiece — a
- * single deep-navy card, centered, with a blue glow bleeding in from the
- * top-left corner and a teal glow from the bottom-right, a glowing blue→violet
- * primary CTA and a four-item trust row.
+ * The closing call-to-action for the repulabs marketing home. The surrounding
+ * page is light; this is its one deliberately DARK moment — a single deep-navy
+ * card, centered, with a blue glow bleeding in from the top-left corner and a
+ * teal glow from the bottom-right, a glowing blue→violet primary CTA and a
+ * four-item trust row.
  *
  * Animation primitives (from `@/components/landing/anim`):
  *   - Reveal   → staggered scroll-in fade-up: eyebrow → headline → sub → buttons → trust
  *   - ShinyText→ premium sheen sweep across the eyebrow label
  * A gentle `motion` glow-pulse sits behind the primary button.
  *
- * Brand: glowing card on the dark canvas — deep-navy gradient, blue #7aa2ff
- * eyebrow, blue→violet primary, blue/teal/violet trust icons, white text,
- * Inter ≤700.
+ * Brand: dark card on a light page — deep-navy gradient, blue #7aa2ff eyebrow,
+ * blue→violet primary, blue/teal/violet trust icons, white text, Inter ≤700.
  */
 
 import { ArrowRight, Lock, ShieldCheck, Star, Zap } from "lucide-react";
@@ -50,7 +49,10 @@ export function LandingReady() {
       id="cta"
       aria-labelledby="cta-heading"
       className="relative isolate overflow-hidden py-16 sm:py-24"
-      style={{ background: "#070b16" }}
+      style={{
+        background:
+          "radial-gradient(130% 100% at 50% -10%, #ffffff 0%, #f0f5ff 55%, #e9f0fb 100%)",
+      }}
     >
       <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
         {/* ── the one dark card ── */}
@@ -59,7 +61,7 @@ export function LandingReady() {
           style={{
             background: "linear-gradient(135deg, #0b1020 0%, #0e1734 55%, #0a1a2e 100%)",
             boxShadow:
-              "inset 0 0 0 1px rgba(255,255,255,0.12), 0 60px 130px -50px rgba(79,70,229,0.35), 0 40px 90px -45px rgba(0,0,0,0.7)",
+              "inset 0 0 0 1px rgba(255,255,255,0.08), 0 40px 90px -45px rgba(11,16,32,0.6)",
           }}
         >
           {/* ── decorative glow / sparkle layer ── */}
@@ -76,7 +78,7 @@ export function LandingReady() {
               className="absolute -left-40 -top-44 h-[460px] w-[460px] rounded-full blur-2xl"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(74,104,255,0.6) 0%, rgba(74,104,255,0.18) 42%, transparent 72%)",
+                  "radial-gradient(circle, rgba(74,104,255,0.5) 0%, rgba(74,104,255,0.14) 42%, transparent 72%)",
               }}
             />
             {/* teal glow — bottom-right corner */}
@@ -84,7 +86,7 @@ export function LandingReady() {
               className="absolute -bottom-44 -right-40 h-[460px] w-[460px] rounded-full blur-2xl"
               style={{
                 background:
-                  "radial-gradient(circle, rgba(23,201,180,0.52) 0%, rgba(23,201,180,0.16) 42%, transparent 72%)",
+                  "radial-gradient(circle, rgba(23,201,180,0.42) 0%, rgba(23,201,180,0.12) 42%, transparent 72%)",
               }}
             />
             {/* faint top-center sheen for depth */}
