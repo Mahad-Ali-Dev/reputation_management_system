@@ -11,10 +11,11 @@
  *   - text translateY drift (-50 → 0) as the panel scrolls through
  *   - the fixed-array hook pattern (hooks mapped over a CONST section array)
  *
- * Restyled from the original dark theme to the repulabs LIGHT brand: ink type,
- * muted #5b6473 body copy, screenshots framed in rounded-2xl light borders with
- * a soft blue-tinted shadow — and bigger than the original's `size-80` (fluid
- * `w-[560px] max-w-full` cards showing the real app).
+ * Dark cinematic restyle — the section sits directly on the page's #070b16
+ * canvas (no own background stripe, just a faint radial glow accent). Cyan
+ * kicker eyebrows, white titles, #9db0d6 body, and the screenshots live in
+ * dark glass frames (white/10 border, deep black drop shadow, a soft glow
+ * ring tinted with each panel's accent color).
  */
 
 import { ArrowDown } from "lucide-react";
@@ -31,7 +32,7 @@ const SECTIONS = [
   {
     id: 1,
     kicker: "Reviews",
-    accent: "#2563eb",
+    accent: "#4a7dff",
     title: "Every review, one inbox",
     description:
       "Google, Facebook and Yelp stream into a single queue the moment they land. AI drafts the reply in your voice — you skim, approve and move on with your day.",
@@ -42,7 +43,7 @@ const SECTIONS = [
   {
     id: 2,
     kicker: "Phone AI",
-    accent: "#7c3aed",
+    accent: "#a855f7",
     title: "A phone line that sells for you",
     description:
       "The AI receptionist answers 24/7, qualifies the caller, books the appointment and hands off to a human when it matters. No more missed-call revenue leaks.",
@@ -53,7 +54,7 @@ const SECTIONS = [
   {
     id: 3,
     kicker: "Analytics",
-    accent: "#0891b2",
+    accent: "#22d3ee",
     title: "Reports your team will actually read",
     description:
       "Rating trends, QR scans, response rates and sentiment on one auto-refreshed page. The Monday number everyone asks for — without the spreadsheet stitching.",
@@ -98,39 +99,42 @@ export function LandingTour() {
       id="tour"
       aria-labelledby="tour-heading"
       className="relative isolate overflow-hidden"
-      style={{
-        background:
-          "radial-gradient(130% 80% at 50% 0%, #ffffff 0%, #f2f6ff 55%, #f8faff 100%)",
-      }}
     >
+      {/* faint radial glow accent — the only background this section owns.
+          Centered well below the section edge so it fades to zero at the
+          boundary (no visible seam against the neighbouring sections). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[900px]"
+        style={{
+          background:
+            "radial-gradient(900px 520px at 80% 380px, rgba(59,90,255,0.10), transparent 70%)",
+        }}
+      />
+
       {/* ── compact header (stands in for the original's full-screen intro) ── */}
       <div className="mx-auto w-full max-w-[1200px] px-5 pt-24 text-center sm:px-8 sm:pt-28">
         <Reveal>
-          <span
-            className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
-            style={{ borderColor: "#D9DDF7", background: "rgba(255,255,255,0.65)" }}
-          >
-            <ShinyText
-              text="✦ SEE IT IN ACTION"
-              className="text-[13px] font-bold tracking-[0.16em] text-[#2563eb]"
-            />
-          </span>
+          <ShinyText
+            text="✦ SEE IT WORKING"
+            className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#22d3ee]"
+          />
         </Reveal>
 
         <Reveal delay={0.06}>
           <h2
             id="tour-heading"
-            className="mx-auto mt-6 max-w-[18ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.025em] text-[#0b1220] sm:text-[56px]"
+            className="mx-auto mt-6 max-w-[18ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.02em] text-white sm:text-[56px]"
           >
             Three screens that{" "}
-            <span className="bg-gradient-to-r from-[#2563eb] to-[#7c3aed] bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-[#4a7dff] via-[#22d3ee] to-[#22d3ee] bg-clip-text text-transparent">
               run your reputation.
             </span>
           </h2>
         </Reveal>
 
         <Reveal delay={0.12}>
-          <p className="mt-8 inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-[0.14em] text-[#5b6473]">
+          <p className="mt-8 inline-flex items-center gap-1.5 text-[13px] font-semibold tracking-[0.14em] text-[#6b7ba3]">
             SCROLL <ArrowDown size={15} />
           </p>
         </Reveal>
@@ -149,18 +153,15 @@ export function LandingTour() {
           >
             {/* text side — the original's translateY drift on both nodes */}
             <motion.div style={{ y: translateContents[index] }} className="max-w-sm">
-              <p
-                className="text-[13px] font-bold tracking-[0.18em]"
-                style={{ color: section.accent }}
-              >
-                {section.kicker.toUpperCase()}
+              <p className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#22d3ee]">
+                ✦ {section.kicker.toUpperCase()}
               </p>
-              <div className="mt-3 max-w-sm text-[38px] font-bold leading-[1.06] tracking-[-0.02em] text-[#0b1220] sm:text-[48px]">
+              <div className="mt-3 max-w-sm text-[38px] font-bold leading-[1.06] tracking-[-0.02em] text-white sm:text-[48px]">
                 {section.title}
               </div>
               <motion.p
                 style={{ y: translateContents[index] }}
-                className="mt-14 max-w-sm text-[17px] leading-[1.6] text-[#5b6473]"
+                className="mt-14 max-w-sm text-[17px] leading-[1.6] text-[#9db0d6]"
               >
                 {section.description}
               </motion.p>
@@ -177,14 +178,16 @@ export function LandingTour() {
               {/* soft accent glow, revealed together with the shot */}
               <div
                 aria-hidden
-                className="pointer-events-none absolute -inset-6 -z-10 rounded-[32px] blur-2xl"
+                className="pointer-events-none absolute -inset-8 -z-10 rounded-[36px] blur-3xl"
                 style={{
-                  background: `radial-gradient(60% 60% at 50% 45%, ${section.accent}2e 0%, transparent 70%)`,
+                  background: `radial-gradient(60% 60% at 50% 45%, ${section.accent}30 0%, transparent 70%)`,
                 }}
               />
               <div
-                className="w-[560px] max-w-full overflow-hidden rounded-2xl border border-[#E1E6F0] bg-white"
-                style={{ boxShadow: "0 34px 70px -34px rgba(26,43,95,0.38)" }}
+                className="w-[560px] max-w-full overflow-hidden rounded-2xl border border-white/10 bg-[#0d1526]"
+                style={{
+                  boxShadow: `0 40px 90px -40px rgba(0,0,0,0.8), 0 0 44px -14px ${section.accent}4d`,
+                }}
               >
                 <div className="aspect-[16/11] w-full">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

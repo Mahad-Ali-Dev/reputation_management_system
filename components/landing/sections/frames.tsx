@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * LandingFrames — "Explore the whole workspace." hover-expand screenshot grid.
+ * LandingFrames — "Six more modules, one login." hover-expand screenshot grid.
  *
  * Port of the founder's DynamicFrameLayout + FrameComponent (hero section.txt),
  * adapted from looping videos to real product screenshots. The signature
@@ -12,9 +12,9 @@
  * video/frame-asset props (autoPlay, corner/edge sprites, showFrame) were
  * stripped since they don't apply to stills.
  *
- * Restyled to the repulabs LIGHT brand: rounded-xl frames on 1px #E1E6F0
- * borders, soft blue-tinted shadows, Inter ≤700, standard section header with
- * Reveal + ShinyText from `@/components/landing/anim`.
+ * Dark cinematic restyle — this is the tour's closing beat ("and everything
+ * else"), sitting directly on the page's #070b16 canvas. Frames are #0d1526
+ * on white/10 borders with a cyan hover ring, label chips are dark glass.
  */
 
 import { motion } from "motion/react";
@@ -35,12 +35,12 @@ interface Frame {
 }
 
 const FRAMES: Frame[] = [
-  { id: 1, image: "dashboard.png", label: "Command dashboard", accent: "#2563eb", defaultPos: { x: 0, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 2, image: "inbox.png", label: "Unified inbox", accent: "#7c3aed", defaultPos: { x: 4, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 3, image: "outreach.png", label: "Review requests", accent: "#0891b2", defaultPos: { x: 8, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 4, image: "surveys.png", label: "Surveys & NPS", accent: "#16a34a", defaultPos: { x: 0, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 5, image: "qr.png", label: "QR stands", accent: "#ea580c", defaultPos: { x: 4, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 6, image: "social.png", label: "Social studio", accent: "#db2777", defaultPos: { x: 8, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
+  { id: 1, image: "dashboard.png", label: "Command dashboard", accent: "#60a5fa", defaultPos: { x: 0, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
+  { id: 2, image: "inbox.png", label: "Unified inbox", accent: "#a78bfa", defaultPos: { x: 4, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
+  { id: 3, image: "outreach.png", label: "Review requests", accent: "#22d3ee", defaultPos: { x: 8, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
+  { id: 4, image: "surveys.png", label: "Surveys & NPS", accent: "#4ade80", defaultPos: { x: 0, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
+  { id: 5, image: "qr.png", label: "QR stands", accent: "#fb923c", defaultPos: { x: 4, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
+  { id: 6, image: "social.png", label: "Social studio", accent: "#f472b6", defaultPos: { x: 8, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
 ];
 
 /* how far a hovered track grows — rows sum to 8fr (2 tracks), cols to 12fr (3 tracks) */
@@ -60,12 +60,12 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
       }}
     >
       <div
-        className="relative h-full w-full overflow-hidden rounded-xl border bg-white"
+        className="relative h-full w-full overflow-hidden rounded-xl border bg-[#0d1526]"
         style={{
-          borderColor: isHovered ? `${frame.accent}55` : "#E1E6F0",
+          borderColor: isHovered ? "rgba(34,211,238,0.55)" : "rgba(255,255,255,0.10)",
           boxShadow: isHovered
-            ? `0 26px 55px -24px ${frame.accent}59`
-            : "0 16px 38px -24px rgba(26,43,95,0.28)",
+            ? `0 0 0 1px rgba(34,211,238,0.28), 0 26px 60px -24px rgba(0,0,0,0.8), 0 0 40px -12px ${frame.accent}45`
+            : "0 20px 45px -28px rgba(0,0,0,0.7)",
           transition: "border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
         }}
       >
@@ -88,14 +88,15 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
           />
         </div>
 
-        {/* label chip — appears on hover */}
+        {/* label chip — dark glass, appears on hover */}
         <div
-          className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full border border-[#E1E6F0] bg-white/90 px-3.5 py-1.5 backdrop-blur"
+          className="pointer-events-none absolute bottom-3 left-3 inline-flex items-center gap-2 rounded-full border border-white/10 px-3.5 py-1.5 backdrop-blur"
           style={{
+            background: "rgba(13,21,38,0.85)",
             opacity: isHovered ? 1 : 0,
             transform: isHovered ? "translateY(0)" : "translateY(8px)",
             transition: "opacity 0.3s ease-in-out, transform 0.3s ease-in-out",
-            boxShadow: "0 10px 24px -12px rgba(26,43,95,0.35)",
+            boxShadow: "0 10px 24px -12px rgba(0,0,0,0.7)",
           }}
         >
           <span
@@ -103,7 +104,7 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
             className="h-2 w-2 rounded-full"
             style={{ background: frame.accent }}
           />
-          <span className="text-[13px] font-bold tracking-[-0.01em] text-[#0b1220]">
+          <span className="text-[13px] font-bold tracking-[-0.01em] text-[#cdd8f2]">
             {frame.label}
           </span>
         </div>
@@ -178,42 +179,45 @@ export function LandingFrames() {
       id="explore"
       aria-labelledby="explore-heading"
       className="relative isolate overflow-hidden py-24 sm:py-28"
-      style={{
-        background:
-          "radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #f4f7ff 50%, #ffffff 100%)",
-      }}
     >
+      {/* faint radial glow accent — the only background this section owns.
+          Centered well below the section edge so it fades to zero at the
+          boundary (no visible seam against the tour section above). */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[900px]"
+        style={{
+          background:
+            "radial-gradient(760px 440px at 22% 430px, rgba(124,58,237,0.08), transparent 70%)",
+        }}
+      />
+
       <div className="mx-auto w-full max-w-[1240px] px-5 sm:px-8">
         {/* ── header ── */}
         <div className="mx-auto max-w-3xl text-center">
           <Reveal>
-            <span
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
-              style={{ borderColor: "#D9DDF7", background: "rgba(255,255,255,0.65)" }}
-            >
-              <ShinyText
-                text="✦ PRODUCT TOUR"
-                className="text-[13px] font-bold tracking-[0.16em] text-[#654DF4]"
-              />
-            </span>
+            <ShinyText
+              text="✦ AND EVERYTHING ELSE"
+              className="text-[12px] font-bold uppercase tracking-[0.22em] text-[#22d3ee]"
+            />
           </Reveal>
 
           <Reveal delay={0.06}>
             <h2
               id="explore-heading"
-              className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.025em] text-[#0b1220] sm:text-[56px]"
+              className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.02em] text-white sm:text-[56px]"
             >
-              Explore the{" "}
-              <span className="bg-gradient-to-r from-[#2563eb] to-[#654df4] bg-clip-text text-transparent">
-                whole workspace.
+              Six more modules,{" "}
+              <span className="bg-gradient-to-r from-[#6d8bff] to-[#a855f7] bg-clip-text text-transparent">
+                one login.
               </span>
             </h2>
           </Reveal>
 
           <Reveal delay={0.12}>
-            <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#5b6473] sm:text-[19px]">
-              Six more modules, one login. Hover any panel — everything below
-              ships in every plan, already wired together.
+            <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#9db0d6] sm:text-[19px]">
+              Hover any panel — everything ships in every plan, already wired
+              together.
             </p>
           </Reveal>
         </div>
