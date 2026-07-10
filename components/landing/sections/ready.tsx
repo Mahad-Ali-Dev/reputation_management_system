@@ -22,7 +22,7 @@ import { ArrowRight, Lock, ShieldCheck, Star, Zap } from "lucide-react";
 import { motion } from "motion/react";
 import Link from "next/link";
 import { Fragment } from "react";
-import { Reveal } from "@/components/landing/anim";
+import { DotPattern, Reveal } from "@/components/landing/anim";
 
 type Trust = { icon: typeof ShieldCheck; color: string; label: string };
 
@@ -66,6 +66,13 @@ export function LandingReady() {
         >
           {/* ── decorative glow / sparkle layer ── */}
           <div aria-hidden className="pointer-events-none absolute inset-0">
+            {/* founder's DotPattern — faint dot matrix, masked to the top-right */}
+            <DotPattern
+              width={22}
+              height={22}
+              cr={0.9}
+              className="fill-white/[0.07] [mask-image:radial-gradient(480px_260px_at_78%_12%,#000,transparent)] [-webkit-mask-image:radial-gradient(480px_260px_at_78%_12%,#000,transparent)]"
+            />
             {/* blue glow — top-left corner */}
             <div
               className="absolute -left-40 -top-44 h-[460px] w-[460px] rounded-full blur-2xl"

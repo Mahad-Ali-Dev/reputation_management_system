@@ -36,7 +36,7 @@ import {
   Zap,
 } from "lucide-react";
 import { type ComponentType, useEffect, useState } from "react";
-import { DotGrid, Float, Reveal, ShinyText } from "@/components/landing/anim";
+import { DotGrid, Float, Reveal, RotatingText, ShinyText } from "@/components/landing/anim";
 import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────── data ─────────────────────────────── */
@@ -486,8 +486,28 @@ export function LandingHero() {
                 <br />
                 reputation
                 <br />
-                <span className="bg-gradient-to-r from-[#2563eb] via-[#2294f2] to-[#22d3ee] bg-clip-text text-transparent [-webkit-text-fill-color:transparent]">
-                  like a system.
+                <span className="bg-gradient-to-r from-[#2563eb] to-[#2294f2] bg-clip-text text-transparent [-webkit-text-fill-color:transparent]">
+                  like a{" "}
+                </span>
+                {/* RotatingText — the founder's component, same usage pattern as
+                    the original InteractiveHero headline (fixed-height clip,
+                    spring char-stagger from the last char). First word matches
+                    the mockup's static "system." */}
+                <span
+                  className="inline-flex h-[1.2em] items-baseline overflow-hidden"
+                  style={{ verticalAlign: "-0.18em" }}
+                >
+                  <RotatingText
+                    texts={["system.", "machine.", "engine.", "flywheel."]}
+                    mainClassName="text-[#22d3ee]"
+                    staggerFrom="last"
+                    initial={{ y: "-100%", opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    exit={{ y: "110%", opacity: 0 }}
+                    staggerDuration={0.01}
+                    transition={{ type: "spring", damping: 18, stiffness: 250 }}
+                    rotationInterval={2600}
+                  />
                 </span>
               </h1>
             </Reveal>

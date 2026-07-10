@@ -23,6 +23,7 @@ import {
   forwardRef,
   useCallback,
   useEffect,
+  useId,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -52,9 +53,14 @@ interface RotatingTextProps {
   loop?: boolean;
   auto?: boolean;
   mainClassName?: string;
+  splitLevelClassName?: string;
   elementLevelClassName?: string;
 }
 
+/** Verbatim port of the founder's RotatingText (hero section.txt) — word/char
+ *  splitting with Intl.Segmenter, variant-label inner motion.div, per-char
+ *  spring stagger. Only the import source (motion/react) and strict-TS details
+ *  differ from the original. */
 export const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>((props, ref) => {
   const {
     texts,
@@ -68,12 +74,42 @@ export const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>((prop
     loop = true,
     auto = true,
     mainClassName,
+    splitLevelClassName,
     elementLevelClassName,
   } = props;
 
   const [index, setIndex] = useState(0);
 
-  const chars = useMemo(() => Array.from(texts[index] ?? ""), [texts, index]);
+  const elements = useMemo(() => {
+    const splitIntoCharacters = (text: string): string[] => {
+      if (typeof Intl !== "undefined" && Intl.Segmenter) {
+        try {
+          const segmenter = new Intl.Segmenter("en", { granularity: "grapheme" });
+          return Array.from(segmenter.segment(text), (segment) => segment.segment);
+        } catch {
+          return text.split("");
+        }
+      }
+      return text.split("");
+    };
+    const currentText = texts[index] ?? "";
+    const words = currentText.split(/(\s+)/);
+    let charCount = 0;
+    return words
+      .filter((part) => part.length > 0)
+      .map((part) => {
+        const isSpace = /^\s+$/.test(part);
+        const characters = isSpace ? [part] : splitIntoCharacters(part);
+        const startIndex = charCount;
+        charCount += characters.length;
+        return { characters, isSpace, startIndex };
+      });
+  }, [texts, index]);
+
+  const totalElements = useMemo(
+    () => elements.reduce((sum, el) => sum + el.characters.length, 0),
+    [elements],
+  );
 
   const getDelay = useCallback(
     (i: number, total: number) => {
@@ -110,24 +146,49 @@ export const RotatingText = forwardRef<RotatingTextRef, RotatingTextProps>((prop
   }, [next, rotationInterval, auto, texts.length]);
 
   return (
-    <motion.span className={cn("inline-flex flex-wrap whitespace-pre-wrap relative", mainClassName)} layout>
+    <motion.span
+      className={cn(
+        "inline-flex flex-wrap whitespace-pre-wrap relative align-bottom pb-[10px]",
+        mainClassName,
+      )}
+      layout
+    >
       <span className="sr-only">{texts[index]}</span>
       <AnimatePresence mode="wait" initial={false}>
-        <motion.span key={index} className="inline-flex" aria-hidden layout>
-          {chars.map((char, i) => (
-            <motion.span
-              // biome-ignore lint/suspicious/noArrayIndexKey: char-position animation
-              key={i}
-              initial={initial}
-              animate={animate}
-              exit={exit}
-              transition={{ ...transition, delay: getDelay(i, chars.length) }}
-              className={cn("inline-block leading-none tracking-tight", elementLevelClassName)}
+        <motion.div
+          key={index}
+          className="inline-flex flex-wrap relative flex-row items-baseline"
+          layout
+          aria-hidden="true"
+        >
+          {elements.map((elementObj, elementIndex) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: word position within a keyed text
+              key={elementIndex}
+              className={cn("inline-flex", splitLevelClassName)}
+              style={{ whiteSpace: "pre" }}
             >
-              {char === " " ? " " : char}
-            </motion.span>
+              {elementObj.characters.map((char, charIndex) => {
+                const globalIndex = elementObj.startIndex + charIndex;
+                return (
+                  <motion.span
+                    key={`${char}-${charIndex}`}
+                    initial={initial}
+                    animate={animate}
+                    exit={exit}
+                    transition={{
+                      ...transition,
+                      delay: getDelay(globalIndex, totalElements),
+                    }}
+                    className={cn("inline-block leading-none tracking-tight", elementLevelClassName)}
+                  >
+                    {char === " " ? " " : char}
+                  </motion.span>
+                );
+              })}
+            </span>
           ))}
-        </motion.span>
+        </motion.div>
       </AnimatePresence>
     </motion.span>
   );
@@ -317,6 +378,57 @@ export function Reveal({
     >
       {children}
     </motion.div>
+  );
+}
+
+/* ─────────────────────────── DotPattern ─────────────────────────── */
+
+/** SVG dot-pattern background (from the founder's component library, verbatim
+ *  behaviour). Absolutely positioned; drop inside a `relative` container and
+ *  tint/mask via className (e.g. `fill-white/10 [mask-image:...]`). */
+export function DotPattern({
+  width = 24,
+  height = 24,
+  x = 0,
+  y = 0,
+  cx = 1,
+  cy = 0.5,
+  cr = 0.5,
+  className,
+}: {
+  width?: number;
+  height?: number;
+  x?: number;
+  y?: number;
+  cx?: number;
+  cy?: number;
+  cr?: number;
+  className?: string;
+}) {
+  const id = useId();
+  return (
+    <svg
+      aria-hidden="true"
+      className={cn(
+        "pointer-events-none absolute inset-0 h-full w-full fill-slate-500/50",
+        className,
+      )}
+    >
+      <defs>
+        <pattern
+          id={id}
+          width={width}
+          height={height}
+          patternUnits="userSpaceOnUse"
+          patternContentUnits="userSpaceOnUse"
+          x={x}
+          y={y}
+        >
+          <circle cx={cx} cy={cy} r={cr} />
+        </pattern>
+      </defs>
+      <rect width="100%" height="100%" strokeWidth={0} fill={`url(#${id})`} />
+    </svg>
   );
 }
 

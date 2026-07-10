@@ -111,6 +111,77 @@ function IntegrationCard({ item, index }: { item: Integration; index: number }) 
   );
 }
 
+/* ── dual logo marquee — the founder's IntegrationHero carousel, adapted to
+      the real brand SVGs. Two rows scroll in opposite directions on the same
+      30s linear loop, with edge fades. Items carry their own trailing padding
+      (instead of flex gap) so the -50% translate loops seamlessly. ── */
+
+const MARQUEE_ROW_1 = INTEGRATIONS.slice(0, 7);
+const MARQUEE_ROW_2 = INTEGRATIONS.slice(7);
+
+const repeated = (row: Integration[], times = 4) =>
+  Array.from({ length: times }).flatMap(() => row);
+
+function MarqueeDisc({ item }: { item: Integration }) {
+  return (
+    <div className="shrink-0 pr-10">
+      <div
+        className="grid h-16 w-16 place-items-center rounded-full bg-white"
+        style={{
+          boxShadow: `inset 0 0 0 1px ${alpha(item.accent, "22")}, 0 10px 22px -10px ${alpha(item.accent, "66")}`,
+        }}
+      >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={`${ART}/${item.file}`}
+          alt=""
+          width={34}
+          height={34}
+          loading="lazy"
+          draggable={false}
+          style={{ height: 34, width: 34 }}
+        />
+      </div>
+    </div>
+  );
+}
+
+function LogoMarquee() {
+  return (
+    <div aria-hidden className="relative mt-12 overflow-hidden pb-1">
+      {/* Row 1 — scrolls left */}
+      <div className="lp-scroll-left flex w-max items-center">
+        {repeated(MARQUEE_ROW_1).map((item, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: repeated decorative loop
+          <MarqueeDisc key={`a${i}`} item={item} />
+        ))}
+      </div>
+
+      {/* Row 2 — scrolls right */}
+      <div className="lp-scroll-right mt-6 flex w-max items-center">
+        {repeated(MARQUEE_ROW_2).map((item, i) => (
+          // biome-ignore lint/suspicious/noArrayIndexKey: repeated decorative loop
+          <MarqueeDisc key={`b${i}`} item={item} />
+        ))}
+      </div>
+
+      {/* edge fades */}
+      <div className="pointer-events-none absolute inset-y-0 left-0 w-24 bg-gradient-to-r from-[#f5f8ff] to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-[#f7f9ff] to-transparent" />
+
+      <style>{`
+        @keyframes lp-scroll-left { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+        @keyframes lp-scroll-right { 0% { transform: translateX(-50%); } 100% { transform: translateX(0); } }
+        .lp-scroll-left { animation: lp-scroll-left 30s linear infinite; }
+        .lp-scroll-right { animation: lp-scroll-right 30s linear infinite; }
+        @media (prefers-reduced-motion: reduce) {
+          .lp-scroll-left, .lp-scroll-right { animation: none; }
+        }
+      `}</style>
+    </div>
+  );
+}
+
 export function LandingIntegrations() {
   return (
     <section
@@ -211,8 +282,14 @@ export function LandingIntegrations() {
           ))}
         </div>
 
+        {/* ── dual logo marquee (founder's IntegrationHero carousel) ── */}
+        <Reveal delay={0.14}>
+          <LogoMarquee />
+        </Reveal>
+
         {/* ── marketplace callout ── */}
         <Reveal delay={0.1} className="mt-8">
+
           <div
             className="mx-auto flex max-w-[1020px] flex-col items-center gap-4 rounded-2xl border px-5 py-4 backdrop-blur sm:flex-row sm:gap-5 sm:px-6"
             style={{
