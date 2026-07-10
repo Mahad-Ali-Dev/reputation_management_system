@@ -1,7 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "lib": [
+      "dom",
+      "dom.iterable",
+      "esnext"
+    ],
     "allowJs": true,
     "skipLibCheck": true,
     "strict": true,
@@ -14,14 +18,54 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
-    "plugins": [{ "name": "next" }],
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
     "paths": {
-      "@/*": ["./*"],
-      "@/lib/*": ["./lib/*"],
-      "@/components/*": ["./components/*"],
-      "@/app/*": ["./app/*"]
+      "@/*": [
+        "./*"
+      ],
+      "@/lib/*": [
+        "./lib/*"
+      ],
+      "@/components/*": [
+        "./components/*"
+      ],
+      "@/app/*": [
+        "./app/*"
+      ]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", ".next", ".pdf-build"]
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".next-bill/types/**/*.ts",
+    ".next-cd/types/**/*.ts",
+    ".next-cmd/types/**/*.ts",
+    ".next-conn/types/**/*.ts",
+    ".next-dc/types/**/*.ts",
+    ".next-est/types/**/*.ts",
+    ".next-faq/types/**/*.ts",
+    ".next-full/types/**/*.ts",
+    ".next-hero/types/**/*.ts",
+    ".next-integ/types/**/*.ts",
+    ".next-loc/types/**/*.ts",
+    ".next-robot/types/**/*.ts",
+    ".next-set/types/**/*.ts",
+    ".next-show/types/**/*.ts",
+    ".next-steps/types/**/*.ts",
+    ".next-surv/types/**/*.ts",
+    ".next-tour/types/**/*.ts",
+    ".next-workspace/types/**/*.ts",
+    ".next/types/**/*.ts",
+    "next-env.d.ts",
+    ".next-nav/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    ".next",
+    ".pdf-build"
+  ]
 }

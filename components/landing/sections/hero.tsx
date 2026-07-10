@@ -41,12 +41,21 @@ import { cn } from "@/lib/utils";
 
 /* ─────────────────────────────── data ─────────────────────────────── */
 
-const NAV_LINKS = [
-  { label: "Product", href: "#platform" },
+const NAV_LINKS: { label: string; href: string; dropdown?: boolean }[] = [
+  { label: "Product", href: "#platform", dropdown: true },
   { label: "How it works", href: "#how-it-works" },
   { label: "Integrations", href: "#integrations" },
   { label: "Operators", href: "#operators" },
   { label: "FAQ", href: "#faq" },
+];
+
+/** Items inside the "Product" hover dropdown — each links to a landing section. */
+const PRODUCT_MENU = [
+  { label: "Reviews & Inbox", href: "#command" },
+  { label: "Platform", href: "#platform" },
+  { label: "How it works", href: "#how-it-works" },
+  { label: "Integrations", href: "#integrations" },
+  { label: "For operators", href: "#operators" },
 ] as const;
 
 const TRUST = ["No card required", "Live in 6 minutes", "Cancel anytime"] as const;
@@ -203,9 +212,97 @@ function Storefront() {
 
 /* ─────────────────────────────── nav ─────────────────────────────── */
 
+/**
+ * Desktop nav link — ported from the kit's NavLink/AnimatedNavLink: a relative
+ * link whose 1px gradient underline (blue → cyan) scales from 0 to full width
+ * on hover, plus the rotating chevron for dropdown triggers.
+ */
+function NavLink({
+  href,
+  children,
+  hasDropdown = false,
+  isOpen = false,
+}: {
+  href: string;
+  children: React.ReactNode;
+  hasDropdown?: boolean;
+  isOpen?: boolean;
+}) {
+  return (
+    <a
+      href={href}
+      className="group relative flex items-center py-1 text-[15px] font-semibold text-[#0b1220] transition-colors duration-200 hover:text-[#2563eb]"
+    >
+      {children}
+      {hasDropdown && (
+        <ChevronDown
+          size={13}
+          strokeWidth={2.5}
+          className={cn("ml-1 transition-transform duration-200", isOpen && "rotate-180")}
+          aria-hidden
+        />
+      )}
+      {/* gradient underline — scaleX 0 → 1 from center on hover (0.3s ease-out,
+          same feel as the kit's motion variant) */}
+      <span
+        aria-hidden
+        className="absolute -bottom-0.5 left-0 right-0 h-px origin-center scale-x-0 rounded-full bg-gradient-to-r from-[#2563eb] to-[#22d3ee] transition-transform duration-300 ease-out group-hover:scale-x-100"
+      />
+    </a>
+  );
+}
+
+/**
+ * Hover dropdown card — same AnimatePresence pop as the kit's DropdownMenu
+ * (y:10 / scale:0.95 → rest), restyled to the light brand. The 8px gap is
+ * padding (not margin) so the pointer never leaves the hover wrapper while
+ * travelling from trigger to menu.
+ */
+function DropdownMenu({ isOpen, children }: { isOpen: boolean; children: React.ReactNode }) {
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0, y: 10, scale: 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 10, scale: 0.95, transition: { duration: 0.15 } }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          style={{ x: "-50%" }}
+          className="absolute left-1/2 top-full z-40 w-60 origin-top pt-2"
+        >
+          <div className="rounded-xl border border-[#e7ecf6] bg-white/95 p-2 shadow-[0_24px_50px_-18px_rgba(49,92,170,0.35)] backdrop-blur-md">
+            {children}
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+function DropdownItem({
+  href,
+  children,
+  onClick,
+}: {
+  href: string;
+  children: React.ReactNode;
+  onClick?: () => void;
+}) {
+  return (
+    <a
+      href={href}
+      onClick={onClick}
+      className="flex w-full items-center justify-between rounded-lg px-3 py-2 text-[13.5px] font-medium text-[#0b1220] transition-colors duration-150 hover:bg-[#f2f6ff] hover:text-[#2563eb]"
+    >
+      <span>{children}</span>
+    </a>
+  );
+}
+
 function TopNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -236,15 +333,32 @@ function TopNav() {
 
         {/* center links */}
         <div className="hidden items-center gap-7 lg:flex xl:gap-9">
-          {NAV_LINKS.map((l) => (
-            <a
-              key={l.label}
-              href={l.href}
-              className="text-[15px] font-semibold text-[#0b1220] transition-colors hover:text-[#2563eb]"
-            >
-              {l.label}
-            </a>
-          ))}
+          {NAV_LINKS.map((l) =>
+            l.dropdown ? (
+              <div
+                key={l.label}
+                data-dropdown={l.label.toLowerCase()}
+                className="relative"
+                onMouseEnter={() => setOpenDropdown(l.label)}
+                onMouseLeave={() => setOpenDropdown(null)}
+              >
+                <NavLink href={l.href} hasDropdown isOpen={openDropdown === l.label}>
+                  {l.label}
+                </NavLink>
+                <DropdownMenu isOpen={openDropdown === l.label}>
+                  {PRODUCT_MENU.map((item) => (
+                    <DropdownItem key={item.label} href={item.href} onClick={() => setOpenDropdown(null)}>
+                      {item.label}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </div>
+            ) : (
+              <NavLink key={l.label} href={l.href}>
+                {l.label}
+              </NavLink>
+            ),
+          )}
         </div>
 
         {/* right actions */}
