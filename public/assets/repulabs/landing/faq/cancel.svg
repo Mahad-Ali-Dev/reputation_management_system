@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="softBg" x1="140" y1="140" x2="880" y2="880" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF1F7"/>
+      <stop offset="1" stop-color="#FFE4EF"/>
+    </linearGradient>
+    <linearGradient id="pink" x1="345" y1="278" x2="700" y2="740" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FB7185"/>
+      <stop offset="0.45" stop-color="#F43F5E"/>
+      <stop offset="1" stop-color="#E11D48"/>
+    </linearGradient>
+    <filter id="shadow" x="80" y="80" width="864" height="864" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="30" stdDeviation="36" flood-color="#F43F5E" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <rect x="132" y="132" width="760" height="760" rx="176" fill="url(#softBg)"/>
+    <path d="M350 360H674C722 360 760 398 760 446V692C760 740 722 778 674 778H350C302 778 264 740 264 692V446C264 398 302 360 350 360Z" fill="none" stroke="url(#pink)" stroke-width="48" stroke-linejoin="round"/>
+    <path d="M360 288V388" stroke="url(#pink)" stroke-width="58" stroke-linecap="round"/>
+    <path d="M664 288V388" stroke="url(#pink)" stroke-width="58" stroke-linecap="round"/>
+    <path d="M402 512L622 732" stroke="url(#pink)" stroke-width="58" stroke-linecap="round"/>
+    <path d="M622 512L402 732" stroke="url(#pink)" stroke-width="58" stroke-linecap="round"/>
+  </g>
+</svg>

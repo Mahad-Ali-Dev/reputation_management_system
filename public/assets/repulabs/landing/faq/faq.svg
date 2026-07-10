@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <radialGradient id="qbg" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(410 330) rotate(48) scale(560)">
+      <stop stop-color="#8B5CF6"/>
+      <stop offset="1" stop-color="#5B35E8"/>
+    </radialGradient>
+    <filter id="shadow" x="120" y="120" width="784" height="784" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="24" stdDeviation="34" flood-color="#6D28D9" flood-opacity="0.30"/>
+    </filter>
+  </defs>
+  <g filter="url(#shadow)">
+    <circle cx="512" cy="512" r="315" fill="url(#qbg)"/>
+    <path d="M429 420C437 351 491 307 562 307C642 307 696 355 696 424C696 480 668 515 616 548C574 576 562 594 562 635V657H462V628C462 571 486 537 533 505C574 478 592 459 592 427C592 397 570 376 536 376C501 376 478 397 472 433L429 420Z" fill="white"/>
+    <circle cx="512" cy="742" r="54" fill="white"/>
+  </g>
+</svg>

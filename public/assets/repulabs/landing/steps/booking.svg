@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="body" x1="240" y1="175" x2="760" y2="850" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#34393d"/><stop offset="1" stop-color="#1e2326"/></linearGradient>
+    <linearGradient id="screen" x1="300" y1="245" x2="700" y2="380" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#5c686a"/><stop offset="1" stop-color="#384345"/></linearGradient>
+    <linearGradient id="panel" x1="292" y1="476" x2="744" y2="698" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#24292b"/><stop offset="1" stop-color="#171b1d"/></linearGradient>
+    <linearGradient id="yellow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffe23b"/><stop offset="1" stop-color="#f6b900"/></linearGradient>
+    <filter id="dshadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="16" stdDeviation="20" flood-color="#000" flood-opacity="0.22"/></filter>
+  </defs>
+  <rect x="255" y="185" width="514" height="614" rx="74" fill="url(#body)" filter="url(#dshadow)"/>
+  <rect x="294" y="240" width="436" height="172" rx="42" fill="#111517" opacity="0.95"/>
+  <rect x="314" y="260" width="396" height="132" rx="28" fill="url(#screen)" opacity="0.85"/>
+  <rect x="282" y="458" width="460" height="264" rx="42" fill="#111517"/>
+  <rect x="303" y="479" width="418" height="222" rx="28" fill="url(#panel)"/>
+  <circle cx="382" cy="562" r="24" fill="#101315" opacity=".45"/>
+  <circle cx="382" cy="558" r="18" fill="url(#yellow)"/>
+  <circle cx="601" cy="641" r="31" fill="#101315" opacity=".42"/>
+  <circle cx="600" cy="637" r="25" fill="url(#yellow)"/>
+  <circle cx="688" cy="615" r="43" fill="#101315" opacity=".42"/>
+  <circle cx="686" cy="610" r="35" fill="url(#yellow)"/>
+  <circle cx="372" cy="550" r="10" fill="#fff3a4" opacity=".7"/>
+  <circle cx="590" cy="625" r="12" fill="#fff3a4" opacity=".65"/>
+  <circle cx="675" cy="596" r="16" fill="#fff3a4" opacity=".65"/>
+</svg>

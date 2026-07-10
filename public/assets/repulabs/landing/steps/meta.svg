@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="metaBlue" x1="145" y1="300" x2="880" y2="725" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0a8cff"/>
+      <stop offset="1" stop-color="#0067e8"/>
+    </linearGradient>
+  </defs>
+  <path d="M166 600C221 316 378 253 512 512c134-259 291-196 346 88 51 262-142 305-346-88-204 393-397 350-346 88z" fill="none" stroke="url(#metaBlue)" stroke-width="92" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="170" y1="120" x2="870" y2="900" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A78BFA"/>
+      <stop offset="0.55" stop-color="#7C3AED"/>
+      <stop offset="1" stop-color="#6D5DFB"/>
+    </linearGradient>
+    <filter id="softShadow" x="80" y="80" width="864" height="864" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="30" stdDeviation="35" flood-color="#7C3AED" flood-opacity="0.28"/>
+    </filter>
+    <linearGradient id="bolt" x1="425" y1="240" x2="640" y2="760" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F7F5FF"/>
+    </linearGradient>
+  </defs>
+  <g filter="url(#softShadow)">
+    <rect x="128" y="128" width="768" height="768" rx="170" fill="url(#bg)"/>
+    <path d="M552 240L356 544H501L457 784L668 468H526L552 240Z" fill="url(#bolt)"/>
+  </g>
+</svg>

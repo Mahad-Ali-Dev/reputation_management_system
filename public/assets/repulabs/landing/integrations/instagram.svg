@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="igGrad1" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#FEDA75"/>
+      <stop offset="20%" stop-color="#FA7E1E"/>
+      <stop offset="40%" stop-color="#D62976"/>
+      <stop offset="60%" stop-color="#962FBF"/>
+      <stop offset="80%" stop-color="#4F5BD5"/>
+    </linearGradient>
+  </defs>
+  <!-- Rounded square outline -->
+  <rect x="32" y="32" width="448" height="448" rx="112" fill="none" stroke="url(#igGrad1)" stroke-width="40"/>
+  <!-- Center circle -->
+  <circle cx="256" cy="256" r="108" fill="none" stroke="url(#igGrad1)" stroke-width="36"/>
+  <!-- Top-right dot -->
+  <circle cx="400" cy="112" r="28" fill="url(#igGrad1)"/>
+</svg>

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="cream" x1="110" y1="90" x2="910" y2="920" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#fff5e6"/>
+      <stop offset="1" stop-color="#ffe8c8"/>
+    </linearGradient>
+    <linearGradient id="orange" x1="512" y1="205" x2="512" y2="806" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#ff9f0a"/>
+      <stop offset="1" stop-color="#ff8800"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="20" stdDeviation="28" flood-color="#f2a94a" flood-opacity="0.22"/>
+    </filter>
+  </defs>
+  <rect x="86" y="86" width="852" height="852" rx="170" fill="url(#cream)" filter="url(#shadow)"/>
+  <path d="M512 194c95 80 181 110 294 126 32 5 55 33 55 65v125c0 180-118 304-321 411-18 10-38 10-56 0C282 814 164 690 164 510V385c0-32 23-60 55-65 112-16 198-46 293-126z" fill="url(#orange)"/>
+  <g fill="#fff">
+    <rect x="379" y="474" width="266" height="200" rx="42"/>
+    <path fill-rule="evenodd" d="M512 312c-72 0-130 58-130 130v76h66v-76c0-35 29-64 64-64s64 29 64 64v76h66v-76c0-72-58-130-130-130z"/>
+    <path d="M512 531c24 0 43 19 43 43 0 16-9 30-22 37l21 75h-84l21-75c-13-7-22-21-22-37 0-24 19-43 43-43z" fill="#ff8c00"/>
+  </g>
+</svg>

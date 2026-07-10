@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { ShieldCheck, User, Users, Zap } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -9,25 +10,23 @@ import { googleSignIn } from "./actions";
 import "./auth.css";
 
 /**
- * Login — premium split-screen redesign (design-mockups/auth-after.png).
+ * Login — premium split-screen (tasks/UI/login/mockup.png).
  *
  * Layout:
  *   ┌──────────────────────┬──────────────────────┐
- *   │ Dark-navy hero       │ Mint gradient panel  │
- *   │ (logo, stat chip,    │ (ACCESS kicker,      │
- *   │  framed illustration,│  email field, pill   │
- *   │  display headline)   │  CTA, Google, fine   │
- *   │                      │  print)              │
+ *   │ Dark-navy brand panel│ White form card      │
+ *   │ (logo, display head, │ (person tile, magic  │
+ *   │  illustration, 3     │  link email, Google, │
+ *   │  feature items)      │  reassurance box)    │
  *   └──────────────────────┴──────────────────────┘
+ * Below 900px the panel collapses to a slim dark brand header.
  *
- * Below 900px the hero collapses to a slim dark brand header above the form.
- *
- * Auth logic unchanged (passwordless — the mockup's password field is
- * illustrative only):
+ * Auth logic is unchanged and passwordless:
  *   - "resend" → magic link (15-min expiry) via next-auth/react signIn.
  *   - "google" → OAuth via server action (next-auth@5-beta's client helper
  *     bakes localhost into the bundle; see app/login/actions.ts).
  *   - callbackUrl honored for flows like /accept-invite (relative paths only).
+ * There is no Microsoft provider, so no Microsoft button is shown.
  */
 export default function LoginPage() {
   return (
@@ -37,23 +36,41 @@ export default function LoginPage() {
   );
 }
 
-function Brand({ teal = false }: { teal?: boolean }) {
+function Brand({ light = false }: { light?: boolean }) {
   return (
     <>
       <Image
         src="/favicon.png?v=2"
         alt=""
-        width={34}
-        height={34}
+        width={32}
+        height={32}
         priority
-        className="auth-brand-logo"
+        className="auth-logo-mark"
       />
-      <span className="auth-brand-name">
-        repu<span style={{ color: teal ? "#5eead4" : "var(--pri)" }}>labs</span>
+      <span className="auth-logo-text" style={{ color: light ? "#fff" : "var(--ink)" }}>
+        repu<span className="auth-grad">labs</span>
       </span>
     </>
   );
 }
+
+const FEATURES = [
+  {
+    icon: ShieldCheck,
+    title: "Secure & Reliable",
+    desc: "Enterprise-grade security to keep your data safe.",
+  },
+  {
+    icon: Zap,
+    title: "Built for Productivity",
+    desc: "Powerful tools to streamline your workflow.",
+  },
+  {
+    icon: Users,
+    title: "Team Collaboration",
+    desc: "Work together seamlessly across your organization.",
+  },
+] as const;
 
 function LoginInner() {
   const sp = useSearchParams();
@@ -84,56 +101,70 @@ function LoginInner() {
   }
 
   return (
-    <main className="auth-shell">
-      {/* Mobile-only slim dark brand header (replaces the hero <900px) */}
+    <main className="auth-shell auth-shell--login">
+      {/* Mobile-only slim dark brand header (replaces the panel <900px) */}
       <header className="auth-mobile-brand">
-        <Brand teal />
+        <Brand light />
       </header>
 
-      {/* LEFT — dark navy hero */}
-      <aside className="auth-hero">
-        <div className="auth-hero-circle auth-hero-circle--a" aria-hidden="true" />
-        <div className="auth-hero-circle auth-hero-circle--b" aria-hidden="true" />
+      {/* LEFT — dark navy brand panel */}
+      <aside className="auth-side">
+        <div className="auth-side-glow auth-side-glow--a" aria-hidden="true" />
+        <div className="auth-side-glow auth-side-glow--b" aria-hidden="true" />
+        <div className="auth-side-dots" aria-hidden="true" />
 
-        <div className="auth-brand">
-          <Brand teal />
+        <div className="auth-logo">
+          <Brand light />
         </div>
 
-        <div className="auth-chip">
-          <div className="auth-chip-v">4.9 avg</div>
-          <div className="auth-chip-l">Across 3 active locations</div>
+        <div className="auth-side-body">
+          <h1 className="auth-side-title">
+            Welcome back to
+            <br />
+            <span className="auth-grad">repulabs</span>
+          </h1>
+          <p className="auth-side-sub">
+            Your command center for feedback, insights and better products.
+          </p>
+
+          <div className="auth-side-illo">
+            <Image
+              src="/assets/repulabs/illustrations/login-hero.svg"
+              alt=""
+              width={500}
+              height={340}
+              priority
+              style={{ width: "100%", height: "auto" }}
+            />
+          </div>
+
+          <div className="auth-feats">
+            {FEATURES.map((f) => (
+              <div key={f.title}>
+                <span className="auth-feat-ic">
+                  <f.icon size={17} />
+                </span>
+                <div className="auth-feat-tt">{f.title}</div>
+                <div className="auth-feat-dd">{f.desc}</div>
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="auth-illo">
-          <Image
-            src="/assets/repulabs/illustrations/login-hero.svg"
-            alt=""
-            width={430}
-            height={300}
-            priority
-            style={{ width: "100%", height: "auto" }}
-          />
-        </div>
-
-        <h1 className="auth-headline">Welcome back to a clean command center.</h1>
-
-        <div className="auth-hero-foot">
+        <div className="auth-side-foot">
           <span>© repulabs {new Date().getFullYear()}</span>
-          <span className="auth-hero-foot-links">
-            <a href="/legal/privacy">Privacy</a>
-            <a href="/legal/terms">Terms</a>
-          </span>
+          <a href="/legal/privacy">Privacy</a>
+          <a href="/legal/terms">Terms</a>
         </div>
       </aside>
 
-      {/* RIGHT — mint gradient form panel */}
-      <section className="auth-panel">
-        <div className="auth-panel-circle auth-panel-circle--a" aria-hidden="true" />
-        <div className="auth-panel-circle auth-panel-circle--b" aria-hidden="true" />
-
-        <div className="auth-form">
-          <div className="auth-kicker">{sent ? "Check your inbox" : "Access"}</div>
-          <h2 className="auth-title">{sent ? "Check your inbox" : "Log in to Repulabs"}</h2>
+      {/* RIGHT — white form card */}
+      <section className="auth-main">
+        <div className="auth-card">
+          <span className="auth-badge">
+            <User size={24} />
+          </span>
+          <h2 className="auth-title">{sent ? "Check your inbox" : "Log in to your account"}</h2>
           <p className="auth-sub">
             {sent ? (
               <>
@@ -141,7 +172,7 @@ function LoginInner() {
                 The link expires in 15 minutes.
               </>
             ) : (
-              "Use your work email — we'll send you a secure sign-in link."
+              "Enter your work email and we’ll send you a secure sign-in link."
             )}
           </p>
 
@@ -149,7 +180,7 @@ function LoginInner() {
             <div className="auth-fields">
               <div className="auth-note">
                 <div className="auth-note-head">
-                  <Icon name="mail" size={14} style={{ color: "var(--pri)" }} />
+                  <Icon name="mail" size={14} style={{ color: "#7c3aed" }} />
                   Sign-in link sent
                 </div>
                 Click the button in the email to finish signing in. Didn&rsquo;t get it? Check your
@@ -171,18 +202,21 @@ function LoginInner() {
               <form onSubmit={onMagicLink} className="auth-fields">
                 <label className="auth-field" htmlFor="login-email">
                   <span className="auth-field-label">Work email</span>
-                  <input
-                    id="login-email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    inputMode="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@business.com"
-                    aria-label="Work email"
-                    className="auth-field-input"
-                  />
+                  <span className="auth-field-box">
+                    <Icon name="mail" size={17} />
+                    <input
+                      id="login-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      inputMode="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@company.com"
+                      aria-label="Work email"
+                      className="auth-field-input"
+                    />
+                  </span>
                 </label>
                 {/* Passwordless: this emails a magic link, no password field. */}
                 <button type="submit" disabled={submitting || !email} className="auth-cta">
@@ -190,8 +224,8 @@ function LoginInner() {
                     "Sending…"
                   ) : (
                     <>
-                      Continue with email
-                      <Icon name="arrowR" size={13} />
+                      <Icon name="send" size={16} />
+                      Send sign-in link
                     </>
                   )}
                 </button>
@@ -208,15 +242,19 @@ function LoginInner() {
               <form action={googleSignIn}>
                 <input type="hidden" name="callbackUrl" value={callbackUrl} />
                 <button type="submit" className="auth-btn-ghost">
-                  <Icon name="google" size={14} />
+                  <Icon name="google" size={16} />
                   Continue with Google
                 </button>
               </form>
 
-              <p className="auth-fine">
-                Secure access, role-based permissions, and full activity history for every
-                workspace.
-              </p>
+              <div className="auth-info">
+                <span className="auth-info-ic">
+                  <ShieldCheck size={16} />
+                </span>
+                <span className="auth-info-tx">
+                  We never use your password. It’s just one-click, magic link access.
+                </span>
+              </div>
 
               <div className="auth-switch">
                 New here?{" "}

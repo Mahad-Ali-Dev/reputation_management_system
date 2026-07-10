@@ -2,6 +2,7 @@
 
 import { googleSignIn } from "@/app/login/actions";
 import { Icon } from "@/components/shell/icon";
+import { ShieldCheck, Users, Zap } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -9,8 +10,9 @@ import { Suspense, useState } from "react";
 import "@/app/login/auth.css";
 
 /**
- * Sign-up — premium split-screen redesign, mirrors /login
- * (design-mockups/auth-after.png) with onboarding copy.
+ * Sign-up — premium split-screen (tasks/UI/free trial/mockup.png), mirrors
+ * /login with onboarding copy: white form panel LEFT, light-grey illustration
+ * panel RIGHT.
  *
  * Why we have it: Auth.js magic-link flow doesn't really distinguish sign-up
  * from sign-in (the resend provider creates the user on first verification).
@@ -33,23 +35,41 @@ export default function SignupPage() {
   );
 }
 
-function Brand({ teal = false }: { teal?: boolean }) {
+function Brand({ light = false }: { light?: boolean }) {
   return (
     <>
       <Image
         src="/favicon.png?v=2"
         alt=""
-        width={34}
-        height={34}
+        width={32}
+        height={32}
         priority
-        className="auth-brand-logo"
+        className="auth-logo-mark"
       />
-      <span className="auth-brand-name">
-        repu<span style={{ color: teal ? "#5eead4" : "var(--pri)" }}>labs</span>
+      <span className="auth-logo-text" style={{ color: light ? "#fff" : "var(--ink)" }}>
+        repu<span className="auth-grad">labs</span>
       </span>
     </>
   );
 }
+
+const FEATURES = [
+  {
+    icon: ShieldCheck,
+    title: "Secure & Reliable",
+    desc: "Enterprise-grade security to keep your data safe.",
+  },
+  {
+    icon: Zap,
+    title: "Built for Productivity",
+    desc: "Powerful tools to streamline your workflow.",
+  },
+  {
+    icon: Users,
+    title: "Team Collaboration",
+    desc: "Work together seamlessly across your organization.",
+  },
+] as const;
 
 function SignupInner() {
   const sp = useSearchParams();
@@ -85,58 +105,23 @@ function SignupInner() {
   }
 
   return (
-    <main className="auth-shell">
-      {/* Mobile-only slim dark brand header (replaces the hero <900px) */}
+    <main className="auth-shell auth-shell--signup">
+      {/* Mobile-only slim dark brand header (replaces the panel <900px) */}
       <header className="auth-mobile-brand">
-        <Brand teal />
+        <Brand light />
       </header>
 
-      {/* LEFT — dark navy hero */}
-      <aside className="auth-hero">
-        <div className="auth-hero-circle auth-hero-circle--a" aria-hidden="true" />
-        <div className="auth-hero-circle auth-hero-circle--b" aria-hidden="true" />
+      {/* LEFT — white form panel */}
+      <section className="auth-main">
+        <div className="auth-card">
+          <div className="auth-logo" style={{ marginBottom: 34 }}>
+            <Brand />
+          </div>
 
-        <div className="auth-brand">
-          <Brand teal />
-        </div>
-
-        <div className="auth-chip">
-          <div className="auth-chip-v">1,284+ reviews</div>
-          <div className="auth-chip-l">Collected by teams like yours this month</div>
-        </div>
-
-        <div className="auth-illo">
-          <Image
-            src="/assets/repulabs/illustrations/home-hero.png"
-            alt=""
-            width={430}
-            height={300}
-            priority
-            style={{ width: "100%", height: "auto" }}
-          />
-        </div>
-
-        <h1 className="auth-headline">Start a reputation workspace with less friction.</h1>
-
-        <div className="auth-hero-foot">
-          <span>© repulabs {new Date().getFullYear()}</span>
-          <span className="auth-hero-foot-links">
-            <a href="/legal/privacy">Privacy</a>
-            <a href="/legal/terms">Terms</a>
-          </span>
-        </div>
-      </aside>
-
-      {/* RIGHT — mint gradient form panel */}
-      <section className="auth-panel">
-        <div className="auth-panel-circle auth-panel-circle--a" aria-hidden="true" />
-        <div className="auth-panel-circle auth-panel-circle--b" aria-hidden="true" />
-
-        <div className="auth-form">
           {slugFromNext && !sent && (
             <div className="auth-note" style={{ marginBottom: 18 }}>
               <div className="auth-note-head">
-                <Icon name="qr" size={13} style={{ color: "var(--pri)" }} />
+                <Icon name="qr" size={13} style={{ color: "#7c3aed" }} />
                 Activating QR {slugFromNext}
               </div>
               Sign up here and we&rsquo;ll take you straight to the activation page with this code
@@ -144,7 +129,7 @@ function SignupInner() {
             </div>
           )}
 
-          <div className="auth-kicker">{sent ? "Check your inbox" : "Get started"}</div>
+          {!sent && <span className="auth-eyebrow">✦ Get started</span>}
           <h2 className="auth-title">{sent ? "Check your inbox" : "Create your workspace"}</h2>
           <p className="auth-sub">
             {sent ? (
@@ -162,7 +147,7 @@ function SignupInner() {
             <div className="auth-fields">
               <div className="auth-note">
                 <div className="auth-note-head">
-                  <Icon name="mail" size={14} style={{ color: "var(--pri)" }} />
+                  <Icon name="mail" size={14} style={{ color: "#7c3aed" }} />
                   Verification link sent
                 </div>
                 Click the button in the email to complete signup. Didn&rsquo;t get it? Check your
@@ -184,18 +169,21 @@ function SignupInner() {
               <form onSubmit={onMagicLink} className="auth-fields">
                 <label className="auth-field" htmlFor="signup-email">
                   <span className="auth-field-label">Work email</span>
-                  <input
-                    id="signup-email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    inputMode="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@business.com"
-                    aria-label="Work email"
-                    className="auth-field-input"
-                  />
+                  <span className="auth-field-box">
+                    <Icon name="mail" size={17} />
+                    <input
+                      id="signup-email"
+                      type="email"
+                      required
+                      autoComplete="email"
+                      inputMode="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@business.com"
+                      aria-label="Work email"
+                      className="auth-field-input"
+                    />
+                  </span>
                 </label>
                 {/* Passwordless: this emails a verification link, no password field. */}
                 <button type="submit" disabled={submitting || !email} className="auth-cta">
@@ -204,7 +192,7 @@ function SignupInner() {
                   ) : (
                     <>
                       Create my workspace
-                      <Icon name="arrowR" size={13} />
+                      <Icon name="arrowR" size={15} />
                     </>
                   )}
                 </button>
@@ -219,7 +207,7 @@ function SignupInner() {
               <form action={googleSignIn}>
                 <input type="hidden" name="callbackUrl" value={next} />
                 <button type="submit" className="auth-btn-ghost">
-                  <Icon name="google" size={14} />
+                  <Icon name="google" size={16} />
                   Continue with Google
                 </button>
               </form>
@@ -247,8 +235,51 @@ function SignupInner() {
               </div>
             </>
           )}
+
+          <div className="auth-foot">
+            <span>© repulabs {new Date().getFullYear()}</span>
+            <a href="/legal/privacy">Privacy</a>
+            <a href="/legal/terms">Terms</a>
+          </div>
         </div>
       </section>
+
+      {/* RIGHT — light-grey illustration panel */}
+      <aside className="auth-side">
+        <div className="auth-side-dots" aria-hidden="true" />
+
+        <div className="auth-side-body" style={{ marginTop: "auto", marginBottom: "auto" }}>
+          <h1 className="auth-side-title">
+            Start a reputation workspace with <span className="auth-grad">less friction.</span>
+          </h1>
+          <p className="auth-side-sub">
+            All the tools you need to collect feedback, analyze insights and build better products.
+          </p>
+
+          <div className="auth-side-illo">
+            <Image
+              src="/assets/repulabs/illustrations/home-hero.png"
+              alt=""
+              width={520}
+              height={360}
+              priority
+              style={{ width: "100%", height: "auto" }}
+            />
+          </div>
+
+          <div className="auth-feats">
+            {FEATURES.map((f) => (
+              <div key={f.title}>
+                <span className="auth-feat-ic">
+                  <f.icon size={17} />
+                </span>
+                <div className="auth-feat-tt">{f.title}</div>
+                <div className="auth-feat-dd">{f.desc}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </aside>
     </main>
   );
 }
