@@ -23,7 +23,6 @@ import {
   ArrowRight,
   BadgeCheck,
   Calendar,
-  CheckCircle2,
   ChevronDown,
   Inbox,
   Menu,
@@ -35,7 +34,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
-import { type ComponentType, useEffect, useState } from "react";
+import { type ComponentType, type FormEvent, useEffect, useState } from "react";
 import { DotGrid, Float, Reveal, RotatingText, ShinyText } from "@/components/landing/anim";
 import { cn } from "@/lib/utils";
 
@@ -57,8 +56,6 @@ const PRODUCT_MENU = [
   { label: "Integrations", href: "#integrations" },
   { label: "For operators", href: "#operators" },
 ] as const;
-
-const TRUST = ["No card required", "Live in 6 minutes", "Cancel anytime"] as const;
 
 const RECENT_REVIEWS = [
   { Mark: GoogleMark, text: "Great service and super friendly team!", time: "2m ago" },
@@ -430,7 +427,9 @@ function CardHeading({ children }: { children: React.ReactNode }) {
 
 function ProductPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-[560px] lg:mx-0 lg:max-w-none">
+    /* text-left: the preview sits inside the hero's centered column — dashboard
+       content must not inherit the centered text alignment */
+    <div className="relative mx-auto w-full max-w-[560px] text-left lg:mx-0 lg:max-w-none">
       {/* main dashboard panel */}
       <Reveal delay={0.15} y={28}>
         <div className="rounded-[26px] border border-[#e2ebf9] bg-gradient-to-b from-white to-[#f4f8ff] p-4 shadow-[0_34px_80px_-30px_rgba(49,92,170,0.4)] sm:p-5">
@@ -571,105 +570,151 @@ function ProductPreview() {
 
 /* ─────────────────────────────── hero ─────────────────────────────── */
 
+/* "Works with" strip — real brand SVGs under the email capture, like the
+   original InteractiveHero's works-with row. */
+const WORKS_WITH = [
+  { name: "Google", file: "google" },
+  { name: "Meta", file: "meta" },
+  { name: "Instagram", file: "instagram" },
+  { name: "WhatsApp", file: "whatsapp" },
+  { name: "Square", file: "square" },
+  { name: "Slack", file: "slack" },
+] as const;
+
 export function LandingHero() {
+  const [email, setEmail] = useState("");
+
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    window.location.href = "/signup?email=" + encodeURIComponent(email);
+  };
+
   return (
     <section id="top" className="relative isolate overflow-x-clip bg-white">
       {/* background wash + dot grid */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-[radial-gradient(1100px_680px_at_82%_-6%,#e6effe_0%,rgba(240,245,255,0.55)_42%,transparent_72%)]"
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(1100px_680px_at_50%_-8%,#e6effe_0%,rgba(240,245,255,0.55)_42%,transparent_72%)]"
       />
       <div aria-hidden className="pointer-events-none absolute inset-0 bg-gradient-to-b from-white via-transparent to-[#f0f5ff]" />
 
       <TopNav />
 
       <div className="relative">
+        {/* interactive dot canvas + a soft bottom fade so the hero settles into the page */}
         <DotGrid className="opacity-70" />
-        <div className="relative mx-auto grid max-w-[1280px] grid-cols-[minmax(0,1fr)] items-center gap-14 px-6 pb-20 pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-8 lg:px-10 lg:pb-24 lg:pt-20 xl:min-h-[720px]">
-          {/* left — copy */}
-          <div className="max-w-[600px]">
-            <Reveal delay={0.05}>
-              <p className="text-[13px] font-bold uppercase tracking-[0.24em] text-[#2563eb]">
-                Reputation OS for local teams
-              </p>
-            </Reveal>
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(to bottom, transparent 0%, transparent 60%, rgba(240,245,255,0.9) 96%)",
+          }}
+        />
 
-            <Reveal delay={0.12}>
-              <h1 className="mt-5 text-[44px] font-bold leading-[0.98] tracking-[-0.025em] text-[#0b1220] sm:text-[56px] lg:text-[68px]">
-                Run your
-                <br />
-                reputation
-                <br />
-                <span className="bg-gradient-to-r from-[#2563eb] to-[#2294f2] bg-clip-text text-transparent [-webkit-text-fill-color:transparent]">
-                  like a{" "}
-                </span>
-                {/* RotatingText — the founder's component, same usage pattern as
-                    the original InteractiveHero headline (fixed-height clip,
-                    spring char-stagger from the last char). First word matches
-                    the mockup's static "system." */}
-                <span
-                  className="inline-flex h-[1.2em] items-baseline overflow-hidden"
-                  style={{ verticalAlign: "-0.18em" }}
-                >
-                  <RotatingText
-                    texts={["system.", "machine.", "engine.", "flywheel."]}
-                    mainClassName="text-[#22d3ee]"
-                    staggerFrom="last"
-                    initial={{ y: "-100%", opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    exit={{ y: "110%", opacity: 0 }}
-                    staggerDuration={0.01}
-                    transition={{ type: "spring", damping: 18, stiffness: 250 }}
-                    rotationInterval={2600}
+        <div className="relative mx-auto flex max-w-[1200px] flex-col items-center px-6 pb-20 pt-14 text-center sm:pt-16 lg:pb-24 lg:pt-20">
+          {/* announcement pill */}
+          <Reveal delay={0.05}>
+            <ShinyText
+              text="✦ New: AI Phone receptionist is live"
+              className="cursor-default rounded-full border border-[#D9DDF7] bg-white/75 px-4 py-1 text-[12px] font-semibold text-[#2563eb] backdrop-blur transition-colors hover:border-[#2563eb]/40 sm:text-[13px]"
+            />
+          </Reveal>
+
+          {/* headline */}
+          <Reveal delay={0.12}>
+            <h1 className="mt-6 max-w-4xl text-[42px] font-bold leading-[1.04] tracking-[-0.02em] text-[#0b1220] sm:text-[56px] lg:text-[64px]">
+              Run your reputation
+              <br />
+              <span className="bg-gradient-to-r from-[#2563eb] to-[#2294f2] bg-clip-text text-transparent [-webkit-text-fill-color:transparent]">
+                like a{" "}
+              </span>
+              {/* RotatingText — the founder's component, same usage pattern as
+                  the original InteractiveHero headline (fixed-height clip,
+                  spring char-stagger from the last char). */}
+              <span
+                className="inline-flex h-[1.2em] items-baseline overflow-hidden"
+                style={{ verticalAlign: "-0.18em" }}
+              >
+                <RotatingText
+                  texts={["system.", "machine.", "engine.", "flywheel."]}
+                  mainClassName="text-[#22d3ee]"
+                  staggerFrom="last"
+                  initial={{ y: "-100%", opacity: 0 }}
+                  animate={{ y: 0, opacity: 1 }}
+                  exit={{ y: "110%", opacity: 0 }}
+                  staggerDuration={0.01}
+                  transition={{ type: "spring", damping: 18, stiffness: 250 }}
+                  rotationInterval={2600}
+                />
+              </span>
+            </h1>
+          </Reveal>
+
+          {/* sub */}
+          <Reveal delay={0.22}>
+            <p className="mt-6 max-w-2xl text-[17px] leading-[1.6] text-[#5b6473] sm:text-[19px]">
+              Reviews, AI replies, requests, a unified inbox, AI phone, social, local SEO and autopilot &mdash; one
+              premium workspace that keeps every customer moment on brand and on time.
+            </p>
+          </Reveal>
+
+          {/* email capture — like the original InteractiveHero form */}
+          <Reveal delay={0.3} className="w-full">
+            <form
+              onSubmit={onSubmit}
+              className="mx-auto mt-9 flex w-full max-w-md flex-col items-center gap-3 sm:flex-row"
+            >
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Your work email"
+                aria-label="Work email"
+                className="h-12 w-full flex-grow rounded-full border border-[#dce4f2] bg-white px-5 text-[15px] text-[#0b1220] placeholder-[#8a93a6] shadow-[0_10px_26px_-18px_rgba(49,92,170,0.4)] outline-none transition-all focus:border-transparent focus:ring-2 focus:ring-[#2563eb]"
+              />
+              <motion.button
+                type="submit"
+                whileHover={{ y: -1, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                transition={{ type: "spring", stiffness: 400, damping: 15 }}
+                className="inline-flex h-12 w-full flex-shrink-0 items-center justify-center gap-1.5 whitespace-nowrap rounded-full bg-gradient-to-b from-[#2f6bff] to-[#1e40af] px-6 text-[15px] font-bold text-white shadow-[0_14px_34px_-10px_rgba(35,82,255,0.6)] sm:w-auto"
+              >
+                Start free <ArrowRight size={17} />
+              </motion.button>
+            </form>
+          </Reveal>
+
+          <Reveal delay={0.36}>
+            <p className="mt-4 text-[12.5px] text-[#8a93a6]">Free 30-day trial &middot; No card required</p>
+          </Reveal>
+
+          {/* works with */}
+          <Reveal delay={0.42}>
+            <div className="mt-10 flex flex-col items-center gap-3.5">
+              <span className="text-[11px] font-bold uppercase tracking-[0.22em] text-[#8a93a6]">Works with</span>
+              <div className="flex flex-wrap items-center justify-center gap-x-7 gap-y-4">
+                {WORKS_WITH.map((b) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    key={b.file}
+                    src={`/assets/repulabs/landing/integrations/${b.file}.svg`}
+                    alt={b.name}
+                    title={b.name}
+                    className="h-[22px] w-auto opacity-60 transition-opacity hover:opacity-100"
+                    loading="lazy"
                   />
-                </span>
-              </h1>
-            </Reveal>
-
-            <Reveal delay={0.22}>
-              <p className="mt-6 max-w-[560px] text-[18px] leading-[1.55] text-[#5b6473] lg:text-[20px]">
-                Reviews, AI replies, requests, a unified inbox, AI phone, social, local SEO and autopilot &mdash; one
-                premium workspace that keeps every customer moment on brand and on time.
-              </p>
-            </Reveal>
-
-            <Reveal delay={0.3}>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row sm:items-center">
-                <motion.a
-                  href="/signup"
-                  whileHover={{ y: -2, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 18 }}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-b from-[#2f6bff] to-[#1e40af] px-7 py-4 text-[18px] font-bold text-white shadow-[0_18px_38px_-12px_rgba(35,82,255,0.55)]"
-                >
-                  <ShinyText text="Start free" />
-                  <ArrowRight size={20} />
-                </motion.a>
-                <motion.a
-                  href="/contact"
-                  whileHover={{ y: -2, scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  transition={{ type: "spring", stiffness: 380, damping: 18 }}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl border border-[#dce4f2] bg-white px-7 py-4 text-[18px] font-bold text-[#0b1220] shadow-[0_10px_26px_-16px_rgba(49,92,170,0.4)] hover:border-[#c7d4ee]"
-                >
-                  Book a demo
-                </motion.a>
-              </div>
-            </Reveal>
-
-            <Reveal delay={0.38}>
-              <ul className="mt-8 flex flex-wrap gap-x-7 gap-y-2.5">
-                {TRUST.map((t) => (
-                  <li key={t} className="inline-flex items-center gap-2 text-[15px] text-[#5b6473]">
-                    <CheckCircle2 size={19} className="text-[#16b875]" /> {t}
-                  </li>
                 ))}
-              </ul>
-            </Reveal>
-          </div>
+              </div>
+            </div>
+          </Reveal>
 
-          {/* right — product preview */}
-          <ProductPreview />
+          {/* floating product preview — centered under the form like the
+              original's screenshot block */}
+          <div className="mt-14 w-full max-w-[920px]">
+            <ProductPreview />
+          </div>
         </div>
       </div>
     </section>
