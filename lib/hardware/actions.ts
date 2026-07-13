@@ -192,10 +192,13 @@ export type ActivateDeviceState = {
  * Activate a device using its printed activation code.
  *
  * Flow:
- *   1. SHA-256 hash the entered code
- *   2. Find an unactivated device with that hash
- *   3. Link to org + establishment, compute redirect_url + slug_signature, push status to active
- *   4. Audit log
+ *   1. Resolve the device: by unique QR slug when the owner scanned (the code is
+ *      mass-printed per batch and can't identify one unit), else by code hash but
+ *      only when it maps to exactly one unactivated device.
+ *   2. Verify the entered code against THAT device's stored hash.
+ *   3. Atomically claim it — one QR binds to one business, once (race-safe).
+ *   4. Link org + establishment, compute redirect_url + slug_signature, activate.
+ *   5. Audit log
  *
  * The redirect URL precedence:
  *   - If `reviewUrl` is pasted on the form, use it verbatim (must be valid URL).
@@ -215,6 +218,7 @@ export async function activateDevice(
 ): Promise<ActivateDeviceState> {
   const { orgId, userId } = await requireManagerOrg();
   const codeRaw = form.get("activationCode");
+  const slugRaw = form.get("slug");
   const establishmentId = form.get("establishmentId");
   const reviewUrlRaw = form.get("reviewUrl");
 
@@ -226,6 +230,18 @@ export async function activateDevice(
   if (typeof establishmentId !== "string" || !/^[0-9a-f-]{36}$/i.test(establishmentId)) {
     return { error: "Pick a business from the list before activating." };
   }
+
+  // The activation code was mass-printed IDENTICALLY across the current
+  // production batch, so it can no longer identify a single device on its own.
+  // The per-unit identifier that IS unique is the QR slug (10-char Crockford
+  // base32) — so when the owner scans their stand, `/activate?slug=…` carries it
+  // through and we bind THAT exact device. The code is still verified, but
+  // against the specific device the slug resolves to (so a future batch with
+  // unique codes is secure again with no code change — the slug just narrows to
+  // one device and its real code must still match). See lib/hardware/codes.ts.
+  const slug =
+    typeof slugRaw === "string" ? slugRaw.replace(/[\s-]/g, "").toUpperCase() : "";
+  const hasSlug = /^[0-9A-HJKMNP-TV-Z]{10}$/.test(slug);
 
   // Optional pasted URL — must parse AND pass the storable-redirect check
   // (rejects javascript:/data:/file: schemes, IP-literal hosts, localhost in
@@ -250,15 +266,42 @@ export async function activateDevice(
   // find the unactivated device (org NULL) and update it to point at this org
   // in the same transaction.
   const result = await withTenant(orgId, async (tx) => {
-    const device = await tx.device.findFirst({
-      where: {
-        activationCodeHash: codeHash,
-        status: "unactivated",
-        activationCodeUsedAt: null,
-      },
-    });
-    if (!device) {
-      return { ok: false as const, reason: "not_found" as const };
+    // Resolve the ONE device being activated.
+    //  • Scanned (slug present): the slug is unique, so it pins the exact device.
+    //    We still require the entered code to match THAT device's stored code.
+    //  • Typed code only (no slug): only works when the code maps to exactly one
+    //    unactivated device (a unique-code batch). If several devices share the
+    //    code (the mis-printed batch), we refuse and ask them to scan — never
+    //    guess a device, so we can't bind the wrong QR to a business.
+    let device: Awaited<ReturnType<typeof tx.device.findFirst>> = null;
+    if (hasSlug) {
+      device = await tx.device.findFirst({
+        where: { shortSlug: slug, status: "unactivated", activationCodeUsedAt: null },
+      });
+      if (!device) {
+        // Unknown slug OR already claimed by another business (RLS hides other
+        // orgs' devices) — one QR, one business, and it's already taken/invalid.
+        return { ok: false as const, reason: "slug_unavailable" as const };
+      }
+      if (device.activationCodeHash !== codeHash) {
+        return { ok: false as const, reason: "code_mismatch" as const };
+      }
+    } else {
+      const matches = await tx.device.findMany({
+        where: {
+          activationCodeHash: codeHash,
+          status: "unactivated",
+          activationCodeUsedAt: null,
+        },
+        take: 2,
+      });
+      if (matches.length > 1) {
+        return { ok: false as const, reason: "ambiguous" as const };
+      }
+      device = matches[0] ?? null;
+      if (!device) {
+        return { ok: false as const, reason: "not_found" as const };
+      }
     }
 
     const estab = await tx.establishment.findFirst({
@@ -326,6 +369,26 @@ export async function activateDevice(
   });
 
   if (!result.ok) {
+    if (result.reason === "ambiguous") {
+      return {
+        error:
+          "This activation code is shared across several stands, so we can’t tell which one you mean. Scan the QR on the stand you’re setting up — that’s how we bind it to the right device.",
+      };
+    }
+    if (result.reason === "slug_unavailable") {
+      // One QR → one business. Already activated (by anyone) or unrecognized.
+      logger.warn({ orgId, event: "device.activation.slug_unavailable" }, "slug not claimable");
+      return {
+        error:
+          "This QR is already set up, or we don’t recognize it. Each stand can be activated by one business only — if you think this is a mistake, contact support.",
+      };
+    }
+    if (result.reason === "code_mismatch") {
+      return {
+        error:
+          "That activation code doesn’t match this QR. Check the 5-character code on the card inside this stand’s package.",
+      };
+    }
     if (result.reason === "not_found" || result.reason === "race_lost") {
       logger.warn(
         { orgId, event: "device.activation.miss" },

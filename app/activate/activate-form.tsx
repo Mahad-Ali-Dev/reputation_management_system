@@ -31,6 +31,9 @@ export function ActivateForm({
 
   return (
     <form action={formAction} className="col" style={{ gap: 16 }}>
+      {/* The scanned QR's unique slug — this is what binds activation to the
+          exact device (the printed code alone can't; see activateDevice). */}
+      {prefilledSlug && <input type="hidden" name="slug" value={prefilledSlug} />}
       {prefilledSlug && (
         <div
           style={{
@@ -82,7 +85,7 @@ export function ActivateForm({
           placeholder="XXXXX"
           autoComplete="off"
           inputMode="text"
-          maxLength={12}
+          maxLength={5}
           style={{
             width: "100%",
             height: 48,
