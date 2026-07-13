@@ -81,24 +81,6 @@ const FEATURES: { label: string; Icon: ComponentType<{ className?: string }> }[]
 
 type MarkProps = { size?: number; className?: string };
 
-/** The repulabs "R" tile mark from the mockup — black rounded square, white R. */
-function BrandMark({ size = 40 }: { size?: number }) {
-  return (
-    <span
-      className="grid place-items-center rounded-[11px] bg-[#0b1220] text-white shadow-[0_6px_16px_-6px_rgba(11,18,32,0.5)]"
-      style={{ width: size, height: size }}
-      aria-hidden
-    >
-      <svg width={size * 0.56} height={size * 0.56} viewBox="0 0 24 24" fill="none">
-        <path
-          d="M5 21V3.6C5 3.27 5.27 3 5.6 3H13c3.31 0 6 2.46 6 5.5 0 2.46-1.76 4.54-4.2 5.24L19 21h-4.2l-3.6-6.5H9V21H5Zm4-9.7h3.4c1.38 0 2.6-1 2.6-2.3s-1.22-2.3-2.6-2.3H9v4.6Z"
-          fill="#fff"
-        />
-      </svg>
-    </span>
-  );
-}
-
 function GoogleMark({ size = 20, className }: MarkProps) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" className={className} aria-hidden>
@@ -320,9 +302,17 @@ function TopNav() {
       className="sticky top-0 z-50 w-full border-b backdrop-blur-md"
     >
       <nav className="mx-auto flex h-[76px] max-w-[1280px] items-center justify-between px-6 lg:px-10">
-        {/* logo */}
+        {/* logo — the real repulabs icon (favicon.png), not the drawn R */}
         <a href="#top" className="flex flex-shrink-0 items-center gap-3">
-          <BrandMark size={40} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/favicon.png"
+            alt="repulabs"
+            width={40}
+            height={40}
+            className="rounded-[9px]"
+            style={{ height: 40, width: 40, objectFit: "cover" }}
+          />
           <span className="text-[22px] font-bold tracking-[-0.02em] text-[#0b1220]">
             repu<span className="text-[#2563eb]">labs</span>
           </span>
