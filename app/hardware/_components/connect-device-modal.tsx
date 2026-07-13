@@ -47,12 +47,18 @@ const PLATFORMS: PlatformDef[] = [
 ];
 
 function normalizeCode(value: string): string {
+  // Activation codes are exactly 5 chars, Crockford base32 (see lib/hardware/codes.ts:
+  // ACTIVATION_LEN = 5). Keep A–Z0–9 (real codes are alphanumeric, e.g. "A3M9K" — not
+  // digits-only), uppercase, strip separators, and hard-cap at 5.
   return value
     .replace(/[\s-]/g, "")
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
-    .slice(0, 6);
+    .slice(0, 5);
 }
+
+/** Activation code length — matches ACTIVATION_LEN in lib/hardware/codes.ts. */
+const CODE_LEN = 5;
 
 export function ConnectDeviceModal({
   establishments,
@@ -91,7 +97,7 @@ export function ConnectDeviceModal({
   }, [open]);
 
   const noBusinesses = establishments.length === 0;
-  const codeComplete = code.length >= 5;
+  const codeComplete = code.length === CODE_LEN;
 
   return (
     <>
@@ -167,7 +173,7 @@ export function ConnectDeviceModal({
                       </Callout>
                     </div>
 
-                    {/* Step 2 — Device code (6 slots over one real input) */}
+                    {/* Step 2 — Device code (5 slots over one real input) */}
                     <div className="cdm-panel" hidden={step !== 2}>
                       <SectionHead n={2} icon="card" title="Enter Your Device Code" />
                       <p className="cdm-helper">Find this on the card inside your package.</p>
@@ -181,15 +187,15 @@ export function ConnectDeviceModal({
                           inputMode="text"
                           autoComplete="off"
                           autoCapitalize="characters"
-                          maxLength={6}
+                          maxLength={CODE_LEN}
                           required
                           aria-label="Device code"
                           className="cdm-code__input"
                         />
                         <div className="cdm-code__slots" aria-hidden>
-                          {Array.from({ length: 6 }).map((_, i) => (
+                          {Array.from({ length: CODE_LEN }).map((_, i) => (
                             <span
-                              // biome-ignore lint/suspicious/noArrayIndexKey: fixed 6-slot display
+                              // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-slot display
                               key={`slot-${i}`}
                               className={code[i] ? "cdm-slot cdm-slot--has" : "cdm-slot"}
                             >
