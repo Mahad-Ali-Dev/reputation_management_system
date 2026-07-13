@@ -32,11 +32,15 @@ import DottedMap from "dotted-map";
 import {
   Activity,
   ArrowRight,
+  BarChart3,
   Bot,
   Inbox,
   Mail,
   MapPin,
+  MessageSquare,
+  Phone,
 } from "lucide-react";
+import type { ComponentType } from "react";
 import { AnimatePresence, motion, useInView } from "motion/react";
 import { useId, useMemo, useRef, useState, type ReactNode } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
@@ -296,49 +300,58 @@ function WorldMap({
    300ms per row, fill forwards), gradient avatar tiles, bottom fade. Rows only
    start animating once scrolled into view. */
 
+/* Each row carries either a real brand SVG (`brand`) or a lucide glyph on a
+   tinted tile (`Icon` + `tint`) for the system channels that have no logo. */
 type FeedMessage = {
   title: string;
   time: string;
   content: string;
-  color: string;
+  brand?: string;
+  Icon?: ComponentType<{ size?: number; className?: string }>;
+  tint?: string;
 };
+
+const BRAND = "/assets/repulabs/landing/integrations";
 
 const FEED: FeedMessage[] = [
   {
     title: "Google Reviews",
     time: "1m ago",
     content: "New 5★ review — “Best front desk experience I've ever had.”",
-    color: "from-amber-400 to-orange-500",
+    brand: "google.svg",
   },
   {
     title: "WhatsApp",
     time: "3m ago",
     content: "AI reply approved and sent to Sarah M.",
-    color: "from-emerald-400 to-green-600",
+    brand: "whatsapp.svg",
   },
   {
     title: "AI Phone",
     time: "6m ago",
     content: "Missed call answered — callback booked for 2:30 pm.",
-    color: "from-violet-500 to-fuchsia-500",
+    Icon: Phone,
+    tint: "#7c3aed",
   },
   {
     title: "SMS Requests",
     time: "10m ago",
     content: "Review request delivered to 24 of today's customers.",
-    color: "from-sky-400 to-blue-600",
+    Icon: MessageSquare,
+    tint: "#2563eb",
   },
   {
-    title: "Facebook",
+    title: "Instagram",
     time: "12m ago",
     content: "New comment on your latest post — awaiting a reply.",
-    color: "from-blue-600 to-indigo-500",
+    brand: "instagram.svg",
   },
   {
     title: "Weekly Report",
     time: "15m ago",
     content: "Your Monday digest is ready — rating climbed to 4.8.",
-    color: "from-cyan-400 to-blue-500",
+    Icon: BarChart3,
+    tint: "#0891b2",
   },
 ];
 
@@ -363,9 +376,29 @@ function InboxFeed() {
                 : "none",
             }}
           >
-            <div
-              className={`h-8 w-8 min-h-[2rem] min-w-[2rem] rounded-lg bg-gradient-to-br ${msg.color}`}
-            />
+            {msg.brand ? (
+              // real brand logo on a white tile with a soft ring
+              <span className="grid h-8 w-8 min-h-[2rem] min-w-[2rem] place-items-center rounded-lg border border-[#e7ecf6] bg-white">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`${BRAND}/${msg.brand}`}
+                  alt={`${msg.title} logo`}
+                  width={18}
+                  height={18}
+                  loading="lazy"
+                  draggable={false}
+                  style={{ height: 18, width: 18 }}
+                />
+              </span>
+            ) : (
+              // system channel — lucide glyph on a tinted tile
+              <span
+                className="grid h-8 w-8 min-h-[2rem] min-w-[2rem] place-items-center rounded-lg text-white"
+                style={{ background: msg.tint }}
+              >
+                {msg.Icon ? <msg.Icon size={16} /> : null}
+              </span>
+            )}
             <div className="flex flex-col">
               <div className="flex items-center gap-2 text-xs font-semibold text-[#0b1220]">
                 {msg.title}
