@@ -189,6 +189,19 @@ export type ActivateDeviceState = {
 };
 
 /**
+ * Shared batch override code. The current production batch was mis-printed with
+ * ONE code (84219) on every card instead of each unit's real code, so during
+ * this batch we accept 84219 for ANY scanned device (the unique QR slug is what
+ * actually identifies the unit). Defaults to "84219" so it works on deploy with
+ * no env change; set HARDWARE_OVERRIDE_ACTIVATION_CODE="" to DISABLE it at the
+ * next production run → strict per-device verification returns with no code
+ * change. See memory: hardware-shared-code-incident-2026-07.
+ */
+const SHARED_BATCH_CODE = (process.env.HARDWARE_OVERRIDE_ACTIVATION_CODE ?? "84219")
+  .replace(/[-\s]/g, "")
+  .toUpperCase();
+
+/**
  * Activate a device using its printed activation code.
  *
  * Flow:
@@ -260,6 +273,8 @@ export async function activateDevice(
   }
 
   const codeHash = hashActivationCode(codeRaw);
+  const codeNorm = codeRaw.replace(/[-\s]/g, "").toUpperCase();
+  const isBatchOverride = SHARED_BATCH_CODE.length > 0 && codeNorm === SHARED_BATCH_CODE;
 
   // Everything below runs inside withTenant. The devices RLS policy allows
   // reads/writes where organization_id IS NULL OR = current_org(), so we can
@@ -283,7 +298,11 @@ export async function activateDevice(
         // orgs' devices) — one QR, one business, and it's already taken/invalid.
         return { ok: false as const, reason: "slug_unavailable" as const };
       }
-      if (device.activationCodeHash !== codeHash) {
+      // Accept the device's real code OR the mis-printed batch code (84219).
+      // The slug already pinned the exact unit; the batch override just tolerates
+      // the wrong code printed on this batch's cards. Remove the override at the
+      // next production run to require each unit's real code again.
+      if (device.activationCodeHash !== codeHash && !isBatchOverride) {
         return { ok: false as const, reason: "code_mismatch" as const };
       }
     } else {
