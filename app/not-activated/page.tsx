@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth/config";
-import { ArrowRight, ExternalLink, Star } from "lucide-react";
+import { ArrowRight, Clock, ExternalLink, Star } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
+import "./not-activated.css";
 
 export const dynamic = "force-dynamic";
 
@@ -45,126 +47,50 @@ export default async function NotActivatedPage({
   const loginHref = `/login?next=${encodeURIComponent(activateHref)}`;
 
   return (
-    <main
-      style={{
-        minHeight: "100vh",
-        background:
-          "radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.06) 0%, transparent 40%), " +
-          "radial-gradient(at 100% 100%, rgba(94, 234, 212, 0.08) 0%, transparent 50%), " +
-          "linear-gradient(180deg, #f6f7f4 0%, #ecf1ec 100%)",
-        display: "grid",
-        placeItems: "center",
-        padding: "32px 20px",
-        fontFamily: "system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-        color: "#0b0d0e",
-      }}
-    >
-      <div style={{ maxWidth: 540, width: "100%" }}>
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <div style={{ fontSize: 56, marginBottom: 10 }} aria-hidden>
-            ⌛
+    <main className="na">
+      <div className="na__card">
+        {/* Brand wordmark — real product icon + repu·labs lockup */}
+        <div className="na__brand">
+          <Image src="/favicon.png?v=2" alt="" width={40} height={40} className="na__logo" priority />
+          <span className="na__wordmark">
+            repu<span>labs</span>
+          </span>
+        </div>
+
+        <div className="na__head">
+          <div className="na__icon" aria-hidden>
+            <Clock size={26} strokeWidth={2} />
           </div>
-          <h1
-            style={{
-              fontSize: 28,
-              fontWeight: 600,
-              letterSpacing: "-0.025em",
-              margin: 0,
-              lineHeight: 1.15,
-            }}
-          >
-            This QR isn&rsquo;t live yet.
-          </h1>
-          <p
-            style={{
-              fontSize: 15,
-              color: "#475569",
-              lineHeight: 1.55,
-              marginTop: 12,
-              maxWidth: 440,
-              marginInline: "auto",
-            }}
-          >
-            The business owner hasn&rsquo;t finished setting up this device. Either you bought it
-            and need to activate it, or you&rsquo;re here to leave a review the regular way.
+          <h1 className="na__title">This QR isn&rsquo;t live yet.</h1>
+          <p className="na__lead">
+            The business owner hasn&rsquo;t finished setting up this device. Either you bought it and
+            need to activate it, or you&rsquo;re here to leave a review the regular way.
           </p>
           {slug && (
-            <p
-              style={{
-                fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-                fontSize: 11,
-                color: "#94a3b8",
-                marginTop: 14,
-                letterSpacing: ".1em",
-              }}
-            >
-              CODE · {slug}
-            </p>
+            <div className="na__code">
+              CODE&nbsp;·&nbsp;<b>{slug}</b>
+            </div>
           )}
         </div>
 
         {/* CTA 1 — Activate this QR (most prominent) */}
-        <Link
-          href={isSignedIn ? activateHref : signupHref}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            padding: "18px 22px",
-            borderRadius: 14,
-            background: "#0b0d0e",
-            color: "#fff",
-            textDecoration: "none",
-            marginBottom: 12,
-            boxShadow: "0 10px 30px -10px rgba(11,13,14,.5)",
-          }}
-        >
+        <Link href={isSignedIn ? activateHref : signupHref} className="na__cta">
           <span>
-            <span
-              style={{
-                fontSize: 11,
-                fontFamily: "ui-monospace, monospace",
-                letterSpacing: ".12em",
-                color: "#5eead4",
-                fontWeight: 600,
-              }}
-            >
-              I BOUGHT THIS PRODUCT
-            </span>
-            <div style={{ fontSize: 17, fontWeight: 600, marginTop: 4, letterSpacing: "-0.01em" }}>
-              Activate this QR{slug ? ` (${slug})` : ""}
-            </div>
-            <div style={{ fontSize: 12.5, color: "#9aa1ad", marginTop: 2 }}>
+            <span className="na__cta-kicker">I bought this product</span>
+            <div className="na__cta-title">Activate this QR{slug ? ` · ${slug}` : ""}</div>
+            <div className="na__cta-sub">
               {isSignedIn
                 ? "Enter your activation code — takes 30 seconds."
                 : "Free workspace, 30-day trial, no card required."}
             </div>
           </span>
-          <ArrowRight size={18} />
+          <ArrowRight className="na__cta-arrow" size={18} />
         </Link>
 
         {/* Already-has-account link — only when not signed in */}
         {!isSignedIn && (
-          <p
-            style={{
-              textAlign: "center",
-              fontSize: 12.5,
-              color: "#64748b",
-              marginBottom: 22,
-            }}
-          >
-            Already have a Repulabs workspace?{" "}
-            <Link
-              href={loginHref}
-              style={{
-                color: "#2563eb",
-                textDecoration: "none",
-                fontWeight: 500,
-              }}
-            >
-              Sign in instead →
-            </Link>
+          <p className="na__signin">
+            Already have a Repulabs workspace? <Link href={loginHref}>Sign in instead →</Link>
           </p>
         )}
 
@@ -173,85 +99,28 @@ export default async function NotActivatedPage({
           href="https://www.google.com/maps/search/leave+a+review"
           target="_blank"
           rel="noopener noreferrer"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: 12,
-            padding: "16px 20px",
-            borderRadius: 12,
-            background: "#fff",
-            color: "#0b0d0e",
-            textDecoration: "none",
-            border: "1px solid #eceeea",
-            marginBottom: 10,
-          }}
+          className="na__review"
         >
           <span>
-            <span
-              style={{
-                fontSize: 11,
-                fontFamily: "ui-monospace, monospace",
-                letterSpacing: ".12em",
-                color: "#92400e",
-                fontWeight: 600,
-              }}
-            >
-              I&rsquo;M JUST LEAVING A REVIEW
-            </span>
-            <div
-              style={{
-                fontSize: 15,
-                fontWeight: 600,
-                marginTop: 4,
-                display: "flex",
-                alignItems: "center",
-                gap: 6,
-              }}
-            >
+            <span className="na__review-kicker">I&rsquo;m just leaving a review</span>
+            <div className="na__review-title">
               Leave a review on Google
-              <Star size={14} fill="#f59e0b" stroke="#f59e0b" />
+              <Star size={14} fill="#f5b301" stroke="#f5b301" />
             </div>
-            <div style={{ fontSize: 12, color: "#64748b", marginTop: 2 }}>
-              Find the business by name and post directly there.
-            </div>
+            <div className="na__review-sub">Find the business by name and post directly there.</div>
           </span>
-          <ExternalLink size={15} color="#94a3b8" />
+          <ExternalLink className="na__review-ext" size={15} />
         </a>
 
         {/* CTA 3 — Visit Google (lowest-friction exit) */}
-        <Link
-          href="https://www.google.com"
-          style={{
-            display: "block",
-            textAlign: "center",
-            fontSize: 12.5,
-            color: "#94a3b8",
-            textDecoration: "none",
-            padding: "10px 0",
-          }}
-        >
+        <Link href="https://www.google.com" className="na__exit">
           Or just go to Google →
         </Link>
 
         {/* Footer reassurance */}
-        <p
-          style={{
-            marginTop: 28,
-            textAlign: "center",
-            fontSize: 11,
-            color: "#94a3b8",
-            lineHeight: 1.5,
-            maxWidth: 380,
-            marginInline: "auto",
-          }}
-        >
-          This QR was made by{" "}
-          <Link href="/" style={{ color: "#64748b", textDecoration: "none" }}>
-            repulabs.com
-          </Link>{" "}
-          — every code is one-time-use and tied to a single business. We never sell or share scanner
-          data.
+        <p className="na__foot">
+          This QR was made by <Link href="/">repulabs.com</Link> — every code is one-time-use and
+          tied to a single business. We never sell or share scanner data.
         </p>
       </div>
     </main>

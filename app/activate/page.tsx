@@ -6,6 +6,7 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 import { ActivateForm } from "./activate-form";
+import "./activate.css";
 
 export const dynamic = "force-dynamic";
 
@@ -54,14 +55,7 @@ export default async function ActivatePage({
         }
       />
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 1fr)",
-          gap: 18,
-          alignItems: "flex-start",
-        }}
-      >
+      <div className="af-page-grid">
         <section className="ds-card">
           <div className="ds-card__head">
             <h3 className="ds-card__title">Activation code</h3>

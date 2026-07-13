@@ -1,0 +1,238 @@
+/* ============================================================
+   Activation form — premium repulabs input skin.
+
+   Restyle only. Every field name, `required`, `maxLength`, the hidden
+   slug input and the useActionState wiring live in activate-form.tsx
+   and are untouched. Shared between /activate (in-app, inside the app
+   shell) and the standalone form render; colors are pinned to the
+   brand palette, fonts reuse the app's Inter (--f-ui) / mono (--f-mono).
+   ============================================================ */
+
+/* /activate page chrome — two-column (form + guide) that collapses to a
+   single column on narrow / phone viewports so the form never squishes. */
+.af-page-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 18px;
+  align-items: flex-start;
+}
+@media (max-width: 900px) {
+  .af-page-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.af {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* prefilled-slug context banner */
+.af-banner {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #eef4ff;
+  border: 1px solid #dbe6ff;
+  color: #1e3a8a;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.af-banner strong {
+  display: block;
+  margin-bottom: 2px;
+  color: #0b1220;
+}
+.af-banner code {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  background: #dbe6ff;
+  color: #1e40af;
+  padding: 1px 6px;
+  border-radius: 6px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+}
+
+/* inline server-action error */
+.af-error {
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.af-error strong {
+  display: block;
+  margin-bottom: 2px;
+}
+
+/* labelled field */
+.af-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.af-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0b1220;
+}
+.af-label .af-num {
+  display: inline-grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: #e6effe;
+  color: #2563eb;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.af-label .af-opt {
+  margin-left: 8px;
+  font-weight: 500;
+  font-size: 11.5px;
+  color: #8a93a6;
+}
+.af-hint {
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: #5b6473;
+}
+.af-hint a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 500;
+}
+.af-hint a:hover {
+  text-decoration: underline;
+}
+
+/* inputs + select */
+.af-input,
+.af-select {
+  width: 100%;
+  height: 48px;
+  padding: 0 15px;
+  border-radius: 14px;
+  border: 1px solid #dce4f2;
+  background: #ffffff;
+  color: #0b1220;
+  font-size: 14px;
+  font-family: var(--f-ui, "Inter", -apple-system, system-ui, sans-serif);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.af-input::placeholder {
+  color: #aab3c5;
+}
+.af-input:hover,
+.af-select:hover {
+  border-color: #c6d2e8;
+}
+.af-input:focus,
+.af-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+/* the activation code — mono, uppercase, tracked */
+.af-input--code {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+}
+/* the review URL — mono, smaller so long links stay legible */
+.af-input--url {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+}
+
+.af-select {
+  appearance: none;
+  padding-right: 40px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' stroke='%235b6473' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+}
+
+/* actions */
+.af-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  margin-top: 4px;
+}
+.af-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 46px;
+  padding: 0 18px;
+  border-radius: 12px;
+  border: 1px solid #dce4f2;
+  background: #ffffff;
+  color: #0b1220;
+  font-size: 13.5px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.af-cancel:hover {
+  border-color: #c6d2e8;
+  background: #f7f9fd;
+}
+.af-submit {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 46px;
+  padding: 0 22px;
+  border: 0;
+  border-radius: 12px;
+  cursor: pointer;
+  background: linear-gradient(180deg, #2f6bff, #1e40af);
+  color: #ffffff;
+  font-size: 13.5px;
+  font-weight: 650;
+  font-family: var(--f-ui, "Inter", -apple-system, system-ui, sans-serif);
+  box-shadow: 0 14px 34px -14px rgba(35, 82, 255, 0.5);
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.af-submit:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 40px -16px rgba(35, 82, 255, 0.6);
+}
+.af-submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #2563eb;
+}
+.af-submit:disabled {
+  cursor: wait;
+  filter: saturate(0.7);
+  opacity: 0.7;
+}
+
+/* Narrow screens: stack the actions full-width (primary on top) so button
+   labels never wrap inside a fixed-height pill. */
+@media (max-width: 460px) {
+  .af-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+  .af-actions .af-cancel,
+  .af-actions .af-submit {
+    width: 100%;
+  }
+}
