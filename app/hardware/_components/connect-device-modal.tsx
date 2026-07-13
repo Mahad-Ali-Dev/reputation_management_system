@@ -60,6 +60,21 @@ function normalizeCode(value: string): string {
 /** Activation code length — matches ACTIVATION_LEN in lib/hardware/codes.ts. */
 const CODE_LEN = 5;
 
+/**
+ * Pull the 10-char QR slug out of what the customer pastes — either the full QR
+ * link (https://repulabs.com/r/XXXXXXXXXX) or the raw slug. The slug is the ONLY
+ * per-unit identifier now that the batch shares one printed code, so manual
+ * dashboard activation needs it to know which device to bind. Matches the slug
+ * shape validated in lib/hardware/actions.ts (Crockford base32, 10 chars).
+ */
+function parseSlug(value: string): string {
+  const m = value.trim().match(/\/r\/([0-9a-z]+)/i);
+  return (m?.[1] ?? value)
+    .toUpperCase()
+    .replace(/[^0-9A-HJKMNP-TV-Z]/g, "")
+    .slice(0, 10);
+}
+
 export function ConnectDeviceModal({
   establishments,
   triggerClassName = "btn btn--pri",
@@ -72,6 +87,7 @@ export function ConnectDeviceModal({
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [code, setCode] = useState("");
+  const [link, setLink] = useState("");
   const [platform, setPlatform] = useState("google");
   const [state, formAction] = useActionState(activateDevice, initialState);
   const codeInputRef = useRef<HTMLInputElement>(null);
@@ -98,6 +114,8 @@ export function ConnectDeviceModal({
 
   const noBusinesses = establishments.length === 0;
   const codeComplete = code.length === CODE_LEN;
+  const slug = parseSlug(link);
+  const slugComplete = slug.length === 10;
 
   return (
     <>
@@ -173,10 +191,36 @@ export function ConnectDeviceModal({
                       </Callout>
                     </div>
 
-                    {/* Step 2 — Device code (5 slots over one real input) */}
+                    {/* Step 2 — QR link (identifies the exact device) + code */}
                     <div className="cdm-panel" hidden={step !== 2}>
-                      <SectionHead n={2} icon="card" title="Enter Your Device Code" />
-                      <p className="cdm-helper">Find this on the card inside your package.</p>
+                      <SectionHead n={2} icon="qr" title="Enter Your Device" />
+
+                      <p className="cdm-helper">
+                        Paste the QR link printed on your product — or scan the QR and copy the
+                        link. This is how we bind the right device to your business.
+                      </p>
+                      <div className="cdm-field">
+                        <span className="cdm-field__icon" aria-hidden>
+                          <Icon name="qr" size={20} />
+                        </span>
+                        <input
+                          type="text"
+                          value={link}
+                          onChange={(e) => setLink(e.target.value)}
+                          placeholder="repulabs.com/r/XXXXXXXXXX"
+                          aria-label="Your device QR link"
+                          autoComplete="off"
+                          spellCheck={false}
+                          className="cdm-select"
+                          style={{ textTransform: "none" }}
+                        />
+                      </div>
+                      {/* the parsed slug is what actually activates the device */}
+                      <input type="hidden" name="slug" value={slug} />
+
+                      <p className="cdm-helper" style={{ marginTop: 16 }}>
+                        Now enter the 5-character code from the card inside your package.
+                      </p>
                       {/* biome-ignore lint/a11y/useKeyWithClickEvents: focus-proxy wrapper; the real input handles keyboard */}
                       <div className="cdm-code" onClick={() => codeInputRef.current?.focus()}>
                         <input
@@ -299,7 +343,7 @@ export function ConnectDeviceModal({
                     <button
                       type="button"
                       className="cdm-cta"
-                      disabled={step === 2 && !codeComplete}
+                      disabled={step === 2 && (!slugComplete || !codeComplete)}
                       onClick={() => setStep((s) => s + 1)}
                     >
                       Continue
@@ -364,7 +408,7 @@ function SectionHead({
   n,
   icon,
   title,
-}: { n: number; icon: "building" | "card" | "grid"; title: string }) {
+}: { n: number; icon: "building" | "card" | "grid" | "qr"; title: string }) {
   return (
     <div className="cdm-sec">
       <span className="cdm-sec__badge" aria-hidden>
