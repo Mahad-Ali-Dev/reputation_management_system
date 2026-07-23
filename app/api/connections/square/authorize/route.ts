@@ -1,11 +1,11 @@
+import { auth } from "@/lib/auth/config";
+import { squareApiBase, squareEnvConfigured } from "@/lib/connections/adapters/square";
 import {
   buildAuthorizeUrl,
   loadProviderApp,
   signProviderState,
 } from "@/lib/connections/oauth-helpers";
-import { squareApiBase, squareEnvConfigured } from "@/lib/connections/adapters/square";
-import { auth } from "@/lib/auth/config";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

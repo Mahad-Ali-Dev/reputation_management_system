@@ -1,6 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
-import { buildAuthorizeUrl, loadProviderApp, signProviderState } from "@/lib/connections/oauth-helpers";
+import {
+  buildAuthorizeUrl,
+  loadProviderApp,
+  signProviderState,
+} from "@/lib/connections/oauth-helpers";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";

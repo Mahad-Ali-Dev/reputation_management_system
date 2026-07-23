@@ -6,6 +6,7 @@ import {
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -16,16 +17,18 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session?.user || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
   const code = req.nextUrl.searchParams.get("code");
   const state = req.nextUrl.searchParams.get("state");
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/connections?error=missing_params", req.url));
+    return NextResponse.redirect(new URL("/connections?error=missing_params", oauthBase(req)));
   }
   const cookieHash = req.cookies.get("oauth_klaviyo_cookie")?.value;
   if (!cookieHash) {
-    return NextResponse.redirect(new URL("/connections?error=missing_oauth_cookie", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=missing_oauth_cookie", oauthBase(req)),
+    );
   }
   try {
     const verified = await verifyProviderState({
@@ -37,7 +40,7 @@ export async function GET(req: NextRequest) {
     });
     const app = await loadProviderApp("klaviyo");
     if (!app) throw new Error("klaviyo_not_configured");
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", oauthBase(req)).origin;
 
     const tokens = await exchangeCodeForTokens({
       tokenUrl: app.tokenUrl ?? "https://a.klaviyo.com/oauth/token",
@@ -85,12 +88,16 @@ export async function GET(req: NextRequest) {
       scopes: app.scopes,
     });
 
-    const response = NextResponse.redirect(new URL("/connections?connected=klaviyo", req.url));
+    const response = NextResponse.redirect(
+      new URL("/connections?connected=klaviyo", oauthBase(req)),
+    );
     response.cookies.delete("oauth_klaviyo_cookie");
     return response;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error({ event: "connection.oauth.callback_failed", provider: "klaviyo", error: msg });
-    return NextResponse.redirect(new URL(`/connections?error=${encodeURIComponent(msg)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/connections?error=${encodeURIComponent(msg)}`, oauthBase(req)),
+    );
   }
 }

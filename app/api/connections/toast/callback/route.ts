@@ -1,12 +1,13 @@
+import { auth } from "@/lib/auth/config";
+import { saveConnectionSoft } from "@/lib/connections/adapters/route-helpers";
+import { toastApiBase, toastEnvConfigured } from "@/lib/connections/adapters/toast";
 import {
   exchangeCodeForTokens,
   loadProviderApp,
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
-import { toastApiBase, toastEnvConfigured } from "@/lib/connections/adapters/toast";
-import { saveConnectionSoft } from "@/lib/connections/adapters/route-helpers";
-import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -24,7 +25,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session?.user || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const code = req.nextUrl.searchParams.get("code");
@@ -35,15 +36,21 @@ export async function GET(req: NextRequest) {
     req.nextUrl.searchParams.get("restaurantGuid") ??
     req.nextUrl.searchParams.get("restaurant_guid");
   if (error) {
-    return NextResponse.redirect(new URL(`/connections?error=${encodeURIComponent(error)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/connections?error=${encodeURIComponent(error)}`, oauthBase(req)),
+    );
   }
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/connections?error=missing_code_or_state", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=missing_code_or_state", oauthBase(req)),
+    );
   }
 
   const cookieHash = req.cookies.get("oauth_toast_cookie")?.value;
   if (!cookieHash) {
-    return NextResponse.redirect(new URL("/connections?error=missing_oauth_cookie", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=missing_oauth_cookie", oauthBase(req)),
+    );
   }
 
   try {
@@ -62,7 +69,7 @@ export async function GET(req: NextRequest) {
       throw new Error("toast_not_configured");
     }
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", oauthBase(req)).origin;
     const redirectUri = `${appUrl}/api/connections/toast/callback`;
 
     const tokens = await exchangeCodeForTokens({
@@ -116,15 +123,19 @@ export async function GET(req: NextRequest) {
       scopes: app?.scopes ?? ["customers.read"],
     });
     if (!saved.ok) {
-      return NextResponse.redirect(new URL("/connections?error=toast_not_configured", req.url));
+      return NextResponse.redirect(
+        new URL("/connections?error=toast_not_configured", oauthBase(req)),
+      );
     }
 
-    const response = NextResponse.redirect(new URL("/connections?connected=toast", req.url));
+    const response = NextResponse.redirect(new URL("/connections?connected=toast", oauthBase(req)));
     response.cookies.delete("oauth_toast_cookie");
     return response;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error({ event: "connection.oauth.callback_failed", provider: "toast", error: msg });
-    return NextResponse.redirect(new URL(`/connections?error=${encodeURIComponent(msg)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/connections?error=${encodeURIComponent(msg)}`, oauthBase(req)),
+    );
   }
 }

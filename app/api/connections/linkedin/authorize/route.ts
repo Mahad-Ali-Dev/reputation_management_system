@@ -1,8 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
 import { signOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,9 +33,7 @@ export async function GET(req: NextRequest) {
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   if (!clientId) {
     logger.warn({ event: "oauth.linkedin.not_configured" });
-    return NextResponse.redirect(
-      new URL("/connections?error=linkedin_not_configured", req.url),
-    );
+    return NextResponse.redirect(new URL("/connections?error=linkedin_not_configured", req.url));
   }
 
   const { state, cookieHash } = await signOAuthState({ orgId, userId, provider: "linkedin" });

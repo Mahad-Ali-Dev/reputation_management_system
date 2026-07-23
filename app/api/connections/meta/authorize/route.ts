@@ -1,11 +1,11 @@
+import { auth } from "@/lib/auth/config";
+import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
 import {
   buildAuthorizeUrl,
   loadProviderApp,
   signProviderState,
 } from "@/lib/connections/oauth-helpers";
-import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
-import { auth } from "@/lib/auth/config";
-import { NextResponse, type NextRequest } from "next/server";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +43,8 @@ export async function GET(req: NextRequest) {
   const scopes = app.scopes.length > 0 ? app.scopes : (META_PROVIDER.scopes ?? []);
 
   const authorizeUrl = buildAuthorizeUrl({
-    baseUrl: app.oauthUrl ?? META_PROVIDER.oauthUrl ?? "https://www.facebook.com/v19.0/dialog/oauth",
+    baseUrl:
+      app.oauthUrl ?? META_PROVIDER.oauthUrl ?? "https://www.facebook.com/v19.0/dialog/oauth",
     clientId: app.clientId,
     redirectUri,
     scopes,

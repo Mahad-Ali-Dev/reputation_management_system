@@ -1,10 +1,11 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +30,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const sessionUserId = session?.user?.id;
   if (!session || !orgId || !sessionUserId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const url = req.nextUrl;
@@ -39,18 +40,18 @@ export async function GET(req: NextRequest) {
 
   if (errParam) {
     logger.warn({ event: "oauth.linkedin.user_denied", err: errParam });
-    return NextResponse.redirect(new URL("/connections?error=oauth_denied", req.url));
+    return NextResponse.redirect(new URL("/connections?error=oauth_denied", oauthBase(req)));
   }
   if (!code || !state) {
     return NextResponse.redirect(
-      new URL("/connections?error=oauth_missing_params", req.url),
+      new URL("/connections?error=oauth_missing_params", oauthBase(req)),
     );
   }
 
   const cookieHash = req.cookies.get("oauth_state_sig")?.value;
   if (!cookieHash) {
     return NextResponse.redirect(
-      new URL("/connections?error=oauth_missing_cookies", req.url),
+      new URL("/connections?error=oauth_missing_cookies", oauthBase(req)),
     );
   }
 
@@ -67,9 +68,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     logger.warn({ event: "oauth.linkedin.state_invalid", error });
-    return NextResponse.redirect(
-      new URL("/connections?error=oauth_state_invalid", req.url),
-    );
+    return NextResponse.redirect(new URL("/connections?error=oauth_state_invalid", oauthBase(req)));
   }
   // `verified` is consumed for its CSRF/replay side effects; LinkedIn has no PKCE
   // verifier to forward to the token exchange.
@@ -81,12 +80,11 @@ export async function GET(req: NextRequest) {
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/linkedin/callback`;
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(
-      new URL("/connections?error=linkedin_not_configured", req.url),
+      new URL("/connections?error=linkedin_not_configured", oauthBase(req)),
     );
   }
 
-  const tokenUrl =
-    PROVIDERS.linkedin?.tokenUrl ?? "https://www.linkedin.com/oauth/v2/accessToken";
+  const tokenUrl = PROVIDERS.linkedin?.tokenUrl ?? "https://www.linkedin.com/oauth/v2/accessToken";
 
   let tokens: {
     access_token: string;
@@ -113,11 +111,15 @@ export async function GET(req: NextRequest) {
     if (!tokenRes.ok) {
       const text = await tokenRes.text().catch(() => "");
       logger.error(
-        { event: "oauth.linkedin.token_exchange_failed", status: tokenRes.status, body: text.slice(0, 300) },
+        {
+          event: "oauth.linkedin.token_exchange_failed",
+          status: tokenRes.status,
+          body: text.slice(0, 300),
+        },
         "linkedin token exchange failed",
       );
       return NextResponse.redirect(
-        new URL("/connections?error=oauth_token_exchange", req.url),
+        new URL("/connections?error=oauth_token_exchange", oauthBase(req)),
       );
     }
     tokens = (await tokenRes.json()) as typeof tokens;
@@ -125,13 +127,13 @@ export async function GET(req: NextRequest) {
     const error = err instanceof Error ? err.message : String(err);
     logger.error({ event: "oauth.linkedin.token_exchange_error", error });
     return NextResponse.redirect(
-      new URL("/connections?error=oauth_token_exchange", req.url),
+      new URL("/connections?error=oauth_token_exchange", oauthBase(req)),
     );
   }
 
   if (!tokens.access_token) {
     return NextResponse.redirect(
-      new URL("/connections?error=oauth_token_exchange", req.url),
+      new URL("/connections?error=oauth_token_exchange", oauthBase(req)),
     );
   }
 
@@ -154,9 +156,7 @@ export async function GET(req: NextRequest) {
   }
 
   const externalId = memberSub ? `urn:li:person:${memberSub}` : undefined;
-  const expiresAt = tokens.expires_in
-    ? new Date(Date.now() + tokens.expires_in * 1000)
-    : undefined;
+  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined;
   const scopes = tokens.scope?.split(/\s+/).filter(Boolean) ?? [];
   const accountLabel = displayName ?? "LinkedIn";
 
@@ -191,13 +191,16 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    logger.error({ event: "oauth.linkedin.persist_failed", orgId, error }, "linkedin connection persist failed");
-    return NextResponse.redirect(new URL("/connections?error=oauth_persist", req.url));
+    logger.error(
+      { event: "oauth.linkedin.persist_failed", orgId, error },
+      "linkedin connection persist failed",
+    );
+    return NextResponse.redirect(new URL("/connections?error=oauth_persist", oauthBase(req)));
   }
 
   logger.info({ orgId, displayName, event: "connection.created" }, "linkedin connected");
 
-  const res = NextResponse.redirect(new URL("/connections?connected=linkedin", req.url));
+  const res = NextResponse.redirect(new URL("/connections?connected=linkedin", oauthBase(req)));
   res.cookies.delete("oauth_state_sig");
   return res;
 }

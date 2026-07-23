@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth/config";
 import { encrypt } from "@/lib/crypto/envelope";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const sessionUserId = session?.user?.id;
   if (!session || !orgId || !sessionUserId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const url = req.nextUrl;
@@ -33,16 +34,20 @@ export async function GET(req: NextRequest) {
 
   if (errParam) {
     logger.warn({ event: "oauth.google.user_denied", err: errParam });
-    return NextResponse.redirect(new URL("/establishments?error=oauth_denied", req.url));
+    return NextResponse.redirect(new URL("/establishments?error=oauth_denied", oauthBase(req)));
   }
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/establishments?error=oauth_missing_params", req.url));
+    return NextResponse.redirect(
+      new URL("/establishments?error=oauth_missing_params", oauthBase(req)),
+    );
   }
 
   const cookieHash = req.cookies.get("oauth_state_sig")?.value;
   const establishmentId = req.cookies.get("oauth_pending_establishment")?.value;
   if (!cookieHash || !establishmentId) {
-    return NextResponse.redirect(new URL("/establishments?error=oauth_missing_cookies", req.url));
+    return NextResponse.redirect(
+      new URL("/establishments?error=oauth_missing_cookies", oauthBase(req)),
+    );
   }
   // SECURITY: the establishmentId came from a cookie the user can edit. Even
   // though RLS scopes the eventual connections row to this org, PG foreign-key
@@ -51,7 +56,9 @@ export async function GET(req: NextRequest) {
   // establishment. Verify ownership here before we accept the OAuth flow.
   // (Also re-validates the UUID shape — defends against cookie tampering.)
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(establishmentId)) {
-    return NextResponse.redirect(new URL("/establishments?error=oauth_bad_establishment", req.url));
+    return NextResponse.redirect(
+      new URL("/establishments?error=oauth_bad_establishment", oauthBase(req)),
+    );
   }
   const ownsEstablishment = await withTenant(orgId, async (tx) => {
     const row = await tx.establishment.findFirst({
@@ -65,7 +72,9 @@ export async function GET(req: NextRequest) {
       { event: "oauth.google.foreign_establishment", orgId, establishmentId },
       "OAuth callback rejected — establishmentId from cookie is not owned by this org",
     );
-    return NextResponse.redirect(new URL("/establishments?error=oauth_bad_establishment", req.url));
+    return NextResponse.redirect(
+      new URL("/establishments?error=oauth_bad_establishment", oauthBase(req)),
+    );
   }
 
   // Step 1: state verification (CSRF + replay + PKCE)
@@ -81,7 +90,9 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     logger.warn({ event: "oauth.google.state_invalid", error });
-    return NextResponse.redirect(new URL("/establishments?error=oauth_state_invalid", req.url));
+    return NextResponse.redirect(
+      new URL("/establishments?error=oauth_state_invalid", oauthBase(req)),
+    );
   }
 
   // Step 2: code → tokens
@@ -111,7 +122,9 @@ export async function GET(req: NextRequest) {
       { event: "oauth.google.token_exchange_failed", status: tokenRes.status, body: text },
       "google token exchange failed",
     );
-    return NextResponse.redirect(new URL("/establishments?error=oauth_token_exchange", req.url));
+    return NextResponse.redirect(
+      new URL("/establishments?error=oauth_token_exchange", oauthBase(req)),
+    );
   }
 
   const tokens = (await tokenRes.json()) as {
@@ -215,7 +228,7 @@ export async function GET(req: NextRequest) {
 
   // Clear the helper cookies
   const res = NextResponse.redirect(
-    new URL(`/establishments/${establishmentId}?connected=google`, req.url),
+    new URL(`/establishments/${establishmentId}?connected=google`, oauthBase(req)),
   );
   res.cookies.delete("oauth_state_sig");
   res.cookies.delete("oauth_pending_establishment");

@@ -1,6 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
-import { buildAuthorizeUrl, loadProviderApp, signProviderState } from "@/lib/connections/oauth-helpers";
+import {
+  buildAuthorizeUrl,
+  loadProviderApp,
+  signProviderState,
+} from "@/lib/connections/oauth-helpers";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -28,8 +32,11 @@ export async function GET(req: NextRequest) {
   });
   const response = NextResponse.redirect(authorizeUrl);
   response.cookies.set("oauth_quickbooks_cookie", cookieHash, {
-    httpOnly: true, secure: process.env.NODE_ENV === "production",
-    sameSite: "lax", path: "/", maxAge: 600,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 600,
   });
   return response;
 }

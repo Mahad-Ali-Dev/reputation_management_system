@@ -1,7 +1,11 @@
-import { NextResponse, type NextRequest } from "next/server";
-import { cookies } from "next/headers";
 import { auth } from "@/lib/auth/config";
-import { buildAuthorizeUrl, loadProviderApp, signProviderState } from "@/lib/connections/oauth-helpers";
+import {
+  buildAuthorizeUrl,
+  loadProviderApp,
+  signProviderState,
+} from "@/lib/connections/oauth-helpers";
+import { cookies } from "next/headers";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -44,7 +48,7 @@ export async function GET(req: NextRequest) {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    maxAge: 600,  // 10 minutes
+    maxAge: 600, // 10 minutes
   });
   return response;
 }

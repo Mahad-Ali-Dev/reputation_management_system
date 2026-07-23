@@ -3,6 +3,7 @@ import { saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
 import { gmailOAuthClient } from "@/lib/gmail/oauth-client";
 import { logger } from "@/lib/logger";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -27,7 +28,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const sessionUserId = session?.user?.id;
   if (!session || !orgId || !sessionUserId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const url = req.nextUrl;
@@ -37,15 +38,19 @@ export async function GET(req: NextRequest) {
 
   if (errParam) {
     logger.warn({ event: "oauth.gmail.user_denied", err: errParam });
-    return NextResponse.redirect(new URL("/connections?error=oauth_denied", req.url));
+    return NextResponse.redirect(new URL("/connections?error=oauth_denied", oauthBase(req)));
   }
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/connections?error=oauth_missing_params", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=oauth_missing_params", oauthBase(req)),
+    );
   }
 
   const cookieHash = req.cookies.get("oauth_state_sig")?.value;
   if (!cookieHash) {
-    return NextResponse.redirect(new URL("/connections?error=oauth_missing_cookies", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=oauth_missing_cookies", oauthBase(req)),
+    );
   }
 
   // Step 1: state verification (CSRF + replay + PKCE + org/user binding)
@@ -61,7 +66,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     logger.warn({ event: "oauth.gmail.state_invalid", error });
-    return NextResponse.redirect(new URL("/connections?error=oauth_state_invalid", req.url));
+    return NextResponse.redirect(new URL("/connections?error=oauth_state_invalid", oauthBase(req)));
   }
 
   // Step 2: code → tokens. Uses the Gmail-specific OAuth client when one is
@@ -91,7 +96,9 @@ export async function GET(req: NextRequest) {
       { event: "oauth.gmail.token_exchange_failed", status: tokenRes.status, body: text },
       "gmail token exchange failed",
     );
-    return NextResponse.redirect(new URL("/connections?error=oauth_token_exchange", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=oauth_token_exchange", oauthBase(req)),
+    );
   }
 
   const tokens = (await tokenRes.json()) as {
@@ -156,12 +163,12 @@ export async function GET(req: NextRequest) {
       { event: "oauth.gmail.persist_failed", orgId, error },
       "gmail connection persist failed",
     );
-    return NextResponse.redirect(new URL("/connections?error=oauth_persist", req.url));
+    return NextResponse.redirect(new URL("/connections?error=oauth_persist", oauthBase(req)));
   }
 
   logger.info({ orgId, mailboxEmail, event: "connection.created" }, "gmail mailbox connected");
 
-  const res = NextResponse.redirect(new URL("/connections?connected=gmail", req.url));
+  const res = NextResponse.redirect(new URL("/connections?connected=gmail", oauthBase(req)));
   res.cookies.delete("oauth_state_sig");
   return res;
 }

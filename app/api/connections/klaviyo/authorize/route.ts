@@ -1,6 +1,10 @@
-import { NextResponse, type NextRequest } from "next/server";
 import { auth } from "@/lib/auth/config";
-import { buildAuthorizeUrl, loadProviderApp, signProviderState } from "@/lib/connections/oauth-helpers";
+import {
+  buildAuthorizeUrl,
+  loadProviderApp,
+  signProviderState,
+} from "@/lib/connections/oauth-helpers";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -19,7 +23,9 @@ export async function GET(req: NextRequest) {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
   const redirectUri = `${appUrl}/api/connections/klaviyo/callback`;
   const { state, cookieHash, pkceChallenge } = await signProviderState({
-    orgId, userId, provider: "klaviyo",
+    orgId,
+    userId,
+    provider: "klaviyo",
   });
   const authorizeUrl = buildAuthorizeUrl({
     baseUrl: app.oauthUrl ?? "https://www.klaviyo.com/oauth/authorize",
@@ -31,8 +37,11 @@ export async function GET(req: NextRequest) {
   });
   const response = NextResponse.redirect(authorizeUrl);
   response.cookies.set("oauth_klaviyo_cookie", cookieHash, {
-    httpOnly: true, secure: process.env.NODE_ENV === "production",
-    sameSite: "lax", path: "/", maxAge: 600,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: 600,
   });
   return response;
 }

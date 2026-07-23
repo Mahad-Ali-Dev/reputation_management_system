@@ -1,8 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { withTenant } from "@/lib/db/with-tenant";
-import { signOAuthState } from "@/lib/oauth/state";
 import { logger } from "@/lib/logger";
+import { signOAuthState } from "@/lib/oauth/state";
+import { type NextRequest, NextResponse } from "next/server";
 
 /**
  * GET /api/connections/google/authorize?establishmentId=<uuid>
@@ -60,7 +60,11 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const { state, cookieHash, pkceChallenge: challenge } = await signOAuthState({
+  const {
+    state,
+    cookieHash,
+    pkceChallenge: challenge,
+  } = await signOAuthState({
     orgId,
     userId,
     provider: "google_business",

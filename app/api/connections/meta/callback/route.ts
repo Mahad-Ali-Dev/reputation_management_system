@@ -1,12 +1,13 @@
+import { auth } from "@/lib/auth/config";
+import { GRAPH_VERSION, fetchMetaPages } from "@/lib/connections/adapters/meta";
+import { saveConnectionSoft } from "@/lib/connections/adapters/route-helpers";
 import {
   exchangeCodeForTokens,
   loadProviderApp,
   verifyProviderState,
 } from "@/lib/connections/oauth-helpers";
-import { fetchMetaPages, GRAPH_VERSION } from "@/lib/connections/adapters/meta";
-import { saveConnectionSoft } from "@/lib/connections/adapters/route-helpers";
-import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session?.user || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const code = req.nextUrl.searchParams.get("code");
@@ -34,15 +35,21 @@ export async function GET(req: NextRequest) {
 
   if (error) {
     logger.warn({ event: "connection.oauth.user_denied", provider: "meta", error });
-    return NextResponse.redirect(new URL(`/connections?error=${encodeURIComponent(error)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/connections?error=${encodeURIComponent(error)}`, oauthBase(req)),
+    );
   }
   if (!code || !state) {
-    return NextResponse.redirect(new URL("/connections?error=missing_code_or_state", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=missing_code_or_state", oauthBase(req)),
+    );
   }
 
   const cookieHash = req.cookies.get("oauth_meta_cookie")?.value;
   if (!cookieHash) {
-    return NextResponse.redirect(new URL("/connections?error=missing_oauth_cookie", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=missing_oauth_cookie", oauthBase(req)),
+    );
   }
 
   try {
@@ -57,7 +64,7 @@ export async function GET(req: NextRequest) {
     const app = await loadProviderApp("meta");
     if (!app) throw new Error("meta_not_configured");
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", oauthBase(req)).origin;
     const redirectUri = `${appUrl}/api/connections/meta/callback`;
 
     // Step 1: code → short-lived user token. Meta's token endpoint takes creds
@@ -115,15 +122,19 @@ export async function GET(req: NextRequest) {
       scopes: app.scopes,
     });
     if (!saved.ok) {
-      return NextResponse.redirect(new URL("/connections?error=meta_not_configured", req.url));
+      return NextResponse.redirect(
+        new URL("/connections?error=meta_not_configured", oauthBase(req)),
+      );
     }
 
-    const response = NextResponse.redirect(new URL("/connections?connected=meta", req.url));
+    const response = NextResponse.redirect(new URL("/connections?connected=meta", oauthBase(req)));
     response.cookies.delete("oauth_meta_cookie");
     return response;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     logger.error({ event: "connection.oauth.callback_failed", provider: "meta", error: msg });
-    return NextResponse.redirect(new URL(`/connections?error=${encodeURIComponent(msg)}`, req.url));
+    return NextResponse.redirect(
+      new URL(`/connections?error=${encodeURIComponent(msg)}`, oauthBase(req)),
+    );
   }
 }
