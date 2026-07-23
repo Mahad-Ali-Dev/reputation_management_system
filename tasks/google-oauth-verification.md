@@ -123,14 +123,92 @@ no dev/localhost URLs anywhere, English UI.
 
 ## 4. Business Profile API access request (do this FIRST)
 
-Separate from OAuth. Submit the Google Business Profile API access request form
-for the **same Cloud project**.
+Separate from OAuth verification, and the longest queue. Nothing returns review
+data until this is approved — the APIs answer `PERMISSION_DENIED` even with a
+fully verified OAuth app.
 
-- [ ] Enable in the project: **My Business Account Management API**,
-      **My Business Business Information API**, and the reviews-serving API
-      (`mybusiness.googleapis.com` v4)
-- [ ] Submit the access form (business details, use case, the same summary as §2)
-- [ ] Wait for the approval email before expecting review data
+**Project:** number `767930797763`
+(from client id `767930797763-qaakrcssrt7ebvlkc8r21r1g3rr5its3.apps.googleusercontent.com`)
+
+### 4a. Enable the APIs first
+
+Cloud Console → **APIs & Services → Library** → enable all of these on that project:
+
+- [ ] **My Business Account Management API** — lists the accounts/locations the user manages
+- [ ] **My Business Business Information API** — location details
+- [ ] **Google My Business API** (`mybusiness.googleapis.com`) — reviews + replies (the v4 endpoints we call)
+- [ ] **My Business Notifications API** — only if you later want push instead of polling
+
+The access form is rejected if the APIs aren't enabled on the project you name.
+
+### 4b. Form answers — paste these
+
+> **Which APIs do you need access to?**
+> Google My Business API (reviews + replies), My Business Account Management API,
+> My Business Business Information API.
+
+> **How will you use the API?**
+> Repulabs is a reputation-management product for local businesses (cafés,
+> clinics, salons, trades). A business owner connects their own Google Business
+> Profile with OAuth, and we then:
+> 1. list the accounts and locations that user manages so they can choose which
+>    of their own locations to connect;
+> 2. read reviews for those locations on a 15-minute poll, so the owner sees all
+>    reviews in one dashboard with notifications and rating trends;
+> 3. publish replies the owner has written or approved (optionally AI-drafted in
+>    their brand voice) back to the review;
+> 4. read location performance/insights to report on how the listing is doing.
+> We only ever access locations the authenticated user already manages.
+
+> **Are you managing your own locations, or acting on behalf of others?**
+> On behalf of others. Each customer authenticates with their own Google account
+> and grants access to their own Business Profile. We never add, claim, verify or
+> modify listings on anyone's behalf — we read reviews and publish replies the
+> owner has approved.
+
+> **Expected request volume**
+> Low. One reviews poll per connected location every 15 minutes (≈96 requests per
+> location per day), plus a reply publish only when an owner sends one. At launch
+> this is tens of locations, so well under a request per second.
+
+> **Do you resell or redistribute Google data?**
+> No. Review data is shown only to the business that owns it, inside their own
+> workspace. It is not sold, shared with third parties, or used for advertising
+> or model training.
+
+> **Website / product URL:** https://repulabs.com
+> **Privacy policy:** https://repulabs.com/legal/privacy
+> **Terms:** https://repulabs.com/legal/terms
+
+- [ ] Submitted — record the date here: ____________
+- [ ] Approval email received: ____________
+
+---
+
+## 4c. Demo video script (OAuth verification)
+
+Unlisted YouTube, 2–3 minutes, one continuous screen recording. No editing that
+cuts the consent screen. Narration optional — on-screen actions are what count.
+
+| # | Show | Why the reviewer needs it |
+|---|---|---|
+| 1 | Browser address bar on **https://repulabs.com** | Proves the app matches the registered domain |
+| 2 | Sign in, land in the app | Establishes it's a real product, not a shell |
+| 3 | Click **Connect Google Business Profile** on `/connections` | Shows where consent starts |
+| 4 | **The Google consent screen — full, uncut, with "Repulabs" as the app name and `business.manage` readable** | The single most-checked frame. Do not crop or speed up |
+| 5 | Grant consent → redirected back into Repulabs | Completes the flow |
+| 6 | The connected location appears | Shows scope → data linkage |
+| 7 | `/reviews` populated with real Google reviews | Demonstrates use (1): reading reviews |
+| 8 | Write/approve a reply and publish it | Demonstrates use (2): posting replies |
+| 9 | Insights/performance view | Demonstrates use (3): reading insights |
+| 10 | Disconnect the integration | Shows the user can revoke |
+
+**Rules that get videos rejected:** private (not unlisted) link; consent screen
+cut or sped past; localhost or a staging URL visible; app name on the consent
+screen not matching the site branding; a non-English UI.
+
+- [ ] Recorded
+- [ ] Uploaded as **unlisted** and the link pasted into the verification form
 
 ---
 
@@ -149,8 +227,20 @@ connections break weekly. That's expected — it disappears once published.
       **checked 2026-07-17**: `app/legal/privacy/page.tsx` covers Google, OAuth,
       Business Profile, Retention and "delete your data". Reachable at
       `https://repulabs.com/legal/privacy`.
-- [ ] Homepage explains what the app does (no placeholder/coming-soon)
+- [x] ~~Homepage explains what the app does~~ — **checked 2026-07-23**: live,
+      HTTP 200, real landing content (“Repulabs — Run your reputation like a
+      system.”), not a placeholder.
+- [x] ~~Domain verified in Search Console~~ — **checked 2026-07-23**: both a
+      `repulabs.com` Domain property and a URL-prefix property exist. Verify the
+      Search Console account is the SAME Google account submitting for
+      verification, or Google won't count it.
+- [x] ~~Terms + privacy reachable on the domain~~ —
+      `/legal/privacy` and `/legal/terms`, both live.
+- [ ] **No Gmail/restricted scopes left on this client** — check
+      Cloud Console → OAuth consent screen → **Data access**. The connect request
+      itself is already clean (`openid`, `userinfo.email`, `userinfo.profile`,
+      `business.manage`), but the tier is decided by what the CONSENT SCREEN
+      declares. This is the one that costs months if missed.
 - [ ] Consent-screen app name == the name in the demo video == the site branding
-- [ ] Domain verified in Search Console under the submitting account
-- [ ] No Gmail/restricted scopes left on this client
-- [ ] Demo video is public or unlisted (not private)
+- [ ] Demo video is unlisted (not private)
+- [ ] App switched from **Testing** to **In production** before submitting
