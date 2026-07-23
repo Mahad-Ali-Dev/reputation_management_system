@@ -1,5 +1,17 @@
 # Google OAuth verification — submission pack (repulabs.com)
 
+> **DECISION (2026-07-23): submit from project `767930797763`.** That's the
+> project whose OAuth client the LIVE app uses — proven by the connect flow
+> request (`client_id=767930797763-qaakrcssrt7ebvlkc8r21r1g3rr5its3…`). Do NOT
+> submit from the account that owns the Business Profile — profiles connect at
+> runtime by any user; the Cloud project is unrelated. The only reason to switch
+> projects is long-term ownership (personal vs business account), and that must
+> happen BEFORE verifying, or you verify twice.
+>
+> Before submitting, confirm the consent-screen `client_id` == prod
+> `AUTH_GOOGLE_ID`. If they ever differ, the app is using a different client than
+> the one being verified.
+
 Goal: get the "Connect your Google Business Profile" flow out of **Testing** so
 any customer can connect and we can fetch reviews.
 
@@ -51,6 +63,25 @@ restricted track and the business-connect launch stalls for months.
 
 **Prerequisite:** `repulabs.com` must be verified in Search Console under the
 same Google account — OAuth verification checks domain ownership.
+
+**App description** (paste into the consent screen / verification "what does
+your app do" box):
+
+> Repulabs is a reputation-management platform for local businesses. After a
+> business owner connects their own Google Business Profile, Repulabs brings
+> their reviews into one dashboard, notifies them of new ones, drafts replies in
+> the business's own brand voice for the owner to approve and publish, and reports
+> on rating trends and listing performance. It only accesses locations the
+> authenticated user already manages.
+
+**One-line description** (if a short field is required):
+
+> Bring your Google reviews into one dashboard, reply in your brand voice, and
+> track your rating over time.
+
+⚠️ The app name on the **consent screen**, in the **demo video**, and on the
+**site** must all read exactly `Repulabs`. A mismatch here is a common,
+avoidable rejection.
 
 ---
 
