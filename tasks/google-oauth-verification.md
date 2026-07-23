@@ -216,8 +216,13 @@ The access form is rejected if the APIs aren't enabled on the project you name.
 > **Privacy policy:** https://repulabs.com/legal/privacy
 > **Terms:** https://repulabs.com/legal/terms
 
-- [ ] Submitted — record the date here: ____________
+- [x] **SUBMITTED 2026-07-24** — support case **`8-7664000041632`**.
+      Google quoted ~7–10 business days (≈ Aug 4–7). Applied from the account
+      that manages a real Business Profile (syenergytools had none; used the
+      account that does), project `767930797763`.
 - [ ] Approval email received: ____________
+- [ ] After approval: BUILD the location picker (connect → accounts.locations.list
+      → pick → save establishment.googlePlaceId) so reviews actually sync.
 
 ---
 
