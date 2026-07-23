@@ -158,6 +158,11 @@ Separate from OAuth verification, and the longest queue. Nothing returns review
 data until this is approved — the APIs answer `PERMISSION_DENIED` even with a
 fully verified OAuth app.
 
+**WHERE TO SUBMIT:** https://support.google.com/business/contact/api_default
+("Google Business Profile APIs — request access"). Linked from the prereqs:
+https://developers.google.com/my-business/content/prereqs
+Sign in as an account with access to the project below.
+
 **Project:** number `767930797763`
 (from client id `767930797763-qaakrcssrt7ebvlkc8r21r1g3rr5its3.apps.googleusercontent.com`)
 
