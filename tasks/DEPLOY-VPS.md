@@ -66,7 +66,7 @@ your secrets manager), then restart.
    ```bash
    chmod +x /opt/repulabs/deploy/cron-hit.sh
    crontab /opt/repulabs/deploy/repulabs.cron
-   crontab -l | grep -c api/cron          # -> 21
+   crontab -l | grep -c cron-hit          # -> 21
    # smoke-test one job by hand:
    /opt/repulabs/deploy/cron-hit.sh sync-reviews && echo OK
    ```

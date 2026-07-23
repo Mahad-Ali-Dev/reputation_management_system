@@ -2,7 +2,7 @@
 # off Vercel). Regenerate: python3 scripts/gen-cron.py
 #
 # Install as the deploy user:   crontab /opt/repulabs/deploy/repulabs.cron
-# Verify:                       crontab -l | grep api/cron
+# Verify (expect 21):           crontab -l | grep -c cron-hit
 # Each line calls the wrapper, which reads CRON_SECRET from .env.production and
 # hits the endpoint with the Bearer header. No secret lives in this file.
 SHELL=/bin/bash
