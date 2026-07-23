@@ -5,6 +5,7 @@ import { TopBar } from "@/components/topbar";
 import { auth } from "@/lib/auth/config";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { createCheckoutSession, createPortalSession } from "@/lib/billing/actions";
+import { PLAN_FEATURES, PRO_PRICE_AUD } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { redirect } from "next/navigation";
@@ -26,34 +27,11 @@ import "./subscription-bill.css";
 
 export const dynamic = "force-dynamic";
 
-/** Plan-config source drives the 3 cards — features are not hardcoded in JSX. */
-const PLAN_FEATURES: Record<"standard" | "pro" | "scale", Array<[string, boolean]>> = {
-  standard: [
-    ["QR review cards & plaques", true],
-    ["Up to 50 review requests / mo", true],
-    ["Live Google feed", true],
-    ["Basic spam filter", true],
-    ["AI-drafted replies", false],
-    ["Dispute service", false],
-    ["AI phone receptionist", false],
-  ],
-  pro: [
-    ["Unlimited review requests (Email + SMS)", true],
-    ["AI-drafted replies in your brand voice", true],
-    ["Cross-channel social scheduler", true],
-    ["Surveys with AI polish", true],
-    ["Premium dispute service", true],
-    ["AI phone receptionist – 200 min", true],
-    ["Priority support", true],
-  ],
-  scale: [
-    ["SSO + SAML + audit logs", true],
-    ["Multi-brand workspaces", true],
-    ["Volume API access", true],
-    ["Dedicated CSM", true],
-    ["Custom voice clone", true],
-  ],
-};
+/**
+ * Plan config drives the 3 cards — features are never hardcoded in JSX. It
+ * lives in lib/billing/plans.ts so this page and the public /pricing page
+ * cannot disagree about prices, trial length or what each tier includes.
+ */
 
 const ASSET = "/assets/repulabs/billing";
 
@@ -92,7 +70,7 @@ export default async function SubscriptionPage({
   const country = org.country ?? "—";
   const renewsAt = org.subscription?.currentPeriodEnd;
   const nextCharge = renewsAt
-    ? `${renewsAt.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} · A$79.00 AUD`
+    ? `${renewsAt.toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" })} · A$${PRO_PRICE_AUD}.00 AUD`
     : hasPaidPlan
       ? "—"
       : "No active subscription";
@@ -104,7 +82,7 @@ export default async function SubscriptionPage({
 
   const eyebrow =
     realPlan === "pro"
-      ? ["PRO", "BILLED MONTHLY", "A$79/MO PER LOCATION"]
+      ? ["PRO", "BILLED MONTHLY", `A$${PRO_PRICE_AUD}/MO PER LOCATION`]
       : realPlan === "trial"
         ? ["FREE TRIAL", "PRO FEATURES ACTIVE"]
         : realPlan === "past_due"
@@ -161,7 +139,12 @@ export default async function SubscriptionPage({
           <section className="bill-card bill-card--standard" aria-label="Standard plan — Free">
             <span className="bill-card__tier bill-card__tier--standard">Standard</span>
             {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-            <img className="bill-card__art" src={`${ASSET}/plan-free.svg`} alt="" aria-hidden="true" />
+            <img
+              className="bill-card__art"
+              src={`${ASSET}/plan-free.svg`}
+              alt=""
+              aria-hidden="true"
+            />
             <div className="bill-card__pricewrap">
               <span className="bill-card__price">Free</span>
             </div>
@@ -186,16 +169,24 @@ export default async function SubscriptionPage({
           </section>
 
           {/* PRO — highlighted */}
-          <section className="bill-card bill-card--pro" aria-label="Pro plan — A$79 per month">
+          <section
+            className="bill-card bill-card--pro"
+            aria-label={`Pro plan — A$${PRO_PRICE_AUD} per month`}
+          >
             <span className="bill-card__tier bill-card__tier--pro">Pro</span>
             <span className="bill-card__badge">
               <Icon name="star" size={11} style={{ color: "#8b5cf6" }} />
               MOST POPULAR
             </span>
             {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-            <img className="bill-card__art" src={`${ASSET}/plan-pro.svg`} alt="" aria-hidden="true" />
+            <img
+              className="bill-card__art"
+              src={`${ASSET}/plan-pro.svg`}
+              alt=""
+              aria-hidden="true"
+            />
             <div className="bill-card__pricewrap">
-              <span className="bill-card__price">A$79</span>
+              <span className="bill-card__price">A${PRO_PRICE_AUD}</span>
               <span className="bill-card__price-suffix">/mo</span>
             </div>
             <div className="bill-card__period">per location · billed monthly</div>
@@ -264,7 +255,12 @@ export default async function SubscriptionPage({
           <section className="bill-panel" aria-label="This month's usage">
             <div className="bill-panel__head">
               {/* biome-ignore lint/performance/noImgElement: static kit icon */}
-              <img className="bill-panel__ic" src={`${ASSET}/ic-plan.svg`} alt="" aria-hidden="true" />
+              <img
+                className="bill-panel__ic"
+                src={`${ASSET}/ic-plan.svg`}
+                alt=""
+                aria-hidden="true"
+              />
               <h2 className="bill-panel__title">This month&apos;s usage</h2>
               <span className="bill-pill bill-pill--neutral">
                 <Icon name="cal" size={12} />
@@ -318,7 +314,8 @@ export default async function SubscriptionPage({
                 aria-hidden="true"
               />
               <span className="bill-banner__txt">
-                Need more capacity? Upgrade your plan or reach out — we&apos;re here to help you grow.
+                Need more capacity? Upgrade your plan or reach out — we&apos;re here to help you
+                grow.
               </span>
               <a
                 href="mailto:sales@repulabs.com?subject=More%20capacity"

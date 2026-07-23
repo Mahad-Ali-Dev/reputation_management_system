@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { planAllowsPaidFeatures } from "@/lib/billing/entitlements";
+import { PRO_PRICE_AUD } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
@@ -179,7 +180,11 @@ export default async function SettingsOverviewPage() {
               <h2 className="set-sum__title">Profile</h2>
               <p className="set-sum__sub">Workspace owner</p>
             </div>
-            <Link href="/settings/workspace" className="set-sum__chev" aria-label="Open workspace settings">
+            <Link
+              href="/settings/workspace"
+              className="set-sum__chev"
+              aria-label="Open workspace settings"
+            >
               <Icon name="chevR" size={16} />
             </Link>
           </div>
@@ -302,7 +307,11 @@ export default async function SettingsOverviewPage() {
               <h2 className="set-sum__title">Plan</h2>
               <p className="set-sum__sub">{planLabel(plan)}</p>
             </div>
-            <Link href="/settings/billing" className="set-sum__chev" aria-label="Open billing settings">
+            <Link
+              href="/settings/billing"
+              className="set-sum__chev"
+              aria-label="Open billing settings"
+            >
               <Icon name="chevR" size={16} />
             </Link>
           </div>
@@ -311,7 +320,7 @@ export default async function SettingsOverviewPage() {
               {isPaid ? "Monthly" : plan === "trial" ? "Trial" : "Current plan"}
             </div>
             <div className="set-plan__pricerow">
-              <span className="set-plan__price">{isPaid ? "A$79" : "$0"}</span>
+              <span className="set-plan__price">{isPaid ? `A$${PRO_PRICE_AUD}` : "$0"}</span>
               <span className="set-plan__suffix">
                 {isPaid ? "/mo per location" : plan === "trial" ? "during trial" : "free plan"}
               </span>
@@ -333,7 +342,12 @@ export default async function SettingsOverviewPage() {
               </div>
             )}
             {/* biome-ignore lint/a11y/useAltText: decorative plan art */}
-            <img src={`${ASSET}/main-plan.svg`} alt="" aria-hidden="true" className="set-plan__art" />
+            <img
+              src={`${ASSET}/main-plan.svg`}
+              alt=""
+              aria-hidden="true"
+              className="set-plan__art"
+            />
           </div>
           {!isPaid && (
             <Link
@@ -361,7 +375,11 @@ export default async function SettingsOverviewPage() {
           <nav className="set-qlinks" aria-label="Settings quick links">
             {SECTION_CARDS.map((s) => (
               <Link key={s.id} href={s.href} className="set-qlink">
-                <Icon name={SETTINGS_SECTIONS.find((x) => x.id === s.id)?.icon ?? "settings"} size={16} className="set-qlink__ic" />
+                <Icon
+                  name={SETTINGS_SECTIONS.find((x) => x.id === s.id)?.icon ?? "settings"}
+                  size={16}
+                  className="set-qlink__ic"
+                />
                 <span className="set-qlink__label">{s.title}</span>
                 <Icon name="chevR" size={14} className="set-qlink__chev" />
               </Link>

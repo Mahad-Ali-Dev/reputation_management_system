@@ -1,5 +1,6 @@
 import { Icon } from "@/components/shell/icon";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { PRO_PRICE_AUD } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db/client";
 import Link from "next/link";
 import { SettingsFrame } from "../_components/settings-frame";
@@ -56,7 +57,7 @@ export default async function BillingSettingsPage() {
       ? "—"
       : "No active subscription";
   const statusLabel = isActive ? "Active" : status === "none" ? "Free plan" : status;
-  const priceLabel = isPro ? "A$79" : "$0";
+  const priceLabel = isPro ? `A$${PRO_PRICE_AUD}` : "$0";
   const priceSuffix = isPro ? "/ month per location" : plan === "trial" ? "during trial" : "free";
 
   return (

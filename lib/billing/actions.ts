@@ -1,15 +1,18 @@
+import { withTenant } from "@/lib/db/with-tenant";
+import { logger } from "@/lib/logger";
+import { APP_URL, STRIPE_PRO_PRICE_ID, stripe } from "@/lib/stripe/client";
 /**
  * Stripe billing actions — used by both API routes AND server actions.
  *
  * Separating the work here means dashboard server actions can call these directly
  * (no HTTP round-trip, no cookie-forwarding required).
  */
-import { withTenant } from "@/lib/db/with-tenant";
-import { APP_URL, STRIPE_PRO_PRICE_ID, stripe } from "@/lib/stripe/client";
-import { logger } from "@/lib/logger";
+import { TRIAL_DAYS } from "./plans";
 
 /**
- * Returns a Stripe Checkout URL for upgrading the given org to Pro (7-day trial).
+ * Returns a Stripe Checkout URL for upgrading the given org to Pro.
+ * Trial length comes from TRIAL_DAYS (lib/billing/plans.ts) so checkout, signup
+ * and the public pricing page always agree.
  */
 export async function createCheckoutSession(orgId: string, userEmail: string): Promise<string> {
   if (!STRIPE_PRO_PRICE_ID) {
@@ -45,7 +48,7 @@ export async function createCheckoutSession(orgId: string, userEmail: string): P
     customer: customerId,
     line_items: [{ price: STRIPE_PRO_PRICE_ID, quantity: 1 }],
     subscription_data: {
-      trial_period_days: 7,
+      trial_period_days: TRIAL_DAYS,
       metadata: { organizationId: org.id },
     },
     metadata: { organizationId: org.id },

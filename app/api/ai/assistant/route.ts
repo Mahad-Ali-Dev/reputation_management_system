@@ -2,6 +2,7 @@ import { checkBudget } from "@/lib/ai/budget";
 import { MODELS, anthropic } from "@/lib/ai/client";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
+import { PRO_PRICE_AUD } from "@/lib/billing/plans";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
@@ -78,7 +79,7 @@ KEY UI LOCATIONS
 
 PLANS
 - Free: 1 location, 50 review requests/mo, basic features.
-- Pro: A$79/mo per location — unlimited requests, AI replies in brand voice, AI phone (200 min), premium dispute, priority support.
+- Pro: A$${PRO_PRICE_AUD}/mo per location — unlimited requests, AI replies in brand voice, AI phone (200 min), premium dispute, priority support.
 - Scale: custom — SSO, multi-brand, dedicated CSM.
 
 STYLE

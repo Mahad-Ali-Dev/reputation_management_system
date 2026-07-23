@@ -1,3 +1,4 @@
+import { TRIAL_DAYS } from "@/lib/billing/plans";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
@@ -250,7 +251,7 @@ async function ensureOrgForUser(
       name: name ?? email.split("@")[0] ?? "My Workspace",
       slug,
       plan: "trial",
-      trialEndsAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000),
       memberships: { create: { userId, role: "owner" } },
     },
     select: { id: true },

@@ -11,15 +11,17 @@ import type { MetadataRoute } from "next";
  * Served at https://repulabs.com/sitemap.xml
  */
 
-const SITE = (
-  process.env.NEXT_PUBLIC_MARKETING_URL ??
-  "https://repulabs.com"
-).replace(/\/$/, "");
+const SITE = (process.env.NEXT_PUBLIC_MARKETING_URL ?? "https://repulabs.com").replace(/\/$/, "");
 
-type Entry = { path: string; priority: number; changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"] };
+type Entry = {
+  path: string;
+  priority: number;
+  changeFrequency: MetadataRoute.Sitemap[number]["changeFrequency"];
+};
 
 const PAGES: Entry[] = [
   { path: "/", priority: 1.0, changeFrequency: "weekly" },
+  { path: "/pricing", priority: 0.9, changeFrequency: "monthly" },
   { path: "/tour", priority: 0.9, changeFrequency: "monthly" },
   { path: "/customers", priority: 0.8, changeFrequency: "monthly" },
   { path: "/docs", priority: 0.7, changeFrequency: "weekly" },
