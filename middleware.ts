@@ -23,6 +23,15 @@ function applySecurityHeaders(res: NextResponse, pathname: string): NextResponse
     return res;
   }
 
+  // Device redirect URLs (/r/<slug>) carry the per-device slug that
+  // activateDevice binds to. They must never land in a search index on ANY
+  // host: robots.txt only asks crawlers not to FETCH, while X-Robots-Tag stops
+  // the URL being INDEXED even if someone links to it. Same exposure we closed
+  // in the store imagery — a public slug plus the printed code is a claim kit.
+  if (pathname.startsWith("/r/")) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow, noarchive");
+  }
+
   // Strict-Transport-Security: HTTPS only in production. 1 year, include subdomains.
   if (process.env.NODE_ENV === "production") {
     res.headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");

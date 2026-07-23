@@ -1,9 +1,10 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
 import { saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
+import { gmailOAuthClient } from "@/lib/gmail/oauth-client";
 import { logger } from "@/lib/logger";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -39,16 +40,12 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/connections?error=oauth_denied", req.url));
   }
   if (!code || !state) {
-    return NextResponse.redirect(
-      new URL("/connections?error=oauth_missing_params", req.url),
-    );
+    return NextResponse.redirect(new URL("/connections?error=oauth_missing_params", req.url));
   }
 
   const cookieHash = req.cookies.get("oauth_state_sig")?.value;
   if (!cookieHash) {
-    return NextResponse.redirect(
-      new URL("/connections?error=oauth_missing_cookies", req.url),
-    );
+    return NextResponse.redirect(new URL("/connections?error=oauth_missing_cookies", req.url));
   }
 
   // Step 1: state verification (CSRF + replay + PKCE + org/user binding)
@@ -64,14 +61,12 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     logger.warn({ event: "oauth.gmail.state_invalid", error });
-    return NextResponse.redirect(
-      new URL("/connections?error=oauth_state_invalid", req.url),
-    );
+    return NextResponse.redirect(new URL("/connections?error=oauth_state_invalid", req.url));
   }
 
-  // Step 2: code → tokens (reuses the existing Google OAuth app creds)
-  const clientId = process.env.AUTH_GOOGLE_ID;
-  const clientSecret = process.env.AUTH_GOOGLE_SECRET;
+  // Step 2: code → tokens. Uses the Gmail-specific OAuth client when one is
+  // configured, so the restricted Gmail scopes stay off the main client.
+  const { clientId, clientSecret } = gmailOAuthClient();
   const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/gmail/callback`;
   if (!clientId || !clientSecret) {
     return NextResponse.json({ error: "google_oauth_not_configured" }, { status: 500 });
@@ -96,9 +91,7 @@ export async function GET(req: NextRequest) {
       { event: "oauth.gmail.token_exchange_failed", status: tokenRes.status, body: text },
       "gmail token exchange failed",
     );
-    return NextResponse.redirect(
-      new URL("/connections?error=oauth_token_exchange", req.url),
-    );
+    return NextResponse.redirect(new URL("/connections?error=oauth_token_exchange", req.url));
   }
 
   const tokens = (await tokenRes.json()) as {
@@ -124,9 +117,7 @@ export async function GET(req: NextRequest) {
     // Non-fatal — the label is a UI nicety; the externalId falls back below.
   }
 
-  const expiresAt = tokens.expires_in
-    ? new Date(Date.now() + tokens.expires_in * 1000)
-    : undefined;
+  const expiresAt = tokens.expires_in ? new Date(Date.now() + tokens.expires_in * 1000) : undefined;
   const scopes = tokens.scope?.split(/\s+/).filter(Boolean) ?? [];
 
   // Step 4: persist via the shared helper (envelope-encrypts + idempotent on
@@ -161,7 +152,10 @@ export async function GET(req: NextRequest) {
     });
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
-    logger.error({ event: "oauth.gmail.persist_failed", orgId, error }, "gmail connection persist failed");
+    logger.error(
+      { event: "oauth.gmail.persist_failed", orgId, error },
+      "gmail connection persist failed",
+    );
     return NextResponse.redirect(new URL("/connections?error=oauth_persist", req.url));
   }
 

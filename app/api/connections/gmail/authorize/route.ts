@@ -1,7 +1,8 @@
-import { type NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth/config";
+import { gmailOAuthClient } from "@/lib/gmail/oauth-client";
 import { logger } from "@/lib/logger";
 import { signOAuthState } from "@/lib/oauth/state";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,7 +26,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const clientId = process.env.AUTH_GOOGLE_ID;
+  const { clientId } = gmailOAuthClient();
   if (!clientId) {
     logger.error({ event: "oauth.gmail.no_client_id" });
     return NextResponse.json({ error: "google_oauth_not_configured" }, { status: 500 });

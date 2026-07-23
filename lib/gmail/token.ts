@@ -14,11 +14,12 @@
  * shared `saveConnection` (re-encrypts) so subsequent runs see a fresh expiry.
  */
 
-import type { Connection } from "@prisma/client";
 import { decryptAccessToken } from "@/lib/connections/adapters/refresh";
 import { saveConnection } from "@/lib/connections/oauth-helpers";
-import { decrypt, type EncryptionContext } from "@/lib/crypto/envelope";
+import { type EncryptionContext, decrypt } from "@/lib/crypto/envelope";
 import { logger } from "@/lib/logger";
+import type { Connection } from "@prisma/client";
+import { gmailOAuthClient } from "./oauth-client";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
 
@@ -44,9 +45,8 @@ export async function getGmailAccessToken(conn: Connection): Promise<string | nu
     return decryptAccessToken(conn);
   }
 
-  // Expired → refresh with the env Google app creds + the stored refresh token.
-  const clientId = process.env.AUTH_GOOGLE_ID;
-  const clientSecret = process.env.AUTH_GOOGLE_SECRET;
+  // Expired → refresh with the Gmail OAuth client creds + stored refresh token.
+  const { clientId, clientSecret } = gmailOAuthClient();
   if (!clientId || !clientSecret || !conn.refreshTokenCt) {
     // No way to refresh — fall back to the (possibly still-valid) stored token.
     return decryptAccessToken(conn);
@@ -77,7 +77,11 @@ export async function getGmailAccessToken(conn: Connection): Promise<string | nu
       }),
     });
     if (!res.ok) {
-      logger.warn({ event: "gmail.token.refresh_failed", connectionId: conn.id, status: res.status });
+      logger.warn({
+        event: "gmail.token.refresh_failed",
+        connectionId: conn.id,
+        status: res.status,
+      });
       return decryptAccessToken(conn);
     }
     const json = (await res.json()) as {

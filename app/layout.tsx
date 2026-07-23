@@ -57,6 +57,12 @@ export const metadata: Metadata = {
     "QR review stand",
     "AI phone receptionist",
   ],
+  // Google Search Console meta-tag verification. Set GOOGLE_SITE_VERIFICATION
+  // to the token from Search Console → "HTML tag" and redeploy. Leave unset to
+  // omit the tag entirely (DNS TXT verification needs nothing here).
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
   icons: {
     // Single source of truth — favicon.png covers the standard tab icon,
     // the 180×180 retina slot, and the apple-touch-icon. Cache-busted via
