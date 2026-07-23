@@ -1,0 +1,31 @@
+# repulabs — VPS cron schedule. GENERATED FROM vercel.json (which does nothing
+# off Vercel). Regenerate: python3 scripts/gen-cron.py
+#
+# Install as the deploy user:   crontab /opt/repulabs/deploy/repulabs.cron
+# Verify:                       crontab -l | grep api/cron
+# Each line calls the wrapper, which reads CRON_SECRET from .env.production and
+# hits the endpoint with the Bearer header. No secret lives in this file.
+SHELL=/bin/bash
+
+
+*/15 * * * * /opt/repulabs/deploy/cron-hit.sh sync-reviews
+*/30 * * * * /opt/repulabs/deploy/cron-hit.sh extract-topics
+0 13 * * *   /opt/repulabs/deploy/cron-hit.sh daily-digest
+* * * * *    /opt/repulabs/deploy/cron-hit.sh dispatch-outbound
+3 * * * *    /opt/repulabs/deploy/cron-hit.sh picker-reminder
+*/5 * * * *  /opt/repulabs/deploy/cron-hit.sh auto-reply-publish
+* * * * *    /opt/repulabs/deploy/cron-hit.sh dispatch-scheduled
+0 12 * * *   /opt/repulabs/deploy/cron-hit.sh daily-briefing
+0 6 * * 1    /opt/repulabs/deploy/cron-hit.sh ai-kb-refresh
+* * * * *    /opt/repulabs/deploy/cron-hit.sh dispatch-review-requests
+0 14 * * *   /opt/repulabs/deploy/cron-hit.sh dispute-status
+0 4 * * 0    /opt/repulabs/deploy/cron-hit.sh refresh-survey-insights
+*/15 * * * * /opt/repulabs/deploy/cron-hit.sh sync-connections
+*/5 * * * *  /opt/repulabs/deploy/cron-hit.sh gmail-sync
+*/30 * * * * /opt/repulabs/deploy/cron-hit.sh contacts-rollup
+*/15 * * * * /opt/repulabs/deploy/cron-hit.sh moderation-rescan
+*/5 * * * *  /opt/repulabs/deploy/cron-hit.sh livechat-stale-sweep
+* * * * *    /opt/repulabs/deploy/cron-hit.sh dispatch-social-posts
+0 7 * * *    /opt/repulabs/deploy/cron-hit.sh refresh-social-metrics
+0 6 * * 1    /opt/repulabs/deploy/cron-hit.sh seo-refresh
+0 14 * * 1   /opt/repulabs/deploy/cron-hit.sh autopilot-weekly

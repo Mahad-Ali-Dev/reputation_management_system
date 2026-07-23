@@ -60,10 +60,20 @@ your secrets manager), then restart.
    RESEND_API_KEY="re_..."                               # a Sending key from Resend
    CRON_SECRET="<openssl rand -base64 32>"               # required or scheduled sends stop
    ```
-3. Make sure the dispatch cron actually runs every minute and sends the auth header
-   `Authorization: Bearer <CRON_SECRET>` to:
-   `GET https://repulabs.com/api/cron/dispatch-review-requests`
-   (and the digest / picker-reminder crons if you use those).
+3. **Install the cron schedule** (all 21 jobs — review sync, request dispatch,
+   auto-reply, digests, …). `vercel.json` does NOT run on the VPS, so nothing is
+   scheduled until you do this ONCE, as the `deploy` user:
+   ```bash
+   chmod +x /opt/repulabs/deploy/cron-hit.sh
+   crontab /opt/repulabs/deploy/repulabs.cron
+   crontab -l | grep -c api/cron          # -> 21
+   # smoke-test one job by hand:
+   /opt/repulabs/deploy/cron-hit.sh sync-reviews && echo OK
+   ```
+   The crontab is generated from `vercel.json` (`scripts/gen-cron.py`); the
+   secret stays in `.env.production` and is read by `cron-hit.sh` at run time —
+   nothing sensitive is committed. Without this, review sync, review-request
+   dispatch and auto-reply all silently never run.
 4. Magic-link **login** uses the same email path — once the domain is verified, sign-in
    emails will actually arrive (this is why "auth wasn't working").
 
