@@ -68,6 +68,19 @@ function isPdf(file: File): boolean {
 }
 
 /**
+ * Plain-text uploads the KB can ingest by reading the bytes as UTF-8. The file
+ * picker's `accept` (.txt/.md) is only a hint, so we re-check here and reject
+ * anything else rather than ingest binary garbage as "text".
+ */
+function isTextFile(file: File): boolean {
+  return (
+    file.type.startsWith("text/") ||
+    file.type === "application/json" ||
+    /\.(txt|md|markdown|csv|json|log|text)$/i.test(file.name)
+  );
+}
+
+/**
  * Upload (or replace) a knowledge-base document for the chatbot.
  * Accepts manual paste (the `content` field) OR a `.pdf` file (text-extracted
  * server-side via lib/ai/pdf-extract). Both feed the same chunk→embed pipeline.
@@ -79,7 +92,8 @@ export async function uploadAiDocument(form: FormData): Promise<AiIngestResult> 
     await assertEntitled(orgId);
 
     const fileEntry = form.get("file");
-    const hasPdf = fileEntry instanceof File && fileEntry.size > 0 && isPdf(fileEntry);
+    const hasFile = fileEntry instanceof File && fileEntry.size > 0;
+    const hasPdf = hasFile && isPdf(fileEntry as File);
 
     let title: string;
     let content: string;
@@ -111,6 +125,40 @@ export async function uploadAiDocument(form: FormData): Promise<AiIngestResult> 
       content = extracted;
       establishmentId = meta.data.establishmentId;
       sourceType = "pdf";
+    } else if (hasFile) {
+      // Non-PDF file: the form accepts .txt/.md and promises "a file takes
+      // priority over pasted content", so read the bytes as UTF-8 text. Before
+      // this, any non-PDF file fell through to the textarea branch below and was
+      // silently ignored (upload appeared to do nothing).
+      const file = fileEntry as File;
+      if (!isTextFile(file)) {
+        return {
+          ok: false,
+          error: "Unsupported file type. Upload a PDF, .txt or .md file — or paste the text below.",
+        };
+      }
+      if (file.size > MAX_PDF_BYTES) {
+        return { ok: false, error: `File too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).` };
+      }
+      const meta = DocMetaSchema.safeParse({
+        title: (form.get("title") as string) || undefined,
+        establishmentId: form.get("establishmentId") || undefined,
+      });
+      if (!meta.success) {
+        return { ok: false, error: `Validation: ${meta.error.issues.map((i) => i.message).join("; ")}` };
+      }
+      const raw = (await file.text()).trim();
+      if (raw.length < 20) {
+        return {
+          ok: false,
+          error: "That file has too little readable text to index (needs at least ~20 characters).",
+        };
+      }
+      title =
+        (meta.data.title ?? file.name.replace(/\.[^.]+$/, "")).slice(0, 120) || "Uploaded document";
+      content = raw.slice(0, 200_000);
+      establishmentId = meta.data.establishmentId;
+      sourceType = "manual";
     } else {
       const parsed = DocSchema.safeParse({
         title: form.get("title"),

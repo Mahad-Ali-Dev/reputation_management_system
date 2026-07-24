@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth/config";
 import { gmailOAuthClient } from "@/lib/gmail/oauth-client";
 import { logger } from "@/lib/logger";
+import { oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
     pkceChallenge: challenge,
   } = await signOAuthState({ orgId, userId, provider: "gmail" });
 
-  const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/gmail/callback`;
+  const callbackUrl = oauthCallbackUrl("gmail");
 
   const params = new URLSearchParams({
     client_id: clientId,

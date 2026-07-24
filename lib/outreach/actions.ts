@@ -155,6 +155,18 @@ export async function createReviewRequest(form: FormData): Promise<OutreachActio
     }
   }
 
+  // Immediate send that reached the provider and FAILED (dispatched:false →
+  // status "failed") must surface as an error, not a false "Sent!". Before this,
+  // a delivery failure (e.g. Twilio/Resend rejecting or unconfigured) returned
+  // ok:true and the composer told the user it sent. Scheduled/queued sends are
+  // legitimately ok here — only an attempted-and-failed immediate send is not.
+  if (enq.status === "failed") {
+    return {
+      ok: false,
+      error: `We couldn't deliver the ${data.channel === "sms" ? "SMS" : "email"} right now. Please try again in a moment.`,
+    };
+  }
+
   // Auto-capture the recipient into the Contact directory. Fire-and-forget +
   // fail-soft (the hook never throws and dedupes internally) so it can't break
   // / slow the send. Recipient is an email or an E.164 phone depending on the

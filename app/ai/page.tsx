@@ -265,7 +265,7 @@ export default async function AiSettingsPage({
             <div className="akb-hero__art" aria-hidden="true">
               <img src="/assets/repulabs/ai-kb/hero-brain.svg" alt="" />
             </div>
-            <Link href="/ai" className="akb-btn-outline akb-hero__cta">
+            <Link href="/docs/ai-training" className="akb-btn-outline akb-hero__cta">
               <Icon name="play" size={15} />
               How it works
             </Link>

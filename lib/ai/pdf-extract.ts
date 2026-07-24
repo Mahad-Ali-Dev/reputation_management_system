@@ -44,17 +44,13 @@ type UnpdfModule = {
 
 async function tryUnpdf(buf: Buffer): Promise<string | null> {
   try {
-    // `unpdf` is an OPTIONAL dependency that may not be installed (see
-    // CODE_RESULT issues). A bare `import("unpdf")` makes tsc try to resolve the
-    // literal specifier and fail with TS2307. Building the specifier at runtime
-    // keeps the import dynamic-only: tsc can't statically resolve it (so no
-    // hard dependency on the type decls), and `next build` of unrelated routes
-    // can't break if the dep is absent. The `.catch` then no-ops to the naive
-    // fallback when the module genuinely isn't there.
-    const specifier = ["un", "pdf"].join("");
-    const mod = (await import(/* webpackIgnore: true */ /* @vite-ignore */ specifier).catch(
-      () => null,
-    )) as UnpdfModule | null;
+    // `unpdf` is a pure-JS PDF text extractor and a real dependency (see
+    // package.json). It's imported dynamically so it's only loaded on the KB
+    // upload path (keeps it out of the bundle of unrelated routes) and is listed
+    // in `serverExternalPackages` in next.config.mjs so Next traces + ships it
+    // instead of trying to bundle its worker. The `.catch` degrades to the naive
+    // fallback if the module ever fails to load at runtime.
+    const mod = (await import("unpdf").catch(() => null)) as UnpdfModule | null;
     if (!mod?.extractText) return null;
     const { text } = await mod.extractText(new Uint8Array(buf), { mergePages: true });
     const joined = Array.isArray(text) ? text.join("\n") : text;

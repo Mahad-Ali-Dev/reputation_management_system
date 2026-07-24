@@ -4,6 +4,7 @@ import { withTenant } from "@/lib/db/with-tenant";
 import { getAutomationRule, listAutomationRules } from "@/lib/outreach/automation";
 import Link from "next/link";
 import { AutomationForm } from "./automation-form";
+import { AutomationToolbar } from "./automation-toolbar";
 import { RuleToggle } from "./rule-toggle";
 
 /**
@@ -126,24 +127,7 @@ export async function AutomationTab({ orgId }: { orgId: string }) {
           <div className="rr-listbar__title">All automation rules</div>
           <span className="rr-chip rr-chip--pri">{rules.length}</span>
         </div>
-        <div className="rr-listbar__ctrls">
-          <span className="rr-filterctrl">
-            All status
-            <Icon name="chevD" size={13} />
-          </span>
-          <span className="rr-searchbox">
-            <Icon name="search" size={14} />
-            Search rules…
-          </span>
-          <div className="rr-viewtoggle" role="group" aria-label="View mode">
-            <button type="button" className="is-active" aria-label="List view" aria-pressed="true">
-              <Icon name="bars" size={15} />
-            </button>
-            <button type="button" aria-label="Grid view" aria-pressed="false">
-              <Icon name="grid" size={15} />
-            </button>
-          </div>
-        </div>
+        <AutomationToolbar targetId="rr-rules-list" />
       </div>
 
       {/* ── Rule list or empty state ── */}
@@ -167,7 +151,7 @@ export async function AutomationTab({ orgId }: { orgId: string }) {
           </div>
         </div>
       ) : (
-        <div className="rr-rules">
+        <div className="rr-rules" id="rr-rules-list">
           {rules.map((r) => {
             const meta = TRIGGER_META[r.trigger] ?? {
               title: `${r.trigger} automation`,
@@ -177,7 +161,12 @@ export async function AutomationTab({ orgId }: { orgId: string }) {
               img: "/assets/repulabs/review-request/auto-rule-purchase.svg",
             };
             return (
-              <div key={r.id ?? r.trigger} className="rr-card rr-rule">
+              <div
+                key={r.id ?? r.trigger}
+                className="rr-card rr-rule"
+                data-search={`${meta.title} ${meta.trigger} ${r.trigger}`.toLowerCase()}
+                data-status={r.enabled ? "active" : "paused"}
+              >
                 <div className={`rr-rule__tile rr-rule__tile--${meta.tile}`}>
                   {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
                   <img src={meta.img} alt="" aria-hidden="true" />

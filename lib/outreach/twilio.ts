@@ -33,7 +33,18 @@ export async function sendSms(args: {
   body: string;
   isFirstMessage?: boolean;
 }): Promise<SmsSendResult> {
-  const { sid, token, from } = getCreds();
+  // Read creds gracefully: an unconfigured Twilio must return {ok:false} like a
+  // network failure does, NOT throw. A throw here propagates uncaught through
+  // dispatch → enqueue → the send action's catch-all, surfacing the generic
+  // "Could not send the request. Try again." instead of a specific reason.
+  let sid: string;
+  let token: string;
+  let from: string;
+  try {
+    ({ sid, token, from } = getCreds());
+  } catch (err) {
+    return { ok: false, error: err instanceof Error ? err.message : "twilio_not_configured" };
+  }
 
   // Compose body with mandatory STOP footer
   const stopText = args.isFirstMessage

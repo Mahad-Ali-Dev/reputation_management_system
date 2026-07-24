@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { listReviewRequests, reviewRequestStats } from "@/lib/outreach/queries";
+import { HistoryFilters } from "./history-filters";
 import { ResendButton } from "./resend-button";
 
 /**
@@ -59,24 +60,7 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
       {/* Filter toolbar (inside the card header) */}
       <div className="rr-filters" style={{ padding: "16px 18px 0", margin: 0 }}>
         <div className="rr-filters__title">All sent requests</div>
-        <span className="rr-filterctrl">
-          All channels
-          <Icon name="chevD" size={13} />
-        </span>
-        <span className="rr-filterctrl">
-          All status
-          <Icon name="chevD" size={13} />
-        </span>
-        <span className="rr-searchbox" style={{ minWidth: 200 }}>
-          <Icon name="search" size={14} />
-          Search by recipient…
-        </span>
-        <button type="button" className="rr-iconbtn rr-iconbtn--sm" aria-label="Filters">
-          <Icon name="sliders" size={15} />
-        </button>
-        <button type="button" className="rr-iconbtn rr-iconbtn--sm" aria-label="Export">
-          <Icon name="download" size={15} />
-        </button>
+        <HistoryFilters targetId="rr-histtable-el" />
       </div>
 
       {!hasData ? (
@@ -91,7 +75,7 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
       ) : (
         <>
           <div style={{ overflowX: "auto", marginTop: 12 }}>
-            <table className="rr-table rr-histtable">
+            <table className="rr-table rr-histtable" id="rr-histtable-el">
               <thead>
                 <tr>
                   <th style={{ paddingLeft: 18 }}>Recipient</th>
@@ -109,7 +93,12 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
                   const when = r.sentAt ?? r.scheduledFor ?? r.createdAt;
                   const canResend = !["queued", "scheduled", "sending"].includes(r.status);
                   return (
-                    <tr key={r.id}>
+                    <tr
+                      key={r.id}
+                      data-search={`${displayName} ${r.recipient ?? ""}`.toLowerCase()}
+                      data-channel={r.channel === "email" ? "email" : "sms"}
+                      data-status={r.status}
+                    >
                       <td style={{ paddingLeft: 18 }}>
                         <div className="rr-cust">
                           <Avatar name={displayName} size={28} tone={tone} />
@@ -157,7 +146,7 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
             </table>
           </div>
           <div className="rr-pagination">
-            <span className="rr-pagination__info">
+            <span className="rr-pagination__info" id="rr-histtable-el-count">
               Showing 1 to {requests.length} of {requests.length} result{requests.length === 1 ? "" : "s"}
             </span>
             <div className="rr-pages">
@@ -221,7 +210,9 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
       {/* ── Table + (active only) live feed ── */}
       {hasData ? (
         <div className="rr-histgrid">
-          <div className="rr-histmain">{table}</div>
+          <div className="rr-histmain" id="sent-history-all" style={{ scrollMarginTop: 80 }}>
+            {table}
+          </div>
           <aside className="rr-card rr-feed" aria-label="Live activity feed">
             <div className="rr-feed__head">
               <div className="rr-feed__title">Sent history</div>
@@ -258,10 +249,10 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
               })}
             </div>
             <div className="rr-feed__foot">
-              <span className="rr-feedbtn" aria-hidden>
+              <a className="rr-feedbtn" href="#sent-history-all">
                 View all activity
                 <Icon name="arrowR" size={13} />
-              </span>
+              </a>
             </div>
           </aside>
         </div>

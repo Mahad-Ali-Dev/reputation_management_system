@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 /**
  * Collapsible "Add source" / source-management panel for the Knowledge tab.
@@ -22,6 +22,36 @@ export function SourcePanel({
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(Boolean(defaultOpen));
+
+  // The kit dashboard's cards — "Upload documents", "Connect website", "View
+  // all sources", the tab-bar "Add source" CTA and the quick-action rows — are
+  // all `<a href="#add-source">`. A bare hash anchor only SCROLLS; it never
+  // opened this disclosure, so those controls looked dead unless the panel
+  // happened to default open (empty KB). Reveal + scroll it whenever it's
+  // targeted: on mount (deep-link), on hashchange, and on any such anchor click
+  // (covers a repeat click where the hash is unchanged and no event fires).
+  useEffect(() => {
+    function reveal() {
+      setOpen(true);
+      requestAnimationFrame(() => {
+        document.getElementById("add-source")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    }
+    function onHash() {
+      if (window.location.hash === "#add-source") reveal();
+    }
+    function onClick(e: MouseEvent) {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest?.('a[href="#add-source"]')) reveal();
+    }
+    onHash();
+    window.addEventListener("hashchange", onHash);
+    document.addEventListener("click", onClick);
+    return () => {
+      window.removeEventListener("hashchange", onHash);
+      document.removeEventListener("click", onClick);
+    };
+  }, []);
 
   return (
     <section className="akb-card akb-card__pad" id="add-source">

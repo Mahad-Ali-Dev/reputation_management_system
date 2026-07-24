@@ -1,7 +1,7 @@
 import { Icon } from "@/components/shell/icon";
-import { deleteAccount } from "@/lib/account/actions";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
+import { DeleteWorkspaceForm } from "./_components/delete-workspace-form";
 
 /**
  * Data & export (designs/settings/date n export/date n export.png).
@@ -73,26 +73,7 @@ export default async function DataSettingsPage() {
           </div>
         </div>
 
-        <form action={deleteAccount} style={{ marginTop: 18 }}>
-          <label htmlFor="confirm" className="set-field__label" style={{ fontWeight: 600 }}>
-            Type <strong>{org.name}</strong> to confirm
-          </label>
-          <input
-            id="confirm"
-            name="confirm"
-            required
-            placeholder={org.name}
-            autoComplete="off"
-            className="set-input set-input--danger"
-            style={{ marginTop: 8 }}
-          />
-          <div className="set-actions">
-            <button type="submit" className="set-btn set-btn--danger">
-              <Icon name="trash" size={16} className="set-btn__ic" />
-              Delete this workspace
-            </button>
-          </div>
-        </form>
+        <DeleteWorkspaceForm orgName={org.name} />
       </section>
     </SettingsFrame>
   );

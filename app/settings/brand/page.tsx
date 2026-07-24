@@ -3,6 +3,7 @@ import { Icon } from "@/components/shell/icon";
 import { updateAccountSettings } from "@/lib/account/actions";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
+import { LogoUploader } from "./_components/logo-uploader";
 
 /**
  * Brand settings (designs/settings/brand/mockup.png).
@@ -74,15 +75,7 @@ export default async function BrandSettingsPage() {
                   )}
                 </span>
               </div>
-              <label className="set-dropzone" aria-label="Upload logo (PNG, SVG or JPG, max 2MB)">
-                <Icon name="upload" size={24} style={{ color: "#6366f1" }} />
-                <span className="set-dropzone__title">
-                  Drag &amp; drop or <b>click to upload</b>
-                </span>
-                <span className="set-dropzone__sub">PNG, SVG or JPG (max 2MB)</span>
-                {/* Self-serve hosted upload ships with the asset library. */}
-                <input type="file" accept="image/png,image/svg+xml,image/jpeg" disabled className="set-sr" />
-              </label>
+              <LogoUploader />
             </div>
           </div>
 
@@ -96,15 +89,12 @@ export default async function BrandSettingsPage() {
               placeholder="https://yourbusiness.com/logo.png"
             />
             <span className="set-field__hint">
-              Paste a public image URL (PNG or SVG, square works best). Hosted upload ships with the
-              asset library.
+              Paste a public image URL (PNG, JPG or WebP; square works best) — or use the uploader
+              above to upload directly.
             </span>
           </div>
 
           <div className="set-actions">
-            <button type="reset" className="set-btn">
-              Upload logo
-            </button>
             <button type="submit" className="set-btn set-btn--primary">
               <Icon name="check" size={16} className="set-btn__ic" />
               Save brand

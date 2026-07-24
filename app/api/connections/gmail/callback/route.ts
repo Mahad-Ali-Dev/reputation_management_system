@@ -3,7 +3,7 @@ import { saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
 import { gmailOAuthClient } from "@/lib/gmail/oauth-client";
 import { logger } from "@/lib/logger";
-import { oauthBase } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -72,7 +72,7 @@ export async function GET(req: NextRequest) {
   // Step 2: code → tokens. Uses the Gmail-specific OAuth client when one is
   // configured, so the restricted Gmail scopes stay off the main client.
   const { clientId, clientSecret } = gmailOAuthClient();
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/gmail/callback`;
+  const redirectUri = oauthCallbackUrl("gmail");
   if (!clientId || !clientSecret) {
     return NextResponse.json({ error: "google_oauth_not_configured" }, { status: 500 });
   }

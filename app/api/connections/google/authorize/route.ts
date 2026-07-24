@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth/config";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -71,7 +72,7 @@ export async function GET(req: NextRequest) {
   });
 
   // Encode establishmentId into the state cookie too, since we need it at callback time.
-  const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/google/callback`;
+  const callbackUrl = oauthCallbackUrl("google");
 
   const params = new URLSearchParams({
     client_id: clientId,

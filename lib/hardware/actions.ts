@@ -229,7 +229,23 @@ export async function activateDevice(
   _prev: ActivateDeviceState,
   form: FormData,
 ): Promise<ActivateDeviceState> {
-  const { orgId, userId } = await requireManagerOrg();
+  // This action feeds `useActionState`, so a THROWN error surfaces as a
+  // production crash digest instead of an inline message (the June-2026
+  // "throw + bare form" trap). `requireManagerOrg()` throws ForbiddenError for a
+  // signed-in user below manager — catch that and return {error}; let its
+  // `redirect("/login")` (a NEXT_ control-flow throw) propagate untouched.
+  let orgId: string;
+  let userId: string;
+  try {
+    ({ orgId, userId } = await requireManagerOrg());
+  } catch (err) {
+    if (err instanceof ForbiddenError) {
+      return {
+        error: "You need manager access to activate a device. Ask an admin or owner to activate it.",
+      };
+    }
+    throw err;
+  }
   const codeRaw = form.get("activationCode");
   const slugRaw = form.get("slug");
   const establishmentId = form.get("establishmentId");

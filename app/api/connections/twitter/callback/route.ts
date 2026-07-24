@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/config";
 import { saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
-import { oauthBase } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
 import { type NextRequest, NextResponse } from "next/server";
@@ -76,7 +76,7 @@ export async function GET(req: NextRequest) {
   // Step 2: code → tokens (PKCE; confidential client uses HTTP Basic auth)
   const clientId = process.env.X_CLIENT_ID;
   const clientSecret = process.env.X_CLIENT_SECRET;
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/twitter/callback`;
+  const redirectUri = oauthCallbackUrl("twitter");
   if (!clientId) {
     return NextResponse.redirect(
       new URL("/connections?error=twitter_not_configured", oauthBase(req)),

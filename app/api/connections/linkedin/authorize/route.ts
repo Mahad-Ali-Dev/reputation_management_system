@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
+import { oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
 import { type NextRequest, NextResponse } from "next/server";
@@ -38,7 +39,7 @@ export async function GET(req: NextRequest) {
 
   const { state, cookieHash } = await signOAuthState({ orgId, userId, provider: "linkedin" });
 
-  const callbackUrl = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/linkedin/callback`;
+  const callbackUrl = oauthCallbackUrl("linkedin");
 
   // `w_member_social` (post on behalf of the member) + OIDC scopes to resolve
   // the member id at connect for the author URN.

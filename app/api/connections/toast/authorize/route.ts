@@ -27,7 +27,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/connections?error=toast_not_configured", req.url));
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
+  // Strip any trailing slash so `${appUrl}/api/...` can't become a double-slash
+  // redirect_uri that fails the provider's exact-match check.
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin).replace(/\/+$/, "");
   const redirectUri = `${appUrl}/api/connections/toast/callback`;
   const { state, cookieHash } = await signProviderState({ orgId, userId, provider: "toast" });
 

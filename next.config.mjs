@@ -36,7 +36,9 @@ const nextConfig = {
   // Critical: do NOT upgrade archiver to v8. v8 is a pure-ESM rewrite that
   // replaces the factory with `new ZipArchive(...)`, ships zero TS types,
   // and breaks every call site in this codebase.
-  serverExternalPackages: ["archiver"],
+  // `unpdf` bundles a pdf.js worker that webpack mis-traces; opt it out so Next
+  // ships it as a runtime require (KB PDF extraction — lib/ai/pdf-extract.ts).
+  serverExternalPackages: ["archiver", "unpdf"],
   experimental: {
     serverActions: {
       // Must comfortably exceed the 8 MB KB-PDF cap (lib/ai/actions.ts) —

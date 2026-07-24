@@ -7,6 +7,7 @@ import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { validatePublicUrlSync } from "@/lib/net/ssrf";
+import { uploadToBlob } from "@/lib/uploads/blob";
 import { redirect } from "next/navigation";
 import { evaluateInvite } from "./invite-validation";
 import type { Prisma } from "@prisma/client";
@@ -81,6 +82,89 @@ export async function updateAccountSettings(form: FormData): Promise<void> {
 
   revalidatePath("/settings", "layout");
   revalidatePath("/dashboard");
+}
+
+const LOGO_MAX_BYTES = 5 * 1024 * 1024;
+
+export type LogoUploadResult = { ok: true; url: string } | { ok: false; error: string };
+
+/**
+ * Upload + persist the org logo from a real file (the Brand settings dropzone).
+ *
+ * Returns `{ok,url}` so the client island renders inline errors and updates the
+ * preview — it must NOT throw to a bare form (that crashes the page). The file
+ * goes through the shared blob pipeline (`org_logo`: PNG/JPEG/WebP ≤5 MB,
+ * magic-byte checked, SVG rejected as XSS). With no BLOB_READ_WRITE_TOKEN it
+ * falls back to a `data:` URL, which the unbounded `logo_url` text column holds,
+ * so upload still works in local dev.
+ */
+export async function uploadOrgLogo(form: FormData): Promise<LogoUploadResult> {
+  try {
+    const { orgId, userId } = await requireRole("admin");
+    const file = form.get("logo");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, error: "Choose an image file to upload." };
+    }
+    if (file.size > LOGO_MAX_BYTES) {
+      return { ok: false, error: "That image is over 5 MB. Use a smaller PNG, JPG or WebP." };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    let url: string;
+    try {
+      ({ url } = await uploadToBlob({
+        orgId,
+        context: "org_logo",
+        buffer,
+        mimeType: file.type.toLowerCase(),
+        filename: file.name || "logo",
+      }));
+    } catch (err) {
+      const reason = err instanceof Error ? err.message : "upload_failed";
+      if (reason.startsWith("mime_type_not_allowed")) {
+        return { ok: false, error: "Unsupported format — upload a PNG, JPG or WebP image (SVG isn't allowed)." };
+      }
+      if (reason.startsWith("file_too_large")) {
+        return { ok: false, error: "That image is too large. Use one under 5 MB." };
+      }
+      if (reason === "file_content_does_not_match_declared_type") {
+        return { ok: false, error: "That file doesn't look like a valid image. Try a different PNG, JPG or WebP." };
+      }
+      logger.error({ event: "account.logo.upload_failed", error: reason });
+      return { ok: false, error: "Couldn't upload that image. Try again." };
+    }
+
+    await withTenant(orgId, async (tx) => {
+      await tx.organization.update({ where: { id: orgId }, data: { logoUrl: url } });
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "account.logo.uploaded",
+          resourceType: "organization",
+          resourceId: orgId,
+          afterData: { via: "upload" },
+        },
+      });
+    });
+
+    revalidatePath("/settings", "layout");
+    revalidatePath("/dashboard");
+    return { ok: true, url };
+  } catch (err) {
+    // Let Next redirect/notFound control-flow propagate; map role denial inline.
+    const digest = (err as { digest?: unknown } | null)?.digest;
+    if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+    if (err instanceof ForbiddenError) {
+      return { ok: false, error: "Only owners and admins can change the logo." };
+    }
+    logger.error({
+      event: "account.logo.upload_error",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { ok: false, error: "Couldn't upload that image. Try again." };
+  }
 }
 
 // ============================================================

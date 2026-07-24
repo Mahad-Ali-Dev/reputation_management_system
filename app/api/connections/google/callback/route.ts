@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/config";
 import { encrypt } from "@/lib/crypto/envelope";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
-import { oauthBase } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
   // Step 2: code → tokens
   const clientId = process.env.AUTH_GOOGLE_ID;
   const clientSecret = process.env.AUTH_GOOGLE_SECRET;
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/google/callback`;
+  const redirectUri = oauthCallbackUrl("google");
   if (!clientId || !clientSecret) {
     return NextResponse.json({ error: "google_oauth_not_configured" }, { status: 500 });
   }

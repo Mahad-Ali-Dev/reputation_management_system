@@ -251,6 +251,21 @@ export function ConnectDeviceModal({
                       <Callout icon="info" title="Can't find the code?">
                         Check the card inside your package.
                       </Callout>
+
+                      {/* No physical device? The Continue button intentionally
+                          stays disabled until a real QR link + code are entered,
+                          which left customers without a card stuck here with no
+                          way forward. Point them at the free digital-QR path. */}
+                      <p className="cdm-helper" style={{ marginTop: 14 }}>
+                        Don&rsquo;t have a physical device yet?{" "}
+                        <Link
+                          href="/hardware/new"
+                          style={{ color: "var(--rl-primary, #4f46e5)", fontWeight: 600 }}
+                        >
+                          Create a free digital QR
+                        </Link>{" "}
+                        — no card needed.
+                      </p>
                     </div>
 
                     {/* Step 3 — Platform */}

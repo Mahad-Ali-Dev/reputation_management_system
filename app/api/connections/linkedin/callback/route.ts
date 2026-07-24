@@ -2,7 +2,7 @@ import { auth } from "@/lib/auth/config";
 import { saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
-import { oauthBase } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { verifyAndConsumeOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
 import { type NextRequest, NextResponse } from "next/server";
@@ -77,7 +77,7 @@ export async function GET(req: NextRequest) {
   // Step 2: code → tokens (client_secret in body; LinkedIn does not use PKCE)
   const clientId = process.env.LINKEDIN_CLIENT_ID;
   const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
-  const redirectUri = `${process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"}/api/connections/linkedin/callback`;
+  const redirectUri = oauthCallbackUrl("linkedin");
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(
       new URL("/connections?error=linkedin_not_configured", oauthBase(req)),

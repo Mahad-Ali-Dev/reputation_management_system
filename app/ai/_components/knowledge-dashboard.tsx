@@ -428,7 +428,7 @@ export function KnowledgeBody({
                       <div className="akb-bo__d">{d.body}</div>
                     </div>
                     <Link
-                      href="/ai?tab=knowledge"
+                      href="/ai/training#knowledge"
                       className="akb-icon-btn"
                       aria-label={`Edit ${d.title}`}
                     >
@@ -438,7 +438,7 @@ export function KnowledgeBody({
                 ))}
               </div>
               <div className="akb-card__foot">
-                <Link className="akb-link" href="/ai?tab=knowledge">
+                <Link className="akb-link" href="/ai/training#knowledge">
                   View all business details <Icon name="arrowR" size={13} />
                 </Link>
               </div>
@@ -459,7 +459,7 @@ export function KnowledgeBody({
                 Add information about your business to help AI answer better.
               </div>
               <Link
-                href="/ai?tab=knowledge"
+                href="/ai/training#knowledge"
                 className="akb-btn-outline"
                 style={{
                   marginTop: 6,
@@ -489,7 +489,7 @@ export function KnowledgeBody({
                   <Icon name="checkCircle" size={11} /> Saved
                 </span>
                 <Link
-                  href="/ai?tab=knowledge"
+                  href="/ai/training#knowledge"
                   className="akb-icon-btn"
                   aria-label="Edit location"
                 >
@@ -511,7 +511,15 @@ export function KnowledgeBody({
                   </span>
                 ))}
               </div>
-              <div className="akb-loc__times">
+              {/* Read-only mirror of the profile's hours. Editing lives in the
+                  AI Training workspace (per-day open/close inputs + autosave), so
+                  the whole row links there instead of faking in-place controls —
+                  otherwise the times/toggle looked interactive but did nothing. */}
+              <Link
+                href="/ai/training#knowledge"
+                className="akb-loc__times"
+                aria-label="Edit operating hours in AI Training"
+              >
                 <span className="akb-time">
                   {to12h(openTime)} <Icon name="chevD" size={12} />
                 </span>
@@ -519,14 +527,10 @@ export function KnowledgeBody({
                 <span className="akb-time">
                   {to12h(closeTime)} <Icon name="chevD" size={12} />
                 </span>
-                <span
-                  className="akb-toggle is-on"
-                  role="img"
-                  aria-label="Operating hours enabled"
-                >
+                <span className="akb-toggle is-on" role="img" aria-label="Operating hours enabled">
                   <span className="akb-toggle__knob" />
                 </span>
-              </div>
+              </Link>
             </>
           ) : (
             <div className="akb-empty">
