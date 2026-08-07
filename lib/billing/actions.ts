@@ -18,6 +18,15 @@ export async function createCheckoutSession(orgId: string, userEmail: string): P
   if (!STRIPE_PRO_PRICE_ID) {
     throw new Error("STRIPE_PRO_PRICE_ID not configured");
   }
+  // Stripe shows BOTH ids on the product page and they're easy to mix up:
+  // `prod_…` is the product ("Repulabs Pro"), `price_…` is the actual amount
+  // ("A$79/month"). checkout line_items needs the PRICE. Pasting the product id
+  // only failed later, as an opaque "No such price: prod_…" from the API.
+  if (!STRIPE_PRO_PRICE_ID.startsWith("price_")) {
+    throw new Error(
+      `STRIPE_PRO_PRICE_ID must be a price id (price_…), got "${STRIPE_PRO_PRICE_ID.slice(0, 5)}…". In Stripe → Product catalog → your Pro product → the Pricing table, copy the API ID of the PRICE row, not the product id.`,
+    );
+  }
 
   const org = await withTenant(orgId, (tx) =>
     tx.organization.findUnique({

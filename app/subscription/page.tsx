@@ -47,6 +47,8 @@ const ASSET = "/assets/repulabs/billing";
 const BILLING_ERRORS: Record<string, string> = {
   not_configured:
     "Billing isn't finished being set up — STRIPE_PRO_PRICE_ID isn't set on the server. Add the Pro price ID from your Stripe dashboard and restart the app.",
+  wrong_id_type:
+    "STRIPE_PRO_PRICE_ID is set to a Stripe PRODUCT id (prod_…) instead of a PRICE id (price_…). In Stripe → Product catalog → your Pro product, copy the API ID from the Pricing row (it starts with price_), then restart the app.",
   bad_price:
     "The configured Pro price no longer exists in this Stripe account. This usually means STRIPE_PRO_PRICE_ID still points at a test-mode price while the app is using live keys (or the price was replaced). Copy the current live price ID into STRIPE_PRO_PRICE_ID.",
   no_key:
@@ -62,6 +64,8 @@ function billingErrorCode(err: unknown): string {
   const msg = err instanceof Error ? err.message : String(err);
   const type = (err as { type?: string } | null)?.type;
   const code = (err as { code?: string } | null)?.code;
+  if (msg.includes("must be a price id")) return "wrong_id_type";
+  if (/no such price: '?prod_/i.test(msg)) return "wrong_id_type";
   if (msg.includes("STRIPE_PRO_PRICE_ID")) return "not_configured";
   if (msg.includes("STRIPE_SECRET_KEY")) return "no_key";
   if (msg === "org_not_found") return "org";
