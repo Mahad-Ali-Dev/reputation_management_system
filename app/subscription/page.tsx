@@ -8,6 +8,7 @@ import { createCheckoutSession, createPortalSession } from "@/lib/billing/action
 import { PLAN_FEATURES, PRO_PRICE_AUD } from "@/lib/billing/plans";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { logger } from "@/lib/logger";
 import { redirect } from "next/navigation";
 import "./subscription-bill.css";
 
@@ -35,10 +36,46 @@ export const dynamic = "force-dynamic";
 
 const ASSET = "/assets/repulabs/billing";
 
+/**
+ * Why the upgrade/portal button couldn't reach Stripe. These map the throw
+ * reasons from lib/billing/actions.ts onto something an owner can act on.
+ *
+ * Before this existed, `upgradeAction` let those errors throw out of a bare
+ * `<form action>` — which Next.js turns into a masked production crash page, so
+ * "Upgrade to Pro" simply looked like a broken link with no clue why.
+ */
+const BILLING_ERRORS: Record<string, string> = {
+  not_configured:
+    "Billing isn't finished being set up — STRIPE_PRO_PRICE_ID isn't set on the server. Add the Pro price ID from your Stripe dashboard and restart the app.",
+  bad_price:
+    "The configured Pro price no longer exists in this Stripe account. This usually means STRIPE_PRO_PRICE_ID still points at a test-mode price while the app is using live keys (or the price was replaced). Copy the current live price ID into STRIPE_PRO_PRICE_ID.",
+  no_key:
+    "Stripe isn't configured on the server (missing STRIPE_SECRET_KEY). Add it to the environment and restart.",
+  auth: "Stripe rejected the API key. Check STRIPE_SECRET_KEY is the live key for the account that owns the Pro price.",
+  no_customer: "No Stripe customer exists for this workspace yet — start a subscription first.",
+  org: "We couldn't load this workspace. Refresh and try again.",
+  failed: "Something went wrong reaching Stripe. Try again, or contact support if it persists.",
+};
+
+/** Map a thrown billing error onto a BILLING_ERRORS key. */
+function billingErrorCode(err: unknown): string {
+  const msg = err instanceof Error ? err.message : String(err);
+  const type = (err as { type?: string } | null)?.type;
+  const code = (err as { code?: string } | null)?.code;
+  if (msg.includes("STRIPE_PRO_PRICE_ID")) return "not_configured";
+  if (msg.includes("STRIPE_SECRET_KEY")) return "no_key";
+  if (msg === "org_not_found") return "org";
+  if (msg === "no_stripe_customer") return "no_customer";
+  if (type === "StripeAuthenticationError") return "auth";
+  // Stripe: "No such price: price_… " / resource_missing on a live/test mismatch.
+  if (code === "resource_missing" || /no such (price|plan|customer)/i.test(msg)) return "bad_price";
+  return "failed";
+}
+
 export default async function SubscriptionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ cancel?: string }>;
+  searchParams: Promise<{ cancel?: string; billing_error?: string }>;
 }) {
   const { orgId, userEmail } = await getOrgContext();
   const params = await searchParams;
@@ -124,6 +161,17 @@ export default async function SubscriptionPage({
             </form>
           )}
         </header>
+
+        {params.billing_error && (
+          <div
+            className="bill-notice"
+            role="alert"
+            style={{ borderColor: "#e14d62", background: "rgba(225,77,98,0.06)" }}
+          >
+            <strong>We couldn&apos;t open Stripe Checkout.</strong>{" "}
+            {BILLING_ERRORS[params.billing_error] ?? BILLING_ERRORS.failed}
+          </div>
+        )}
 
         {params.cancel === "submitted" && (
           <div className="bill-notice">
@@ -519,7 +567,25 @@ async function upgradeAction() {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const email = session?.user?.email;
   if (!session || !orgId || !email) redirect("/login");
-  const url = await createCheckoutSession(orgId, email);
+
+  // A Stripe failure here must NOT escape the action: this is a bare
+  // `<form action>`, so a throw becomes a masked production crash page and the
+  // upgrade button reads as a broken link. Redirect back with a reason instead.
+  // NOTE: redirect() signals via a thrown NEXT_REDIRECT, so the success redirect
+  // stays OUTSIDE the try — otherwise the catch would swallow it.
+  let url: string;
+  try {
+    url = await createCheckoutSession(orgId, email);
+  } catch (err) {
+    const code = billingErrorCode(err);
+    logger.error({
+      orgId,
+      code,
+      error: err instanceof Error ? err.message : String(err),
+      event: "billing.checkout.failed",
+    });
+    redirect(`/subscription?billing_error=${code}`);
+  }
   redirect(url);
 }
 
@@ -528,6 +594,19 @@ async function portalAction() {
   const session = await auth();
   const orgId = (session as { orgId?: string } | null)?.orgId;
   if (!session || !orgId) redirect("/login");
-  const url = await createPortalSession(orgId);
+
+  let url: string;
+  try {
+    url = await createPortalSession(orgId);
+  } catch (err) {
+    const code = billingErrorCode(err);
+    logger.error({
+      orgId,
+      code,
+      error: err instanceof Error ? err.message : String(err),
+      event: "billing.portal.failed",
+    });
+    redirect(`/subscription?billing_error=${code}`);
+  }
   redirect(url);
 }
