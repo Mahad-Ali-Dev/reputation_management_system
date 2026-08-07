@@ -8,6 +8,7 @@ import { Resend as ResendClient } from "resend";
 
 import { prisma } from "@/lib/db/client";
 import { magicLinkEmail } from "@/lib/email/templates";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { logger } from "@/lib/logger";
 
 type AuthProvider = NonNullable<NextAuthConfig["providers"]>[number];
@@ -52,6 +53,11 @@ if (process.env.RESEND_API_KEY) {
       from: process.env.EMAIL_FROM ?? "Repulabs <auth@repulabs.com>",
       async sendVerificationRequest({ identifier: email, url, provider }) {
         const fromAddress = provider.from ?? process.env.EMAIL_FROM ?? "auth@repulabs.com";
+        // Magic link was the ONE sender that skipped this guard, so a
+        // *.resend.dev sandbox `from` failed silently here: Resend accepts the
+        // send and returns no error, but only delivers to the Resend account
+        // owner — every other user just never receives their sign-in link.
+        assertSendableEmailConfig(fromAddress);
         const { html, text } = magicLinkEmail(url);
         const { error } = await getResend().emails.send({
           from: fromAddress,

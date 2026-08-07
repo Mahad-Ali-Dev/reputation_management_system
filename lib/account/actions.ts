@@ -5,6 +5,7 @@ import { auth, signOut } from "@/lib/auth/config";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { sendTeamInviteEmail } from "@/lib/email/team-invite";
 import { logger } from "@/lib/logger";
 import { validatePublicUrlSync } from "@/lib/net/ssrf";
 import { uploadToBlob } from "@/lib/uploads/blob";
@@ -229,11 +230,38 @@ export async function inviteTeammate(form: FormData): Promise<void> {
     });
   });
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000").replace(/\/+$/, "");
   const acceptUrl = `${appUrl}/accept-invite?token=${plaintextToken}`;
+
+  // Actually EMAIL the invitation. Previously this only logged the accept URL,
+  // so the invitee never heard anything and the button looked broken.
+  const [inviter, org] = await Promise.all([
+    prisma.user.findUnique({ where: { id: userId }, select: { name: true, email: true } }),
+    withTenant(orgId, (tx) =>
+      tx.organization.findUnique({ where: { id: orgId }, select: { name: true } }),
+    ),
+  ]);
+  const delivery = await sendTeamInviteEmail({
+    to: parsed.data.email,
+    inviterName: inviter?.name ?? inviter?.email ?? "A teammate",
+    orgName: org?.name ?? "your workspace",
+    acceptUrl,
+    orgId,
+  });
+
   logger.info(
-    { event: "team.invite.created", orgId, email: parsed.data.email, acceptUrl },
-    "team invitation created — share the accept URL with the invitee",
+    {
+      event: "team.invite.created",
+      orgId,
+      email: parsed.data.email,
+      emailSent: delivery.sent,
+      // Keep the URL in the log so an admin can still deliver it by hand when
+      // email is unconfigured or Resend rejects the send.
+      ...(delivery.sent ? {} : { acceptUrl, reason: delivery.reason }),
+    },
+    delivery.sent
+      ? "team invitation created + emailed"
+      : "team invitation created but email NOT sent — share the accept URL with the invitee",
   );
 
   revalidatePath("/settings", "layout");
