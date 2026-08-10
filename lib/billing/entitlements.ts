@@ -45,7 +45,9 @@ export class PlanInactiveError extends Error {
   }
 }
 
-async function loadPlan(orgId: string): Promise<{ plan: string; trialEndsAt: Date | null } | null> {
+export async function loadPlan(
+  orgId: string,
+): Promise<{ plan: string; trialEndsAt: Date | null } | null> {
   // Reads the caller's OWN org by verified session orgId — the documented
   // auth-domain exception to the withTenant rule.
   return prisma.organization.findUnique({

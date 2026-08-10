@@ -347,7 +347,13 @@ export function Composer({
     startSubmit(async () => {
       try {
         if (action === "publish") {
-          await publishSocialPostNow(fd);
+          // Quota / plan rejections come back as {ok:false} rather than throwing,
+          // so the real reason survives Next's production error masking.
+          const res = await publishSocialPostNow(fd);
+          if (!res.ok) {
+            setError(res.error);
+            return;
+          }
           setSuccess("Publishing now…");
         } else {
           await createSocialPost(fd);

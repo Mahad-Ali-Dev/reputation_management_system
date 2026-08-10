@@ -23,6 +23,7 @@
  */
 
 import { isProductionRuntime } from "@/lib/secrets";
+import { getPostQuota } from "@/lib/social/quota";
 import {
   publishSocialPost,
   type PlatformPublishResult,
@@ -80,6 +81,31 @@ export async function dispatchDuePost(postId: string, orgId: string): Promise<Di
   // finds it already resolved no-ops.
   if (post.status !== "publishing") {
     return { status: "skipped", postId, reason: `not_publishing(${post.status})` };
+  }
+
+  // Daily publishing cap. Enforced HERE as well as in the "Publish now" action
+  // so a tenant can't queue 50 posts overnight and bypass the limit — the cron
+  // is the other way a post reaches a platform.
+  //
+  // Over quota → put the post BACK to `scheduled` rather than failing it: the
+  // post is fine, it's just the wrong day. The next tick after midnight UTC
+  // picks it up. (Failing it would need a manual retry to ever publish.)
+  const quota = await getPostQuota(orgId);
+  if (!quota.allowed) {
+    await withTenant(orgId, (tx) =>
+      tx.socialPost.updateMany({
+        where: { id: postId, status: "publishing" },
+        data: { status: "scheduled", error: null },
+      }),
+    ).catch(() => {});
+    logger.info({
+      orgId,
+      postId,
+      used: quota.used,
+      limit: quota.limit,
+      event: "social.dispatch.quota_deferred",
+    });
+    return { status: "skipped", postId, reason: "daily_quota_reached" };
   }
 
   // Pre-publish validation (IG-needs-media, X-280, …). Fail → mark failed.

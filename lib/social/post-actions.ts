@@ -4,6 +4,10 @@ import { MODELS, anthropic } from "@/lib/ai/client";
 import { auth } from "@/lib/auth/config";
 import { requireRole } from "@/lib/auth/rbac";
 import { assertEntitled } from "@/lib/billing/entitlements";
+import { getPostQuota } from "@/lib/social/quota";
+
+/** Result of "Publish now" — quota/plan rejections come back inline, not thrown. */
+export type PublishNowResult = { ok: true } | { ok: false; error: string };
 import { dispatchDuePost } from "@/lib/social/dispatch";
 import {
   generateCaptions as generateCaptionsV2,
@@ -125,9 +129,26 @@ export async function createSocialPost(form: FormData): Promise<void> {
  * The dispatch core is env-gated; with no connected platform it stub-publishes
  * in dev / fails cleanly in prod (no live paid call by default).
  */
-export async function publishSocialPostNow(form: FormData): Promise<void> {
+export async function publishSocialPostNow(form: FormData): Promise<PublishNowResult> {
   const { orgId } = await requireOrg();
   await assertEntitled(orgId);
+
+  // Daily publishing cap (Pro/trial: 7/day). Checked BEFORE the row is claimed
+  // into `publishing`, so a quota rejection can't strand a post mid-state.
+  //
+  // RETURNED, not thrown: hitting your daily limit is an expected condition, and
+  // Next.js MASKS thrown server-action messages in production — the user would
+  // get a generic error instead of "5/7 posts used today".
+  const quota = await getPostQuota(orgId);
+  if (!quota.allowed) {
+    return {
+      ok: false,
+      error:
+        quota.limit === 0
+          ? "Publishing isn't included on your current plan."
+          : `Daily posting limit reached — you've published ${quota.used} of ${quota.limit} posts today. The limit resets at midnight UTC.`,
+    };
+  }
 
   const existingId = (form.get("id") as string) || "";
   let postId: string;
@@ -187,6 +208,7 @@ export async function publishSocialPostNow(form: FormData): Promise<void> {
   await dispatchDuePost(postId, orgId);
   revalidatePath("/social/posts");
   revalidatePath("/social/calendar");
+  return { ok: true };
 }
 
 /**
