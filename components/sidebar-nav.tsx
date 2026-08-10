@@ -62,7 +62,7 @@ const NAV: NavItem[] = [
 
   { group: "AI Engine" },
   { href: "/ai", label: "AI Knowledge Base", icon: "brain" },
-  { href: "/phone", label: "AI Phone Receptionist", icon: "phone", badge: "AI" },
+  { href: "/phone", label: "AI Phone Receptionist", icon: "phone", badge: "Soon" },
 
   { group: "Reviews" },
   { href: "/reviews", label: "Review Feed", icon: "star" },
@@ -70,8 +70,8 @@ const NAV: NavItem[] = [
   { href: "/reviews/dispute", label: "Dispute Center", icon: "flag" },
 
   { group: "Social & Messaging" },
-  { href: "/support", label: "Unified Inbox", icon: "chat", pro: "advanced_inbox" },
-  { href: "/support?tab=meetings", label: "Meeting Requests", icon: "cal" },
+  { href: "/support", label: "Unified Inbox", icon: "chat", badge: "Soon" },
+  { href: "/support?tab=meetings", label: "Meeting Requests", icon: "cal", badge: "Soon" },
   { href: "/social/posts", label: "Post Creator", icon: "share", pro: "image_creatives" },
 
   { group: "Engagement & CRM" },
@@ -79,7 +79,7 @@ const NAV: NavItem[] = [
   { href: "/contacts", label: "Contact Directory", icon: "users" },
 
   { group: "Intelligence" },
-  { href: "/analytics", label: "Business Reports", icon: "bars" },
+  { href: "/analytics", label: "Business Reports", icon: "bars", badge: "Soon" },
 
   { group: "Settings" },
   { href: "/connections", label: "Connections", icon: "plug" },

@@ -1,4 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import { ComingSoonPage } from "@/components/coming-soon";
 import { PageHeader } from "@/components/page-header";
 import { TopBar } from "@/components/topbar";
 import { Icon } from "@/components/shell/icon";
@@ -26,7 +27,14 @@ import { InboxShell, type InboxSearchParams } from "./_components/inbox-shell";
 
 export const dynamic = "force-dynamic";
 
-export default async function SupportInboxPage({
+export default async function SupportInboxPage() {
+  // LOCKED: not released yet — locked on every plan, Pro included. This also
+  // supersedes the entitlement gate in <InboxShell> while the lock is on.
+  // To release: delete these two lines and restore the signature below.
+  return <ComingSoonPage module="inbox" />;
+}
+
+async function SupportInboxPageLocked({
   searchParams,
 }: {
   searchParams: Promise<InboxSearchParams>;

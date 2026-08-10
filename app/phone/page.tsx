@@ -1,4 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import { ComingSoonPage } from "@/components/coming-soon";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
@@ -32,6 +33,12 @@ const TRANSCRIPT_ILLO = "/assets/repulabs/phone/transcript-to-review.svg";
 const TRANSCRIPT_EMPTY_ILLO = "/assets/repulabs/phone/transcript-empty.svg";
 
 export default async function PhoneDashboardPage() {
+  // LOCKED: not released yet — locked on every plan, Pro included.
+  // To release: delete these two lines (the dashboard below is intact).
+  return <ComingSoonPage module="phone" />;
+}
+
+async function PhoneDashboardPageLocked() {
   const { orgId } = await getOrgContext();
 
   const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

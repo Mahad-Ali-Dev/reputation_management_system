@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { AppShellServer } from "@/components/app-shell-server";
+import { ComingSoonPage } from "@/components/coming-soon";
 import { TopBar } from "@/components/topbar";
 import { PageHeader } from "@/components/page-header";
 import { UpgradeCard } from "@/components/pro-gate";
@@ -58,7 +59,14 @@ type SearchParams = { tab?: string; range?: string };
  * shows the report tabs. Every SEO read is fail-soft (the SEO tables aren't
  * migrated until the founder applies the SQL), so this never 500s.
  */
-export default async function AnalyticsPage({
+export default async function AnalyticsPage() {
+  // LOCKED: not released yet — locked on every plan, Pro included. Also parks
+  // the unresolved prod crash on this route (see business-reports notes).
+  // To release: delete these two lines and restore the signature below.
+  return <ComingSoonPage module="reports" />;
+}
+
+async function AnalyticsPageLocked({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
