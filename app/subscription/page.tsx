@@ -50,7 +50,7 @@ const BILLING_ERRORS: Record<string, string> = {
   wrong_id_type:
     "STRIPE_PRO_PRICE_ID is set to a Stripe PRODUCT id (prod_…) instead of a PRICE id (price_…). In Stripe → Product catalog → your Pro product, copy the API ID from the Pricing row (it starts with price_), then restart the app.",
   bad_price:
-    "The configured Pro price no longer exists in this Stripe account. This usually means STRIPE_PRO_PRICE_ID still points at a test-mode price while the app is using live keys (or the price was replaced). Copy the current live price ID into STRIPE_PRO_PRICE_ID.",
+    "Stripe doesn't have that price. STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID must be from the SAME Stripe mode — price ids are mode-specific, so a live price is invisible to a test key and vice versa. Swap the key, the price id, the webhook secret and the publishable key together as one set.",
   no_key:
     "Stripe isn't configured on the server (missing STRIPE_SECRET_KEY). Add it to the environment and restart.",
   auth: "Stripe rejected the API key. Check STRIPE_SECRET_KEY is the live key for the account that owns the Pro price.",
