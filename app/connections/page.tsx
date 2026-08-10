@@ -129,29 +129,22 @@ type SectionDef = {
   providerIds: string[];
 };
 
+/**
+ * SCOPED CATALOG (2026-08). Trimmed to what the product actually ships:
+ * Google reviews + the content-publishing channels + email.
+ *
+ * POS, CRM, ecommerce and accounting tiles were removed from the UI. Their
+ * registry entries and adapters are UNTOUCHED on disk (lib/providers/registry.ts,
+ * lib/connections/adapters/*) — re-listing one is a single line here. WhatsApp
+ * was dropped too; its tile 404'd (QA BUG-038).
+ *
+ * Anything a tenant already connected still appears in the Connected table
+ * below, so trimming this list never hides a live connection.
+ */
 const SECTION_DEFS: SectionDef[] = [
   { key: "reviews", providerIds: ["google_business"] },
-  { key: "social", providerIds: ["meta", "whatsapp", "linkedin", "twitter"] },
-  { key: "pos", providerIds: ["square_pos", "toast_pos", "clover_pos", "lightspeed_pos"] },
-  {
-    key: "crm",
-    providerIds: [
-      "hubspot",
-      "salesforce",
-      "zoho",
-      "shopify",
-      "quickbooks",
-      "xero",
-      "mailchimp",
-      "klaviyo",
-      "activecampaign",
-      "brevo",
-      "convertkit",
-      "getresponse",
-      "omnisend",
-      "squarespace",
-    ],
-  },
+  { key: "social", providerIds: ["meta", "linkedin", "twitter"] },
+  { key: "email", providerIds: ["gmail"] },
 ];
 
 /** Resolve a provider id to its catalog entry (registry ∪ the Meta overlay). */
