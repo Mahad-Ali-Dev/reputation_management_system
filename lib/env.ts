@@ -152,6 +152,10 @@ const schema = z.object({
 
   // Voyage embeddings
   VOYAGE_API_KEY: optionalString,
+  // HasData — scrapes PUBLIC Google Maps reviews from a Place ID, so reviews can
+  // sync without per-tenant OAuth or Google's GBP API allow-listing. Optional:
+  // absent, the HasData sync is skipped and only the GBP OAuth path runs.
+  HASDATA_API_KEY: optionalString,
 
   // ElevenLabs
   ELEVENLABS_API_KEY: optionalString,
