@@ -21,14 +21,22 @@ export function PlacePicker({
   establishmentId,
   near,
   currentPlaceId,
+  initialQuery,
 }: {
   establishmentId: string;
   /** Biases search (usually the establishment's suburb/city). */
   near?: string | null;
   currentPlaceId?: string | null;
+  /**
+   * Pre-fills the box with the business name so an unlinked establishment finds
+   * its own listing without the owner retyping it. Only passed when NOT yet
+   * linked — otherwise every visit to a linked establishment would spend a
+   * search credit for nothing.
+   */
+  initialQuery?: string | null;
 }) {
   const router = useRouter();
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(initialQuery ?? "");
   const [results, setResults] = useState<PlaceCandidate[]>([]);
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState<string | null>(null);

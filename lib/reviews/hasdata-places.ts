@@ -45,7 +45,25 @@ export function isPlaceSearchEnabled(): boolean {
 function pickResults(payload: unknown): Record<string, unknown>[] {
   const p = payload as Record<string, unknown> | null;
   if (!p) return [];
-  for (const key of ["localResults", "local_results", "places", "results", "data"]) {
+
+  // HasData returns TWO different shapes depending on the query:
+  //   - an exact single match  → `placeResults` as a bare OBJECT
+  //   - an ambiguous search    → `localResults` as an ARRAY
+  // Only handling the array case made a perfect match look like "no results",
+  // which is the most common case (an owner types their own business name).
+  const single = p.placeResults ?? p.place_results;
+  if (single && typeof single === "object" && !Array.isArray(single)) {
+    return [single as Record<string, unknown>];
+  }
+
+  for (const key of [
+    "localResults",
+    "local_results",
+    "places",
+    "results",
+    "data",
+    "placeResults",
+  ]) {
     const v = p[key];
     if (Array.isArray(v)) return v as Record<string, unknown>[];
   }

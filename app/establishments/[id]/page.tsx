@@ -412,6 +412,7 @@ export default async function EstablishmentDetailPage({
                     establishmentId={establishment.id}
                     near={locality}
                     currentPlaceId={establishment.googlePlaceId}
+                    initialQuery={establishment.googlePlaceId ? null : establishment.name}
                   />
                 </>
               ) : (
@@ -424,6 +425,7 @@ export default async function EstablishmentDetailPage({
                     establishmentId={establishment.id}
                     near={locality}
                     currentPlaceId={establishment.googlePlaceId}
+                    initialQuery={establishment.googlePlaceId ? null : establishment.name}
                   />
                   <div
                     style={{
