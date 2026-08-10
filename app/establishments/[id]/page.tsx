@@ -6,11 +6,12 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
-import { deleteEstablishment, setGooglePlaceId } from "@/lib/establishments/actions";
+import { deleteEstablishment } from "@/lib/establishments/actions";
 import { getEstablishment } from "@/lib/establishments/queries";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EstablishmentMenu } from "../_components/establishment-menu";
+import { PlacePicker } from "../_components/place-picker";
 
 /**
  * Establishment detail — repulabs v2 design.
@@ -95,6 +96,9 @@ export default async function EstablishmentDetailPage({
   const googleConn = establishment.connections.find((c) => c.provider === "google_business");
   const addr = establishment.address as Address | null;
   const fullAddress = addressLine(addr);
+  // Biases the Maps search — a bare trade name matches nationwide, so the
+  // suburb/city is what surfaces THIS owner's listing first.
+  const locality = [addr?.city, addr?.region].filter(Boolean).join(" ") || null;
   const isVerified = !!googleConn;
   const maxBucket = Math.max(...Object.values(stats.buckets), 1);
 
@@ -386,13 +390,14 @@ export default async function EstablishmentDetailPage({
                       </div>
                     </div>
                   </div>
-                  {establishment.googlePlaceId ? (
+                  {establishment.googlePlaceId && (
                     <div
                       style={{
                         padding: 10,
                         background: "var(--surface-2)",
                         borderRadius: 8,
                         fontSize: 12,
+                        marginBottom: 12,
                       }}
                     >
                       <div className="lbl-mono" style={{ margin: 0, marginBottom: 4 }}>
@@ -402,24 +407,43 @@ export default async function EstablishmentDetailPage({
                         {establishment.googlePlaceId}
                       </code>
                     </div>
-                  ) : (
-                    <PlaceIdForm establishmentId={establishment.id} />
                   )}
+                  <PlacePicker
+                    establishmentId={establishment.id}
+                    near={locality}
+                    currentPlaceId={establishment.googlePlaceId}
+                  />
                 </>
               ) : (
                 <div>
-                  <p className="dim" style={{ fontSize: 13, lineHeight: 1.6 }}>
-                    Connect to start syncing reviews automatically. We'll pull every existing review
-                    and start drafting AI replies in your brand voice within minutes.
-                  </p>
-                  <a
-                    href={`/api/connections/google/authorize?establishmentId=${establishment.id}`}
-                    className="btn btn--pri"
-                    style={{ marginTop: 12 }}
+                  {/* Reviews sync from the PUBLIC Google listing via the picker
+                      below — no OAuth and no Google approval needed. The connect
+                      button stays as the secondary path because publishing
+                      replies back to Google still requires the GBP API. */}
+                  <PlacePicker
+                    establishmentId={establishment.id}
+                    near={locality}
+                    currentPlaceId={establishment.googlePlaceId}
+                  />
+                  <div
+                    style={{
+                      marginTop: 16,
+                      paddingTop: 14,
+                      borderTop: "1px solid var(--border)",
+                    }}
                   >
-                    <Icon name="google" size={12} />
-                    Connect Google Business Profile
-                  </a>
+                    <p className="dim" style={{ fontSize: 12.5, lineHeight: 1.6, margin: 0 }}>
+                      Want to publish replies back to Google from here? Connect the profile as well.
+                    </p>
+                    <a
+                      href={`/api/connections/google/authorize?establishmentId=${establishment.id}`}
+                      className="btn btn--sm"
+                      style={{ marginTop: 10 }}
+                    >
+                      <Icon name="google" size={12} />
+                      Connect Google Business Profile
+                    </a>
+                  </div>
                 </div>
               )}
             </div>
@@ -520,47 +544,6 @@ function Stat({
       </div>
       {stars && avg !== null && avg !== undefined && <Stars value={Math.round(avg)} size={10} />}
     </div>
-  );
-}
-
-function PlaceIdForm({ establishmentId }: { establishmentId: string }) {
-  return (
-    <form
-      action={async (form: FormData) => {
-        "use server";
-        const placeId = form.get("placeId");
-        if (typeof placeId === "string" && placeId.length > 0) {
-          await setGooglePlaceId(establishmentId, placeId.trim());
-        }
-      }}
-      className="col"
-      style={{ gap: 8, marginTop: 10 }}
-    >
-      <label className="col" style={{ gap: 4 }}>
-        <span className="lbl">Google Place ID</span>
-        <input
-          name="placeId"
-          required
-          placeholder="ChIJ..."
-          autoComplete="off"
-          style={{
-            width: "100%",
-            height: 38,
-            padding: "0 14px",
-            borderRadius: "var(--r)",
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-            fontFamily: "var(--f-mono)",
-            fontSize: 13,
-            outline: "none",
-          }}
-        />
-      </label>
-      <button type="submit" className="btn btn--pri btn--sm" style={{ alignSelf: "flex-start" }}>
-        <Icon name="check" size={11} />
-        Save
-      </button>
-    </form>
   );
 }
 
