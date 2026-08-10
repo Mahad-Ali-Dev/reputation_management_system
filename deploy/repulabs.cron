@@ -8,7 +8,10 @@
 SHELL=/bin/bash
 
 
-*/15 * * * * /opt/repulabs/deploy/cron-hit.sh sync-reviews
+# Reviews: HOURLY, not */15. Each sync paginates the listing via HasData and
+# every page costs credits. Incremental sync makes a steady-state run ~1 page,
+# but 96 runs/day still buys little on data that changes a few times a week.
+0 * * * * /opt/repulabs/deploy/cron-hit.sh sync-reviews
 */30 * * * * /opt/repulabs/deploy/cron-hit.sh extract-topics
 0 13 * * *   /opt/repulabs/deploy/cron-hit.sh daily-digest
 * * * * *    /opt/repulabs/deploy/cron-hit.sh dispatch-outbound

@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/db/client";
+import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { type NormalizedReview, ingestReviews } from "./ingest";
 
@@ -203,6 +204,8 @@ export async function fetchReviewsViaHasData(args: {
   placeId: string;
   /** Override the per-run cap (used by the manual backfill). */
   maxReviews?: number;
+  /** Walk the ENTIRE listing even if pages are already stored (backfill/repair). */
+  fullSync?: boolean;
 }): Promise<HasDataFetchResult> {
   const { orgId, establishmentId, placeId } = args;
   const apiKey = process.env.HASDATA_API_KEY;
@@ -212,6 +215,30 @@ export async function fetchReviewsViaHasData(args: {
 
   const envMax = Number.parseInt(process.env.HASDATA_MAX_REVIEWS ?? "", 10);
   const maxReviews = args.maxReviews ?? (Number.isFinite(envMax) && envMax > 0 ? envMax : 500);
+
+  // INCREMENTAL SYNC (cost control). Pages are sorted newestFirst, so once a
+  // whole page is already stored, everything after it is older and also stored —
+  // we can stop instead of walking the entire listing again.
+  //
+  // Why it matters: a 428-review listing is ~54 pages. Re-walking that every
+  // 15 minutes is ~5,200 paid calls/day to re-fetch reviews we already have.
+  // With this, the first run pays for the full backfill and steady-state runs
+  // cost ONE page. Pass `fullSync` to force the complete walk.
+  const known = new Set<string>();
+  if (!args.fullSync) {
+    try {
+      const rows = await withTenant(orgId, (tx) =>
+        tx.review.findMany({
+          where: { establishmentId, source: "google" },
+          select: { externalId: true },
+        }),
+      );
+      for (const r of rows) known.add(r.externalId);
+    } catch {
+      // Can't read what we already have → fall back to a full walk. Safer to
+      // overpay once than to silently miss reviews.
+    }
+  }
 
   const collected: NormalizedReview[] = [];
   const seen = new Set<string>();
@@ -234,14 +261,41 @@ export async function fetchReviewsViaHasData(args: {
       .filter((r): r is NormalizedReview => r !== null);
     if (batch.length === 0) break;
 
+    let newOnPage = 0;
     for (const r of batch) {
       if (seen.has(r.externalId)) continue;
       seen.add(r.externalId);
       collected.push(r);
+      if (!known.has(r.externalId)) newOnPage++;
     }
 
-    cursor = nextCursor(page.payload);
-    if (!cursor) break; // last page
+    // Whole page already stored → everything older is too (newestFirst). Stop.
+    if (!args.fullSync && known.size > 0 && newOnPage === 0) {
+      logger.info({
+        event: "reviews.hasdata.incremental_stop",
+        orgId,
+        establishmentId,
+        pages: pages,
+      });
+      break;
+    }
+
+    const next = nextCursor(page.payload);
+    if (!next) break; // last page
+    // If the token comes back UNCHANGED, our request param name isn't the one
+    // HasData reads — it's ignoring it and re-serving page 1. Without this the
+    // loop would spin to MAX_PAGES burning a credit per call for zero new
+    // reviews (dedup hides it, so the only symptom would be the bill).
+    if (next === cursor) {
+      logger.warn({
+        event: "reviews.hasdata.cursor_stalled",
+        orgId,
+        establishmentId,
+        pages,
+      });
+      break;
+    }
+    cursor = next;
   }
 
   if (collected.length === 0) {
