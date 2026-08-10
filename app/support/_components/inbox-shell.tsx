@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import "../support-kit.css";
 import { withTenant } from "@/lib/db/with-tenant";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
+import { ProGate } from "@/components/pro-gate";
 import { channelCounts, countNeedsAttention, countOpenThreads } from "@/lib/inbox/queries";
 import { softInbox } from "@/lib/inbox/fail-soft";
 import { commentStatusCounts, listComments } from "@/lib/inbox/comments";
@@ -71,11 +72,38 @@ export async function InboxShell({
 }) {
   const tab = searchParams.tab && VALID_TABS.has(searchParams.tab) ? searchParams.tab : "conversations";
 
-  const [openCount, needsAttention, newMeetings] = await Promise.all([
+  const [openCount, needsAttention, newMeetings, entitled] = await Promise.all([
     countOpenThreads(orgId),
     countNeedsAttention(orgId),
     countNewMeetingRequests(orgId),
+    isOrgEntitled(orgId),
   ]);
+
+  // ENTITLEMENT GATE (QA BUG-044). The Unified Inbox is a paid feature
+  // (`advanced_inbox`), but nothing enforced it: entitlement was read only
+  // inside ConversationsTab, and purely to toggle `aiEnabled`. Every other tab
+  // — meetings, live-chat, comments, moderation, automation, analytics —
+  // rendered in full on any plan. And because /support/{meetings,dms,live-chat,
+  // comments,analytics,blacklist,chat-automation,customers} all redirect into
+  // `/support?tab=…`, each of those was a way in.
+  //
+  // Gating HERE covers every tab and every one of those redirects in one place,
+  // so a new tab or sub-route can't silently reopen the hole.
+  if (!entitled) {
+    return (
+      <div className="uinbox">
+        <ProGate
+          feature="advanced_inbox"
+          hasAccess={false}
+          mode="replace"
+          title="Unified Inbox is a Pro feature"
+          description="Upgrade to bring reviews, DMs, comments, live chat and meeting requests into one workspace — with AI replies and automation."
+        >
+          <span />
+        </ProGate>
+      </div>
+    );
+  }
 
   return (
     <div className="uinbox">
