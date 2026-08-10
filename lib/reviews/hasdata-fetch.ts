@@ -159,7 +159,9 @@ async function fetchPage(
   placeId: string,
   cursor: string | null,
 ): Promise<{ ok: true; payload: unknown } | { ok: false; error: string }> {
-  const params = new URLSearchParams({ placeId, sortBy: "newest" });
+  // HasData's `sortBy` is a strict enum: mostRelevant | newestFirst | ratingHigh
+  // | ratingLow. Anything else 422s the whole request.
+  const params = new URLSearchParams({ placeId, sortBy: "newestFirst" });
   if (cursor) params.set("nextPageToken", cursor);
 
   const controller = new AbortController();
