@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { dispatchWebhookInBackground } from "@/lib/notifications/webhook";
+import { isMapsPlaceId } from "./hasdata-fetch";
 
 /**
  * Google Business Profile review fetcher.
@@ -82,6 +83,14 @@ export async function fetchReviewsForConnection(
       inserted: 0,
       error: `decrypt_failed: ${String(err)}`,
     };
+  }
+
+  // A Google MAPS Place ID ("ChIJ…") belongs to the HasData fetcher, not here:
+  // it is not a GBP location, so `accounts/-/locations/ChIJ…` can never resolve.
+  // Skipping it also stops BOTH fetchers claiming one establishment — which
+  // would store each review twice, once per source's external id.
+  if (isMapsPlaceId(conn.establishment.googlePlaceId)) {
+    return { establishmentId, fetched: 0, inserted: 0, error: "place_id_handled_by_hasdata" };
   }
 
   // googlePlaceId is what the tenant pasted. The GBP API needs accounts/{aId}/locations/{lId}.

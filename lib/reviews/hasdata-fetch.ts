@@ -26,6 +26,8 @@ import { type NormalizedReview, ingestReviews } from "./ingest";
 
 const HASDATA_REVIEWS_URL = "https://api.hasdata.com/scrape/google-maps/reviews";
 const REQUEST_TIMEOUT_MS = 30_000;
+/** Hard stop on the pagination loop — every page costs HasData credits. */
+const MAX_PAGES = 60;
 
 export type HasDataFetchResult = {
   establishmentId: string;
@@ -48,6 +50,26 @@ export function looksLikePlaceId(value: string | null | undefined): boolean {
   const v = value.trim();
   if (v.startsWith("accounts/") || v.includes("/locations/")) return false;
   return v.length >= 10;
+}
+
+/**
+ * True for a Google MAPS Place ID ("ChIJ…", "GhIJ…", "EiQ…") as opposed to a GBP
+ * location id (numeric) or a full resource name.
+ *
+ * Used to keep the two fetchers from BOTH claiming one establishment. The GBP
+ * fetcher selects by Connection row and HasData selects by Place ID, so an
+ * establishment with a connection AND a Place ID was picked up twice — which
+ * would insert each review under two different external ids (a GBP resource
+ * name and a HasData review id) once the GBP API is live. A Maps Place ID is
+ * also simply not a valid GBP location, so wrapping it as
+ * `accounts/-/locations/ChIJ…` could never have worked.
+ */
+export function isMapsPlaceId(value: string | null | undefined): boolean {
+  if (!value) return false;
+  const v = value.trim();
+  if (v.startsWith("accounts/") || v.includes("/locations/")) return false;
+  // GBP location ids are all-digits; a Maps Place ID is a mixed-case token.
+  return !/^\d+$/.test(v);
 }
 
 /** HasData's payload varies by listing; every field is treated as optional. */
@@ -117,14 +139,68 @@ function normalize(r: HasDataReview, placeId: string, index: number): Normalized
   };
 }
 
+/** Pull the next-page cursor out of whichever field this listing returned it in. */
+function nextCursor(payload: unknown): string | null {
+  const p = payload as Record<string, unknown> | null;
+  if (!p) return null;
+  const direct = p.nextPageToken ?? p.next_page_token ?? p.nextPage ?? p.cursor;
+  if (typeof direct === "string" && direct.length > 0) return direct;
+  const pag = (p.pagination ?? p.meta) as Record<string, unknown> | undefined;
+  if (pag) {
+    const nested = pag.nextPageToken ?? pag.next_page_token ?? pag.next ?? pag.cursor;
+    if (typeof nested === "string" && nested.length > 0) return nested;
+  }
+  return null;
+}
+
+/** One page. Separated so the pagination loop stays readable. */
+async function fetchPage(
+  apiKey: string,
+  placeId: string,
+  cursor: string | null,
+): Promise<{ ok: true; payload: unknown } | { ok: false; error: string }> {
+  const params = new URLSearchParams({ placeId, sortBy: "newest" });
+  if (cursor) params.set("nextPageToken", cursor);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  try {
+    const res = await fetch(`${HASDATA_REVIEWS_URL}?${params.toString()}`, {
+      headers: { "x-api-key": apiKey, accept: "application/json" },
+      signal: controller.signal,
+    });
+    clearTimeout(timer);
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      return { ok: false, error: `hasdata_${res.status}: ${text.slice(0, 160)}` };
+    }
+    try {
+      return { ok: true, payload: await res.json() };
+    } catch {
+      return { ok: false, error: "hasdata_bad_json" };
+    }
+  } catch (err) {
+    clearTimeout(timer);
+    const e = err instanceof Error ? err.message : String(err);
+    return { ok: false, error: `hasdata_fetch_failed: ${e.slice(0, 160)}` };
+  }
+}
+
 /**
  * Fetch + ingest public Google reviews for one establishment via HasData.
  * NEVER throws — all failures come back as `{ error }`.
+ *
+ * PAGINATES: HasData returns one page (~8-20 reviews) per call, so a listing
+ * with hundreds of reviews needs the cursor followed. Bounded by
+ * HASDATA_MAX_REVIEWS (default 500) and MAX_PAGES because every page costs
+ * credits — an unbounded loop on a busy listing is a real bill.
  */
 export async function fetchReviewsViaHasData(args: {
   orgId: string;
   establishmentId: string;
   placeId: string;
+  /** Override the per-run cap (used by the manual backfill). */
+  maxReviews?: number;
 }): Promise<HasDataFetchResult> {
   const { orgId, establishmentId, placeId } = args;
   const apiKey = process.env.HASDATA_API_KEY;
@@ -132,58 +208,50 @@ export async function fetchReviewsViaHasData(args: {
     return { establishmentId, fetched: 0, inserted: 0, error: "not_configured" };
   }
 
-  const url = `${HASDATA_REVIEWS_URL}?placeId=${encodeURIComponent(placeId)}`;
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
-  let res: Response;
-  try {
-    res = await fetch(url, {
-      headers: { "x-api-key": apiKey, accept: "application/json" },
-      signal: controller.signal,
-    });
-  } catch (err) {
-    clearTimeout(timer);
-    const e = err instanceof Error ? err.message : String(err);
-    logger.warn({ event: "reviews.hasdata.fetch_failed", orgId, establishmentId, error: e });
+  const envMax = Number.parseInt(process.env.HASDATA_MAX_REVIEWS ?? "", 10);
+  const maxReviews = args.maxReviews ?? (Number.isFinite(envMax) && envMax > 0 ? envMax : 500);
+
+  const collected: NormalizedReview[] = [];
+  const seen = new Set<string>();
+  let cursor: string | null = null;
+  let pages = 0;
+  let firstError: string | null = null;
+
+  while (pages < MAX_PAGES && collected.length < maxReviews) {
+    const page: Awaited<ReturnType<typeof fetchPage>> = await fetchPage(apiKey, placeId, cursor);
+    if (!page.ok) {
+      // A mid-pagination failure keeps whatever we already have rather than
+      // throwing the whole run away.
+      firstError = page.error;
+      break;
+    }
+    pages++;
+
+    const batch = pickReviews(page.payload)
+      .map((r, i) => normalize(r, placeId, collected.length + i))
+      .filter((r): r is NormalizedReview => r !== null);
+    if (batch.length === 0) break;
+
+    for (const r of batch) {
+      if (seen.has(r.externalId)) continue;
+      seen.add(r.externalId);
+      collected.push(r);
+    }
+
+    cursor = nextCursor(page.payload);
+    if (!cursor) break; // last page
+  }
+
+  if (collected.length === 0) {
     return {
       establishmentId,
       fetched: 0,
       inserted: 0,
-      error: `hasdata_fetch_failed: ${e.slice(0, 160)}`,
-    };
-  }
-  clearTimeout(timer);
-
-  if (!res.ok) {
-    const text = await res.text().catch(() => "");
-    logger.warn({
-      event: "reviews.hasdata.http_error",
-      orgId,
-      establishmentId,
-      status: res.status,
-    });
-    return {
-      establishmentId,
-      fetched: 0,
-      inserted: 0,
-      error: `hasdata_${res.status}: ${text.slice(0, 160)}`,
+      ...(firstError ? { error: firstError } : {}),
     };
   }
 
-  let payload: unknown;
-  try {
-    payload = await res.json();
-  } catch {
-    return { establishmentId, fetched: 0, inserted: 0, error: "hasdata_bad_json" };
-  }
-
-  const normalized = pickReviews(payload)
-    .map((r, i) => normalize(r, placeId, i))
-    .filter((r): r is NormalizedReview => r !== null);
-
-  if (normalized.length === 0) {
-    return { establishmentId, fetched: 0, inserted: 0 };
-  }
+  const normalized = collected.slice(0, maxReviews);
 
   const { fetched, inserted } = await ingestReviews({
     orgId,
@@ -197,8 +265,15 @@ export async function fetchReviewsViaHasData(args: {
     .update({ where: { id: establishmentId }, data: { updatedAt: new Date() } })
     .catch(() => {});
 
-  logger.info({ event: "reviews.hasdata.synced", orgId, establishmentId, fetched, inserted });
-  return { establishmentId, fetched, inserted };
+  logger.info({
+    event: "reviews.hasdata.synced",
+    orgId,
+    establishmentId,
+    pages,
+    fetched,
+    inserted,
+  });
+  return { establishmentId, fetched, inserted, ...(firstError ? { error: firstError } : {}) };
 }
 
 /**
