@@ -1,5 +1,6 @@
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { LIVE_ESTABLISHMENT } from "@/lib/reviews/scope";
 
 /**
  * Dashboard server queries.
@@ -139,7 +140,8 @@ function localityFromAddress(address: unknown): string | null {
   if (!address || typeof address !== "object") return null;
   const a = address as Record<string, unknown>;
   const city = typeof a.city === "string" ? a.city : null;
-  const region = typeof a.region === "string" ? a.region : typeof a.state === "string" ? a.state : null;
+  const region =
+    typeof a.region === "string" ? a.region : typeof a.state === "string" ? a.state : null;
   return city ?? region ?? null;
 }
 
@@ -193,24 +195,42 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         ratingAgg30d,
         ratingAggPrev30d,
       ] = await Promise.all([
-        tx.review.aggregate({ _avg: { rating: true }, _count: { _all: true } }),
-        tx.review.groupBy({ by: ["rating"], _count: { _all: true } }),
-        tx.review.count({ where: { postedAt: { gte: since7d } } }),
-        tx.review.count({ where: { postedAt: { gte: prev7dStart, lt: since7d } } }),
+        tx.review.aggregate({
+          where: { ...LIVE_ESTABLISHMENT },
+          _avg: { rating: true },
+          _count: { _all: true },
+        }),
+        tx.review.groupBy({
+          by: ["rating"],
+          where: { ...LIVE_ESTABLISHMENT },
+          _count: { _all: true },
+        }),
+        tx.review.count({ where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since7d } } }),
+        tx.review.count({
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prev7dStart, lt: since7d } },
+        }),
         tx.reviewReply.count({ where: { status: { in: ["published", "pending_review"] } } }),
         tx.reviewReply.count({ where: { status: "pending_review" } }),
-        tx.review.count({ where: { rating: { lte: 3 }, reply: { is: null } } }),
+        tx.review.count({
+          where: { ...LIVE_ESTABLISHMENT, rating: { lte: 3 }, reply: { is: null } },
+        }),
         tx.reviewReply.count({ where: { createdAt: { gte: since24h } } }),
         tx.review.findMany({
+          where: { ...LIVE_ESTABLISHMENT },
           orderBy: { postedAt: "desc" },
           take: 4,
           select: {
-            id: true, rating: true, reviewerName: true, body: true, postedAt: true,
-            source: true, reply: { select: { id: true } },
+            id: true,
+            rating: true,
+            reviewerName: true,
+            body: true,
+            postedAt: true,
+            source: true,
+            reply: { select: { id: true } },
           },
         }),
         tx.review.findMany({
-          where: { body: { not: null } },
+          where: { ...LIVE_ESTABLISHMENT, body: { not: null } },
           orderBy: [{ rating: "desc" }, { postedAt: "desc" }],
           take: 2,
           select: { id: true, rating: true, reviewerName: true, body: true },
@@ -220,7 +240,10 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
           take: 6,
           orderBy: { createdAt: "asc" },
           select: {
-            id: true, name: true, address: true, googlePlaceId: true,
+            id: true,
+            name: true,
+            address: true,
+            googlePlaceId: true,
             _count: {
               select: {
                 connections: { where: { status: "active" } },
@@ -234,34 +257,59 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         tx.connection.count({ where: { status: "active" } }),
         tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
         tx.review.findMany({
-          where: { postedAt: { gte: since12w } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since12w } },
           select: { postedAt: true, rating: true },
         }),
         tx.reviewReply.findMany({
-          where: { createdAt: { gte: since24h } }, orderBy: { createdAt: "desc" }, take: 8,
-          select: { id: true, createdAt: true, status: true, review: { select: { reviewerName: true } } },
+          where: { createdAt: { gte: since24h } },
+          orderBy: { createdAt: "desc" },
+          take: 8,
+          select: {
+            id: true,
+            createdAt: true,
+            status: true,
+            review: { select: { reviewerName: true } },
+          },
         }),
         tx.reviewRequest.findMany({
-          where: { createdAt: { gte: since24h } }, orderBy: { createdAt: "desc" }, take: 8,
+          where: { createdAt: { gte: since24h } },
+          orderBy: { createdAt: "desc" },
+          take: 8,
           select: {
-            id: true, createdAt: true, status: true, channel: true, recipient: true,
-            convertedAt: true, deliveredAt: true, openedAt: true,
+            id: true,
+            createdAt: true,
+            status: true,
+            channel: true,
+            recipient: true,
+            convertedAt: true,
+            deliveredAt: true,
+            openedAt: true,
           },
         }),
         tx.phoneCall.findMany({
-          where: { startedAt: { gte: since24h } }, orderBy: { startedAt: "desc" }, take: 4,
+          where: { startedAt: { gte: since24h } },
+          orderBy: { startedAt: "desc" },
+          take: 4,
           select: { id: true, startedAt: true, fromE164: true },
         }),
         tx.deviceScan.findMany({
-          where: { scannedAt: { gte: since24h } }, orderBy: { scannedAt: "desc" }, take: 4,
+          where: { scannedAt: { gte: since24h } },
+          orderBy: { scannedAt: "desc" },
+          take: 4,
           select: { id: true, scannedAt: true, country: true },
         }),
         // Funnel counts — explicit counts (per-field _count avoided to keep
         // typecheck robust across Prisma client variants).
         tx.reviewRequest.count({ where: { createdAt: { gte: since30d }, sentAt: { not: null } } }),
-        tx.reviewRequest.count({ where: { createdAt: { gte: since30d }, deliveredAt: { not: null } } }),
-        tx.reviewRequest.count({ where: { createdAt: { gte: since30d }, openedAt: { not: null } } }),
-        tx.reviewRequest.count({ where: { createdAt: { gte: since30d }, convertedAt: { not: null } } }),
+        tx.reviewRequest.count({
+          where: { createdAt: { gte: since30d }, deliveredAt: { not: null } },
+        }),
+        tx.reviewRequest.count({
+          where: { createdAt: { gte: since30d }, openedAt: { not: null } },
+        }),
+        tx.reviewRequest.count({
+          where: { createdAt: { gte: since30d }, convertedAt: { not: null } },
+        }),
         // ── Kit stat-chip + key-insight sources ──────────────────────────
         tx.reviewReply.count({ where: { status: "published" } }),
         // Recent published replies → weekly reply sparkline + avg response time
@@ -276,33 +324,69 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
             review: { select: { postedAt: true } },
           },
         }),
-        tx.review.count({ where: { postedAt: { gte: since30d } } }),
-        tx.review.count({ where: { postedAt: { gte: prev30dStart, lt: since30d } } }),
-        tx.review.count({ where: { rating: 5, postedAt: { gte: since30d } } }),
-        tx.review.count({ where: { rating: 5, postedAt: { gte: prev30dStart, lt: since30d } } }),
+        tx.review.count({ where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since30d } } }),
+        tx.review.count({
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prev30dStart, lt: since30d } },
+        }),
+        tx.review.count({
+          where: { ...LIVE_ESTABLISHMENT, rating: 5, postedAt: { gte: since30d } },
+        }),
+        tx.review.count({
+          where: {
+            ...LIVE_ESTABLISHMENT,
+            rating: 5,
+            postedAt: { gte: prev30dStart, lt: since30d },
+          },
+        }),
         tx.reviewReply.count({ where: { status: "published", createdAt: { gte: since30d } } }),
         tx.reviewReply.count({
           where: { status: "published", createdAt: { gte: prev30dStart, lt: since30d } },
         }),
         tx.review.aggregate({
-          where: { postedAt: { gte: since30d } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since30d } },
           _avg: { rating: true },
           _count: { _all: true },
         }),
         tx.review.aggregate({
-          where: { postedAt: { gte: prev30dStart, lt: since30d } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prev30dStart, lt: since30d } },
           _avg: { rating: true },
           _count: { _all: true },
         }),
       ]);
       return {
-        ratingAgg, ratingGroups, reviews7d, reviewsPrev7d, repliedCount, pendingReplyCount,
-        needsReplyCount, aiDrafted24h, liveReviews, topReviews, establishments,
-        establishmentCount, activeConnections, requestsSent30d, chartReviews, recentReplies, recentRequests,
-        recentCalls, recentScans,
-        funnelSent, funnelDelivered, funnelOpened, funnelConverted,
-        publishedReplyCount, publishedReplies, reviews30d, reviewsPrev30d,
-        fiveStar30d, fiveStarPrev30d, replies30d, repliesPrev30d, ratingAgg30d, ratingAggPrev30d,
+        ratingAgg,
+        ratingGroups,
+        reviews7d,
+        reviewsPrev7d,
+        repliedCount,
+        pendingReplyCount,
+        needsReplyCount,
+        aiDrafted24h,
+        liveReviews,
+        topReviews,
+        establishments,
+        establishmentCount,
+        activeConnections,
+        requestsSent30d,
+        chartReviews,
+        recentReplies,
+        recentRequests,
+        recentCalls,
+        recentScans,
+        funnelSent,
+        funnelDelivered,
+        funnelOpened,
+        funnelConverted,
+        publishedReplyCount,
+        publishedReplies,
+        reviews30d,
+        reviewsPrev30d,
+        fiveStar30d,
+        fiveStarPrev30d,
+        replies30d,
+        repliesPrev30d,
+        ratingAgg30d,
+        ratingAggPrev30d,
       };
     });
 
@@ -377,7 +461,10 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       fiveStarPct: pctDelta(d.fiveStar30d, d.fiveStarPrev30d),
       aiRepliesPct: pctDelta(d.replies30d, d.repliesPrev30d),
       ratingAbs:
-        d.ratingAgg30d._count._all > 0 && d.ratingAggPrev30d._count._all > 0 && avg30 !== null && avgPrev30 !== null
+        d.ratingAgg30d._count._all > 0 &&
+        d.ratingAggPrev30d._count._all > 0 &&
+        avg30 !== null &&
+        avgPrev30 !== null
           ? Math.round((avg30 - avgPrev30) * 10) / 10
           : null,
     };
@@ -398,13 +485,14 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       else neg += g.count;
     }
     const sentTotal = pos + neu + neg;
-    const sentiment = sentTotal > 0
-      ? {
-          positivePct: Math.round((pos / sentTotal) * 100),
-          neutralPct: Math.round((neu / sentTotal) * 100),
-          negativePct: Math.round((neg / sentTotal) * 100),
-        }
-      : { positivePct: 0, neutralPct: 0, negativePct: 0 };
+    const sentiment =
+      sentTotal > 0
+        ? {
+            positivePct: Math.round((pos / sentTotal) * 100),
+            neutralPct: Math.round((neu / sentTotal) * 100),
+            negativePct: Math.round((neg / sentTotal) * 100),
+          }
+        : { positivePct: 0, neutralPct: 0, negativePct: 0 };
 
     // Channel mix from the 30d request channels (proxy for acquisition mix).
     const channelCounts = new Map<string, number>();
@@ -413,27 +501,41 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
     }
     // Fall back to source distribution of reviews if no requests in window.
     const channelTotal = [...channelCounts.values()].reduce((a, b) => a + b, 0);
-    const channelMix: ChannelSlice[] = channelTotal > 0
-      ? [...channelCounts.entries()]
-          .map(([channel, count]) => ({
-            channel,
-            count,
-            pct: Math.round((count / channelTotal) * 100),
-          }))
-          .sort((a, b) => b.count - a.count)
-          .slice(0, 4)
-      : [];
+    const channelMix: ChannelSlice[] =
+      channelTotal > 0
+        ? [...channelCounts.entries()]
+            .map(([channel, count]) => ({
+              channel,
+              count,
+              pct: Math.round((count / channelTotal) * 100),
+            }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 4)
+        : [];
 
     // Funnel from the explicit counts.
     const sent = d.funnelSent;
-    const funnel: FunnelStage[] = sent > 0
-      ? [
-          { label: "Sent", count: sent, pct: 100 },
-          { label: "Delivered", count: d.funnelDelivered, pct: Math.round((d.funnelDelivered / sent) * 100) },
-          { label: "Opened", count: d.funnelOpened, pct: Math.round((d.funnelOpened / sent) * 100) },
-          { label: "Converted", count: d.funnelConverted, pct: Math.round((d.funnelConverted / sent) * 100) },
-        ]
-      : [];
+    const funnel: FunnelStage[] =
+      sent > 0
+        ? [
+            { label: "Sent", count: sent, pct: 100 },
+            {
+              label: "Delivered",
+              count: d.funnelDelivered,
+              pct: Math.round((d.funnelDelivered / sent) * 100),
+            },
+            {
+              label: "Opened",
+              count: d.funnelOpened,
+              pct: Math.round((d.funnelOpened / sent) * 100),
+            },
+            {
+              label: "Converted",
+              count: d.funnelConverted,
+              pct: Math.round((d.funnelConverted / sent) * 100),
+            },
+          ]
+        : [];
 
     const listings: DashboardListing[] = d.establishments.map((e) => {
       const ratings = e.reviews.map((r) => r.rating);
@@ -449,34 +551,42 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
 
     // Merge recent events into one audit feed, newest first.
     const recentActivity: RecentActivityItem[] = [
-      ...d.recentRequests.map((r): RecentActivityItem => ({
-        id: `req-${r.id}`,
-        at: r.createdAt,
-        kind: "request",
-        title: `Review request sent via ${channelLabel(r.channel)} to ${r.recipient}`,
-        status: requestStatus(r),
-      })),
-      ...d.recentReplies.map((r): RecentActivityItem => ({
-        id: `rep-${r.id}`,
-        at: r.createdAt,
-        kind: "reply",
-        title: `AI drafted a review reply${r.review?.reviewerName ? ` for ${r.review.reviewerName}` : ""}`,
-        status: r.status,
-      })),
-      ...d.recentCalls.map((c): RecentActivityItem => ({
-        id: `call-${c.id}`,
-        at: c.startedAt,
-        kind: "call",
-        title: `Phone call answered from ${c.fromE164 ?? "unknown caller"}`,
-        status: "answered",
-      })),
-      ...d.recentScans.map((s): RecentActivityItem => ({
-        id: `scan-${s.id}`,
-        at: s.scannedAt,
-        kind: "scan",
-        title: `Review stand scanned${s.country ? ` in ${s.country}` : ""}`,
-        status: "scan",
-      })),
+      ...d.recentRequests.map(
+        (r): RecentActivityItem => ({
+          id: `req-${r.id}`,
+          at: r.createdAt,
+          kind: "request",
+          title: `Review request sent via ${channelLabel(r.channel)} to ${r.recipient}`,
+          status: requestStatus(r),
+        }),
+      ),
+      ...d.recentReplies.map(
+        (r): RecentActivityItem => ({
+          id: `rep-${r.id}`,
+          at: r.createdAt,
+          kind: "reply",
+          title: `AI drafted a review reply${r.review?.reviewerName ? ` for ${r.review.reviewerName}` : ""}`,
+          status: r.status,
+        }),
+      ),
+      ...d.recentCalls.map(
+        (c): RecentActivityItem => ({
+          id: `call-${c.id}`,
+          at: c.startedAt,
+          kind: "call",
+          title: `Phone call answered from ${c.fromE164 ?? "unknown caller"}`,
+          status: "answered",
+        }),
+      ),
+      ...d.recentScans.map(
+        (s): RecentActivityItem => ({
+          id: `scan-${s.id}`,
+          at: s.scannedAt,
+          kind: "scan",
+          title: `Review stand scanned${s.country ? ` in ${s.country}` : ""}`,
+          status: "scan",
+        }),
+      ),
     ]
       .sort((a, b) => b.at.getTime() - a.at.getTime())
       .slice(0, 8);
@@ -578,14 +688,7 @@ export async function getSetupState(orgId: string): Promise<SetupState> {
 
   try {
     const data = await withTenant(orgId, async (tx) => {
-      const [
-        org,
-        googleConn,
-        otherConn,
-        requests,
-        replies,
-        memberships,
-      ] = await Promise.all([
+      const [org, googleConn, otherConn, requests, replies, memberships] = await Promise.all([
         tx.organization.findUnique({ where: { id: orgId }, select: { onboardingStep: true } }),
         tx.connection.count({ where: { provider: "google_business", status: "active" } }),
         tx.connection.count({ where: { status: "active" } }),
@@ -612,10 +715,30 @@ export async function getSetupState(orgId: string): Promise<SetupState> {
   }
 
   const steps: SetupStep[] = [
-    { key: "google", label: "Connect Google Business Profile", done: hasGoogle, href: "/connections" },
-    { key: "requests", label: "Send your first review request", done: requestsSent > 0, href: "/outreach/send" },
-    { key: "ai-reply", label: "Approve an AI-drafted reply", done: repliedCount > 0, href: "/reviews" },
-    { key: "social", label: "Add a social account", done: activeConnections > 1, href: "/connections" },
+    {
+      key: "google",
+      label: "Connect Google Business Profile",
+      done: hasGoogle,
+      href: "/connections",
+    },
+    {
+      key: "requests",
+      label: "Send your first review request",
+      done: requestsSent > 0,
+      href: "/outreach/send",
+    },
+    {
+      key: "ai-reply",
+      label: "Approve an AI-drafted reply",
+      done: repliedCount > 0,
+      href: "/reviews",
+    },
+    {
+      key: "social",
+      label: "Add a social account",
+      done: activeConnections > 1,
+      href: "/connections",
+    },
     { key: "team", label: "Invite a team member", done: hasTeam, href: "/settings/team" },
   ];
   const completed = steps.filter((s) => s.done).length;

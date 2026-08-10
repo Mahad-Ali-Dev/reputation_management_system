@@ -1,9 +1,10 @@
-import type { Prisma } from "@prisma/client";
+import { checkBudget } from "@/lib/ai/budget";
 import { MODELS, anthropic } from "@/lib/ai/client";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
-import { checkBudget } from "@/lib/ai/budget";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { LIVE_ESTABLISHMENT } from "@/lib/reviews/scope";
+import type { Prisma } from "@prisma/client";
 
 /**
  * Daily-briefing generator for the dashboard's AI Intelligence Center.
@@ -85,16 +86,18 @@ async function readBriefingSignals(orgId: string): Promise<BriefingSignals> {
     return await withTenant(orgId, async (tx) => {
       const [last24, prev24, pendingReplies, needsReply, totalReviews] = await Promise.all([
         tx.review.findMany({
-          where: { postedAt: { gte: since24h } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since24h } },
           select: { rating: true },
         }),
         tx.review.findMany({
-          where: { postedAt: { gte: prev24hStart, lt: since24h } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prev24hStart, lt: since24h } },
           select: { rating: true },
         }),
         tx.reviewReply.count({ where: { status: "pending_review" } }),
-        tx.review.count({ where: { rating: { lte: 3 }, reply: { is: null } } }),
-        tx.review.count(),
+        tx.review.count({
+          where: { ...LIVE_ESTABLISHMENT, rating: { lte: 3 }, reply: { is: null } },
+        }),
+        tx.review.count({ where: { ...LIVE_ESTABLISHMENT } }),
       ]);
 
       const newReviews24h = last24.length;

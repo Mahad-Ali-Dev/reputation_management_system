@@ -82,23 +82,29 @@ export async function linkGooglePlace(args: {
       return { ok: false, error: "Invalid establishment." };
     }
 
-    // One Google listing per establishment, and not one already claimed by a
-    // DIFFERENT establishment in this org — two businesses pointing at the same
-    // listing would double-ingest the same reviews under both.
+    // One Google listing per establishment. Two establishments on the same
+    // listing ingest the same reviews twice — which is exactly what produced a
+    // doubled dashboard (856 for a 428-review listing).
+    //
+    // Deliberately does NOT filter `deletedAt: null`: a SOFT-deleted
+    // establishment keeps its reviews (they're retained for 30-day undo), so
+    // re-linking its listing to a new establishment duplicates every review.
+    // That's the exact path that caused the doubling.
     const clash = await withTenant(orgId, (tx) =>
       tx.establishment.findFirst({
         where: {
           googlePlaceId: args.placeId,
           id: { not: args.establishmentId },
-          deletedAt: null,
         },
-        select: { name: true },
+        select: { name: true, deletedAt: true },
       }),
     );
     if (clash) {
       return {
         ok: false,
-        error: `That Google listing is already linked to "${clash.name}".`,
+        error: clash.deletedAt
+          ? `Those reviews are still held by a deleted business ("${clash.name}"). Restore it, or ask support to purge it, before linking this listing again.`
+          : `That Google listing is already linked to "${clash.name}".`,
       };
     }
 

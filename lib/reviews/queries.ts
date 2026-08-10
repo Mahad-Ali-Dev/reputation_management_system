@@ -1,4 +1,5 @@
 import { withTenant } from "@/lib/db/with-tenant";
+import { LIVE_ESTABLISHMENT } from "@/lib/reviews/scope";
 
 /** Review sources we know how to render in the inbox. Extend cautiously —
  *  every new source needs (a) a badge in the inbox and (b) a Reply CTA
@@ -41,6 +42,9 @@ export type ReviewFilter = {
  */
 function reviewWhere(filter: ReviewFilter) {
   return {
+    // Exclude reviews whose establishment was soft-deleted — they stay attached
+    // for undo but must not appear in feeds or counts.
+    ...LIVE_ESTABLISHMENT,
     ...(filter.establishmentId && { establishmentId: filter.establishmentId }),
     ...(filter.rating && { rating: filter.rating }),
     ...(filter.source && { source: filter.source }),
@@ -139,7 +143,7 @@ export async function reviewCountsBySource(orgId: string) {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const rows = await tx.review.groupBy({
       by: ["source"],
-      where: { postedAt: { gte: since } },
+      where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since } },
       _count: { _all: true },
     });
     const counts: Record<string, number> = {};
@@ -164,6 +168,7 @@ export async function reviewStats(orgId: string, establishmentId?: string) {
   return withTenant(orgId, async (tx) => {
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const where = {
+      ...LIVE_ESTABLISHMENT,
       ...(establishmentId && { establishmentId }),
       postedAt: { gte: since },
     };
