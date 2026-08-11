@@ -42,15 +42,33 @@ export const META_PROVIDER: ProviderEntry = {
   ready: false,
   blockerNote:
     "Requires Meta App Review (2–6 weeks). The combined OAuth flow is built — submit your app at developers.facebook.com, then paste the App ID/Secret.",
+  /**
+   * Split by the FEATURE each permission serves, because Meta App Review
+   * requires a working screencast per permission — asking for one you can't
+   * demonstrate gets the whole submission bounced.
+   *
+   * PUBLISHING (Post Creator — shippable today):
+   *   instagram_content_publish is REQUIRED by the IG adapter's
+   *   /media → /media_publish calls. It was missing, so Instagram posting would
+   *   have failed with a permission error even after review passed — and adding
+   *   a permission later means ANOTHER multi-week review cycle.
+   *
+   * INBOX (comments + DMs) — these serve the Unified Inbox, which is currently
+   * behind the Coming Soon lock and therefore NOT demonstrable in a screencast.
+   * Submit them with the inbox release, not before.
+   */
   scopes: [
+    // Publishing
     "pages_show_list",
     "pages_manage_posts",
     "pages_read_engagement",
-    "pages_manage_engagement",
     "instagram_basic",
-    "instagram_manage_comments",
-    "instagram_manage_messages",
+    "instagram_content_publish",
     "business_management",
+    // Inbox — re-enable when Unified Inbox ships (see LOCKED_MODULES)
+    // "pages_manage_engagement",
+    // "instagram_manage_comments",
+    // "instagram_manage_messages",
   ],
   oauthUrl: "https://www.facebook.com/v19.0/dialog/oauth",
   tokenUrl: "https://graph.facebook.com/v19.0/oauth/access_token",
