@@ -1,18 +1,19 @@
 "use server";
 
-import { redirect } from "next/navigation";
-import { revalidatePath } from "next/cache";
-import { z } from "zod";
 import { getAdminSession } from "@/lib/admin/session";
-import { prisma } from "@/lib/db/client";
+import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
 import { encrypt } from "@/lib/crypto/envelope";
+import { prisma } from "@/lib/db/client";
 import { PROVIDERS } from "@/lib/providers/registry";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 const SaveSchema = z.object({
   provider: z.string().min(1).max(40),
   clientId: z.string().min(1).max(500),
   clientSecret: z.string().min(1).max(500),
-  scopes: z.string().max(1000).optional(),  // newline or comma separated
+  scopes: z.string().max(1000).optional(), // newline or comma separated
 });
 
 /**
@@ -36,7 +37,11 @@ export async function saveProviderApp(form: FormData): Promise<void> {
   });
   if (!parsed.success) throw new Error(parsed.error.issues.map((i) => i.message).join("; "));
 
-  const entry = PROVIDERS[parsed.data.provider];
+  // `meta` is an OVERLAY, not a registry entry — a bare PROVIDERS lookup threw
+  // "Unknown provider: meta" out of this bare form action, which surfaces as the
+  // generic crash page. Resolve it the same way the page and the customer-facing
+  // connections list do.
+  const entry = parsed.data.provider === "meta" ? META_PROVIDER : PROVIDERS[parsed.data.provider];
   if (!entry) throw new Error(`Unknown provider: ${parsed.data.provider}`);
 
   // Envelope encrypt the secret. We use a synthetic orgId of "__provider_app__"
@@ -54,7 +59,7 @@ export async function saveProviderApp(form: FormData): Promise<void> {
         .split(/[\n,]+/)
         .map((s) => s.trim())
         .filter((s) => s.length > 0)
-    : entry.scopes ?? [];
+    : (entry.scopes ?? []);
 
   await prisma.providerApp.upsert({
     where: { provider: parsed.data.provider },

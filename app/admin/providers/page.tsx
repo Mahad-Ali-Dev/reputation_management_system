@@ -1,5 +1,6 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
-import { Badge, KpiCard, TableCard, THead, Th, Td } from "@/components/admin/admin-ui";
+import { Badge, KpiCard, THead, TableCard, Td, Th } from "@/components/admin/admin-ui";
+import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
 import { prisma } from "@/lib/db/client";
 import { CATEGORY_LABELS, getProvidersByCategory } from "@/lib/providers/registry";
 import Link from "next/link";
@@ -19,7 +20,15 @@ export default async function ProvidersAdminPage() {
     select: { provider: true, status: true, updatedAt: true },
   });
   const appByProvider = new Map(apps.map((a) => [a.provider, a]));
+  // `meta` is an overlay, so it's absent from the registry-derived list while the
+  // LEGACY `facebook`/`instagram` entries still show. Those two now redirect to
+  // meta and have no routes of their own, so surface the real connector here and
+  // drop them — otherwise the only Meta rows an admin sees are the dead ones.
   const grouped = getProvidersByCategory();
+  grouped.social = [
+    META_PROVIDER,
+    ...(grouped.social ?? []).filter((p) => p.id !== "facebook" && p.id !== "instagram"),
+  ];
 
   const allProviders = Object.values(grouped).flat();
   const configuredCount = allProviders.filter(
@@ -78,11 +87,7 @@ export default async function ProvidersAdminPage() {
                     <Td>
                       <Badge
                         tone={
-                          status === "configured"
-                            ? "ok"
-                            : status === "disabled"
-                              ? "bad"
-                              : "neutral"
+                          status === "configured" ? "ok" : status === "disabled" ? "bad" : "neutral"
                         }
                       >
                         {status}
