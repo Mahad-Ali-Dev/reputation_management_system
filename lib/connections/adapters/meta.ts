@@ -12,9 +12,9 @@
  */
 
 import { loadProviderApp } from "@/lib/connections/oauth-helpers";
+import { safeJson } from "./fetch-util";
 import { META_PROVIDER } from "./meta-overlay";
 import { type ConnectionAdapter, defineAdapter } from "./types";
-import { safeJson } from "./fetch-util";
 
 /** The combined scope set a healthy Meta connection must carry. */
 export const META_REQUIRED_SCOPES = META_PROVIDER.scopes ?? [];
@@ -23,7 +23,11 @@ export function metaEnvConfigured(): boolean {
   return Boolean(process.env.META_APP_ID && process.env.META_APP_SECRET);
 }
 
-export const GRAPH_VERSION = "v19.0";
+// Graph API version for ALL Meta calls (Pages, IG publish, token exchange).
+// Meta sunsets a version ~2 years after release; v19 shipped early 2024 and is
+// at/past end-of-life, and a removed version fails in vague ways that look like
+// config errors. v23 is a recent stable rather than the bleeding edge.
+export const GRAPH_VERSION = "v23.0";
 
 /** A connected Facebook Page (+ optional linked IG Business account). */
 export type MetaPage = {

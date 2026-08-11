@@ -75,8 +75,8 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     blockerNote:
       "Requires Meta App Review (2-6 weeks). We've built the OAuth flow; submit your app at developers.facebook.com.",
     scopes: ["pages_manage_posts", "pages_read_engagement", "pages_manage_engagement"],
-    oauthUrl: "https://www.facebook.com/v18.0/dialog/oauth",
-    tokenUrl: "https://graph.facebook.com/v18.0/oauth/access_token",
+    oauthUrl: "https://www.facebook.com/v23.0/dialog/oauth",
+    tokenUrl: "https://graph.facebook.com/v23.0/oauth/access_token",
     logoEmoji: "📘",
     docsUrl: "https://developers.facebook.com/docs/facebook-login",
   },

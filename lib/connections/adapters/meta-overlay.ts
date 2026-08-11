@@ -72,8 +72,8 @@ export const META_PROVIDER: ProviderEntry = {
     // "instagram_manage_comments",
     // "instagram_manage_messages",
   ],
-  oauthUrl: "https://www.facebook.com/v19.0/dialog/oauth",
-  tokenUrl: "https://graph.facebook.com/v19.0/oauth/access_token",
+  oauthUrl: "https://www.facebook.com/v23.0/dialog/oauth",
+  tokenUrl: "https://graph.facebook.com/v23.0/oauth/access_token",
   logoEmoji: "🟦",
   docsUrl: "https://developers.facebook.com/docs/facebook-login",
 };

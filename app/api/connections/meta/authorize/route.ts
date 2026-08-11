@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
 
   const authorizeUrl = buildAuthorizeUrl({
     baseUrl:
-      app.oauthUrl ?? META_PROVIDER.oauthUrl ?? "https://www.facebook.com/v19.0/dialog/oauth",
+      app.oauthUrl ?? META_PROVIDER.oauthUrl ?? "https://www.facebook.com/v23.0/dialog/oauth",
     clientId: app.clientId,
     redirectUri,
     // config_id carries the permissions — sending scope alongside it is rejected.
