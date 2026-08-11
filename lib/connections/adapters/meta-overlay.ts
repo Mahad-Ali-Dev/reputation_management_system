@@ -37,8 +37,10 @@ export const META_PROVIDER: ProviderEntry = {
   id: "meta",
   displayName: "Meta (Facebook + Instagram)",
   category: "social" as ProviderCategory,
+  // Comments & DMs feed the Unified Inbox, which is behind the coming-soon lock —
+  // and those scopes are no longer requested. Describe only what it does today.
   description:
-    "One connection for Facebook Pages and Instagram Business — read comments & DMs, publish and schedule posts.",
+    "One connection for Facebook Pages and Instagram Business — publish and schedule posts.",
   ready: false,
   blockerNote:
     "Requires Meta App Review (2–6 weeks). The combined OAuth flow is built — submit your app at developers.facebook.com, then paste the App ID/Secret.",

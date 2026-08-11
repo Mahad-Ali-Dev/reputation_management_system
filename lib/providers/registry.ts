@@ -627,8 +627,7 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     id: "gmail",
     displayName: "Gmail",
     category: "email_marketing",
-    description:
-      "Two-way mailbox sync — customer emails appear in the Unified Inbox and replies send from your Gmail.",
+    description: "Send review requests and notifications from your own Gmail address.",
     ready: true,
     // Reuses the existing Google OAuth app (AUTH_GOOGLE_ID/SECRET) — just adds
     // the Gmail read + send scopes. Connect/callback live under

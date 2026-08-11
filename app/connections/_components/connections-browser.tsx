@@ -226,12 +226,16 @@ function Row({
   const tag = syncsLabel(provider.syncs);
 
   // Description precedence: connected → account + last sync; else catalog copy.
+  //
+  // `blockerNote` is deliberately NOT used here. It's OPS copy for the admin —
+  // it names env vars and our own API costs ("Set X_CLIENT_ID/X_CLIENT_SECRET…
+  // needs the X API paid tier ($100+/mo)") — and this list is customer-facing.
+  // It still shows where it belongs: the admin providers screen and the
+  // provider-detail warning banner.
   let desc = provider.description;
   if (connected && liveConn) {
     const acct = liveConn.accountLabel ?? provider.displayName;
     desc = sync ? `${acct} · synced ${relativeTime(sync)}` : acct;
-  } else if (!provider.ready && provider.blockerNote) {
-    desc = provider.blockerNote;
   }
 
   return (
@@ -270,10 +274,7 @@ export function ConnectionsBrowser({
 
   // Flatten every provider once, tagging its category.
   const allRows: FlatRow[] = useMemo(
-    () =>
-      sections.flatMap((s) =>
-        s.providers.map((p) => ({ ...p, categoryKey: s.key })),
-      ),
+    () => sections.flatMap((s) => s.providers.map((p) => ({ ...p, categoryKey: s.key }))),
     [sections],
   );
 
@@ -287,9 +288,7 @@ export function ConnectionsBrowser({
   const visible = useMemo(() => {
     let rows = activeCat === "all" ? allRows : allRows.filter((r) => r.categoryKey === activeCat);
     if (q) {
-      rows = rows.filter((r) =>
-        `${r.displayName} ${r.description}`.toLowerCase().includes(q),
-      );
+      rows = rows.filter((r) => `${r.displayName} ${r.description}`.toLowerCase().includes(q));
     }
     return rows;
   }, [allRows, activeCat, q]);
