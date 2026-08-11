@@ -1,10 +1,11 @@
 import { AdminPageHeader } from "@/components/admin/admin-page-header";
 import { Badge } from "@/components/admin/admin-ui";
 import { disableProviderApp, saveProviderApp } from "@/lib/admin/providers";
+import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
 import { prisma } from "@/lib/db/client";
 import { PROVIDERS } from "@/lib/providers/registry";
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,20 @@ export default async function ProviderConfigurePage({
   params: Promise<{ provider: string }>;
 }) {
   const { provider } = await params;
-  const entry = PROVIDERS[provider];
+
+  // `facebook` and `instagram` are LEGACY registry entries. The live connector
+  // is the combined `meta` one (/api/connections/meta), and their setup text
+  // pointed at /api/connections/facebook/callback — a route that doesn't exist.
+  // Worse, saving here wrote a ProviderApp row keyed "facebook", which
+  // loadProviderApp("meta") never reads: credentials that silently do nothing.
+  if (provider === "facebook" || provider === "instagram") {
+    redirect("/admin/providers/meta");
+  }
+
+  // `meta` is an OVERLAY, not a registry entry, so a bare PROVIDERS lookup 404'd
+  // and Meta could not be configured at all. Resolve it the same way the
+  // customer-facing connections page does.
+  const entry = provider === "meta" ? META_PROVIDER : PROVIDERS[provider];
   if (!entry) notFound();
 
   const app = await prisma.providerApp.findUnique({
@@ -226,7 +240,7 @@ export default async function ProviderConfigurePage({
           <li>
             Set the redirect URI to:{" "}
             <code className="mono" style={chipCode}>
-              {`${process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com"}/api/connections/${provider}/callback`}
+              {`${(process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com").replace(/\/+$/, "")}/api/connections/${provider}/callback`}
             </code>
           </li>
           <li>Request the scopes listed above (some platforms call these "permissions").</li>
@@ -265,7 +279,14 @@ const chipCode: React.CSSProperties = {
 function FormField({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <label style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-      <span style={{ fontSize: 10.5, color: "var(--rl-muted)", letterSpacing: "0.04em", fontWeight: 600 }}>
+      <span
+        style={{
+          fontSize: 10.5,
+          color: "var(--rl-muted)",
+          letterSpacing: "0.04em",
+          fontWeight: 600,
+        }}
+      >
         {label.toUpperCase()}
       </span>
       {children}
