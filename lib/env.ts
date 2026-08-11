@@ -156,6 +156,9 @@ const schema = z.object({
   // sync without per-tenant OAuth or Google's GBP API allow-listing. Optional:
   // absent, the HasData sync is skipped and only the GBP OAuth path runs.
   HASDATA_API_KEY: optionalString,
+  // Facebook Login for Business: the Configuration ID whose permission bundle
+  // replaces `scope=` in the OAuth dialog. Unset = classic Facebook Login.
+  META_LOGIN_CONFIG_ID: optionalString,
 
   // ElevenLabs
   ELEVENLABS_API_KEY: optionalString,

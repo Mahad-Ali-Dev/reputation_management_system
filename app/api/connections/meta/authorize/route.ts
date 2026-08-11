@@ -45,13 +45,28 @@ export async function GET(req: NextRequest) {
   // misconfigured app still requests FB Pages + IG together.
   const scopes = app.scopes.length > 0 ? app.scopes : (META_PROVIDER.scopes ?? []);
 
+  // FACEBOOK LOGIN FOR BUSINESS vs classic Facebook Login.
+  //
+  // Meta now defaults business apps to "Facebook Login for Business", whose
+  // dialog does NOT accept `scope=`. Permissions come from a Configuration you
+  // create in the app dashboard, referenced by `config_id`. Sending the classic
+  // scope-based request to such an app fails with a misleading
+  // "Can't load URL / domain isn't included in the app's domains" — which sends
+  // you chasing App Domains settings that were never the problem.
+  //
+  // Set META_LOGIN_CONFIG_ID to the Configuration ID to use that flow; leave it
+  // unset for apps with the classic Facebook Login product.
+  const configId = process.env.META_LOGIN_CONFIG_ID?.trim();
+
   const authorizeUrl = buildAuthorizeUrl({
     baseUrl:
       app.oauthUrl ?? META_PROVIDER.oauthUrl ?? "https://www.facebook.com/v19.0/dialog/oauth",
     clientId: app.clientId,
     redirectUri,
-    scopes,
+    // config_id carries the permissions — sending scope alongside it is rejected.
+    scopes: configId ? [] : scopes,
     state,
+    ...(configId ? { extraParams: { config_id: configId } } : {}),
   });
 
   const response = NextResponse.redirect(authorizeUrl);

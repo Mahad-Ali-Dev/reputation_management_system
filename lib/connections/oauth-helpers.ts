@@ -94,7 +94,10 @@ export function buildAuthorizeUrl(args: {
     response_type: "code",
     client_id: args.clientId,
     redirect_uri: args.redirectUri,
-    scope: args.scopes.join(" "),
+    // An EMPTY scopes array omits the param entirely. Facebook Login for
+    // Business rejects `scope=` — its permissions come from a server-side
+    // Configuration referenced by `config_id` instead.
+    ...(args.scopes.length > 0 ? { scope: args.scopes.join(" ") } : {}),
     state: args.state,
     ...(args.pkceChallenge
       ? { code_challenge: args.pkceChallenge, code_challenge_method: "S256" }
