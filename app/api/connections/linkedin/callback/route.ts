@@ -1,5 +1,5 @@
 import { auth } from "@/lib/auth/config";
-import { saveConnection } from "@/lib/connections/oauth-helpers";
+import { resolveOAuthCredentials, saveConnection } from "@/lib/connections/oauth-helpers";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
@@ -75,8 +75,13 @@ export async function GET(req: NextRequest) {
   void verified;
 
   // Step 2: code → tokens (client_secret in body; LinkedIn does not use PKCE)
-  const clientId = process.env.LINKEDIN_CLIENT_ID;
-  const clientSecret = process.env.LINKEDIN_CLIENT_SECRET;
+  const creds = await resolveOAuthCredentials(
+    "linkedin",
+    process.env.LINKEDIN_CLIENT_ID,
+    process.env.LINKEDIN_CLIENT_SECRET,
+  );
+  const clientId = creds?.clientId;
+  const clientSecret = creds?.clientSecret;
   const redirectUri = oauthCallbackUrl("linkedin");
   if (!clientId || !clientSecret) {
     return NextResponse.redirect(

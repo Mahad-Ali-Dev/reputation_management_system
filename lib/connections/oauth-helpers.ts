@@ -335,3 +335,32 @@ export async function verifyProviderState(args: {
     pkceVerifier: verified.pkceVerifier,
   };
 }
+
+/**
+ * Resolve OAuth credentials for a provider, preferring the admin-configured
+ * DB row and falling back to environment variables.
+ *
+ * WHY: the admin "Provider OAuth apps" screen writes credentials to
+ * `ProviderApp`, but several connect routes only ever read `process.env`. An
+ * admin could paste a Client ID/Secret, see the row flip to "configured", and
+ * have the connect still fail — the credentials were encrypted and then ignored.
+ * (Same silent no-op that made the legacy `facebook` provider page so
+ * misleading.)
+ *
+ * DB first so the admin UI is authoritative when used; env fallback so existing
+ * env-configured deployments keep working untouched.
+ */
+export async function resolveOAuthCredentials(
+  provider: string,
+  envClientId: string | undefined,
+  envClientSecret: string | undefined,
+): Promise<{ clientId: string; clientSecret: string; source: "db" | "env" } | null> {
+  const app = await loadProviderApp(provider).catch(() => null);
+  if (app?.clientId && app.clientSecret) {
+    return { clientId: app.clientId, clientSecret: app.clientSecret, source: "db" };
+  }
+  if (envClientId && envClientSecret) {
+    return { clientId: envClientId, clientSecret: envClientSecret, source: "env" };
+  }
+  return null;
+}

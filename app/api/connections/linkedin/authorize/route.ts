@@ -1,4 +1,5 @@
 import { auth } from "@/lib/auth/config";
+import { resolveOAuthCredentials } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
 import { oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
@@ -31,11 +32,19 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  const clientId = process.env.LINKEDIN_CLIENT_ID;
-  if (!clientId) {
+  // Admin-configured credentials (DB) win; env is the fallback so existing
+  // env-only deployments keep working. Before this the admin screen could show
+  // LinkedIn as "configured" while this route ignored it entirely.
+  const creds = await resolveOAuthCredentials(
+    "linkedin",
+    process.env.LINKEDIN_CLIENT_ID,
+    process.env.LINKEDIN_CLIENT_SECRET,
+  );
+  if (!creds) {
     logger.warn({ event: "oauth.linkedin.not_configured" });
     return NextResponse.redirect(new URL("/connections?error=linkedin_not_configured", req.url));
   }
+  const clientId = creds.clientId;
 
   const { state, cookieHash } = await signOAuthState({ orgId, userId, provider: "linkedin" });
 
