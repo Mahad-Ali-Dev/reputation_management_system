@@ -60,15 +60,31 @@ export const META_PROVIDER: ProviderEntry = {
    * Submit them with the inbox release, not before.
    */
   scopes: [
-    // Publishing
+    // Facebook Page publishing — works as soon as the "Manage Pages" use case
+    // has these added, so this is the connectable baseline.
     "pages_show_list",
     "pages_manage_posts",
     "pages_read_engagement",
-    "instagram_basic",
-    "instagram_content_publish",
     "business_management",
-    // Inbox — re-enable when Unified Inbox ships (see LOCKED_MODULES)
+
+    // INSTAGRAM — add ONLY after the Instagram use case is configured on the app
+    // via "API setup with FACEBOOK login" (NOT "API setup with Instagram login",
+    // which is a separate standalone API our adapter doesn't speak: we publish
+    // through graph.facebook.com/{ig-user-id}/media and resolve the account from
+    // /me/accounts.instagram_business_account).
+    //
+    // Requesting these before that setup exists makes the whole dialog fail with
+    // "Invalid Scopes: instagram_basic, instagram_content_publish".
+    // "instagram_basic",
+    // "instagram_content_publish",
+
+    // INBOX (comments + DMs) — serve the Unified Inbox, currently behind the
+    // Coming Soon lock and so not demonstrable for App Review. Add with that
+    // release. pages_manage_metadata is what allows the Page webhook
+    // subscription that feeds inbound events.
     // "pages_manage_engagement",
+    // "pages_messaging",
+    // "pages_manage_metadata",
     // "instagram_manage_comments",
     // "instagram_manage_messages",
   ],
