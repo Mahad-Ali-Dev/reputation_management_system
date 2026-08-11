@@ -5,7 +5,7 @@ import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
 import { encrypt } from "@/lib/crypto/envelope";
 import { prisma } from "@/lib/db/client";
 import { PROVIDERS } from "@/lib/providers/registry";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
@@ -101,6 +101,10 @@ export async function saveProviderApp(form: FormData): Promise<void> {
   revalidatePath("/admin/providers");
   revalidatePath(`/admin/providers/${parsed.data.provider}`);
   revalidatePath("/connections");
+  // /connections reads provider_apps through unstable_cache (5-min TTL, tag
+  // "provider-apps"). Without busting the TAG, freshly saved credentials stay
+  // invisible there for up to 5 minutes — it looks like the save didn't work.
+  revalidateTag("provider-apps");
 }
 
 export async function disableProviderApp(form: FormData): Promise<void> {
@@ -124,4 +128,6 @@ export async function disableProviderApp(form: FormData): Promise<void> {
     },
   });
   revalidatePath("/admin/providers");
+  revalidatePath("/connections");
+  revalidateTag("provider-apps");
 }

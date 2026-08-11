@@ -9,15 +9,15 @@ import {
 } from "@/lib/connections/adapters/meta-overlay";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import type { ConnectionSuggestion } from "@/lib/onboarding/constants";
+import { getLatestRun } from "@/lib/onboarding/run-store";
 import { PROVIDERS, type ProviderEntry } from "@/lib/providers/registry";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
-import { getLatestRun } from "@/lib/onboarding/run-store";
-import type { ConnectionSuggestion } from "@/lib/onboarding/constants";
 import { disconnectConnection, resyncConnection } from "./_components/actions";
+import { type ConnectedRow, ConnectedSystemsTable } from "./_components/connected-systems-table";
 import { ConnectionsBrowser } from "./_components/connections-browser";
 import { CsvImportPanel } from "./_components/csv-import-panel";
-import { type ConnectedRow, ConnectedSystemsTable } from "./_components/connected-systems-table";
 import { SuggestedBand, type SuggestedCard } from "./_components/suggested-band";
 import "./connections-kit.css";
 import {
@@ -237,7 +237,9 @@ export default async function ConnectionsPage({
     const { href, prefetch } = suggestionConnectHref(
       providerId,
       meta.connType,
-      entry.ready,
+      // Admin-configured DB-backed providers (meta) are connectable even though
+      // their static `ready` flag is false.
+      entry.ready || configured,
       configured,
     );
     suggestedCards.push({
@@ -269,7 +271,7 @@ export default async function ConnectionsPage({
       id: entry.id,
       displayName: entry.displayName,
       description: entry.description,
-      ready: entry.ready,
+      ready: entry.ready || configuredSet.has(entry.id),
       configured: configuredSet.has(entry.id),
       blockerNote: entry.blockerNote ?? null,
       connType: meta.connType,
@@ -487,11 +489,7 @@ export default async function ConnectionsPage({
         </div>
 
         {/* ── Live-status banner ──────────────────────────────────────── */}
-        <StatusBanner
-          empty={isEmpty}
-          hasError={errorCount > 0}
-          activeCount={connectedCount}
-        />
+        <StatusBanner empty={isEmpty} hasError={errorCount > 0} activeCount={connectedCount} />
 
         {/* ── CSV import pre-flight (opened via ?import=1) ────────────── */}
         {showImport && (

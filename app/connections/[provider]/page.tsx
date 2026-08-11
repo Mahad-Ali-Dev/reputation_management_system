@@ -9,12 +9,9 @@ import {
   getProviderMeta,
   isLegacyProvider,
 } from "@/lib/connections/adapters/meta-overlay";
+import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
-import {
-  getPrimaryWidgetKey,
-  getWidgetConfig,
-  widgetEmbedSnippet,
-} from "@/lib/inbox/widget";
+import { getPrimaryWidgetKey, getWidgetConfig, widgetEmbedSnippet } from "@/lib/inbox/widget";
 import { PROVIDERS, type ProviderEntry } from "@/lib/providers/registry";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -206,10 +203,7 @@ export default async function ConnectionProviderPage({
   // The website live-chat widget is an EMBED, not an OAuth connection — render
   // the embed-snippet + config panel instead of the connection view.
   if (WIDGET_ALIASES.has(provider) || meta.connType === "embed") {
-    const [config, key] = await Promise.all([
-      getWidgetConfig(orgId),
-      getPrimaryWidgetKey(orgId),
-    ]);
+    const [config, key] = await Promise.all([getWidgetConfig(orgId), getPrimaryWidgetKey(orgId)]);
 
     return (
       <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Connections", entry.displayName]}>
@@ -249,9 +243,7 @@ export default async function ConnectionProviderPage({
   // Accept both id forms so the Square POS tile (`square_pos`) and the raw
   // callback provider (`square`) surface the same rows from either URL.
   const providerIds =
-    provider === "square_pos" || provider === "square"
-      ? ["square_pos", "square"]
-      : [provider];
+    provider === "square_pos" || provider === "square" ? ["square_pos", "square"] : [provider];
   const connections = await loadConnections(orgId, providerIds);
 
   const serializedConns: SerializedConnection[] = connections.map((c) => ({
@@ -268,6 +260,16 @@ export default async function ConnectionProviderPage({
     connections.map((c) => c.id),
   );
 
+  // `entry.ready` is a STATIC registry flag meaning "the code is built". For
+  // DB-backed providers (meta, toast) the credentials live in ProviderApp, so a
+  // provider can be fully configured while that flag still reads false — which
+  // rendered "Set up in admin" + "Coming soon" on a configured Meta app and
+  // never offered a Connect button at all.
+  const adminApp = await prisma.providerApp
+    .findUnique({ where: { provider }, select: { status: true } })
+    .catch(() => null);
+  const connectable = entry.ready || adminApp?.status === "configured";
+
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Connections", entry.displayName]}>
       <BackLink />
@@ -277,12 +279,7 @@ export default async function ConnectionProviderPage({
         description={entry.description}
         actions={
           entry.docsUrl ? (
-            <a
-              href={entry.docsUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn"
-            >
+            <a href={entry.docsUrl} target="_blank" rel="noopener noreferrer" className="btn">
               <Icon name="ext" size={13} />
               Developer docs
             </a>
@@ -318,7 +315,7 @@ export default async function ConnectionProviderPage({
           id: entry.id,
           displayName: entry.displayName,
           description: entry.description,
-          ready: entry.ready,
+          ready: connectable,
           blockerNote: entry.blockerNote ?? null,
           docsUrl: entry.docsUrl ?? null,
           connType: meta.connType,
