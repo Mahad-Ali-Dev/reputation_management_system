@@ -152,7 +152,10 @@ export function syncsLabel(syncs: SerializedProviderRow["syncs"]): string | null
     case "contacts":
       return "Syncs customers";
     case "social":
-      return "Comments & DMs";
+      // NOT "Comments & DMs": that describes the Unified Inbox, which is behind
+      // the coming-soon lock. What a connected social provider does today is
+      // publish — so say that rather than advertising a locked capability.
+      return "Publishing";
     case "reviews":
       return "Syncs reviews";
     default:

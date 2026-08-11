@@ -72,7 +72,8 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     category: "social",
     description: "Read + reply to Facebook page comments. Post + schedule content.",
     ready: false,
-    blockerNote: "Requires Meta App Review (2-6 weeks). We've built the OAuth flow; submit your app at developers.facebook.com.",
+    blockerNote:
+      "Requires Meta App Review (2-6 weeks). We've built the OAuth flow; submit your app at developers.facebook.com.",
     scopes: ["pages_manage_posts", "pages_read_engagement", "pages_manage_engagement"],
     oauthUrl: "https://www.facebook.com/v18.0/dialog/oauth",
     tokenUrl: "https://graph.facebook.com/v18.0/oauth/access_token",
@@ -85,7 +86,8 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     category: "social",
     description: "Read DMs + comments. Post photos, reels, and stories.",
     ready: false,
-    blockerNote: "Requires Meta App Review (same as Facebook). Account must be a Business or Creator profile.",
+    blockerNote:
+      "Requires Meta App Review (same as Facebook). Account must be a Business or Creator profile.",
     scopes: ["instagram_basic", "instagram_manage_comments", "instagram_manage_messages"],
     oauthUrl: "https://api.instagram.com/oauth/authorize",
     tokenUrl: "https://api.instagram.com/oauth/access_token",
@@ -117,7 +119,8 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
     // as the other OAuth providers. Live publishing additionally needs the paid
     // tier (TWITTER_PUBLISH_ENABLED), enforced in the publish adapter.
     ready: Boolean(process.env.X_CLIENT_ID && process.env.X_CLIENT_SECRET),
-    blockerNote: "Set X_CLIENT_ID/X_CLIENT_SECRET to enable. Live publishing also needs the X API paid tier ($100+/mo).",
+    blockerNote:
+      "Set X_CLIENT_ID/X_CLIENT_SECRET to enable. Live publishing also needs the X API paid tier ($100+/mo).",
     scopes: ["tweet.read", "tweet.write", "users.read", "offline.access"],
     oauthUrl: "https://twitter.com/i/oauth2/authorize",
     tokenUrl: "https://api.twitter.com/2/oauth2/token",
@@ -126,14 +129,20 @@ export const PROVIDERS: Record<string, ProviderEntry> = {
   },
   linkedin: {
     id: "linkedin",
-    displayName: "LinkedIn Pages",
+    displayName: "LinkedIn",
     category: "social",
-    description: "Post to company pages + read engagement.",
+    // Honest to the scopes we actually request. `w_member_social` posts as the
+    // CONNECTED MEMBER (urn:li:person:…) — the person's own feed. Posting to a
+    // company page needs `w_organization_social`, which requires LinkedIn's
+    // Marketing Developer Platform. Calling this "LinkedIn Pages / post to
+    // company pages" promised something the granted token cannot do.
+    description: "Publish posts to the connected member's LinkedIn feed.",
     // Env-gated: the OAuth 2.0 connect flow (app/api/connections/linkedin) is
     // live and only goes "ready" once LINKEDIN_CLIENT_ID/SECRET exist. Live
     // publishing additionally needs LINKEDIN_PUBLISH_ENABLED (publish adapter).
     ready: Boolean(process.env.LINKEDIN_CLIENT_ID && process.env.LINKEDIN_CLIENT_SECRET),
-    blockerNote: "Set LINKEDIN_CLIENT_ID/LINKEDIN_CLIENT_SECRET to enable. Org-page posting needs LinkedIn Marketing Developer Platform approval (2-4 weeks).",
+    blockerNote:
+      "Set LINKEDIN_CLIENT_ID/LINKEDIN_CLIENT_SECRET to enable. Org-page posting needs LinkedIn Marketing Developer Platform approval (2-4 weeks).",
     scopes: ["openid", "profile", "w_member_social"],
     oauthUrl: "https://www.linkedin.com/oauth/v2/authorization",
     tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",

@@ -19,6 +19,7 @@
 import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
+import { DisconnectDialog } from "../../_components/disconnect-dialog";
 import {
   type ConnPillTone,
   type SerializedConnection,
@@ -27,7 +28,6 @@ import {
   newestSync,
   relativeTime,
 } from "../../_lib/format";
-import { DisconnectDialog } from "../../_components/disconnect-dialog";
 import type { SerializedSyncLog } from "./widget-embed-panel";
 
 const PILL_CLASS: Record<ConnPillTone, string> = {
@@ -55,7 +55,12 @@ export type ProviderInfo = {
 function ResyncButton() {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" className="btn btn--sm" disabled={pending} title="Pull recent customers now">
+    <button
+      type="submit"
+      className="btn btn--sm"
+      disabled={pending}
+      title="Pull recent customers now"
+    >
       <Icon name="refresh" size={12} />
       {pending ? "Syncing…" : "Re-sync now"}
     </button>
@@ -114,9 +119,7 @@ export function ProviderDetailClient({
                   {liveConn?.accountLabel ?? provider.displayName}
                 </div>
                 <div className="dim" style={{ fontSize: 12 }}>
-                  {connected
-                    ? `Last sync ${relativeTime(lastSync)}`
-                    : "No active connection"}
+                  {connected ? `Last sync ${relativeTime(lastSync)}` : "No active connection"}
                 </div>
               </div>
             </div>
@@ -147,10 +150,8 @@ export function ProviderDetailClient({
                     />
                   )}
                 </>
-              ) : isApiKey ? (
-                // The paste form below is the connect affordance — no hero CTA.
-                null
-              ) : provider.ready ? (
+              ) : isApiKey ? // The paste form below is the connect affordance — no hero CTA.
+              null : provider.ready ? (
                 <Link href={authorizeHref} className="btn btn--sm btn--pri" prefetch={false}>
                   Connect
                   <Icon name="arrowR" size={12} />
@@ -243,9 +244,12 @@ export function ProviderDetailClient({
           >
             <SettingItem label="Connection type" value={connTypeName(provider.connType)} />
             <SettingItem label="Syncs" value={provider.syncsLabel ?? "Nothing automatic"} />
+            {/* `hasRealAdapter` means "has a CONTACT-SYNC adapter" — nothing to
+                do with publishing. Labelling a publish-only provider like
+                LinkedIn "Listener only" read as if it couldn't post at all. */}
             <SettingItem
-              label="Adapter"
-              value={provider.hasRealAdapter ? "Active" : "Listener only"}
+              label="Contact sync"
+              value={provider.hasRealAdapter ? "Enabled" : "Not applicable"}
             />
             <SettingItem
               label="Status"
@@ -291,7 +295,12 @@ export function ProviderDetailClient({
         {syncLogs.length === 0 ? (
           <div
             className="ds-card__body"
-            style={{ padding: "28px 20px", textAlign: "center", color: "var(--rl-muted)", fontSize: 13 }}
+            style={{
+              padding: "28px 20px",
+              textAlign: "center",
+              color: "var(--rl-muted)",
+              fontSize: 13,
+            }}
           >
             {provider.syncs === "contacts"
               ? "No sync runs yet. Re-sync now to pull recent customers."
