@@ -64,7 +64,10 @@ export async function GET(req: NextRequest) {
     const app = await loadProviderApp("meta");
     if (!app) throw new Error("meta_not_configured");
 
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", oauthBase(req)).origin;
+    const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", oauthBase(req)).origin).replace(
+      /\/+$/,
+      "",
+    );
     const redirectUri = `${appUrl}/api/connections/meta/callback`;
 
     // Step 1: code → short-lived user token. Meta's token endpoint takes creds

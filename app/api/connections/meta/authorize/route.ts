@@ -34,7 +34,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(new URL("/connections?error=meta_not_configured", req.url));
   }
 
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin).replace(
+    /\/+$/,
+    "",
+  );
   const redirectUri = `${appUrl}/api/connections/meta/callback`;
   const { state, cookieHash } = await signProviderState({ orgId, userId, provider: "meta" });
 
