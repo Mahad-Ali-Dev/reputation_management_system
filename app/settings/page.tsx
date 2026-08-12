@@ -6,16 +6,15 @@ import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 import { loadSettingsData, memberRoleLabel } from "./_lib/data";
-import { SETTINGS_SECTIONS } from "./_lib/sections";
 
 /**
  * /settings — workspace overview hub (designs/settings/main/mockup.png).
  *
  * At-a-glance composition: Profile card (owner + workspace), Team-roles table,
- * Plan card (real plan/price via lib/billing semantics), Quick links, a Usage-
- * meters panel (real 30-day tenant counters, mirroring /subscription's reads)
- * and a row of section-entry cards. Every card links into its existing routed
- * sub-page — all mutations stay on the sub-pages, this page is read-only.
+ * Plan card (real plan/price via lib/billing semantics), a Usage-meters panel
+ * (real 30-day tenant counters, mirroring /subscription's reads) and a row of
+ * section-entry cards. Every card links into its existing routed sub-page —
+ * all mutations stay on the sub-pages, this page is read-only.
  */
 export const dynamic = "force-dynamic";
 
@@ -361,31 +360,6 @@ export default async function SettingsOverviewPage() {
           )}
         </section>
 
-        {/* ── Quick links ─────────────────────────────────────────── */}
-        <section className="set-card set-sum">
-          <div className="set-sum__head">
-            <span className="set-tile set-tile--sm set-tile--indigo">
-              <Icon name="share" size={16} />
-            </span>
-            <div className="set-sum__titles">
-              <h2 className="set-sum__title">Quick links</h2>
-              <p className="set-sum__sub">Jump to a section</p>
-            </div>
-          </div>
-          <nav className="set-qlinks" aria-label="Settings quick links">
-            {SECTION_CARDS.map((s) => (
-              <Link key={s.id} href={s.href} className="set-qlink">
-                <Icon
-                  name={SETTINGS_SECTIONS.find((x) => x.id === s.id)?.icon ?? "settings"}
-                  size={16}
-                  className="set-qlink__ic"
-                />
-                <span className="set-qlink__label">{s.title}</span>
-                <Icon name="chevR" size={14} className="set-qlink__chev" />
-              </Link>
-            ))}
-          </nav>
-        </section>
       </div>
 
       {/* ── Usage meters ──────────────────────────────────────────── */}
