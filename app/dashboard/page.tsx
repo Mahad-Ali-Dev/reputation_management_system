@@ -11,6 +11,7 @@ import {
   getDashboardData,
   getSetupState,
 } from "@/lib/dashboard/queries";
+import { normalizeRangeDays } from "@/lib/date-range";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { getOnboardingFacts } from "@/lib/onboarding/facts";
@@ -159,7 +160,7 @@ export default async function DashboardPage({
     arr.length >= 2 && arr.some((v) => v > 0) ? arr : undefined;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]} biz={org.name}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]}>
       {/* Website crawls run as background jobs, so the owner can start one and
           close the modal. This is the only place they'd otherwise see it's
           still working. Renders nothing when there's nothing in flight. */}
