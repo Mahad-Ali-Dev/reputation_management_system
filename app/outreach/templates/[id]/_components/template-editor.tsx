@@ -98,10 +98,13 @@ export function TemplateEditor({
       }}
     >
       {/* Left: form */}
+      {/* `ds-card` carries no padding of its own — every other usage in the app
+          passes it explicitly. Without it the form's fields sat flush against
+          the card edges. */}
       <form
         action={upsertOutreachTemplate}
         className="ds-card"
-        style={{ display: "flex", flexDirection: "column", gap: 16 }}
+        style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}
       >
         {initial.id && <input type="hidden" name="id" value={initial.id} />}
         <input type="hidden" name="channel" value={channel} />
@@ -240,8 +243,9 @@ export function TemplateEditor({
         </div>
       </form>
 
-      {/* Right: recipient preview */}
-      <div style={{ position: "sticky", top: 12 }}>
+      {/* Right: recipient preview. Matches the form's top padding so the two
+          column headings sit on the same baseline. */}
+      <div style={{ position: "sticky", top: 12, paddingTop: 20 }}>
         <span className="lbl">Preview — what the recipient sees</span>
         {channel === "email" ? (
           <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
