@@ -88,123 +88,121 @@ export function KnowledgeSummary({
 
   return (
     <div className="akb-summary">
-        {/* knowledge strength */}
-        <section className="akb-card akb-readiness" aria-label="Knowledge strength">
-          <span className="akb-readiness__tile" aria-hidden="true">
-            <Image
-              src={`${ASSET}/knowledge-strength.svg`}
-              alt=""
-              width={76}
-              height={76}
-              unoptimized
-            />
+      {/* knowledge strength */}
+      <section className="akb-card akb-readiness" aria-label="Knowledge strength">
+        <span className="akb-readiness__tile" aria-hidden="true">
+          <Image
+            src={`${ASSET}/knowledge-strength.svg`}
+            alt=""
+            width={76}
+            height={76}
+            unoptimized
+          />
+        </span>
+        <div className="akb-readiness__body">
+          <span className="akb-eyebrow">
+            Knowledge strength
+            <Icon name="info" size={12} />
           </span>
-          <div className="akb-readiness__body">
-            <span className="akb-eyebrow">
-              Knowledge strength
-              <Icon name="info" size={12} />
-            </span>
-            <h3 className="akb-readiness__metric">
-              Brain readiness: <span style={{ color: "var(--akb-success)" }}>{readinessPct}%</span>
-            </h3>
-            <p className="akb-readiness__copy">{readinessCopy}</p>
-            {/* biome-ignore lint/a11y/useFocusableInteractive: progressbar is a display-only ARIA value, not a focusable control */}
-            <div
-              className="akb-progress"
-              role="progressbar"
-              aria-label={`Brain readiness ${readinessPct} percent`}
-              aria-valuenow={readinessPct}
-              aria-valuemin={0}
-              aria-valuemax={100}
-            >
-              <div className="akb-progress__fill" style={{ width: `${readinessPct}%` }} />
-            </div>
+          <h3 className="akb-readiness__metric">
+            Brain readiness: <span style={{ color: "var(--akb-success)" }}>{readinessPct}%</span>
+          </h3>
+          <p className="akb-readiness__copy">{readinessCopy}</p>
+          {/* biome-ignore lint/a11y/useFocusableInteractive: progressbar is a display-only ARIA value, not a focusable control */}
+          <div
+            className="akb-progress"
+            role="progressbar"
+            aria-label={`Brain readiness ${readinessPct} percent`}
+            aria-valuenow={readinessPct}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <div className="akb-progress__fill" style={{ width: `${readinessPct}%` }} />
           </div>
-          <div className="akb-ring" aria-hidden="true">
-            <svg width="134" height="134" viewBox="0 0 134 134" aria-hidden="true">
-              <circle cx="67" cy="67" r={R} fill="none" stroke="var(--akb-track)" strokeWidth="8" />
-              <circle
-                cx="67"
-                cy="67"
-                r={R}
-                fill="none"
-                stroke="var(--akb-success)"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={C}
-                strokeDashoffset={offset}
-              />
-            </svg>
-            <span className="akb-ring__label">{readinessPct}%</span>
-          </div>
-        </section>
+        </div>
+        <div className="akb-ring" aria-hidden="true">
+          <svg width="134" height="134" viewBox="0 0 134 134" aria-hidden="true">
+            <circle cx="67" cy="67" r={R} fill="none" stroke="var(--akb-track)" strokeWidth="8" />
+            <circle
+              cx="67"
+              cy="67"
+              r={R}
+              fill="none"
+              stroke="var(--akb-success)"
+              strokeWidth="8"
+              strokeLinecap="round"
+              strokeDasharray={C}
+              strokeDashoffset={offset}
+            />
+          </svg>
+          <span className="akb-ring__label">{readinessPct}%</span>
+        </div>
+      </section>
 
-        {/* stats 2x2 */}
-        <section className="akb-card akb-stats" aria-label="Knowledge base stats">
-          <div className="akb-stat">
-            <div className="akb-stat__head">
-              <span className="akb-stat__tile" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/stat-total-sources.svg`}
-                  alt=""
-                  width={30}
-                  height={30}
-                  unoptimized
-                />
-              </span>
-              <span className="akb-stat__label">Total sources</span>
-            </div>
-            <div className="akb-stat__value">{totalSources}</div>
+      {/* stats 2x2 */}
+      <section className="akb-card akb-stats" aria-label="Knowledge base stats">
+        <div className="akb-stat">
+          <div className="akb-stat__head">
+            <span className="akb-stat__tile" aria-hidden="true">
+              <Image
+                src={`${ASSET}/stat-total-sources.svg`}
+                alt=""
+                width={30}
+                height={30}
+                unoptimized
+              />
+            </span>
+            <span className="akb-stat__label">Total sources</span>
           </div>
-          <div className="akb-stat">
-            <div className="akb-stat__head">
-              <span className="akb-stat__tile" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/stat-active-sources.svg`}
-                  alt=""
-                  width={30}
-                  height={30}
-                  unoptimized
-                />
-              </span>
-              <span className="akb-stat__label">Active sources</span>
-              {activeSources > 0 && <span className="akb-stat__dot" aria-hidden="true" />}
-            </div>
-            <div className="akb-stat__value">{activeSources}</div>
+          <div className="akb-stat__value">{totalSources}</div>
+        </div>
+        <div className="akb-stat">
+          <div className="akb-stat__head">
+            <span className="akb-stat__tile" aria-hidden="true">
+              <Image
+                src={`${ASSET}/stat-active-sources.svg`}
+                alt=""
+                width={30}
+                height={30}
+                unoptimized
+              />
+            </span>
+            <span className="akb-stat__label">Active sources</span>
+            {activeSources > 0 && <span className="akb-stat__dot" aria-hidden="true" />}
           </div>
-          <div className="akb-stat">
-            <div className="akb-stat__head">
-              <span className="akb-stat__tile" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/stat-last-updated.svg`}
-                  alt=""
-                  width={30}
-                  height={30}
-                  unoptimized
-                />
-              </span>
-              <span className="akb-stat__label">Last updated</span>
-            </div>
-            <div className="akb-stat__value akb-stat__value--sm">
-              {lastUpdated ? relativeTime(lastUpdated) : "—"}
-            </div>
+          <div className="akb-stat__value">{activeSources}</div>
+        </div>
+        <div className="akb-stat">
+          <div className="akb-stat__head">
+            <span className="akb-stat__tile" aria-hidden="true">
+              <Image
+                src={`${ASSET}/stat-last-updated.svg`}
+                alt=""
+                width={30}
+                height={30}
+                unoptimized
+              />
+            </span>
+            <span className="akb-stat__label">Last updated</span>
           </div>
-          <div className="akb-stat">
-            <div className="akb-stat__head">
-              <span className="akb-stat__tile" aria-hidden="true">
-                <Image src={`${ASSET}/stat-status.svg`} alt="" width={30} height={30} unoptimized />
-              </span>
-              <span className="akb-stat__label">Status</span>
-            </div>
-            <div style={{ marginTop: 12 }}>
-              <span
-                className={`akb-pill ${hasSources ? "akb-pill--success" : "akb-pill--warning"}`}
-              >
-                {statusLabel}
-              </span>
-            </div>
+          <div className="akb-stat__value akb-stat__value--sm">
+            {lastUpdated ? relativeTime(lastUpdated) : "—"}
           </div>
-        </section>
+        </div>
+        <div className="akb-stat">
+          <div className="akb-stat__head">
+            <span className="akb-stat__tile" aria-hidden="true">
+              <Image src={`${ASSET}/stat-status.svg`} alt="" width={30} height={30} unoptimized />
+            </span>
+            <span className="akb-stat__label">Status</span>
+          </div>
+          <div style={{ marginTop: 12 }}>
+            <span className={`akb-pill ${hasSources ? "akb-pill--success" : "akb-pill--warning"}`}>
+              {statusLabel}
+            </span>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -247,7 +245,11 @@ export function KnowledgeBody({
           </p>
           {hasSources ? (
             <div className="akb-sources__grid">
-              <a className="akb-source akb-source--upload" href="#add-source">
+              <button
+                type="button"
+                className="akb-source akb-source--upload"
+                data-kb-action="upload"
+              >
                 <span className="akb-source__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/upload-doc.svg`}
@@ -260,8 +262,12 @@ export function KnowledgeBody({
                 <span className="akb-source__title">Upload documents</span>
                 <span className="akb-source__desc">PDF, DOCX, TXT</span>
                 <span className="akb-source__desc">Drag &amp; drop or click to browse</span>
-              </a>
-              <a className="akb-source akb-source--full" href="#add-source">
+              </button>
+              <button
+                type="button"
+                className="akb-source akb-source--full"
+                data-kb-action="connect"
+              >
                 <span className="akb-source__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/connect-website.svg`}
@@ -276,12 +282,12 @@ export function KnowledgeBody({
                   <span className="akb-source__desc">Auto-scrape your website</span>
                 </span>
                 {websiteActive && <span className="akb-pill akb-pill--success">Active</span>}
-              </a>
+              </button>
             </div>
           ) : (
             <div className="akb-sources__empty">
               {/* large "Business grid" dashed dropzone (kit empty layout) */}
-              <a className="akb-source akb-source--grid" href="#add-source">
+              <button type="button" className="akb-source akb-source--grid" data-kb-action="upload">
                 <span className="akb-source__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/upload-doc.svg`}
@@ -295,10 +301,14 @@ export function KnowledgeBody({
                 <span className="akb-source__desc">
                   Upload documents or connect a website to be searchable for AI knowledge.
                 </span>
-              </a>
+              </button>
               {/* right column: two stacked dashed action boxes */}
               <div className="akb-sources__empty-col">
-                <a className="akb-source akb-source--box" href="#add-source">
+                <button
+                  type="button"
+                  className="akb-source akb-source--box"
+                  data-kb-action="upload"
+                >
                   <span className="akb-source__icon" aria-hidden="true">
                     <Image
                       src={`${ASSET}/upload-doc.svg`}
@@ -312,8 +322,12 @@ export function KnowledgeBody({
                     <span className="akb-source__title">Upload documents</span>
                     <span className="akb-source__desc">PDF, DOCX, TXT</span>
                   </span>
-                </a>
-                <a className="akb-source akb-source--box" href="#add-source">
+                </button>
+                <button
+                  type="button"
+                  className="akb-source akb-source--box"
+                  data-kb-action="connect"
+                >
                   <span className="akb-source__icon" aria-hidden="true">
                     <Image
                       src={`${ASSET}/connect-website.svg`}
@@ -327,12 +341,12 @@ export function KnowledgeBody({
                     <span className="akb-source__title">Connect website</span>
                     <span className="akb-source__desc">Auto-scrape your website</span>
                   </span>
-                </a>
+                </button>
               </div>
             </div>
           )}
           <div className="akb-card__foot">
-            <a className="akb-link" href="#add-source">
+            <a className="akb-link" href="/ai?tab=sources">
               View all sources <Icon name="arrowR" size={13} />
             </a>
           </div>
@@ -343,7 +357,7 @@ export function KnowledgeBody({
           <h3 className="akb-card__title">Quick actions</h3>
           <div className="akb-qa" style={{ marginTop: 14 }}>
             <div className="akb-qa__list">
-              <a className="akb-qa__row" href="#add-source">
+              <button type="button" className="akb-qa__row" data-kb-action="upload">
                 <span className="akb-qa__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/qa-add-source.svg`}
@@ -357,7 +371,7 @@ export function KnowledgeBody({
                   <div className="akb-qa__title">Add new source</div>
                   <div className="akb-qa__desc">Upload docs or connect a website</div>
                 </span>
-              </a>
+              </button>
               <Link className="akb-qa__row" href="/ai?tab=test">
                 <span className="akb-qa__icon" aria-hidden="true">
                   <Image
