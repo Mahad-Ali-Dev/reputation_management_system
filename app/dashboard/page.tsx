@@ -6,7 +6,11 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { syncSubscriptionOnReturn } from "@/lib/billing/sync";
-import { type SetupState, getDashboardData, getSetupState } from "@/lib/dashboard/queries";
+import {
+  type SetupState,
+  getDashboardData,
+  getSetupState,
+} from "@/lib/dashboard/queries";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { getOnboardingFacts } from "@/lib/onboarding/facts";
@@ -45,11 +49,17 @@ const ASSETS = "/assets/repulabs/dashboard";
 export default async function DashboardPage({
   searchParams,
 }: {
-  searchParams: Promise<{ checkout?: string; session_id?: string }>;
+  searchParams: Promise<{
+    checkout?: string;
+    session_id?: string;
+    range?: string;
+  }>;
 }) {
   const { orgId, userName, userEmail, org } = await getOrgContext();
 
   const params = await searchParams;
+  // Window from the topbar date pill (7 | 30 | 90, default 30).
+  const rangeDays = normalizeRangeDays(params.range);
 
   // Sync-on-return after Stripe Checkout. Idempotent with the webhook, scoped
   // strictly to THIS org's stripeCustomerId (never trusts session_id blindly),
@@ -57,17 +67,22 @@ export default async function DashboardPage({
   // shows when the org actually reflects pro/active.
   let checkoutPlan = org.plan;
   if (params.checkout === "success") {
-    await syncSubscriptionOnReturn(orgId, org.stripeCustomerId, params.session_id ?? null);
+    await syncSubscriptionOnReturn(
+      orgId,
+      org.stripeCustomerId,
+      params.session_id ?? null,
+    );
     const refreshed = await prisma.organization.findUnique({
       where: { id: orgId },
       select: { plan: true },
     });
     checkoutPlan = refreshed?.plan ?? checkoutPlan;
   }
-  const checkoutActive = params.checkout === "success" && checkoutPlan === "pro";
+  const checkoutActive =
+    params.checkout === "success" && checkoutPlan === "pro";
 
   const [d, setup, facts] = await Promise.all([
-    getDashboardData(orgId),
+    getDashboardData(orgId, rangeDays),
     getSetupState(orgId),
     getOnboardingFacts(orgId),
   ]);
@@ -102,7 +117,8 @@ export default async function DashboardPage({
             ? "done"
             : r.content && r.content.length > 40
               ? "indexing"
-              : "crawling") as "queued" | "crawling" | "indexing" | "done" | "failed",
+              : "crawling") as
+          "queued" | "crawling" | "indexing" | "done" | "failed",
         chunks: r._count.embeddings,
         message: r.status === "failed" ? r.content : null,
       })),
@@ -126,12 +142,15 @@ export default async function DashboardPage({
 
   const total = d.total;
   const avgRating = d.avgRating;
-  const byRating = (r: number) => d.ratingGroups.find((g) => g.rating === r)?.count ?? 0;
+  const byRating = (r: number) =>
+    d.ratingGroups.find((g) => g.rating === r)?.count ?? 0;
   const fiveStarCount = byRating(5);
-  const responseRate = total > 0 ? Math.min(100, Math.round((d.repliedCount / total) * 100)) : 0;
+  const responseRate =
+    total > 0 ? Math.min(100, Math.round((d.repliedCount / total) * 100)) : 0;
   const hasGoogle = d.hasGoogle;
 
-  const firstName = userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
+  const firstName =
+    userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
   const isEmpty = total === 0 && !hasGoogle;
 
   // Sparklines render only from REAL non-flat series (kit rule: a chip with no
@@ -176,19 +195,29 @@ export default async function DashboardPage({
                   growth board). Same asset in BOTH states (the kit reuses it),
                   extracted from the delivered kit SVG at full resolution and
                   shown large per the brief. */}
-              <img className="dk-hero__art" src={`${ASSETS}/kit-hero-board.png`} alt="" />
+              <img
+                className="dk-hero__art"
+                src={`${ASSETS}/kit-hero-board.png`}
+                alt=""
+              />
             </div>
 
             <div className="dk-card dk-train">
-              <img className="dk-train__icon" src={`${ASSETS}/kit-train-stack.png`} alt="" />
+              <img
+                className="dk-train__icon"
+                src={`${ASSETS}/kit-train-stack.png`}
+                alt=""
+              />
               <div className="dk-train__body">
                 <h2 className="dk-train__title">Train your agent</h2>
                 <p className="dk-train__sub">
-                  Teach your AI agent about your business so it can give smarter, on-brand answers.
+                  Teach your AI agent about your business so it can give
+                  smarter, on-brand answers.
                 </p>
               </div>
               <Link href="/ai" className="dk-train__cta">
-                <Icon name="sparkle" size={14} /> Train your agent <Icon name="arrowR" size={13} />
+                <Icon name="sparkle" size={14} /> Train your agent{" "}
+                <Icon name="arrowR" size={13} />
               </Link>
             </div>
 
@@ -230,34 +259,42 @@ export default async function DashboardPage({
             <StatChip
               label="Average Rating"
               icon="kit-stat-rating.png"
-              value={total > 0 ? avgRating.toFixed(1) : null}
-              star={total > 0}
+              value={
+                d.avgRatingInRange !== null
+                  ? d.avgRatingInRange.toFixed(1)
+                  : null
+              }
+              star={d.avgRatingInRange !== null}
               delta={
-                d.deltas30d.ratingAbs !== null && d.deltas30d.ratingAbs !== 0
+                d.deltas.ratingAbs !== null && d.deltas.ratingAbs !== 0
                   ? {
-                      text: Math.abs(d.deltas30d.ratingAbs).toFixed(1),
-                      dir: d.deltas30d.ratingAbs > 0 ? "up" : "down",
+                      text: Math.abs(d.deltas.ratingAbs).toFixed(1),
+                      dir: d.deltas.ratingAbs > 0 ? "up" : "down",
                     }
                   : null
               }
               spark={series(d.ratingTrendPoints) ?? null}
+              rangeDays={rangeDays}
               sparkColor="#2563eb"
               noneTitle="No ratings yet"
               noneHint="Ratings will appear here"
             />
             <StatChip
-              label="Total Reviews"
+              label="Reviews"
               icon="kit-stat-reviews.png"
-              value={total > 0 ? total.toLocaleString() : null}
+              value={
+                d.reviewsInRange > 0 ? d.reviewsInRange.toLocaleString() : null
+              }
               delta={
-                d.deltas30d.reviewsPct !== null && d.deltas30d.reviewsPct !== 0
+                d.deltas.reviewsPct !== null && d.deltas.reviewsPct !== 0
                   ? {
-                      text: `${Math.abs(d.deltas30d.reviewsPct)}%`,
-                      dir: d.deltas30d.reviewsPct > 0 ? "up" : "down",
+                      text: `${Math.abs(d.deltas.reviewsPct)}%`,
+                      dir: d.deltas.reviewsPct > 0 ? "up" : "down",
                     }
                   : null
               }
               spark={series(d.weeklyReviews) ?? null}
+              rangeDays={rangeDays}
               sparkColor="#16a34a"
               noneTitle="No reviews yet"
               noneHint="Reviews will appear here"
@@ -265,34 +302,44 @@ export default async function DashboardPage({
             <StatChip
               label="AI Replies Sent"
               icon="kit-stat-ai-replies.png"
-              value={d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null}
+              value={
+                d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null
+              }
               delta={
-                d.deltas30d.aiRepliesPct !== null && d.deltas30d.aiRepliesPct !== 0
+                d.deltas.aiRepliesPct !== null && d.deltas.aiRepliesPct !== 0
                   ? {
-                      text: `${Math.abs(d.deltas30d.aiRepliesPct)}%`,
-                      dir: d.deltas30d.aiRepliesPct > 0 ? "up" : "down",
+                      text: `${Math.abs(d.deltas.aiRepliesPct)}%`,
+                      dir: d.deltas.aiRepliesPct > 0 ? "up" : "down",
                     }
                   : null
               }
               spark={series(d.weeklyAiReplies) ?? null}
+              rangeDays={rangeDays}
               sparkColor="#7c3aed"
               noneTitle="No replies yet"
               noneHint="Replies will appear here"
-              pending={d.pendingReplyCount > 0 ? d.pendingReplyCount : undefined}
+              pending={
+                d.pendingReplyCount > 0 ? d.pendingReplyCount : undefined
+              }
             />
             <StatChip
               label="5-star Reviews"
               icon="kit-stat-five-star.png"
-              value={fiveStarCount > 0 ? fiveStarCount.toLocaleString() : null}
+              value={
+                d.fiveStarInRange > 0
+                  ? d.fiveStarInRange.toLocaleString()
+                  : null
+              }
               delta={
-                d.deltas30d.fiveStarPct !== null && d.deltas30d.fiveStarPct !== 0
+                d.deltas.fiveStarPct !== null && d.deltas.fiveStarPct !== 0
                   ? {
-                      text: `${Math.abs(d.deltas30d.fiveStarPct)}%`,
-                      dir: d.deltas30d.fiveStarPct > 0 ? "up" : "down",
+                      text: `${Math.abs(d.deltas.fiveStarPct)}%`,
+                      dir: d.deltas.fiveStarPct > 0 ? "up" : "down",
                     }
                   : null
               }
               spark={series(d.weeklyFiveStar) ?? null}
+              rangeDays={rangeDays}
               sparkColor="#f59e0b"
               noneTitle="No 5-star reviews yet"
               noneHint="5-star reviews will appear here"
@@ -320,11 +367,11 @@ export default async function DashboardPage({
         <section aria-label="Key insights">
           <div className="dk-insights__head">
             <h2 className="dk-insights__title">Key Insights</h2>
-            {/* Kit shows a "30 days ⌄" range label (static — we don't ship a
-                fake dropdown; insights are fixed to the last 30 days). */}
-            <span className="dk-insights__range">
-              30 days <Icon name="chevD" size={13} />
-            </span>
+            {/* Kit shows a "30 days ⌄" chip here, but these four cards are NOT
+                range-scoped: response rate and sentiment are lifetime ratios and
+                Trend is a fixed 7d comparison. Labelled for what they actually
+                are rather than echoing the topbar window and lying about it. */}
+            <span className="dk-insights__range">All time · 7d trend</span>
           </div>
           <div className="dk-insights__grid">
             <InsightCard
@@ -335,7 +382,11 @@ export default async function DashboardPage({
             <InsightCard
               label="Avg. Response Time"
               art="kit-insight-response-time.png"
-              value={d.avgResponseHours !== null ? fmtHours(d.avgResponseHours) : null}
+              value={
+                d.avgResponseHours !== null
+                  ? fmtHours(d.avgResponseHours)
+                  : null
+              }
             />
             <InsightCard
               label="Sentiment"
@@ -362,7 +413,9 @@ export default async function DashboardPage({
                   : null
               }
               chip={
-                total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
+                total > 0 &&
+                d.reviews7dDeltaPct !== null &&
+                d.reviews7dDeltaPct !== 0
                   ? {
                       text: `${Math.abs(d.reviews7dDeltaPct)}%`,
                       dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
@@ -382,7 +435,9 @@ export default async function DashboardPage({
               <Icon name="sparkle" size={14} /> AI Assistant{" "}
               <span className="dk-copilot__beta">Beta</span>
             </div>
-            <h2 className="dk-copilot__title">Your AI copilot for reputation growth.</h2>
+            <h2 className="dk-copilot__title">
+              Your AI copilot for reputation growth.
+            </h2>
             <p className="dk-copilot__sub">
               Ask anything. Get insights, summaries, and recommendations.
             </p>
@@ -418,7 +473,12 @@ function QuickChip({
   title,
   sub,
   href,
-}: { icon: string; title: string; sub: string; href: string }) {
+}: {
+  icon: string;
+  title: string;
+  sub: string;
+  href: string;
+}) {
   return (
     <Link href={href} className="dk-card dk-quick__chip">
       <img className="dk-quick__icon" src={`${ASSETS}/${icon}`} alt="" />
@@ -449,6 +509,7 @@ function StatChip({
   noneTitle,
   noneHint,
   pending,
+  rangeDays,
 }: {
   label: string;
   icon: string;
@@ -456,6 +517,8 @@ function StatChip({
   value: string | null;
   star?: boolean;
   delta: { text: string; dir: "up" | "down" } | null;
+  /** Selected window, so the delta caption names the real comparison. */
+  rangeDays: number;
   spark: number[] | null;
   sparkColor: string;
   noneTitle: string;
@@ -507,13 +570,20 @@ function StatChip({
         {delta ? (
           <span className={`dk-delta dk-delta--${delta.dir}`}>
             <Icon name={delta.dir === "up" ? "arrowU" : "arrowD"} size={11} />
-            {delta.text} <span className="dk-delta__vs">vs last 30 days</span>
+            {delta.text}{" "}
+            <span className="dk-delta__vs">vs prior {rangeDays} days</span>
           </span>
         ) : (
           <span />
         )}
         {spark && (
-          <Sparkline points={spark} color={sparkColor} width={112} height={38} area={false} />
+          <Sparkline
+            points={spark}
+            color={sparkColor}
+            width={112}
+            height={38}
+            area={false}
+          />
         )}
       </div>
     </div>
@@ -541,7 +611,13 @@ const BAR_COLORS = RATING_COLORS;
 /** Brand-colored Google "G" (the kit shows the multicolor mark, not a tinted glyph). */
 function GoogleG({ size = 14 }: { size?: number }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden focusable="false">
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 48 48"
+      aria-hidden
+      focusable="false"
+    >
       <path
         fill="#EA4335"
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -581,7 +657,12 @@ function GoogleOverviewCard({
           <GoogleG size={15} /> Google Reviews Overview
         </h3>
         {googlePlaceUrl && (
-          <a className="dk-colcard__link" href={googlePlaceUrl} target="_blank" rel="noreferrer">
+          <a
+            className="dk-colcard__link"
+            href={googlePlaceUrl}
+            target="_blank"
+            rel="noreferrer"
+          >
             View on Google <Icon name="ext" size={11} />
           </a>
         )}
@@ -595,7 +676,8 @@ function GoogleOverviewCard({
           />
           <h4 className="dk-cardempty__title">No review data yet</h4>
           <p className="dk-cardempty__sub">
-            Reviews and ratings will appear here once you start receiving reviews.
+            Reviews and ratings will appear here once you start receiving
+            reviews.
           </p>
           <Link href="/connections" className="dk-btn-outline">
             Connect your business <Icon name="arrowR" size={12} />
@@ -608,17 +690,27 @@ function GoogleOverviewCard({
               <div className="dk-google__num">
                 {avg.toFixed(1)}
                 <span className="dk-star" aria-hidden>
-                  <Icon name="star" size={20} style={{ fill: "currentColor" }} />
+                  <Icon
+                    name="star"
+                    size={20}
+                    style={{ fill: "currentColor" }}
+                  />
                 </span>
               </div>
-              <div className="dk-google__based">Based on {total.toLocaleString()} reviews</div>
+              <div className="dk-google__based">
+                Based on {total.toLocaleString()} reviews
+              </div>
             </div>
             <div className="dk-google__dist">
               {[5, 4, 3, 2, 1].map((r) => (
                 <div key={r} className="dk-dist-row">
                   <span className="dk-dist-row__label">
                     {r}
-                    <span className="dk-star" style={{ color: "var(--dk-star)" }} aria-hidden>
+                    <span
+                      className="dk-star"
+                      style={{ color: "var(--dk-star)" }}
+                      aria-hidden
+                    >
                       ★
                     </span>
                   </span>
@@ -638,7 +730,8 @@ function GoogleOverviewCard({
             <RatingDonut total={total} byRating={byRating} />
           </div>
           <Link href="/reviews" className="dk-btn-outline dk-btn-outline--end">
-            <Icon name="chat" size={13} /> Manage Reviews <Icon name="arrowR" size={12} />
+            <Icon name="chat" size={13} /> Manage Reviews{" "}
+            <Icon name="arrowR" size={12} />
           </Link>
         </>
       )}
@@ -647,7 +740,13 @@ function GoogleOverviewCard({
 }
 
 /** Multi-segment donut of the REAL rating split, total reviews in the center. */
-function RatingDonut({ total, byRating }: { total: number; byRating: (r: number) => number }) {
+function RatingDonut({
+  total,
+  byRating,
+}: {
+  total: number;
+  byRating: (r: number) => number;
+}) {
   // Mockup donut is ~94px outer diameter with a ~10px ring (sampled), smaller and
   // thinner than the previous 112/14.
   const size = 96;
@@ -738,7 +837,9 @@ function RecentReviewsCard({
             alt=""
           />
           <h4 className="dk-cardempty__title">No reviews yet</h4>
-          <p className="dk-cardempty__sub">Reviews from your customers will appear here.</p>
+          <p className="dk-cardempty__sub">
+            Reviews from your customers will appear here.
+          </p>
         </div>
       ) : (
         <div>
@@ -750,10 +851,14 @@ function RecentReviewsCard({
                 {initials(rv.reviewerName)}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span className="dk-review-row__name">{rv.reviewerName ?? "Anonymous"}</span>
+                <span className="dk-review-row__name">
+                  {rv.reviewerName ?? "Anonymous"}
+                </span>
                 <span className="dk-review-row__meta">
                   <Stars value={rv.rating} size={12} />
-                  <span className="dk-review-row__time">{rv.postedAt ? rel(rv.postedAt) : ""}</span>
+                  <span className="dk-review-row__time">
+                    {rv.postedAt ? rel(rv.postedAt) : ""}
+                  </span>
                 </span>
                 {rv.body && <p className="dk-review-row__body">{rv.body}</p>}
               </span>
@@ -774,7 +879,13 @@ function RecentReviewsCard({
 // Setup Progress
 // ============================================================
 
-function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boolean }) {
+function SetupProgressCard({
+  setup,
+  isEmpty,
+}: {
+  setup: SetupState;
+  isEmpty: boolean;
+}) {
   const left = setup.total - setup.completed;
   const nextHref = setup.steps.find((s) => !s.done)?.href ?? "/connections";
   return (
@@ -798,12 +909,13 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
             </>
           ) : isEmpty || setup.completed === 0 ? (
             <>
-              <strong>Let's get you all set up!</strong> Complete these steps to get the most out of
-              Repulabs.
+              <strong>Let's get you all set up!</strong> Complete these steps to
+              get the most out of Repulabs.
             </>
           ) : (
             <>
-              <strong>Almost there!</strong> {left} step{left === 1 ? "" : "s"} left to go live.
+              <strong>Almost there!</strong> {left} step{left === 1 ? "" : "s"}{" "}
+              left to go live.
             </>
           )}
         </p>
@@ -823,7 +935,10 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
                 name="round"
                 size={18}
                 style={{
-                  color: setup.completed > 0 ? "var(--dk-green, #16a34a)" : "var(--dk-ph, #9ca3af)",
+                  color:
+                    setup.completed > 0
+                      ? "var(--dk-green, #16a34a)"
+                      : "var(--dk-ph, #9ca3af)",
                   flexShrink: 0,
                 }}
               />
@@ -861,7 +976,9 @@ function InsightCard({
 }) {
   return (
     <div className="dk-card dk-insight">
-      {art && <img className="dk-insight__icon" src={`${ASSETS}/${art}`} alt="" />}
+      {art && (
+        <img className="dk-insight__icon" src={`${ASSETS}/${art}`} alt="" />
+      )}
       <div style={{ minWidth: 0 }}>
         <div className="dk-insight__label">{label}</div>
         {value === null ? (
@@ -873,8 +990,12 @@ function InsightCard({
           <div className="dk-insight__value">
             {value}
             {chip && (
-              <span className={`dk-insight__chip dk-insight__chip--${chip.dir}`}>
-                {chip.arrow === false ? chip.text : `${chip.dir === "up" ? "↑" : "↓"} ${chip.text}`}
+              <span
+                className={`dk-insight__chip dk-insight__chip--${chip.dir}`}
+              >
+                {chip.arrow === false
+                  ? chip.text
+                  : `${chip.dir === "up" ? "↑" : "↓"} ${chip.text}`}
               </span>
             )}
           </div>
@@ -901,7 +1022,11 @@ function initials(name: string | null): string {
   return `${first}${last}`.toUpperCase() || "?";
 }
 
-function sentimentLabel(s: { positivePct: number; neutralPct: number; negativePct: number }): {
+function sentimentLabel(s: {
+  positivePct: number;
+  neutralPct: number;
+  negativePct: number;
+}): {
   label: string;
   pct: number;
   dir: "up" | "down";

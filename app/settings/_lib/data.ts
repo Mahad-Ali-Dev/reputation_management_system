@@ -26,6 +26,8 @@ export type SettingsOrg = {
 export type SettingsMember = {
   id: string;
   role: string;
+  /** Tab whitelist (lib/access/tabs.ts) — empty means unrestricted. */
+  allowedTabs: string[];
   user: { name: string | null; email: string | null };
 };
 

@@ -46,7 +46,11 @@ export function StackedBars({
         let cumulative = 0;
         const label = labels?.[i];
         return (
-          <g key={`bar-${label ?? i}`}>
+          // Index, not label: callers may pass repeated/blank labels (e.g.
+          // labels={["", "", ""]} when only the segment colors matter), which
+          // collapsed every bar to the same key and duplicated/dropped bars.
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed bars per chart, same as the seg- key below
+          <g key={`bar-${i}`}>
             {stack.map((v, si) => {
               const h = (v / max) * (height - 32);
               const y = height - 22 - h - cumulative;

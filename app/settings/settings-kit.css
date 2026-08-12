@@ -67,6 +67,15 @@
   font-family: inherit;
 }
 
+/* The kit hero carries its own headroom, so the app-wide 36px top padding on
+   .scroll reads as too much space above it here. Page-scoped via :has() so only
+   settings tightens up, and desktop-only so mobile keeps its own 16px. */
+@media (min-width: 768px) {
+  .scroll:has(.set-shell) {
+    padding-top: 22px;
+  }
+}
+
 /* ── Hero banner (shared) ──────────────────────────────────────────────── */
 .set-hero {
   position: relative;
@@ -634,13 +643,18 @@
 }
 .set-hub__top {
   display: grid;
-  grid-template-columns: minmax(0, 4.6fr) minmax(0, 8fr) minmax(0, 4.7fr) minmax(0, 4.7fr);
+  grid-template-columns: minmax(0, 4.6fr) minmax(0, 8fr) minmax(0, 4.7fr);
   gap: 20px;
   align-items: stretch;
 }
 @media (max-width: 1280px) {
   .set-hub__top {
     grid-template-columns: 1fr 1fr;
+  }
+  /* Three cards in two columns — let the last one span the row it lands on
+     rather than leaving a hole beside it. */
+  .set-hub__top > :last-child {
+    grid-column: 1 / -1;
   }
 }
 @media (max-width: 640px) {
@@ -649,7 +663,7 @@
   }
 }
 
-/* Summary card (Profile / Team / Plan / Quick links) */
+/* Summary card (Profile / Team / Plan) */
 .set-sum {
   display: flex;
   flex-direction: column;
@@ -790,53 +804,22 @@
   font-weight: 500;
   color: var(--set-mut);
 }
+/* Kept small enough to clear .set-plan__renew, which sits in the same corner
+   of the tile — at the previous 104×78 the art crowded the renewal date. */
 .set-plan__art {
   position: absolute;
   right: 8px;
   bottom: 6px;
-  width: 104px;
-  height: 78px;
+  width: 76px;
+  height: 56px;
   object-fit: contain;
   pointer-events: none;
 }
 .set-plan__renew {
+  position: relative;
   font-size: 12px;
   color: var(--set-mut-2);
   margin-top: 8px;
-}
-
-/* Quick links list */
-.set-qlinks {
-  display: flex;
-  flex-direction: column;
-}
-.set-qlink {
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 9px 4px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--set-ink-2);
-  text-decoration: none;
-  border-radius: 8px;
-  transition: background 0.13s ease;
-}
-.set-qlink + .set-qlink {
-  border-top: 1px solid var(--set-track);
-}
-.set-qlink:hover {
-  background: #f8fafc;
-}
-.set-qlink__ic {
-  flex-shrink: 0;
-  color: var(--set-indigo);
-}
-.set-qlink__label {
-  flex: 1;
-}
-.set-qlink__chev {
-  color: var(--set-mut-2);
 }
 
 /* Usage meters */

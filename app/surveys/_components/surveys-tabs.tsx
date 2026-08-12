@@ -20,7 +20,8 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
 import { AiInsightsPanel } from "./ai-insights-panel";
 import { AutomationsPanel } from "./automations-panel";
-import { IncentivesPanel } from "./incentives-panel";
+// Incentives tab is hidden for now (not removed — see TAB_KEYS/tabs[] below).
+// import { IncentivesPanel } from "./incentives-panel";
 import { ResponsesCharts } from "./responses-charts";
 import { ResponsesTable } from "./responses-table";
 import { StatCards } from "./stat-cards";
@@ -31,8 +32,9 @@ const KIT = "/assets/repulabs/customer-surveys";
 /**
  * The Surveys workspace controller (Module 11) — laid out as the survey
  * lifecycle: Campaigns → Templates (Builder picker) → Automations → Results →
- * AI Insights → Incentives. The old standalone `/surveys/coupons` page now lives
- * here as the Incentives tab.
+ * AI Insights. The old standalone `/surveys/coupons` page lives here as the
+ * Incentives tab, currently commented out (not removed) — see TAB_KEYS /
+ * tabs[] / the panel div below to re-enable it.
  *
  * Uses the Wave-0 `TabBar` in CONTROLLED mode so ALL panels stay mounted
  * (per-tab client state — an in-progress automation form, scroll position —
@@ -97,7 +99,7 @@ const TAB_KEYS = [
   "automations",
   "responses",
   "insights",
-  "incentives",
+  // "incentives", // hidden for now — not removed, see the tabs[]/panel below
 ] as const;
 type TabKey = (typeof TAB_KEYS)[number];
 
@@ -131,12 +133,14 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
     { key: "automations", label: "Automations", icon: "bolt", badge: data.automations.length || undefined },
     { key: "responses", label: "Results", icon: "pie", badge: data.responseCount || undefined },
     { key: "insights", label: "AI Insights", icon: "brain" },
-    {
-      key: "incentives",
-      label: "Incentives",
-      icon: "star",
-      badge: data.couponStats.issued || undefined,
-    },
+    // Hidden for now — not removed. Re-enable by uncommenting this entry,
+    // the "incentives" key in TAB_KEYS above, and the panel div below.
+    // {
+    //   key: "incentives",
+    //   label: "Incentives",
+    //   icon: "star",
+    //   badge: data.couponStats.issued || undefined,
+    // },
   ];
 
   return (
@@ -176,9 +180,11 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
           hasAccess={data.hasInsightsAccess}
         />
       </div>
-      <div hidden={tab !== "incentives"}>
+      {/* Hidden for now — not removed. Re-enable alongside the tabs[] entry
+          and TAB_KEYS above. */}
+      {/* <div hidden={tab !== "incentives"}>
         <IncentivesPanel stats={data.couponStats} coupons={data.coupons} />
-      </div>
+      </div> */}
     </div>
   );
 }

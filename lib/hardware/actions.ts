@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { ForbiddenError, roleAtLeast } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -34,12 +34,9 @@ const QuantitySchema = z.object({
  * surface. The role check mirrors `requireRole("manager")` exactly.
  */
 async function requireManagerOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  const email = session?.user?.email;
-  const role = (session as { role?: string } | null)?.role ?? null;
-  if (!session || !orgId || !userId || !email) redirect("/login");
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg || !sessionOrg.email) redirect("/login");
+  const { orgId, userId, email, role } = sessionOrg;
   if (!roleAtLeast(role, "manager")) throw new ForbiddenError("manager", role);
   return { orgId, userId, email };
 }

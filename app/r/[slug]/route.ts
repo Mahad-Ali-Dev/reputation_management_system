@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { isAllowedReviewHost, verifySlugSignature } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
+import { resolveReviewRequestClick } from "@/lib/outreach/tracking";
 import { checkRateLimit } from "@/lib/ratelimit";
 import { publicUrl } from "@/lib/url";
 import type { NextRequest } from "next/server";
@@ -52,6 +53,20 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   });
 
   if (!device) {
+    // Not a hardware QR/NFC slug — try a review-request tracking link (every
+    // review request sent since lib/outreach/dispatch.ts started routing
+    // through here). Records the first click + notifies the requester.
+    const rr = await resolveReviewRequestClick(normalizedSlug);
+    if (rr.found) {
+      if (!rr.allowedHost) {
+        const url = publicUrl("/r/external", req);
+        url.searchParams.set("slug", normalizedSlug);
+        url.searchParams.set("to", rr.destination);
+        return NextResponse.redirect(url, { status: 302 });
+      }
+      return NextResponse.redirect(rr.destination, { status: 302 });
+    }
+
     logger.warn({ slug, event: "redirect.unknown_slug" });
     return NextResponse.redirect(publicUrl("/not-activated", req));
   }

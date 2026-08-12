@@ -1,6 +1,7 @@
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
-import { auth, signOut } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
+import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import { NotificationsBell } from "./notifications-bell";
 
@@ -11,10 +12,11 @@ import { NotificationsBell } from "./notifications-bell";
  * `title` kept optional for backward-compat with older callers.
  */
 export async function TopBar({ title }: { title?: string } = {}) {
-  const session = await auth();
-  const name =
-    session?.user?.name ?? session?.user?.email?.split("@")[0] ?? "Account";
-  const role = (session as { role?: string } | null)?.role ?? "Member";
+  const sessionOrg = await resolveSessionOrg();
+  const name = sessionOrg?.name ?? sessionOrg?.email?.split("@")[0] ?? "Account";
+  // Role for the user's ACTIVE org (see lib/auth/active-org.ts) — not
+  // necessarily their role in every workspace they belong to.
+  const role = sessionOrg?.role ?? "Member";
   const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
 
   return (

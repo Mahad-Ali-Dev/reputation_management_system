@@ -380,21 +380,46 @@
   height: 22px;
   background: var(--line);
 }
-.tb__loc {
+.tb__wswrap {
+  position: relative;
+  flex: none;
+}
+.tb__ws {
   display: flex;
   align-items: center;
   gap: 7px;
-  padding: 6px 12px;
+  max-width: 200px;
+  padding: 5px 10px 5px 6px;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--r-pill);
   font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s;
   box-shadow: var(--sh);
 }
-.tb__loc:hover {
+.tb__ws:hover {
   border-color: var(--line-2);
+}
+.tb__ws-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Icon-only past this width — the switcher stays clickable (unlike
+   .tb__datewrap, which fully disappears) since it's a primary control, not a
+   decorative hint. */
+@media (max-width: 560px) {
+  .tb__ws {
+    max-width: none;
+    padding: 5px;
+  }
+  .tb__ws-name {
+    display: none;
+  }
 }
 .tb__search {
   flex: 1;
@@ -517,16 +542,15 @@
   box-shadow: 0 0 0 2px var(--surface);
 }
 
-/* Mobile topbar: trim padding, hide crumbs + location pill so the hamburger,
-   page actions, and sign-out stay above the fold on narrow screens. */
+/* Mobile topbar: trim padding, hide crumbs so the hamburger, page actions,
+   and sign-out stay above the fold on narrow screens. */
 @media (max-width: 767px) {
   .tb {
     padding: 0 12px;
     gap: 8px;
   }
   .tb__crumbs,
-  .tb__divider,
-  .tb__loc {
+  .tb__divider {
     display: none;
   }
   .tb__right {

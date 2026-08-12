@@ -57,11 +57,12 @@ export type OverviewMetrics = {
   };
 };
 
-const RANGE_DAYS = new Set([7, 30, 90]);
-export function normalizeRange(range: unknown): number {
-  const n = Number(range);
-  return RANGE_DAYS.has(n) ? n : 30;
-}
+/**
+ * Re-exported from lib/date-range so the topbar date pill, the on-page
+ * RangeSelector, and this report all coerce `?range=` identically. Kept as a
+ * named export here for the existing `@/lib/seo/overview` import sites.
+ */
+export { normalizeRangeDays as normalizeRange } from "@/lib/date-range";
 
 async function loadReputation(orgId: string, since: Date, now: Date): Promise<ReputationMetrics> {
   try {

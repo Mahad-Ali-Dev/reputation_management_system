@@ -23,6 +23,7 @@ const EVENT_ART: Record<string, { art: string; tint: string }> = {
   campaign_completed: { art: `${ASSET}/notif-campaign.svg`, tint: "set-tile--amber" },
   survey_response: { art: `${ASSET}/notif-survey.svg`, tint: "set-tile--blue" },
   teammate_joined: { art: `${ASSET}/notif-teammate.svg`, tint: "set-tile--teal" },
+  review_request_clicked: { art: `${ASSET}/notif-campaign.svg`, tint: "set-tile--violet" },
 };
 
 export default async function NotificationsSettingsPage() {

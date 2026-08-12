@@ -1,6 +1,8 @@
 "use server";
 
 import { createHash, randomBytes } from "node:crypto";
+import { sanitizeTabKeys } from "@/lib/access/tabs";
+import { ACTIVE_ORG_COOKIE } from "@/lib/auth/active-org";
 import { auth, signOut } from "@/lib/auth/config";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
@@ -204,6 +206,17 @@ export async function inviteTeammate(form: FormData): Promise<void> {
     throw new ForbiddenError("owner", role);
   }
 
+  // "Custom access" whitelists specific tabs (lib/access/tabs.ts) on top of
+  // whatever the role already permits; missing/invalid entries are dropped
+  // rather than rejected. Anything that isn't explicitly "custom" — including
+  // a tampered submission — falls back to unrestricted (empty array), same as
+  // every invite before this feature existed. That's a deliberate fail-open:
+  // the actor here already passed `requireRole("admin")`, so a malformed
+  // request degrading to "full access" isn't a privilege escalation, just a
+  // no-op on the restriction.
+  const accessMode = form.get("accessMode") === "custom" ? "custom" : "full";
+  const allowedTabs = accessMode === "custom" ? sanitizeTabKeys(form.getAll("tabs") as string[]) : [];
+
   const plaintextToken = randomBytes(24).toString("base64url");
   const tokenHash = createHash("sha256").update(plaintextToken).digest("hex");
   const expiresAt = new Date(Date.now() + INVITE_TTL_DAYS * 24 * 60 * 60 * 1000);
@@ -214,6 +227,7 @@ export async function inviteTeammate(form: FormData): Promise<void> {
         organizationId: orgId,
         email: parsed.data.email,
         role: parsed.data.role,
+        allowedTabs,
         tokenHash,
         expiresAt,
       },
@@ -225,7 +239,7 @@ export async function inviteTeammate(form: FormData): Promise<void> {
         actorId: userId,
         action: "team.invited",
         resourceType: "invitation",
-        afterData: { email: parsed.data.email, role: parsed.data.role },
+        afterData: { email: parsed.data.email, role: parsed.data.role, allowedTabs },
       },
     });
   });
@@ -359,6 +373,7 @@ export async function acceptInvite(form: FormData): Promise<void> {
       organizationId: true,
       email: true,
       role: true,
+      allowedTabs: true,
       expiresAt: true,
       acceptedAt: true,
     },
@@ -376,9 +391,11 @@ export async function acceptInvite(form: FormData): Promise<void> {
   // verdict.ok implies invite !== null — make it explicit for the type checker.
   if (!invite) throw new Error("Invitation not found.");
 
-  // The stored role is the source of truth — never user-supplied.
+  // The stored role (and tab whitelist) is the source of truth — never
+  // user-supplied at accept time.
   const role = invite.role;
   const orgId = invite.organizationId;
+  const allowedTabs = invite.allowedTabs;
 
   await withTenant(orgId, async (tx) => {
     // Atomic single-use consume: only succeeds if it's still unaccepted.
@@ -399,7 +416,7 @@ export async function acceptInvite(form: FormData): Promise<void> {
     });
     if (!existing) {
       await tx.membership.create({
-        data: { organizationId: orgId, userId, role },
+        data: { organizationId: orgId, userId, role, allowedTabs },
       });
     }
 
@@ -421,7 +438,21 @@ export async function acceptInvite(form: FormData): Promise<void> {
     "team invitation accepted",
   );
 
-  // New membership exists; send them into the app.
+  // A brand-new user gets their OWN workspace auto-created on first sign-in
+  // (see ensureOrgForUser in lib/auth/config.ts), before they ever reach this
+  // action — so by now they typically have two memberships, and the session's
+  // default org is the older (their own), never this one. Set the active-org
+  // cookie so /dashboard actually opens the workspace they just joined instead
+  // of silently falling back to their own empty workspace.
+  const jar = await cookies();
+  jar.set(ACTIVE_ORG_COOKIE, orgId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
   redirect("/dashboard");
 }
 

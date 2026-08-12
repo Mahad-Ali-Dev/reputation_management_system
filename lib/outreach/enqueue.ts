@@ -26,7 +26,7 @@
  */
 
 import { withTenant } from "@/lib/db/with-tenant";
-import { generateSlug, googleReviewUrl } from "@/lib/hardware/codes";
+import { generateSlug } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { createHmac } from "node:crypto";
 import { getHmacSecret } from "@/lib/secrets";
@@ -92,21 +92,16 @@ export async function enqueueReviewRequest(
     }
   }
 
-  // ---- Resolve establishment (Google place + name) ----
+  // ---- Resolve establishment ----
   const estab = await withTenant(orgId, (tx) =>
     tx.establishment.findFirst({
       where: { id: establishmentId, deletedAt: null },
-      select: { id: true, name: true, googlePlaceId: true },
+      select: { id: true, name: true },
     }),
   );
   if (!estab) return { ok: false, reason: "establishment_not_found" };
 
   const trackingSlug = generateSlug();
-  const reviewTarget = googleReviewUrl(estab.googlePlaceId, estab.name);
-  // Mirror the UI path: point /r/{slug} at the Google review URL (no Device row
-  // for review-request slugs in this version).
-  const effectiveLink = reviewTarget;
-
   const scheduledFor = new Date(Date.now() + delayHours * 60 * 60 * 1000);
   const unsubscribeUrl = `${APP_URL}/u?${buildUnsubToken(orgId, channel, recipient)}`;
 
@@ -139,8 +134,9 @@ export async function enqueueReviewRequest(
       }),
     );
     if (claimed.count > 0) {
+      // No reviewLink override here — dispatch derives the tracked /r/{slug}
+      // link itself from the row's shortSlug (see lib/outreach/dispatch.ts).
       const outcome = await dispatchReviewRequest(rr.id, orgId, {
-        reviewLink: effectiveLink,
         unsubscribeUrl,
         businessName: estab.name,
         customBody: args.customBody,

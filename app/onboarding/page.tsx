@@ -99,7 +99,7 @@ export default async function OnboardingPage() {
       : { label: "Continue setup", href: steps[currentIndex]?.href ?? "/dashboard" };
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Setup"]} biz={org.name}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Setup"]}>
       <div className="onb">
         {/* ---------- page head ---------- */}
         <header className="ph" style={{ marginBottom: 0 }}>

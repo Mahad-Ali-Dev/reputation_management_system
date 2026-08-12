@@ -3,7 +3,11 @@
 import { Icon } from "@/components/shell/icon";
 import { createReviewRequest } from "@/lib/outreach/actions";
 import { generateRequestBody } from "@/lib/outreach/ai-generate";
-import { OUTREACH_MERGE_TAGS, resolveMergeTags, sampleContext } from "@/lib/outreach/merge-tags";
+import {
+  OUTREACH_MERGE_TAGS,
+  resolveMergeTags,
+  sampleContext,
+} from "@/lib/outreach/merge-tags";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 
@@ -27,9 +31,17 @@ const SMS_ENABLED = false;
  *   - template picker (fills body/subject from a saved OutreachTemplate),
  *   - merge-tag chips that insert {{tag}} at the cursor,
  *   - char limits (greeting ≤120, body ≤1000),
- *   - live email + SMS preview using the SAME `resolveMergeTags` the server uses,
- *   - Now/Schedule timing + TCPA attestation,
+ *   - live email preview using the SAME `resolveMergeTags` the server uses,
+ *   - Now/Schedule timing,
  *   - "Bulk CSV" deep link to /outreach/bulk.
+ *
+ * SMS is commented out (not removed) for now — email-only send. The phone
+ * field, SMS checkbox, TCPA consent block, and SMS preview panel are all
+ * still here, just disabled via JSX comments, so re-enabling is a matter of
+ * uncommenting rather than rebuilding. `sendSms`/`customerPhone`/
+ * `consentAttested` state stays declared and is read by `handleSend` exactly
+ * as before — with no UI path left to ever set `sendSms` true, those
+ * branches are simply inert, not deleted.
  *
  * FK note: a chosen template's OutreachTemplate id is passed as
  * `outreachTemplateId` (subject/logo hydration) — NEVER as ReviewRequest.templateId.
@@ -65,12 +77,14 @@ export function SendComposer({
   const [body, setBody] = useState(
     `We'd love to hear your feedback on your recent experience with {{business_name}}!\n\nLeave a review: {{review_link}}`,
   );
-  const [tone, setTone] = useState<"friendly" | "formal" | "brief" | "warm" | "playful">(
-    "friendly",
-  );
+  const [tone, setTone] = useState<
+    "friendly" | "formal" | "brief" | "warm" | "playful"
+  >("friendly");
   const [sendEmail, setSendEmail] = useState(true);
   const [sendSms, setSendSms] = useState(false);
-  const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
+  const [establishmentId, setEstablishmentId] = useState(
+    establishments[0]?.id ?? "",
+  );
   const [templateId, setTemplateId] = useState("");
   const [scheduleHours, setScheduleHours] = useState(0);
   const [consentAttested, setConsentAttested] = useState(false);
@@ -83,14 +97,25 @@ export function SendComposer({
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
   const previewCtx = useMemo(
-    () => ({ ...sampleContext(businessName), recipientName: customerName || "Jordan Smith" }),
+    () => ({
+      ...sampleContext(businessName),
+      recipientName: customerName || "Jordan Smith",
+    }),
     [businessName, customerName],
   );
-  const filled = (s: string) => resolveMergeTags(s, previewCtx, { keepUnknown: true });
+  const filled = (s: string) =>
+    resolveMergeTags(s, previewCtx, { keepUnknown: true });
+
+  // Email-only send (SMS commented out, see file header) — an SMS-channel
+  // template has nothing to apply itself to here.
+  const emailTemplates = useMemo(
+    () => templates.filter((t) => t.channel === "email"),
+    [templates],
+  );
 
   function applyTemplate(id: string) {
     setTemplateId(id);
-    const t = templates.find((x) => x.id === id);
+    const t = emailTemplates.find((x) => x.id === id);
     if (!t) return;
     setBody(t.body.slice(0, BODY_MAX));
     if (t.channel === "email") setSendEmail(true);
@@ -106,7 +131,10 @@ export function SendComposer({
     }
     const start = ta.selectionStart ?? body.length;
     const end = ta.selectionEnd ?? body.length;
-    const next = (body.slice(0, start) + token + body.slice(end)).slice(0, BODY_MAX);
+    const next = (body.slice(0, start) + token + body.slice(end)).slice(
+      0,
+      BODY_MAX,
+    );
     setBody(next);
     requestAnimationFrame(() => {
       const pos = Math.min(start + token.length, next.length);
@@ -140,15 +168,20 @@ export function SendComposer({
     setError(null);
     setSuccess(null);
 
-    if (!sendEmail && !sendSms) return setError("Pick at least one delivery channel.");
+    if (!sendEmail && !sendSms)
+      return setError("Pick at least one delivery channel.");
     if (sendEmail && !customerEmail.trim())
       return setError("Email channel requires an email address.");
-    if (sendSms && !customerPhone.trim()) return setError("SMS channel requires a phone number.");
-    if (sendSms && !consentAttested) return setError("SMS requires TCPA consent attestation.");
+    if (sendSms && !customerPhone.trim())
+      return setError("SMS channel requires a phone number.");
+    if (sendSms && !consentAttested)
+      return setError("SMS requires TCPA consent attestation.");
 
     startSendTransition(async () => {
       try {
-        const tasks: Array<Promise<{ ok: true } | { ok: false; error: string }>> = [];
+        const tasks: Array<
+          Promise<{ ok: true } | { ok: false; error: string }>
+        > = [];
         const fullBody = `${greeting}\n\n${body}`;
 
         if (sendEmail) {
@@ -216,39 +249,42 @@ export function SendComposer({
               placeholder="Optional"
             />
           </label>
+          {/* SMS commented out — see the file header note. Phone was only
+              ever collected for the SMS channel, so its <div className="rr-2col">
+              wrapper (Phone | Email side-by-side) is commented out too —
+              Email now renders full-width like the field above it.
           <div className="rr-2col">
-            {SMS_ENABLED && (
-              <label className="rr-field">
-                <span className="rr-field__lbl">Phone (E.164)</span>
-                <div className="rr-inputwrap">
-                  <span className="rr-inputwrap__icon">
-                    <Icon name="phone" size={14} />
-                  </span>
-                  <input
-                    className="rr-input"
-                    value={customerPhone}
-                    onChange={(e) => setCustomerPhone(e.target.value)}
-                    placeholder="+1 555 123 4567"
-                  />
-                </div>
-              </label>
-            )}
             <label className="rr-field">
-              <span className="rr-field__lbl">Email</span>
+              <span className="rr-field__lbl">Phone (E.164)</span>
               <div className="rr-inputwrap">
                 <span className="rr-inputwrap__icon">
-                  <Icon name="mail" size={14} />
+                  <Icon name="phone" size={14} />
                 </span>
                 <input
                   className="rr-input"
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="customer@example.com"
+                  value={customerPhone}
+                  onChange={(e) => setCustomerPhone(e.target.value)}
+                  placeholder="+1 555 123 4567"
                 />
               </div>
             </label>
-          </div>
+          */}
+          <label className="rr-field">
+            <span className="rr-field__lbl">Email</span>
+            <div className="rr-inputwrap">
+              <span className="rr-inputwrap__icon">
+                <Icon name="mail" size={14} />
+              </span>
+              <input
+                className="rr-input"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="customer@example.com"
+              />
+            </div>
+          </label>
+          {/* </div> — closing the commented-out rr-2col above */}
         </section>
 
         {/* Step 2 — Message */}
@@ -258,7 +294,7 @@ export function SendComposer({
           </span>
           <h3 className="rr-step__title">
             2. Message
-            {templates.length > 0 && (
+            {emailTemplates.length > 0 && (
               <select
                 className="rr-select"
                 style={{ maxWidth: 180, height: 36 }}
@@ -267,7 +303,7 @@ export function SendComposer({
                 aria-label="Start from template"
               >
                 <option value="">Start from template…</option>
-                {templates.map((t) => (
+                {emailTemplates.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} ({t.channel})
                   </option>
@@ -350,24 +386,22 @@ export function SendComposer({
           </span>
           <h3 className="rr-step__title">3. Delivery</h3>
           <div className="rr-checks">
-            <label className="rr-check">
-              <input
-                type="checkbox"
-                checked={sendEmail}
-                onChange={(e) => setSendEmail(e.target.checked)}
-              />
+            {/* Email-only for now — nothing left to toggle, so this is a fixed
+                confirmation rather than an interactive checkbox. sendEmail
+                stays true; see the file header note. */}
+            <label
+              className="rr-check"
+              style={{ opacity: 0.75, cursor: "default" }}
+            >
+              <input type="checkbox" checked={sendEmail} disabled readOnly />
               Email
             </label>
-            {SMS_ENABLED && (
-              <label className="rr-check">
-                <input
-                  type="checkbox"
-                  checked={sendSms}
-                  onChange={(e) => setSendSms(e.target.checked)}
-                />
-                SMS
-              </label>
-            )}
+            {/* SMS commented out — see the file header note.
+            <label className="rr-check">
+              <input type="checkbox" checked={sendSms} onChange={(e) => setSendSms(e.target.checked)} />
+              SMS
+            </label>
+            */}
           </div>
         </section>
 
@@ -430,8 +464,9 @@ export function SendComposer({
               onChange={(e) => setConsentAttested(e.target.checked)}
             />
             <span>
-              I attest this recipient has previously given written consent to receive marketing SMS
-              from my business (TCPA / A2P 10DLC compliance).
+              I attest this recipient has previously given written consent to
+              receive marketing SMS from my business (TCPA / A2P 10DLC
+              compliance).
             </span>
           </label>
         )}
@@ -440,7 +475,11 @@ export function SendComposer({
         {success && <p className="rr-msgok">{success}</p>}
 
         <div className="rr-formactions">
-          <button type="submit" className="rr-actbtn rr-actbtn--pri" disabled={sendPending}>
+          <button
+            type="submit"
+            className="rr-actbtn rr-actbtn--pri"
+            disabled={sendPending}
+          >
             <Icon name="send" size={14} />
             {sendPending ? "Sending…" : "Send request"}
           </button>
@@ -472,7 +511,8 @@ export function SendComposer({
               <span className="rr-meta__k">From:</span> {businessName}
             </div>
             <div>
-              <span className="rr-meta__k">To:</span> {customerEmail || "customer@example.com"}
+              <span className="rr-meta__k">To:</span>{" "}
+              {customerEmail || "customer@example.com"}
             </div>
             <div>
               <span className="rr-meta__k">Subject:</span> {subjectLine}
@@ -501,19 +541,37 @@ export function SendComposer({
           />
         </div>
 
-        {/* SMS preview — hidden while SMS is disabled for launch */}
-        {SMS_ENABLED && (
-          <div className="rr-card rr-preview">
-            <div className="rr-preview__head">
-              <div className="rr-preview__tile rr-preview__tile--ok">
-                <Icon name="chat" size={16} />
-              </div>
-              <div className="rr-preview__title">SMS preview</div>
-              <div className="rr-preview__aside">
-                <span className="rr-linkbtn" style={{ cursor: "default" }}>
-                  <Icon name="ext" size={12} />
-                  View full size
-                </span>
+        {/* SMS preview — commented out, see the file header note.
+        <div className="rr-card rr-preview">
+          <div className="rr-preview__head">
+            <div className="rr-preview__tile rr-preview__tile--ok">
+              <Icon name="chat" size={16} />
+            </div>
+            <div className="rr-preview__title">SMS preview</div>
+            <div className="rr-preview__aside">
+              <span className="rr-linkbtn" style={{ cursor: "default" }}>
+                <Icon name="ext" size={12} />
+                View full size
+              </span>
+            </div>
+          </div>
+          <div className="rr-meta" style={{ marginBottom: 4 }}>
+            <span className="rr-meta__k">To:</span> {customerPhone || "+1 555 123 4567"}
+          </div>
+          <div className="rr-phone">
+            <div className="rr-phone__bar">
+              <span>9:41</span>
+              <span className="row" style={{ gap: 4 }}>
+                <Icon name="sound" size={12} />
+                <Icon name="bars" size={12} />
+              </span>
+            </div>
+            <div className="rr-phone__body">
+              <div className="rr-bubble">
+                {filled(greeting)}
+                {"\n"}
+                {filled(body)}
+                <span className="rr-bubble__time">9:41 AM ✓✓</span>
               </div>
             </div>
             <div className="rr-meta" style={{ marginBottom: 4 }}>
@@ -543,7 +601,14 @@ export function SendComposer({
               </span>
             </div>
           </div>
-        )}
+          <div className="rr-callout">
+            <Icon name="info" size={14} />
+            <span>
+              Reply STOP to opt out. SMS includes our standard unsubscribe footer automatically.
+            </span>
+          </div>
+        </div>
+        */}
       </div>
     </div>
   );

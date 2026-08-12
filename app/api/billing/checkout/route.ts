@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { roleAtLeast } from "@/lib/auth/rbac";
 import { createCheckoutSession } from "@/lib/billing/actions";
 import { logger } from "@/lib/logger";
@@ -15,14 +15,13 @@ export const dynamic = "force-dynamic";
  * `createCheckoutSession()` directly to avoid an unnecessary HTTP round-trip + cookie issues.
  */
 export async function POST() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userEmail = session?.user?.email;
-  if (!session || !orgId || !userEmail) {
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg || !sessionOrg.email) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
+  const { orgId, email: userEmail } = sessionOrg;
   // Billing is an owner/admin action.
-  if (!roleAtLeast((session as { role?: string }).role, "admin")) {
+  if (!roleAtLeast(sessionOrg.role, "admin")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

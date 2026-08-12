@@ -2,7 +2,6 @@ import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
-import { auth } from "@/lib/auth/config";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { roleAtLeast } from "@/lib/auth/rbac";
 import { deleteEstablishment, updateEstablishment } from "@/lib/establishments/actions";
@@ -41,15 +40,13 @@ export default async function EstablishmentSettingsPage({
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
 
-  const { orgId } = await getOrgContext();
+  const { orgId, role } = await getOrgContext();
   const establishment = await getEstablishment(orgId, id);
   if (!establishment) notFound();
 
   // deleteEstablishment requires "admin" — don't render a button that can
   // only throw for manager/member/viewer roles.
-  const session = await auth();
-  const callerRole = (session as { role?: string } | null)?.role ?? null;
-  const canDelete = roleAtLeast(callerRole, "admin");
+  const canDelete = roleAtLeast(role, "admin");
 
   const sp = await searchParams;
   const addr = (establishment.address ?? {}) as Address;
@@ -224,6 +221,25 @@ export default async function EstablishmentSettingsPage({
                   />
                 </label>
               </div>
+              <label className="lbl">
+                Review link
+                <input
+                  name="reviewLinkOverride"
+                  type="url"
+                  className="ds-input"
+                  defaultValue={establishment.reviewLinkOverride ?? ""}
+                  placeholder="https://g.page/r/.../review"
+                  maxLength={500}
+                />
+              </label>
+              <p className="dim" style={{ fontSize: 11.5, margin: "-6px 0 4px", lineHeight: 1.5 }}>
+                {establishment.reviewLinkOverride
+                  ? "Review requests send customers here."
+                  : establishment.googlePlaceId
+                    ? "Empty — review requests use your connected Google Business Profile. Set a link here to send customers somewhere specific instead."
+                    : "Empty and no Google Business Profile connected — review requests will fall back to a generic Google search. Paste your review link to fix this."}
+              </p>
+
               <div className="row" style={{ justifyContent: "flex-end", marginTop: 4 }}>
                 <button type="submit" className="btn btn--pri">
                   <Icon name="check" size={12} />

@@ -1,6 +1,8 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { WorkspaceSwitcher } from "@/components/workspace-switcher";
+import type { Workspace } from "@/lib/auth/active-org";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandPalette, openCommandPalette } from "./command-palette";
@@ -16,28 +18,33 @@ import { SidebarNav } from "./sidebar-nav";
  * Mobile (< lg): sidebar hidden behind a hamburger; slides in as a drawer.
  * Esc closes the drawer; navigation auto-closes it.
  *
- * Public API: { children, topBar?, orgName, planLabel, crumbs?, biz? }.
- *   - topBar  — right-aligned actions area (notifications, sign-out, etc.).
- *   - crumbs  — array of strings rendered into the topbar's breadcrumb trail
- *               (last entry is bold, earlier entries muted). Falls back to
- *               nothing.
- *   - biz     — text shown inside the location pill (e.g. business name).
+ * Public API: { children, topBar?, orgName, planLabel, crumbs?, workspaces?, allowedTabs? }.
+ *   - topBar      — right-aligned actions area (notifications, sign-out, etc.).
+ *   - crumbs      — array of strings rendered into the topbar's breadcrumb trail
+ *                   (last entry is bold, earlier entries muted). Falls back to
+ *                   nothing.
+ *   - workspaces  — every org the signed-in user belongs to; renders the
+ *                   top-left workspace switcher (see workspace-switcher.tsx).
+ *   - allowedTabs — this member's tab whitelist (lib/access/tabs.ts); empty
+ *                   means unrestricted. Locks the matching sidebar items.
  */
 export function AppShell({
   children,
   topBar,
   orgName,
   planLabel,
-  biz,
   dateLabels,
+  workspaces,
+  allowedTabs,
 }: {
   children: React.ReactNode;
   topBar?: React.ReactNode;
   orgName: string;
   planLabel: string;
   crumbs?: string[];
-  biz?: string;
   dateLabels?: Record<string, string>;
+  workspaces?: Workspace[];
+  allowedTabs?: string[];
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,7 +67,7 @@ export function AppShell({
     <div className="app app--responsive app--canvas">
       {/* Desktop sidebar */}
       <div className="app__sb-desktop">
-        <SidebarNav orgName={orgName} planLabel={planLabel} />
+        <SidebarNav orgName={orgName} planLabel={planLabel} allowedTabs={allowedTabs} />
       </div>
 
       {/* Mobile drawer */}
@@ -76,6 +83,7 @@ export function AppShell({
             <SidebarNav
               orgName={orgName}
               planLabel={planLabel}
+              allowedTabs={allowedTabs}
               onNavigate={() => setDrawerOpen(false)}
             />
           </div>
@@ -93,13 +101,7 @@ export function AppShell({
             <Icon name="menu" size={18} />
           </button>
 
-          {biz && (
-            <button type="button" className="tb__loc">
-              <Icon name="building" size={13} style={{ color: "var(--pri)" }} />
-              <b style={{ fontWeight: 600 }}>{biz}</b>
-              <Icon name="chevD" size={11} style={{ color: "var(--rl-muted)" }} />
-            </button>
-          )}
+          {workspaces && workspaces.length > 0 && <WorkspaceSwitcher workspaces={workspaces} />}
 
           <button
             type="button"

@@ -5,6 +5,7 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { getAutoReply5StarState } from "@/lib/auto-reply/managed-rule";
+import { normalizeRangeDays } from "@/lib/date-range";
 import { getReviewDispute } from "@/lib/reviews/dispute-queries";
 import { hasActiveGoogleConnection } from "@/lib/reviews/connection-status";
 import {
@@ -68,11 +69,14 @@ export default async function ReviewsPage({
     q?: string;
     source?: string;
     selected?: string;
+    range?: string;
   }>;
 }) {
   const { orgId } = await getOrgContext();
 
   const sp = await searchParams;
+  // Window from the topbar date pill (7 | 30 | 90, default 30).
+  const rangeDays = normalizeRangeDays(sp.range);
   const rating = sp.rating ? Number.parseInt(sp.rating, 10) : undefined;
   // Validate source against the known enum so a tampered URL can't poke
   // at unknown values and turn into a SQL filter we didn't intend.
@@ -86,12 +90,12 @@ export default async function ReviewsPage({
 
   // The base filter (no reply-status) drives the pill counts so they reflect
   // "within what you're currently looking at".
-  const baseFilter = { rating, search: sp.q, source };
+  const baseFilter = { rating, search: sp.q, source, sinceDays: rangeDays };
 
   const [reviews, stats, sourceCounts, statusCounts, autoReply, hasGoogle] = await Promise.all([
     listReviews(orgId, { ...baseFilter, replyStatus, limit: 50 }),
-    reviewStats(orgId),
-    reviewCountsBySource(orgId),
+    reviewStats(orgId, undefined, rangeDays),
+    reviewCountsBySource(orgId, rangeDays),
     replyStatusCounts(orgId, baseFilter),
     getAutoReply5StarState(orgId),
     hasActiveGoogleConnection(orgId),
@@ -140,6 +144,8 @@ export default async function ReviewsPage({
     if (sp.q) params.set("q", sp.q);
     if (nextStatus) params.set("status", nextStatus);
     if (nextSelected) params.set("selected", nextSelected);
+    // Carry the topbar window through, or clicking a pill silently resets it.
+    if (sp.range) params.set("range", sp.range);
     const qs = params.toString();
     return qs ? `/reviews?${qs}` : "/reviews";
   };
