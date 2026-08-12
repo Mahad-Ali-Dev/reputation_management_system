@@ -29,7 +29,7 @@
 
 import { createHmac } from "node:crypto";
 import { withTenant } from "@/lib/db/with-tenant";
-import { businessReplyTo } from "@/lib/email/reply-to";
+import { resolveBusinessReplyTo } from "@/lib/email/reply-to";
 import { googleReviewUrl } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { getHmacSecret } from "@/lib/secrets";
@@ -212,7 +212,7 @@ export async function dispatchReviewRequest(
       to: rr.recipient,
       // The customer thinks they're emailing the business, so their reply must
       // reach the business — not a Repulabs address with no mailbox.
-      replyTo: businessReplyTo(org?.ownerEmail),
+      replyTo: await resolveBusinessReplyTo(orgId, org?.ownerEmail),
       subject,
       bodyText: text,
       bodyHtml: html,

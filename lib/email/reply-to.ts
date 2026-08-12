@@ -1,3 +1,5 @@
+import { withTenant } from "@/lib/db/with-tenant";
+
 /**
  * Where replies go.
  *
@@ -35,4 +37,29 @@ export function businessReplyTo(ownerEmail: string | null | undefined): string {
   // header, so an obviously-malformed one must not become the Reply-To.
   if (email && /^[^@\s]+@[^@\s.]+\.[^@\s]+$/.test(email)) return email;
   return SUPPORT_REPLY_TO;
+}
+
+/**
+ * Business Reply-To with a fallback that actually resolves.
+ *
+ * `Organization.ownerEmail` is an OPTIONAL field on the business-profile form
+ * and is never written at signup, so it is NULL for most orgs — using it alone
+ * would strand nearly every customer reply at support, which is the outcome
+ * this module exists to prevent. The owner's login email always exists, so we
+ * fall back to that before giving up.
+ */
+export async function resolveBusinessReplyTo(
+  orgId: string,
+  ownerEmail: string | null | undefined,
+): Promise<string> {
+  const direct = ownerEmail?.trim();
+  if (direct) return businessReplyTo(direct);
+  const owner = await withTenant(orgId, (tx) =>
+    tx.membership.findFirst({
+      where: { role: "owner" },
+      select: { user: { select: { email: true } } },
+      orderBy: { createdAt: "asc" },
+    }),
+  ).catch(() => null);
+  return businessReplyTo(owner?.user.email);
 }
