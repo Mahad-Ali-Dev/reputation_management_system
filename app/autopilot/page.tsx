@@ -114,14 +114,9 @@ export default async function AutopilotPage({
       icon: `${ASSETS}/setup-zap.png`,
       done: config.enabled,
     },
-    {
-      key: "voice",
-      title: "Connect your phone for Voice → Review",
-      body: "Enable Voice→Review to turn calls into reviews automatically.",
-      icon: `${ASSETS}/setup-phone.png`,
-      done: false,
-      href: "/phone",
-    },
+    // Voice→Review step REMOVED (2026-08). It pointed at /phone, which is now
+    // behind the Coming Soon lock, so the checklist could never reach 3/3 —
+    // it was permanently stuck at 1/3 with an unreachable step.
     {
       key: "roi",
       title: "Set your average job value",
@@ -147,9 +142,9 @@ export default async function AutopilotPage({
                 </span>
               </div>
               <p className="ap2-hero__desc">
-                One switch runs your whole reputation loop — replies, review requests, Voice→Review,
-                and more — then sends a weekly digest of what it did and the few things that need
-                you.
+                One switch runs your whole reputation loop — AI replies published for 5-star
+                reviews, everything else drafted for you to approve — then sends a weekly digest of
+                what it did and the few things that need you.
               </p>
             </div>
           </div>

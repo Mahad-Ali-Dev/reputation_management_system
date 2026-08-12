@@ -33,17 +33,15 @@
 
 import { generateReply } from "@/lib/ai/generate-reply";
 import { classifyReplySafety } from "@/lib/ai/safety-classify";
+import { recordAutopilotAction } from "@/lib/autopilot/ledger";
+import { resolveAutopilotPolicy, shouldAutoAct } from "@/lib/autopilot/policy";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import type { Prisma } from "@prisma/client";
 import { pickRule } from "./match";
-import {
-  fixedScheduledPublishAt,
-  nextScheduledPublishAt,
-  usesRandomizedWindow,
-} from "./schedule";
+import { fixedScheduledPublishAt, nextScheduledPublishAt, usesRandomizedWindow } from "./schedule";
 
 type BrandVoiceJson = {
   tone?: string[];
@@ -199,10 +197,30 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
     },
   });
 
+  // ---- Reputation Autopilot policy ----
+  // The Autopilot page's master switch, risk tolerance and 5★ toggle used to
+  // gate NOTHING: `shouldAutoAct` and `resolveAutopilotPolicy` were written but
+  // never called, so those controls saved to the DB and changed no behaviour.
+  // This is the seam that makes them real.
+  //
+  // The decision the owner chose: auto-publish 5★, DRAFT everything else — so a
+  // 1-4★ reply is never published without a human reading it. `shouldAutoAct`
+  // already encodes exactly that (rating < 5 → draft; 5★ → auto only when the
+  // toggle is on, risk isn't conservative, and confidence clears the floor).
+  const policy = await resolveAutopilotPolicy(organizationId);
+  const decision = shouldAutoAct(policy, "auto_reply", {
+    rating: ctx.review.rating,
+    confidence: gen.confidence ?? null,
+    blocked,
+  });
+
   // Auto-publish gets disabled by ANY classifier flag. Drafts always stay
   // pending_review regardless — they go through the same approve gate as
-  // human-triggered drafts.
-  const willAutoPublish = rule.action === "auto_publish_after_delay" && !blocked;
+  // human-triggered drafts. Autopilot is an ADDITIONAL gate on top of the
+  // rule's own action: the rule may say "auto publish", but if Autopilot is off
+  // (or conservative, or the review isn't 5★) it still lands as a draft.
+  const willAutoPublish =
+    rule.action === "auto_publish_after_delay" && !blocked && decision === "auto";
   // Durable post time. Rules opting into the randomized window (the managed 5★
   // toggle, delayMinutes = sentinel) spread across 2–4h so the cadence reads as
   // human; legacy fixed-delay rules keep their exact `delayMinutes` offset.
@@ -308,6 +326,31 @@ async function runExecutor(input: ExecuteAutoReplyInput): Promise<ExecuteAutoRep
     );
   }
 
+  // Ledger entry — this is what fills the Autopilot "Activity" feed. Before
+  // this, `recordAutopilotAction` was called from exactly ONE place
+  // (lib/phone/voice-review.ts), so with Voice→Review removed the feed could
+  // never populate at all and always read "0 recent actions".
+  //
+  // A low-star draft is logged under its own loop so "Needs you" can surface
+  // the replies a human still has to approve.
+  const isLowStar = typeof ctx.review.rating === "number" && ctx.review.rating < 5;
+  await recordAutopilotAction({
+    orgId: organizationId,
+    loop: isLowStar ? "low_star_draft" : "auto_reply",
+    action: willAutoPublish ? "published" : "drafted",
+    resourceType: "review",
+    resourceId: ctx.review.id,
+    // A draft is work waiting on a person; an auto-publish is finished.
+    requiresHuman: !willAutoPublish,
+    detail: {
+      rating: ctx.review.rating,
+      ruleId: rule.id,
+      decision,
+      safetyBlocked: blocked,
+      autoPublishAt: autoPublishAt?.toISOString() ?? null,
+    },
+  });
+
   logger.info(
     {
       organizationId,
@@ -407,10 +450,7 @@ async function drainByScheduledColumn(): Promise<{ promoted: number; skipped: nu
       // drafts (generatedBy = a model id), clean auto-drafts, and any NULL-
       // generatedBy scheduled reply all pass. The OR keeps NULLs included
       // (a bare `NOT startsWith` would drop them via SQL three-valued logic).
-      OR: [
-        { generatedBy: null },
-        { generatedBy: { not: { startsWith: "auto_reply_blocked:" } } },
-      ],
+      OR: [{ generatedBy: null }, { generatedBy: { not: { startsWith: "auto_reply_blocked:" } } }],
     },
     select: { id: true, organizationId: true, reviewId: true },
     take: 500,

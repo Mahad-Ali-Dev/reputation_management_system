@@ -2,8 +2,8 @@
 
 import { Icon } from "@/components/shell/icon";
 import { saveRoiSettings } from "@/lib/roi/actions";
-import { type JSX, useState, useTransition } from "react";
 import type { RoiByChannel } from "@/lib/roi/estimate";
+import { type JSX, useState, useTransition } from "react";
 import "./autopilot-roi.css";
 
 /**
@@ -34,7 +34,13 @@ const ASSETS = "/assets/repulabs/autopilot";
 export type RoiPanelData = {
   funnel: {
     scans: number;
-    reviews: { total: number; fromQr: number; fromOutreach: number; fromVoice: number; organic: number };
+    reviews: {
+      total: number;
+      fromQr: number;
+      fromOutreach: number;
+      fromVoice: number;
+      organic: number;
+    };
     gbpViews: number | null;
     calls: number;
     bookings: { total: number; confirmed: number };
@@ -141,11 +147,37 @@ function FunnelStream({ stages }: { stages: number[] }): JSX.Element {
       {[152, 300, 448].map((x) => (
         <line key={x} x1={x} y1={10} x2={x} y2={H - 10} stroke="#E6EDF2" strokeWidth={1} />
       ))}
-      <path d={bandPath(pts((c) => c.y0), pts((c) => c.y1))} fill="#5B5CFF" />
-      <path d={bandPath(pts((c) => c.y1), pts((c) => c.y2))} fill="#EC5A7E" />
-      <path d={bandPath(pts((c) => c.y2), pts((c) => c.y3))} fill="#FBBF24" />
-      <path d={bandPath(pts((c) => c.y3), pts((c) => c.y4))} fill="#5B5CFF" />
-      {last && <rect x={W - 6} y={r1(last.y0)} width={5} height={r1(last.h)} rx={2.5} fill="#F59E0B" />}
+      <path
+        d={bandPath(
+          pts((c) => c.y0),
+          pts((c) => c.y1),
+        )}
+        fill="#5B5CFF"
+      />
+      <path
+        d={bandPath(
+          pts((c) => c.y1),
+          pts((c) => c.y2),
+        )}
+        fill="#EC5A7E"
+      />
+      <path
+        d={bandPath(
+          pts((c) => c.y2),
+          pts((c) => c.y3),
+        )}
+        fill="#FBBF24"
+      />
+      <path
+        d={bandPath(
+          pts((c) => c.y3),
+          pts((c) => c.y4),
+        )}
+        fill="#5B5CFF"
+      />
+      {last && (
+        <rect x={W - 6} y={r1(last.y0)} width={5} height={r1(last.h)} rx={2.5} fill="#F59E0B" />
+      )}
     </svg>
   );
 }
@@ -175,9 +207,22 @@ function RevenueMiniChart({ values }: { values: number[] }): JSX.Element {
           fill="#EAF0FF"
         />
       ))}
-      <path d={line} fill="none" stroke="#315BFF" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d={line}
+        fill="none"
+        stroke="#315BFF"
+        strokeWidth={3}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
       {items.map((p, i) => (
-        <circle key={`d-${p.x}`} cx={r1(p.x)} cy={r1(p.y)} r={i === items.length - 1 ? 4.5 : 3} fill="#315BFF" />
+        <circle
+          key={`d-${p.x}`}
+          cx={r1(p.x)}
+          cy={r1(p.y)}
+          r={i === items.length - 1 ? 4.5 : 3}
+          fill="#315BFF"
+        />
       ))}
     </svg>
   );
@@ -209,16 +254,23 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
   const reviewedPct =
     f.scans > 0 && totalReviews > 0 ? Math.round((totalReviews / f.scans) * 100) : null;
 
-  const sources = [
-    { key: "voice", label: "Voice → Review", value: f.reviews.fromVoice, tone: "green" as const },
-    { key: "outreach", label: "Review requests", value: f.reviews.fromOutreach, tone: "purple" as const },
-    { key: "qr", label: "QR plaques", value: f.reviews.fromQr, tone: "blue" as const },
-    { key: "organic", label: "Organic", value: f.reviews.organic, tone: "orange" as const },
+  // Voice→Review retired (2026-08) — no new rows can be attributed to it.
+  // NOTE: the reduce seed below previously used tone "green", which only
+  // type-checked because the Voice row contributed that variant to the inferred
+  // union. Typed explicitly so removing a row can't break the seed again.
+  type SourceTone = "purple" | "blue" | "orange";
+  type SourceRow = { key: string; label: string; value: number; tone: SourceTone };
+  const sources: SourceRow[] = [
+    { key: "outreach", label: "Review requests", value: f.reviews.fromOutreach, tone: "purple" },
+    { key: "qr", label: "QR plaques", value: f.reviews.fromQr, tone: "blue" },
+    { key: "organic", label: "Organic", value: f.reviews.organic, tone: "orange" },
   ];
-  const topSource = sources.reduce(
-    (a, b) => (b.value > a.value ? b : a),
-    { key: "none", label: "", value: 0, tone: "green" as const },
-  );
+  const topSource = sources.reduce<SourceRow>((a, b) => (b.value > a.value ? b : a), {
+    key: "none",
+    label: "",
+    value: 0,
+    tone: "purple",
+  });
 
   const stageMetrics = [
     { key: "scans", label: "QR scans", value: f.scans as number | null, dot: DOT.blue },
@@ -229,10 +281,27 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
   ];
 
   const bySource = [
-    { key: "bookings", label: "Bookings", value: data.byChannel.bookings, art: `${ASSETS}/roi-by-bookings.png`, tone: "green" as const },
-    { key: "outreach", label: "Review requests", value: data.byChannel.outreachReviews, art: `${ASSETS}/roi-by-reqreview.png`, tone: "purple" as const },
-    { key: "voice", label: "Voice → Review", value: data.byChannel.voiceReviews, art: `${ASSETS}/roi-by-voice.png`, tone: "indigo" as const },
-    { key: "qr", label: "QR plaques", value: data.byChannel.qrReviews, art: `${ASSETS}/roi-by-qr.png`, tone: "blue" as const },
+    {
+      key: "bookings",
+      label: "Bookings",
+      value: data.byChannel.bookings,
+      art: `${ASSETS}/roi-by-bookings.png`,
+      tone: "green" as const,
+    },
+    {
+      key: "outreach",
+      label: "Review requests",
+      value: data.byChannel.outreachReviews,
+      art: `${ASSETS}/roi-by-reqreview.png`,
+      tone: "purple" as const,
+    },
+    {
+      key: "qr",
+      label: "QR plaques",
+      value: data.byChannel.qrReviews,
+      art: `${ASSETS}/roi-by-qr.png`,
+      tone: "blue" as const,
+    },
   ] as const;
   const maxChannel = Math.max(...bySource.map((c) => c.value), 1);
 
@@ -265,14 +334,22 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
               <div className="apr-minis__row">
                 <div className="apr-mini">
                   <span className="apr-mini__value">
-                    <span className="apr-dot" style={{ background: DOT.orange }} aria-hidden="true" />
+                    <span
+                      className="apr-dot"
+                      style={{ background: DOT.orange }}
+                      aria-hidden="true"
+                    />
                     {totalReviews.toLocaleString()}
                   </span>
                   <div className="apr-mini__label">Reviews</div>
                 </div>
                 <div className="apr-mini">
                   <span className="apr-mini__value">
-                    <span className="apr-dot" style={{ background: DOT.green }} aria-hidden="true" />
+                    <span
+                      className="apr-dot"
+                      style={{ background: DOT.green }}
+                      aria-hidden="true"
+                    />
                     {f.calls.toLocaleString()}
                   </span>
                   <div className="apr-mini__label">Calls</div>
@@ -350,7 +427,11 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
                   </span>
                   <div
                     className="apr-fmetric__label"
-                    title={m.key === "views" && m.value === null ? "Connect Google Business Profile" : undefined}
+                    title={
+                      m.key === "views" && m.value === null
+                        ? "Connect Google Business Profile"
+                        : undefined
+                    }
                   >
                     {m.label}
                   </div>
@@ -391,7 +472,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Where reviews came from</h3>
-                <p className="apr-sub">{isEmpty ? "No source activity yet" : "Active source mix"}</p>
+                <p className="apr-sub">
+                  {isEmpty ? "No source activity yet" : "Active source mix"}
+                </p>
               </div>
             </div>
 
@@ -465,7 +548,9 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
                       className="apr-bar__fill"
                       style={{
                         width: `${Math.round((c.value / maxChannel) * 100)}%`,
-                        background: DOT[c.tone === "indigo" ? "blue" : c.tone],
+                        // "indigo" was the retired Voice→Review row's tone; the
+                        // remaining tones map straight to DOT.
+                        background: DOT[c.tone],
                       }}
                     />
                   </div>

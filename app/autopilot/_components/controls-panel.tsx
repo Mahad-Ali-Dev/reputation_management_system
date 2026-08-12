@@ -58,12 +58,9 @@ const GROUPS: { title: string; subtitle: string; rows: LoopRow[] }[] = [
         desc: "Ask happy customers for a review.",
         asset: "/assets/repulabs/autopilot/control-review-requests.png",
       },
-      {
-        key: "voiceToReviewEnabled",
-        label: "Voice to Review",
-        desc: "Turn resolved calls into review requests.",
-        asset: "/assets/repulabs/autopilot/control-voice-review.png",
-      },
+      // Voice→Review REMOVED (2026-08): the loop is retired, and it was the
+      // only writer to the Autopilot ledger — so it also can't be the reason
+      // the Activity feed exists. The auto-reply path now records instead.
       {
         key: "inboxAutoReply",
         label: "Inbox auto-reply",
