@@ -258,8 +258,8 @@ export default async function AiSettingsPage({
               <h1 className="akb-hero__title">AI Knowledge Base</h1>
               <p className="akb-hero__copy">
                 Teach your AI about your business, voice and policies. It uses this to answer
-                reviews, DMs, surveys and phone calls — and learns from every question it
-                can&apos;t answer.
+                reviews, DMs, surveys and phone calls — and learns from every question it can&apos;t
+                answer.
               </p>
             </div>
             <div className="akb-hero__art" aria-hidden="true">
@@ -548,11 +548,15 @@ export default async function AiSettingsPage({
         {tab === "behaviour" && <BehaviourSettings initial={behaviourInitial} />}
 
         {/* ---------- Test tab ---------- */}
+        {/* teachHref: the Teach MODAL lives in learning-monitor-tab.tsx, rendered
+            by /ai/training#test. It used to point at "/ai?tab=test" — the page
+            the button is already on — so clicking Teach navigated to itself and
+            appeared to do nothing. */}
         {tab === "test" && (
           <TestConsole
             suggestions={suggestions}
             openGaps={openGaps}
-            teachHref="/ai?tab=test"
+            teachHref="/ai/training#test"
           />
         )}
       </div>

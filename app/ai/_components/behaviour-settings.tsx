@@ -127,11 +127,10 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
         t: "Customer inquiry style",
         v: labelFor(INQUIRY_OPTS, fields.customerInquiryStyle),
       },
-      {
-        icon: "beh-response-style.svg",
-        t: "Booking style",
-        v: labelFor(BOOKING_OPTS, fields.bookingStyle),
-      },
+      // Booking style is an AI RECEPTIONIST concern (taking bookings on a call).
+      // That module is behind the Coming Soon lock, so the setting is hidden
+      // until it ships. Commented out rather than deleted — `bookingStyle` is
+      // still persisted, so restoring this is uncommenting.
       {
         icon: "beh-language.svg",
         t: "Complaint handling",
@@ -250,23 +249,7 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
           <h3 className="akb-beh-card__title">Response behaviour</h3>
           <p className="akb-beh-card__sub">Set how your AI should respond in conversations.</p>
 
-          <div className="akb-resp-row">
-            <label className="akb-resp-row__l" htmlFor="beh-booking">
-              Booking
-            </label>
-            <select
-              id="beh-booking"
-              className="akb-select"
-              value={fields.bookingStyle}
-              onChange={(e) => patch({ bookingStyle: e.target.value })}
-            >
-              {BOOKING_OPTS.map(([v, l]) => (
-                <option key={v} value={v}>
-                  {l}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* Booking row hidden with the AI Receptionist (see BOOKING_OPTS). */}
           <div className="akb-resp-row">
             <label className="akb-resp-row__l" htmlFor="beh-complaint">
               Complaint handling
@@ -392,7 +375,7 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
           aria-hidden="true"
         />
         <span>
-          These behaviour settings apply across all AI channels: Reviews, DMs, Surveys, Phone Calls.
+          These behaviour settings apply across all AI channels: Reviews, DMs and Surveys.
         </span>
       </div>
 
