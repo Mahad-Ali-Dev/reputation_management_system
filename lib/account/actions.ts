@@ -1,6 +1,7 @@
 "use server";
 
 import { createHash, randomBytes } from "node:crypto";
+import { ACTIVE_ORG_COOKIE } from "@/lib/auth/active-org";
 import { auth, signOut } from "@/lib/auth/config";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
 import { prisma } from "@/lib/db/client";
@@ -421,7 +422,21 @@ export async function acceptInvite(form: FormData): Promise<void> {
     "team invitation accepted",
   );
 
-  // New membership exists; send them into the app.
+  // A brand-new user gets their OWN workspace auto-created on first sign-in
+  // (see ensureOrgForUser in lib/auth/config.ts), before they ever reach this
+  // action — so by now they typically have two memberships, and the session's
+  // default org is the older (their own), never this one. Set the active-org
+  // cookie so /dashboard actually opens the workspace they just joined instead
+  // of silently falling back to their own empty workspace.
+  const jar = await cookies();
+  jar.set(ACTIVE_ORG_COOKIE, orgId, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
   redirect("/dashboard");
 }
 

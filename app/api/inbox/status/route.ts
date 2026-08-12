@@ -1,7 +1,7 @@
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { roleAtLeast } from "@/lib/auth/rbac";
-import { logger } from "@/lib/logger";
 import { blockThreadParticipant, setThreadStatus } from "@/lib/inbox/conversations";
+import { logger } from "@/lib/logger";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -24,13 +24,12 @@ const Body = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) {
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
-  if (!roleAtLeast((session as { role?: string }).role, "manager")) {
+  const { orgId } = sessionOrg;
+  if (!roleAtLeast(sessionOrg.role, "manager")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

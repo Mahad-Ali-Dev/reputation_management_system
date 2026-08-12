@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { requireRole, roleAtLeast } from "@/lib/auth/rbac";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -37,21 +37,16 @@ const ContactSchema = z.object({
 });
 
 async function requireOrg() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId };
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) redirect("/login");
+  return { orgId: sessionOrg.orgId, userId: sessionOrg.userId };
 }
 
 /** Authenticated session + role (no redirect on insufficient role — returns flag). */
 async function requireOrgWithRole() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  const role = (session as { role?: string } | null)?.role ?? null;
-  if (!session || !orgId || !userId) redirect("/login");
-  return { orgId, userId, role };
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) redirect("/login");
+  return { orgId: sessionOrg.orgId, userId: sessionOrg.userId, role: sessionOrg.role };
 }
 
 /** Validate an E.164 phone, allowing blank. Throws on a present-but-bad value. */

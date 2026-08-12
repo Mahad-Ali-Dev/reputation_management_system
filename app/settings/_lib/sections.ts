@@ -20,14 +20,56 @@ export type SettingsSection = {
 };
 
 export const SETTINGS_SECTIONS: SettingsSection[] = [
-  { id: "workspace", href: "/settings/workspace", icon: "building", label: "Workspace", group: "workspace" },
-  { id: "team", href: "/settings/team", icon: "users", label: "Team & roles", group: "workspace" },
-  { id: "billing", href: "/settings/billing", icon: "card", label: "Billing", group: "workspace" },
-  { id: "brand", href: "/settings/brand", icon: "image", label: "Brand", group: "workspace" },
-  { id: "notifications", href: "/settings/notifications", icon: "bell", label: "Notifications", group: "account" },
-  { id: "security", href: "/settings/security", icon: "lock", label: "Security", group: "account" },
-  { id: "api", href: "/settings/api", icon: "plug", label: "API & webhooks", group: "advanced" },
-  { id: "data", href: "/settings/data", icon: "download", label: "Data & export", group: "advanced" },
+  {
+    id: "workspace",
+    href: "/settings/workspace",
+    icon: "building",
+    label: "Workspace",
+    group: "workspace",
+  },
+  {
+    id: "team",
+    href: "/settings/team",
+    icon: "users",
+    label: "Team & roles",
+    group: "workspace",
+  },
+  {
+    id: "billing",
+    href: "/settings/billing",
+    icon: "card",
+    label: "Billing",
+    group: "workspace",
+  },
+  {
+    id: "brand",
+    href: "/settings/brand",
+    icon: "image",
+    label: "Brand",
+    group: "workspace",
+  },
+  {
+    id: "notifications",
+    href: "/settings/notifications",
+    icon: "bell",
+    label: "Notifications",
+    group: "account",
+  },
+  {
+    id: "security",
+    href: "/settings/security",
+    icon: "lock",
+    label: "Security",
+    group: "account",
+  },
+  // { id: "api", href: "/settings/api", icon: "plug", label: "API & webhooks", group: "advanced" },
+  {
+    id: "data",
+    href: "/settings/data",
+    icon: "download",
+    label: "Data & export",
+    group: "advanced",
+  },
 ];
 
 export const SETTINGS_GROUP_LABELS: Record<SettingsSection["group"], string> = {

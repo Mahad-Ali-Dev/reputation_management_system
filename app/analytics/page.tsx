@@ -227,7 +227,10 @@ async function AnalyticsPageLocked({
   };
 
   return (
-    <AppShellServer topBar={<TopBar title="Business Reports" />} crumbs={["Intelligence", "Business Reports"]}>
+    <AppShellServer
+      topBar={<TopBar title="Business Reports" />}
+      crumbs={["Intelligence", "Business Reports"]}
+    >
       {header}
       <Suspense fallback={<div className="ds-card" style={{ height: 360 }} />}>
         <ReportsTabs activeTab={activeTab} entitled={entitled} panels={panels} />

@@ -33,7 +33,16 @@ export type ReviewFilter = {
   search?: string;
   source?: ReviewSource;
   limit?: number;
+  /** Only reviews posted within the last N days (the topbar date pill). */
+  sinceDays?: number;
 };
+
+/** Start of an N-day window ending now, or undefined for "no window". */
+function windowStart(sinceDays?: number): Date | undefined {
+  return sinceDays && sinceDays > 0
+    ? new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000)
+    : undefined;
+}
 
 /**
  * Translate the high-level filter knobs into the Prisma `where` on `reply`.
@@ -41,6 +50,7 @@ export type ReviewFilter = {
  * badges always agree on what "Replied" / "Needs Reply" mean.
  */
 function reviewWhere(filter: ReviewFilter) {
+  const since = windowStart(filter.sinceDays);
   return {
     // Exclude reviews whose establishment was soft-deleted — they stay attached
     // for undo but must not appear in feeds or counts.
@@ -48,6 +58,7 @@ function reviewWhere(filter: ReviewFilter) {
     ...(filter.establishmentId && { establishmentId: filter.establishmentId }),
     ...(filter.rating && { rating: filter.rating }),
     ...(filter.source && { source: filter.source }),
+    ...(since && { postedAt: { gte: since } }),
     ...(filter.hasReply === true && { reply: { isNot: null } }),
     ...(filter.hasReply === false && { reply: null }),
     ...(filter.replyStatus === "needs_reply" && { reply: null }),
@@ -135,15 +146,15 @@ export async function replyStatusCounts(
 }
 
 /**
- * Per-source counts for the past 30 days. Drives the filter chip badges
- * in the reviews inbox ("Airbnb 12", "Google 47").
+ * Per-source counts for the selected window (default 30 days). Drives the
+ * filter chip badges in the reviews inbox ("Airbnb 12", "Google 47").
  */
-export async function reviewCountsBySource(orgId: string) {
+export async function reviewCountsBySource(orgId: string, sinceDays = 30) {
   return withTenant(orgId, async (tx) => {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const since = windowStart(sinceDays);
     const rows = await tx.review.groupBy({
       by: ["source"],
-      where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since } },
+      where: { ...LIVE_ESTABLISHMENT, ...(since && { postedAt: { gte: since } }) },
       _count: { _all: true },
     });
     const counts: Record<string, number> = {};
@@ -164,13 +175,13 @@ export async function getReview(orgId: string, id: string) {
   });
 }
 
-export async function reviewStats(orgId: string, establishmentId?: string) {
+export async function reviewStats(orgId: string, establishmentId?: string, sinceDays = 30) {
   return withTenant(orgId, async (tx) => {
-    const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const since = windowStart(sinceDays);
     const where = {
       ...LIVE_ESTABLISHMENT,
       ...(establishmentId && { establishmentId }),
-      postedAt: { gte: since },
+      ...(since && { postedAt: { gte: since } }),
     };
     const [total, byRating, avgRating] = await Promise.all([
       tx.review.count({ where }),

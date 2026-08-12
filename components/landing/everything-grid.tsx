@@ -71,12 +71,12 @@ export function EverythingGrid() {
       description:
         "Answer customers in their language, still in your tone, across 12 languages out of the box.",
     },
-    {
-      icon: <Webhook size={20} />,
-      title: "Open API & webhooks",
-      description:
-        "Pipe events anywhere. Native connectors plus a documented REST API and Zapier bridge.",
-    },
+    // {
+    //   icon: <Webhook size={20} />,
+    //   title: "Open API & webhooks",
+    //   description:
+    //     "Pipe events anywhere. Native connectors plus a documented REST API and Zapier bridge.",
+    // },
     {
       icon: <Smartphone size={20} />,
       title: "Mobile-ready",

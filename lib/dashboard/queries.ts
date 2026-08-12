@@ -73,7 +73,7 @@ export type DashboardData = {
   establishmentCount: number;
   activeConnections: number;
   hasGoogle: boolean;
-  requestsSent30d: number;
+  requestsSentInRange: number;
   /** 12-week weekly review counts (oldest → newest) for the bar chart. */
   weeklyReviews: number[];
   /** Sentiment split derived from rating (>=4 positive, ==3 neutral, <=2 negative). */
@@ -93,8 +93,17 @@ export type DashboardData = {
   avgResponseHours: number | null;
   /** Public Google reviews URL for the first listing with a place id, else null. */
   googlePlaceUrl: string | null;
-  /** 30d-vs-prior-30d movements for the hero stat chips. null = prior window empty (no defined rate). */
-  deltas30d: {
+  /** The window these range-scoped figures cover, echoed back for labelling. */
+  rangeDays: number;
+  /** Reviews posted inside the selected window. */
+  reviewsInRange: number;
+  /** 5-star reviews posted inside the selected window. */
+  fiveStarInRange: number;
+  /** Mean rating inside the selected window; null when the window has none. */
+  avgRatingInRange: number | null;
+  /** Selected-window vs equally-sized prior window, for the hero stat chips.
+   *  null = prior window empty (no defined rate). */
+  deltas: {
     reviewsPct: number | null;
     fiveStarPct: number | null;
     aiRepliesPct: number | null;
@@ -119,7 +128,7 @@ const EMPTY_DASHBOARD: DashboardData = {
   establishmentCount: 0,
   activeConnections: 0,
   hasGoogle: false,
-  requestsSent30d: 0,
+  requestsSentInRange: 0,
   weeklyReviews: new Array(12).fill(0),
   sentiment: { positivePct: 0, neutralPct: 0, negativePct: 0 },
   channelMix: [],
@@ -131,7 +140,11 @@ const EMPTY_DASHBOARD: DashboardData = {
   ratingTrendPoints: [],
   avgResponseHours: null,
   googlePlaceUrl: null,
-  deltas30d: { reviewsPct: null, fiveStarPct: null, aiRepliesPct: null, ratingAbs: null },
+  rangeDays: 30,
+  reviewsInRange: 0,
+  fiveStarInRange: 0,
+  avgRatingInRange: null,
+  deltas: { reviewsPct: null, fiveStarPct: null, aiRepliesPct: null, ratingAbs: null },
 };
 
 const DAY = 864e5;
@@ -149,10 +162,14 @@ function localityFromAddress(address: unknown): string | null {
  * One batched, tenant-scoped read of every dashboard aggregate. Fail-soft to
  * {@link EMPTY_DASHBOARD} on any error (incl. not-yet-migrated tables/columns).
  */
-export async function getDashboardData(orgId: string): Promise<DashboardData> {
+export async function getDashboardData(orgId: string, rangeDays = 30): Promise<DashboardData> {
   const now = Date.now();
-  const since30d = new Date(now - 30 * DAY);
-  const prev30dStart = new Date(now - 60 * DAY);
+  // Selected window from the topbar date pill, plus the equally-sized window
+  // before it for the deltas. The 24h / 7d / 12-week windows below are NOT
+  // range-driven — they back separately-labelled figures ("drafted today",
+  // "7d trend", the 12-week sparklines).
+  const sinceRange = new Date(now - rangeDays * DAY);
+  const prevRangeStart = new Date(now - 2 * rangeDays * DAY);
   const since7d = new Date(now - 7 * DAY);
   const prev7dStart = new Date(now - 14 * DAY);
   const since24h = new Date(now - DAY);
@@ -174,7 +191,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         establishments,
         establishmentCount,
         activeConnections,
-        requestsSent30d,
+        requestsSentInRange,
         chartReviews,
         recentReplies,
         recentRequests,
@@ -186,14 +203,14 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         funnelConverted,
         publishedReplyCount,
         publishedReplies,
-        reviews30d,
-        reviewsPrev30d,
-        fiveStar30d,
-        fiveStarPrev30d,
-        replies30d,
-        repliesPrev30d,
-        ratingAgg30d,
-        ratingAggPrev30d,
+        rangeReviews,
+        prevReviews,
+        rangeFiveStar,
+        prevFiveStar,
+        rangeReplies,
+        prevReplies,
+        rangeRatingAgg,
+        prevRatingAgg,
       ] = await Promise.all([
         tx.review.aggregate({
           where: { ...LIVE_ESTABLISHMENT },
@@ -255,7 +272,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         }),
         tx.establishment.count({ where: { deletedAt: null } }),
         tx.connection.count({ where: { status: "active" } }),
-        tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
+        tx.reviewRequest.count({ where: { sentAt: { gte: sinceRange } } }),
         tx.review.findMany({
           where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since12w } },
           select: { postedAt: true, rating: true },
@@ -300,15 +317,15 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         }),
         // Funnel counts — explicit counts (per-field _count avoided to keep
         // typecheck robust across Prisma client variants).
-        tx.reviewRequest.count({ where: { createdAt: { gte: since30d }, sentAt: { not: null } } }),
+        tx.reviewRequest.count({ where: { createdAt: { gte: sinceRange }, sentAt: { not: null } } }),
         tx.reviewRequest.count({
-          where: { createdAt: { gte: since30d }, deliveredAt: { not: null } },
+          where: { createdAt: { gte: sinceRange }, deliveredAt: { not: null } },
         }),
         tx.reviewRequest.count({
-          where: { createdAt: { gte: since30d }, openedAt: { not: null } },
+          where: { createdAt: { gte: sinceRange }, openedAt: { not: null } },
         }),
         tx.reviewRequest.count({
-          where: { createdAt: { gte: since30d }, convertedAt: { not: null } },
+          where: { createdAt: { gte: sinceRange }, convertedAt: { not: null } },
         }),
         // ── Kit stat-chip + key-insight sources ──────────────────────────
         tx.reviewReply.count({ where: { status: "published" } }),
@@ -324,31 +341,31 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
             review: { select: { postedAt: true } },
           },
         }),
-        tx.review.count({ where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since30d } } }),
+        tx.review.count({ where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: sinceRange } } }),
         tx.review.count({
-          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prev30dStart, lt: since30d } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prevRangeStart, lt: sinceRange } },
         }),
         tx.review.count({
-          where: { ...LIVE_ESTABLISHMENT, rating: 5, postedAt: { gte: since30d } },
+          where: { ...LIVE_ESTABLISHMENT, rating: 5, postedAt: { gte: sinceRange } },
         }),
         tx.review.count({
           where: {
             ...LIVE_ESTABLISHMENT,
             rating: 5,
-            postedAt: { gte: prev30dStart, lt: since30d },
+            postedAt: { gte: prevRangeStart, lt: sinceRange },
           },
         }),
-        tx.reviewReply.count({ where: { status: "published", createdAt: { gte: since30d } } }),
+        tx.reviewReply.count({ where: { status: "published", createdAt: { gte: sinceRange } } }),
         tx.reviewReply.count({
-          where: { status: "published", createdAt: { gte: prev30dStart, lt: since30d } },
+          where: { status: "published", createdAt: { gte: prevRangeStart, lt: sinceRange } },
         }),
         tx.review.aggregate({
-          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: since30d } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: sinceRange } },
           _avg: { rating: true },
           _count: { _all: true },
         }),
         tx.review.aggregate({
-          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prev30dStart, lt: since30d } },
+          where: { ...LIVE_ESTABLISHMENT, postedAt: { gte: prevRangeStart, lt: sinceRange } },
           _avg: { rating: true },
           _count: { _all: true },
         }),
@@ -367,7 +384,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         establishments,
         establishmentCount,
         activeConnections,
-        requestsSent30d,
+        requestsSentInRange,
         chartReviews,
         recentReplies,
         recentRequests,
@@ -379,14 +396,14 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
         funnelConverted,
         publishedReplyCount,
         publishedReplies,
-        reviews30d,
-        reviewsPrev30d,
-        fiveStar30d,
-        fiveStarPrev30d,
-        replies30d,
-        repliesPrev30d,
-        ratingAgg30d,
-        ratingAggPrev30d,
+        rangeReviews,
+        prevReviews,
+        rangeFiveStar,
+        prevFiveStar,
+        rangeReplies,
+        prevReplies,
+        rangeRatingAgg,
+        prevRatingAgg,
       };
     });
 
@@ -450,22 +467,23 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
     }
     const avgResponseHours = respN > 0 ? Math.round((respSumMs / respN / 36e5) * 10) / 10 : null;
 
-    // 30d-vs-prior-30d chip deltas. null when the prior window is empty — a
-    // 0→N month has no defined growth rate (same contract as reviews7dDeltaPct).
+    // Selected-window vs prior-window chip deltas. null when the prior window is
+    // empty — a 0→N window has no defined growth rate (same contract as
+    // reviews7dDeltaPct).
     const pctDelta = (cur: number, prev: number): number | null =>
       prev > 0 ? Math.round(((cur - prev) / prev) * 100) : null;
-    const avg30 = d.ratingAgg30d._avg.rating;
-    const avgPrev30 = d.ratingAggPrev30d._avg.rating;
-    const deltas30d = {
-      reviewsPct: pctDelta(d.reviews30d, d.reviewsPrev30d),
-      fiveStarPct: pctDelta(d.fiveStar30d, d.fiveStarPrev30d),
-      aiRepliesPct: pctDelta(d.replies30d, d.repliesPrev30d),
+    const avgRange = d.rangeRatingAgg._avg.rating;
+    const avgPrev = d.prevRatingAgg._avg.rating;
+    const deltas = {
+      reviewsPct: pctDelta(d.rangeReviews, d.prevReviews),
+      fiveStarPct: pctDelta(d.rangeFiveStar, d.prevFiveStar),
+      aiRepliesPct: pctDelta(d.rangeReplies, d.prevReplies),
       ratingAbs:
-        d.ratingAgg30d._count._all > 0 &&
-        d.ratingAggPrev30d._count._all > 0 &&
-        avg30 !== null &&
-        avgPrev30 !== null
-          ? Math.round((avg30 - avgPrev30) * 10) / 10
+        d.rangeRatingAgg._count._all > 0 &&
+        d.prevRatingAgg._count._all > 0 &&
+        avgRange !== null &&
+        avgPrev !== null
+          ? Math.round((avgRange - avgPrev) * 10) / 10
           : null,
     };
 
@@ -607,7 +625,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       establishmentCount: d.establishmentCount,
       activeConnections: d.activeConnections,
       hasGoogle,
-      requestsSent30d: d.requestsSent30d,
+      requestsSentInRange: d.requestsSentInRange,
       weeklyReviews,
       sentiment,
       channelMix,
@@ -619,7 +637,11 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       ratingTrendPoints,
       avgResponseHours,
       googlePlaceUrl,
-      deltas30d,
+      rangeDays,
+      reviewsInRange: d.rangeReviews,
+      fiveStarInRange: d.rangeFiveStar,
+      avgRatingInRange: d.rangeRatingAgg._count._all > 0 ? (avgRange ?? null) : null,
+      deltas,
     };
   } catch (err) {
     logger.warn({
@@ -627,7 +649,7 @@ export async function getDashboardData(orgId: string): Promise<DashboardData> {
       error: err instanceof Error ? err.message : String(err),
       event: "dashboard.data.failed",
     });
-    return EMPTY_DASHBOARD;
+    return { ...EMPTY_DASHBOARD, rangeDays };
   }
 }
 

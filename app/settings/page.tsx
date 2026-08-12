@@ -76,14 +76,14 @@ const SECTION_CARDS: Array<{
     art: `${ASSET}/nav-security.svg`,
     tint: "set-tile--emerald",
   },
-  {
-    id: "api",
-    href: "/settings/api",
-    title: "API & webhooks",
-    desc: "Integrations and developer tools",
-    art: `${ASSET}/nav-api.svg`,
-    tint: "set-tile--blue",
-  },
+  // {
+  //   id: "api",
+  //   href: "/settings/api",
+  //   title: "API & webhooks",
+  //   desc: "Integrations and developer tools",
+  //   art: `${ASSET}/nav-api.svg`,
+  //   tint: "set-tile--blue",
+  // },
   {
     id: "data",
     href: "/settings/data",
@@ -107,12 +107,15 @@ async function loadUsage(orgId: string): Promise<UsageCounters | null> {
   try {
     return await withTenant(orgId, async (tx) => {
       const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const [locations, requestsSent30d, smsRequests30d, repliesDrafted30d] = await Promise.all([
-        tx.establishment.count(),
-        tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
-        tx.reviewRequest.count({ where: { sentAt: { gte: since30d }, channel: "sms" } }),
-        tx.reviewReply.count({ where: { createdAt: { gte: since30d } } }),
-      ]);
+      const [locations, requestsSent30d, smsRequests30d, repliesDrafted30d] =
+        await Promise.all([
+          tx.establishment.count(),
+          tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
+          tx.reviewRequest.count({
+            where: { sentAt: { gte: since30d }, channel: "sms" },
+          }),
+          tx.reviewReply.count({ where: { createdAt: { gte: since30d } } }),
+        ]);
       return { locations, requestsSent30d, smsRequests30d, repliesDrafted30d };
     });
   } catch {
@@ -141,11 +144,17 @@ export default async function SettingsOverviewPage() {
   const renewsAt = orgBilling?.subscription?.currentPeriodEnd ?? null;
   const trialDaysLeft =
     plan === "trial" && trialEndsAt
-      ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000))
+      ? Math.max(
+          0,
+          Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000),
+        )
       : null;
 
   const ownerDisplayName =
-    org.ownerName ?? sessionUser.name ?? sessionUser.email?.split("@")[0] ?? "Owner";
+    org.ownerName ??
+    sessionUser.name ??
+    sessionUser.email?.split("@")[0] ??
+    "Owner";
   const myRole = memberRoleLabel(members, sessionUser.email ?? "");
 
   // Quota semantics mirror /subscription: paid/trial = Pro tier limits.
@@ -207,10 +216,15 @@ export default async function SettingsOverviewPage() {
                   ? `${usage.locations} ${usage.locations === 1 ? "location" : "locations"} · `
                   : ""}
                 Joined{" "}
-                {org.createdAt.toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                {org.createdAt.toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "numeric",
+                })}
               </div>
             </div>
-            <span className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}>
+            <span
+              className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}
+            >
               {entitled && <span className="set-pill__dot" />}
               {entitled ? "Active" : planLabel(plan)}
             </span>
@@ -226,10 +240,14 @@ export default async function SettingsOverviewPage() {
             <div className="set-sum__titles">
               <h2 className="set-sum__title">Team roles</h2>
               <p className="set-sum__sub">
-                {members.length} {members.length === 1 ? "member" : "members"} · RBAC
+                {members.length} {members.length === 1 ? "member" : "members"} ·
+                RBAC
               </p>
             </div>
-            <Link href="/settings/team" className="set-btn set-btn--primary set-btn--sm">
+            <Link
+              href="/settings/team"
+              className="set-btn set-btn--primary set-btn--sm"
+            >
               <Icon name="plus" size={13} className="set-btn__ic" />
               Invite teammate
             </Link>
@@ -264,8 +282,12 @@ export default async function SettingsOverviewPage() {
                             tone={tone}
                           />
                           <div style={{ minWidth: 0 }}>
-                            <div className="set-mini__name">{m.user.name ?? m.user.email}</div>
-                            <div className="set-mini__email">{m.user.email}</div>
+                            <div className="set-mini__name">
+                              {m.user.name ?? m.user.email}
+                            </div>
+                            <div className="set-mini__email">
+                              {m.user.email}
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -277,7 +299,9 @@ export default async function SettingsOverviewPage() {
                           {m.role}
                         </span>
                       </td>
-                      <td className="set-mini__access">{ROLE_ACCESS[m.role] ?? "Member"}</td>
+                      <td className="set-mini__access">
+                        {ROLE_ACCESS[m.role] ?? "Member"}
+                      </td>
                     </tr>
                   );
                 })}
@@ -319,13 +343,21 @@ export default async function SettingsOverviewPage() {
               {isPaid ? "Monthly" : plan === "trial" ? "Trial" : "Current plan"}
             </div>
             <div className="set-plan__pricerow">
-              <span className="set-plan__price">{isPaid ? `A$${PRO_PRICE_AUD}` : "$0"}</span>
+              <span className="set-plan__price">
+                {isPaid ? `A$${PRO_PRICE_AUD}` : "$0"}
+              </span>
               <span className="set-plan__suffix">
-                {isPaid ? "/mo per location" : plan === "trial" ? "during trial" : "free plan"}
+                {isPaid
+                  ? "/mo per location"
+                  : plan === "trial"
+                    ? "during trial"
+                    : "free plan"}
               </span>
             </div>
             <div style={{ marginTop: 8 }}>
-              <span className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}>
+              <span
+                className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}
+              >
                 {entitled && <span className="set-pill__dot" />}
                 {planStatusLabel}
               </span>
@@ -359,7 +391,6 @@ export default async function SettingsOverviewPage() {
             </Link>
           )}
         </section>
-
       </div>
 
       {/* ── Usage meters ──────────────────────────────────────────── */}
@@ -369,7 +400,9 @@ export default async function SettingsOverviewPage() {
             <Icon name="bars" size={16} />
           </span>
           <div style={{ flex: 1 }}>
-            <h2 className="set-card__title set-card__title--sm">Usage meters</h2>
+            <h2 className="set-card__title set-card__title--sm">
+              Usage meters
+            </h2>
             <p className="set-card__sub">Across limits · rolling 30 days</p>
           </div>
           <Link href="/subscription" className="set-link">
@@ -453,7 +486,8 @@ function Meter({
   max: number | null;
   color: string;
 }) {
-  const pct = max && max > 0 ? Math.min(100, Math.round((used / max) * 100)) : null;
+  const pct =
+    max && max > 0 ? Math.min(100, Math.round((used / max) * 100)) : null;
   return (
     <div className="set-meter">
       <span className="set-meter__tile">
@@ -472,22 +506,33 @@ function Meter({
           <span className="set-meter__label">{label}</span>
           <span className="set-meter__val">
             {used.toLocaleString()}
-            {max !== null && <span className="set-dim"> / {max.toLocaleString()}</span>}
+            {max !== null && (
+              <span className="set-dim"> / {max.toLocaleString()}</span>
+            )}
           </span>
-          <span className="set-meter__pct" style={{ color: pct === null ? undefined : color }}>
+          <span
+            className="set-meter__pct"
+            style={{ color: pct === null ? undefined : color }}
+          >
             {pct === null ? "Unlimited" : `${pct}%`}
           </span>
         </div>
         <div className="set-track">
-          <i style={{ width: `${pct === null ? 100 : pct}%`, background: color }} />
+          <i
+            style={{ width: `${pct === null ? 100 : pct}%`, background: color }}
+          />
         </div>
         {note && (
-          <div className={`set-meter__note${noteRight ? " set-meter__note--right" : ""}`}>
+          <div
+            className={`set-meter__note${noteRight ? " set-meter__note--right" : ""}`}
+          >
             {note}
           </div>
         )}
         {noteRight && !note && max === null && (
-          <div className="set-meter__note set-meter__note--right">Unlimited</div>
+          <div className="set-meter__note set-meter__note--right">
+            Unlimited
+          </div>
         )}
       </div>
     </div>

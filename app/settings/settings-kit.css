@@ -67,6 +67,15 @@
   font-family: inherit;
 }
 
+/* The kit hero carries its own headroom, so the app-wide 36px top padding on
+   .scroll reads as too much space above it here. Page-scoped via :has() so only
+   settings tightens up, and desktop-only so mobile keeps its own 16px. */
+@media (min-width: 768px) {
+  .scroll:has(.set-shell) {
+    padding-top: 22px;
+  }
+}
+
 /* ── Hero banner (shared) ──────────────────────────────────────────────── */
 .set-hero {
   position: relative;
@@ -795,16 +804,19 @@
   font-weight: 500;
   color: var(--set-mut);
 }
+/* Kept small enough to clear .set-plan__renew, which sits in the same corner
+   of the tile — at the previous 104×78 the art crowded the renewal date. */
 .set-plan__art {
   position: absolute;
   right: 8px;
   bottom: 6px;
-  width: 104px;
-  height: 78px;
+  width: 76px;
+  height: 56px;
   object-fit: contain;
   pointer-events: none;
 }
 .set-plan__renew {
+  position: relative;
   font-size: 12px;
   color: var(--set-mut-2);
   margin-top: 8px;

@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { prisma } from "@/lib/db/client";
 import { redirect } from "next/navigation";
 import { cache } from "react";
@@ -10,16 +10,18 @@ import { cache } from "react";
  * all need the org row. React's `cache()` dedupes within a single server
  * request, so we only hit Postgres once per page load instead of 3-4 times.
  *
+ * orgId/role come from `resolveSessionOrg()` — the user's ACTIVE workspace,
+ * which may differ from their session default after `switchOrg()` or right
+ * after accepting a team invite (see lib/auth/active-org.ts for why that
+ * distinction exists).
+ *
  * Returns the same data shape every caller needs; pages that only need orgId
  * can destructure { orgId } from it.
  */
 export const getOrgContext = cache(async () => {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  if (!session?.user || !orgId || !userId) {
-    redirect("/login");
-  }
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) redirect("/login");
+  const { orgId, userId, role } = sessionOrg;
   const org = await prisma.organization.findUnique({
     where: { id: orgId },
     select: {
@@ -44,8 +46,11 @@ export const getOrgContext = cache(async () => {
   return {
     orgId,
     userId,
-    userEmail: session.user.email ?? null,
-    userName: session.user.name ?? null,
+    userEmail: sessionOrg.email,
+    userName: sessionOrg.name,
+    /** The user's role in `org` — NOT necessarily their role in every org
+     *  they belong to (see resolveSessionOrg). */
+    role,
     org,
   };
 });

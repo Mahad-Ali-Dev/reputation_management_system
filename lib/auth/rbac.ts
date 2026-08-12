@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { redirect } from "next/navigation";
 
 /**
@@ -49,11 +49,9 @@ export class ForbiddenError extends Error {
 export async function requireRole(
   min: Role,
 ): Promise<{ orgId: string; userId: string; role: string }> {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  const userId = session?.user?.id;
-  const role = (session as { role?: string } | null)?.role ?? null;
-  if (!session || !orgId || !userId) redirect("/login");
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) redirect("/login");
+  const { orgId, userId, role } = sessionOrg;
   if (!roleAtLeast(role, min)) throw new ForbiddenError(min, role);
-  return { orgId, userId, role: role ?? "viewer" };
+  return { orgId, userId, role };
 }

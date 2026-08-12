@@ -1,4 +1,4 @@
-import { auth } from "@/lib/auth/config";
+import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { roleAtLeast } from "@/lib/auth/rbac";
 import { createPortalSession } from "@/lib/billing/actions";
 import { NextResponse } from "next/server";
@@ -8,13 +8,13 @@ import { NextResponse } from "next/server";
 export const dynamic = "force-dynamic";
 
 export async function POST() {
-  const session = await auth();
-  const orgId = (session as { orgId?: string } | null)?.orgId;
-  if (!session || !orgId) {
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) {
     return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
   }
+  const { orgId } = sessionOrg;
   // Billing is an owner/admin action.
-  if (!roleAtLeast((session as { role?: string }).role, "admin")) {
+  if (!roleAtLeast(sessionOrg.role, "admin")) {
     return NextResponse.json({ error: "forbidden" }, { status: 403 });
   }
 

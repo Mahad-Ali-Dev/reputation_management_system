@@ -1,8 +1,8 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/shell/icon";
 import { openCommandPalette } from "@/components/command-palette";
 import { LockIcon, upgradeHref } from "@/components/pro-gate";
+import { Icon, type IconName } from "@/components/shell/icon";
 import type { FeatureKey } from "@/lib/billing/feature-access";
 import Image from "next/image";
 import Link from "next/link";
