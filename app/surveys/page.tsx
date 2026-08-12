@@ -43,7 +43,7 @@ const VALID_TABS = [
   "automations",
   "responses",
   "insights",
-  "incentives",
+  // "incentives",
 ] as const;
 type TabKey = (typeof VALID_TABS)[number];
 
@@ -51,7 +51,7 @@ type TabKey = (typeof VALID_TABS)[number];
 const TAB_ALIASES: Record<string, TabKey> = {
   campaigns: "surveys",
   results: "responses",
-  coupons: "incentives",
+  // coupons: "incentives",
 };
 
 export default async function SurveysPage({
@@ -62,7 +62,9 @@ export default async function SurveysPage({
   const { orgId } = await getOrgContext();
   const { tab: tabParam } = await searchParams;
   const resolvedTab = TAB_ALIASES[tabParam ?? ""] ?? tabParam ?? "";
-  const initialTab: TabKey = (VALID_TABS as readonly string[]).includes(resolvedTab)
+  const initialTab: TabKey = (VALID_TABS as readonly string[]).includes(
+    resolvedTab,
+  )
     ? (resolvedTab as TabKey)
     : "surveys";
 
@@ -140,7 +142,9 @@ export default async function SurveysPage({
     automationCampaigns: campaigns.map((c) => ({ id: c.id, name: c.name })),
     connectedProviders: [...connectedProviders],
     insights: cachedInsights.insights,
-    insightsGeneratedAt: cachedInsights.generatedAt ? cachedInsights.generatedAt.toISOString() : null,
+    insightsGeneratedAt: cachedInsights.generatedAt
+      ? cachedInsights.generatedAt.toISOString()
+      : null,
     responseCount,
     hasInsightsAccess,
     couponStats: couponStatsData,
@@ -154,10 +158,13 @@ export default async function SurveysPage({
       <div className="surv">
         <div className="surv-hero">
           <div className="surv-hero__art" aria-hidden>
-            <img src="/assets/repulabs/customer-surveys/campaigns/survey.svg" alt="" />
+            <img
+              src="/assets/repulabs/customer-surveys/campaigns/survey.svg"
+              alt=""
+            />
           </div>
           <PageHeader
-            kicker="Campaigns · Builder · Results · Incentives"
+            kicker="Campaigns · Builder · Results ·"
             title="Surveys"
             description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters — all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
             actions={
@@ -169,7 +176,9 @@ export default async function SurveysPage({
           />
         </div>
 
-        <Suspense fallback={<div className="ds-card" style={{ height: 240 }} />}>
+        <Suspense
+          fallback={<div className="ds-card" style={{ height: 240 }} />}
+        >
           <SurveysTabs initialTab={initialTab} data={data} />
         </Suspense>
       </div>
@@ -205,7 +214,10 @@ async function surveysCsat(orgId: string): Promise<SurveyCsat | null> {
       }
       if (ratings.length === 0) return null;
       const satisfied = ratings.filter((n) => n >= 4).length;
-      return { score: Math.round((satisfied / ratings.length) * 100), count: ratings.length };
+      return {
+        score: Math.round((satisfied / ratings.length) * 100),
+        count: ratings.length,
+      };
     });
   } catch {
     return null;
@@ -213,7 +225,9 @@ async function surveysCsat(orgId: string): Promise<SurveyCsat | null> {
 }
 
 /** Org-wide smart-route outcome counts (fail-soft → zeros). */
-async function smartRouteCounts(orgId: string): Promise<{ review: number; alert: number }> {
+async function smartRouteCounts(
+  orgId: string,
+): Promise<{ review: number; alert: number }> {
   try {
     return await withTenant(orgId, async (tx) => {
       const rows = await tx.surveyResponse.groupBy({
