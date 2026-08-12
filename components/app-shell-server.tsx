@@ -28,7 +28,7 @@ export async function AppShellServer({
   topBar?: React.ReactNode;
   crumbs?: string[];
 }) {
-  const { org, orgId, userId } = await getOrgContext();
+  const { org, orgId, userId, allowedTabs } = await getOrgContext();
 
   // One label per selectable window for the topbar date pill, e.g.
   // "May 8 – Jun 7, 2026". Computed server-side (and passed down whole rather
@@ -51,6 +51,7 @@ export async function AppShellServer({
       crumbs={crumbs}
       dateLabels={dateLabels}
       workspaces={workspaces}
+      allowedTabs={allowedTabs}
     >
       {children}
     </AppShell>

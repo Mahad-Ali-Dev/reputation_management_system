@@ -17,6 +17,9 @@ export type SessionOrg = {
   name: string | null;
   orgId: string;
   role: string;
+  /** Whitelist of tab keys (lib/access/tabs.ts) this membership is restricted
+   *  to. Empty = unrestricted (default for every membership). */
+  allowedTabs: string[];
 };
 
 /**
@@ -38,6 +41,11 @@ export type SessionOrg = {
  * foreign id — e.g. after being removed from a workspace — silently falls
  * back to the session default instead of leaking access.
  *
+ * Role AND `allowedTabs` are always read fresh from `Membership` here (never
+ * from the session cookie), so an admin narrowing a teammate's tab access
+ * takes effect on their very next request rather than waiting out the
+ * session's cache lifetime.
+ *
  * This is the SINGLE place org/role resolution happens. Every server action,
  * route handler and page should go through this (directly, or via
  * `getOrgContext()` / `requireRole()`, which both delegate to it) rather than
@@ -47,34 +55,41 @@ export type SessionOrg = {
  *
  * Wrapped in React `cache()`: AppShellServer, TopBar and the page itself all
  * resolve this independently within one request, and this dedupes them down
- * to a single `auth()` call + (at most) one Membership lookup, same as
- * `getOrgContext` already does for the org row.
+ * to a single `auth()` call + one Membership lookup, same as `getOrgContext`
+ * already does for the org row.
  */
 export const resolveSessionOrg = cache(async (): Promise<SessionOrg | null> => {
   const session = await auth();
   const userId = session?.user?.id;
   const sessionOrgId = (session as { orgId?: string } | null)?.orgId;
-  const sessionRole = (session as { role?: string } | null)?.role;
-  if (!session?.user || !userId || !sessionOrgId || !sessionRole) return null;
+  if (!session?.user || !userId || !sessionOrgId) return null;
 
-  const base: SessionOrg = {
-    userId,
-    email: session.user.email ?? null,
-    name: session.user.name ?? null,
-    orgId: sessionOrgId,
-    role: sessionRole,
-  };
+  const identity = { userId, email: session.user.email ?? null, name: session.user.name ?? null };
 
   const requestedOrgId = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value;
-  if (!requestedOrgId || requestedOrgId === sessionOrgId) return base;
+  const targetOrgId = requestedOrgId ?? sessionOrgId;
 
-  const membership = await prisma.membership.findUnique({
-    where: { organizationId_userId: { organizationId: requestedOrgId, userId } },
-    select: { organizationId: true, role: true },
+  let membership = await prisma.membership.findUnique({
+    where: { organizationId_userId: { organizationId: targetOrgId, userId } },
+    select: { organizationId: true, role: true, allowedTabs: true },
   });
-  if (!membership) return base;
+  // The cookie pointed at an org the user is no longer a member of (removed,
+  // or a stale value from before) — fall back to the session default rather
+  // than leaking a permission-denied vs. logged-out ambiguity.
+  if (!membership && targetOrgId !== sessionOrgId) {
+    membership = await prisma.membership.findUnique({
+      where: { organizationId_userId: { organizationId: sessionOrgId, userId } },
+      select: { organizationId: true, role: true, allowedTabs: true },
+    });
+  }
+  if (!membership) return null;
 
-  return { ...base, orgId: membership.organizationId, role: membership.role };
+  return {
+    ...identity,
+    orgId: membership.organizationId,
+    role: membership.role,
+    allowedTabs: membership.allowedTabs,
+  };
 });
 
 export type Workspace = {

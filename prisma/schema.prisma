@@ -843,6 +843,12 @@ model Membership {
   organizationId String   @map("organization_id") @db.Uuid
   userId         String   @map("user_id") @db.Uuid
   role           String   // owner | admin | manager | member | viewer
+  // Whitelist of sidebar tab keys (see lib/access/tabs.ts) this member can
+  // reach, ON TOP OF whatever their role already permits — never a way to
+  // grant more than the role allows, only to narrow it further. An empty
+  // array means "no restriction" (the default — matches every membership
+  // created before this feature existed).
+  allowedTabs    String[] @default([]) @map("allowed_tabs")
   createdAt      DateTime @default(now()) @map("created_at")
 
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Restrict)
@@ -858,6 +864,10 @@ model Invitation {
   organizationId String    @map("organization_id") @db.Uuid
   email          String    @db.Citext
   role           String
+  // Carried over to Membership.allowedTabs when the invite is accepted (see
+  // acceptInvite in lib/account/actions.ts). Same "empty = unrestricted"
+  // convention.
+  allowedTabs    String[]  @default([]) @map("allowed_tabs")
   tokenHash      String    @map("token_hash")
   expiresAt      DateTime  @map("expires_at")
   acceptedAt     DateTime? @map("accepted_at")

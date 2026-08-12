@@ -3,6 +3,7 @@
 import { openCommandPalette } from "@/components/command-palette";
 import { LockIcon, upgradeHref } from "@/components/pro-gate";
 import { Icon, type IconName } from "@/components/shell/icon";
+import { type AccessTabKey, accessTabLabel } from "@/lib/access/tabs";
 import type { FeatureKey } from "@/lib/billing/feature-access";
 import Image from "next/image";
 import Link from "next/link";
@@ -24,10 +25,18 @@ import { usePathname, useSearchParams } from "next/navigation";
  * `components/pro-gate.tsx`, so locked nav items, locked TabBar tabs, and the
  * ProGate lock card all read as ONE product. Pro/trial orgs see every item live.
  *
+ * Per-item access padlock: items flagged `tab` are checked against the
+ * signed-in member's `allowedTabs` (lib/access/tabs.ts) — a workspace admin's
+ * per-invite restriction, orthogonal to plan. A restricted item shows a
+ * muted-gray padlock (distinct from the gold Pro one) and routes to
+ * `/restricted?feature=<label>` instead of the real page; the actual
+ * enforcement is server-side in `getOrgContext` (lib/auth/org-context.ts) —
+ * this lock is a hint, direct URL entry is blocked there regardless.
+ *
  * Routing contract: hrefs are NEVER changed here (a prior commit chose
  * action-led labels with no URL migration) — only link TEXT is relabeled.
  *
- * Public API unchanged: { onNavigate?, orgName, planLabel }.
+ * Public API unchanged: { onNavigate?, orgName, planLabel, allowedTabs? }.
  */
 
 type NavLink = {
@@ -42,6 +51,9 @@ type NavLink = {
    * `FeatureKey` so the padlock + upgrade CTA stay consistent app-wide.
    */
   pro?: FeatureKey;
+  /** Canonical access-tab key (lib/access/tabs.ts) this item is gated by.
+   *  Omitted for Dashboard/Settings, which are never restrictable. */
+  tab?: AccessTabKey;
 };
 type NavGroup = { group: string };
 type NavItem = NavLink | NavGroup;
@@ -54,36 +66,54 @@ const isGroup = (x: NavItem): x is NavGroup => "group" in x;
  */
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
-  { href: "/autopilot", label: "Autopilot", icon: "bolt", badge: "AI" },
+  { href: "/autopilot", label: "Autopilot", icon: "bolt", badge: "AI", tab: "autopilot" },
 
   { group: "Device Setup" },
-  { href: "/establishments", label: "My Establishments", icon: "pin" },
-  { href: "/hardware", label: "My Devices", icon: "qr" },
+  { href: "/establishments", label: "My Establishments", icon: "pin", tab: "establishments" },
+  { href: "/hardware", label: "My Devices", icon: "qr", tab: "hardware" },
 
   { group: "AI Engine" },
-  { href: "/ai", label: "AI Knowledge Base", icon: "brain" },
-  { href: "/phone", label: "AI Phone Receptionist", icon: "phone", badge: "Soon" },
+  { href: "/ai", label: "AI Knowledge Base", icon: "brain", tab: "ai" },
+  { href: "/phone", label: "AI Phone Receptionist", icon: "phone", badge: "Soon", tab: "phone" },
 
   { group: "Reviews" },
-  { href: "/reviews", label: "Review Feed", icon: "star" },
-  { href: "/outreach", label: "Review Requests", icon: "send" },
-  { href: "/reviews/dispute", label: "Dispute Center", icon: "flag" },
+  { href: "/reviews", label: "Review Feed", icon: "star", tab: "reviews" },
+  { href: "/outreach", label: "Review Requests", icon: "send", tab: "outreach" },
+  { href: "/reviews/dispute", label: "Dispute Center", icon: "flag", tab: "dispute" },
 
   { group: "Social & Messaging" },
-  { href: "/support", label: "Unified Inbox", icon: "chat", badge: "Soon" },
-  { href: "/support?tab=meetings", label: "Meeting Requests", icon: "cal", badge: "Soon" },
-  { href: "/social/posts", label: "Post Creator", icon: "share", pro: "image_creatives" },
+  { href: "/support", label: "Unified Inbox", icon: "chat", badge: "Soon", tab: "support" },
+  {
+    href: "/support?tab=meetings",
+    label: "Meeting Requests",
+    icon: "cal",
+    badge: "Soon",
+    tab: "support",
+  },
+  {
+    href: "/social/posts",
+    label: "Post Creator",
+    icon: "share",
+    pro: "image_creatives",
+    tab: "social",
+  },
 
   { group: "Engagement & CRM" },
-  { href: "/surveys", label: "Customer Surveys", icon: "survey", pro: "surveys_insights" },
-  { href: "/contacts", label: "Contact Directory", icon: "users" },
+  {
+    href: "/surveys",
+    label: "Customer Surveys",
+    icon: "survey",
+    pro: "surveys_insights",
+    tab: "surveys",
+  },
+  { href: "/contacts", label: "Contact Directory", icon: "users", tab: "contacts" },
 
   { group: "Intelligence" },
-  { href: "/analytics", label: "Business Reports", icon: "bars", badge: "Soon" },
+  { href: "/analytics", label: "Business Reports", icon: "bars", badge: "Soon", tab: "analytics" },
 
   { group: "Settings" },
-  { href: "/connections", label: "Connections", icon: "plug" },
-  { href: "/subscription", label: "Account & Billing", icon: "card" },
+  { href: "/connections", label: "Connections", icon: "plug", tab: "connections" },
+  { href: "/subscription", label: "Account & Billing", icon: "card", tab: "subscription" },
   { href: "/settings", label: "Settings", icon: "settings" },
 ];
 
@@ -110,15 +140,21 @@ export function SidebarNav({
   onNavigate,
   orgName,
   planLabel,
+  allowedTabs,
 }: {
   onNavigate?: () => void;
   orgName: string;
   planLabel: string;
+  /** This member's tab whitelist (lib/access/tabs.ts). Empty/undefined = no
+   *  restriction — every item renders exactly as it always has. */
+  allowedTabs?: string[];
 }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const activeTab = searchParams?.get("tab") ?? null;
   const isPro = /pro|scale|business|enterprise/i.test(planLabel);
+  const isRestricted = (tab: AccessTabKey | undefined) =>
+    Boolean(tab) && Boolean(allowedTabs?.length) && !allowedTabs?.includes(tab as string);
 
   return (
     <aside className="sb">
@@ -164,9 +200,19 @@ export function SidebarNav({
             );
           }
 
-          // A Pro item is "locked" only when the org is NOT on a paid plan.
-          const locked = Boolean(n.pro) && !isPro;
-          const href = locked ? upgradeHref(n.pro) : n.href;
+          // Two independent locks: a Pro item is locked when the org isn't on
+          // a paid plan; an access-restricted item is locked regardless of
+          // plan (a workspace admin narrowed this specific member's tabs).
+          // Access restriction takes the more specific copy/href when both
+          // could apply — upgrading the plan would never fix it anyway.
+          const proLocked = Boolean(n.pro) && !isPro;
+          const restricted = isRestricted(n.tab);
+          const locked = proLocked || restricted;
+          const href = restricted
+            ? `/restricted?feature=${encodeURIComponent(accessTabLabel(n.tab as string))}`
+            : proLocked
+              ? upgradeHref(n.pro)
+              : n.href;
 
           return (
             <Link
@@ -174,13 +220,26 @@ export function SidebarNav({
               href={href}
               onClick={onNavigate}
               className={`sb__item${pathMatches(pathname, n.href, activeTab) ? " is-active" : ""}`}
-              aria-label={locked ? `${n.label} (Pro)` : undefined}
-              title={locked ? `${n.label} — upgrade to Pro` : undefined}
+              aria-label={restricted ? `${n.label} (Restricted)` : locked ? `${n.label} (Pro)` : undefined}
+              title={
+                restricted
+                  ? `${n.label} — restricted by your workspace admin`
+                  : locked
+                    ? `${n.label} — upgrade to Pro`
+                    : undefined
+              }
               style={locked ? { color: "var(--rl-muted-2)" } : undefined}
             >
               <Icon name={n.icon} style={locked ? { opacity: 0.6 } : undefined} />
               <span style={{ flex: 1, opacity: locked ? 0.7 : undefined }}>{n.label}</span>
-              {locked ? (
+              {restricted ? (
+                <Icon
+                  name="lock"
+                  size={13}
+                  style={{ color: "var(--rl-muted-2)", marginLeft: "auto" }}
+                  title="Restricted by your workspace admin"
+                />
+              ) : proLocked ? (
                 <LockIcon size={13} style={{ marginLeft: "auto" }} />
               ) : (
                 n.badge && <span className="sb__badge">{n.badge}</span>

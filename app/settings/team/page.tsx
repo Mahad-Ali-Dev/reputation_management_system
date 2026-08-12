@@ -1,14 +1,21 @@
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
-import { inviteTeammate, removeMember } from "@/lib/account/actions";
+import { accessTabLabel } from "@/lib/access/tabs";
+import { removeMember } from "@/lib/account/actions";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
 import { prettyPlan } from "../_lib/sections";
+import { InviteTeammateModal } from "./_components/invite-teammate-modal";
 
 /**
  * Team & roles (designs/settings/team n roles/team n roles.png) — membership
  * table + invite flow. Bound to the existing inviteTeammate / removeMember
  * server actions.
+ *
+ * <InviteTeammateModal> owns the trigger button + centered dialog; its email
+ * + role fields post straight to `inviteTeammate`, and the tab-access grid
+ * lives alongside them in <InviteTeammateForm> (client component — it needs
+ * state for the Full/Custom toggle and "select all").
  */
 export const dynamic = "force-dynamic";
 
@@ -35,59 +42,7 @@ export default async function TeamSettingsPage() {
           </h2>
           <p className="set-card__sub">{prettyPlan(org.plan)} includes unlimited seats</p>
         </div>
-        <details style={{ position: "relative" }}>
-          <summary
-            className="set-btn set-btn--primary set-btn--sm"
-            style={{ listStyle: "none", cursor: "pointer" }}
-          >
-            <Icon name="plus" size={13} className="set-btn__ic" />
-            Invite teammate
-          </summary>
-          <form
-            action={inviteTeammate}
-            className="set-card"
-            style={{
-              position: "absolute",
-              right: 0,
-              top: "calc(100% + 8px)",
-              zIndex: 10,
-              width: 320,
-              padding: 16,
-              boxShadow: "0 12px 34px -10px rgba(15,23,42,.25)",
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <label className="set-field">
-                <span className="set-field__label">Email</span>
-                <input
-                  className="set-input"
-                  type="email"
-                  name="email"
-                  required
-                  maxLength={200}
-                  placeholder="teammate@business.com"
-                />
-              </label>
-              <label className="set-field">
-                <span className="set-field__label">Role</span>
-                <select className="set-select" name="role" defaultValue="admin">
-                  <option value="admin">Admin · can manage data</option>
-                  <option value="manager">Manager · can reply + edit</option>
-                  <option value="viewer">Viewer · read-only</option>
-                  <option value="owner">Owner · full control</option>
-                </select>
-              </label>
-              <button type="submit" className="set-btn set-btn--primary">
-                <Icon name="send" size={15} className="set-btn__ic" />
-                Send invitation
-              </button>
-              <p className="set-field__hint">
-                The invite link is valid for 14 days. We&apos;ll log it for now — email delivery
-                ships next release.
-              </p>
-            </div>
-          </form>
-        </details>
+        <InviteTeammateModal />
       </div>
 
       {members.length === 0 ? (
@@ -137,7 +92,23 @@ export default async function TeamSettingsPage() {
                       {m.role}
                     </span>
                   </td>
-                  <td className="set-mini__access">{ROLE_ACCESS[m.role] ?? "Member"}</td>
+                  <td className="set-mini__access">
+                    {ROLE_ACCESS[m.role] ?? "Member"}
+                    {m.allowedTabs.length > 0 && (
+                      <span
+                        title={m.allowedTabs.map(accessTabLabel).join(", ")}
+                        style={{
+                          display: "block",
+                          fontSize: 10.5,
+                          color: "var(--set-mut-2)",
+                          marginTop: 2,
+                        }}
+                      >
+                        <Icon name="lock" size={10} style={{ marginRight: 3, verticalAlign: -1 }} />
+                        {m.allowedTabs.length} tab{m.allowedTabs.length === 1 ? "" : "s"} only
+                      </span>
+                    )}
+                  </td>
                   <td style={{ textAlign: "right" }}>
                     {isYou ? null : (
                       <form action={removeMember}>
