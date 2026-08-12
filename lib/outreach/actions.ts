@@ -161,9 +161,16 @@ export async function createReviewRequest(form: FormData): Promise<OutreachActio
   // ok:true and the composer told the user it sent. Scheduled/queued sends are
   // legitimately ok here — only an attempted-and-failed immediate send is not.
   if (enq.status === "failed") {
+    // Name the provider's reason. "Try again in a moment" is wrong advice for
+    // the common causes here (unverified sending domain, missing credentials) —
+    // those never resolve by retrying, and the generic copy sent people round
+    // that loop instead of at the fix.
+    const reason = enq.error?.trim();
     return {
       ok: false,
-      error: `We couldn't deliver the ${data.channel === "sms" ? "SMS" : "email"} right now. Please try again in a moment.`,
+      error: reason
+        ? `Couldn't send the ${data.channel === "sms" ? "SMS" : "email"}: ${reason.slice(0, 160)}. It's saved in Sent History — retry from there once fixed.`
+        : `We couldn't deliver the ${data.channel === "sms" ? "SMS" : "email"} right now. Please try again in a moment.`,
     };
   }
 

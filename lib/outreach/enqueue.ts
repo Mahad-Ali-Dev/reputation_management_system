@@ -54,7 +54,17 @@ export type EnqueueReviewRequestArgs = {
 };
 
 export type EnqueueReviewRequestResult =
-  | { ok: true; reviewRequestId: string; status: "queued" | "scheduled" | "sent" | "failed" }
+  | {
+      ok: true;
+      reviewRequestId: string;
+      status: "queued" | "scheduled" | "sent" | "failed";
+      /**
+       * Provider/transport reason when `status === "failed"`. `ok:true` here means
+       * "the row was created", NOT "the message went out" — callers that report
+       * delivery to a human MUST branch on `status` and surface this.
+       */
+      error?: string;
+    }
   | { ok: false; reason: string };
 
 /**
@@ -146,7 +156,12 @@ export async function enqueueReviewRequest(
         { orgId, reviewRequestId: rr.id, triggerSource, status: outcome.status, event: "outreach.enqueue.dispatched" },
         "programmatic review request dispatched",
       );
-      return { ok: true, reviewRequestId: rr.id, status: outcome.dispatched ? "sent" : "failed" };
+      return {
+        ok: true,
+        reviewRequestId: rr.id,
+        status: outcome.dispatched ? "sent" : "failed",
+        error: outcome.dispatched ? undefined : outcome.error,
+      };
     }
     // Lost the claim race (cron beat us) — still a success; it will send.
     return { ok: true, reviewRequestId: rr.id, status: "queued" };
