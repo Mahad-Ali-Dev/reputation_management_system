@@ -101,9 +101,21 @@ export async function handleKbCrawl(
     const msg = err instanceof Error ? err.message : String(err);
     // Embeddings need VOYAGE_API_KEY — the single most common cause here, and
     // worth saying plainly rather than surfacing a raw provider error.
-    const reason = msg.includes("VOYAGE_API_KEY")
-      ? "Indexing isn't configured on this server yet (missing embeddings key). Ask your admin."
-      : "We read the site but couldn't index it. Try again shortly.";
+    // Surface the ACTUAL reason. A generic "try again shortly" told the owner
+    // nothing and hid the cause from us too — the whole point of writing the
+    // failure onto the document is that it can be read without server access.
+    let reason: string;
+    if (msg.includes("VOYAGE_API_KEY")) {
+      reason =
+        "Indexing isn't configured on this server yet (missing embeddings key). Ask your admin.";
+    } else if (/voyage_4\d\d/.test(msg)) {
+      // 4xx from the embeddings provider: bad key, quota, or payload too large.
+      reason = `The embeddings service rejected this content (${msg.slice(0, 120)}).`;
+    } else if (msg.includes("no chunks produced")) {
+      reason = "We read the site but found no indexable text on it.";
+    } else {
+      reason = `We read the site but couldn't index it: ${msg.slice(0, 160)}`;
+    }
     await markFailed(orgId, documentId, reason);
     logger.error({ event: "kb.crawl.index_failed", orgId, documentId, error: msg });
     return { ok: true, detail: "index_failed" };
