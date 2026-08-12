@@ -9,6 +9,13 @@ import { useMemo, useState, useTransition } from "react";
 import { MergeTagBody } from "./merge-tag-body";
 
 /**
+ * SMS is DISABLED for launch (2026-08) — email only; SMS returns later.
+ * Flip to `true` to restore the channel picker. Existing SMS templates still
+ * load and save correctly; they just can't be created from here meanwhile.
+ */
+const SMS_ENABLED = false;
+
+/**
  * Two-column Template Editor (client island).
  *
  * Left: name; channel pills (Email / SMS) that toggle Subject-line visibility
@@ -53,11 +60,16 @@ export function TemplateEditor({
   const [body, setBody] = useState(initial.body);
   const [isDefault, setIsDefault] = useState(initial.isDefault);
 
-  const [tone, setTone] = useState<"friendly" | "formal" | "brief" | "warm" | "playful">("friendly");
+  const [tone, setTone] = useState<"friendly" | "formal" | "brief" | "warm" | "playful">(
+    "friendly",
+  );
   const [aiPending, startAi] = useTransition();
   const [aiError, setAiError] = useState<string | null>(null);
 
-  const ctx = useMemo(() => sampleContext(businessName, sampleAddress), [businessName, sampleAddress]);
+  const ctx = useMemo(
+    () => sampleContext(businessName, sampleAddress),
+    [businessName, sampleAddress],
+  );
   const previewSubject = resolveMergeTags(subject, ctx, { keepUnknown: true });
   const previewBody = resolveMergeTags(body, ctx, { keepUnknown: true });
 
@@ -77,9 +89,23 @@ export function TemplateEditor({
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)", gap: 18, alignItems: "start" }}>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
+        gap: 18,
+        alignItems: "start",
+      }}
+    >
       {/* Left: form */}
-      <form action={upsertOutreachTemplate} className="ds-card" style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+      {/* `ds-card` carries no padding of its own — every other usage in the app
+          passes it explicitly. Without it the form's fields sat flush against
+          the card edges. */}
+      <form
+        action={upsertOutreachTemplate}
+        className="ds-card"
+        style={{ display: "flex", flexDirection: "column", gap: 16, padding: 20 }}
+      >
         {initial.id && <input type="hidden" name="id" value={initial.id} />}
         <input type="hidden" name="channel" value={channel} />
         <input type="hidden" name="body" value={body} />
@@ -99,23 +125,26 @@ export function TemplateEditor({
           />
         </label>
 
-        {/* Channel pills */}
-        <div>
-          <span className="lbl">Channel</span>
-          <div className="row" style={{ gap: 8 }}>
-            {(["email", "sms"] as const).map((c) => (
-              <button
-                key={c}
-                type="button"
-                className={channel === c ? "btn btn--pri" : "btn"}
-                onClick={() => setChannel(c)}
-              >
-                <Icon name={c === "email" ? "mail" : "smartphone"} size={12} />
-                {c === "email" ? "Email" : "SMS"}
-              </button>
-            ))}
+        {/* Channel pills — hidden while SMS is disabled, since Email would be
+            the only option and a one-choice picker is just noise. */}
+        {SMS_ENABLED && (
+          <div>
+            <span className="lbl">Channel</span>
+            <div className="row" style={{ gap: 8 }}>
+              {(["email", "sms"] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className={channel === c ? "btn btn--pri" : "btn"}
+                  onClick={() => setChannel(c)}
+                >
+                  <Icon name={c === "email" ? "mail" : "smartphone"} size={12} />
+                  {c === "email" ? "Email" : "SMS"}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Subject — email only (channel toggle controls visibility, AC). */}
         {channel === "email" && (
@@ -141,7 +170,13 @@ export function TemplateEditor({
                 <img
                   src={initial.logoUrl}
                   alt=""
-                  style={{ maxHeight: 40, maxWidth: 140, border: "1px solid var(--line)", borderRadius: 6, padding: 4 }}
+                  style={{
+                    maxHeight: 40,
+                    maxWidth: 140,
+                    border: "1px solid var(--line)",
+                    borderRadius: 6,
+                    padding: 4,
+                  }}
                 />
               ) : (
                 <span className="dim" style={{ fontSize: 12 }}>
@@ -186,7 +221,11 @@ export function TemplateEditor({
             </button>
           </div>
           <label className="row" style={{ gap: 6, fontSize: 12.5 }}>
-            <input type="checkbox" checked={isDefault} onChange={(e) => setIsDefault(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={isDefault}
+              onChange={(e) => setIsDefault(e.target.checked)}
+            />
             Default {channel} template
           </label>
         </div>
@@ -204,8 +243,9 @@ export function TemplateEditor({
         </div>
       </form>
 
-      {/* Right: recipient preview */}
-      <div style={{ position: "sticky", top: 12 }}>
+      {/* Right: recipient preview. Matches the form's top padding so the two
+          column headings sit on the same baseline. */}
+      <div style={{ position: "sticky", top: 12, paddingTop: 20 }}>
         <span className="lbl">Preview — what the recipient sees</span>
         {channel === "email" ? (
           <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
@@ -213,7 +253,8 @@ export function TemplateEditor({
               className="dim"
               style={{ borderBottom: "1px solid var(--line)", padding: "10px 16px", fontSize: 12 }}
             >
-              <strong>Subject:</strong> {previewSubject || `How was your experience at ${businessName}?`}
+              <strong>Subject:</strong>{" "}
+              {previewSubject || `How was your experience at ${businessName}?`}
             </div>
             <div style={{ padding: 24, background: "var(--surface-2)" }}>
               <div
@@ -228,13 +269,26 @@ export function TemplateEditor({
               >
                 {initial.logoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={initial.logoUrl} alt="" style={{ maxHeight: 44, marginBottom: 16, display: "block" }} />
+                  <img
+                    src={initial.logoUrl}
+                    alt=""
+                    style={{ maxHeight: 44, marginBottom: 16, display: "block" }}
+                  />
                 ) : (
-                  <div style={{ fontWeight: 700, fontSize: 16, color: "var(--ink)", marginBottom: 16 }}>
+                  <div
+                    style={{ fontWeight: 700, fontSize: 16, color: "var(--ink)", marginBottom: 16 }}
+                  >
                     {businessName}
                   </div>
                 )}
-                <div style={{ whiteSpace: "pre-wrap", color: "var(--ink-2)", fontSize: 14, lineHeight: 1.6 }}>
+                <div
+                  style={{
+                    whiteSpace: "pre-wrap",
+                    color: "var(--ink-2)",
+                    fontSize: 14,
+                    lineHeight: 1.6,
+                  }}
+                >
                   {previewBody}
                 </div>
                 <div style={{ margin: "22px 0" }}>
@@ -252,7 +306,9 @@ export function TemplateEditor({
                     Leave a Review →
                   </span>
                 </div>
-                <hr style={{ border: "none", borderTop: "1px solid var(--line)", margin: "20px 0" }} />
+                <hr
+                  style={{ border: "none", borderTop: "1px solid var(--line)", margin: "20px 0" }}
+                />
                 <p className="dim" style={{ fontSize: 11 }}>
                   Don't want these emails? Unsubscribe anytime.
                 </p>

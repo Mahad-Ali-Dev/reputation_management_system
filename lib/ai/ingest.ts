@@ -103,8 +103,7 @@ export function chunkText(content: string): Chunk[] {
         slice.lastIndexOf("! "),
         slice.lastIndexOf(".\n"),
       );
-      const cutoff =
-        lastPeriod > CHUNK_TARGET_CHARS / 2 ? i + lastPeriod + 1 : end;
+      const cutoff = lastPeriod > CHUNK_TARGET_CHARS / 2 ? i + lastPeriod + 1 : end;
       const text = body.slice(i, cutoff).trim();
       if (text.length > 0) {
         chunks.push({
@@ -183,36 +182,59 @@ export async function ingestDocument(args: {
   }
 
   // Wipe old embeddings + insert new (transactional)
-  await prisma.$transaction(async (tx) => {
-    await tx.aiEmbedding.deleteMany({ where: { documentId: args.documentId } });
+  //
+  // MULTI-ROW INSERT, NOT ONE PER CHUNK. This loop used to issue a separate
+  // round-trip per chunk inside a transaction left on Prisma's DEFAULT 5s
+  // timeout. Against Neon (~10-30ms per round-trip) a one-page document's ~15
+  // chunks finished comfortably, so it looked fine — but a 20-page site crawl
+  // produces 300-400 chunks, which blows the 5s budget and Postgres kills the
+  // transaction mid-write. The whole index then fails with a message that named
+  // nothing. Batching collapses those hundreds of round-trips into a handful.
+  const INSERT_BATCH = 100; // 8 binds/row → 800 params, far under PG's 65535
+  await prisma.$transaction(
+    async (tx) => {
+      await tx.aiEmbedding.deleteMany({ where: { documentId: args.documentId } });
 
-    // Bulk insert via raw SQL (Prisma doesn't support vector column natively).
-    // Each row: id, document_id, organization_id, establishment_id, chunk_text, embedding, content_hash, position, metadata
-    for (let i = 0; i < chunks.length; i++) {
-      const chunk = chunks[i]!;
-      const vec = embeddings[i]!;
-      // Format vector as Postgres `[1.0,2.0,...]` text literal
-      const vecLiteral = `[${vec.join(",")}]`;
-      const meta = JSON.stringify(chunk.metadata);
-      await tx.$executeRawUnsafe(
-        `INSERT INTO ai_embeddings (id, document_id, organization_id, establishment_id, chunk_text, embedding, content_hash, position, metadata)
-         VALUES (gen_random_uuid(), $1::uuid, $2::uuid, $3::uuid, $4, $5::vector, $6, $7, $8::jsonb)`,
-        args.documentId,
-        args.organizationId,
-        args.establishmentId,
-        chunk.text,
-        vecLiteral,
-        contentHash,
-        chunk.position,
-        meta,
-      );
-    }
+      // Raw SQL because Prisma doesn't support the pgvector column type natively.
+      for (let start = 0; start < chunks.length; start += INSERT_BATCH) {
+        const slice = chunks.slice(start, start + INSERT_BATCH);
+        const tuples: string[] = [];
+        const params: unknown[] = [];
+        for (let j = 0; j < slice.length; j++) {
+          const chunk = slice[j]!;
+          const vec = embeddings[start + j]!;
+          const b = params.length;
+          tuples.push(
+            `(gen_random_uuid(), $${b + 1}::uuid, $${b + 2}::uuid, $${b + 3}::uuid, $${b + 4}, $${b + 5}::vector, $${b + 6}, $${b + 7}, $${b + 8}::jsonb)`,
+          );
+          params.push(
+            args.documentId,
+            args.organizationId,
+            args.establishmentId,
+            chunk.text,
+            // Postgres vector literal: `[1.0,2.0,…]`
+            `[${vec.join(",")}]`,
+            contentHash,
+            chunk.position,
+            JSON.stringify(chunk.metadata),
+          );
+        }
+        await tx.$executeRawUnsafe(
+          `INSERT INTO ai_embeddings (id, document_id, organization_id, establishment_id, chunk_text, embedding, content_hash, position, metadata)
+           VALUES ${tuples.join(", ")}`,
+          ...params,
+        );
+      }
 
-    await tx.aiDocument.update({
-      where: { id: args.documentId },
-      data: { status: "indexed", lastIndexedAt: new Date() },
-    });
-  });
+      await tx.aiDocument.update({
+        where: { id: args.documentId },
+        data: { status: "indexed", lastIndexedAt: new Date() },
+      });
+    },
+    // Belt-and-braces: batching alone brings a 400-chunk write back under a
+    // second, but a big site on a slow link shouldn't hit a silent 5s cliff.
+    { timeout: 120_000, maxWait: 20_000 },
+  );
 
   logger.info(
     { documentId: args.documentId, chunks: chunks.length, event: "ai.document.indexed" },

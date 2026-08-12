@@ -23,7 +23,8 @@ export type ScheduledKind =
   | "scheduled_post"
   | "scheduled_request"
   | "scheduled_reply"
-  | "onboarding_step";
+  | "onboarding_step"
+  | "kb_crawl";
 
 export type ScheduledHandlerJob = {
   id: string;
@@ -36,6 +37,7 @@ export type ScheduledHandler = (
   job: ScheduledHandlerJob,
 ) => Promise<{ ok: boolean; detail?: string }>;
 
+import { handleKbCrawl } from "./kb_crawl";
 import { handleOnboardingStep } from "./onboarding_step";
 import { handleScheduledPost } from "./scheduled_post";
 import { handleScheduledReply } from "./scheduled_reply";
@@ -51,4 +53,5 @@ export const HANDLERS: Record<ScheduledKind, ScheduledHandler> = {
   scheduled_request: handleScheduledRequest,
   scheduled_reply: handleScheduledReply,
   onboarding_step: handleOnboardingStep,
+  kb_crawl: handleKbCrawl,
 };

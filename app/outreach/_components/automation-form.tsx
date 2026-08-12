@@ -1,8 +1,8 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import { upsertAutomationRule } from "@/lib/outreach/automation-actions";
 import type { AutomationRuleView } from "@/lib/outreach/automation";
+import { upsertAutomationRule } from "@/lib/outreach/automation-actions";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -83,7 +83,16 @@ export function AutomationForm({
         <div style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)" }}>
           Connect a platform to automate requests
         </div>
-        <p className="dim" style={{ marginTop: 6, marginBottom: 16, fontSize: 13, maxWidth: 440, marginInline: "auto" }}>
+        <p
+          className="dim"
+          style={{
+            marginTop: 6,
+            marginBottom: 16,
+            fontSize: 13,
+            maxWidth: 440,
+            marginInline: "auto",
+          }}
+        >
           Automated review requests fire when a connected platform reports an event — e.g. a
           completed Shopify order. Connect a store or CRM to turn this on.
         </p>
@@ -96,7 +105,11 @@ export function AutomationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="rr-card" style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 620, padding: 22 }}>
+    <form
+      onSubmit={handleSubmit}
+      className="rr-card"
+      style={{ display: "flex", flexDirection: "column", gap: 18, maxWidth: 620, padding: 22 }}
+    >
       {/* Master toggle */}
       <label className="row" style={{ gap: 10, alignItems: "flex-start" }}>
         <input
@@ -166,7 +179,11 @@ export function AutomationForm({
       {templates.length > 0 && (
         <label className="lbl">
           Template (optional)
-          <select className="ds-input" value={templateId} onChange={(e) => setTemplateId(e.target.value)}>
+          <select
+            className="ds-input"
+            value={templateId}
+            onChange={(e) => setTemplateId(e.target.value)}
+          >
             <option value="">Default body</option>
             {templates.map((t) => (
               <option key={t.id} value={t.id}>
@@ -191,8 +208,8 @@ export function AutomationForm({
       >
         <Icon name="info" size={14} style={{ color: "var(--pri)", marginTop: 1 }} />
         <span className="dim">
-          Automated SMS still respects TCPA consent and STOP opt-outs — a request is only scheduled
-          for recipients with consent on file, and the frequency cap prevents duplicate contacts.
+          Automated requests go out by email, and the frequency cap prevents duplicate contacts.
+          Recipients who unsubscribe are skipped automatically.
         </span>
       </div>
 

@@ -50,37 +50,69 @@ export async function provisionDevicesForOrder(orderId: string): Promise<{
   // For each item, allocate N devices. We attribute device.product_sku to the item's product.
   const out: Array<{ deviceId: string; slug: string; serial: string; codePlaintext: string }> = [];
 
-  await prisma.$transaction(async (tx) => {
-    for (const item of order.items) {
-      const units = item.quantity * item.product.unitsPerPack;
-      for (let i = 0; i < units; i++) {
-        const slug = generateSlug();
-        const serial = generateSerial();
-        const { plaintext, hash } = generateActivationCode();
-        // Sign a placeholder so the field isn't empty; real signature set on activation when
-        // the redirect_url is known. The literal value doesn't matter — it's overwritten on
-        // activation — but we use the production domain so any leak isn't misleading.
-        const placeholderRedirect = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com"}/not-activated`;
-        const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5;
-        const placeholderSig = signSlug(slug, placeholderRedirect, expiresAtUnix);
+  // Generate every slug / serial / activation code / signature BEFORE opening the
+  // transaction. This is pure CPU (hashing + HMAC) and was previously running
+  // inside it, spending the transaction's budget on work that touches no rows.
+  const planned: Array<{
+    productSku: string;
+    slug: string;
+    serial: string;
+    plaintext: string;
+    hash: string;
+    signature: string;
+  }> = [];
+  for (const item of order.items) {
+    const units = item.quantity * item.product.unitsPerPack;
+    for (let i = 0; i < units; i++) {
+      const slug = generateSlug();
+      const serial = generateSerial();
+      const { plaintext, hash } = generateActivationCode();
+      // Sign a placeholder so the field isn't empty; real signature set on activation when
+      // the redirect_url is known. The literal value doesn't matter — it's overwritten on
+      // activation — but we use the production domain so any leak isn't misleading.
+      const placeholderRedirect = `${process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com"}/not-activated`;
+      const expiresAtUnix = Math.floor(Date.now() / 1000) + 60 * 60 * 24 * 365 * 5;
+      planned.push({
+        productSku: item.product.sku,
+        slug,
+        serial,
+        plaintext,
+        hash,
+        signature: signSlug(slug, placeholderRedirect, expiresAtUnix),
+      });
+    }
+  }
 
+  await prisma.$transaction(
+    async (tx) => {
+      for (const p of planned) {
         const device = await tx.device.create({
           data: {
             organizationId: null, // assigned at activation time
             establishmentId: null,
             orderId: order.id,
-            productSku: item.product.sku,
-            serial,
-            shortSlug: slug,
-            slugSignature: placeholderSig,
-            activationCodeHash: hash,
+            productSku: p.productSku,
+            serial: p.serial,
+            shortSlug: p.slug,
+            slugSignature: p.signature,
+            activationCodeHash: p.hash,
             status: "unactivated",
           },
         });
-        out.push({ deviceId: device.id, slug, serial, codePlaintext: plaintext });
+        out.push({
+          deviceId: device.id,
+          slug: p.slug,
+          serial: p.serial,
+          codePlaintext: p.plaintext,
+        });
       }
-    }
-  });
+    },
+    // One round-trip per device against Neon, on Prisma's default 5s timeout,
+    // meant a large enough order would be killed mid-provision AFTER the customer
+    // had paid — leaving the order with no devices. Units per order are bounded
+    // by what's purchasable, so a generous ceiling is the right call here.
+    { timeout: 120_000, maxWait: 20_000 },
+  );
 
   logger.info(
     { orderId, provisioned: out.length, event: "hardware.provisioned" },

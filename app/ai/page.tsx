@@ -10,7 +10,7 @@ import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { type BehaviourFields, BehaviourSettings } from "./_components/behaviour-settings";
-import { KbAddForms } from "./_components/kb-add-forms";
+import { KbSourceActions } from "./_components/kb-source-actions";
 import {
   type BusinessDetailRow,
   KnowledgeBody,
@@ -18,7 +18,6 @@ import {
   type LocationData,
   type RecentLearningRow,
 } from "./_components/knowledge-dashboard";
-import { SourcePanel } from "./_components/source-panel";
 import { TestConsole } from "./_components/test-console";
 import { readiness, relativeTime } from "./training/_components/shared-utils";
 import "./aikb.css";
@@ -32,11 +31,13 @@ export const dynamic = "force-dynamic";
  * Three kit tabs switched via the ?tab= searchParam (server-rendered <Link>s, no
  * client JS for tab switching — keeps the route an RSC):
  *   - Knowledge → the kit dashboard (readiness ribbon + stats + sources + quick
- *     actions + business overview/location + recent learning). Active AND empty
- *     states, every figure a live tenant query (fail-soft). The existing source
- *     management (KbAddForms upload/URL-crawl, indexed-doc list + delete, widget
- *     key create/revoke + embed snippet, test-page links) is preserved inside
- *     the <SourcePanel> disclosure.
+ *     actions + business overview/location + recent learning). The source CARDS
+ *     are now real controls via <KbSourceActions>: "Upload documents" opens the
+ *     OS file picker, "Connect website" opens a 2-field modal and runs the crawl
+ *     as a background `kb_crawl` job with live per-stage progress. The old stack
+ *     of inline forms in a disclosure is gone.
+ *   - Sources → the indexed-document list + delete.
+ *   - Chat widget → widget key create/revoke, embed snippet, test-page link.
  *   - Behaviour → the kit "AI Behaviour Settings" surface, bound to the real
  *     AiTrainingProfile voice/behaviour columns via saveAiTraining.
  *   - Test → the kit "Train your AI agent" console, reusing the existing
@@ -53,7 +54,7 @@ function isNextControlFlow(err: unknown): boolean {
   return typeof digest === "string" && digest.startsWith("NEXT_");
 }
 
-type TabKey = "knowledge" | "behaviour" | "test";
+type TabKey = "knowledge" | "sources" | "widget" | "behaviour" | "test";
 
 /** Weighted readiness: 60% training profile + indexed docs (≤25) + live widget (15). */
 function computeReadiness(profileScore: number, indexedDocs: number, hasWidget: boolean): number {
@@ -115,7 +116,10 @@ export default async function AiSettingsPage({
 }) {
   const { orgId } = await getOrgContext();
   const sp = await searchParams;
-  const tab: TabKey = sp.tab === "behaviour" || sp.tab === "test" ? sp.tab : "knowledge";
+  const tab: TabKey =
+    sp.tab === "behaviour" || sp.tab === "test" || sp.tab === "sources" || sp.tab === "widget"
+      ? sp.tab
+      : "knowledge";
   const actionFailed = sp.saved === "error";
 
   const loadAi = () =>
@@ -230,6 +234,8 @@ export default async function AiSettingsPage({
 
   const TABS: { key: TabKey; href: string; label: string; icon: IconName; badge?: number }[] = [
     { key: "knowledge", href: "/ai?tab=knowledge", label: "Knowledge", icon: "box" },
+    { key: "sources", href: "/ai?tab=sources", label: "Sources", icon: "box" },
+    { key: "widget", href: "/ai?tab=widget", label: "Chat widget", icon: "plug" },
     { key: "behaviour", href: "/ai?tab=behaviour", label: "Behaviour", icon: "sparkle" },
     {
       key: "test",
@@ -258,8 +264,8 @@ export default async function AiSettingsPage({
               <h1 className="akb-hero__title">AI Knowledge Base</h1>
               <p className="akb-hero__copy">
                 Teach your AI about your business, voice and policies. It uses this to answer
-                reviews, DMs, surveys and phone calls — and learns from every question it
-                can&apos;t answer.
+                reviews, DMs, surveys and phone calls — and learns from every question it can&apos;t
+                answer.
               </p>
             </div>
             <div className="akb-hero__art" aria-hidden="true">
@@ -308,11 +314,19 @@ export default async function AiSettingsPage({
               );
             })}
           </div>
+          {/* "Add source" was `href="#add-source"`, pointing at the disclosure
+              that no longer exists — a dead button. It now triggers the same
+              file picker as the Upload card, via KbSourceActions' delegation. */}
           {tab === "knowledge" ? (
-            <a href="#add-source" className="akb-btn-primary" style={{ height: 33 }}>
+            <button
+              type="button"
+              data-kb-action="upload"
+              className="akb-btn-primary"
+              style={{ height: 33 }}
+            >
               <Icon name="plus" size={14} />
               Add source
-            </a>
+            </button>
           ) : (
             <Link href="/ai?tab=test" className="akb-btn-primary" style={{ height: 33 }}>
               <Icon name="sparkle" size={14} />
@@ -349,210 +363,215 @@ export default async function AiSettingsPage({
               recentLearning={recentLearning}
             />
 
-            {/* Existing source management — preserved, in a disclosure. */}
-            <SourcePanel defaultOpen={documents.length === 0}>
-              <KbAddForms
-                establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
-              />
-
-              <hr className="aikb-divider" />
-
-              <h4 className="aikb-subhead">
-                <Icon name="box" size={14} /> Indexed documents
-                <span className="chip chip--pri">{documents.length}</span>
-              </h4>
-              {documents.length === 0 ? (
-                <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
-                  No documents yet — paste your FAQ above or crawl your website to start.
-                </p>
-              ) : (
-                <div>
-                  {documents.map((d) => {
-                    const chip = statusChip(d.status);
-                    return (
-                      <div key={d.id} className="aikb-doc">
-                        <div style={{ minWidth: 0 }}>
-                          <div className="aikb-doc__title">
-                            {d.title}
-                            <span className="chip chip--out" style={{ textTransform: "uppercase" }}>
-                              {d.sourceType}
-                            </span>
-                            <span className={chip.cls}>
-                              <span className="dot" />
-                              {chip.label}
-                            </span>
-                          </div>
-                          <div className="aikb-doc__meta">
-                            {d.content.length.toLocaleString()} chars ·{" "}
-                            {d.lastIndexedAt ? new Date(d.lastIndexedAt).toLocaleString() : "—"}
-                            {d.sourceUri && (
-                              <>
-                                {" · "}
-                                <a
-                                  href={d.sourceUri}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="text-primary hover:underline"
-                                >
-                                  source ↗
-                                </a>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        <form
-                          action={async () => {
-                            "use server";
-                            try {
-                              await deleteAiDocument(d.id);
-                            } catch (err) {
-                              if (isNextControlFlow(err)) throw err;
-                              redirect("/ai?tab=knowledge&saved=error");
-                            }
-                          }}
-                        >
-                          <Button type="submit" variant="ghost" size="sm">
-                            Delete
-                          </Button>
-                        </form>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-
-              <hr className="aikb-divider" />
-
-              {/* Widget key generation (existing action: createWidgetKey) */}
-              <h4 className="aikb-subhead">
-                <Icon name="plug" size={14} /> Embed snippet
-              </h4>
-              <p style={{ fontSize: 12.5, color: "var(--rl-muted)", margin: "0 0 12px" }}>
-                Generate a widget key, then paste the snippet on any page where you want the
-                chatbot.
-              </p>
-              <form
-                action={async (form: FormData) => {
-                  "use server";
-                  try {
-                    await createWidgetKey(form);
-                  } catch (err) {
-                    if (isNextControlFlow(err)) throw err;
-                    redirect("/ai?tab=knowledge&saved=error");
-                  }
-                }}
-                className="space-y-3"
-              >
-                <div className="aikb-formgrid">
-                  {/* biome-ignore lint/a11y/noLabelWithoutControl: the select is nested inside this label (implicit association) */}
-                  <label className="aikb-label">
-                    Establishment (optional)
-                    <EstablishmentSelect
-                      establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
-                    />
-                  </label>
-                  <label className="aikb-label">
-                    Origin allowlist (optional)
-                    <input
-                      name="originAllowlist"
-                      placeholder="https://example.com, https://shop.example.com"
-                      className="aikb-input"
-                    />
-                    <span className="aikb-hint">
-                      Comma-separated. Leave empty to allow any origin (testing only).
-                    </span>
-                  </label>
-                </div>
-                <Button type="submit">Generate key</Button>
-              </form>
-
-              <hr className="aikb-divider" />
-
-              <h4 className="aikb-subhead">
-                <Icon name="lock" size={14} /> Active keys
-                <span className="chip chip--pri">{widgets.length}</span>
-              </h4>
-              {widgets.length === 0 ? (
-                <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>No active keys.</p>
-              ) : (
-                <div>
-                  {widgets.map((w) => (
-                    <div key={w.id} className="aikb-key">
-                      <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
-                        <code
-                          style={{
-                            fontSize: 11.5,
-                            fontFamily: "var(--f-mono)",
-                            wordBreak: "break-all",
-                          }}
-                        >
-                          {w.publicKey}
-                        </code>
-                        <form
-                          action={async () => {
-                            "use server";
-                            try {
-                              await revokeWidgetKey(w.id);
-                            } catch (err) {
-                              if (isNextControlFlow(err)) throw err;
-                              redirect("/ai?tab=knowledge&saved=error");
-                            }
-                          }}
-                        >
-                          <Button type="submit" variant="ghost" size="sm">
-                            Revoke
-                          </Button>
-                        </form>
-                      </div>
-                      {w.originAllowlist.length > 0 && (
-                        <div className="aikb-doc__meta">
-                          Origins: {w.originAllowlist.join(", ")}
-                        </div>
-                      )}
-                      <details style={{ fontSize: 12 }}>
-                        <summary className="cursor-pointer text-primary">
-                          Show embed snippet
-                        </summary>
-                        <pre className="aikb-snippet">{`<script src="${appUrl}/widget?key=${w.publicKey}" async></script>`}</pre>
-                      </details>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <hr className="aikb-divider" />
-
-              <h4 className="aikb-subhead">
-                <Icon name="bot" size={14} /> Test the chatbot
-              </h4>
-              {widgets.length === 0 ? (
-                <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
-                  Generate a key above first — the test page renders the live widget.
-                </p>
-              ) : (
-                <Button asChild variant="outline">
-                  <Link
-                    href={`/ai/test?key=${widgets[0]?.publicKey ?? ""}`}
-                    target="_blank"
-                    rel="noopener"
-                  >
-                    Open test page →
-                  </Link>
-                </Button>
-              )}
-            </SourcePanel>
+            {/* Card interactions: "Upload documents" opens the OS file picker,
+                "Connect website" opens the 2-field modal and runs the crawl as a
+                background job. Replaces the old stack of inline forms that used
+                to live in a disclosure below the fold. */}
+            <KbSourceActions />
           </>
+        )}
+
+        {/* ---------- Sources tab ---------- */}
+        {tab === "sources" && (
+          <section className="akb-card akb-card__pad">
+            <h4 className="aikb-subhead">
+              <Icon name="box" size={14} /> Indexed documents
+              <span className="chip chip--pri">{documents.length}</span>
+            </h4>
+            {documents.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
+                No documents yet — paste your FAQ above or crawl your website to start.
+              </p>
+            ) : (
+              <div>
+                {documents.map((d) => {
+                  const chip = statusChip(d.status);
+                  return (
+                    <div key={d.id} className="aikb-doc">
+                      <div style={{ minWidth: 0 }}>
+                        <div className="aikb-doc__title">
+                          {d.title}
+                          <span className="chip chip--out" style={{ textTransform: "uppercase" }}>
+                            {d.sourceType}
+                          </span>
+                          <span className={chip.cls}>
+                            <span className="dot" />
+                            {chip.label}
+                          </span>
+                        </div>
+                        <div className="aikb-doc__meta">
+                          {d.content.length.toLocaleString()} chars ·{" "}
+                          {d.lastIndexedAt ? new Date(d.lastIndexedAt).toLocaleString() : "—"}
+                          {d.sourceUri && (
+                            <>
+                              {" · "}
+                              <a
+                                href={d.sourceUri}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-primary hover:underline"
+                              >
+                                source ↗
+                              </a>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                      <form
+                        action={async () => {
+                          "use server";
+                          try {
+                            await deleteAiDocument(d.id);
+                          } catch (err) {
+                            if (isNextControlFlow(err)) throw err;
+                            redirect("/ai?tab=knowledge&saved=error");
+                          }
+                        }}
+                      >
+                        <Button type="submit" variant="ghost" size="sm">
+                          Delete
+                        </Button>
+                      </form>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
+            <hr className="aikb-divider" />
+          </section>
+        )}
+
+        {/* ---------- Chat widget tab ---------- */}
+        {tab === "widget" && (
+          <section className="akb-card akb-card__pad">
+            <h4 className="aikb-subhead">
+              <Icon name="plug" size={14} /> Embed snippet
+            </h4>
+            <p style={{ fontSize: 12.5, color: "var(--rl-muted)", margin: "0 0 12px" }}>
+              Generate a widget key, then paste the snippet on any page where you want the chatbot.
+            </p>
+            <form
+              action={async (form: FormData) => {
+                "use server";
+                try {
+                  await createWidgetKey(form);
+                } catch (err) {
+                  if (isNextControlFlow(err)) throw err;
+                  redirect("/ai?tab=knowledge&saved=error");
+                }
+              }}
+              className="space-y-3"
+            >
+              <div className="aikb-formgrid">
+                {/* biome-ignore lint/a11y/noLabelWithoutControl: the select is nested inside this label (implicit association) */}
+                <label className="aikb-label">
+                  Establishment (optional)
+                  <EstablishmentSelect
+                    establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
+                  />
+                </label>
+                <label className="aikb-label">
+                  Origin allowlist (optional)
+                  <input
+                    name="originAllowlist"
+                    placeholder="https://example.com, https://shop.example.com"
+                    className="aikb-input"
+                  />
+                  <span className="aikb-hint">
+                    Comma-separated. Leave empty to allow any origin (testing only).
+                  </span>
+                </label>
+              </div>
+              <Button type="submit">Generate key</Button>
+            </form>
+
+            <hr className="aikb-divider" />
+
+            <h4 className="aikb-subhead">
+              <Icon name="lock" size={14} /> Active keys
+              <span className="chip chip--pri">{widgets.length}</span>
+            </h4>
+            {widgets.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>No active keys.</p>
+            ) : (
+              <div>
+                {widgets.map((w) => (
+                  <div key={w.id} className="aikb-key">
+                    <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
+                      <code
+                        style={{
+                          fontSize: 11.5,
+                          fontFamily: "var(--f-mono)",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        {w.publicKey}
+                      </code>
+                      <form
+                        action={async () => {
+                          "use server";
+                          try {
+                            await revokeWidgetKey(w.id);
+                          } catch (err) {
+                            if (isNextControlFlow(err)) throw err;
+                            redirect("/ai?tab=knowledge&saved=error");
+                          }
+                        }}
+                      >
+                        <Button type="submit" variant="ghost" size="sm">
+                          Revoke
+                        </Button>
+                      </form>
+                    </div>
+                    {w.originAllowlist.length > 0 && (
+                      <div className="aikb-doc__meta">Origins: {w.originAllowlist.join(", ")}</div>
+                    )}
+                    <details style={{ fontSize: 12 }}>
+                      <summary className="cursor-pointer text-primary">Show embed snippet</summary>
+                      <pre className="aikb-snippet">{`<script src="${appUrl}/widget?key=${w.publicKey}" async></script>`}</pre>
+                    </details>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <hr className="aikb-divider" />
+
+            <h4 className="aikb-subhead">
+              <Icon name="bot" size={14} /> Test the chatbot
+            </h4>
+            {widgets.length === 0 ? (
+              <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
+                Generate a key above first — the test page renders the live widget.
+              </p>
+            ) : (
+              <Button asChild variant="outline">
+                <Link
+                  href={`/ai/test?key=${widgets[0]?.publicKey ?? ""}`}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  Open test page →
+                </Link>
+              </Button>
+            )}
+          </section>
         )}
 
         {/* ---------- Behaviour tab ---------- */}
         {tab === "behaviour" && <BehaviourSettings initial={behaviourInitial} />}
 
         {/* ---------- Test tab ---------- */}
+        {/* teachHref: the Teach MODAL lives in learning-monitor-tab.tsx, rendered
+            by /ai/training#test. It used to point at "/ai?tab=test" — the page
+            the button is already on — so clicking Teach navigated to itself and
+            appeared to do nothing. */}
         {tab === "test" && (
           <TestConsole
             suggestions={suggestions}
             openGaps={openGaps}
-            teachHref="/ai?tab=test"
+            teachHref="/ai/training#test"
           />
         )}
       </div>

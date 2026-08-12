@@ -3,9 +3,23 @@
 import { Icon } from "@/components/shell/icon";
 import { createReviewRequest } from "@/lib/outreach/actions";
 import { generateRequestBody } from "@/lib/outreach/ai-generate";
-import { OUTREACH_MERGE_TAGS, resolveMergeTags, sampleContext } from "@/lib/outreach/merge-tags";
+import {
+  OUTREACH_MERGE_TAGS,
+  resolveMergeTags,
+  sampleContext,
+} from "@/lib/outreach/merge-tags";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
+
+/**
+ * SMS is DISABLED for launch (2026-08) — email only; SMS returns later.
+ *
+ * A single flag rather than deleted code: flipping this back to `true` restores
+ * every SMS surface at once (phone field, channel checkbox, TCPA consent block,
+ * SMS preview) and the Twilio send path underneath is untouched. The server
+ * action still accepts channel:"sms", so nothing breaks for a queued request.
+ */
+const SMS_ENABLED = false;
 
 /**
  * Send Request composer (Send tab body), rebuilt to the kit mockup
@@ -34,7 +48,13 @@ import { useMemo, useRef, useState, useTransition } from "react";
  */
 
 type Establishment = { id: string; name: string };
-type TemplateOpt = { id: string; name: string; channel: string; subject: string | null; body: string };
+type TemplateOpt = {
+  id: string;
+  name: string;
+  channel: string;
+  subject: string | null;
+  body: string;
+};
 
 const GREETING_MAX = 120;
 const BODY_MAX = 1000;
@@ -57,10 +77,14 @@ export function SendComposer({
   const [body, setBody] = useState(
     `We'd love to hear your feedback on your recent experience with {{business_name}}!\n\nLeave a review: {{review_link}}`,
   );
-  const [tone, setTone] = useState<"friendly" | "formal" | "brief" | "warm" | "playful">("friendly");
+  const [tone, setTone] = useState<
+    "friendly" | "formal" | "brief" | "warm" | "playful"
+  >("friendly");
   const [sendEmail, setSendEmail] = useState(true);
   const [sendSms, setSendSms] = useState(false);
-  const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
+  const [establishmentId, setEstablishmentId] = useState(
+    establishments[0]?.id ?? "",
+  );
   const [templateId, setTemplateId] = useState("");
   const [scheduleHours, setScheduleHours] = useState(0);
   const [consentAttested, setConsentAttested] = useState(false);
@@ -73,14 +97,21 @@ export function SendComposer({
   const bodyRef = useRef<HTMLTextAreaElement | null>(null);
 
   const previewCtx = useMemo(
-    () => ({ ...sampleContext(businessName), recipientName: customerName || "Jordan Smith" }),
+    () => ({
+      ...sampleContext(businessName),
+      recipientName: customerName || "Jordan Smith",
+    }),
     [businessName, customerName],
   );
-  const filled = (s: string) => resolveMergeTags(s, previewCtx, { keepUnknown: true });
+  const filled = (s: string) =>
+    resolveMergeTags(s, previewCtx, { keepUnknown: true });
 
   // Email-only send (SMS commented out, see file header) — an SMS-channel
   // template has nothing to apply itself to here.
-  const emailTemplates = useMemo(() => templates.filter((t) => t.channel === "email"), [templates]);
+  const emailTemplates = useMemo(
+    () => templates.filter((t) => t.channel === "email"),
+    [templates],
+  );
 
   function applyTemplate(id: string) {
     setTemplateId(id);
@@ -100,7 +131,10 @@ export function SendComposer({
     }
     const start = ta.selectionStart ?? body.length;
     const end = ta.selectionEnd ?? body.length;
-    const next = (body.slice(0, start) + token + body.slice(end)).slice(0, BODY_MAX);
+    const next = (body.slice(0, start) + token + body.slice(end)).slice(
+      0,
+      BODY_MAX,
+    );
     setBody(next);
     requestAnimationFrame(() => {
       const pos = Math.min(start + token.length, next.length);
@@ -134,14 +168,20 @@ export function SendComposer({
     setError(null);
     setSuccess(null);
 
-    if (!sendEmail && !sendSms) return setError("Pick at least one delivery channel.");
-    if (sendEmail && !customerEmail.trim()) return setError("Email channel requires an email address.");
-    if (sendSms && !customerPhone.trim()) return setError("SMS channel requires a phone number.");
-    if (sendSms && !consentAttested) return setError("SMS requires TCPA consent attestation.");
+    if (!sendEmail && !sendSms)
+      return setError("Pick at least one delivery channel.");
+    if (sendEmail && !customerEmail.trim())
+      return setError("Email channel requires an email address.");
+    if (sendSms && !customerPhone.trim())
+      return setError("SMS channel requires a phone number.");
+    if (sendSms && !consentAttested)
+      return setError("SMS requires TCPA consent attestation.");
 
     startSendTransition(async () => {
       try {
-        const tasks: Array<Promise<{ ok: true } | { ok: false; error: string }>> = [];
+        const tasks: Array<
+          Promise<{ ok: true } | { ok: false; error: string }>
+        > = [];
         const fullBody = `${greeting}\n\n${body}`;
 
         if (sendEmail) {
@@ -323,7 +363,12 @@ export function SendComposer({
                 <option value="warm">Warm</option>
                 <option value="playful">Playful</option>
               </select>
-              <button type="button" className="rr-toolbtn" disabled={aiPending} onClick={handleGenerateAI}>
+              <button
+                type="button"
+                className="rr-toolbtn"
+                disabled={aiPending}
+                onClick={handleGenerateAI}
+              >
                 <Icon name="sparkle" size={13} />
                 {aiPending ? "Generating…" : "Generate with AI"}
               </button>
@@ -344,7 +389,10 @@ export function SendComposer({
             {/* Email-only for now — nothing left to toggle, so this is a fixed
                 confirmation rather than an interactive checkbox. sendEmail
                 stays true; see the file header note. */}
-            <label className="rr-check" style={{ opacity: 0.75, cursor: "default" }}>
+            <label
+              className="rr-check"
+              style={{ opacity: 0.75, cursor: "default" }}
+            >
               <input type="checkbox" checked={sendEmail} disabled readOnly />
               Email
             </label>
@@ -416,8 +464,9 @@ export function SendComposer({
               onChange={(e) => setConsentAttested(e.target.checked)}
             />
             <span>
-              I attest this recipient has previously given written consent to receive marketing SMS from
-              my business (TCPA / A2P 10DLC compliance).
+              I attest this recipient has previously given written consent to
+              receive marketing SMS from my business (TCPA / A2P 10DLC
+              compliance).
             </span>
           </label>
         )}
@@ -426,7 +475,11 @@ export function SendComposer({
         {success && <p className="rr-msgok">{success}</p>}
 
         <div className="rr-formactions">
-          <button type="submit" className="rr-actbtn rr-actbtn--pri" disabled={sendPending}>
+          <button
+            type="submit"
+            className="rr-actbtn rr-actbtn--pri"
+            disabled={sendPending}
+          >
             <Icon name="send" size={14} />
             {sendPending ? "Sending…" : "Send request"}
           </button>
@@ -458,7 +511,8 @@ export function SendComposer({
               <span className="rr-meta__k">From:</span> {businessName}
             </div>
             <div>
-              <span className="rr-meta__k">To:</span> {customerEmail || "customer@example.com"}
+              <span className="rr-meta__k">To:</span>{" "}
+              {customerEmail || "customer@example.com"}
             </div>
             <div>
               <span className="rr-meta__k">Subject:</span> {subjectLine}
@@ -467,7 +521,11 @@ export function SendComposer({
           <div className="rr-preview__divider" />
           {logoUrl && (
             // biome-ignore lint/performance/noImgElement: org logo preview
-            <img src={logoUrl} alt="" style={{ maxHeight: 36, marginBottom: 10, display: "block" }} />
+            <img
+              src={logoUrl}
+              alt=""
+              style={{ maxHeight: 36, marginBottom: 10, display: "block" }}
+            />
           )}
           <div className="rr-emailbody">
             <strong>{filled(greeting)}</strong>
@@ -515,6 +573,32 @@ export function SendComposer({
                 {filled(body)}
                 <span className="rr-bubble__time">9:41 AM ✓✓</span>
               </div>
+            </div>
+            <div className="rr-meta" style={{ marginBottom: 4 }}>
+              <span className="rr-meta__k">To:</span> {customerPhone || "+1 555 123 4567"}
+            </div>
+            <div className="rr-phone">
+              <div className="rr-phone__bar">
+                <span>9:41</span>
+                <span className="row" style={{ gap: 4 }}>
+                  <Icon name="sound" size={12} />
+                  <Icon name="bars" size={12} />
+                </span>
+              </div>
+              <div className="rr-phone__body">
+                <div className="rr-bubble">
+                  {filled(greeting)}
+                  {"\n"}
+                  {filled(body)}
+                  <span className="rr-bubble__time">9:41 AM ✓✓</span>
+                </div>
+              </div>
+            </div>
+            <div className="rr-callout">
+              <Icon name="info" size={14} />
+              <span>
+                Reply STOP to opt out. SMS includes our standard unsubscribe footer automatically.
+              </span>
             </div>
           </div>
           <div className="rr-callout">

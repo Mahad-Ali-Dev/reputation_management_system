@@ -5,10 +5,11 @@ import { crawlUrl } from "@/lib/ai/crawl";
 import { ingestDocument } from "@/lib/ai/ingest";
 import { extractPdfText } from "@/lib/ai/pdf-extract";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
-import { assertEntitled, PlanInactiveError } from "@/lib/billing/entitlements";
+import { PlanInactiveError, assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { assertRateLimit } from "@/lib/ratelimit";
+import { schedule } from "@/lib/scheduler";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -41,7 +42,8 @@ function mapIngestError(err: unknown, event: string): AiIngestResult {
   if (code === "P2021" || code === "P2022" || code === "42P01" || code === "42703") {
     return {
       ok: false,
-      error: "The knowledge base isn't provisioned yet — ask your admin to apply the latest database migration.",
+      error:
+        "The knowledge base isn't provisioned yet — ask your admin to apply the latest database migration.",
     };
   }
   const msg = err instanceof Error ? err.message : String(err);
@@ -103,14 +105,20 @@ export async function uploadAiDocument(form: FormData): Promise<AiIngestResult> 
     if (hasPdf) {
       const file = fileEntry as File;
       if (file.size > MAX_PDF_BYTES) {
-        return { ok: false, error: `PDF too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).` };
+        return {
+          ok: false,
+          error: `PDF too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).`,
+        };
       }
       const meta = DocMetaSchema.safeParse({
         title: (form.get("title") as string) || undefined,
         establishmentId: form.get("establishmentId") || undefined,
       });
       if (!meta.success) {
-        return { ok: false, error: `Validation: ${meta.error.issues.map((i) => i.message).join("; ")}` };
+        return {
+          ok: false,
+          error: `Validation: ${meta.error.issues.map((i) => i.message).join("; ")}`,
+        };
       }
       const buf = Buffer.from(await file.arrayBuffer());
       const extracted = await extractPdfText(buf);
@@ -138,14 +146,20 @@ export async function uploadAiDocument(form: FormData): Promise<AiIngestResult> 
         };
       }
       if (file.size > MAX_PDF_BYTES) {
-        return { ok: false, error: `File too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).` };
+        return {
+          ok: false,
+          error: `File too large (max ${Math.round(MAX_PDF_BYTES / 1024 / 1024)} MB).`,
+        };
       }
       const meta = DocMetaSchema.safeParse({
         title: (form.get("title") as string) || undefined,
         establishmentId: form.get("establishmentId") || undefined,
       });
       if (!meta.success) {
-        return { ok: false, error: `Validation: ${meta.error.issues.map((i) => i.message).join("; ")}` };
+        return {
+          ok: false,
+          error: `Validation: ${meta.error.issues.map((i) => i.message).join("; ")}`,
+        };
       }
       const raw = (await file.text()).trim();
       if (raw.length < 20) {
@@ -275,7 +289,10 @@ export async function ingestAiDocumentFromUrl(form: FormData): Promise<AiIngestR
       establishmentId: form.get("establishmentId") || undefined,
     });
     if (!parsed.success) {
-      return { ok: false, error: `Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}` };
+      return {
+        ok: false,
+        error: `Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`,
+      };
     }
     const { url, title, establishmentId } = parsed.data;
 
@@ -295,20 +312,38 @@ export async function ingestAiDocumentFromUrl(form: FormData): Promise<AiIngestR
       return { ok: false, error: "Crawled page is too large (>200K chars). Use a smaller URL." };
     }
 
-  const contentHash = createHash("sha256").update(result.text).digest("hex");
+    const contentHash = createHash("sha256").update(result.text).digest("hex");
 
-  const doc = await withTenant(orgId, async (tx) => {
-    const existing = await tx.aiDocument.findFirst({
-      where: {
-        organizationId: orgId,
-        establishmentId: establishmentId ?? null,
-        title,
-      },
-    });
-    if (existing) {
-      return tx.aiDocument.update({
-        where: { id: existing.id },
+    const doc = await withTenant(orgId, async (tx) => {
+      const existing = await tx.aiDocument.findFirst({
+        where: {
+          organizationId: orgId,
+          establishmentId: establishmentId ?? null,
+          title,
+        },
+      });
+      if (existing) {
+        return tx.aiDocument.update({
+          where: { id: existing.id },
+          data: {
+            content: result.text,
+            contentHash,
+            sourceType: "url",
+            sourceUri: result.finalUrl,
+            sourceMetadata: {
+              fetchedAt: result.fetchedAt.toISOString(),
+              contentType: result.contentType,
+              bytes: result.bytes,
+            },
+            status: "indexing",
+          },
+        });
+      }
+      return tx.aiDocument.create({
         data: {
+          organizationId: orgId,
+          establishmentId: establishmentId ?? null,
+          title,
           content: result.text,
           contentHash,
           sourceType: "url",
@@ -321,25 +356,7 @@ export async function ingestAiDocumentFromUrl(form: FormData): Promise<AiIngestR
           status: "indexing",
         },
       });
-    }
-    return tx.aiDocument.create({
-      data: {
-        organizationId: orgId,
-        establishmentId: establishmentId ?? null,
-        title,
-        content: result.text,
-        contentHash,
-        sourceType: "url",
-        sourceUri: result.finalUrl,
-        sourceMetadata: {
-          fetchedAt: result.fetchedAt.toISOString(),
-          contentType: result.contentType,
-          bytes: result.bytes,
-        },
-        status: "indexing",
-      },
     });
-  });
 
     try {
       await ingestDocument({
@@ -474,4 +491,80 @@ export async function revokeWidgetKey(keyId: string): Promise<void> {
     });
   });
   revalidatePath("/ai");
+}
+
+// ---------------------------------------------------------------------------
+// Connect Website — background crawl
+// ---------------------------------------------------------------------------
+
+const ConnectSiteSchema = z.object({
+  businessName: z.string().min(1).max(120),
+  url: z.string().url().max(500),
+  establishmentId: z.string().uuid().optional(),
+});
+
+export type ConnectSiteResult = { ok: true; documentId: string } | { ok: false; error: string };
+
+/**
+ * Start a website crawl in the BACKGROUND and return immediately with the
+ * document id the UI polls (/api/ai/kb-crawl-status).
+ *
+ * Differs from `ingestAiDocumentFromUrl`, which crawls + embeds inline: that
+ * blocks the request for the whole job, loses the work on a refresh, and can
+ * exceed the request timeout on a slow site. Here we only create the row and
+ * enqueue `kb_crawl`; the dispatcher does the work.
+ */
+export async function connectWebsite(form: FormData): Promise<ConnectSiteResult> {
+  try {
+    const { orgId } = await requireRole("manager");
+    await assertEntitled(orgId);
+    await assertRateLimit("url_crawl", orgId);
+
+    const parsed = ConnectSiteSchema.safeParse({
+      businessName: form.get("businessName"),
+      url: form.get("url"),
+      establishmentId: (form.get("establishmentId") as string) || undefined,
+    });
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: parsed.error.issues[0]?.message ?? "Check the business name and website URL.",
+      };
+    }
+    const { businessName, url, establishmentId } = parsed.data;
+
+    // Create the placeholder row the job fills in. `content` starts empty and
+    // becomes either the page text or a user-facing failure reason.
+    const doc = await withTenant(orgId, (tx) =>
+      tx.aiDocument.create({
+        data: {
+          organizationId: orgId,
+          establishmentId: establishmentId ?? null,
+          title: businessName,
+          sourceType: "url",
+          sourceUri: url,
+          content: "",
+          contentHash: createHash("sha256").update(`${url}:pending`).digest("hex"),
+          status: "indexing",
+        },
+        select: { id: true },
+      }),
+    );
+
+    await schedule({
+      orgId,
+      kind: "kb_crawl",
+      runAt: new Date(),
+      payload: { documentId: doc.id, url, establishmentId: establishmentId ?? null },
+      // One crawl per document — a double-submit reuses the queued job.
+      dedupeKey: `kb_crawl:${doc.id}`,
+    });
+
+    revalidatePath("/ai");
+    return { ok: true, documentId: doc.id };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    const mapped = mapIngestError(err, "ai.connect_website_failed");
+    return { ok: false, error: mapped.ok ? "Couldn't start the crawl." : mapped.error };
+  }
 }

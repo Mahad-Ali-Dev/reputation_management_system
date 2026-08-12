@@ -39,12 +39,18 @@ function isMissingRelation(err: unknown): boolean {
   return msg.includes(PG_UNDEFINED_TABLE) || msg.includes(PG_UNDEFINED_COLUMN);
 }
 
-const KNOWN_KINDS: ReadonlySet<string> = new Set<ScheduledKind>([
-  "scheduled_post",
-  "scheduled_request",
-  "scheduled_reply",
-  "onboarding_step",
-]);
+/**
+ * DERIVED from HANDLERS on purpose — do not hand-maintain this list.
+ *
+ * It used to be a hardcoded array, and because it was typed `Set<ScheduledKind>`
+ * a SUBSET still type-checked: adding `kb_crawl` to the union and to HANDLERS
+ * compiled cleanly while this set silently omitted it, so every kb_crawl job was
+ * marked `failed: "unknown kind: kb_crawl"` the moment it was picked up. Nothing
+ * — not tsc, not lint — caught the drift.
+ *
+ * Deriving it means registering a handler is now the ONLY step required.
+ */
+const KNOWN_KINDS: ReadonlySet<string> = new Set(Object.keys(HANDLERS));
 
 export type DrainSummary = {
   claimed: number;
@@ -238,13 +244,9 @@ export async function drainDueScheduledJobs(opts?: {
             maxAttempts,
             exhausted,
             detail,
-            event: exhausted
-              ? "scheduler.dispatch.failed"
-              : "scheduler.dispatch.retry",
+            event: exhausted ? "scheduler.dispatch.failed" : "scheduler.dispatch.retry",
           },
-          exhausted
-            ? "scheduled job failed permanently"
-            : "scheduled job failed — will retry",
+          exhausted ? "scheduled job failed permanently" : "scheduled job failed — will retry",
         );
       }
     } catch (err) {
