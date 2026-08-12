@@ -17,9 +17,17 @@ import { useMemo, useRef, useState, useTransition } from "react";
  *   - template picker (fills body/subject from a saved OutreachTemplate),
  *   - merge-tag chips that insert {{tag}} at the cursor,
  *   - char limits (greeting ≤120, body ≤1000),
- *   - live email + SMS preview using the SAME `resolveMergeTags` the server uses,
- *   - Now/Schedule timing + TCPA attestation,
+ *   - live email preview using the SAME `resolveMergeTags` the server uses,
+ *   - Now/Schedule timing,
  *   - "Bulk CSV" deep link to /outreach/bulk.
+ *
+ * SMS is commented out (not removed) for now — email-only send. The phone
+ * field, SMS checkbox, TCPA consent block, and SMS preview panel are all
+ * still here, just disabled via JSX comments, so re-enabling is a matter of
+ * uncommenting rather than rebuilding. `sendSms`/`customerPhone`/
+ * `consentAttested` state stays declared and is read by `handleSend` exactly
+ * as before — with no UI path left to ever set `sendSms` true, those
+ * branches are simply inert, not deleted.
  *
  * FK note: a chosen template's OutreachTemplate id is passed as
  * `outreachTemplateId` (subject/logo hydration) — NEVER as ReviewRequest.templateId.
@@ -70,9 +78,13 @@ export function SendComposer({
   );
   const filled = (s: string) => resolveMergeTags(s, previewCtx, { keepUnknown: true });
 
+  // Email-only send (SMS commented out, see file header) — an SMS-channel
+  // template has nothing to apply itself to here.
+  const emailTemplates = useMemo(() => templates.filter((t) => t.channel === "email"), [templates]);
+
   function applyTemplate(id: string) {
     setTemplateId(id);
-    const t = templates.find((x) => x.id === id);
+    const t = emailTemplates.find((x) => x.id === id);
     if (!t) return;
     setBody(t.body.slice(0, BODY_MAX));
     if (t.channel === "email") setSendEmail(true);
@@ -197,6 +209,10 @@ export function SendComposer({
               placeholder="Optional"
             />
           </label>
+          {/* SMS commented out — see the file header note. Phone was only
+              ever collected for the SMS channel, so its <div className="rr-2col">
+              wrapper (Phone | Email side-by-side) is commented out too —
+              Email now renders full-width like the field above it.
           <div className="rr-2col">
             <label className="rr-field">
               <span className="rr-field__lbl">Phone (E.164)</span>
@@ -212,22 +228,23 @@ export function SendComposer({
                 />
               </div>
             </label>
-            <label className="rr-field">
-              <span className="rr-field__lbl">Email</span>
-              <div className="rr-inputwrap">
-                <span className="rr-inputwrap__icon">
-                  <Icon name="mail" size={14} />
-                </span>
-                <input
-                  className="rr-input"
-                  type="email"
-                  value={customerEmail}
-                  onChange={(e) => setCustomerEmail(e.target.value)}
-                  placeholder="customer@example.com"
-                />
-              </div>
-            </label>
-          </div>
+          */}
+          <label className="rr-field">
+            <span className="rr-field__lbl">Email</span>
+            <div className="rr-inputwrap">
+              <span className="rr-inputwrap__icon">
+                <Icon name="mail" size={14} />
+              </span>
+              <input
+                className="rr-input"
+                type="email"
+                value={customerEmail}
+                onChange={(e) => setCustomerEmail(e.target.value)}
+                placeholder="customer@example.com"
+              />
+            </div>
+          </label>
+          {/* </div> — closing the commented-out rr-2col above */}
         </section>
 
         {/* Step 2 — Message */}
@@ -237,7 +254,7 @@ export function SendComposer({
           </span>
           <h3 className="rr-step__title">
             2. Message
-            {templates.length > 0 && (
+            {emailTemplates.length > 0 && (
               <select
                 className="rr-select"
                 style={{ maxWidth: 180, height: 36 }}
@@ -246,7 +263,7 @@ export function SendComposer({
                 aria-label="Start from template"
               >
                 <option value="">Start from template…</option>
-                {templates.map((t) => (
+                {emailTemplates.map((t) => (
                   <option key={t.id} value={t.id}>
                     {t.name} ({t.channel})
                   </option>
@@ -324,14 +341,19 @@ export function SendComposer({
           </span>
           <h3 className="rr-step__title">3. Delivery</h3>
           <div className="rr-checks">
-            <label className="rr-check">
-              <input type="checkbox" checked={sendEmail} onChange={(e) => setSendEmail(e.target.checked)} />
+            {/* Email-only for now — nothing left to toggle, so this is a fixed
+                confirmation rather than an interactive checkbox. sendEmail
+                stays true; see the file header note. */}
+            <label className="rr-check" style={{ opacity: 0.75, cursor: "default" }}>
+              <input type="checkbox" checked={sendEmail} disabled readOnly />
               Email
             </label>
+            {/* SMS commented out — see the file header note.
             <label className="rr-check">
               <input type="checkbox" checked={sendSms} onChange={(e) => setSendSms(e.target.checked)} />
               SMS
             </label>
+            */}
           </div>
         </section>
 
@@ -461,7 +483,7 @@ export function SendComposer({
           />
         </div>
 
-        {/* SMS preview */}
+        {/* SMS preview — commented out, see the file header note.
         <div className="rr-card rr-preview">
           <div className="rr-preview__head">
             <div className="rr-preview__tile rr-preview__tile--ok">
@@ -502,6 +524,7 @@ export function SendComposer({
             </span>
           </div>
         </div>
+        */}
       </div>
     </div>
   );

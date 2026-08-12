@@ -26,6 +26,11 @@ export const NOTIFICATION_EVENTS = [
     sub: "When a customer completes one of your surveys",
   },
   { key: "teammate_joined", label: "Teammate joined", sub: "When someone accepts a team invite" },
+  {
+    key: "review_request_clicked",
+    label: "Review link opened",
+    sub: "When a customer opens the review link from a request you sent",
+  },
 ] as const;
 
 /** Cookie used to surface a freshly generated API key exactly once (then it expires). */

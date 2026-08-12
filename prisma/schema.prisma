@@ -113,6 +113,13 @@ model Establishment {
   // Day 11 V3 — UI extras
   imageUrl        String?   @map("image_url")
   websiteUrl      String?   @map("website_url")
+  // Explicit "leave a review here" link a business owner pastes in, e.g. a
+  // g.page/r/... short link. Review-request sends (lib/outreach/tracking.ts)
+  // prefer this over the auto-derived googlePlaceId link when set — lets an
+  // owner point customers at the exact review flow they want without a
+  // Google Place ID on file. Validated against isStorableRedirectUrl before
+  // save; the /r/{slug} redirect additionally checks isAllowedReviewHost.
+  reviewLinkOverride String? @map("review_link_override")
   phone           String?
   // Day 17 V8 — Short-term rental host extensions (Airbnb / Booking.com)
   airbnbListingId      String? @map("airbnb_listing_id")
@@ -226,7 +233,11 @@ model ReviewRequest {
   channel           String
   recipient         String
   recipientName     String?  @map("recipient_name")
-  shortSlug         String?  @map("short_slug")
+  // Powers the tracked /r/{slug} redirect (lib/outreach/tracking.ts) — the
+  // link every send actually points at, so a click can be recorded before
+  // handing off to the resolved Google review URL. @unique: Postgres allows
+  // multiple NULLs, so pre-existing rows without one are unaffected.
+  shortSlug         String?  @unique @map("short_slug")
   scheduledFor      DateTime @map("scheduled_for")
   sentAt            DateTime? @map("sent_at")
   deliveredAt       DateTime? @map("delivered_at")

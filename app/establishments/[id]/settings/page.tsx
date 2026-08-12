@@ -221,6 +221,25 @@ export default async function EstablishmentSettingsPage({
                   />
                 </label>
               </div>
+              <label className="lbl">
+                Review link
+                <input
+                  name="reviewLinkOverride"
+                  type="url"
+                  className="ds-input"
+                  defaultValue={establishment.reviewLinkOverride ?? ""}
+                  placeholder="https://g.page/r/.../review"
+                  maxLength={500}
+                />
+              </label>
+              <p className="dim" style={{ fontSize: 11.5, margin: "-6px 0 4px", lineHeight: 1.5 }}>
+                {establishment.reviewLinkOverride
+                  ? "Review requests send customers here."
+                  : establishment.googlePlaceId
+                    ? "Empty — review requests use your connected Google Business Profile. Set a link here to send customers somewhere specific instead."
+                    : "Empty and no Google Business Profile connected — review requests will fall back to a generic Google search. Paste your review link to fix this."}
+              </p>
+
               <div className="row" style={{ justifyContent: "flex-end", marginTop: 4 }}>
                 <button type="submit" className="btn btn--pri">
                   <Icon name="check" size={12} />

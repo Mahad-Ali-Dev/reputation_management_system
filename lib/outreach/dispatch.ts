@@ -148,10 +148,18 @@ export async function dispatchReviewRequest(
   const businessName = overrides.businessName ?? estab?.name ?? org?.name ?? "Your Business";
   const establishmentAddress = formatAddress(estab?.address);
 
-  // Review link: prefer an override (tracked link from the inline path), else
-  // derive the Google review URL from the establishment place id.
+  // Review link: prefer an explicit override, else the tracked `/r/{slug}`
+  // redirect (app/r/[slug]/route.ts → lib/outreach/tracking.ts), which
+  // resolves the actual destination — establishment.reviewLinkOverride if
+  // the owner pasted one, else the Google-Place-Id link — AT CLICK TIME and
+  // records it as the request's first click. `shortSlug` is set on every
+  // insert path (enqueue.ts, bulk-actions.ts); the direct-URL fallback only
+  // guards a legacy/malformed row that somehow has none.
   const reviewLink =
-    overrides.reviewLink ?? googleReviewUrl(estab?.googlePlaceId ?? null, businessName);
+    overrides.reviewLink ??
+    (rr.shortSlug
+      ? `${APP_URL}/r/${rr.shortSlug}`
+      : googleReviewUrl(estab?.googlePlaceId ?? null, businessName));
   const unsubscribeUrl =
     overrides.unsubscribeUrl ??
     `${APP_URL}/u?${buildUnsubToken(orgId, rr.channel, rr.recipient)}`;

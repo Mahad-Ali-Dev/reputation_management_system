@@ -9,6 +9,12 @@ import { useActionState } from "react";
  * renders its `{ok|error}` result inline — the old bare `<form action>`
  * crashed the whole page when the action threw (e.g. a phone number pasted
  * with the Email channel selected; bug 011 in the June 2026 assessment).
+ *
+ * SMS is commented out (not removed) for now — email-only send. The channel
+ * select below is fixed to "email" via a hidden input rather than a live
+ * dropdown, so there's nothing left to pick; the "sms" <option>, the TCPA
+ * compliance notice, and the consent checkbox are all still here, just
+ * disabled via JSX comments.
  */
 
 type FormState = {
@@ -57,6 +63,9 @@ export function BulkSendForm({
         </label>
         <label className="block text-sm">
           <span className="font-medium">Channel</span>
+          {/* Email-only for now — fixed via hidden input rather than a live
+              dropdown, since there's nothing left to pick. The "sms" option
+              is commented out (not removed), see the file header note.
           <select
             name="channel"
             required
@@ -65,6 +74,11 @@ export function BulkSendForm({
             <option value="email">Email</option>
             <option value="sms">SMS</option>
           </select>
+          */}
+          <input type="hidden" name="channel" value="email" />
+          <div className="mt-1 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm text-muted-foreground">
+            Email
+          </div>
         </label>
       </div>
 
@@ -74,12 +88,11 @@ export function BulkSendForm({
           name="csvText"
           required
           rows={10}
-          placeholder={`phone,name\n+15551234567,Alice Smith\n+15559876543,Bob Jones\n+15550001111,`}
+          placeholder={"email,name\nalice@example.com,Alice Smith\nbob@example.com,Bob Jones\ncarol@example.com,"}
           className="mt-1 w-full rounded-md border border-input px-3 py-2 font-mono text-xs"
         />
         <span className="mt-1 block text-xs text-muted-foreground">
-          Phone numbers must be E.164 format (e.g. +15551234567) with the SMS channel; email
-          addresses (lowercased) with the Email channel.
+          One email address (lowercased) per line, with an optional name column.
         </span>
       </label>
 
@@ -98,6 +111,9 @@ export function BulkSendForm({
         </span>
       </label>
 
+      {/* TCPA notice + consent checkbox were SMS-specific (commitBulkReviewRequests
+          only enforces/records this for channel:"sms") — commented out, not
+          removed, alongside the SMS option above.
       <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900">
         <strong>TCPA / CAN-SPAM compliance.</strong> For SMS sends, you must attest that every
         recipient has previously given prior express written consent to receive marketing texts
@@ -111,6 +127,10 @@ export function BulkSendForm({
           messages from us (required for SMS, recommended for email).
         </span>
       </label>
+      */}
+      <p className="text-xs text-muted-foreground">
+        CAN-SPAM: every email includes an unsubscribe link automatically.
+      </p>
 
       {state.error && (
         <p

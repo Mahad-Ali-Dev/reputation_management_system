@@ -3,6 +3,7 @@
 import { requireRole } from "@/lib/auth/rbac";
 import { encrypt } from "@/lib/crypto/envelope";
 import { withTenant } from "@/lib/db/with-tenant";
+import { isStorableRedirectUrl } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -27,6 +28,16 @@ const CreateSchema = z.object({
   category: z.string().max(60).optional().or(z.literal("")),
   timezone: z.string().max(60).default("UTC"),
   address: AddressSchema.optional(),
+  // Owner-pasted "leave a review here" link (e.g. a g.page/r/... short link).
+  // Empty string is a deliberate clear (reverts to the auto-derived
+  // googlePlaceId link) — see the `?? null` write in updateEstablishment.
+  reviewLinkOverride: z
+    .string()
+    .max(500)
+    .refine((v) => v === "" || isStorableRedirectUrl(v), {
+      message: "That doesn't look like a valid review link — paste a plain https:// URL.",
+    })
+    .optional(),
 });
 
 /**
@@ -127,6 +138,11 @@ export async function createEstablishment(form: FormData): Promise<void> {
 export async function updateEstablishment(id: string, form: FormData): Promise<void> {
   const { orgId, userId } = await requireRole("manager");
 
+  // Not via fd() — that helper collapses "" to undefined ("field not sent"),
+  // which would make clearing a previously-set review link impossible (the
+  // update below would just skip it and leave the old value in place).
+  const reviewLinkRaw = form.get("reviewLinkOverride");
+
   const parsed = CreateSchema.partial().safeParse({
     name: fd(form, "name"),
     category: fd(form, "category"),
@@ -138,6 +154,7 @@ export async function updateEstablishment(id: string, form: FormData): Promise<v
       postal: fd(form, "address_postal"),
       country: fd(form, "address_country"),
     },
+    reviewLinkOverride: typeof reviewLinkRaw === "string" ? reviewLinkRaw.trim() : undefined,
   });
   if (!parsed.success) {
     throw new Error(`Validation failed: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
@@ -155,6 +172,9 @@ export async function updateEstablishment(id: string, form: FormData): Promise<v
         ...(data.category !== undefined && { category: data.category || null }),
         ...(data.timezone !== undefined && { timezone: data.timezone }),
         ...(data.address !== undefined && { address: data.address }),
+        ...(data.reviewLinkOverride !== undefined && {
+          reviewLinkOverride: data.reviewLinkOverride || null,
+        }),
       },
     });
     await tx.auditLog.create({
