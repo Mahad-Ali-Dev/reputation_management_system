@@ -1,4 +1,4 @@
-import { crawlUrl } from "@/lib/ai/crawl";
+import { crawlSite } from "@/lib/ai/crawl";
 import { ingestDocument } from "@/lib/ai/ingest";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
@@ -16,6 +16,9 @@ import type { ScheduledHandlerJob } from "./index";
  * NO NEW TABLE: progress lives on the AiDocument row that the action already
  * creates (`status`: indexing → indexed | failed) plus this job's own status.
  * That keeps prod migration-free — see /api/ai/kb-crawl-status for the read.
+ *
+ * Crawls up to 20 same-origin pages (depth 2) so services/pricing/policy pages
+ * are indexed, not just the landing page.
  *
  * Stages reported to the UI:
  *   queued → crawling → indexing → done | failed
@@ -51,7 +54,13 @@ export async function handleKbCrawl(
   const orgId = job.orgId;
 
   // ---- Stage: crawling ----
-  const crawled = await crawlUrl(url);
+  // MULTI-PAGE on purpose. Crawling only the given URL indexed a homepage, and a
+  // homepage doesn't contain refund policy, booking or payment info — so the
+  // assistant honestly answered "I'm not sure" to exactly the questions the UI
+  // suggests asking. `crawlSite` is a same-origin BFS that reuses crawlUrl per
+  // hop (so every SSRF / robots / size / redirect guard still applies) and is
+  // hard-capped on depth and pages for cost + politeness.
+  const crawled = await crawlSite(url, { maxDepth: 2, maxPages: 20 });
   if ("error" in crawled) {
     const reason = `Couldn't read that site (${crawled.error}). Check the URL is public and try again.`;
     await markFailed(orgId, documentId, reason);
@@ -60,12 +69,13 @@ export async function handleKbCrawl(
     return { ok: true, detail: `crawl_failed:${crawled.error}` };
   }
 
+  const pages = crawled.result.pagesCrawled;
   const text = crawled.result.text?.trim() ?? "";
   if (text.length < 40) {
     await markFailed(
       orgId,
       documentId,
-      "That page had almost no readable text — try a page with more content.",
+      "We couldn't find readable text on that site — check the URL opens publicly in a browser.",
     );
     return { ok: true, detail: "crawl_empty" };
   }
@@ -85,8 +95,8 @@ export async function handleKbCrawl(
       establishmentId,
       content: text,
     });
-    logger.info({ event: "kb.crawl.indexed", orgId, documentId, chunks, pages: 1 });
-    return { ok: true, detail: `indexed:${chunks}` };
+    logger.info({ event: "kb.crawl.indexed", orgId, documentId, chunks, pages });
+    return { ok: true, detail: `indexed:${chunks} pages:${pages}` };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
     // Embeddings need VOYAGE_API_KEY — the single most common cause here, and
