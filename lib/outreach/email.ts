@@ -23,9 +23,7 @@ function getResend(): Resend {
   return _resend;
 }
 
-export type EmailSendResult =
-  | { ok: true; messageId: string }
-  | { ok: false; error: string };
+export type EmailSendResult = { ok: true; messageId: string } | { ok: false; error: string };
 
 export async function sendReviewRequestEmail(args: {
   to: string;
@@ -34,6 +32,8 @@ export async function sendReviewRequestEmail(args: {
   bodyHtml: string;
   unsubscribeUrl: string;
   fromOverride?: string;
+  /** Where a customer reply goes. See lib/email/reply-to.ts. */
+  replyTo?: string | null;
 }): Promise<EmailSendResult> {
   // NOTE: the fallback is a VERIFIED address, not the resend.dev sandbox. If
   // EMAIL_FROM is misconfigured (unset → fallback, or a *.resend.dev sandbox
@@ -45,6 +45,7 @@ export async function sendReviewRequestEmail(args: {
   try {
     const { data, error } = await getResend().emails.send({
       from,
+      ...(args.replyTo ? { replyTo: args.replyTo } : {}),
       to: args.to,
       subject: args.subject,
       text: args.bodyText,

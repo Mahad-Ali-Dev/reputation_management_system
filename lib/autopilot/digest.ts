@@ -22,15 +22,16 @@
  * no paid call fires in a default path.
  */
 
-import { Resend } from "resend";
 import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
+import { type RoiHeadline, getRoiHeadline } from "@/lib/roi/summary";
 import { getUnsubscribeSecret } from "@/lib/secrets";
-import { getRoiHeadline, type RoiHeadline } from "@/lib/roi/summary";
-import { summarizeAutopilotActions, listAutopilotActions } from "./ledger";
+import { Resend } from "resend";
+import { listAutopilotActions, summarizeAutopilotActions } from "./ledger";
 import { getAutopilotConfig } from "./queries";
 
 let _resend: Resend | null = null;
@@ -188,7 +189,13 @@ function describeDetail(detail: unknown): string | null {
  */
 async function buildIntro(
   orgId: string,
-  facts: { orgName: string; totalActions: number; needsYouCount: number; estimatedRevenue: number; currency: string },
+  facts: {
+    orgName: string;
+    totalActions: number;
+    needsYouCount: number;
+    estimatedRevenue: number;
+    currency: string;
+  },
 ): Promise<string> {
   const deterministic = deterministicIntro(facts);
   if (!process.env.ANTHROPIC_API_KEY) return deterministic;
@@ -210,7 +217,11 @@ async function buildIntro(
     return text && text.length > 0 ? text : deterministic;
   } catch (err) {
     logger.warn(
-      { orgId, event: "autopilot.digest.intro_fallback", error: err instanceof Error ? err.message : String(err) },
+      {
+        orgId,
+        event: "autopilot.digest.intro_fallback",
+        error: err instanceof Error ? err.message : String(err),
+      },
       "AI intro failed — using deterministic intro",
     );
     return deterministic;
@@ -259,7 +270,8 @@ export function renderAutopilotDigestEmail(
   lines.push("");
   if (digest.needsYou.length > 0) {
     lines.push("Needs you:");
-    for (const n of digest.needsYou) lines.push(`  • ${n.label}${n.detail ? ` — ${n.detail}` : ""}`);
+    for (const n of digest.needsYou)
+      lines.push(`  • ${n.label}${n.detail ? ` — ${n.detail}` : ""}`);
     lines.push("");
   }
   lines.push(`Open Autopilot: ${appUrl}/autopilot`);
@@ -347,7 +359,11 @@ export async function sendAutopilotDigestForOrg(
     const code = (err as { code?: string } | null)?.code;
     if (code === "P2002") {
       logger.info(
-        { orgId, weekStart: weekStartDate.toISOString(), event: "autopilot.digest.skip.already_sent" },
+        {
+          orgId,
+          weekStart: weekStartDate.toISOString(),
+          event: "autopilot.digest.skip.already_sent",
+        },
         "autopilot digest already sent for this org/week",
       );
       return { sent: 0, skipped: 1, errors: [] };
@@ -381,6 +397,7 @@ export async function sendAutopilotDigestForOrg(
     try {
       const { error } = await getResend().emails.send({
         from,
+        replyTo: SUPPORT_REPLY_TO,
         to: r.email,
         subject,
         html,

@@ -17,8 +17,9 @@
  * the gate logic upstream.
  */
 
-import { Resend } from "resend";
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
+import { Resend } from "resend";
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -33,9 +34,7 @@ function getResend(): Resend {
   return _resend;
 }
 
-export type BookingEmailResult =
-  | { ok: true; messageId: string }
-  | { ok: false; error: string };
+export type BookingEmailResult = { ok: true; messageId: string } | { ok: false; error: string };
 
 export interface BookingEmailContext {
   /** Caller's name as given to the AI ("Maria Lopez"). */
@@ -88,7 +87,9 @@ export async function sendCustomerBookingEmail(args: {
     `Hi ${firstName(args.ctx.attendeeName)},`,
     "",
     `You're booked at ${args.ctx.businessName} for ${when}.`,
-    args.ctx.attendeePhone ? `We'll reach you at ${args.ctx.attendeePhone} if anything changes.` : "",
+    args.ctx.attendeePhone
+      ? `We'll reach you at ${args.ctx.attendeePhone} if anything changes.`
+      : "",
     args.ctx.notes ? `What we noted from your call: ${args.ctx.notes}` : "",
     "",
     `To reschedule or cancel, just reply to this email and a human at ${args.ctx.businessName} will get back to you.`,
@@ -179,6 +180,8 @@ export async function sendOwnerBookingEmail(args: {
 async function sendOnce(args: {
   to: string;
   from: string;
+  /** Business address when the caller has org context; support otherwise. */
+  replyTo?: string;
   subject: string;
   html: string;
   text: string;
@@ -186,6 +189,7 @@ async function sendOnce(args: {
   try {
     const { data, error } = await getResend().emails.send({
       from: args.from,
+      replyTo: args.replyTo ?? SUPPORT_REPLY_TO,
       to: args.to,
       subject: args.subject,
       html: args.html,
@@ -217,7 +221,10 @@ export function defaultFromAddress(businessName: string): string {
 export function sanitizeDisplay(s: string): string {
   // Strip characters that break RFC 5322 display-name quoting if present
   // in the wild (commas, semicolons, double quotes, angle brackets).
-  return s.replace(/[",;<>]/g, "").trim().slice(0, 60);
+  return s
+    .replace(/[",;<>]/g, "")
+    .trim()
+    .slice(0, 60);
 }
 
 export function firstName(full: string): string {

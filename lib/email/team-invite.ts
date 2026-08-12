@@ -1,3 +1,4 @@
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { Resend } from "resend";
@@ -57,6 +58,7 @@ export async function sendTeamInviteEmail(args: {
   try {
     const { error } = await resend.emails.send({
       from,
+      replyTo: SUPPORT_REPLY_TO,
       to: args.to,
       subject: `${args.inviterName} invited you to ${args.orgName} on Repulabs`,
       html,

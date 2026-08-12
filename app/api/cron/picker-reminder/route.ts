@@ -1,9 +1,10 @@
-import { Resend } from "resend";
 import { prisma } from "@/lib/db/client";
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getCronSecret, verifyCronRequest } from "@/lib/secrets";
 import { type NextRequest, NextResponse } from "next/server";
+import { Resend } from "resend";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -130,6 +131,7 @@ async function sendDueReminders(): Promise<SendSummary> {
     try {
       const { data, error } = await resend.emails.send({
         from: fromAddress,
+        replyTo: SUPPORT_REPLY_TO,
         to: c.guestEmail,
         subject,
         html,

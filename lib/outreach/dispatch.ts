@@ -27,11 +27,12 @@
  * worker can call it with just the id.
  */
 
+import { createHmac } from "node:crypto";
 import { withTenant } from "@/lib/db/with-tenant";
+import { businessReplyTo } from "@/lib/email/reply-to";
 import { googleReviewUrl } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { getHmacSecret } from "@/lib/secrets";
-import { createHmac } from "node:crypto";
 import { defaultReviewRequestHtml, sendReviewRequestEmail } from "./email";
 import { formatAddress, resolveMergeTags } from "./merge-tags";
 import { sendSms } from "./twilio";
@@ -95,7 +96,7 @@ export async function dispatchReviewRequest(
       }),
       tx.organization.findUnique({
         where: { id: orgId },
-        select: { name: true, logoUrl: true },
+        select: { name: true, logoUrl: true, ownerEmail: true },
       }),
     ]);
     // Hydrate an OutreachTemplate for body/subject/logo. Priority:
@@ -105,15 +106,13 @@ export async function dispatchReviewRequest(
     // custom body) use the user's saved template content rather than only the
     // hardcoded fallback. We NEVER write this template id to ReviewRequest.
     // templateId (that FK is for ReviewRequestTemplate) — FK correctness.
-    let template:
-      | {
-          channel: string;
-          subject: string | null;
-          body: string;
-          bodyHtml: string | null;
-          logoUrl: string | null;
-        }
-      | null = null;
+    let template: {
+      channel: string;
+      subject: string | null;
+      body: string;
+      bodyHtml: string | null;
+      logoUrl: string | null;
+    } | null = null;
     const templateSelect = {
       channel: true,
       subject: true,
@@ -161,8 +160,7 @@ export async function dispatchReviewRequest(
       ? `${APP_URL}/r/${rr.shortSlug}`
       : googleReviewUrl(estab?.googlePlaceId ?? null, businessName));
   const unsubscribeUrl =
-    overrides.unsubscribeUrl ??
-    `${APP_URL}/u?${buildUnsubToken(orgId, rr.channel, rr.recipient)}`;
+    overrides.unsubscribeUrl ?? `${APP_URL}/u?${buildUnsubToken(orgId, rr.channel, rr.recipient)}`;
 
   const mergeCtx = {
     recipientName: rr.recipientName,
@@ -212,6 +210,9 @@ export async function dispatchReviewRequest(
 
     const result = await sendReviewRequestEmail({
       to: rr.recipient,
+      // The customer thinks they're emailing the business, so their reply must
+      // reach the business — not a Repulabs address with no mailbox.
+      replyTo: businessReplyTo(org?.ownerEmail),
       subject,
       bodyText: text,
       bodyHtml: html,
@@ -256,7 +257,10 @@ async function finalize(
 
 async function markFailed(orgId: string, id: string, error: string): Promise<void> {
   await withTenant(orgId, (tx) =>
-    tx.reviewRequest.updateMany({ where: { id, status: "sending" }, data: { status: "failed", error } }),
+    tx.reviewRequest.updateMany({
+      where: { id, status: "sending" },
+      data: { status: "failed", error },
+    }),
   );
   logger.warn({ orgId, reviewRequestId: id, error, event: "review_request.send_failed" });
 }

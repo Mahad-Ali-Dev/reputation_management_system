@@ -1,11 +1,12 @@
 import { createHmac } from "node:crypto";
-import { Resend } from "resend";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { logger } from "@/lib/logger";
 import { notificationEnabled } from "@/lib/notifications/prefs";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getUnsubscribeSecret } from "@/lib/secrets";
+import { Resend } from "resend";
 
 /**
  * Daily digest builder.
@@ -113,26 +114,24 @@ export async function buildDigestForOrg(orgId: string, day: Date): Promise<Diges
   const worstReview = sortedByRating[sortedByRating.length - 1] ?? null;
 
   // Filter recipients against unsubscribes (single query, scoped to this org)
-  const recipientEmails = data.recipients
-    .map((m) => m.user?.email)
-    .filter((e): e is string => !!e);
-  const unsubs = recipientEmails.length === 0
-    ? []
-    : await prisma.unsubscribe.findMany({
-        where: {
-          organizationId: orgId,
-          channel: "email",
-          emailOrPhone: { in: recipientEmails.map((e) => e.toLowerCase()) },
-        },
-        select: { emailOrPhone: true },
-      });
+  const recipientEmails = data.recipients.map((m) => m.user?.email).filter((e): e is string => !!e);
+  const unsubs =
+    recipientEmails.length === 0
+      ? []
+      : await prisma.unsubscribe.findMany({
+          where: {
+            organizationId: orgId,
+            channel: "email",
+            emailOrPhone: { in: recipientEmails.map((e) => e.toLowerCase()) },
+          },
+          select: { emailOrPhone: true },
+        });
   const unsubSet = new Set(unsubs.map((u) => u.emailOrPhone));
-  const allowedRecipients = data.recipients
-    .flatMap((m) => {
-      const email = m.user?.email;
-      if (!email || unsubSet.has(email.toLowerCase())) return [];
-      return [{ email, name: m.user?.name ?? null }];
-    });
+  const allowedRecipients = data.recipients.flatMap((m) => {
+    const email = m.user?.email;
+    if (!email || unsubSet.has(email.toLowerCase())) return [];
+    return [{ email, name: m.user?.name ?? null }];
+  });
 
   return {
     orgId: org.id,
@@ -142,13 +141,15 @@ export async function buildDigestForOrg(orgId: string, day: Date): Promise<Diges
     starBreakdown,
     pendingReplyCount: data.pendingReplyCount,
     bestReview: bestReview && bestReview.rating === sortedByRating[0]?.rating ? bestReview : null,
-    worstReview:
-      worstReview && worstReview.rating !== bestReview?.rating ? worstReview : null,
+    worstReview: worstReview && worstReview.rating !== bestReview?.rating ? worstReview : null,
     recipients: allowedRecipients,
   };
 }
 
-export function renderDigestEmail(stats: DigestStats, recipientEmail: string): {
+export function renderDigestEmail(
+  stats: DigestStats,
+  recipientEmail: string,
+): {
   subject: string;
   html: string;
   text: string;
@@ -163,10 +164,7 @@ export function renderDigestEmail(stats: DigestStats, recipientEmail: string): {
       : `${stats.orgName}: ${stats.pendingReplyCount} replies still need your approval`;
 
   // Plain-text version
-  const lines: string[] = [
-    `${stats.orgName} — yesterday's review digest`,
-    "",
-  ];
+  const lines: string[] = [`${stats.orgName} — yesterday's review digest`, ""];
   if (stats.reviewCount > 0) {
     lines.push(
       `${stats.reviewCount} new review${stats.reviewCount === 1 ? "" : "s"} · avg rating ${stats.avgRating.toFixed(2)}`,
@@ -179,11 +177,15 @@ export function renderDigestEmail(stats: DigestStats, recipientEmail: string): {
     }
     if (stats.bestReview) {
       lines.push("");
-      lines.push(`Best: "${(stats.bestReview.body ?? "").slice(0, 200)}" — ${stats.bestReview.reviewerName ?? "Anonymous"}`);
+      lines.push(
+        `Best: "${(stats.bestReview.body ?? "").slice(0, 200)}" — ${stats.bestReview.reviewerName ?? "Anonymous"}`,
+      );
     }
     if (stats.worstReview) {
       lines.push("");
-      lines.push(`Lowest: "${(stats.worstReview.body ?? "").slice(0, 200)}" — ${stats.worstReview.reviewerName ?? "Anonymous"}`);
+      lines.push(
+        `Lowest: "${(stats.worstReview.body ?? "").slice(0, 200)}" — ${stats.worstReview.reviewerName ?? "Anonymous"}`,
+      );
     }
   }
   if (stats.pendingReplyCount > 0) {
@@ -271,7 +273,10 @@ export function renderDigestEmail(stats: DigestStats, recipientEmail: string): {
   return { subject, html, text, unsubscribeUrl };
 }
 
-export async function sendDigestForOrg(orgId: string, day: Date): Promise<{
+export async function sendDigestForOrg(
+  orgId: string,
+  day: Date,
+): Promise<{
   sent: number;
   skipped: number;
   errors: string[];
@@ -328,6 +333,7 @@ export async function sendDigestForOrg(orgId: string, day: Date): Promise<{
     try {
       const { error } = await getResend().emails.send({
         from,
+        replyTo: SUPPORT_REPLY_TO,
         to: r.email,
         subject,
         html,

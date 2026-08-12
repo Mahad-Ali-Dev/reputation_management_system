@@ -1,4 +1,5 @@
 import { TRIAL_DAYS } from "@/lib/billing/plans";
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
@@ -8,8 +9,8 @@ import { Resend as ResendClient } from "resend";
 
 import { prisma } from "@/lib/db/client";
 import { magicLinkEmail } from "@/lib/email/templates";
-import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { logger } from "@/lib/logger";
+import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 
 type AuthProvider = NonNullable<NextAuthConfig["providers"]>[number];
 
@@ -61,6 +62,7 @@ if (process.env.RESEND_API_KEY) {
         const { html, text } = magicLinkEmail(url);
         const { error } = await getResend().emails.send({
           from: fromAddress,
+          replyTo: SUPPORT_REPLY_TO,
           to: email,
           subject: "Your sign-in link for Repulabs",
           html,

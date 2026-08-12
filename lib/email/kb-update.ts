@@ -1,6 +1,7 @@
-import { Resend } from "resend";
+import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
+import { Resend } from "resend";
 
 /**
  * Auto-updater email (Module 05). Sent by the weekly cron when the AI re-scans
@@ -96,18 +97,25 @@ export async function sendKbUpdateEmail(args: {
 </body></html>`;
 
   try {
-    const { error } = await resend.emails.send({ from, to: args.to, subject, html, text });
+    const { error } = await resend.emails.send({
+      from,
+      replyTo: SUPPORT_REPLY_TO,
+      to: args.to,
+      subject,
+      html,
+      text,
+    });
     if (error) {
-      logger.warn(
-        { event: "kb.update_email.error", orgId: args.orgId, error: error.message },
-      );
+      logger.warn({ event: "kb.update_email.error", orgId: args.orgId, error: error.message });
       return { sent: false, reason: error.message };
     }
     return { sent: true };
   } catch (err) {
-    logger.warn(
-      { event: "kb.update_email.exception", orgId: args.orgId, error: err instanceof Error ? err.message : String(err) },
-    );
+    logger.warn({
+      event: "kb.update_email.exception",
+      orgId: args.orgId,
+      error: err instanceof Error ? err.message : String(err),
+    });
     return { sent: false, reason: "exception" };
   }
 }
