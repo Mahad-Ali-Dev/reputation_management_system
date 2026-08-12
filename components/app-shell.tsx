@@ -4,6 +4,7 @@ import { Icon } from "@/components/shell/icon";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandPalette, openCommandPalette } from "./command-palette";
+import { DateRangeMenu } from "./date-range-menu";
 import { SidebarNav } from "./sidebar-nav";
 
 /**
@@ -28,7 +29,7 @@ export function AppShell({
   orgName,
   planLabel,
   biz,
-  dateLabel,
+  dateLabels,
 }: {
   children: React.ReactNode;
   topBar?: React.ReactNode;
@@ -36,7 +37,7 @@ export function AppShell({
   planLabel: string;
   crumbs?: string[];
   biz?: string;
-  dateLabel?: string;
+  dateLabels?: Record<string, string>;
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -122,13 +123,7 @@ export function AppShell({
             </kbd>
           </button>
 
-          {dateLabel && (
-            <button type="button" className="tb__date">
-              <Icon name="cal" size={13} style={{ color: "var(--rl-muted)" }} />
-              <span>{dateLabel}</span>
-              <Icon name="chevD" size={11} style={{ color: "var(--rl-muted)" }} />
-            </button>
-          )}
+          {dateLabels && <DateRangeMenu labels={dateLabels} />}
 
           <div className="tb__right">{topBar}</div>
         </header>

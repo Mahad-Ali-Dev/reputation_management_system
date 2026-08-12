@@ -7,7 +7,7 @@ import { NotificationsBell } from "./notifications-bell";
 /**
  * Right side of the AppShell topbar — repulabs v3.
  *
- * Help · notifications · user identity (avatar + name + role) · sign-out.
+ * Docs · notifications · user identity (avatar + name + role) · sign-out.
  * `title` kept optional for backward-compat with older callers.
  */
 export async function TopBar({ title }: { title?: string } = {}) {
@@ -28,8 +28,8 @@ export async function TopBar({ title }: { title?: string } = {}) {
         </div>
       )}
 
-      <Link href="/docs" className="tb__iconbtn" aria-label="Help & documentation">
-        <Icon name="help" size={16} />
+      <Link href="/docs" className="tb__iconbtn" aria-label="Documentation">
+        <Icon name="book" size={16} />
       </Link>
 
       <div className="tb__iconbtn" aria-label="Notifications">
@@ -52,7 +52,7 @@ export async function TopBar({ title }: { title?: string } = {}) {
         }}
       >
         <button type="submit" className="tb__iconbtn" aria-label="Sign out">
-          <Icon name="ext" size={15} />
+          <Icon name="logout" size={15} />
         </button>
       </form>
     </>

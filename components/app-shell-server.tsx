@@ -1,5 +1,6 @@
 import { getOrgContext } from "@/lib/auth/org-context";
 import { AppShell } from "./app-shell";
+import { DATE_RANGE_DAYS } from "./date-range-menu";
 
 /**
  * Server-side wrapper around <AppShell>. Reads the per-request memoized org
@@ -26,12 +27,18 @@ export async function AppShellServer({
 }) {
   const { org } = await getOrgContext();
 
-  // Last-30-days label for the topbar date pill (computed server-side to avoid
-  // a hydration mismatch). e.g. "May 8 – Jun 7, 2026".
+  // One label per selectable window for the topbar date pill, e.g.
+  // "May 8 – Jun 7, 2026". Computed server-side (and passed down whole rather
+  // than derived in the client island) so the browser's timezone can't produce
+  // a different string than the SSR pass did.
   const now = new Date();
-  const start = new Date(now.getTime() - 30 * 864e5);
   const fmt = (dt: Date) => dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const dateLabel = `${fmt(start)} – ${fmt(now)}, ${now.getFullYear()}`;
+  const dateLabels = Object.fromEntries(
+    DATE_RANGE_DAYS.map((days) => [
+      String(days),
+      `${fmt(new Date(now.getTime() - days * 864e5))} – ${fmt(now)}, ${now.getFullYear()}`,
+    ]),
+  );
 
   return (
     <AppShell
@@ -40,7 +47,7 @@ export async function AppShellServer({
       topBar={topBar}
       crumbs={crumbs}
       biz={biz ?? org.name}
-      dateLabel={dateLabel}
+      dateLabels={dateLabels}
     >
       {children}
     </AppShell>

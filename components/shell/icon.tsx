@@ -86,6 +86,7 @@ export type IconName =
   | "archive"
   | "pause2"
   | "ext"
+  | "logout"
   | "copy"
   | "minus"
   | "triangleR"
@@ -502,6 +503,13 @@ const PATHS: Record<IconName, React.ReactNode> = {
       <path d="M14 4h6v6" />
       <path d="M21 3 12 12" />
       <path d="M19 13v6a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h6" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <path d="m16 17 5-5-5-5" />
+      <path d="M21 12H9" />
     </>
   ),
   copy: (

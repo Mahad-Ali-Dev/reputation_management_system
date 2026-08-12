@@ -423,6 +423,10 @@
   color: var(--ink);
   width: 100%;
 }
+.tb__datewrap {
+  position: relative;
+  flex: none;
+}
 .tb__date {
   display: flex;
   align-items: center;
@@ -475,7 +479,7 @@
 }
 @media (max-width: 880px) {
   .tb__search,
-  .tb__date,
+  .tb__datewrap,
   .tb__user-meta {
     display: none;
   }
