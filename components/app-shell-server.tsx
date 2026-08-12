@@ -1,6 +1,6 @@
 import { getOrgContext } from "@/lib/auth/org-context";
+import { buildDateRangeLabels } from "@/lib/date-range";
 import { AppShell } from "./app-shell";
-import { DATE_RANGE_DAYS } from "./date-range-menu";
 
 /**
  * Server-side wrapper around <AppShell>. Reads the per-request memoized org
@@ -31,14 +31,7 @@ export async function AppShellServer({
   // "May 8 – Jun 7, 2026". Computed server-side (and passed down whole rather
   // than derived in the client island) so the browser's timezone can't produce
   // a different string than the SSR pass did.
-  const now = new Date();
-  const fmt = (dt: Date) => dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-  const dateLabels = Object.fromEntries(
-    DATE_RANGE_DAYS.map((days) => [
-      String(days),
-      `${fmt(new Date(now.getTime() - days * 864e5))} – ${fmt(now)}, ${now.getFullYear()}`,
-    ]),
-  );
+  const dateLabels = buildDateRangeLabels(new Date());
 
   return (
     <AppShell

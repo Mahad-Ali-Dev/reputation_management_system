@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { DATE_RANGE_DAYS, RANGE_OPTION_LABELS, normalizeRangeDays } from "@/lib/date-range";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -13,17 +14,10 @@ import { useEffect, useRef, useState } from "react";
  *
  * Labels are computed on the server and passed in (`labels`) so the rendered
  * date window can't hydrate differently from the SSR pass when the browser
- * timezone differs from the server's.
+ * timezone differs from the server's. The window constants live in
+ * lib/date-range.ts, not here — a Server Component importing them from this
+ * "use client" module would get client-reference proxies instead of values.
  */
-export const DATE_RANGE_DAYS = [7, 30, 90] as const;
-export const DEFAULT_RANGE_DAYS = 30;
-
-const OPTION_LABELS: Record<number, string> = {
-  7: "Last 7 days",
-  30: "Last 30 days",
-  90: "Last 90 days",
-};
-
 export function DateRangeMenu({ labels }: { labels: Record<string, string> }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -31,10 +25,7 @@ export function DateRangeMenu({ labels }: { labels: Record<string, string> }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  const requested = Number(searchParams?.get("range"));
-  const current = (DATE_RANGE_DAYS as readonly number[]).includes(requested)
-    ? requested
-    : DEFAULT_RANGE_DAYS;
+  const current = normalizeRangeDays(searchParams?.get("range"));
 
   // Close on outside click / Escape — same pattern as the establishment kebab.
   useEffect(() => {
@@ -67,11 +58,11 @@ export function DateRangeMenu({ labels }: { labels: Record<string, string> }) {
         className="tb__date"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Date range: ${OPTION_LABELS[current]}`}
+        aria-label={`Date range: ${RANGE_OPTION_LABELS[current]}`}
         onClick={() => setOpen((v) => !v)}
       >
         <Icon name="cal" size={13} style={{ color: "var(--rl-muted)" }} />
-        <span>{labels[String(current)] ?? OPTION_LABELS[current]}</span>
+        <span>{labels[String(current)] ?? RANGE_OPTION_LABELS[current]}</span>
         <Icon
           name="chevD"
           size={11}
@@ -129,7 +120,7 @@ export function DateRangeMenu({ labels }: { labels: Record<string, string> }) {
                   size={13}
                   style={{ opacity: isActive ? 1 : 0, flex: "0 0 13px" }}
                 />
-                <span style={{ flex: 1 }}>{OPTION_LABELS[days]}</span>
+                <span style={{ flex: 1 }}>{RANGE_OPTION_LABELS[days]}</span>
                 <span style={{ fontSize: 11, color: "var(--rl-muted)", fontWeight: 400 }}>
                   {labels[String(days)]}
                 </span>
