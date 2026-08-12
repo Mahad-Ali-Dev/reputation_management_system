@@ -6,12 +6,14 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { syncSubscriptionOnReturn } from "@/lib/billing/sync";
-import { getDashboardData, getSetupState, type SetupState } from "@/lib/dashboard/queries";
+import { type SetupState, getDashboardData, getSetupState } from "@/lib/dashboard/queries";
 import { prisma } from "@/lib/db/client";
+import { withTenant } from "@/lib/db/with-tenant";
 import { getOnboardingFacts } from "@/lib/onboarding/facts";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopilotChips, CopilotPrompt } from "./_components/copilot-panel";
+import { KbCrawlStrip } from "./_components/kb-crawl-strip";
 import "./dashboard-kit.css";
 
 /**
@@ -70,6 +72,43 @@ export default async function DashboardPage({
     getOnboardingFacts(orgId),
   ]);
 
+  // In-flight / just-finished website crawls for the status strip. Only URL
+  // sources, only the last hour, so a long-settled document never re-appears on
+  // the dashboard. Fail-soft: the strip is informational, never worth a 500.
+  const kbCrawls = await withTenant(orgId, (tx) =>
+    tx.aiDocument.findMany({
+      where: {
+        sourceType: "url",
+        createdAt: { gte: new Date(Date.now() - 60 * 60 * 1000) },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        content: true,
+        _count: { select: { embeddings: true } },
+      },
+    }),
+  )
+    .then((rows) =>
+      rows.map((r) => ({
+        documentId: r.id,
+        title: r.title,
+        stage: (r.status === "failed"
+          ? "failed"
+          : r.status === "indexed"
+            ? "done"
+            : r.content && r.content.length > 40
+              ? "indexing"
+              : "crawling") as "queued" | "crawling" | "indexing" | "done" | "failed",
+        chunks: r._count.embeddings,
+        message: r.status === "failed" ? r.content : null,
+      })),
+    )
+    .catch(() => []);
+
   // First-run redirect to the agentic onboarding. A brand-new org (never started
   // the wizard, onboardingStep === 0) with no establishment yet hasn't been set
   // up at all — send it to /onboarding to kick off the auto-build. Anyone who
@@ -102,8 +141,16 @@ export default async function DashboardPage({
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]} biz={org.name}>
+      {/* Website crawls run as background jobs, so the owner can start one and
+          close the modal. This is the only place they'd otherwise see it's
+          still working. Renders nothing when there's nothing in flight. */}
+      <KbCrawlStrip initial={kbCrawls} />
+
       {checkoutActive && (
-        <div className="ds-card ds-card--pri" style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}>
+        <div
+          className="ds-card ds-card--pri"
+          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
+        >
           <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
           Subscription active. Welcome to Pro.
         </div>
@@ -121,7 +168,9 @@ export default async function DashboardPage({
                   Good {dayPart()}, {firstName}! 👋
                 </p>
                 <h1 className="dk-hero__title">Your reputation, your edge.</h1>
-                <p className="dk-hero__sub">Track reviews, engage customers and grow your brand trust.</p>
+                <p className="dk-hero__sub">
+                  Track reviews, engage customers and grow your brand trust.
+                </p>
               </div>
               {/* Kit hero illustration ("dashboard/dashboard.svg" — the colorful
                   growth board). Same asset in BOTH states (the kit reuses it),
@@ -144,11 +193,36 @@ export default async function DashboardPage({
             </div>
 
             <div className="dk-quick">
-              <QuickChip icon="kit-chip-upload-faq.png" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
-              <QuickChip icon="kit-chip-add-business.png" title="Add business info" sub="Services, hours, etc." href="/ai" />
-              <QuickChip icon="kit-chip-train-reviews.png" title="Train from reviews" sub="Learn from feedback" href="/ai?tab=test" />
-              <QuickChip icon="kit-chip-brand-voice.png" title="Brand voices" sub="Tone and style" href="/ai?tab=behaviour" />
-              <QuickChip icon="kit-chip-knowledge.png" title="Knowledge sources" sub="Docs, URLs & more" href="/ai?tab=knowledge" />
+              <QuickChip
+                icon="kit-chip-upload-faq.png"
+                title="Upload FAQs"
+                sub="Add common Q&A"
+                href="/ai?tab=info"
+              />
+              <QuickChip
+                icon="kit-chip-add-business.png"
+                title="Add business info"
+                sub="Services, hours, etc."
+                href="/ai"
+              />
+              <QuickChip
+                icon="kit-chip-train-reviews.png"
+                title="Train from reviews"
+                sub="Learn from feedback"
+                href="/ai?tab=test"
+              />
+              <QuickChip
+                icon="kit-chip-brand-voice.png"
+                title="Brand voices"
+                sub="Tone and style"
+                href="/ai?tab=behaviour"
+              />
+              <QuickChip
+                icon="kit-chip-knowledge.png"
+                title="Knowledge sources"
+                sub="Docs, URLs & more"
+                href="/ai?tab=knowledge"
+              />
             </div>
           </div>
 
@@ -160,7 +234,10 @@ export default async function DashboardPage({
               star={total > 0}
               delta={
                 d.deltas30d.ratingAbs !== null && d.deltas30d.ratingAbs !== 0
-                  ? { text: Math.abs(d.deltas30d.ratingAbs).toFixed(1), dir: d.deltas30d.ratingAbs > 0 ? "up" : "down" }
+                  ? {
+                      text: Math.abs(d.deltas30d.ratingAbs).toFixed(1),
+                      dir: d.deltas30d.ratingAbs > 0 ? "up" : "down",
+                    }
                   : null
               }
               spark={series(d.ratingTrendPoints) ?? null}
@@ -174,7 +251,10 @@ export default async function DashboardPage({
               value={total > 0 ? total.toLocaleString() : null}
               delta={
                 d.deltas30d.reviewsPct !== null && d.deltas30d.reviewsPct !== 0
-                  ? { text: `${Math.abs(d.deltas30d.reviewsPct)}%`, dir: d.deltas30d.reviewsPct > 0 ? "up" : "down" }
+                  ? {
+                      text: `${Math.abs(d.deltas30d.reviewsPct)}%`,
+                      dir: d.deltas30d.reviewsPct > 0 ? "up" : "down",
+                    }
                   : null
               }
               spark={series(d.weeklyReviews) ?? null}
@@ -188,7 +268,10 @@ export default async function DashboardPage({
               value={d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null}
               delta={
                 d.deltas30d.aiRepliesPct !== null && d.deltas30d.aiRepliesPct !== 0
-                  ? { text: `${Math.abs(d.deltas30d.aiRepliesPct)}%`, dir: d.deltas30d.aiRepliesPct > 0 ? "up" : "down" }
+                  ? {
+                      text: `${Math.abs(d.deltas30d.aiRepliesPct)}%`,
+                      dir: d.deltas30d.aiRepliesPct > 0 ? "up" : "down",
+                    }
                   : null
               }
               spark={series(d.weeklyAiReplies) ?? null}
@@ -203,7 +286,10 @@ export default async function DashboardPage({
               value={fiveStarCount > 0 ? fiveStarCount.toLocaleString() : null}
               delta={
                 d.deltas30d.fiveStarPct !== null && d.deltas30d.fiveStarPct !== 0
-                  ? { text: `${Math.abs(d.deltas30d.fiveStarPct)}%`, dir: d.deltas30d.fiveStarPct > 0 ? "up" : "down" }
+                  ? {
+                      text: `${Math.abs(d.deltas30d.fiveStarPct)}%`,
+                      dir: d.deltas30d.fiveStarPct > 0 ? "up" : "down",
+                    }
                   : null
               }
               spark={series(d.weeklyFiveStar) ?? null}
@@ -257,17 +343,30 @@ export default async function DashboardPage({
               value={total > 0 ? sentimentLabel(d.sentiment).label : null}
               chip={
                 total > 0
-                  ? { text: `${sentimentLabel(d.sentiment).pct}%`, dir: sentimentLabel(d.sentiment).dir, arrow: false }
+                  ? {
+                      text: `${sentimentLabel(d.sentiment).pct}%`,
+                      dir: sentimentLabel(d.sentiment).dir,
+                      arrow: false,
+                    }
                   : undefined
               }
             />
             <InsightCard
               label="Trend"
               art="kit-insight-trend.png"
-              value={total > 0 ? (d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0 ? "Improving" : "Steady") : null}
+              value={
+                total > 0
+                  ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
+                    ? "Improving"
+                    : "Steady"
+                  : null
+              }
               chip={
                 total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
-                  ? { text: `${Math.abs(d.reviews7dDeltaPct)}%`, dir: d.reviews7dDeltaPct > 0 ? "up" : "down" }
+                  ? {
+                      text: `${Math.abs(d.reviews7dDeltaPct)}%`,
+                      dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
+                    }
                   : undefined
               }
             />
@@ -280,10 +379,13 @@ export default async function DashboardPage({
         <section className="dk-copilot" aria-label="AI copilot">
           <div className="dk-copilot__main">
             <div className="dk-copilot__kicker">
-              <Icon name="sparkle" size={14} /> AI Assistant <span className="dk-copilot__beta">Beta</span>
+              <Icon name="sparkle" size={14} /> AI Assistant{" "}
+              <span className="dk-copilot__beta">Beta</span>
             </div>
             <h2 className="dk-copilot__title">Your AI copilot for reputation growth.</h2>
-            <p className="dk-copilot__sub">Ask anything. Get insights, summaries, and recommendations.</p>
+            <p className="dk-copilot__sub">
+              Ask anything. Get insights, summaries, and recommendations.
+            </p>
             <CopilotPrompt />
           </div>
           {/* Kit: the 4 suggestion chips sit on a full-width row BELOW the
@@ -295,7 +397,11 @@ export default async function DashboardPage({
               The asset ships with a baked near-white background, so multiply melts
               it into the lavender panel on every edge (no crop/feather hacks). */}
           <div className="dk-copilot__bot" aria-hidden>
-            <img className="dk-copilot__art dk-copilot__art--3d" src={`${ASSETS}/kit-copilot-robot.png`} alt="" />
+            <img
+              className="dk-copilot__art dk-copilot__art--3d"
+              src={`${ASSETS}/kit-copilot-robot.png`}
+              alt=""
+            />
           </div>
         </section>
       </div>
@@ -307,13 +413,22 @@ export default async function DashboardPage({
 // Quick training chips
 // ============================================================
 
-function QuickChip({ icon, title, sub, href }: { icon: string; title: string; sub: string; href: string }) {
+function QuickChip({
+  icon,
+  title,
+  sub,
+  href,
+}: { icon: string; title: string; sub: string; href: string }) {
   return (
     <Link href={href} className="dk-card dk-quick__chip">
       <img className="dk-quick__icon" src={`${ASSETS}/${icon}`} alt="" />
       <span style={{ minWidth: 0 }}>
-        <span className="dk-quick__title" style={{ display: "block" }}>{title}</span>
-        <span className="dk-quick__sub" style={{ display: "block" }}>{sub}</span>
+        <span className="dk-quick__title" style={{ display: "block" }}>
+          {title}
+        </span>
+        <span className="dk-quick__sub" style={{ display: "block" }}>
+          {sub}
+        </span>
       </span>
     </Link>
   );
@@ -378,7 +493,11 @@ function StatChip({
             )}
           </span>
           {pending !== undefined && (
-            <Link href="/reviews" className="dk-stat__pending" title={`${pending} AI replies awaiting approval`}>
+            <Link
+              href="/reviews"
+              className="dk-stat__pending"
+              title={`${pending} AI replies awaiting approval`}
+            >
               {pending} awaiting →
             </Link>
           )}
@@ -393,7 +512,9 @@ function StatChip({
         ) : (
           <span />
         )}
-        {spark && <Sparkline points={spark} color={sparkColor} width={112} height={38} area={false} />}
+        {spark && (
+          <Sparkline points={spark} color={sparkColor} width={112} height={38} area={false} />
+        )}
       </div>
     </div>
   );
@@ -467,9 +588,15 @@ function GoogleOverviewCard({
       </div>
       {total === 0 ? (
         <div className="dk-cardempty">
-          <img className="dk-cardempty__art" src={`${ASSETS}/kit-empty-google-reviews.png`} alt="" />
+          <img
+            className="dk-cardempty__art"
+            src={`${ASSETS}/kit-empty-google-reviews.png`}
+            alt=""
+          />
           <h4 className="dk-cardempty__title">No review data yet</h4>
-          <p className="dk-cardempty__sub">Reviews and ratings will appear here once you start receiving reviews.</p>
+          <p className="dk-cardempty__sub">
+            Reviews and ratings will appear here once you start receiving reviews.
+          </p>
           <Link href="/connections" className="dk-btn-outline">
             Connect your business <Icon name="arrowR" size={12} />
           </Link>
@@ -491,12 +618,17 @@ function GoogleOverviewCard({
                 <div key={r} className="dk-dist-row">
                   <span className="dk-dist-row__label">
                     {r}
-                    <span className="dk-star" style={{ color: "var(--dk-star)" }} aria-hidden>★</span>
+                    <span className="dk-star" style={{ color: "var(--dk-star)" }} aria-hidden>
+                      ★
+                    </span>
                   </span>
                   <span className="dk-dist-row__track">
                     <span
                       className="dk-dist-row__fill"
-                      style={{ width: `${Math.round((byRating(r) / max) * 100)}%`, background: BAR_COLORS[r] }}
+                      style={{
+                        width: `${Math.round((byRating(r) / max) * 100)}%`,
+                        background: BAR_COLORS[r],
+                      }}
                     />
                   </span>
                   <span className="dk-dist-row__count">{byRating(r)}</span>
@@ -534,8 +666,21 @@ function RatingDonut({ total, byRating }: { total: number; byRating: (r: number)
     });
   return (
     <div className="dk-donut" style={{ width: size, height: size }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }} aria-hidden>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="#f3f4f6" strokeWidth={stroke} />
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ transform: "rotate(-90deg)" }}
+        aria-hidden
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="#f3f4f6"
+          strokeWidth={stroke}
+        />
         {segs.map((s) => (
           <circle
             key={s.rating}
@@ -587,7 +732,11 @@ function RecentReviewsCard({
         <div className="dk-cardempty">
           {/* Kit "Recent reviews/recent reviews.svg" — the asset ships with a baked
               near-white background, so multiply blends it cleanly onto the card. */}
-          <img className="dk-cardempty__art dk-cardempty__art--blend" src={`${ASSETS}/kit-empty-recent-reviews.png`} alt="" />
+          <img
+            className="dk-cardempty__art dk-cardempty__art--blend"
+            src={`${ASSETS}/kit-empty-recent-reviews.png`}
+            alt=""
+          />
           <h4 className="dk-cardempty__title">No reviews yet</h4>
           <p className="dk-cardempty__sub">Reviews from your customers will appear here.</p>
         </div>
@@ -595,7 +744,9 @@ function RecentReviewsCard({
         <div>
           {reviews.slice(0, 3).map((rv, i) => (
             <Link key={rv.id} href="/reviews" className="dk-review-row">
-              <span className={`dk-review-row__avatar dk-review-row__avatar--${["a", "b", "c"][i % 3]}`}>
+              <span
+                className={`dk-review-row__avatar dk-review-row__avatar--${["a", "b", "c"][i % 3]}`}
+              >
                 {initials(rv.reviewerName)}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
@@ -632,7 +783,14 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
         <h3 className="dk-colcard__title">Setup Progress</h3>
       </div>
       <div className="dk-setup__top">
-        <ScoreRing value={setup.pct} suffix="%" size={72} stroke={9} hideMax color="var(--dk-pri, #2563eb)" />
+        <ScoreRing
+          value={setup.pct}
+          suffix="%"
+          size={72}
+          stroke={9}
+          hideMax
+          color="var(--dk-pri, #2563eb)"
+        />
         <p className="dk-setup__copy">
           {setup.pct === 100 ? (
             <>
@@ -640,7 +798,8 @@ function SetupProgressCard({ setup, isEmpty }: { setup: SetupState; isEmpty: boo
             </>
           ) : isEmpty || setup.completed === 0 ? (
             <>
-              <strong>Let's get you all set up!</strong> Complete these steps to get the most out of Repulabs.
+              <strong>Let's get you all set up!</strong> Complete these steps to get the most out of
+              Repulabs.
             </>
           ) : (
             <>
