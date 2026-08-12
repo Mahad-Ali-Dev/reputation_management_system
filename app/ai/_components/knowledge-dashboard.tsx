@@ -2,6 +2,7 @@ import { Icon, type IconName } from "@/components/shell/icon";
 import Image from "next/image";
 import Link from "next/link";
 import { relativeTime } from "../training/_components/shared-utils";
+import { LocationHoursEditor } from "./location-hours-editor";
 
 /**
  * Knowledge tab — the kit dashboard (active AND empty states), server-rendered.
@@ -30,19 +31,6 @@ const DAY_LABELS: Array<[string, string]> = [
   ["saturday", "Sa"],
   ["sunday", "Su"],
 ];
-
-/** Format a "HH:MM" 24h time to the kit's "09:00 AM" 12h display. */
-function to12h(t: string | undefined): string {
-  if (!t) return "—";
-  const m = /^(\d{1,2}):(\d{2})/.exec(t.trim());
-  if (!m) return t;
-  let h = Number(m[1]);
-  const min = m[2];
-  const ampm = h >= 12 ? "PM" : "AM";
-  h = h % 12;
-  if (h === 0) h = 12;
-  return `${String(h).padStart(2, "0")}:${min} ${ampm}`;
-}
 
 export type BusinessDetailRow = { id: string; icon: IconName; title: string; body: string | null };
 export type RecentLearningRow = {
@@ -228,9 +216,6 @@ export function KnowledgeBody({
   const filledDetails = businessDetails.filter((d) => d.body && d.body.trim().length > 0);
   const hasOverview = filledDetails.length > 0;
   const hasLocation = Boolean(location.address && location.address.trim().length > 0);
-  const activeDay = DAY_LABELS.find(([k]) => location.hours[k]?.open)?.[0] ?? "monday";
-  const openTime = location.hours[activeDay]?.open ?? "09:00";
-  const closeTime = location.hours[activeDay]?.close ?? "17:00";
   const hasLearning = recentLearning.length > 0;
 
   return (
@@ -493,59 +478,11 @@ export function KnowledgeBody({
           <h3 className="akb-card__title">Business location</h3>
           <p className="akb-card__sub">Where is your business based?</p>
           {hasLocation ? (
-            <>
-              <div className="akb-loc__addr">
-                <span className="akb-loc__pin" aria-hidden="true">
-                  <Icon name="pin" size={15} />
-                </span>
-                <span className="akb-loc__addr-text">{location.address}</span>
-                <span className="akb-saved">
-                  <Icon name="checkCircle" size={11} /> Saved
-                </span>
-                <Link
-                  href="/ai/training#knowledge"
-                  className="akb-icon-btn"
-                  aria-label="Edit location"
-                >
-                  <Icon name="edit" size={12} />
-                </Link>
-              </div>
-              <div className="akb-loc__hours-head">
-                <div className="akb-bo__t" style={{ justifyContent: "flex-start" }}>
-                  Operating hours
-                </div>
-                <div className="akb-card__sub" style={{ marginTop: 2 }}>
-                  Set your business operating hours.
-                </div>
-              </div>
-              <div className="akb-loc__days">
-                {DAY_LABELS.map(([k, l]) => (
-                  <span key={k} className={`akb-day ${location.hours[k]?.open ? "is-on" : ""}`}>
-                    {l}
-                  </span>
-                ))}
-              </div>
-              {/* Read-only mirror of the profile's hours. Editing lives in the
-                  AI Training workspace (per-day open/close inputs + autosave), so
-                  the whole row links there instead of faking in-place controls —
-                  otherwise the times/toggle looked interactive but did nothing. */}
-              <Link
-                href="/ai/training#knowledge"
-                className="akb-loc__times"
-                aria-label="Edit operating hours in AI Training"
-              >
-                <span className="akb-time">
-                  {to12h(openTime)} <Icon name="chevD" size={12} />
-                </span>
-                <span className="akb-time__to">to</span>
-                <span className="akb-time">
-                  {to12h(closeTime)} <Icon name="chevD" size={12} />
-                </span>
-                <span className="akb-toggle is-on" role="img" aria-label="Operating hours enabled">
-                  <span className="akb-toggle__knob" />
-                </span>
-              </Link>
-            </>
+            /* Inline editor. These controls used to be static spans with
+               dropdown chevrons and a fake toggle — they looked interactive and
+               did nothing. Editing now happens here, saving through the same
+               autosaveAiTraining action the training workspace uses. */
+            <LocationHoursEditor address={location.address} hours={location.hours} />
           ) : (
             <div className="akb-empty">
               <span className="akb-empty__icon" aria-hidden="true">

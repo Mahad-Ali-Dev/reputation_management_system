@@ -314,11 +314,19 @@ export default async function AiSettingsPage({
               );
             })}
           </div>
+          {/* "Add source" was `href="#add-source"`, pointing at the disclosure
+              that no longer exists — a dead button. It now triggers the same
+              file picker as the Upload card, via KbSourceActions' delegation. */}
           {tab === "knowledge" ? (
-            <a href="#add-source" className="akb-btn-primary" style={{ height: 33 }}>
+            <button
+              type="button"
+              data-kb-action="upload"
+              className="akb-btn-primary"
+              style={{ height: 33 }}
+            >
               <Icon name="plus" size={14} />
               Add source
-            </a>
+            </button>
           ) : (
             <Link href="/ai?tab=test" className="akb-btn-primary" style={{ height: 33 }}>
               <Icon name="sparkle" size={14} />
