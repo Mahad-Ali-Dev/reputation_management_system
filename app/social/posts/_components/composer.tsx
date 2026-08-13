@@ -6,7 +6,7 @@ import Link from "next/link";
 import { type JSX, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { CaptionModal, type CaptionOption, type GenerateCaptionsFn } from "./caption-modal";
 import { CreativesModal, type GenerateCreativesFn } from "./creatives-modal";
-import { LibraryModal, type LibraryAsset } from "./library-modal";
+import { type LibraryAsset, LibraryModal } from "./library-modal";
 import { PhonePreview, type PreviewPlatform } from "./phone-preview";
 import "../social-compose.css";
 
@@ -412,7 +412,12 @@ export function Composer({
                 <span className="sk-lbl" style={{ margin: 0 }}>
                   Your post
                 </span>
-                <button type="button" className="sk-btn-out" style={{ height: 32 }} onClick={() => setCaptionOpen(true)}>
+                <button
+                  type="button"
+                  className="sk-btn-out"
+                  style={{ height: 32 }}
+                  onClick={() => setCaptionOpen(true)}
+                >
                   <Icon name="sparkle" size={13} />
                   AI caption
                 </button>
@@ -474,7 +479,9 @@ export function Composer({
                     <p style={{ margin: "8px 0 0", fontSize: 12.5 }}>
                       {uploading ? "Uploading…" : "Drag & drop, or click to upload"}
                     </p>
-                    <p style={{ margin: "2px 0 0", fontSize: 10.5 }}>PNG, JPG, WebP or MP4 · up to 50MB</p>
+                    <p style={{ margin: "2px 0 0", fontSize: 10.5 }}>
+                      PNG, JPG, WebP or MP4 · up to 50MB
+                    </p>
                   </div>
                 ) : (
                   <div
@@ -500,10 +507,22 @@ export function Composer({
                         <img
                           src={m.url}
                           alt=""
-                          style={{ width: "100%", height: "100%", objectFit: "cover", opacity: m.kind === "video" ? 0.7 : 1 }}
+                          style={{
+                            width: "100%",
+                            height: "100%",
+                            objectFit: "cover",
+                            opacity: m.kind === "video" ? 0.7 : 1,
+                          }}
                         />
                         {m.kind === "video" && (
-                          <span style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center" }}>
+                          <span
+                            style={{
+                              position: "absolute",
+                              inset: 0,
+                              display: "grid",
+                              placeItems: "center",
+                            }}
+                          >
                             <Icon name="play" size={16} style={{ color: "#fff" }} />
                           </span>
                         )}
@@ -565,7 +584,12 @@ export function Composer({
                 }}
               />
               <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap: "wrap" }}>
-                <button type="button" className="sk-btn-out" style={{ height: 34 }} onClick={() => setLibraryOpen(true)}>
+                <button
+                  type="button"
+                  className="sk-btn-out"
+                  style={{ height: 34 }}
+                  onClick={() => setLibraryOpen(true)}
+                >
                   <Icon name="image" size={13} />
                   Content library
                 </button>
@@ -596,7 +620,11 @@ export function Composer({
             <div style={{ borderTop: "1px solid var(--sk-divider)", paddingTop: 16 }}>
               <span className="sk-lbl">When to post</span>
               <div className="sk-seg sk-seg--full" style={{ marginBottom: 10 }}>
-                <SegBtn label="Post now" active={scheduleMode === "now"} onClick={() => setScheduleMode("now")} />
+                <SegBtn
+                  label="Post now"
+                  active={scheduleMode === "now"}
+                  onClick={() => setScheduleMode("now")}
+                />
                 <SegBtn
                   label="Schedule"
                   active={scheduleMode === "schedule"}
@@ -648,7 +676,14 @@ export function Composer({
             </div>
 
             {/* actions */}
-            <div style={{ borderTop: "1px solid var(--sk-divider)", paddingTop: 16, display: "grid", gap: 10 }}>
+            <div
+              style={{
+                borderTop: "1px solid var(--sk-divider)",
+                paddingTop: 16,
+                display: "grid",
+                gap: 10,
+              }}
+            >
               <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
                 <button
                   type="button"
@@ -658,7 +693,11 @@ export function Composer({
                   disabled={pending || uploading}
                 >
                   <Icon name={scheduleMode === "schedule" ? "clock" : "send"} size={14} />
-                  {pending ? "Working…" : scheduleMode === "schedule" ? "Schedule post" : "Publish now"}
+                  {pending
+                    ? "Working…"
+                    : scheduleMode === "schedule"
+                      ? "Schedule post"
+                      : "Publish now"}
                 </button>
                 <button
                   type="button"
@@ -673,7 +712,11 @@ export function Composer({
               </div>
               <div style={{ minHeight: 18 }}>
                 {error && (
-                  <span className="row" style={{ fontSize: 12.5, color: "#c0344a", gap: 6 }} role="alert">
+                  <span
+                    className="row"
+                    style={{ fontSize: 12.5, color: "#c0344a", gap: 6 }}
+                    role="alert"
+                  >
                     <Icon name="alert" size={13} /> {error}
                   </span>
                 )}
@@ -687,107 +730,114 @@ export function Composer({
           </div>
         </div>
 
-        {/* ===================== CENTER: live preview ===================== */}
-        <div className="sk-card">
-          <div className="sk-card__head">
-            <div>
-              <h3 className="sk-card__title">Preview</h3>
-              <div className="sk-card__sub">See how your post will look on each platform</div>
-            </div>
-            <select
-              className="sk-select"
-              aria-label="Preview platform"
-              value={previewPlatform}
-              onChange={(e) => setPreviewPlatform(e.target.value as PreviewPlatform)}
-              style={{ width: 140, height: 36, fontSize: 12.5 }}
-            >
-              {PLATFORMS.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="sk-card__body" style={{ background: "var(--sk-soft)" }}>
-            <PhonePreview
-              platform={previewPlatform}
-              caption={caption}
-              hashtags={hashtags}
-              media={media}
-              orgName={orgName}
-              orgLogoUrl={orgLogoUrl}
-            />
-          </div>
-        </div>
-
-        {/* ===================== RIGHT: channels ===================== */}
-        <div className="sk-card">
-          <div className="sk-card__head">
-            <div>
-              <h3 className="sk-card__title">Channels</h3>
-              <div className="sk-card__sub">
-                {connectedPlatforms.length} connected
+        {/*
+          RIGHT RAIL. Preview + Channels are short cards; the editor column is
+          very tall (compose → hashtags → media → location → calendar →
+          actions). Side-by-side as three equal columns left two thirds of the
+          page empty below the fold. Stacking them in one sticky rail balances
+          the heights and keeps the preview in view while you type.
+        */}
+        <div className="sk-composer__rail">
+          {/* ===================== live preview ===================== */}
+          <div className="sk-card">
+            <div className="sk-card__head">
+              <div>
+                <h3 className="sk-card__title">Preview</h3>
+                <div className="sk-card__sub">See how your post will look on each platform</div>
               </div>
-            </div>
-            <Link href="/connections" className="sk-btn-out" style={{ height: 32 }}>
-              Manage
-            </Link>
-          </div>
-          <div className="sk-card__body" style={{ display: "grid", gap: 10 }}>
-            {PLATFORMS.map((p) => {
-              const connected = connectedSet.has(p.id);
-              const on = platforms.includes(p.id);
-              return (
-                <button
-                  type="button"
-                  key={p.id}
-                  onClick={() => togglePlatform(p.id)}
-                  disabled={!connected}
-                  aria-pressed={on}
-                  title={connected ? p.label : `Connect ${p.label} on Connections →`}
-                  className={`sk-channel${on ? " is-on" : ""}`}
-                >
-                  <span className="sk-channel__icon">
-                    <Icon name={p.icon} size={16} />
-                  </span>
-                  <span className="sk-channel__name">
+              <select
+                className="sk-select"
+                aria-label="Preview platform"
+                value={previewPlatform}
+                onChange={(e) => setPreviewPlatform(e.target.value as PreviewPlatform)}
+                style={{ width: 140, height: 36, fontSize: 12.5 }}
+              >
+                {PLATFORMS.map((p) => (
+                  <option key={p.id} value={p.id}>
                     {p.label}
-                    {!connected && <span className="sk-channel__sub">Not connected</span>}
-                  </span>
-                  {connected ? (
-                    <span
-                      className="sk-status sk-status--published"
-                      style={{ height: 22, fontSize: 11 }}
-                    >
-                      <span className="sk-status__dot" />
-                      Connected
-                    </span>
-                  ) : (
-                    <Icon name="lock" size={14} style={{ color: "var(--sk-muted)" }} />
-                  )}
-                </button>
-              );
-            })}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="sk-card__body" style={{ background: "var(--sk-soft)" }}>
+              <PhonePreview
+                platform={previewPlatform}
+                caption={caption}
+                hashtags={hashtags}
+                media={media}
+                orgName={orgName}
+                orgLogoUrl={orgLogoUrl}
+              />
+            </div>
+          </div>
 
-            <Link
-              href="/connections"
-              className="row"
-              style={{
-                gap: 8,
-                justifyContent: "center",
-                padding: "11px 12px",
-                borderRadius: 11,
-                background: "var(--sk-pri-soft)",
-                color: "var(--sk-pri)",
-                fontSize: 13,
-                fontWeight: 700,
-                textDecoration: "none",
-                marginTop: 4,
-              }}
-            >
-              <Icon name="plus" size={14} />
-              Connect channel
-            </Link>
+          {/* ===================== channels ===================== */}
+          <div className="sk-card">
+            <div className="sk-card__head">
+              <div>
+                <h3 className="sk-card__title">Channels</h3>
+                <div className="sk-card__sub">{connectedPlatforms.length} connected</div>
+              </div>
+              <Link href="/connections" className="sk-btn-out" style={{ height: 32 }}>
+                Manage
+              </Link>
+            </div>
+            <div className="sk-card__body" style={{ display: "grid", gap: 10 }}>
+              {PLATFORMS.map((p) => {
+                const connected = connectedSet.has(p.id);
+                const on = platforms.includes(p.id);
+                return (
+                  <button
+                    type="button"
+                    key={p.id}
+                    onClick={() => togglePlatform(p.id)}
+                    disabled={!connected}
+                    aria-pressed={on}
+                    title={connected ? p.label : `Connect ${p.label} on Connections →`}
+                    className={`sk-channel${on ? " is-on" : ""}`}
+                  >
+                    <span className={`sk-channel__icon sk-channel__icon--${p.id}`}>
+                      <Icon name={p.icon} size={16} />
+                    </span>
+                    <span className="sk-channel__name">
+                      {p.label}
+                      {!connected && <span className="sk-channel__sub">Not connected</span>}
+                    </span>
+                    {connected ? (
+                      <span
+                        className="sk-status sk-status--published"
+                        style={{ height: 22, fontSize: 11 }}
+                      >
+                        <span className="sk-status__dot" />
+                        Connected
+                      </span>
+                    ) : (
+                      <Icon name="lock" size={14} style={{ color: "var(--sk-muted)" }} />
+                    )}
+                  </button>
+                );
+              })}
+
+              <Link
+                href="/connections"
+                className="row"
+                style={{
+                  gap: 8,
+                  justifyContent: "center",
+                  padding: "11px 12px",
+                  borderRadius: 11,
+                  background: "var(--sk-pri-soft)",
+                  color: "var(--sk-pri)",
+                  fontSize: 13,
+                  fontWeight: 700,
+                  textDecoration: "none",
+                  marginTop: 4,
+                }}
+              >
+                <Icon name="plus" size={14} />
+                Connect channel
+              </Link>
+            </div>
           </div>
         </div>
       </div>
@@ -805,7 +855,12 @@ export function Composer({
         <div className="sk-card__body">
           <div className="sk-ideas__grid">
             {CREATIVE_IDEAS.map((idea) => (
-              <button key={idea.id} type="button" className="sk-idea" onClick={() => applyIdea(idea)}>
+              <button
+                key={idea.id}
+                type="button"
+                className="sk-idea"
+                onClick={() => applyIdea(idea)}
+              >
                 <span className="sk-idea__art" aria-hidden>
                   {/* biome-ignore lint/performance/noImgElement: static illustration-kit asset */}
                   <img src={idea.art} alt="" loading="lazy" />
@@ -833,9 +888,7 @@ export function Composer({
         open={libraryOpen}
         onClose={() => setLibraryOpen(false)}
         assets={libraryAssets}
-        onUse={(chosen) =>
-          addMedia(chosen.map((a) => ({ url: a.url, kind: a.kind })))
-        }
+        onUse={(chosen) => addMedia(chosen.map((a) => ({ url: a.url, kind: a.kind })))}
       />
       <CreativesModal
         open={creativesOpen}
@@ -850,7 +903,11 @@ export function Composer({
 
 /* ---------------------------- subcomponents ------------------------------- */
 
-function SegBtn({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function SegBtn({
+  label,
+  active,
+  onClick,
+}: { label: string; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -1050,7 +1107,14 @@ function HashtagEditor({
             type="button"
             onClick={() => onChange(value.filter((x) => x !== t))}
             aria-label={`Remove #${t}`}
-            style={{ border: "none", background: "none", cursor: "pointer", padding: 0, color: "inherit", display: "grid" }}
+            style={{
+              border: "none",
+              background: "none",
+              cursor: "pointer",
+              padding: 0,
+              color: "inherit",
+              display: "grid",
+            }}
           >
             <Icon name="x" size={10} />
           </button>

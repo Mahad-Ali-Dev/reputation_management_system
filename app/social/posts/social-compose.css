@@ -346,13 +346,26 @@
    ========================================================================== */
 .sk-composer {
   display: grid;
-  grid-template-columns: minmax(0, 0.92fr) minmax(0, 1.18fr) minmax(0, 0.9fr);
+  /* Editor + one rail. See the rail comment in composer.tsx for why this is no
+     longer three equal columns. */
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: 20px;
   align-items: start;
 }
+.sk-composer__rail {
+  display: grid;
+  gap: 20px;
+  align-content: start;
+  position: sticky;
+  top: 16px;
+}
 @media (max-width: 1100px) {
   .sk-composer {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .sk-composer__rail {
+    position: static;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   }
 }
 @media (max-width: 760px) {
@@ -407,6 +420,29 @@
 .sk-channel.is-on .sk-channel__icon {
   background: var(--sk-pri);
   color: #fff;
+}
+
+/*
+ * Real brand marks. These read as the actual networks instead of anonymous grey
+ * glyphs — at a glance the row says "Facebook", not "some icon". A channel you
+ * haven't connected is desaturated rather than recoloured, so it still reads as
+ * the right network while clearly being unavailable.
+ */
+.sk-channel__icon--facebook {
+  background: #1877f2;
+  color: #fff;
+}
+.sk-channel__icon--instagram {
+  background: linear-gradient(135deg, #f58529 0%, #dd2a7b 45%, #8134af 75%, #515bd4 100%);
+  color: #fff;
+}
+.sk-channel__icon--linkedin {
+  background: #0a66c2;
+  color: #fff;
+}
+.sk-channel:disabled .sk-channel__icon {
+  filter: grayscale(1);
+  opacity: 0.45;
 }
 .sk-channel__name {
   flex: 1;
