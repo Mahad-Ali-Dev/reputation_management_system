@@ -24,19 +24,35 @@
  * fallback returns a data: URL so the UI still works in development.
  */
 
-import { put, del } from "@vercel/blob";
+import { logger } from "@/lib/logger";
+import { del, put } from "@vercel/blob";
 import { z } from "zod";
 
 const UPLOAD_CONTEXTS = {
-  org_logo:               { maxBytes: 5 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
-  establishment_image:    { maxBytes: 5 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
-  social_post_media:      { maxBytes: 50 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/quicktime"] },
+  org_logo: { maxBytes: 5 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp"] },
+  establishment_image: {
+    maxBytes: 5 * 1024 * 1024,
+    mimes: ["image/png", "image/jpeg", "image/webp"],
+  },
+  social_post_media: {
+    maxBytes: 50 * 1024 * 1024,
+    mimes: ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/quicktime"],
+  },
   // Content Library accepts the same image+video set as a social media upload.
-  content_library:        { maxBytes: 50 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/quicktime"] },
+  content_library: {
+    maxBytes: 50 * 1024 * 1024,
+    mimes: ["image/png", "image/jpeg", "image/webp", "video/mp4", "video/quicktime"],
+  },
   // AI-generated creatives are images only, smaller cap.
-  ai_creative:            { maxBytes: 10 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp"] },
-  email_template_logo:    { maxBytes: 2 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
-  survey_template_logo:   { maxBytes: 2 * 1024 * 1024,  mimes: ["image/png", "image/jpeg", "image/webp"] },
+  ai_creative: { maxBytes: 10 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp"] },
+  email_template_logo: {
+    maxBytes: 2 * 1024 * 1024,
+    mimes: ["image/png", "image/jpeg", "image/webp"],
+  },
+  survey_template_logo: {
+    maxBytes: 2 * 1024 * 1024,
+    mimes: ["image/png", "image/jpeg", "image/webp"],
+  },
 } as const;
 
 export type UploadContext = keyof typeof UPLOAD_CONTEXTS;
@@ -48,7 +64,11 @@ export const UploadInputSchema = z.object({
   filename: z.string().max(200).optional(),
 });
 
-export function isUploadAllowed(args: { context: UploadContext; mimeType: string; sizeBytes: number }): {
+export function isUploadAllowed(args: {
+  context: UploadContext;
+  mimeType: string;
+  sizeBytes: number;
+}): {
   ok: boolean;
   reason?: string;
 } {
@@ -75,16 +95,27 @@ function magicBytesMatchMime(buffer: Buffer, declaredMime: string): boolean {
   const png = b[0] === 0x89 && b[1] === 0x50 && b[2] === 0x4e && b[3] === 0x47;
   const jpeg = b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff;
   const webp =
-    b[0] === 0x52 && b[1] === 0x49 && b[2] === 0x46 && b[3] === 0x46 &&
-    b[8] === 0x57 && b[9] === 0x45 && b[10] === 0x42 && b[11] === 0x50;
+    b[0] === 0x52 &&
+    b[1] === 0x49 &&
+    b[2] === 0x46 &&
+    b[3] === 0x46 &&
+    b[8] === 0x57 &&
+    b[9] === 0x45 &&
+    b[10] === 0x42 &&
+    b[11] === 0x50;
   const ftyp = b[4] === 0x66 && b[5] === 0x74 && b[6] === 0x79 && b[7] === 0x70; // mp4 / mov
   switch (declaredMime.toLowerCase()) {
-    case "image/png": return png;
-    case "image/jpeg": return jpeg;
-    case "image/webp": return webp;
+    case "image/png":
+      return png;
+    case "image/jpeg":
+      return jpeg;
+    case "image/webp":
+      return webp;
     case "video/mp4":
-    case "video/quicktime": return ftyp;
-    default: return true;
+    case "video/quicktime":
+      return ftyp;
+    default:
+      return true;
   }
 }
 
@@ -114,8 +145,19 @@ export async function uploadToBlob(args: {
     throw new Error("file_content_does_not_match_declared_type");
   }
 
-  // Dev fallback: when no Blob token, return data: URL
+  // DEV-ONLY fallback: with no Blob token, hand back a data: URL so local work
+  // doesn't need cloud storage.
+  //
+  // In production this is a trap, so it says so loudly. The upload appears to
+  // succeed and the image renders in our own UI, but the URL is a multi-megabyte
+  // base64 blob that (a) gets stored in the DB row, (b) can't be fetched by
+  // Facebook/LinkedIn when publishing, and (c) is stripped by Gmail and Outlook
+  // when it lands in an email `<img src>` — so a logo uploaded this way silently
+  // disappears from every branded email we send.
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    if (process.env.NODE_ENV === "production") {
+      warnNoBlobToken(args.context);
+    }
     const dataUrl = `data:${args.mimeType};base64,${args.buffer.toString("base64")}`;
     return { url: dataUrl, pathname: `dev-fallback/${args.filename}` };
   }
@@ -130,6 +172,17 @@ export async function uploadToBlob(args: {
   });
 
   return { url: result.url, pathname: result.pathname };
+}
+
+/** Warn once per context per process — this fires on every upload otherwise. */
+const _warnedContexts = new Set<string>();
+function warnNoBlobToken(context: string): void {
+  if (_warnedContexts.has(context)) return;
+  _warnedContexts.add(context);
+  logger.error(
+    { context, event: "uploads.blob.missing_token" },
+    "BLOB_READ_WRITE_TOKEN is not set — uploads are falling back to data: URLs, which cannot be published to social platforms or rendered in email",
+  );
 }
 
 /**
