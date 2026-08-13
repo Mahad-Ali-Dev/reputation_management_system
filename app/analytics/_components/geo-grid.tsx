@@ -124,7 +124,9 @@ export function GeoGrid({
       </div>
 
       {/* Legend */}
-      <div style={{ display: "flex", gap: 12, marginTop: 10, fontSize: 11, color: "var(--rl-muted)" }}>
+      <div
+        style={{ display: "flex", gap: 12, marginTop: 10, fontSize: 11, color: "var(--rl-muted)" }}
+      >
         <Legend color="var(--ok)" label="Top 3" />
         <Legend color="var(--warn)" label="4–7" />
         <Legend color="#f59e0b" label="8–15" />
@@ -144,11 +146,17 @@ export function GeoGrid({
 
       {/* Schedule affordance for the selected cell */}
       {selected != null && cells[selected] && (
-        <div
-          className="ds-card"
-          style={{ marginTop: 12, background: "var(--surface-2)" }}
-        >
-          <div className="ds-card__body" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
+        <div className="ds-card" style={{ marginTop: 12, background: "var(--surface-2)" }}>
+          <div
+            className="ds-card__body"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
             <div style={{ fontSize: 13, color: "var(--ink)" }}>
               <strong>
                 {cells[selected]!.position == null
@@ -170,11 +178,16 @@ export function GeoGrid({
                 {pending ? "Saving draft…" : "Draft geo-post in Social"}
               </button>
             ) : (
-              <span style={{ fontSize: 12, color: "var(--rl-muted-2)" }}>Upgrade to draft geo-posts</span>
+              <span style={{ fontSize: 12, color: "var(--rl-muted-2)" }}>
+                Upgrade to draft geo-posts
+              </span>
             )}
           </div>
           {error && (
-            <div className="ds-card__body" style={{ paddingTop: 0, color: "var(--bad)", fontSize: 12 }}>
+            <div
+              className="ds-card__body"
+              style={{ paddingTop: 0, color: "var(--bad)", fontSize: 12 }}
+            >
               {error}
             </div>
           )}
@@ -187,7 +200,15 @@ export function GeoGrid({
 function Legend({ color, label }: { color: string; label: string }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
-      <span style={{ width: 12, height: 12, borderRadius: 3, background: color, display: "inline-block" }} />
+      <span
+        style={{
+          width: 12,
+          height: 12,
+          borderRadius: 3,
+          background: color,
+          display: "inline-block",
+        }}
+      />
       {label}
     </span>
   );

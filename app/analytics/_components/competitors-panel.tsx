@@ -30,14 +30,33 @@ export function CompetitorsPanel({ data }: { data: CompetitorsPanelData }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       <div className="ds-card" style={{ background: "var(--surface-2)" }}>
-        <div className="ds-card__body" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <div
+          className="ds-card__body"
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 12,
+            flexWrap: "wrap",
+          }}
+        >
           <div style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
             <span style={{ color: "var(--pri)", marginTop: 2, display: "inline-flex" }}>
               <Icon name="target" size={18} />
             </span>
             <div>
-              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", margin: 0 }}>Competitor tracking</h3>
-              <p style={{ fontSize: 13, color: "var(--rl-muted)", marginTop: 4, marginBottom: 0, maxWidth: 560 }}>
+              <h3 style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)", margin: 0 }}>
+                Competitor tracking
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: "var(--rl-muted)",
+                  marginTop: 4,
+                  marginBottom: 0,
+                  maxWidth: 560,
+                }}
+              >
                 Track up to {CAP} local rivals side-by-side. We monitor their rating, review volume,
                 and the keywords they rank for that you don't.
               </p>
@@ -119,10 +138,23 @@ export function CompetitorsPanel({ data }: { data: CompetitorsPanelData }) {
                     .filter((c) => c.keywordGap.length > 0)
                     .map((c) => (
                       <div key={c.id}>
-                        <div style={{ fontSize: 12, fontWeight: 600, color: "var(--ink)", marginBottom: 6 }}>{c.name}</div>
+                        <div
+                          style={{
+                            fontSize: 12,
+                            fontWeight: 600,
+                            color: "var(--ink)",
+                            marginBottom: 6,
+                          }}
+                        >
+                          {c.name}
+                        </div>
                         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
                           {c.keywordGap.map((kw) => (
-                            <span key={kw} className="chip chip--warn" style={{ height: 22, padding: "0 8px", fontSize: 11 }}>
+                            <span
+                              key={kw}
+                              className="chip chip--warn"
+                              style={{ height: 22, padding: "0 8px", fontSize: 11 }}
+                            >
                               {kw}
                             </span>
                           ))}
@@ -163,25 +195,71 @@ function MatrixRow({
   establishmentId?: string | null;
 }) {
   return (
-    <tr style={{ borderTop: "1px solid var(--line)", background: highlight ? "color-mix(in srgb, var(--pri) 7%, transparent)" : undefined }}>
-      <td style={{ ...td, fontWeight: highlight ? 700 : 500, color: highlight ? "var(--pri)" : "var(--ink)" }}>
+    <tr
+      style={{
+        borderTop: "1px solid var(--line)",
+        background: highlight ? "color-mix(in srgb, var(--pri) 7%, transparent)" : undefined,
+      }}
+    >
+      <td
+        style={{
+          ...td,
+          fontWeight: highlight ? 700 : 500,
+          color: highlight ? "var(--pri)" : "var(--ink)",
+        }}
+      >
         <span style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
           {name}
-          {onRemoveId && <CompetitorControls.RemoveButton id={onRemoveId} establishmentId={establishmentId ?? null} />}
+          {onRemoveId && (
+            <CompetitorControls.RemoveButton
+              id={onRemoveId}
+              establishmentId={establishmentId ?? null}
+            />
+          )}
         </span>
       </td>
       <td style={{ ...td, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-        <Cmp value={rating != null ? rating.toFixed(2) : "—"} better={betterThanYou?.rating} worse={betterThanYou ? !betterThanYou.rating : undefined} />
+        <Cmp
+          value={rating != null ? rating.toFixed(2) : "—"}
+          better={betterThanYou?.rating}
+          worse={betterThanYou ? !betterThanYou.rating : undefined}
+        />
       </td>
       <td style={{ ...td, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-        <Cmp value={reviewCount != null ? reviewCount.toLocaleString() : "—"} better={betterThanYou?.reviews} worse={betterThanYou ? !betterThanYou.reviews : undefined} />
+        <Cmp
+          value={reviewCount != null ? reviewCount.toLocaleString() : "—"}
+          better={betterThanYou?.reviews}
+          worse={betterThanYou ? !betterThanYou.reviews : undefined}
+        />
       </td>
       <td style={{ ...td, textAlign: "right" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end" }}>
-          <div style={{ width: 80, height: 7, borderRadius: 4, background: "var(--surface-3)", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${Math.max(0, Math.min(100, sov))}%`, background: highlight ? "var(--pri)" : "var(--rl-muted-2)" }} />
+          <div
+            style={{
+              width: 80,
+              height: 7,
+              borderRadius: 4,
+              background: "var(--surface-3)",
+              overflow: "hidden",
+            }}
+          >
+            <div
+              style={{
+                height: "100%",
+                width: `${Math.max(0, Math.min(100, sov))}%`,
+                background: highlight ? "var(--pri)" : "var(--rl-muted-2)",
+              }}
+            />
           </div>
-          <span style={{ fontVariantNumeric: "tabular-nums", color: "var(--rl-muted)", fontSize: 12, width: 38, textAlign: "right" }}>
+          <span
+            style={{
+              fontVariantNumeric: "tabular-nums",
+              color: "var(--rl-muted)",
+              fontSize: 12,
+              width: 38,
+              textAlign: "right",
+            }}
+          >
             {sov.toFixed(0)}%
           </span>
         </div>
@@ -194,8 +272,20 @@ function Cmp({ value, better, worse }: { value: string; better?: boolean; worse?
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 3, color: "var(--ink)" }}>
       {value}
-      {better && <Icon name="triangleR" size={10} style={{ color: "var(--bad)", transform: "rotate(-90deg)" }} />}
-      {worse && <Icon name="triangleR" size={10} style={{ color: "var(--ok)", transform: "rotate(90deg)" }} />}
+      {better && (
+        <Icon
+          name="triangleR"
+          size={10}
+          style={{ color: "var(--bad)", transform: "rotate(-90deg)" }}
+        />
+      )}
+      {worse && (
+        <Icon
+          name="triangleR"
+          size={10}
+          style={{ color: "var(--ok)", transform: "rotate(90deg)" }}
+        />
+      )}
     </span>
   );
 }

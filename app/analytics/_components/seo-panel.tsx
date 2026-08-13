@@ -1,10 +1,10 @@
 import { Icon } from "@/components/shell/icon";
-import Link from "next/link";
-import type { KeywordRankView, CitationAuditView, Ga4SummaryView } from "@/lib/seo/queries";
 import type { GbpInsights } from "@/lib/seo/adapters/gbp-insights";
 import type { CoreWebVitals } from "@/lib/seo/adapters/pagespeed";
-import { KeywordRankTable } from "./keyword-rank-table";
+import type { CitationAuditView, Ga4SummaryView, KeywordRankView } from "@/lib/seo/queries";
+import Link from "next/link";
 import { CitationAuditTable } from "./citation-audit-table";
+import { KeywordRankTable } from "./keyword-rank-table";
 
 /**
  * SEO & Visibility tab (Module 13) — Pro-gated at the page level via
@@ -40,7 +40,13 @@ export function SeoPanel({ data }: { data: SeoPanelData }) {
       {/* GBP Insights */}
       <Section title="Google Business Profile insights" icon="google">
         {data.gbp.available ? (
-          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            }}
+          >
             <Metric label="Profile views" value={fmtNum(data.gbp.views)} />
             <Metric label="Searches" value={fmtNum(data.gbp.searches)} />
             <Metric label="Direction requests" value={fmtNum(data.gbp.directions)} />
@@ -58,8 +64,21 @@ export function SeoPanel({ data }: { data: SeoPanelData }) {
       {/* GA4 traffic */}
       <Section title="Website traffic (GA4)" icon="bars">
         {data.connected.ga4 && data.ga4.connected ? (
-          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
-            <Metric label="Sessions" value={fmtNum(data.gbp.available ? data.gbp.views : undefined) /* placeholder until ga4 live */} />
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            }}
+          >
+            <Metric
+              label="Sessions"
+              value={
+                fmtNum(
+                  data.gbp.available ? data.gbp.views : undefined,
+                ) /* placeholder until ga4 live */
+              }
+            />
             <Metric label="Property" value={data.ga4.propertyId ?? "—"} small />
             <Metric label="Status" value={data.ga4.status ?? "—"} small />
           </div>
@@ -80,21 +99,45 @@ export function SeoPanel({ data }: { data: SeoPanelData }) {
       {/* Core Web Vitals */}
       <Section title="Core Web Vitals" icon="bolt">
         {data.vitals.available ? (
-          <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))" }}>
-            <Metric label="Performance" value={data.vitals.performanceScore != null ? String(data.vitals.performanceScore) : "—"} />
-            <Metric label="LCP" value={data.vitals.lcpSeconds != null ? `${data.vitals.lcpSeconds}s` : "—"} />
+          <div
+            style={{
+              display: "grid",
+              gap: 12,
+              gridTemplateColumns: "repeat(auto-fill, minmax(150px, 1fr))",
+            }}
+          >
+            <Metric
+              label="Performance"
+              value={
+                data.vitals.performanceScore != null ? String(data.vitals.performanceScore) : "—"
+              }
+            />
+            <Metric
+              label="LCP"
+              value={data.vitals.lcpSeconds != null ? `${data.vitals.lcpSeconds}s` : "—"}
+            />
             <Metric label="CLS" value={data.vitals.cls != null ? String(data.vitals.cls) : "—"} />
-            <Metric label="INP" value={data.vitals.inpMs != null ? `${data.vitals.inpMs}ms` : "—"} />
+            <Metric
+              label="INP"
+              value={data.vitals.inpMs != null ? `${data.vitals.inpMs}ms` : "—"}
+            />
           </div>
         ) : (
-          <ConnectPrompt what="PageSpeed" note="Lighthouse performance score + LCP / CLS / INP for your website." />
+          <ConnectPrompt
+            what="PageSpeed"
+            note="Lighthouse performance score + LCP / CLS / INP for your website."
+          />
         )}
       </Section>
     </div>
   );
 }
 
-function Section({ title, icon, children }: { title: string; icon: import("@/components/shell/icon").IconName; children: React.ReactNode }) {
+function Section({
+  title,
+  icon,
+  children,
+}: { title: string; icon: import("@/components/shell/icon").IconName; children: React.ReactNode }) {
   return (
     <div className="ds-card">
       <div className="ds-card__head" style={{ display: "flex", alignItems: "center", gap: 8 }}>
@@ -128,7 +171,11 @@ function Metric({ label, value, small }: { label: string; value: string; small?:
   );
 }
 
-function ConnectPrompt({ what, note, provider }: { what: string; note: string; provider?: string }) {
+function ConnectPrompt({
+  what,
+  note,
+  provider,
+}: { what: string; note: string; provider?: string }) {
   const href = provider ? "/connections#connection-sources" : "/connections";
   return (
     <div

@@ -19,7 +19,10 @@ const PLATFORMS: { id: string; label: string; icon: IconName; color: string }[] 
   { id: "facebook", label: "Facebook", icon: "fb", color: "#1877F2" },
   { id: "instagram", label: "Instagram", icon: "insta", color: "#E1306C" },
   { id: "linkedin", label: "LinkedIn", icon: "linkedin", color: "#0A66C2" },
-  { id: "twitter", label: "X (Twitter)", icon: "twitter", color: "#0F1419" },
+  // X/Twitter delisted 2026-08 — not shipping this launch. Kept in
+  // PLATFORM_LIMITS / previews / calendar so ALREADY-PUBLISHED posts still
+  // render; only the picker drops it. Re-add this line to bring it back.
+  // { id: "twitter", label: "X (Twitter)", icon: "twitter", color: "#0F1419" },
 ];
 
 const MAX_ROWS = 100;

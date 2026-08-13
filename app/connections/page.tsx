@@ -143,8 +143,14 @@ type SectionDef = {
  */
 const SECTION_DEFS: SectionDef[] = [
   { key: "reviews", providerIds: ["google_business"] },
-  { key: "social", providerIds: ["meta", "linkedin", "twitter"] },
-  { key: "email", providerIds: ["gmail"] },
+  // X/Twitter delisted 2026-08: not shipping in this launch. Registry entry,
+  // adapter and OAuth routes are UNTOUCHED on disk — re-add "twitter" here to
+  // bring the tile back.
+  { key: "social", providerIds: ["meta", "linkedin"] },
+  // Gmail delisted 2026-08 for the same reason. Note its restricted scopes are
+  // also what would force a paid CASA audit on the main OAuth client, so this
+  // stays off until that's a deliberate decision.
+  // { key: "email", providerIds: ["gmail"] },
 ];
 
 /** Resolve a provider id to its catalog entry (registry ∪ the Meta overlay). */

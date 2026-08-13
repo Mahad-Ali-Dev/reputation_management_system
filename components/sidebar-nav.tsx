@@ -109,7 +109,7 @@ const NAV: NavItem[] = [
   { href: "/contacts", label: "Contact Directory", icon: "users", tab: "contacts" },
 
   { group: "Intelligence" },
-  { href: "/analytics", label: "Business Reports", icon: "bars", badge: "Soon", tab: "analytics" },
+  { href: "/analytics", label: "Business Reports", icon: "bars", tab: "analytics" },
 
   { group: "Settings" },
   { href: "/connections", label: "Connections", icon: "plug", tab: "connections" },
@@ -189,7 +189,13 @@ export function SidebarNav({
       </button>
 
       <nav
-        style={{ flex: 1, overflowY: "auto", overflowX: "hidden", marginRight: -6, paddingRight: 6 }}
+        style={{
+          flex: 1,
+          overflowY: "auto",
+          overflowX: "hidden",
+          marginRight: -6,
+          paddingRight: 6,
+        }}
       >
         {NAV.map((n) => {
           if (isGroup(n)) {
@@ -220,7 +226,9 @@ export function SidebarNav({
               href={href}
               onClick={onNavigate}
               className={`sb__item${pathMatches(pathname, n.href, activeTab) ? " is-active" : ""}`}
-              aria-label={restricted ? `${n.label} (Restricted)` : locked ? `${n.label} (Pro)` : undefined}
+              aria-label={
+                restricted ? `${n.label} (Restricted)` : locked ? `${n.label} (Pro)` : undefined
+              }
               title={
                 restricted
                   ? `${n.label} — restricted by your workspace admin`

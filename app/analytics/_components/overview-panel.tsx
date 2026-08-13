@@ -1,8 +1,8 @@
-import type { ReactNode } from "react";
-import { Icon } from "@/components/shell/icon";
-import Link from "next/link";
 import { EmptyIllustration } from "@/components/empty-state";
+import { Icon } from "@/components/shell/icon";
 import type { OverviewMetrics } from "@/lib/seo/overview";
+import Link from "next/link";
+import type { ReactNode } from "react";
 
 /** Minimal competitor slice for the Overview compare chart (built by the page
  *  from the same `listCompetitors` query the Competitors tab uses; `null` when
@@ -93,20 +93,35 @@ export function OverviewPanel({
         {metrics.connected.rankTracking && (
           <KpiTile
             label="Local pack position"
-            value={metrics.seo.localPackPosition != null ? `#${metrics.seo.localPackPosition}` : "—"}
-            hint={metrics.seo.localPackPosition != null ? "Best tracked keyword" : "Awaiting first crawl"}
+            value={
+              metrics.seo.localPackPosition != null ? `#${metrics.seo.localPackPosition}` : "—"
+            }
+            hint={
+              metrics.seo.localPackPosition != null
+                ? "Best tracked keyword"
+                : "Awaiting first crawl"
+            }
             icon="pin"
           />
         )}
         {metrics.connected.ga4 ? (
           <KpiTile
             label="Website sessions"
-            value={metrics.seo.websiteSessions != null ? metrics.seo.websiteSessions.toLocaleString() : "—"}
+            value={
+              metrics.seo.websiteSessions != null
+                ? metrics.seo.websiteSessions.toLocaleString()
+                : "—"
+            }
             hint="Last 30 days (GA4)"
             icon="bars"
           />
         ) : (
-          <ConnectTile label="Website sessions" hint="Connect GA4" href="/connections" icon="bars" />
+          <ConnectTile
+            label="Website sessions"
+            hint="Connect GA4"
+            href="/connections"
+            icon="bars"
+          />
         )}
       </div>
 
@@ -137,13 +152,22 @@ export function OverviewPanel({
       </div>
 
       {/* Rating distribution + NPS/chatbot */}
-      <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))" }}>
+      <div
+        style={{
+          display: "grid",
+          gap: 12,
+          gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+        }}
+      >
         <div className="ds-card">
           <div className="ds-card__head">
             <div className="ds-card__title">Rating distribution</div>
             <div className="ds-card__sub">Last {metrics.rangeDays} days</div>
           </div>
-          <div className="ds-card__body" style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div
+            className="ds-card__body"
+            style={{ display: "flex", flexDirection: "column", gap: 8 }}
+          >
             <RatingHistogram buckets={rep.ratingBreakdown} hasReviews={hasReviews} />
           </div>
         </div>
@@ -153,16 +177,33 @@ export function OverviewPanel({
             <div className="ds-card__title">NPS &amp; Chatbot</div>
             <div className="ds-card__sub">Survey + AI activity</div>
           </div>
-          <div className="ds-card__body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div
+            className="ds-card__body"
+            style={{ display: "flex", flexDirection: "column", gap: 14 }}
+          >
             <div>
               <div style={{ fontSize: 12, color: "var(--rl-muted)" }}>NPS score</div>
-              <div style={{ fontSize: 28, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 700,
+                  fontVariantNumeric: "tabular-nums",
+                  color: "var(--ink)",
+                }}
+              >
                 {rep.npsScore === null ? "—" : rep.npsScore}
               </div>
             </div>
             <div style={{ borderTop: "1px solid var(--line)", paddingTop: 12 }}>
               <div style={{ fontSize: 12, color: "var(--rl-muted)" }}>AI chatbot conversations</div>
-              <div style={{ fontSize: 28, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--ink)" }}>
+              <div
+                style={{
+                  fontSize: 28,
+                  fontWeight: 700,
+                  fontVariantNumeric: "tabular-nums",
+                  color: "var(--ink)",
+                }}
+              >
                 {rep.conversationCount.toLocaleString()}
               </div>
               <Link href="/ai" style={{ fontSize: 12, color: "var(--pri)" }}>
@@ -181,15 +222,36 @@ export function OverviewPanel({
 import type { IconName } from "@/components/shell/icon";
 import type { DailyCount, RatingBucket } from "@/lib/seo/overview";
 
-function KpiTile({ label, value, hint, icon }: { label: string; value: string; hint: string; icon: IconName }) {
+function KpiTile({
+  label,
+  value,
+  hint,
+  icon,
+}: { label: string; value: string; hint: string; icon: IconName }) {
   return (
     <div className="ds-card">
       <div className="ds-card__body">
-        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--rl-muted)", fontSize: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            color: "var(--rl-muted)",
+            fontSize: 12,
+          }}
+        >
           <Icon name={icon} size={13} />
           {label}
         </div>
-        <div style={{ fontSize: 26, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: "var(--ink)", marginTop: 4 }}>
+        <div
+          style={{
+            fontSize: 26,
+            fontWeight: 700,
+            fontVariantNumeric: "tabular-nums",
+            color: "var(--ink)",
+            marginTop: 4,
+          }}
+        >
           {value}
         </div>
         <div style={{ fontSize: 11.5, color: "var(--rl-muted-2)", marginTop: 2 }}>{hint}</div>
@@ -198,7 +260,12 @@ function KpiTile({ label, value, hint, icon }: { label: string; value: string; h
   );
 }
 
-function ConnectTile({ label, hint, href, icon }: { label: string; hint: string; href: string; icon: IconName }) {
+function ConnectTile({
+  label,
+  hint,
+  href,
+  icon,
+}: { label: string; hint: string; href: string; icon: IconName }) {
   return (
     <Link
       href={href}
@@ -206,11 +273,29 @@ function ConnectTile({ label, hint, href, icon }: { label: string; hint: string;
       style={{ textDecoration: "none", display: "block", borderStyle: "dashed" }}
     >
       <div className="ds-card__body">
-        <div style={{ display: "flex", alignItems: "center", gap: 6, color: "var(--rl-muted)", fontSize: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 6,
+            color: "var(--rl-muted)",
+            fontSize: 12,
+          }}
+        >
           <Icon name={icon} size={13} />
           {label}
         </div>
-        <div style={{ fontSize: 14, fontWeight: 600, color: "var(--pri)", marginTop: 8, display: "inline-flex", alignItems: "center", gap: 5 }}>
+        <div
+          style={{
+            fontSize: 14,
+            fontWeight: 600,
+            color: "var(--pri)",
+            marginTop: 8,
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 5,
+          }}
+        >
           <Icon name="plug" size={13} /> {hint} →
         </div>
       </div>
@@ -250,7 +335,8 @@ function LocalPackCard({
           </span>
           <p className="anx-connect__title">See your local 3-pack rank</p>
           <p className="anx-connect__sub">
-            Connect rank tracking to monitor where you appear in Google's local map pack for your keywords.
+            Connect rank tracking to monitor where you appear in Google's local map pack for your
+            keywords.
           </p>
           <Link href="/connections" className="anx-connect__cta">
             <Icon name="plug" size={13} /> Connect rank tracking
@@ -365,7 +451,9 @@ function CompetitorCompareCard({ data }: { data: CompetitorCompareData | null })
         <div className="ds-card__body anx-comp__empty">
           <EmptyIllustration name="insights-empty" size={120} />
           <p className="anx-connect__title">No competitors tracked yet</p>
-          <p className="anx-connect__sub">Track up to 3 local rivals to see how your review volume stacks up.</p>
+          <p className="anx-connect__sub">
+            Track up to 3 local rivals to see how your review volume stacks up.
+          </p>
           <Link href="/analytics?tab=competitors" className="anx-connect__cta">
             <Icon name="target" size={13} /> Track competitors
           </Link>
@@ -375,8 +463,18 @@ function CompetitorCompareCard({ data }: { data: CompetitorCompareData | null })
   }
 
   const entries = [
-    { name: data.you.name, rating: data.you.rating, reviewCount: data.you.reviewCount ?? 0, you: true },
-    ...data.competitors.map((c) => ({ name: c.name, rating: c.rating, reviewCount: c.reviewCount ?? 0, you: false })),
+    {
+      name: data.you.name,
+      rating: data.you.rating,
+      reviewCount: data.you.reviewCount ?? 0,
+      you: true,
+    },
+    ...data.competitors.map((c) => ({
+      name: c.name,
+      rating: c.rating,
+      reviewCount: c.reviewCount ?? 0,
+      you: false,
+    })),
   ];
   const max = Math.max(1, ...entries.map((e) => e.reviewCount));
 
@@ -387,7 +485,11 @@ function CompetitorCompareCard({ data }: { data: CompetitorCompareData | null })
         <div className="ds-card__sub">Total review volume</div>
       </div>
       <div className="ds-card__body">
-        <div className="anx-comp__bars" role="img" aria-label="Review volume: you vs tracked competitors">
+        <div
+          className="anx-comp__bars"
+          role="img"
+          aria-label="Review volume: you vs tracked competitors"
+        >
           {entries.map((e) => (
             <div key={e.name + (e.you ? "-you" : "")} className="anx-comp__col">
               <span className="anx-comp__val">{e.reviewCount.toLocaleString()}</span>
@@ -401,9 +503,14 @@ function CompetitorCompareCard({ data }: { data: CompetitorCompareData | null })
         </div>
         <div className="anx-comp__labels">
           {entries.map((e) => (
-            <span key={e.name + (e.you ? "-you" : "")} className={`anx-comp__label${e.you ? " anx-comp__label--you" : ""}`}>
+            <span
+              key={e.name + (e.you ? "-you" : "")}
+              className={`anx-comp__label${e.you ? " anx-comp__label--you" : ""}`}
+            >
               {e.you ? "You" : e.name}
-              <span className="anx-comp__rating">{e.rating != null ? `${e.rating.toFixed(1)} ★` : "—"}</span>
+              <span className="anx-comp__rating">
+                {e.rating != null ? `${e.rating.toFixed(1)} ★` : "—"}
+              </span>
             </span>
           ))}
         </div>
@@ -412,14 +519,25 @@ function CompetitorCompareCard({ data }: { data: CompetitorCompareData | null })
   );
 }
 
-function RatingHistogram({ buckets, hasReviews }: { buckets: RatingBucket[]; hasReviews: boolean }) {
+function RatingHistogram({
+  buckets,
+  hasReviews,
+}: { buckets: RatingBucket[]; hasReviews: boolean }) {
   const max = Math.max(1, ...buckets.map((b) => b.count));
   return (
     <>
       {buckets.map((b) => (
         <div key={b.star} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 13 }}>
           <span style={{ width: 34, color: "var(--rl-muted)" }}>{b.star} ★</span>
-          <div style={{ flex: 1, height: 8, borderRadius: 4, background: "var(--surface-3)", overflow: "hidden" }}>
+          <div
+            style={{
+              flex: 1,
+              height: 8,
+              borderRadius: 4,
+              background: "var(--surface-3)",
+              overflow: "hidden",
+            }}
+          >
             <div
               style={{
                 height: "100%",
@@ -428,12 +546,21 @@ function RatingHistogram({ buckets, hasReviews }: { buckets: RatingBucket[]; has
               }}
             />
           </div>
-          <span style={{ width: 36, textAlign: "right", fontVariantNumeric: "tabular-nums", color: "var(--rl-muted)" }}>
+          <span
+            style={{
+              width: 36,
+              textAlign: "right",
+              fontVariantNumeric: "tabular-nums",
+              color: "var(--rl-muted)",
+            }}
+          >
             {b.count}
           </span>
         </div>
       ))}
-      {!hasReviews && <p style={{ fontSize: 12, color: "var(--rl-muted-2)", margin: 0 }}>No reviews yet.</p>}
+      {!hasReviews && (
+        <p style={{ fontSize: 12, color: "var(--rl-muted-2)", margin: 0 }}>No reviews yet.</p>
+      )}
     </>
   );
 }
@@ -466,7 +593,13 @@ function ReviewsTrendChart({ points }: { points: DailyCount[] }) {
 
   return (
     <div>
-      <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none" style={{ width: "100%", height: 176 }} role="img" aria-label="Reviews per day">
+      <svg
+        viewBox={`0 0 ${width} ${height}`}
+        preserveAspectRatio="none"
+        style={{ width: "100%", height: 176 }}
+        role="img"
+        aria-label="Reviews per day"
+      >
         <defs>
           <linearGradient id="seoTrendFill" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="var(--pri)" stopOpacity="0.22" />
@@ -474,17 +607,35 @@ function ReviewsTrendChart({ points }: { points: DailyCount[] }) {
           </linearGradient>
         </defs>
         {[0.25, 0.5, 0.75].map((t) => (
-          <line key={t} x1={padX} x2={width - padX} y1={padY + innerH * t} y2={padY + innerH * t} stroke="var(--line)" strokeDasharray="2,3" />
+          <line
+            key={t}
+            x1={padX}
+            x2={width - padX}
+            y1={padY + innerH * t}
+            y2={padY + innerH * t}
+            stroke="var(--line)"
+            strokeDasharray="2,3"
+          />
         ))}
         <path d={areaPath} fill="url(#seoTrendFill)" />
         <path d={linePath} fill="none" stroke="var(--pri)" strokeWidth="2" />
         {coords.map((c) => (
           <circle key={c.day} cx={c.x} cy={c.y} r="2" fill="var(--pri)">
-            <title>{c.day}: {c.count} review{c.count === 1 ? "" : "s"}</title>
+            <title>
+              {c.day}: {c.count} review{c.count === 1 ? "" : "s"}
+            </title>
           </circle>
         ))}
       </svg>
-      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 11, color: "var(--rl-muted-2)", paddingTop: 4 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          fontSize: 11,
+          color: "var(--rl-muted-2)",
+          paddingTop: 4,
+        }}
+      >
         <span>{points[0]?.day}</span>
         <span>{points[points.length - 1]?.day}</span>
       </div>

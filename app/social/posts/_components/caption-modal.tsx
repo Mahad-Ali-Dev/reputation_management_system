@@ -128,7 +128,7 @@ export function CaptionModal({
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
             >
-              {(platforms.length ? platforms : ["facebook", "instagram", "twitter", "linkedin"]).map(
+              {(platforms.length ? platforms : ["facebook", "instagram", "linkedin"]).map(
                 (p) => (
                   <option key={p} value={p}>
                     {p.charAt(0).toUpperCase() + p.slice(1)}

@@ -33,11 +33,15 @@ export class PanelBoundary extends Component<
       return (
         <div
           className="ds-card"
-          style={{ padding: 28, textAlign: "center", color: "var(--ink-3, #667085)", fontSize: 13.5 }}
+          style={{
+            padding: 28,
+            textAlign: "center",
+            color: "var(--ink-3, #667085)",
+            fontSize: 13.5,
+          }}
         >
-          {this.props.label ? `The ${this.props.label} view` : "This view"} couldn’t
-          load with your current data. The rest of your report is unaffected —
-          refresh to try again.
+          {this.props.label ? `The ${this.props.label} view` : "This view"} couldn’t load with your
+          current data. The rest of your report is unaffected — refresh to try again.
         </div>
       );
     }

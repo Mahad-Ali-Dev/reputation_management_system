@@ -1,11 +1,11 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import Link from "next/link";
-import { useState, useTransition } from "react";
-import { useRouter } from "next/navigation";
 import { dismissRecommendation } from "@/lib/seo/actions";
 import type { Recommendation } from "@/lib/seo/recommendations";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState, useTransition } from "react";
 import { GeoGrid, type GeoGridProps } from "./geo-grid";
 
 /**
@@ -35,15 +35,39 @@ export function RecommendationsPanel({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Segmented control */}
-      <div className="tabs" role="group" aria-label="Recommendation view" style={{ display: "inline-flex", alignSelf: "flex-start" }}>
-        <Seg active={view === "actions"} onClick={() => setView("actions")} icon="bolt" label="Top actions" />
-        <Seg active={view === "geo"} onClick={() => setView("geo")} icon="pin" label="Geo-location strategy" />
-        <Seg active={view === "photo"} onClick={() => setView("photo")} icon="image" label="Photo review strategy" />
+      <div
+        className="tabs"
+        role="group"
+        aria-label="Recommendation view"
+        style={{ display: "inline-flex", alignSelf: "flex-start" }}
+      >
+        <Seg
+          active={view === "actions"}
+          onClick={() => setView("actions")}
+          icon="bolt"
+          label="Top actions"
+        />
+        <Seg
+          active={view === "geo"}
+          onClick={() => setView("geo")}
+          icon="pin"
+          label="Geo-location strategy"
+        />
+        <Seg
+          active={view === "photo"}
+          onClick={() => setView("photo")}
+          icon="image"
+          label="Photo review strategy"
+        />
       </div>
 
       {/* Keep panels mounted; toggle visibility so state survives a switch. */}
       <div hidden={view !== "actions"}>
-        <ActionsView recommendations={recommendations} establishmentId={establishmentId} canSchedule={canSchedule} />
+        <ActionsView
+          recommendations={recommendations}
+          establishmentId={establishmentId}
+          canSchedule={canSchedule}
+        />
       </div>
       <div hidden={view !== "geo"}>
         <GeoView geoGrid={geoGrid} />
@@ -55,9 +79,24 @@ export function RecommendationsPanel({
   );
 }
 
-function Seg({ active, onClick, icon, label }: { active: boolean; onClick: () => void; icon: import("@/components/shell/icon").IconName; label: string }) {
+function Seg({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: import("@/components/shell/icon").IconName;
+  label: string;
+}) {
   return (
-    <button type="button" className={active ? "tabs__t is-active" : "tabs__t"} onClick={onClick} aria-pressed={active}>
+    <button
+      type="button"
+      className={active ? "tabs__t is-active" : "tabs__t"}
+      onClick={onClick}
+      aria-pressed={active}
+    >
       <Icon name={icon} size={13} /> {label}
     </button>
   );
@@ -79,7 +118,9 @@ function ActionsView({
           <div style={{ color: "var(--ok)", display: "inline-flex" }}>
             <Icon name="checkCircle" size={28} />
           </div>
-          <p style={{ fontSize: 14, color: "var(--ink)", margin: "10px 0 2px", fontWeight: 600 }}>You're on track</p>
+          <p style={{ fontSize: 14, color: "var(--ink)", margin: "10px 0 2px", fontWeight: 600 }}>
+            You're on track
+          </p>
           <p style={{ fontSize: 13, color: "var(--rl-muted)", margin: 0 }}>
             No high-impact actions right now. We'll surface new ones as your data changes.
           </p>
@@ -90,7 +131,12 @@ function ActionsView({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {recommendations.map((r, i) => (
-        <RecommendationCard key={`${r.kind}-${i}`} rec={r} establishmentId={establishmentId} canSchedule={canSchedule} />
+        <RecommendationCard
+          key={`${r.kind}-${i}`}
+          rec={r}
+          establishmentId={establishmentId}
+          canSchedule={canSchedule}
+        />
       ))}
     </div>
   );
@@ -133,7 +179,9 @@ function RecommendationCard({
             borderRadius: 8,
             alignItems: "center",
             justifyContent: "center",
-            background: isReviewGen ? "color-mix(in srgb, var(--pri) 12%, transparent)" : "color-mix(in srgb, var(--warn) 16%, transparent)",
+            background: isReviewGen
+              ? "color-mix(in srgb, var(--pri) 12%, transparent)"
+              : "color-mix(in srgb, var(--warn) 16%, transparent)",
             color: isReviewGen ? "var(--pri)" : "var(--warn)",
             flexShrink: 0,
           }}
@@ -142,23 +190,53 @@ function RecommendationCard({
         </span>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontSize: 14, fontWeight: 600, color: "var(--ink)" }}>{rec.headline}</div>
-          <div style={{ fontSize: 12.5, color: "var(--ok)", marginTop: 3, display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <div
+            style={{
+              fontSize: 12.5,
+              color: "var(--ok)",
+              marginTop: 3,
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 5,
+            }}
+          >
             <Icon name="trend" size={12} /> {rec.expectedImpact}
           </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 6, flexShrink: 0 }}>
           {isReviewGen ? (
-            <Link href={(rec.payload.href as string) ?? "/outreach"} className="btn btn--sm btn--pri">
+            <Link
+              href={(rec.payload.href as string) ?? "/outreach"}
+              className="btn btn--sm btn--pri"
+            >
               Send requests →
             </Link>
           ) : canSchedule ? (
-            <GeoDoItButton rec={rec} establishmentId={establishmentId} onDone={() => router.refresh()} />
+            <GeoDoItButton
+              rec={rec}
+              establishmentId={establishmentId}
+              onDone={() => router.refresh()}
+            />
           ) : (
             <Link href="/subscription?feature=competitor_intel" className="btn btn--sm">
               <Icon name="lock" size={12} /> Upgrade
             </Link>
           )}
-          <button type="button" onClick={onDismiss} disabled={pending} aria-label="Dismiss" title="Dismiss" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--rl-muted-2)", display: "inline-flex", padding: 4 }}>
+          <button
+            type="button"
+            onClick={onDismiss}
+            disabled={pending}
+            aria-label="Dismiss"
+            title="Dismiss"
+            style={{
+              background: "none",
+              border: "none",
+              cursor: "pointer",
+              color: "var(--rl-muted-2)",
+              display: "inline-flex",
+              padding: 4,
+            }}
+          >
             <Icon name="x" size={14} />
           </button>
         </div>
@@ -212,7 +290,10 @@ function GeoView({ geoGrid }: { geoGrid: GeoGridProps | null }) {
     <div className="ds-card">
       <div className="ds-card__head">
         <div className="ds-card__title">Geo-location strategy</div>
-        <div className="ds-card__sub">Your 5-mile ranking heatmap. Click a weak cell to draft a geo-tagged post — it’s saved to Social for you to review and publish.</div>
+        <div className="ds-card__sub">
+          Your 5-mile ranking heatmap. Click a weak cell to draft a geo-tagged post — it’s saved to
+          Social for you to review and publish.
+        </div>
       </div>
       <div className="ds-card__body">
         {geoGrid ? (
@@ -230,27 +311,62 @@ function GeoView({ geoGrid }: { geoGrid: GeoGridProps | null }) {
 
 function PhotoView() {
   const steps = [
-    { icon: "qr" as const, title: "Place a QR plaque on the counter", body: "Customers scan it to leave a review with a photo — photos boost listing rank + trust." },
-    { icon: "image" as const, title: "Ask for a photo at the moment of delight", body: "A picture of the finished work or happy moment converts far better than a text-only ask." },
-    { icon: "send" as const, title: "Follow up with a photo-review request", body: "Post-visit, send a request that nudges for a photo. Wire this through Review Requests." },
+    {
+      icon: "qr" as const,
+      title: "Place a QR plaque on the counter",
+      body: "Customers scan it to leave a review with a photo — photos boost listing rank + trust.",
+    },
+    {
+      icon: "image" as const,
+      title: "Ask for a photo at the moment of delight",
+      body: "A picture of the finished work or happy moment converts far better than a text-only ask.",
+    },
+    {
+      icon: "send" as const,
+      title: "Follow up with a photo-review request",
+      body: "Post-visit, send a request that nudges for a photo. Wire this through Review Requests.",
+    },
   ];
   return (
     <div className="ds-card">
       <div className="ds-card__head">
         <div className="ds-card__title">Photo review strategy</div>
-        <div className="ds-card__sub">Photo reviews rank higher and convert better. Here's the funnel.</div>
+        <div className="ds-card__sub">
+          Photo reviews rank higher and convert better. Here's the funnel.
+        </div>
       </div>
       <div className="ds-card__body" style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {steps.map((s, i) => (
           <div key={s.title} style={{ display: "flex", gap: 12, alignItems: "flex-start" }}>
-            <span style={{ display: "inline-flex", width: 30, height: 30, borderRadius: 8, alignItems: "center", justifyContent: "center", background: "var(--surface-3)", color: "var(--pri)", flexShrink: 0 }}>
+            <span
+              style={{
+                display: "inline-flex",
+                width: 30,
+                height: 30,
+                borderRadius: 8,
+                alignItems: "center",
+                justifyContent: "center",
+                background: "var(--surface-3)",
+                color: "var(--pri)",
+                flexShrink: 0,
+              }}
+            >
               <Icon name={s.icon} size={15} />
             </span>
             <div>
               <div style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>
                 {i + 1}. {s.title}
               </div>
-              <p style={{ fontSize: 12.5, color: "var(--rl-muted)", margin: "2px 0 0", lineHeight: 1.5 }}>{s.body}</p>
+              <p
+                style={{
+                  fontSize: 12.5,
+                  color: "var(--rl-muted)",
+                  margin: "2px 0 0",
+                  lineHeight: 1.5,
+                }}
+              >
+                {s.body}
+              </p>
             </div>
           </div>
         ))}
