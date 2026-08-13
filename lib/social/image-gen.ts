@@ -1,7 +1,8 @@
+import { assertEntitled, isOrgEntitled } from "@/lib/billing/entitlements";
 // Server-side library (NOT a "use server" actions file): it exports a class +
 // sync helpers + types, and is invoked only from server components and the
 // use-server composer-actions bridge — never imported directly by a client.
-import { assertEntitled, isOrgEntitled } from "@/lib/billing/entitlements";
+import { runtimeEnv } from "@/lib/env-runtime";
 import { logger } from "@/lib/logger";
 import { uploadToBlob } from "@/lib/uploads/blob";
 
@@ -43,9 +44,9 @@ export type ImageGenAvailability = {
  * no paid call. Mirrors the connections adapter-availability pattern.
  */
 export function isImageGenEnabled(): boolean {
-  const provider = (process.env.IMAGE_GEN_PROVIDER ?? "").toLowerCase();
-  if (provider === "openai") return Boolean(process.env.OPENAI_API_KEY);
-  if (provider === "stability") return Boolean(process.env.STABILITY_API_KEY);
+  const provider = (runtimeEnv("IMAGE_GEN_PROVIDER") ?? "").toLowerCase();
+  if (provider === "openai") return Boolean(runtimeEnv("OPENAI_API_KEY"));
+  if (provider === "stability") return Boolean(runtimeEnv("STABILITY_API_KEY"));
   return false;
 }
 

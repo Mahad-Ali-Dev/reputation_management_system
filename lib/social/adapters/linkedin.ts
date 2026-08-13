@@ -20,6 +20,7 @@
  * `tests/social/linkedin-adapter.test.ts`.
  */
 
+import { runtimeFlag } from "@/lib/env-runtime";
 import { PLATFORM_LIMITS } from "@/lib/social/connections";
 
 export const LINKEDIN_MAX_CHARS = PLATFORM_LIMITS.linkedin.maxChars; // 3000
@@ -105,7 +106,7 @@ export function parseLinkedInResponse(args: {
 
 /** Live publish enabled? Explicit opt-in flag only. */
 export function isLinkedInPublishEnabled(): boolean {
-  return process.env.LINKEDIN_PUBLISH_ENABLED === "true";
+  return runtimeFlag("LINKEDIN_PUBLISH_ENABLED");
 }
 
 const API_BASE = "https://api.linkedin.com/v2";
