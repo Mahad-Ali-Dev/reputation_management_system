@@ -27,6 +27,7 @@
 import { logger } from "@/lib/logger";
 import { del, put } from "@vercel/blob";
 import { z } from "zod";
+import { deleteLocalUpload, localUploadRoot, saveLocalUpload } from "./local-store";
 
 const UPLOAD_CONTEXTS = {
   org_logo: { maxBytes: 5 * 1024 * 1024, mimes: ["image/png", "image/jpeg", "image/webp"] },
@@ -145,8 +146,21 @@ export async function uploadToBlob(args: {
     throw new Error("file_content_does_not_match_declared_type");
   }
 
-  // DEV-ONLY fallback: with no Blob token, hand back a data: URL so local work
-  // doesn't need cloud storage.
+  // Self-hosted storage takes precedence: if UPLOAD_DIR is set, files live on
+  // this box and no cloud account is involved.
+  const localRoot = localUploadRoot();
+  if (localRoot) {
+    return saveLocalUpload({
+      root: localRoot,
+      orgId: args.orgId,
+      context: args.context,
+      buffer: args.buffer,
+      filename: args.filename,
+    });
+  }
+
+  // DEV-ONLY fallback: with no Blob token AND no UPLOAD_DIR, hand back a data:
+  // URL so local work doesn't need any storage at all.
   //
   // In production this is a trap, so it says so loudly. The upload appears to
   // succeed and the image renders in our own UI, but the URL is a multi-megabyte
@@ -156,7 +170,7 @@ export async function uploadToBlob(args: {
   // disappears from every branded email we send.
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     if (process.env.NODE_ENV === "production") {
-      warnNoBlobToken(args.context);
+      warnNoStorageConfigured(args.context);
     }
     const dataUrl = `data:${args.mimeType};base64,${args.buffer.toString("base64")}`;
     return { url: dataUrl, pathname: `dev-fallback/${args.filename}` };
@@ -176,12 +190,12 @@ export async function uploadToBlob(args: {
 
 /** Warn once per context per process — this fires on every upload otherwise. */
 const _warnedContexts = new Set<string>();
-function warnNoBlobToken(context: string): void {
+function warnNoStorageConfigured(context: string): void {
   if (_warnedContexts.has(context)) return;
   _warnedContexts.add(context);
   logger.error(
     { context, event: "uploads.blob.missing_token" },
-    "BLOB_READ_WRITE_TOKEN is not set — uploads are falling back to data: URLs, which cannot be published to social platforms or rendered in email",
+    "No upload storage configured (set UPLOAD_DIR for this server's disk, or BLOB_READ_WRITE_TOKEN) — uploads are falling back to data: URLs, which cannot be published to social platforms or rendered in email",
   );
 }
 
@@ -190,6 +204,11 @@ function warnNoBlobToken(context: string): void {
  * No-op if running in dev fallback (data: URLs aren't deletable).
  */
 export async function deleteFromBlob(pathname: string): Promise<void> {
+  const localRoot = localUploadRoot();
+  if (localRoot) {
+    await deleteLocalUpload(localRoot, pathname);
+    return;
+  }
   if (!process.env.BLOB_READ_WRITE_TOKEN) return;
   if (pathname.startsWith("dev-fallback/")) return;
   await del(pathname);
