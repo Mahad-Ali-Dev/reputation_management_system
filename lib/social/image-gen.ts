@@ -110,6 +110,11 @@ export async function generateCreatives(
   });
 
   const out: GeneratedCreative[] = [];
+  // Keep the upload failures. Demoting them to a warn and then reporting the
+  // generic "no output" hid the actual fault: the images HAD been generated (and
+  // billed), and it was storage that failed. The owner was told "try again",
+  // which regenerates and bills again without touching the cause.
+  const uploadErrors: string[] = [];
   for (let i = 0; i < images.length; i++) {
     const img = images[i]!;
     try {
@@ -122,15 +127,22 @@ export async function generateCreatives(
       });
       out.push(uploaded);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      uploadErrors.push(msg);
       logger.warn({
         orgId: input.orgId,
         event: "social.image_gen.upload_failed",
-        error: err instanceof Error ? err.message : String(err),
+        error: msg,
       });
     }
   }
 
-  if (out.length === 0) throw new Error("image_gen_no_output");
+  if (out.length === 0) {
+    if (uploadErrors.length > 0) {
+      throw new Error(`image_gen_upload_failed: ${uploadErrors[0]}`);
+    }
+    throw new Error("image_gen_no_output");
+  }
   logger.info({ orgId: input.orgId, event: "social.image_gen.ok", count: out.length });
   return out;
 }

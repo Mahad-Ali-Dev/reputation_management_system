@@ -86,6 +86,14 @@ export async function generateCaptionsForComposer(input: {
  */
 function describeImageFailure(raw: string): string {
   const e = raw.toLowerCase();
+  if (e.includes("image_gen_upload_failed")) {
+    // The images exist and were paid for — only storage failed. Say so, because
+    // "try again" regenerates and bills again without fixing anything.
+    return `The images were generated but couldn't be saved. Storage isn't writable — check UPLOAD_DIR exists and is owned by the app user (${raw.slice(0, 140)}).`;
+  }
+  if (e.includes("image_gen_no_output")) {
+    return "The provider returned no images for that brief. Try rewording it.";
+  }
   if (e.includes("must be verified") || (e.includes("403") && e.includes("verif"))) {
     return "OpenAI requires organisation verification before gpt-image-1 can be used. Verify your org in the OpenAI dashboard, or set IMAGE_GEN_MODEL=dall-e-3 on the server to use a model that doesn't need it.";
   }
