@@ -18,6 +18,7 @@
  */
 
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import { type EmailBrand, emailShell } from "@/lib/email/templates";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { Resend } from "resend";
 
@@ -267,23 +268,22 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function buildEmailShell(opts: { preheader: string; title: string; body: string }): string {
-  return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8" /><title>${escapeHtml(opts.title)}</title></head>
-<body style="margin:0;padding:0;background:#f6f7f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <span style="display:none !important;opacity:0;color:transparent;height:0;width:0;overflow:hidden;">${escapeHtml(opts.preheader)}</span>
-  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7f4;padding:24px 12px;">
-    <tr><td align="center">
-      <table cellpadding="0" cellspacing="0" border="0" width="560" style="max-width:560px;background:#ffffff;border:1px solid #eceeea;border-radius:14px;">
-        <tr><td style="padding:28px 28px 8px;">
-          <div style="font-size:14px;font-weight:600;color:#0b0d0e;letter-spacing:-0.01em;">repu<span style="color:#2563eb;">labs</span></div>
-        </td></tr>
-        <tr><td style="padding:8px 28px 28px;font-size:15px;line-height:1.6;color:#0b0d0e;">
-          ${opts.body}
-        </td></tr>
-      </table>
-      <p style="margin:14px 0 0;font-size:11px;color:#94a3b8;">Sent via Repulabs · repulabs.com</p>
-    </td></tr>
-  </table>
-</body></html>`;
+/**
+ * Booking mail is sent on the BUSINESS's behalf, so it carries their brand.
+ * This used to be a second, near-duplicate shell that drifted from the real one
+ * (no viewport meta, no Outlook-safe button, a hardcoded Repulabs masthead on
+ * mail going to someone else's customer).
+ */
+function buildEmailShell(opts: {
+  preheader: string;
+  title: string;
+  body: string;
+  brand?: EmailBrand | null;
+}): string {
+  return emailShell({
+    preheader: opts.preheader,
+    title: opts.title,
+    body: opts.body,
+    brand: opts.brand ?? null,
+  });
 }

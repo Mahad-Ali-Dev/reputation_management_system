@@ -2,6 +2,13 @@ import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import {
+  ctaButton,
+  emailHeading,
+  emailParagraph,
+  emailShell,
+  emailStatRow,
+} from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 import { notificationEnabled } from "@/lib/notifications/prefs";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
@@ -209,66 +216,56 @@ export function renderDigestEmail(
     )
     .join("");
 
-  const html = `<!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;margin:0;">
-<div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
-  <h1 style="margin:0 0 4px;font-size:22px;color:#0f172a;">${escapeHtml(stats.orgName)}</h1>
-  <p style="margin:0 0 20px;color:#94a3b8;font-size:13px;">Yesterday's review digest</p>
+  // Quote card for the best/lowest review — the one bit of colour in the digest,
+  // so the reader sees the sentiment before reading the text.
+  const quote = (
+    tone: "good" | "bad",
+    label: string,
+    body: string | null,
+    who: string | null,
+    rating: number,
+  ) =>
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px;background:${tone === "good" ? "#ecfdf5" : "#fef2f2"};border-left:3px solid ${tone === "good" ? "#10b981" : "#ef4444"};border-radius:6px;">
+      <tr><td style="padding:12px 16px;">
+        <div style="font-size:11px;color:${tone === "good" ? "#059669" : "#dc2626"};text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">${escapeHtml(label)}</div>
+        <p style="margin:6px 0 0;color:#0b0d0e;font-size:14px;line-height:1.55;">&ldquo;${escapeHtml((body ?? "").slice(0, 240))}&rdquo;</p>
+        <div style="margin-top:6px;color:#64748b;font-size:12px;">— ${escapeHtml(who ?? "Anonymous")} · ${rating}&#9733;</div>
+      </td></tr>
+    </table>`;
 
-  ${
-    stats.reviewCount > 0
-      ? `
-  <div style="display:flex;gap:24px;margin-bottom:20px;">
-    <div>
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">New reviews</div>
-      <div style="font-size:28px;font-weight:700;color:#0f172a;">${stats.reviewCount}</div>
-    </div>
-    <div>
-      <div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;">Avg rating</div>
-      <div style="font-size:28px;font-weight:700;color:#0f172a;">${stats.avgRating.toFixed(2)}</div>
-    </div>
-  </div>
-  ${starsRows ? `<table style="border-collapse:collapse;margin:0 0 20px;">${starsRows}</table>` : ""}
-  ${
-    stats.bestReview
-      ? `<div style="background:#ecfdf5;border-left:3px solid #10b981;padding:12px 16px;margin:12px 0;border-radius:4px;">
-          <div style="font-size:11px;color:#059669;text-transform:uppercase;font-weight:600;">Best review</div>
-          <p style="margin:6px 0 0;color:#0f172a;font-size:14px;">"${escapeHtml((stats.bestReview.body ?? "").slice(0, 240))}"</p>
-          <div style="margin-top:6px;color:#94a3b8;font-size:12px;">— ${escapeHtml(stats.bestReview.reviewerName ?? "Anonymous")} · ${stats.bestReview.rating}★</div>
-        </div>`
-      : ""
-  }
-  ${
-    stats.worstReview
-      ? `<div style="background:#fef2f2;border-left:3px solid #ef4444;padding:12px 16px;margin:12px 0;border-radius:4px;">
-          <div style="font-size:11px;color:#dc2626;text-transform:uppercase;font-weight:600;">Lowest review</div>
-          <p style="margin:6px 0 0;color:#0f172a;font-size:14px;">"${escapeHtml((stats.worstReview.body ?? "").slice(0, 240))}"</p>
-          <div style="margin-top:6px;color:#94a3b8;font-size:12px;">— ${escapeHtml(stats.worstReview.reviewerName ?? "Anonymous")} · ${stats.worstReview.rating}★</div>
-        </div>`
-      : ""
-  }
-  `
-      : ""
-  }
-
-  ${
-    stats.pendingReplyCount > 0
-      ? `<div style="background:#fffbeb;border-left:3px solid #f59e0b;padding:12px 16px;margin:12px 0;border-radius:4px;">
-          <p style="margin:0;color:#92400e;font-size:14px;font-weight:600;">${stats.pendingReplyCount} repl${stats.pendingReplyCount === 1 ? "y" : "ies"} pending your approval</p>
-        </div>`
-      : ""
-  }
-
-  <p style="margin:24px 0 0;">
-    <a href="${appUrl}/reviews" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Open dashboard →</a>
-  </p>
-
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
-  <p style="color:#94a3b8;font-size:12px;margin:0;">
-    Don't want these digests? <a href="${unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe with one click</a>.
-  </p>
-</div>
-</body></html>`;
+  const html = emailShell({
+    preheader:
+      stats.reviewCount > 0
+        ? `${stats.reviewCount} new review${stats.reviewCount === 1 ? "" : "s"}, ${stats.avgRating.toFixed(2)} average`
+        : "No new reviews yesterday",
+    title: `${stats.orgName} — yesterday's review digest`,
+    body: `
+      ${emailHeading(stats.orgName)}
+      ${emailParagraph('<span style="color:#64748b;">Yesterday&rsquo;s review digest</span>')}
+      ${
+        stats.reviewCount > 0
+          ? `
+      ${emailStatRow([
+        { value: stats.reviewCount, label: "New reviews" },
+        { value: stats.avgRating.toFixed(2), label: "Avg rating" },
+      ])}
+      ${starsRows ? `<table role="presentation" style="border-collapse:collapse;margin:0 0 18px;">${starsRows}</table>` : ""}
+      ${stats.bestReview ? quote("good", "Best review", stats.bestReview.body, stats.bestReview.reviewerName, stats.bestReview.rating) : ""}
+      ${stats.worstReview ? quote("bad", "Lowest review", stats.worstReview.body, stats.worstReview.reviewerName, stats.worstReview.rating) : ""}
+      `
+          : emailParagraph("No new reviews came in yesterday.")
+      }
+      ${
+        stats.pendingReplyCount > 0
+          ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
+              <tr><td style="padding:12px 16px;color:#92400e;font-size:14px;font-weight:600;">${stats.pendingReplyCount} repl${stats.pendingReplyCount === 1 ? "y" : "ies"} pending your approval</td></tr>
+            </table>`
+          : ""
+      }
+      <div style="margin:26px 0 0;">${ctaButton({ url: `${appUrl}/reviews`, label: "Open dashboard" })}</div>
+    `,
+    footerNote: `Don't want these digests? <a href="${unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe with one click</a>.`,
+  });
 
   return { subject, html, text, unsubscribeUrl };
 }

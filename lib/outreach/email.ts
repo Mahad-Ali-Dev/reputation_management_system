@@ -1,3 +1,10 @@
+import {
+  ctaButton,
+  emailHeading,
+  emailParagraph,
+  emailShell,
+  escapeHtml,
+} from "@/lib/email/templates";
 import { Resend } from "resend";
 import { assertSendableEmailConfig } from "./email-guard";
 
@@ -73,11 +80,12 @@ export function defaultReviewRequestHtml(args: {
   reviewLink: string;
   unsubscribeUrl: string;
   /** Org's brand primary color (Settings → Brand), CTA button background.
-   *  Falls back to the original fixed indigo when the org hasn't set one. */
+   *  Falls back to the platform blue when the org hasn't set one. */
   accentColor?: string;
+  /** Org logo, shown in the masthead in place of a lettermark. */
+  logoUrl?: string | null;
 }): { html: string; text: string } {
   const name = args.reviewerName ?? "there";
-  const accent = args.accentColor ?? "#4f46e5";
   const text = `Hi ${name},
 
 Thanks for choosing ${args.businessName}! If you have a moment, we'd love your honest feedback on Google:
@@ -90,32 +98,27 @@ Your review helps us improve and helps other locals find us. Thank you!
 
 To unsubscribe: ${args.unsubscribeUrl}`;
 
-  const html = `<!doctype html>
-<html>
-  <body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;">
-    <div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
-      <h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Hi ${escapeHtml(name)},</h1>
-      <p style="color:#475569;">Thanks for choosing <strong>${escapeHtml(args.businessName)}</strong>! If you have a moment, we'd love your honest feedback on Google.</p>
-      <p style="margin:24px 0;">
-        <a href="${args.reviewLink}" style="display:inline-block;background:${accent};color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a>
-      </p>
-      <p style="color:#94a3b8;font-size:13px;">Your review helps us improve and helps other locals find us. Thank you!</p>
-      <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
-      <p style="color:#94a3b8;font-size:12px;">
-        Don't want these emails?
-        <a href="${args.unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe</a>
-      </p>
-    </div>
-  </body>
-</html>`;
+  // Rendered through the SHARED shell, branded as the BUSINESS. This email goes
+  // to their customer, who has no relationship with Repulabs — our masthead on
+  // it reads as a third party asking for a review, which is both confusing and a
+  // worse conversion story. The old hand-rolled markup also skipped the
+  // preheader and the Outlook-safe button the shell provides.
+  const html = emailShell({
+    preheader: `Share your experience with ${args.businessName}`,
+    title: `How was your experience at ${args.businessName}?`,
+    brand: {
+      name: args.businessName,
+      logoUrl: args.logoUrl ?? null,
+      accent: args.accentColor ?? null,
+    },
+    body: `
+      ${emailHeading(`Hi ${name},`)}
+      ${emailParagraph(`Thanks for choosing <strong>${escapeHtml(args.businessName)}</strong>! If you have a moment, we'd love your honest feedback on Google.`)}
+      <div style="margin:26px 0;">${ctaButton({ url: args.reviewLink, label: "Leave a review", accent: args.accentColor ?? null })}</div>
+      ${emailParagraph("Your review helps us improve — and helps other locals find us. Thank you!")}
+    `,
+    footerNote: `Don't want these emails? <a href="${args.unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe</a>`,
+  });
 
   return { html, text };
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }

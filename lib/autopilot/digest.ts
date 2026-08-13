@@ -26,6 +26,7 @@ import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import { ctaButton, emailHeading, emailParagraph, emailShell } from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { type RoiHeadline, getRoiHeadline } from "@/lib/roi/summary";
@@ -293,44 +294,40 @@ export function renderAutopilotDigestEmail(
     )
     .join("");
 
-  const html = `<!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;margin:0;">
-<div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
-  <div style="font-size:11px;color:#2563eb;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Reputation Autopilot</div>
-  <h1 style="margin:4px 0 14px;font-size:21px;color:#0f172a;">${escapeHtml(digest.orgName)} — this week</h1>
-  <p style="margin:0 0 20px;color:#334155;font-size:14px;line-height:1.6;">${escapeHtml(digest.intro)}</p>
-
-  ${
-    didRows
-      ? `<div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">What Autopilot did</div>
-         <table style="border-collapse:collapse;width:100%;margin:0 0 20px;">${didRows}</table>`
-      : ""
-  }
-
-  <div style="background:#eff6ff;border-left:3px solid #2563eb;padding:12px 16px;margin:12px 0;border-radius:4px;">
-    <div style="font-size:11px;color:#1d4ed8;text-transform:uppercase;font-weight:600;">Estimated booked revenue</div>
-    <div style="font-size:24px;font-weight:700;color:#0f172a;margin-top:2px;">${escapeHtml(digest.roi.currency)} ${digest.roi.estimatedRevenue.toLocaleString()}</div>
-    <div style="color:#64748b;font-size:12px;margin-top:2px;">${digest.roi.topDriver !== "—" ? `Top driver: ${escapeHtml(digest.roi.topDriver)} · ` : ""}Estimated, not booked.</div>
-  </div>
-
-  ${
-    needsRows
-      ? `<div style="background:#fffbeb;border-left:3px solid #f59e0b;padding:12px 16px;margin:12px 0;border-radius:4px;">
-           <div style="font-size:11px;color:#b45309;text-transform:uppercase;font-weight:600;margin-bottom:4px;">Needs you (${digest.needsYouCount})</div>
-           <ul style="margin:0;padding-left:18px;">${needsRows}</ul>
-         </div>`
-      : ""
-  }
-
-  <p style="margin:24px 0 0;">
-    <a href="${appUrl}/autopilot" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Open Autopilot →</a>
-  </p>
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
-  <p style="color:#94a3b8;font-size:12px;margin:0;">
-    Don't want these? <a href="${unsubscribeUrl}" style="color:#94a3b8;">Unsubscribe with one click</a>.
-  </p>
-</div>
-</body></html>`;
+  const html = emailShell({
+    preheader: digest.intro.slice(0, 120),
+    title: `${digest.orgName} — Autopilot this week`,
+    body: `
+      <div style="font-size:11px;color:#2563eb;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Reputation Autopilot</div>
+      ${emailHeading(`${digest.orgName} — this week`)}
+      ${emailParagraph(escapeHtml(digest.intro))}
+      ${
+        didRows
+          ? `<div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">What Autopilot did</div>
+             <table role="presentation" style="border-collapse:collapse;width:100%;margin:0 0 18px;">${didRows}</table>`
+          : ""
+      }
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:6px;">
+        <tr><td style="padding:12px 16px;">
+          <div style="font-size:11px;color:#1d4ed8;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">Estimated booked revenue</div>
+          <div style="font-size:24px;font-weight:700;color:#0b0d0e;margin-top:2px;">${escapeHtml(digest.roi.currency)} ${digest.roi.estimatedRevenue.toLocaleString()}</div>
+          <div style="color:#64748b;font-size:12px;margin-top:2px;">${digest.roi.topDriver !== "—" ? `Top driver: ${escapeHtml(digest.roi.topDriver)} · ` : ""}Estimated, not booked.</div>
+        </td></tr>
+      </table>
+      ${
+        needsRows
+          ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
+              <tr><td style="padding:12px 16px;">
+                <div style="font-size:11px;color:#b45309;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;margin-bottom:4px;">Needs you (${digest.needsYouCount})</div>
+                <ul style="margin:0;padding-left:18px;color:#0b0d0e;font-size:14px;line-height:1.6;">${needsRows}</ul>
+              </td></tr>
+            </table>`
+          : ""
+      }
+      <div style="margin:26px 0 0;">${ctaButton({ url: `${appUrl}/autopilot`, label: "Open Autopilot" })}</div>
+    `,
+    footerNote: `Don't want these? <a href="${unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe with one click</a>.`,
+  });
 
   return { subject, html, text, unsubscribeUrl };
 }

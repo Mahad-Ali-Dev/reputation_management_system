@@ -21,7 +21,7 @@
  * MIME with a plain alternative is a deliverability best-practice).
  */
 
-const BRAND = {
+export const BRAND = {
   primary: "#2563eb",
   primaryDark: "#1d4ed8",
   ink: "#0b0d0e",
@@ -55,13 +55,35 @@ function siteUrl(): string {
  *   - footerNote: optional small italic line below the body (e.g. "If you
  *                 didn't request this, ignore it")
  */
-function emailShell(opts: {
+export type EmailBrand = {
+  /** Business name shown in the masthead and footer. */
+  name: string;
+  /** Square logo URL. Falls back to a lettermark when absent. */
+  logoUrl?: string | null;
+  /** CTA + accent colour. */
+  accent?: string | null;
+};
+
+export function emailShell(opts: {
   preheader: string;
   title: string;
   body: string;
   footerNote?: string;
+  /**
+   * Send AS a tenant rather than as Repulabs.
+   *
+   * Review requests and booking confirmations go to the BUSINESS's customers,
+   * who have no relationship with us — a Repulabs masthead on that mail is
+   * confusing at best and looks like a phish at worst. Passing a brand swaps the
+   * masthead, accent and footer for theirs. Omit it for platform mail (sign-in,
+   * invites, digests), where we genuinely are the sender.
+   */
+  brand?: EmailBrand | null;
 }): string {
   const url = siteUrl();
+  const b = opts.brand ?? null;
+  const accent = b?.accent || BRAND.primary;
+  const mastheadHref = b ? "#" : url;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -86,17 +108,21 @@ function emailShell(opts: {
               <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                 <tr>
                   <td style="vertical-align:middle;padding-right:10px;">
-                    <a href="${url}" style="text-decoration:none;display:inline-block;">
+                    <a href="${mastheadHref}" style="text-decoration:none;display:inline-block;">
                       <table role="presentation" cellpadding="0" cellspacing="0" border="0">
                         <tr>
-                          <td style="background:linear-gradient(140deg,${BRAND.primary} 0%,#6366f1 100%);width:34px;height:34px;border-radius:9px;text-align:center;color:#fff;font-size:18px;font-weight:800;line-height:34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">r</td>
+                          ${
+                            b?.logoUrl
+                              ? `<td style="width:34px;height:34px;"><img src="${b.logoUrl}" width="34" height="34" alt="" style="display:block;width:34px;height:34px;border-radius:9px;object-fit:cover;" /></td>`
+                              : `<td style="background:${b ? accent : `linear-gradient(140deg,${BRAND.primary} 0%,#6366f1 100%)`};width:34px;height:34px;border-radius:9px;text-align:center;color:#fff;font-size:18px;font-weight:800;line-height:34px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">${b ? escapeHtml(b.name.charAt(0).toUpperCase()) : "r"}</td>`
+                          }
                         </tr>
                       </table>
                     </a>
                   </td>
                   <td style="vertical-align:middle;">
-                    <a href="${url}" style="text-decoration:none;color:${BRAND.ink};font-size:18px;font-weight:600;letter-spacing:-0.02em;">
-                      repu<span style="color:${BRAND.primary};">labs</span>
+                    <a href="${mastheadHref}" style="text-decoration:none;color:${BRAND.ink};font-size:18px;font-weight:600;letter-spacing:-0.02em;">
+                      ${b ? escapeHtml(b.name) : `repu<span style="color:${BRAND.primary};">labs</span>`}
                     </a>
                   </td>
                 </tr>
@@ -111,20 +137,28 @@ function emailShell(opts: {
             </td>
           </tr>
 
-          ${opts.footerNote ? `
+          ${
+            opts.footerNote
+              ? `
           <tr>
             <td style="padding:18px 8px 0;text-align:center;">
               <p style="margin:0;color:${BRAND.muted};font-size:12.5px;line-height:1.5;">${opts.footerNote}</p>
             </td>
           </tr>
-          ` : ""}
+          `
+              : ""
+          }
 
           <!-- Footer -->
           <tr>
             <td style="padding:24px 8px 0;text-align:center;">
               <p style="margin:0;color:${BRAND.muted};font-size:11.5px;line-height:1.6;">
-                Repulabs · The reputation OS for local businesses<br>
-                <a href="${url}" style="color:${BRAND.muted};text-decoration:underline;">${url.replace(/^https?:\/\//, "")}</a>
+                ${
+                  b
+                    ? escapeHtml(b.name)
+                    : `Repulabs · The reputation OS for local businesses<br>
+                <a href="${url}" style="color:${BRAND.muted};text-decoration:underline;">${url.replace(/^https?:\/\//, "")}</a>`
+                }
               </p>
             </td>
           </tr>
@@ -138,7 +172,7 @@ function emailShell(opts: {
 </html>`;
 }
 
-function escapeHtml(s: string): string {
+export function escapeHtml(s: string): string {
   return s
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -151,13 +185,14 @@ function escapeHtml(s: string): string {
  * Primary CTA button HTML — used in all action emails.
  * Falls back to an underlined link on clients that strip backgrounds.
  */
-function ctaButton(opts: { url: string; label: string }): string {
+export function ctaButton(opts: { url: string; label: string; accent?: string | null }): string {
+  const bg = opts.accent || BRAND.primary;
   return `
   <!-- CTA: bulletproof button via VML for Outlook + standard for everyone else -->
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
     <tr>
-      <td align="center" bgcolor="${BRAND.primary}" style="border-radius:10px;">
-        <a href="${opts.url}" target="_blank" style="display:inline-block;padding:13px 28px;background:${BRAND.primary};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-0.005em;">
+      <td align="center" bgcolor="${bg}" style="border-radius:10px;">
+        <a href="${opts.url}" target="_blank" style="display:inline-block;padding:13px 28px;background:${bg};color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;border-radius:10px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;letter-spacing:-0.005em;">
           ${escapeHtml(opts.label)}
         </a>
       </td>
@@ -300,4 +335,65 @@ export function reviewRequestEmail(opts: {
   ].join("\n");
 
   return { html, text };
+}
+
+// ============================================================
+// Shared building blocks
+// ============================================================
+
+/**
+ * These exist so the digest / booking / KB emails stop hand-rolling their own
+ * markup. Five of the eight senders built bespoke HTML, so the polish applied
+ * here only ever reached the three that used the shell — the rest looked like a
+ * different product. Anything added below is available to all of them.
+ */
+
+/** Section heading inside the card. */
+export function emailHeading(text: string): string {
+  return `<h1 style="margin:0 0 8px;color:${BRAND.ink};font-size:22px;font-weight:600;letter-spacing:-0.02em;line-height:1.25;">${escapeHtml(text)}</h1>`;
+}
+
+/** Body paragraph. `html` is inserted raw — escape before calling if it's user data. */
+export function emailParagraph(html: string): string {
+  return `<p style="margin:0 0 18px;color:${BRAND.ink2};font-size:15px;line-height:1.6;">${html}</p>`;
+}
+
+/** Soft-tinted panel for secondary detail (link fallbacks, summaries). */
+export function emailPanel(innerHtml: string): string {
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;background:${BRAND.bg};border:1px solid ${BRAND.border};border-radius:10px;">
+    <tr><td style="padding:14px 16px;color:${BRAND.ink2};font-size:14px;line-height:1.55;">${innerHtml}</td></tr>
+  </table>`;
+}
+
+/** Label/value rows — booking details, digest counts. */
+export function emailDetailRows(rows: Array<{ label: string; value: string }>): string {
+  const body = rows
+    .map(
+      (r) => `<tr>
+        <td style="padding:7px 0;color:${BRAND.muted};font-size:13px;white-space:nowrap;">${escapeHtml(r.label)}</td>
+        <td style="padding:7px 0 7px 16px;color:${BRAND.ink};font-size:14px;font-weight:600;text-align:right;">${escapeHtml(r.value)}</td>
+      </tr>`,
+    )
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;">${body}</table>`;
+}
+
+/** Big number tiles for the digests. Kept to a table so Outlook lays it out. */
+export function emailStatRow(stats: Array<{ value: string | number; label: string }>): string {
+  if (stats.length === 0) return "";
+  const width = Math.floor(100 / stats.length);
+  const cells = stats
+    .map(
+      (s) => `<td width="${width}%" align="center" style="padding:12px 6px;">
+        <div style="color:${BRAND.ink};font-size:26px;font-weight:700;line-height:1.1;letter-spacing:-0.02em;">${escapeHtml(String(s.value))}</div>
+        <div style="color:${BRAND.muted};font-size:12px;margin-top:4px;">${escapeHtml(s.label)}</div>
+      </td>`,
+    )
+    .join("");
+  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;background:${BRAND.bg};border:1px solid ${BRAND.border};border-radius:10px;"><tr>${cells}</tr></table>`;
+}
+
+/** Unsubscribe line for bulk mail. Transactional mail must NOT use this. */
+export function emailUnsubscribeLine(url: string): string {
+  return `<a href="${url}" style="color:${BRAND.muted};text-decoration:underline;">Unsubscribe</a>`;
 }
