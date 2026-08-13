@@ -1,7 +1,7 @@
 import { Icon, type IconName } from "@/components/shell/icon";
-import { retrySocialPost } from "@/lib/social/post-actions";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { retrySocialPost } from "@/lib/social/post-actions";
 import Link from "next/link";
 
 /**
@@ -135,8 +135,8 @@ export async function HistoryTab({
           </div>
           <h3 className="sk-empty-center__title">No post history yet</h3>
           <p className="sk-empty-center__body">
-            You haven’t scheduled or published any posts yet. Create your first post and it will show
-            up here.
+            You haven’t scheduled or published any posts yet. Create your first post and it will
+            show up here.
           </p>
           <Link href="/social/posts?tab=create" className="sk-btn-out" style={{ height: 46 }}>
             <Icon name="plus" size={14} />
@@ -163,8 +163,7 @@ export async function HistoryTab({
         const m = metrics.get(p.id);
         const when = p.postedAt ?? p.scheduledFor ?? p.createdAt;
         const whenLabel = p.postedAt ? "Posted" : p.scheduledFor ? "Scheduled" : "Created";
-        const statusTone =
-          p.status === "publishing" ? "queued" : p.status;
+        const statusTone = p.status === "publishing" ? "queued" : p.status;
         return (
           <div key={p.id} className="sk-table__row">
             {/* post col */}
@@ -178,7 +177,10 @@ export async function HistoryTab({
                 </span>
               )}
               <div style={{ minWidth: 0 }}>
-                <Link href={`/social/posts?tab=create&post=${p.id}`} className="sk-post-cell__title">
+                <Link
+                  href={`/social/posts?tab=create&post=${p.id}`}
+                  className="sk-post-cell__title"
+                >
                   {p.caption ? truncate(p.caption, 60) : "(no caption)"}
                 </Link>
                 <div className="row" style={{ gap: 6, marginTop: 4 }}>
@@ -204,10 +206,31 @@ export async function HistoryTab({
                 <span className="sk-status__dot" />
                 {p.status}
               </span>
+              {/* The reason was previously only a `title` on the Retry button —
+                  invisible unless you hovered that exact spot, and unreachable
+                  on touch. A failed post that won't say why is unactionable. */}
+              {p.status === "failed" && p.error && (
+                <p
+                  style={{
+                    margin: "6px 0 0",
+                    fontSize: 11.5,
+                    lineHeight: 1.45,
+                    color: "var(--bad, #b42318)",
+                    maxWidth: 260,
+                  }}
+                >
+                  {friendlyPublishError(p.error)}
+                </p>
+              )}
               {p.status === "failed" && (
                 <form action={retrySocialPost} style={{ marginTop: 6 }}>
                   <input type="hidden" name="id" value={p.id} />
-                  <button type="submit" className="sk-btn-out" style={{ height: 28, padding: "0 10px", fontSize: 11.5 }} title={p.error ?? undefined}>
+                  <button
+                    type="submit"
+                    className="sk-btn-out"
+                    style={{ height: 28, padding: "0 10px", fontSize: 11.5 }}
+                    title={p.error ?? undefined}
+                  >
                     <Icon name="refresh" size={11} />
                     Retry
                   </button>
@@ -219,19 +242,31 @@ export async function HistoryTab({
             <div className="sk-engage">
               {isPublished(p.status) ? (
                 <>
-                  <span className="sk-engage__item sk-engage--like" title={`${m?.likes ?? 0} likes`}>
+                  <span
+                    className="sk-engage__item sk-engage--like"
+                    title={`${m?.likes ?? 0} likes`}
+                  >
                     <Icon name="star" size={14} />
                     {compact(m?.likes ?? 0)}
                   </span>
-                  <span className="sk-engage__item sk-engage--comment" title={`${m?.comments ?? 0} comments`}>
+                  <span
+                    className="sk-engage__item sk-engage--comment"
+                    title={`${m?.comments ?? 0} comments`}
+                  >
                     <Icon name="chat" size={14} />
                     {compact(m?.comments ?? 0)}
                   </span>
-                  <span className="sk-engage__item sk-engage--share" title={`${m?.shares ?? 0} shares`}>
+                  <span
+                    className="sk-engage__item sk-engage--share"
+                    title={`${m?.shares ?? 0} shares`}
+                  >
                     <Icon name="share" size={14} />
                     {compact(m?.shares ?? 0)}
                   </span>
-                  <span className="sk-engage__item sk-engage--reach" title={`${m?.reach ?? 0} reach`}>
+                  <span
+                    className="sk-engage__item sk-engage--reach"
+                    title={`${m?.reach ?? 0} reach`}
+                  >
                     <Icon name="eye" size={14} />
                     {compact(m?.reach ?? 0)}
                   </span>
@@ -248,7 +283,12 @@ export async function HistoryTab({
             </div>
 
             {/* actions */}
-            <button type="button" className="sk-rowmore" aria-label="Post actions" title="Post actions">
+            <button
+              type="button"
+              className="sk-rowmore"
+              aria-label="Post actions"
+              title="Post actions"
+            >
               <Icon name="sliders" size={15} />
             </button>
           </div>
@@ -271,7 +311,12 @@ export async function HistoryTab({
           </span>
           <div className="row" style={{ gap: 8 }}>
             <PageLink page={safePage - 1} disabled={safePage <= 1} label="Previous" icon="chevL" />
-            <PageLink page={safePage + 1} disabled={safePage >= totalPages} label="Next" icon="chevR" />
+            <PageLink
+              page={safePage + 1}
+              disabled={safePage >= totalPages}
+              label="Next"
+              icon="chevR"
+            />
           </div>
         </div>
       )}
@@ -299,7 +344,11 @@ function PageLink({
     );
   }
   return (
-    <Link href={`/social/posts?tab=history&hpage=${page}`} className="sk-btn-out" style={{ height: 34 }}>
+    <Link
+      href={`/social/posts?tab=history&hpage=${page}`}
+      className="sk-btn-out"
+      style={{ height: 34 }}
+    >
       <Icon name={icon} size={12} />
       {label}
     </Link>
@@ -321,5 +370,35 @@ function compact(n: number): string {
 }
 
 function fmtDate(d: Date): string {
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+  return d.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
+
+/**
+ * Publish failures arrive as raw provider text. Map the ones an owner can act on
+ * and pass anything else through rather than hiding it — a truncated provider
+ * message still beats no message.
+ */
+function friendlyPublishError(raw: string): string {
+  const e = raw.toLowerCase();
+  if (
+    e.includes("token") &&
+    (e.includes("expire") || e.includes("invalid") || e.includes("revoke"))
+  ) {
+    return "The channel connection expired. Reconnect it under Connections, then retry.";
+  }
+  if (e.includes("permission") || e.includes("scope") || e.includes("403")) {
+    return "That channel is missing a permission needed to post. Reconnect it and accept all prompts.";
+  }
+  if (e.includes("data:") || e.includes("image") || e.includes("media")) {
+    return "The attached image couldn't be used. Re-upload it and retry.";
+  }
+  if (e.includes("duplicate")) return "The network rejected this as a duplicate of a recent post.";
+  if (e.includes("rate") || e.includes("429"))
+    return "The network is rate-limiting this account. Retry shortly.";
+  return raw.length > 160 ? `${raw.slice(0, 160)}…` : raw;
 }

@@ -4,16 +4,17 @@ import { MODELS, anthropic } from "@/lib/ai/client";
 import { auth } from "@/lib/auth/config";
 import { requireRole } from "@/lib/auth/rbac";
 import { assertEntitled } from "@/lib/billing/entitlements";
+import { logger } from "@/lib/logger";
 import { getPostQuota } from "@/lib/social/quota";
 
 /** Result of "Publish now" — quota/plan rejections come back inline, not thrown. */
 export type PublishNowResult = { ok: true } | { ok: false; error: string };
-import { dispatchDuePost } from "@/lib/social/dispatch";
-import {
-  generateCaptions as generateCaptionsV2,
-  type GenerateCaptionsResult,
-} from "@/lib/social/captions";
 import { withTenant } from "@/lib/db/with-tenant";
+import {
+  type GenerateCaptionsResult,
+  generateCaptions as generateCaptionsV2,
+} from "@/lib/social/captions";
+import { dispatchDuePost } from "@/lib/social/dispatch";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -177,10 +178,17 @@ export async function publishSocialPostNow(form: FormData): Promise<PublishNowRe
     });
     if (!parsed.success) throw new Error(parsed.error.issues.map((i) => i.message).join("; "));
     const d = parsed.data;
-    const platforms = d.platforms.split(",").map((p) => p.trim()).filter(Boolean);
+    const platforms = d.platforms
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean);
     if (platforms.length === 0) throw new Error("Pick at least one platform");
     const hashtags = d.hashtags
-      ? d.hashtags.split(/[,\s]+/).map((t) => t.trim().replace(/^#/, "")).filter(Boolean).map((t) => `#${t}`)
+      ? d.hashtags
+          .split(/[,\s]+/)
+          .map((t) => t.trim().replace(/^#/, ""))
+          .filter(Boolean)
+          .map((t) => `#${t}`)
       : [];
     const mediaUrls = parseMediaUrls(d.mediaUrls);
     const primaryMedia = d.mediaUrl || mediaUrls[0] || null;
@@ -217,14 +225,28 @@ export async function publishSocialPostNow(form: FormData): Promise<PublishNowRe
  */
 export async function retrySocialPost(form: FormData): Promise<void> {
   const { orgId } = await requireOrg();
-  const id = z.string().uuid().parse(form.get("id"));
+  const parsed = z.string().uuid().safeParse(form.get("id"));
+  if (!parsed.success) return;
+
   const updated = await withTenant(orgId, async (tx) =>
     tx.socialPost.updateMany({
-      where: { id, status: "failed" },
+      where: { id: parsed.data, status: "failed" },
       data: { status: "scheduled", scheduledFor: new Date(), error: null },
     }),
   );
-  if (updated.count === 0) throw new Error("post_not_retryable");
+
+  // A miss here is BENIGN, not exceptional: the row is no longer `failed`
+  // because a concurrent retry or the cron already moved it on. This is invoked
+  // from a bare <form action>, where a thrown error renders the production error
+  // page — so a harmless double-click would have looked like the app crashing.
+  // Revalidating either way refreshes the row to whatever its real status is.
+  if (updated.count === 0) {
+    logger.info(
+      { orgId, postId: parsed.data, event: "social.retry.not_retryable" },
+      "retry ignored — post is no longer in a failed state",
+    );
+  }
+
   revalidatePath("/social/posts");
   revalidatePath("/social/calendar");
 }
