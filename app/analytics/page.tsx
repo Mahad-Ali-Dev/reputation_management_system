@@ -11,6 +11,7 @@ import {
 import { parseReportRange } from "@/lib/reports/range";
 
 import "./business-report.css";
+import { AreaTrend, DayBars, Donut, Sparkline, StackedBar } from "./_components/charts";
 import { ExportPdfButton } from "./_components/export-pdf-button";
 import { ReportRangePicker } from "./_components/report-range-picker";
 
@@ -65,17 +66,16 @@ export default async function AnalyticsPage({
 
         <ReviewsCard data={report.reviews} days={range.days} />
 
-        <div className="brp-grid-2">
+        <div className="brp-grid-3">
           <AutopilotCard data={report.autopilot} />
           <SocialCard data={report.social} />
+          <DisputesCard data={report.disputes} />
         </div>
 
         <div className="brp-grid-2">
-          <DisputesCard data={report.disputes} />
           <DevicesLocationCard data={report.devices} />
+          <DevicesCard data={report.devices} />
         </div>
-
-        <DevicesCard data={report.devices} />
         <SurveysCard data={report.surveys} />
       </div>
     </AppShellServer>
@@ -129,10 +129,11 @@ function Card({
   return (
     <section className={`brp-card${breakBefore ? " brp-section-break" : ""}`}>
       <div className="brp-card__head">
+        <span className="brp-card__badge" aria-hidden="true">
+          <Icon name={icon} size={16} />
+        </span>
         <div>
-          <h2 className="brp-card__title">
-            <Icon name={icon} size={14} /> {title}
-          </h2>
+          <h2 className="brp-card__title">{title}</h2>
           {sub && <p className="brp-card__sub">{sub}</p>}
         </div>
       </div>
@@ -218,19 +219,21 @@ function ReviewsCard({ data, days }: { data: BusinessReport["reviews"]; days: nu
               label="5-star reviews"
             />
           </div>
-          <div className="brp-grid-2">
+          <div className="brp-grid-3">
+            <AreaTrend points={data.series} title={`Review trend (last ${days} days)`} />
             <div>
-              <p className="brp-card__sub" style={{ marginBottom: 8 }}>
-                Rating breakdown
-              </p>
+              <p className="brp-chart__title">Rating breakdown</p>
               <Bars rows={data.byStar.map((s) => ({ label: `${s.stars} star`, count: s.count }))} />
+              <div className="brp-stack__foot">
+                <span>Total reviews</span>
+                <span className="brp-num">{data.total}</span>
+              </div>
             </div>
             <div>
-              <p className="brp-card__sub" style={{ marginBottom: 8 }}>
-                Where they came from
-              </p>
-              <Bars
-                rows={data.bySource.map((s) => ({ label: humanize(s.source), count: s.count }))}
+              <p className="brp-chart__title">Where they came from</p>
+              <Donut
+                slices={data.bySource.map((s) => ({ label: humanize(s.source), count: s.count }))}
+                centerLabel="reviews"
               />
             </div>
           </div>
@@ -252,6 +255,7 @@ function AutopilotCard({ data }: { data: BusinessReport["autopilot"] }) {
             <Stat value={data.drafted} label="Drafted for review" />
             <Stat value={data.needsHuman} label="Needed a human" />
           </div>
+          <Sparkline points={data.series} label="Autopilot actions" />
           <Bars rows={data.byLoop.map((l) => ({ label: humanize(l.loop), count: l.count }))} />
         </>
       )}
@@ -271,6 +275,7 @@ function SocialCard({ data }: { data: BusinessReport["social"] }) {
             <Stat value={data.scheduled} label="Scheduled" />
             <Stat value={data.failed} label="Failed" />
           </div>
+          <DayBars points={data.series} label="Posts published" />
           <Bars
             rows={data.byPlatform.map((p) => ({ label: humanize(p.platform), count: p.count }))}
           />
@@ -292,7 +297,10 @@ function DisputesCard({ data }: { data: BusinessReport["disputes"] }) {
             <Stat value={data.removed} label="Removed / upheld" />
             <Stat value={data.pending} label="Awaiting decision" />
           </div>
-          <Bars rows={data.byStatus.map((s) => ({ label: humanize(s.status), count: s.count }))} />
+          <StackedBar
+            segments={data.byStatus.map((s) => ({ label: s.status, count: s.count }))}
+            totalLabel="Total"
+          />
         </>
       )}
     </Card>

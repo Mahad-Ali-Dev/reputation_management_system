@@ -164,7 +164,7 @@
 }
 .brp-card__head {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 10px;
   margin-bottom: 14px;
@@ -265,6 +265,23 @@
   font-variant-numeric: tabular-nums;
 }
 
+.brp-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+  gap: 16px;
+}
+
+.brp-card__badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--rl-primary, #2563eb) 10%, transparent);
+  color: var(--rl-primary, #2563eb);
+}
+
 .brp-grid-2 {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -310,6 +327,239 @@
   margin-top: 1px;
 }
 
+/* ── charts (inline SVG + CSS keyframes) ───────────────────── */
+.brp-chart {
+  margin: 0;
+}
+.brp-chart__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rl-ink, #101828);
+  margin-bottom: 8px;
+}
+.brp-chart__svg {
+  width: 100%;
+  height: 170px;
+  overflow: visible;
+}
+.brp-chart__grid {
+  stroke: var(--rl-border-soft, #eef1f6);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.brp-chart__ylab,
+.brp-chart__xlab {
+  fill: var(--rl-muted, #98a2b3);
+  font-size: 9px;
+  font-family: inherit;
+}
+.brp-chart__ylab {
+  text-anchor: end;
+}
+.brp-chart__xlab {
+  text-anchor: middle;
+}
+
+/* pathLength=1 normalises the dash maths, so one keyframe draws any path. */
+.brp-chart__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: brp-draw 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-chart__area {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: brp-grow-y 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms forwards;
+}
+.brp-chart__dot {
+  fill: #fff;
+  stroke: var(--rl-primary, #2563eb);
+  stroke-width: 2;
+  opacity: 0;
+  animation: brp-pop 260ms ease-out forwards;
+}
+
+.brp-spark {
+  width: 100%;
+  height: 44px;
+  overflow: visible;
+}
+.brp-spark__flat {
+  stroke: var(--rl-border, #d7dee9);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 6;
+}
+
+.brp-daybars {
+  width: 100%;
+  height: 64px;
+  overflow: visible;
+}
+.brp-daybar {
+  fill: var(--rl-primary, #2563eb);
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: brp-grow-y 480ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* donut */
+.brp-donut {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.brp-donut__ring {
+  position: relative;
+  width: 132px;
+  flex-shrink: 0;
+}
+.brp-donut__ring svg {
+  width: 100%;
+  transform: rotate(-90deg);
+}
+.brp-donut__track {
+  fill: none;
+  stroke: var(--rl-border-soft, #eef1f6);
+  stroke-width: 5.5;
+}
+.brp-donut__arc {
+  fill: none;
+  stroke-width: 5.5;
+  stroke-linecap: butt;
+  stroke-dasharray: 0 100;
+  animation: brp-arc 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-donut__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1.1;
+}
+.brp-donut__total {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+}
+.brp-donut__caption {
+  display: block;
+  font-size: 10.5px;
+  color: var(--rl-muted, #667085);
+}
+.brp-donut__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.brp-donut__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.brp-donut__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.brp-donut__name {
+  flex: 1;
+  min-width: 0;
+}
+.brp-donut__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--rl-muted, #667085);
+}
+
+/* stacked bar */
+.brp-stack__bar {
+  display: flex;
+  height: 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--rl-border-soft, #eef1f6);
+}
+.brp-stack__seg {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: brp-grow-x 620ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-stack__foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--rl-muted, #667085);
+  margin-top: 8px;
+}
+
+/* the horizontal distribution bars animate on the same clock */
+.brp-bar__fill {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: brp-grow-x 620ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes brp-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes brp-grow-y {
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes brp-grow-x {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes brp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes brp-arc {
+  to {
+    stroke-dasharray: var(--len) 100;
+  }
+}
+
+/*
+ * Motion is decoration here — the numbers are already on the page. Anyone who
+ * has asked the OS for less of it gets the final frame immediately.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .brp-chart__line,
+  .brp-chart__area,
+  .brp-chart__dot,
+  .brp-daybar,
+  .brp-donut__arc,
+  .brp-stack__seg,
+  .brp-bar__fill {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+    stroke-dasharray: var(--len, none) 100;
+  }
+}
+
 /* ── print / PDF ───────────────────────────────────────────── */
 @media print {
   @page {
@@ -352,6 +602,46 @@
   .brp-bar__fill,
   .brp-chip.is-active {
     /* Keep the accent visible in print — browsers drop backgrounds otherwise. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /*
+   * Charts must print as FINISHED. Print rendering doesn't wait for CSS
+   * animations, so an un-frozen chart exports mid-draw — a line at 40% length,
+   * bars at zero height. Killing the animations lands every element on its
+   * final geometry.
+   */
+  .brp-chart__line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .brp-chart__area,
+  .brp-daybar {
+    animation: none !important;
+    transform: none !important;
+  }
+  .brp-chart__dot {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .brp-donut__arc {
+    animation: none !important;
+    stroke-dasharray: var(--len) 100 !important;
+  }
+  .brp-stack__seg,
+  .brp-bar__fill {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .brp-chart__svg,
+  .brp-daybars,
+  .brp-spark,
+  .brp-donut__arc,
+  .brp-stack__seg,
+  .brp-daybar {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }

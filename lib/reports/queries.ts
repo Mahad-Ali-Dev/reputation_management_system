@@ -21,6 +21,9 @@ import type { ReportRange } from "./range";
 
 // ── shapes ───────────────────────────────────────────────────────
 
+/** One bucket per day of the window, zero-filled. */
+export type DailyPoint = { date: string; count: number };
+
 export type Unavailable = { available: false };
 type Available<T> = T & { available: true };
 
@@ -30,6 +33,7 @@ export type ReviewsSection = Available<{
   byStar: Array<{ stars: number; count: number }>;
   bySource: Array<{ source: string; count: number }>;
   previousTotal: number;
+  series: DailyPoint[];
   /** Whole-percent change vs the preceding window; null when there's no base. */
   changePct: number | null;
 }>;
@@ -39,6 +43,7 @@ export type AutopilotSection = Available<{
   published: number;
   drafted: number;
   needsHuman: number;
+  series: DailyPoint[];
   byLoop: Array<{ loop: string; count: number }>;
 }>;
 
@@ -46,6 +51,7 @@ export type SocialSection = Available<{
   posted: number;
   scheduled: number;
   failed: number;
+  series: DailyPoint[];
   byPlatform: Array<{ platform: string; count: number }>;
 }>;
 
@@ -113,6 +119,37 @@ async function section<T>(
   }
 }
 
+function dayKey(d: Date): string {
+  const m = `${d.getMonth() + 1}`.padStart(2, "0");
+  const day = `${d.getDate()}`.padStart(2, "0");
+  return `${d.getFullYear()}-${m}-${day}`;
+}
+
+/**
+ * Bucket timestamps into one point per day across the WHOLE window.
+ *
+ * Zero-filling is the point: a trend line drawn only from days that happened to
+ * have activity silently closes the gaps and reads as steady traffic when the
+ * truth is "nothing for four days". Days are keyed in server-local time to match
+ * the range boundaries, which are also local.
+ */
+function toSeries(dates: Date[], range: ReportRange): DailyPoint[] {
+  const buckets = new Map<string, number>();
+  const cursor = new Date(range.from);
+  // The range is capped at 366 days upstream; the guard is belt-and-braces
+  // against an unbounded loop if that ever changes.
+  for (let i = 0; i < 400 && cursor <= range.to; i++) {
+    buckets.set(dayKey(cursor), 0);
+    cursor.setDate(cursor.getDate() + 1);
+  }
+  for (const d of dates) {
+    const k = dayKey(d);
+    const current = buckets.get(k);
+    if (current !== undefined) buckets.set(k, current + 1);
+  }
+  return [...buckets.entries()].map(([date, count]) => ({ date, count }));
+}
+
 function pct(current: number, previous: number): number | null {
   if (previous <= 0) return null;
   return Math.round(((current - previous) / previous) * 100);
@@ -145,8 +182,8 @@ export async function buildBusinessReport(
 
   const [reviews, autopilot, social, disputes, devices, surveys] = await Promise.all([
     section("reviews", orgId, () => reviewsSection(orgId, range, window)),
-    section("autopilot", orgId, () => autopilotSection(orgId, window)),
-    section("social", orgId, () => socialSection(orgId, window)),
+    section("autopilot", orgId, () => autopilotSection(orgId, range, window)),
+    section("social", orgId, () => socialSection(orgId, range, window)),
     section("disputes", orgId, () => disputesSection(orgId, window)),
     section("devices", orgId, () => devicesSection(orgId, window)),
     section("surveys", orgId, () => surveysSection(orgId, window)),
@@ -166,13 +203,16 @@ async function reviewsSection(
     // LIVE_ESTABLISHMENT excludes soft-deleted locations — without it a removed
     // location's reviews keep counting and the totals read as doubled.
     const where = { postedAt: window, ...LIVE_ESTABLISHMENT };
-    const [agg, byStarRaw, bySourceRaw, previousTotal] = await Promise.all([
+    const [agg, byStarRaw, bySourceRaw, previousTotal, dates] = await Promise.all([
       tx.review.aggregate({ where, _avg: { rating: true }, _count: { _all: true } }),
       tx.review.groupBy({ by: ["rating"], where, _count: { _all: true } }),
       tx.review.groupBy({ by: ["source"], where, _count: { _all: true } }),
       tx.review.count({
         where: { postedAt: { gte: range.previousFrom, lt: range.from }, ...LIVE_ESTABLISHMENT },
       }),
+      // Timestamps only — bucketed into the trend line below. Selecting the one
+      // column keeps this cheap even on an org with thousands of reviews.
+      tx.review.findMany({ where, select: { postedAt: true } }),
     ]);
 
     const starCounts = new Map<number, number>(byStarRaw.map((r) => [r.rating, r._count._all]));
@@ -188,17 +228,26 @@ async function reviewsSection(
         .map((r) => ({ source: r.source, count: r._count._all }))
         .sort((a, b) => b.count - a.count),
       previousTotal,
+      series: toSeries(
+        dates.map((r) => r.postedAt),
+        range,
+      ),
       changePct: pct(total, previousTotal),
     };
   });
 }
 
-async function autopilotSection(orgId: string, window: Window): Promise<AutopilotSection> {
+async function autopilotSection(
+  orgId: string,
+  range: ReportRange,
+  window: Window,
+): Promise<AutopilotSection> {
   return withTenant(orgId, async (tx) => {
     const where = { createdAt: window };
-    const [byLoopAction, needsHuman] = await Promise.all([
+    const [byLoopAction, needsHuman, dates] = await Promise.all([
       tx.autopilotAction.groupBy({ by: ["loop", "action"], where, _count: { _all: true } }),
       tx.autopilotAction.count({ where: { ...where, requiresHuman: true } }),
+      tx.autopilotAction.findMany({ where, select: { createdAt: true } }),
     ]);
 
     let total = 0;
@@ -219,6 +268,10 @@ async function autopilotSection(orgId: string, window: Window): Promise<Autopilo
       published,
       drafted,
       needsHuman,
+      series: toSeries(
+        dates.map((r) => r.createdAt),
+        range,
+      ),
       byLoop: [...loops.entries()]
         .map(([loop, count]) => ({ loop, count }))
         .sort((a, b) => b.count - a.count),
@@ -226,14 +279,18 @@ async function autopilotSection(orgId: string, window: Window): Promise<Autopilo
   });
 }
 
-async function socialSection(orgId: string, window: Window): Promise<SocialSection> {
+async function socialSection(
+  orgId: string,
+  range: ReportRange,
+  window: Window,
+): Promise<SocialSection> {
   return withTenant(orgId, async (tx) => {
     // `platforms` is a String[] — one post can target several, so per-platform
     // counts have to be tallied from the rows rather than grouped in SQL.
     const [postedRows, scheduled, failed] = await Promise.all([
       tx.socialPost.findMany({
         where: { status: "posted", postedAt: window },
-        select: { platforms: true },
+        select: { platforms: true, postedAt: true },
       }),
       tx.socialPost.count({ where: { status: "scheduled", scheduledFor: window } }),
       tx.socialPost.count({ where: { status: "failed", updatedAt: window } }),
@@ -251,6 +308,10 @@ async function socialSection(orgId: string, window: Window): Promise<SocialSecti
       posted: postedRows.length,
       scheduled,
       failed,
+      series: toSeries(
+        postedRows.map((p) => p.postedAt).filter((d): d is Date => d !== null),
+        range,
+      ),
       byPlatform: [...counts.entries()]
         .map(([platform, count]) => ({ platform, count }))
         .sort((a, b) => b.count - a.count),
