@@ -2,6 +2,7 @@ import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { Resend } from "resend";
+import { senderFor } from "./senders";
 import { teamInviteEmail } from "./templates";
 
 /**
@@ -34,7 +35,7 @@ export async function sendTeamInviteEmail(args: {
   acceptUrl: string;
   orgId: string;
 }): Promise<{ sent: boolean; reason?: string }> {
-  const from = process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  const from = senderFor("team");
   // Loudly surfaces a missing key or a *.resend.dev sandbox `from` (which Resend
   // accepts but only delivers to the account owner — the classic "no error, no
   // email" case).

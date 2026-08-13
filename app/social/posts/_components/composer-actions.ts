@@ -19,6 +19,8 @@
  */
 
 import { auth } from "@/lib/auth/config";
+import { logger } from "@/lib/logger";
+import { recommendTimes as recommendTimesBackend } from "@/lib/social/best-time";
 import {
   type CaptionOption,
   generateCaptions as generateCaptionsBackend,
@@ -27,8 +29,9 @@ import {
   ImageGenNotConfiguredError,
   generateCreatives as generateCreativesBackend,
 } from "@/lib/social/image-gen";
-import { recommendTimes as recommendTimesBackend } from "@/lib/social/best-time";
 import { redirect } from "next/navigation";
+import type { CaptionGenResult } from "./caption-modal";
+import type { CreativeGenResult } from "./creatives-modal";
 
 async function requireOrgId(): Promise<string> {
   const session = await auth();
@@ -55,7 +58,7 @@ export async function generateCaptionsForComposer(input: {
   includeCta: boolean;
   includeEmoji: boolean;
   includeHashtags: boolean;
-}): Promise<CaptionOption[]> {
+}): Promise<CaptionGenResult> {
   const form = new FormData();
   // The backend tightens the char limit across all selected platforms; the modal
   // optimizes for one, so pass that single platform.
@@ -68,22 +71,28 @@ export async function generateCaptionsForComposer(input: {
 
   const result = await generateCaptionsBackend(form);
   if (!result.ok) {
-    throw new Error(CAPTION_REASON_COPY[result.reason] ?? "Caption generation failed.");
+    return { ok: false, error: CAPTION_REASON_COPY[result.reason] ?? "Caption generation failed." };
   }
-  return result.options;
+  return { ok: true, options: result.options };
 }
 
 /**
- * Creatives modal adapter — injects the server-trusted orgId, returns the public
- * URLs of generated creatives. Re-throws `ImageGenNotConfiguredError` (and the
- * entitlement error) unchanged so the modal can show the right gate panel.
+ * Creatives modal adapter — injects the server-trusted orgId and returns the
+ * public URLs of the generated creatives.
+ *
+ * The gate is classified HERE, on the server, and sent as an explicit `code`.
+ * This used to re-throw `ImageGenNotConfiguredError` so the modal could detect
+ * it, but neither half of that survives the boundary: class identity is lost on
+ * serialization, and Next.js redacts server-action error messages in production.
+ * The modal's `err.name` / message sniffing therefore always missed in prod and
+ * the "not enabled" and "upgrade" panels could never appear.
  */
 export async function generateCreativesForComposer(input: {
   brief: string;
   brandColors: string[];
   style: string;
   count: number;
-}): Promise<{ url: string; kind: "image" }[]> {
+}): Promise<CreativeGenResult> {
   const orgId = await requireOrgId();
   try {
     const creatives = await generateCreativesBackend({
@@ -93,11 +102,24 @@ export async function generateCreativesForComposer(input: {
       style: input.style,
       count: input.count,
     });
-    return creatives.map((c) => ({ url: c.url, kind: "image" as const }));
+    return { ok: true, creatives: creatives.map((c) => ({ url: c.url, kind: "image" as const })) };
   } catch (err) {
-    // Preserve the typed "not configured" so the modal renders the right panel.
-    if (err instanceof ImageGenNotConfiguredError) throw err;
-    throw err;
+    if (err instanceof ImageGenNotConfiguredError) {
+      return {
+        ok: false,
+        code: "not_enabled",
+        error: "AI image generation isn't configured on this server yet.",
+      };
+    }
+    const name = (err as { name?: string } | null)?.name ?? "";
+    if (name === "PlanInactiveError" || name === "EntitlementError") {
+      return { ok: false, code: "plan", error: "AI creatives are a paid feature." };
+    }
+    logger.error({
+      event: "composer.creatives.failed",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { ok: false, code: "error", error: "Image generation failed. Try again." };
   }
 }
 

@@ -19,7 +19,18 @@ import { type JSX, useState, useTransition } from "react";
 
 export type CaptionOption = { caption: string; hashtags: string[] };
 
-/** The shape the modal calls — server page adapts `generateCaptions` to this. */
+/**
+ * The shape the modal calls — the server page adapts `generateCaptions` to this.
+ *
+ * RETURNS a result envelope; it must never THROW to convey a message. Next.js
+ * redacts errors thrown out of a server action in production, so the friendly
+ * text ("AI captions aren't enabled for this workspace yet") was replaced by a
+ * generic transport failure and the user saw "network error" for every cause.
+ */
+export type CaptionGenResult =
+  | { ok: true; options: CaptionOption[] }
+  | { ok: false; error: string };
+
 export type GenerateCaptionsFn = (input: {
   topic: string;
   tone: string;
@@ -27,7 +38,7 @@ export type GenerateCaptionsFn = (input: {
   includeCta: boolean;
   includeEmoji: boolean;
   includeHashtags: boolean;
-}) => Promise<CaptionOption[]>;
+}) => Promise<CaptionGenResult>;
 
 const TONES = [
   { value: "professional", label: "Professional" },
@@ -80,12 +91,17 @@ export function CaptionModal({
           includeEmoji,
           includeHashtags,
         });
-        const safe = Array.isArray(result) ? result.slice(0, 3) : [];
+        if (!result.ok) {
+          setError(result.error);
+          return;
+        }
+        const safe = result.options.slice(0, 3);
         setOptions(safe);
         if (safe.length > 0) setSelected(0);
         if (safe.length === 0) setError("No suggestions came back. Try a different topic.");
-      } catch (e) {
-        setError(e instanceof Error ? e.message : "Generation failed");
+      } catch {
+        // Only a genuine transport failure reaches here now.
+        setError("Couldn't reach the server. Check your connection and try again.");
       }
     });
   }
@@ -128,13 +144,11 @@ export function CaptionModal({
               value={platform}
               onChange={(e) => setPlatform(e.target.value)}
             >
-              {(platforms.length ? platforms : ["facebook", "instagram", "linkedin"]).map(
-                (p) => (
-                  <option key={p} value={p}>
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
-                  </option>
-                ),
-              )}
+              {(platforms.length ? platforms : ["facebook", "instagram", "linkedin"]).map((p) => (
+                <option key={p} value={p}>
+                  {p.charAt(0).toUpperCase() + p.slice(1)}
+                </option>
+              ))}
             </select>
           </label>
         </div>
@@ -142,7 +156,11 @@ export function CaptionModal({
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <Toggle label="Call to action" on={includeCta} onClick={() => setIncludeCta((v) => !v)} />
           <Toggle label="Emoji" on={includeEmoji} onClick={() => setIncludeEmoji((v) => !v)} />
-          <Toggle label="Hashtags" on={includeHashtags} onClick={() => setIncludeHashtags((v) => !v)} />
+          <Toggle
+            label="Hashtags"
+            on={includeHashtags}
+            onClick={() => setIncludeHashtags((v) => !v)}
+          />
         </div>
 
         <div>
@@ -185,7 +203,15 @@ export function CaptionModal({
                   </span>
                   {isSel && <Icon name="checkCircle" size={16} style={{ color: "var(--pri)" }} />}
                 </div>
-                <p style={{ margin: 0, fontSize: 13, lineHeight: 1.55, color: "var(--ink)", whiteSpace: "pre-wrap" }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 13,
+                    lineHeight: 1.55,
+                    color: "var(--ink)",
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
                   {opt.caption}
                 </p>
                 {opt.hashtags.length > 0 && (
@@ -288,10 +314,7 @@ export function ModalShell({
         overflowY: "auto",
       }}
     >
-      <div
-        className="ds-card"
-        style={{ width: "100%", maxWidth: wide ? 720 : 520, padding: 0 }}
-      >
+      <div className="ds-card" style={{ width: "100%", maxWidth: wide ? 720 : 520, padding: 0 }}>
         <div className="ds-card__head">
           <div className="row" style={{ gap: 8 }}>
             {icon && <Icon name={icon} size={16} style={{ color: "var(--pri)" }} />}
@@ -300,12 +323,7 @@ export function ModalShell({
               {subtitle && <div className="ds-card__sub">{subtitle}</div>}
             </div>
           </div>
-          <button
-            type="button"
-            className="btn btn--xs"
-            onClick={onClose}
-            aria-label="Close"
-          >
+          <button type="button" className="btn btn--xs" onClick={onClose} aria-label="Close">
             <Icon name="x" size={13} />
           </button>
         </div>

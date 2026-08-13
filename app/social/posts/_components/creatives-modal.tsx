@@ -23,12 +23,22 @@ import { ModalShell } from "./caption-modal";
 
 export type Creative = { url: string; kind: "image" };
 
+/**
+ * RETURNS a result envelope with an explicit `code`. The gate panels used to be
+ * chosen by sniffing `err.name` / the error text, but neither survives the
+ * server-action boundary — class identity is lost and production redacts the
+ * message — so in prod the "not enabled" and "upgrade" panels could never show.
+ */
+export type CreativeGenResult =
+  | { ok: true; creatives: Creative[] }
+  | { ok: false; code: "not_enabled" | "plan" | "error"; error: string };
+
 export type GenerateCreativesFn = (input: {
   brief: string;
   brandColors: string[];
   style: string;
   count: number;
-}) => Promise<Creative[]>;
+}) => Promise<CreativeGenResult>;
 
 const STYLES = [
   { value: "photographic", label: "Photographic" },
@@ -39,25 +49,6 @@ const STYLES = [
 ] as const;
 
 type Tile = { url: string; status: "pending" | "approved" | "rejected" };
-
-function isNotEnabled(err: unknown): boolean {
-  const name = (err as { name?: string } | null)?.name ?? "";
-  const msg = err instanceof Error ? err.message : String(err ?? "");
-  return (
-    name === "ImageGenNotConfiguredError" ||
-    /not[_ ]?configured|not[_ ]?enabled|image_gen_disabled/i.test(msg)
-  );
-}
-
-function isPlanError(err: unknown): boolean {
-  const name = (err as { name?: string } | null)?.name ?? "";
-  const msg = err instanceof Error ? err.message : String(err ?? "");
-  return (
-    name === "PlanInactiveError" ||
-    name === "EntitlementError" ||
-    /not[_ ]?entitled|plan_inactive|upgrade|pro[_ ]?required/i.test(msg)
-  );
-}
 
 export function CreativesModal({
   open,
@@ -96,13 +87,17 @@ export function CreativesModal({
           style,
           count,
         });
-        const safe = Array.isArray(result) ? result : [];
+        if (!result.ok) {
+          if (result.code === "not_enabled") setGate("not_enabled");
+          else if (result.code === "plan") setGate("plan");
+          else setError(result.error);
+          return;
+        }
+        const safe = result.creatives;
         setTiles(safe.map((c) => ({ url: c.url, status: "pending" })));
         if (safe.length === 0) setError("No creatives came back. Adjust the brief and retry.");
-      } catch (e) {
-        if (isNotEnabled(e)) setGate("not_enabled");
-        else if (isPlanError(e)) setGate("plan");
-        else setError(e instanceof Error ? e.message : "Generation failed");
+      } catch {
+        setError("Couldn't reach the server. Check your connection and try again.");
       }
     });
   }
@@ -111,15 +106,26 @@ export function CreativesModal({
     setError(null);
     start(async () => {
       try {
-        const result = await generate({ brief: brief.trim(), brandColors: colors, style, count: 1 });
-        const next = result?.[0];
-        if (next) {
-          setTiles((prev) => prev.map((t, i) => (i === index ? { url: next.url, status: "pending" } : t)));
+        const result = await generate({
+          brief: brief.trim(),
+          brandColors: colors,
+          style,
+          count: 1,
+        });
+        if (!result.ok) {
+          if (result.code === "not_enabled") setGate("not_enabled");
+          else if (result.code === "plan") setGate("plan");
+          else setError(result.error);
+          return;
         }
-      } catch (e) {
-        if (isNotEnabled(e)) setGate("not_enabled");
-        else if (isPlanError(e)) setGate("plan");
-        else setError(e instanceof Error ? e.message : "Regenerate failed");
+        const next = result.creatives[0];
+        if (next) {
+          setTiles((prev) =>
+            prev.map((t, i) => (i === index ? { url: next.url, status: "pending" } : t)),
+          );
+        }
+      } catch {
+        setError("Couldn't reach the server. Check your connection and try again.");
       }
     });
   }
@@ -159,7 +165,11 @@ export function CreativesModal({
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
               <label style={{ display: "block" }}>
                 <span className="lbl">Style</span>
-                <select className="ds-select" value={style} onChange={(e) => setStyle(e.target.value)}>
+                <select
+                  className="ds-select"
+                  value={style}
+                  onChange={(e) => setStyle(e.target.value)}
+                >
                   {STYLES.map((s) => (
                     <option key={s.value} value={s.value}>
                       {s.label}
@@ -283,7 +293,13 @@ export function CreativesModal({
                       t.status === "approved" ? "1.5px solid var(--ok)" : "1px solid var(--line)",
                   }}
                 >
-                  <div style={{ position: "relative", aspectRatio: "1 / 1", background: "var(--surface-3)" }}>
+                  <div
+                    style={{
+                      position: "relative",
+                      aspectRatio: "1 / 1",
+                      background: "var(--surface-3)",
+                    }}
+                  >
                     {/* biome-ignore lint/performance/noImgElement: generated creative (blob asset) */}
                     <img
                       src={t.url}
@@ -322,7 +338,12 @@ export function CreativesModal({
                       active={t.status === "rejected"}
                       onClick={() => setStatus(i, t.status === "rejected" ? "pending" : "rejected")}
                     />
-                    <TileBtn label="Redo" icon="refresh" onClick={() => redo(i)} disabled={pending} />
+                    <TileBtn
+                      label="Redo"
+                      icon="refresh"
+                      onClick={() => redo(i)}
+                      disabled={pending}
+                    />
                   </div>
                 </div>
               ))}
@@ -330,7 +351,14 @@ export function CreativesModal({
           )}
 
           {/* Footer */}
-          <div style={{ marginTop: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+          <div
+            style={{
+              marginTop: 16,
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+            }}
+          >
             <span style={{ fontSize: 12, color: "var(--rl-muted)" }}>
               {approvedUrls.length} approved
             </span>
@@ -428,8 +456,8 @@ function GatePanel({ kind }: { kind: "not_enabled" | "plan" }) {
       </div>
       <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Image generation isn’t enabled</h3>
       <p style={{ margin: "6px 0 0", fontSize: 12.5, color: "var(--rl-muted)" }}>
-        AI image generation isn’t configured for this workspace yet. You can still upload media or pick
-        from your Content Library.
+        AI image generation isn’t configured for this workspace yet. You can still upload media or
+        pick from your Content Library.
       </p>
     </div>
   );

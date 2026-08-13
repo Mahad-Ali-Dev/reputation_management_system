@@ -1,7 +1,15 @@
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import {
+  ctaButton,
+  emailHeading,
+  emailParagraph,
+  emailShell,
+  escapeHtml,
+} from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { Resend } from "resend";
+import { senderFor } from "./senders";
 
 /**
  * Auto-updater email (Module 05). Sent by the weekly cron when the AI re-scans
@@ -19,14 +27,6 @@ function getResend(): Resend | null {
   if (_resend) return _resend;
   _resend = new Resend(key);
   return _resend;
-}
-
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -61,7 +61,7 @@ export async function sendKbUpdateEmail(args: {
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-  const from = process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  const from = senderFor("notify");
   assertSendableEmailConfig(from);
   const fieldsPhrase = humanizeFields(args.changedFields);
   const subject = `Your AI noticed your ${fieldsPhrase} changed and updated itself`;
@@ -77,24 +77,17 @@ export async function sendKbUpdateEmail(args: {
     "If this wasn't expected, open AI Training to review and adjust.",
   ].join("\n");
 
-  const html = `<!doctype html>
-<html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;margin:0;">
-<div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
-  <h1 style="margin:0 0 4px;font-size:20px;color:#0f172a;">Your AI updated itself</h1>
-  <p style="margin:0 0 20px;color:#94a3b8;font-size:13px;">${escapeHtml(args.businessName)}</p>
-  <p style="margin:0 0 16px;color:#0f172a;font-size:14px;line-height:1.6;">
-    Your AI re-scanned your website and noticed your <strong>${escapeHtml(fieldsPhrase)}</strong> changed.
-    It refreshed its knowledge automatically, so your replies, DMs and chats stay accurate.
-  </p>
-  <p style="margin:24px 0 0;">
-    <a href="${trainingUrl}" style="display:inline-block;background:#2563eb;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Review the changes →</a>
-  </p>
-  <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
-  <p style="color:#94a3b8;font-size:12px;margin:0;">
-    The AI re-scans your tracked site weekly and only updates when something changes.
-  </p>
-</div>
-</body></html>`;
+  const html = emailShell({
+    preheader: `Your AI refreshed its knowledge of ${args.businessName}`,
+    title: "Your AI updated itself",
+    body: `
+      ${emailHeading("Your AI updated itself")}
+      ${emailParagraph(`<span style="color:#64748b;">${escapeHtml(args.businessName)}</span>`)}
+      ${emailParagraph(`Your AI re-scanned your website and noticed your <strong>${escapeHtml(fieldsPhrase)}</strong> changed. It refreshed its knowledge automatically, so your replies, DMs and chats stay accurate.`)}
+      <div style="margin:26px 0;">${ctaButton({ url: trainingUrl, label: "Review the changes" })}</div>
+    `,
+    footerNote: "The AI re-scans your tracked site weekly and only updates when something changes.",
+  });
 
   try {
     const { error } = await resend.emails.send({
