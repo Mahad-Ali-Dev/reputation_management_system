@@ -89,6 +89,7 @@ export function ConnectDeviceModal({
   const [code, setCode] = useState("");
   const [link, setLink] = useState("");
   const [platform, setPlatform] = useState("google");
+  const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
   const [state, formAction] = useActionState(activateDevice, initialState);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
@@ -167,25 +168,12 @@ export function ConnectDeviceModal({
                     {/* Step 1 — Business */}
                     <div className="cdm-panel" hidden={step !== 1}>
                       <SectionHead n={1} icon="building" title="Select Your Business" />
-                      <div className="cdm-field">
-                        <span className="cdm-field__icon" aria-hidden>
-                          <Icon name="building" size={20} />
-                        </span>
-                        <select
-                          name="establishmentId"
-                          required
-                          defaultValue={establishments[0]?.id}
-                          aria-label="Select your business"
-                          className="cdm-select"
-                        >
-                          {establishments.map((e) => (
-                            <option key={e.id} value={e.id}>
-                              {e.name}
-                            </option>
-                          ))}
-                        </select>
-                        <Icon name="chevD" size={18} className="cdm-field__chev" />
-                      </div>
+                      <BusinessSelect
+                        establishments={establishments}
+                        value={establishmentId}
+                        onChange={setEstablishmentId}
+                      />
+                      <input type="hidden" name="establishmentId" value={establishmentId} />
                       <Callout icon="info">
                         Scans from this device will route to this business&rsquo;s review page.
                       </Callout>
@@ -374,6 +362,97 @@ export function ConnectDeviceModal({
         </div>
       )}
     </>
+  );
+}
+
+/**
+ * Custom listbox for the business picker — a native <select>'s OWN styling
+ * (border, icon, chevron) matched the kit fine, but its options POPUP is
+ * rendered by the OS/browser (plain white rows, hard corners, browser-blue
+ * highlight) and can't be restyled to match, which is what looked off. This
+ * swaps in a button + absolutely-positioned listbox so the open menu matches
+ * the rest of the modal, while still submitting via a plain hidden input
+ * (`establishmentId`) so activateDevice's `form.get("establishmentId")` is
+ * unchanged.
+ */
+function BusinessSelect({
+  establishments,
+  value,
+  onChange,
+}: {
+  establishments: Array<{ id: string; name: string }>;
+  value: string;
+  onChange: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+  const selected = establishments.find((e) => e.id === value) ?? establishments[0];
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <div className="cdm-field" ref={rootRef}>
+      <span className="cdm-field__icon" aria-hidden>
+        <Icon name="building" size={20} />
+      </span>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="cdm-combo__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Select your business"
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className="cdm-combo__label">
+          {selected?.name ?? "Select a business"}
+        </span>
+      </button>
+      <Icon name="chevD" size={18} className={`cdm-field__chev${open ? " is-open" : ""}`} />
+
+      {open && (
+        <div className="cdm-combo__list" role="listbox" aria-label="Businesses" tabIndex={-1}>
+          {establishments.map((e) => {
+            const isSel = e.id === selected?.id;
+            return (
+              <button
+                key={e.id}
+                type="button"
+                role="option"
+                aria-selected={isSel}
+                className={`cdm-combo__opt${isSel ? " is-sel" : ""}`}
+                onClick={() => {
+                  onChange(e.id);
+                  setOpen(false);
+                  triggerRef.current?.focus();
+                }}
+              >
+                <span className="cdm-combo__opttext">{e.name}</span>
+                {isSel && <Icon name="check" size={14} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
   );
 }
 

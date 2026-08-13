@@ -28,6 +28,7 @@
  */
 
 import { createHmac } from "node:crypto";
+import { resolveBrandColorsFromSettings } from "@/lib/account/brand-colors";
 import { withTenant } from "@/lib/db/with-tenant";
 import { resolveBusinessReplyTo } from "@/lib/email/reply-to";
 import { googleReviewUrl } from "@/lib/hardware/codes";
@@ -96,7 +97,7 @@ export async function dispatchReviewRequest(
       }),
       tx.organization.findUnique({
         where: { id: orgId },
-        select: { name: true, logoUrl: true, ownerEmail: true },
+        select: { name: true, logoUrl: true, ownerEmail: true, settings: true },
       }),
     ]);
     // Hydrate an OutreachTemplate for body/subject/logo. Priority:
@@ -190,19 +191,24 @@ export async function dispatchReviewRequest(
       ? resolveMergeTags(template.subject, mergeCtx)
       : `How was your experience at ${businessName}?`;
     const logoUrl = template?.logoUrl ?? estab?.imageUrl ?? org?.logoUrl ?? null;
+    // Settings → Brand palette (see lib/account/brand-colors.ts). Every org
+    // resolves to a value even before customizing — falls back to the same
+    // fixed indigo these emails always used.
+    const accentColor = resolveBrandColorsFromSettings(org?.settings).primary;
 
     let html: string;
     let text: string;
     if (rawBody) {
       const renderedBody = resolveMergeTags(rawBody, mergeCtx);
       text = `${renderedBody}\n\nUnsubscribe: ${unsubscribeUrl}`;
-      html = renderEmailHtml({ body: renderedBody, logoUrl, reviewLink, unsubscribeUrl });
+      html = renderEmailHtml({ body: renderedBody, logoUrl, reviewLink, unsubscribeUrl, accentColor });
     } else {
       const generated = defaultReviewRequestHtml({
         reviewerName: rr.recipientName,
         businessName,
         reviewLink,
         unsubscribeUrl,
+        accentColor,
       });
       html = generated.html;
       text = generated.text;
@@ -301,6 +307,9 @@ function renderEmailHtml(args: {
   logoUrl: string | null;
   reviewLink: string;
   unsubscribeUrl: string;
+  /** Org's brand primary color (Settings → Brand), CTA button background.
+   *  Falls back to the original fixed indigo when the org hasn't set one. */
+  accentColor?: string;
 }): string {
   const escaped = args.body
     .replace(/&/g, "&amp;")
@@ -317,7 +326,8 @@ function renderEmailHtml(args: {
   // validation, fall back to a non-clickable "#" rather than emitting raw input.
   const reviewHref = safeReviewLink ?? "#";
   const unsubscribeHref = safeUnsubscribe ?? "#";
-  return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">${logoBlock}<div style="color:#0f172a;font-size:14px;line-height:1.6;">${escaped}</div><p style="margin:24px 0;"><a href="${reviewHref}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a></p><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:12px;margin:0;">Don't want these? <a href="${unsubscribeHref}" style="color:#94a3b8;">Unsubscribe</a></p></div></body></html>`;
+  const accent = args.accentColor ?? "#4f46e5";
+  return `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:560px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">${logoBlock}<div style="color:#0f172a;font-size:14px;line-height:1.6;">${escaped}</div><p style="margin:24px 0;"><a href="${reviewHref}" style="display:inline-block;background:${accent};color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a></p><hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;"/><p style="color:#94a3b8;font-size:12px;margin:0;">Don't want these? <a href="${unsubscribeHref}" style="color:#94a3b8;">Unsubscribe</a></p></div></body></html>`;
 }
 
 /**

@@ -1053,6 +1053,240 @@
   place-items: center;
   flex-shrink: 0;
 }
+
+/* "Manage rules" dialog — the 6 conversation rules aren't per-org editable
+   (they're the fixed safety gate in lib/ai/assist/safety.ts), so this
+   explains what's enforced and why there's no toggle, instead of linking
+   nowhere. */
+.akb-rules-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.akb-rules-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(14, 18, 56, 0.45);
+  cursor: pointer;
+}
+.akb-rules-modal {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 480px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(14, 18, 56, 0.22);
+  padding: 24px;
+}
+.akb-rules-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.akb-rules-modal__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--akb-ink);
+}
+.akb-rules-modal__close {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--akb-line-soft);
+  color: var(--akb-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.akb-rules-modal__close:hover {
+  background: var(--akb-line);
+  color: var(--akb-ink);
+}
+.akb-rules-modal__sub {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--akb-muted);
+}
+.akb-rules-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-top: 20px;
+}
+.akb-rules-modal__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.akb-rules-modal__item-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--akb-ink);
+}
+.akb-rules-modal__item-detail {
+  margin-top: 2px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--akb-muted);
+}
+.akb-rules-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 24px;
+}
+
+/* "Teach AI" / "Add question" dialog (test-console.tsx) — same shape as the
+   rules dialog above, plus an editable form. */
+.akb-teach-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.akb-teach-scrim {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(14, 18, 56, 0.45);
+  cursor: pointer;
+}
+.akb-teach-modal {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 520px;
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 24px 60px rgba(14, 18, 56, 0.22);
+  padding: 24px;
+}
+.akb-teach-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.akb-teach-modal__title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--akb-ink);
+}
+.akb-teach-modal__close {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--akb-line-soft);
+  color: var(--akb-muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+}
+.akb-teach-modal__close:hover {
+  background: var(--akb-line);
+  color: var(--akb-ink);
+}
+.akb-teach-modal__sub {
+  margin: 10px 0 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--akb-muted);
+}
+.akb-teach-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 18px;
+}
+.akb-teach-modal__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.akb-teach-modal__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--akb-ink);
+}
+.akb-teach-modal__qbox {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 14px;
+  background: var(--akb-lavender);
+  border-radius: 10px;
+}
+.akb-teach-modal__qbox .akb-teach-modal__label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--akb-muted);
+}
+.akb-teach-modal__qtext {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--akb-ink);
+}
+.akb-teach-modal__input {
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 8px;
+  border: 1px solid var(--akb-divider);
+  font-size: 13px;
+  color: var(--akb-ink);
+  background: #fff;
+  outline: none;
+}
+.akb-teach-modal__input:focus {
+  border-color: var(--akb-primary);
+}
+.akb-teach-modal__textarea {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--akb-divider);
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--akb-ink);
+  background: #fff;
+  resize: vertical;
+  outline: none;
+  font-family: inherit;
+}
+.akb-teach-modal__textarea:focus {
+  border-color: var(--akb-primary);
+}
+.akb-teach-modal__error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: #e14d62;
+}
+.akb-teach-modal__foot {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
 .akb-beh-info {
   display: flex;
   align-items: center;

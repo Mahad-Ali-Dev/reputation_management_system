@@ -1,8 +1,13 @@
+import { SaveToast } from "@/components/save-toast";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { updateAccountSettings } from "@/lib/account/actions";
+import { resolveBrandColors } from "@/lib/account/brand-colors";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
+import { BrandKitPanel } from "./_components/brand-kit-panel";
 import { LogoUploader } from "./_components/logo-uploader";
 
 /**
@@ -15,32 +20,70 @@ import { LogoUploader } from "./_components/logo-uploader";
  * it's submitted as a hidden field to keep this form a logo-only update.
  * Self-serve file upload (dropzone) ships with the asset library — the working
  * control today is the Logo URL field.
+ *
+ * `logoUrlFieldValue` is deliberately NOT `org.logoUrl` verbatim: in dev
+ * without cloud storage configured, the uploader's fallback stores a `data:`
+ * URL (see lib/uploads/blob.ts), and echoing a multi-KB data URL back into
+ * this "paste a public URL" text field made the field unusable AND crashed
+ * "Save brand" the moment it was resubmitted unchanged (updateAccountSettings
+ * caps logoUrl at 500 chars for exactly this reason). The preview tiles below
+ * still render it fine — <img src> doesn't care that it's a data: URL.
+ *
+ * That blanked field created a second bug: clicking "Save brand" right after
+ * a dropzone upload submitted an EMPTY logoUrl, which updateAccountSettings
+ * reads as "clear the logo" and wiped out the upload that had just succeeded.
+ * `saveAction` below fixes this — it compares the typed value against a
+ * hidden mirror of the real current value and, when the field is blank
+ * specifically BECAUSE we hid a data: URL (not because the user cleared a
+ * real one), drops `logoUrl` from the submission entirely so
+ * updateAccountSettings leaves the column untouched instead of nulling it.
  */
 export const dynamic = "force-dynamic";
 
-const ASSET = "/assets/repulabs/settings";
-
-const SWATCHES: Array<[string, string]> = [
-  ["Primary", "#4F46E5"],
-  ["Secondary", "#10B981"],
-  ["Accent", "#EC4899"],
-  ["Neutral", "#64748B"],
-  ["Light", "#F1F5F9"],
-];
-
 export default async function BrandSettingsPage() {
-  const { org } = await loadSettingsData();
+  const { org, settingsObj } = await loadSettingsData();
+  const logoUrlFieldValue = org.logoUrl?.startsWith("data:") ? "" : (org.logoUrl ?? "");
+  const brandColors = resolveBrandColors(settingsObj.brand?.colors);
+
+  async function saveAction(form: FormData) {
+    "use server";
+    const typedLogoUrl = ((form.get("logoUrl") as string) ?? "").trim();
+    const currentLogoUrl = (form.get("currentLogoUrl") as string) ?? "";
+    if (!typedLogoUrl && currentLogoUrl.startsWith("data:")) {
+      // Blank could mean "the user cleared the logo" or "we hid a data: URL
+      // from this field" — only the latter should be preserved. Deleting the
+      // key (rather than resubmitting the data: URL) makes
+      // updateAccountSettings see it as absent, not as a too-long value.
+      form.delete("logoUrl");
+    }
+    try {
+      await updateAccountSettings(form);
+    } catch (err) {
+      const digest = (err as { digest?: unknown } | null)?.digest;
+      if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+      redirect("/settings/brand?saved=error");
+    }
+    redirect("/settings/brand?saved=1");
+  }
 
   return (
     <SettingsFrame>
+      <Suspense fallback={null}>
+        <SaveToast successMessage="Brand settings saved." />
+      </Suspense>
+
       {/* ── Brand panel ─────────────────────────────────────────────── */}
       <section className="set-card">
         <h2 className="set-card__title">Brand</h2>
         <p className="set-card__sub">Your logo and identity on review widgets and emails.</p>
 
-        <form action={updateAccountSettings}>
+        <form action={saveAction}>
           {/* updateAccountSettings requires businessName — preserve it untouched. */}
           <input type="hidden" name="businessName" value={org.name} />
+          {/* Mirrors the real (possibly data:) logoUrl so saveAction can tell
+              "field left blank because we hid a data: URL" apart from "user
+              intentionally cleared a real URL" — see the note above. */}
+          <input type="hidden" name="currentLogoUrl" value={org.logoUrl ?? ""} />
 
           <div className="set-brand-grid">
             <div className="set-brand-id">
@@ -85,12 +128,13 @@ export default async function BrandSettingsPage() {
               className="set-input"
               type="url"
               name="logoUrl"
-              defaultValue={org.logoUrl ?? ""}
+              defaultValue={logoUrlFieldValue}
               placeholder="https://yourbusiness.com/logo.png"
             />
             <span className="set-field__hint">
-              Paste a public image URL (PNG, JPG or WebP; square works best) — or use the uploader
-              above to upload directly.
+              {org.logoUrl?.startsWith("data:")
+                ? "Your current logo came from the uploader without cloud storage configured, so there's no public URL to show here — paste one to replace it, or keep using the uploader."
+                : "Paste a public image URL (PNG, JPG or WebP; square works best) — or use the uploader above to upload directly."}
             </span>
           </div>
 
@@ -104,100 +148,7 @@ export default async function BrandSettingsPage() {
       </section>
 
       {/* ── Brand kit + Review widget preview ───────────────────────── */}
-      <div className="set-grid-2">
-        <section className="set-card">
-          <h2 className="set-card__title set-card__title--sm">Brand kit</h2>
-          <p className="set-card__sub">
-            Your brand palette and typography used across widgets, emails and public pages.
-          </p>
-
-          <div className="set-kitcols">
-            <div>
-              <div className="set-kitlabel">Colors</div>
-              <div className="set-swatches">
-                {SWATCHES.map(([name, hex]) => (
-                  <div key={name} className="set-swatch">
-                    <div className="set-swatch__name">{name}</div>
-                    <div
-                      className="set-swatch__chip"
-                      style={{
-                        background: hex,
-                        border: hex === "#F1F5F9" ? "1px solid #e2e8f0" : undefined,
-                      }}
-                    />
-                    <div className="set-swatch__hex">{hex}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <div className="set-kitlabel">Typography</div>
-              <div className="set-specimen">Aa</div>
-              <div className="set-type-name">Inter</div>
-              <div className="set-type-desc">Clean, modern, and highly readable across all devices.</div>
-            </div>
-
-            <div>
-              <div className="set-kitlabel">Widget preview</div>
-              <div className="set-widget">
-                <div className="set-widget__bar">
-                  <Avatar name={org.name} size={22} tone={3} />
-                </div>
-                <div className="set-widget__body">
-                  <div className="set-widget__q">How was your experience?</div>
-                  <div className="set-widget__stars">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      // biome-ignore lint/a11y/useAltText: decorative preview star
-                      <img key={i} src={`${ASSET}/brand-star-outline.svg`} alt="" aria-hidden="true" />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="set-actions" style={{ justifyContent: "flex-start", marginTop: 18 }}>
-            <a href="/brand" className="set-btn set-btn--sm">
-              <Icon name="ext" size={14} className="set-btn__ic" />
-              View brand kit
-            </a>
-          </div>
-        </section>
-
-        <section className="set-card">
-          <h2 className="set-card__title set-card__title--sm">Review widget preview</h2>
-          <p className="set-card__sub">See how your branding appears to your customers.</p>
-
-          <div className="set-preview">
-            <div className="set-preview__row">
-              <Avatar name={org.name} size={40} tone={3} />
-              <div style={{ minWidth: 0 }}>
-                <div className="set-preview__name">{org.name}</div>
-                <div className="set-preview__cap">We&apos;d love your feedback!</div>
-              </div>
-            </div>
-            <div className="set-preview__stars" aria-hidden="true">
-              {[0, 1, 2, 3, 4].map((i) => (
-                // biome-ignore lint/a11y/useAltText: decorative preview star
-                <img key={i} src={`${ASSET}/brand-star-filled.svg`} alt="" />
-              ))}
-            </div>
-            <div className="set-preview__skel" />
-            <div className="set-preview__skel" />
-            <button type="button" className="set-preview__btn">
-              Write a review
-            </button>
-          </div>
-
-          <div className="set-actions" style={{ justifyContent: "flex-start", marginTop: 16 }}>
-            <a href="/brand" target="_blank" rel="noopener noreferrer" className="set-link">
-              Open full preview
-              <Icon name="ext" size={13} />
-            </a>
-          </div>
-        </section>
-      </div>
+      <BrandKitPanel initialColors={brandColors} orgName={org.name} />
     </SettingsFrame>
   );
 }

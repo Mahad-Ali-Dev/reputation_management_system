@@ -13,6 +13,33 @@ import "./autopilot-roi.css";
  */
 const ASSETS = "/assets/repulabs/autopilot";
 
+/** Currency codes for the Revenue assumptions form — display is a plain
+ *  `${code} ${amount}` string (see fmtMoney below), so any ISO 4217-style
+ *  code works; this is just a curated pick list instead of free text. */
+const CURRENCY_OPTIONS = [
+  { code: "USD", label: "USD — US Dollar" },
+  { code: "EUR", label: "EUR — Euro" },
+  { code: "GBP", label: "GBP — British Pound" },
+  { code: "CAD", label: "CAD — Canadian Dollar" },
+  { code: "AUD", label: "AUD — Australian Dollar" },
+  { code: "NZD", label: "NZD — New Zealand Dollar" },
+  { code: "INR", label: "INR — Indian Rupee" },
+  { code: "PKR", label: "PKR — Pakistani Rupee" },
+  { code: "AED", label: "AED — UAE Dirham" },
+  { code: "SAR", label: "SAR — Saudi Riyal" },
+  { code: "SGD", label: "SGD — Singapore Dollar" },
+  { code: "HKD", label: "HKD — Hong Kong Dollar" },
+  { code: "JPY", label: "JPY — Japanese Yen" },
+  { code: "CNY", label: "CNY — Chinese Yuan" },
+  { code: "ZAR", label: "ZAR — South African Rand" },
+  { code: "BRL", label: "BRL — Brazilian Real" },
+  { code: "MXN", label: "MXN — Mexican Peso" },
+  { code: "CHF", label: "CHF — Swiss Franc" },
+  { code: "SEK", label: "SEK — Swedish Krona" },
+  { code: "NOK", label: "NOK — Norwegian Krone" },
+  { code: "DKK", label: "DKK — Danish Krone" },
+] as const;
+
 /**
  * ROI panel (Module 15) — design-kit rebuild (tasks/autopilot/autopilot/
  * ROI section, active + empty handoffs).
@@ -322,7 +349,13 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
             <div className="apr-head">
               <span className="apr-badge">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="apr-badge__art" src={`${ASSETS}/roi-book-revenue.png`} alt="" />
+                <img
+                  className="apr-badge__art"
+                  src={`${ASSETS}/roi-book-revenue.png`}
+                  alt=""
+                  width={44}
+                  height={44}
+                />
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Estimated booked revenue</h3>
@@ -389,7 +422,13 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
             <div className="apr-rev__chart">
               {isEmpty ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img className="apr-emptyart" src={`${ASSETS}/roi-empty-rev.png`} alt="" />
+                <img
+                  className="apr-emptyart"
+                  src={`${ASSETS}/roi-empty-rev.png`}
+                  alt=""
+                  width={132}
+                  height={132}
+                />
               ) : (
                 <RevenueMiniChart
                   values={[
@@ -408,7 +447,13 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
           <div className="apr-head">
             <span className="apr-badge">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img className="apr-badge__art" src={`${ASSETS}/roi-funnel.png`} alt="" />
+              <img
+                className="apr-badge__art"
+                src={`${ASSETS}/roi-funnel.png`}
+                alt=""
+                width={44}
+                height={44}
+              />
             </span>
             <div className="apr-head__text">
               <h3 className="apr-title">The funnel</h3>
@@ -468,7 +513,13 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
             <div className="apr-head">
               <span className="apr-badge">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="apr-badge__art" src={`${ASSETS}/roi-came-reviews.png`} alt="" />
+                <img
+                  className="apr-badge__art"
+                  src={`${ASSETS}/roi-came-reviews.png`}
+                  alt=""
+                  width={44}
+                  height={44}
+                />
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Where reviews came from</h3>
@@ -488,6 +539,8 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
                         className="apr-srcicon__art"
                         src={`${ASSETS}/roi-src-${s.key === "outreach" ? "reqreview" : s.key === "organic" ? "organic" : s.key === "qr" ? "qr" : "voice"}.png`}
                         alt=""
+                        width={32}
+                        height={32}
                       />
                     </span>
                     <span className="apr-source__label">{s.label}</span>
@@ -524,7 +577,13 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
             <div className="apr-head">
               <span className="apr-badge">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="apr-badge__art" src={`${ASSETS}/roi-bysrc-header.png`} alt="" />
+                <img
+                  className="apr-badge__art"
+                  src={`${ASSETS}/roi-bysrc-header.png`}
+                  alt=""
+                  width={44}
+                  height={44}
+                />
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Estimated revenue by source</h3>
@@ -538,7 +597,7 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
                   <div className="apr-bysrc__top">
                     <span className="apr-srcicon">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img className="apr-srcicon__art" src={c.art} alt="" />
+                      <img className="apr-srcicon__art" src={c.art} alt="" width={32} height={32} />
                     </span>
                     <span className="apr-bysrc__label">{c.label}</span>
                   </div>
@@ -642,7 +701,13 @@ function RoiSettingsEditor({
       <div className="apr-head">
         <span className="apr-badge">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img className="apr-badge__art" src={`${ASSETS}/roi-assume.png`} alt="" />
+          <img
+            className="apr-badge__art"
+            src={`${ASSETS}/roi-assume.png`}
+            alt=""
+            width={44}
+            height={44}
+          />
         </span>
         <div className="apr-head__text">
           <h3 className="apr-title">Revenue assumptions</h3>
@@ -658,7 +723,13 @@ function RoiSettingsEditor({
             <label className="apr-field__label" htmlFor="apr-input-location">
               <span className="apr-glyph" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="apr-glyph__art" src={`${ASSETS}/roi-loc.png`} alt="" />
+                <img
+                  className="apr-glyph__art"
+                  src={`${ASSETS}/roi-loc.png`}
+                  alt=""
+                  width={26}
+                  height={26}
+                />
               </span>
               Location
             </label>
@@ -692,7 +763,13 @@ function RoiSettingsEditor({
             <label className="apr-field__label" htmlFor="apr-input-avg">
               <span className="apr-glyph" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="apr-glyph__art" src={`${ASSETS}/roi-avgjob.png`} alt="" />
+                <img
+                  className="apr-glyph__art"
+                  src={`${ASSETS}/roi-avgjob.png`}
+                  alt=""
+                  width={26}
+                  height={26}
+                />
               </span>
               Average job value
             </label>
@@ -711,7 +788,13 @@ function RoiSettingsEditor({
             <label className="apr-field__label" htmlFor="apr-input-rate">
               <span className="apr-glyph" aria-hidden="true">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img className="apr-glyph__art" src={`${ASSETS}/roi-rate.png`} alt="" />
+                <img
+                  className="apr-glyph__art"
+                  src={`${ASSETS}/roi-rate.png`}
+                  alt=""
+                  width={26}
+                  height={26}
+                />
               </span>
               Booking rate (0–1)
             </label>
@@ -734,14 +817,25 @@ function RoiSettingsEditor({
               </span>
               Currency
             </label>
-            <input
+            <select
               id="apr-input-currency"
               className="apr-input"
-              type="text"
-              maxLength={8}
               value={cur}
               onChange={(e) => setCur(e.target.value)}
-            />
+            >
+              <option value="">Select a currency…</option>
+              {/* The saved/typed value might not be in the curated list (a custom
+                  code from before this was a dropdown) — keep it selectable so
+                  switching to a select never silently changes the org's setting. */}
+              {cur && !CURRENCY_OPTIONS.some((c) => c.code === cur) && (
+                <option value={cur}>{cur}</option>
+              )}
+              {CURRENCY_OPTIONS.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.label}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 

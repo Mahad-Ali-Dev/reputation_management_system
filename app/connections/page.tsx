@@ -15,10 +15,16 @@ import { PROVIDERS, type ProviderEntry } from "@/lib/providers/registry";
 import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { disconnectConnection, resyncConnection } from "./_components/actions";
-import { type ConnectedRow, ConnectedSystemsTable } from "./_components/connected-systems-table";
+import {
+  type ConnectedRow,
+  ConnectedSystemsTable,
+} from "./_components/connected-systems-table";
 import { ConnectionsBrowser } from "./_components/connections-browser";
 import { CsvImportPanel } from "./_components/csv-import-panel";
-import { SuggestedBand, type SuggestedCard } from "./_components/suggested-band";
+import {
+  SuggestedBand,
+  type SuggestedCard,
+} from "./_components/suggested-band";
 import "./connections-kit.css";
 import {
   type SerializedConnection,
@@ -183,7 +189,10 @@ function suggestionConnectHref(
   configured: boolean,
 ): { href: string; prefetch: boolean } {
   if (connType === "oauth" && ready && configured) {
-    return { href: `/api/connections/${providerId}/authorize`, prefetch: false };
+    return {
+      href: `/api/connections/${providerId}/authorize`,
+      prefetch: false,
+    };
   }
   return { href: `/connections/${providerId}`, prefetch: true };
 }
@@ -224,7 +233,9 @@ export default async function ConnectionsPage({
   }
 
   const configuredSet = new Set(
-    providerApps.filter((p) => p.status === "configured").map((p) => p.provider),
+    providerApps
+      .filter((p) => p.status === "configured")
+      .map((p) => p.provider),
   );
 
   // ── Band 1: "Suggested for you" — orchestrator-detected candidates. ───────
@@ -239,7 +250,8 @@ export default async function ConnectionsPage({
     seenSuggested.add(providerId);
     const meta = getProviderMeta(providerId);
     const configured = configuredSet.has(entry.id);
-    const conns = connByProvider.get(providerId) ?? connByProvider.get(entry.id) ?? [];
+    const conns =
+      connByProvider.get(providerId) ?? connByProvider.get(entry.id) ?? [];
     const { href, prefetch } = suggestionConnectHref(
       providerId,
       meta.connType,
@@ -336,7 +348,8 @@ export default async function ConnectionsPage({
   const connectedCount = activeConns.length;
   const errorCount = connections.filter((c) => c.status === "error").length;
   const totalAvailable = SECTION_DEFS.reduce(
-    (sum, d) => sum + d.providerIds.filter((id) => !isLegacyProvider(id)).length,
+    (sum, d) =>
+      sum + d.providerIds.filter((id) => !isLegacyProvider(id)).length,
     0,
   );
   const newest = newestSync(
@@ -358,15 +371,18 @@ export default async function ConnectionsPage({
             </div>
             <h1 className="ph__title">Connections</h1>
             <p className="ph__sub">
-              Pull customer data from your CRM and POS, listen on social, and let repulabs ship
-              review requests at the moment of truth.
+              Pull customer data from your CRM and POS, listen on social, and
+              let repulabs ship review requests at the moment of truth.
             </p>
           </div>
-          <div className="row" style={{ flexShrink: 0, gap: 10, flexWrap: "wrap" }}>
-            <Link href="/connections?import=1#csv-import" className="conn-btn">
+          <div
+            className="row"
+            style={{ flexShrink: 0, gap: 10, flexWrap: "wrap" }}
+          >
+            {/* <Link href="/connections?import=1#csv-import" className="conn-btn">
               <Icon name="upload" size={15} />
               Import CSV
-            </Link>
+            </Link> */}
             <a
               href="mailto:hello@repulabs.com?subject=Integration%20request"
               className="conn-btn conn-btn--pri"
@@ -411,7 +427,9 @@ export default async function ConnectionsPage({
             label="Last sync"
             value={isEmpty ? "—" : relativeTime(newest)}
             valueMuted={isEmpty}
-            pill={isEmpty ? undefined : { tone: "green", label: "Synced just now" }}
+            pill={
+              isEmpty ? undefined : { tone: "green", label: "Synced just now" }
+            }
             sub={isEmpty ? "—" : undefined}
             smallValue={!isEmpty}
             spark="green"
@@ -449,8 +467,8 @@ export default async function ConnectionsPage({
           <div style={{ minWidth: 0 }}>
             <h2 className="conn-panel__title">Bring your systems together</h2>
             <p className="conn-panel__text">
-              Connect the tools you already use. We&apos;ll sync your customers and send review
-              requests automatically at the right moment.
+              Connect the tools you already use. We&apos;ll sync your customers
+              and send review requests automatically at the right moment.
             </p>
             <div className="conn-panel__cta">
               <a
@@ -495,19 +513,32 @@ export default async function ConnectionsPage({
         </div>
 
         {/* ── Live-status banner ──────────────────────────────────────── */}
-        <StatusBanner empty={isEmpty} hasError={errorCount > 0} activeCount={connectedCount} />
+        <StatusBanner
+          empty={isEmpty}
+          hasError={errorCount > 0}
+          activeCount={connectedCount}
+        />
 
         {/* ── CSV import pre-flight (opened via ?import=1) ────────────── */}
         {showImport && (
-          <div id="csv-import" style={{ marginBottom: 20, scrollMarginTop: 24 }}>
+          <div
+            id="csv-import"
+            style={{ marginBottom: 20, scrollMarginTop: 24 }}
+          >
             <CsvImportPanel />
           </div>
         )}
 
         {/* ── Bands ───────────────────────────────────────────────────── */}
-        <div id="browse" className="col" style={{ gap: 20, scrollMarginTop: 24 }}>
+        <div
+          id="browse"
+          className="col"
+          style={{ gap: 20, scrollMarginTop: 24 }}
+        >
           {/* Suggested for you (hidden entirely when no suggestions). */}
-          {suggestedCards.length > 0 && <SuggestedBand cards={suggestedCards} />}
+          {suggestedCards.length > 0 && (
+            <SuggestedBand cards={suggestedCards} />
+          )}
 
           {/* Connected — the org's live connection rows (kept, live table). */}
           <ConnectedSystemsTable
@@ -517,7 +548,10 @@ export default async function ConnectionsPage({
           />
 
           {/* All integrations — category cards + searchable list. */}
-          <ConnectionsBrowser sections={sections} disconnectAction={disconnectConnection} />
+          <ConnectionsBrowser
+            sections={sections}
+            disconnectAction={disconnectConnection}
+          />
         </div>
       </div>
     </AppShellServer>
@@ -545,7 +579,12 @@ function Sparkline({ kind }: { kind: keyof typeof SPARKS }) {
   const s = SPARKS[kind];
   const id = `conn-spark-${kind}`;
   return (
-    <svg className="conn-stat__spark" viewBox="0 0 118 40" fill="none" aria-hidden="true">
+    <svg
+      className="conn-stat__spark"
+      viewBox="0 0 118 40"
+      fill="none"
+      aria-hidden="true"
+    >
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor={s.color} stopOpacity="0.18" />
@@ -553,7 +592,13 @@ function Sparkline({ kind }: { kind: keyof typeof SPARKS }) {
         </linearGradient>
       </defs>
       <path d={`${s.d} L116 40 L2 40 Z`} fill={`url(#${id})`} />
-      <path d={s.d} stroke={s.color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path
+        d={s.d}
+        stroke={s.color}
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -584,7 +629,10 @@ function StatCard({
 }) {
   return (
     <div className="conn-card conn-stat">
-      <div className={`conn-stat__tile conn-stat__tile--${tile}`} aria-hidden="true">
+      <div
+        className={`conn-stat__tile conn-stat__tile--${tile}`}
+        aria-hidden="true"
+      >
         {asset ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={`/assets/repulabs/connections/${asset}`} alt="" />
@@ -602,7 +650,9 @@ function StatCard({
         {value}
       </div>
       {pill ? (
-        <span className={`conn-stat__pill conn-stat__pill--${pill.tone}`}>{pill.label}</span>
+        <span className={`conn-stat__pill conn-stat__pill--${pill.tone}`}>
+          {pill.label}
+        </span>
       ) : (
         sub && <div className="conn-stat__sub">{sub}</div>
       )}
@@ -660,7 +710,10 @@ function Step({
 }) {
   return (
     <div className="conn-step">
-      <span className={`conn-step__ico conn-step__ico--${tone}`} aria-hidden="true">
+      <span
+        className={`conn-step__ico conn-step__ico--${tone}`}
+        aria-hidden="true"
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={`/assets/repulabs/connections/${asset}`} alt="" />
         <span className="conn-step__badge">{n}</span>
@@ -686,7 +739,10 @@ function StatusBanner({
   // neutral (per the file-17 QA flag — no green "Connected" while 0 connected).
   const neutral = empty || hasError;
   return (
-    <div className={`conn-banner${neutral ? " conn-banner--neutral" : ""}`} role="status">
+    <div
+      className={`conn-banner${neutral ? " conn-banner--neutral" : ""}`}
+      role="status"
+    >
       <div className="conn-banner__top">
         <span className="conn-banner__check" aria-hidden="true">
           {neutral ? (
@@ -698,14 +754,20 @@ function StatusBanner({
         </span>
         <div style={{ minWidth: 0 }}>
           <div className="conn-banner__title">
-            {empty ? "Not connected yet" : hasError ? "Attention needed" : "Connected"}
+            {empty
+              ? "Not connected yet"
+              : hasError
+                ? "Attention needed"
+                : "Connected"}
           </div>
           <div className="conn-banner__sub">
             Everything currently feeding your data spine — status and last sync.
           </div>
         </div>
         <span className="conn-banner__active">
-          {!neutral && <span className="conn-banner__active-dot" aria-hidden="true" />}
+          {!neutral && (
+            <span className="conn-banner__active-dot" aria-hidden="true" />
+          )}
           {activeCount} ACTIVE
         </span>
       </div>

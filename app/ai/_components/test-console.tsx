@@ -1,9 +1,15 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import {
+  addKnowledgeAnswer,
+  dismissKnowledgeGap,
+  teachKnowledgeGap,
+} from "@/lib/ai/knowledge-gap-actions";
 import type { KnowledgeGapRow } from "@/lib/ai/knowledge-gaps";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 /**
@@ -85,18 +91,30 @@ const TOPIC_CHIPS: Array<{
 export function TestConsole({
   suggestions,
   openGaps,
-  teachHref,
+  answeredGaps,
 }: {
   suggestions: string[];
   openGaps: KnowledgeGapRow[];
-  teachHref: string;
+  answeredGaps: KnowledgeGapRow[];
 }) {
+  const router = useRouter();
   const [turns, setTurns] = useState<Turn[]>([]);
   const [input, setInput] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const convId = useRef<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  // null = closed, "add" = new-question form, a KnowledgeGapRow = teach-this-gap form.
+  const [teachModal, setTeachModal] = useState<KnowledgeGapRow | "add" | null>(null);
+  const [showTaught, setShowTaught] = useState(true);
+
+  function closeTeachModal() {
+    setTeachModal(null);
+  }
+  function onTaught() {
+    setTeachModal(null);
+    router.refresh();
+  }
 
   const assistantTurns = turns.filter((t) => t.role === "assistant");
   const totalTests = assistantTurns.length;
@@ -550,7 +568,7 @@ export function TestConsole({
       </section>
 
       {/* Questions to teach (real open gaps) */}
-      <section className="akb-card akb-card__pad">
+      <section id="akb-teach-section" className="akb-card akb-card__pad">
         <div
           style={{
             display: "flex",
@@ -567,10 +585,15 @@ export function TestConsole({
               accuracy.
             </p>
           </div>
-          <Link href={teachHref} className="akb-btn-outline" style={{ height: 34 }}>
+          <button
+            type="button"
+            className="akb-btn-outline"
+            style={{ height: 34 }}
+            onClick={() => setTeachModal("add")}
+          >
             <Icon name="plus" size={14} />
             Add question
-          </Link>
+          </button>
         </div>
 
         {openGaps.length === 0 ? (
@@ -593,25 +616,27 @@ export function TestConsole({
               Rate a tester answer thumbs-down, or add real questions and accurate answers your AI
               agent can learn from.
             </div>
-            <Link
-              href={teachHref}
+            <button
+              type="button"
               className="akb-btn-outline"
               style={{
                 marginTop: 6,
                 color: "var(--akb-primary)",
                 borderColor: "var(--akb-hero-border)",
               }}
+              onClick={() => setTeachModal("add")}
             >
               <Icon name="plus" size={14} />
               Add your first question
-            </Link>
+            </button>
           </div>
         ) : (
           <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
             {openGaps.slice(0, 5).map((g) => (
-              <Link
+              <button
                 key={g.id}
-                href={teachHref}
+                type="button"
+                onClick={() => setTeachModal(g)}
                 style={{
                   display: "flex",
                   justifyContent: "space-between",
@@ -621,6 +646,11 @@ export function TestConsole({
                   borderRadius: 10,
                   textDecoration: "none",
                   color: "inherit",
+                  background: "#fff",
+                  width: "100%",
+                  textAlign: "left",
+                  cursor: "pointer",
+                  font: "inherit",
                 }}
               >
                 <div style={{ minWidth: 0 }}>
@@ -634,11 +664,90 @@ export function TestConsole({
                 <span className="akb-pill akb-pill--warning" style={{ alignSelf: "center" }}>
                   Teach
                 </span>
-              </Link>
+              </button>
             ))}
           </div>
         )}
       </section>
+
+      {/* Taught answers (real, already-answered gaps — this is where an added
+          or taught question actually shows up: it's saved as "answered" right
+          away, so it never appears in "Questions to teach" above). */}
+      {answeredGaps.length > 0 && (
+        <section className="akb-card akb-card__pad">
+          <button
+            type="button"
+            onClick={() => setShowTaught((s) => !s)}
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              width: "100%",
+              background: "none",
+              border: 0,
+              padding: 0,
+              cursor: "pointer",
+              textAlign: "left",
+            }}
+          >
+            <div>
+              <h3 className="akb-card__title">Taught answers ({answeredGaps.length})</h3>
+              <p className="akb-card__sub">Questions your AI agent already knows how to answer.</p>
+            </div>
+            <Icon name={showTaught ? "chevU" : "chevD"} size={14} />
+          </button>
+
+          {showTaught && (
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {answeredGaps.map((g) => (
+                <div
+                  key={g.id}
+                  style={{
+                    padding: "10px 14px",
+                    border: "1px solid var(--akb-line)",
+                    borderRadius: 10,
+                  }}
+                >
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                      gap: 12,
+                    }}
+                  >
+                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--akb-ink)" }}>
+                      {g.question}
+                    </div>
+                    <span
+                      className="akb-pill akb-pill--success"
+                      style={{ flexShrink: 0, alignSelf: "center" }}
+                    >
+                      <Icon name="checkCircle" size={11} />
+                      Taught
+                    </span>
+                  </div>
+                  {g.answerText && (
+                    <div
+                      style={{
+                        fontSize: 12.5,
+                        color: "var(--akb-muted)",
+                        marginTop: 4,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {g.answerText}
+                    </div>
+                  )}
+                  <div style={{ fontSize: 11, color: "var(--akb-soft-text)", marginTop: 4 }}>
+                    via {g.source.replace(/_/g, " ")}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
+      )}
 
       {/* Insights & tips */}
       <section className="akb-card akb-card__pad">
@@ -662,10 +771,147 @@ export function TestConsole({
                 : "Teaching these answers is the fastest way to raise your AI's accuracy."}
             </div>
           </div>
-          <Link href={teachHref} className="akb-link" style={{ flexShrink: 0 }}>
+          <Link href="#akb-teach-section" className="akb-link" style={{ flexShrink: 0 }}>
             View suggestions <Icon name="arrowR" size={13} />
           </Link>
         </div>
+      </section>
+
+      {teachModal !== null && (
+        <TeachDialog
+          gap={teachModal === "add" ? null : teachModal}
+          onClose={closeTeachModal}
+          onDone={onTaught}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * "Teach AI" (answer an existing gap) and "Add question" (a brand-new Q&A
+ * pair, no prior gap) share this dialog — `gap` null means the question field
+ * is editable; otherwise it's the gap's real question, read-only.
+ */
+function TeachDialog({
+  gap,
+  onClose,
+  onDone,
+}: {
+  gap: KnowledgeGapRow | null;
+  onClose: () => void;
+  onDone: () => void;
+}) {
+  const [question, setQuestion] = useState(gap?.question ?? "");
+  const [answer, setAnswer] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    setPending(true);
+    setError(null);
+    try {
+      const fd = new FormData();
+      fd.set("answer", answer);
+      if (gap) {
+        fd.set("gapId", gap.id);
+        await teachKnowledgeGap(fd);
+      } else {
+        fd.set("question", question);
+        await addKnowledgeAnswer(fd);
+      }
+      onDone();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save. Try again.");
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="akb-teach-backdrop">
+      <button
+        type="button"
+        aria-label="Close"
+        className="akb-teach-scrim"
+        onClick={onClose}
+        disabled={pending}
+      />
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="akb-teach-title"
+        className="akb-teach-modal"
+      >
+        <div className="akb-teach-modal__head">
+          <h3 id="akb-teach-title" className="akb-teach-modal__title">
+            {gap ? "Teach your AI" : "Add a question"}
+          </h3>
+          <button
+            type="button"
+            aria-label="Close"
+            className="akb-teach-modal__close"
+            onClick={onClose}
+          >
+            <Icon name="x" size={16} stroke={2.2} />
+          </button>
+        </div>
+        <p className="akb-teach-modal__sub">
+          {gap
+            ? "Your answer is added to the AI's instructions so it can answer this — and similar questions — correctly from now on."
+            : "Add a question your AI should know, with the correct answer. It's saved straight into the AI's knowledge, no need to wait for a customer to ask it first."}
+        </p>
+
+        <form onSubmit={submit} className="akb-teach-modal__form">
+          {gap ? (
+            <div className="akb-teach-modal__qbox">
+              <span className="akb-teach-modal__label">Question</span>
+              <div className="akb-teach-modal__qtext">{gap.question}</div>
+            </div>
+          ) : (
+            <label className="akb-teach-modal__field">
+              <span className="akb-teach-modal__label">Question</span>
+              <input
+                value={question}
+                onChange={(e) => setQuestion(e.target.value)}
+                maxLength={500}
+                required
+                placeholder="e.g. Do you offer gift cards?"
+                className="akb-teach-modal__input"
+              />
+            </label>
+          )}
+
+          <label className="akb-teach-modal__field">
+            <span className="akb-teach-modal__label">Answer</span>
+            <textarea
+              value={answer}
+              onChange={(e) => setAnswer(e.target.value)}
+              maxLength={1000}
+              rows={5}
+              required
+              placeholder="Type the correct answer the AI should give…"
+              className="akb-teach-modal__textarea"
+            />
+          </label>
+
+          {error && (
+            <div role="alert" className="akb-teach-modal__error">
+              <Icon name="alert" size={12} />
+              {error}
+            </div>
+          )}
+
+          <div className="akb-teach-modal__foot">
+            <button type="button" className="akb-btn-outline" onClick={onClose} disabled={pending}>
+              Cancel
+            </button>
+            <button type="submit" className="akb-btn-primary" disabled={pending}>
+              <Icon name="check" size={13} />
+              {pending ? "Saving…" : gap ? "Teach AI" : "Add question"}
+            </button>
+          </div>
+        </form>
       </section>
     </div>
   );

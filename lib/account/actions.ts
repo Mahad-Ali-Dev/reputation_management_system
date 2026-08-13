@@ -2,6 +2,7 @@
 
 import { createHash, randomBytes } from "node:crypto";
 import { sanitizeTabKeys } from "@/lib/access/tabs";
+import { HEX_COLOR_RE } from "@/lib/account/brand-colors";
 import { ACTIVE_ORG_COOKIE } from "@/lib/auth/active-org";
 import { auth, signOut } from "@/lib/auth/config";
 import { ForbiddenError, requireRole } from "@/lib/auth/rbac";
@@ -26,7 +27,20 @@ const ProfileSchema = z.object({
   phone: z.string().max(40).optional(),
   country: z.string().max(60).optional(),
   websiteUrl: z.string().url().max(500).or(z.literal("")).optional(),
-  logoUrl: z.string().url().max(500).or(z.literal("")).optional(),
+  // max() before url() so a too-long value reports THIS message, not zod's
+  // generic "invalid url" one — the common cause is the dev-mode upload
+  // fallback (lib/uploads/blob.ts) embedding the image as a data: URL when
+  // no blob storage token is configured, which the Brand page must never
+  // feed back into this plain-text field (see app/settings/brand/page.tsx).
+  logoUrl: z
+    .string()
+    .max(
+      500,
+      "Logo URL is too long — paste a public https:// link to the image, not a data: URL (that usually means the uploader ran without cloud storage configured; use it directly instead of pasting its result here).",
+    )
+    .url()
+    .or(z.literal(""))
+    .optional(),
   businessDescription: z.string().max(2000).optional(),
 });
 
@@ -49,6 +63,17 @@ export async function updateAccountSettings(form: FormData): Promise<void> {
   }
   const data = parsed.data;
 
+  // This action is shared by two forms that DON'T submit the same fields —
+  // /settings/workspace has no `logoUrl` input, /settings/brand only submits
+  // `businessName` + `logoUrl` (no ownerName/phone/country/etc). A field
+  // genuinely ABSENT from the submitted form must leave that column
+  // untouched; only a field the form actually included, submitted blank, is
+  // an intentional "clear this". `form.has()` distinguishes the two — the
+  // parsed `data` alone can't, since "" and "absent" both parse to
+  // `undefined` above. Before this, saving either form silently nulled out
+  // every field the OTHER form owns.
+  const has = (key: string) => form.has(key);
+
   // Both writes happen inside the same tenant-scoped transaction so RLS
   // enforces that this org can only mutate its own row + its own audit log.
   await withTenant(orgId, async (tx) => {
@@ -56,13 +81,13 @@ export async function updateAccountSettings(form: FormData): Promise<void> {
       where: { id: orgId },
       data: {
         name: data.businessName,
-        ownerName: data.ownerName ?? null,
-        ownerEmail: data.ownerEmail ?? null,
-        phone: data.phone ?? null,
-        country: data.country ?? null,
-        websiteUrl: data.websiteUrl || null,
-        logoUrl: data.logoUrl || null,
-        businessDescription: data.businessDescription ?? null,
+        ...(has("ownerName") && { ownerName: data.ownerName ?? null }),
+        ...(has("ownerEmail") && { ownerEmail: data.ownerEmail ?? null }),
+        ...(has("phone") && { phone: data.phone ?? null }),
+        ...(has("country") && { country: data.country ?? null }),
+        ...(has("websiteUrl") && { websiteUrl: data.websiteUrl || null }),
+        ...(has("logoUrl") && { logoUrl: data.logoUrl || null }),
+        ...(has("businessDescription") && { businessDescription: data.businessDescription ?? null }),
       },
     });
     await tx.auditLog.create({
@@ -571,6 +596,86 @@ export async function updateSecurityPrefs(form: FormData): Promise<void> {
   });
 
   revalidatePath("/settings", "layout");
+}
+
+// ============================================================
+// Brand — palette used by the Brand settings preview + outbound emails
+// (constants live in ./brand-colors — "use server" can't export non-functions)
+// ============================================================
+
+export type BrandColorsResult = { ok: true } | { ok: false; error: string };
+
+const BrandColorsSchema = z.object({
+  primary: z.string().regex(HEX_COLOR_RE),
+  secondary: z.string().regex(HEX_COLOR_RE),
+  accent: z.string().regex(HEX_COLOR_RE),
+  neutral: z.string().regex(HEX_COLOR_RE),
+  light: z.string().regex(HEX_COLOR_RE),
+});
+
+/**
+ * Persist the brand palette, merged into `settings.brand.colors` (same
+ * read-merge-write pattern as updateSecurityPrefs/updateNotificationPrefs, so
+ * this can't clobber those other setting groups). Called directly from the
+ * client (BrandKitPanel), not bound as a `<form action>`, so it returns a
+ * result object rather than throwing — the LogoUploader/uploadOrgLogo
+ * convention on this same page.
+ */
+export async function updateBrandColors(form: FormData): Promise<BrandColorsResult> {
+  try {
+    const { orgId, userId } = await requireRole("admin");
+    const parsed = BrandColorsSchema.safeParse({
+      primary: form.get("primary"),
+      secondary: form.get("secondary"),
+      accent: form.get("accent"),
+      neutral: form.get("neutral"),
+      light: form.get("light"),
+    });
+    if (!parsed.success) {
+      return { ok: false, error: "Each color must be a valid hex value." };
+    }
+
+    await withTenant(orgId, async (tx) => {
+      const current = await tx.organization.findUnique({
+        where: { id: orgId },
+        select: { settings: true },
+      });
+      const existing = asJsonObject(current?.settings);
+      const next = {
+        ...existing,
+        brand: { ...asJsonObject(existing.brand), colors: parsed.data },
+      };
+      await tx.organization.update({
+        where: { id: orgId },
+        data: { settings: next as Prisma.InputJsonValue },
+      });
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "brand.colors.updated",
+          resourceType: "organization",
+          resourceId: orgId,
+          afterData: parsed.data,
+        },
+      });
+    });
+
+    revalidatePath("/settings", "layout");
+    return { ok: true };
+  } catch (err) {
+    const digest = (err as { digest?: unknown } | null)?.digest;
+    if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+    if (err instanceof ForbiddenError) {
+      return { ok: false, error: "Only owners and admins can change the brand palette." };
+    }
+    logger.error({
+      event: "brand.colors.update_failed",
+      error: err instanceof Error ? err.message : String(err),
+    });
+    return { ok: false, error: "Couldn't save the palette. Try again." };
+  }
 }
 
 // ============================================================

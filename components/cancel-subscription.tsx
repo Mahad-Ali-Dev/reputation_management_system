@@ -23,7 +23,7 @@ export function CancelSubscriptionButton() {
         style={{
           width: "100%",
           justifyContent: "center",
-          marginTop: 16,
+          marginTop: 26,
           color: "var(--bad, #b91c1c)",
         }}
       >

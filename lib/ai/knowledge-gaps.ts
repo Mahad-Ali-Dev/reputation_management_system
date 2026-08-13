@@ -5,7 +5,7 @@ import { auth } from "@/lib/auth/config";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
-import { isMissingRelationError } from "./confidence";
+import { isMissingRelationError, normalizeQuestion } from "./confidence";
 
 /**
  * Knowledge-gap queries + the "Teach AI" action behind the Learning Monitor tab.
@@ -282,13 +282,115 @@ export async function teachKnowledgeGap(form: FormData): Promise<void> {
         { event: "kb.teach.table_missing", orgId, gapId },
         "knowledge_gaps not migrated yet — teach no-op (fail-soft)",
       );
-      revalidatePath("/ai/training");
+      // The Learning Monitor UI moved to /ai (?tab=test) — /ai/training is a
+      // permanent redirect now, so revalidating it did nothing useful.
+      revalidatePath("/ai");
       return;
     }
     throw err;
   }
 
-  revalidatePath("/ai/training");
+  revalidatePath("/ai");
+}
+
+const AddSchema = z.object({
+  question: z.string().min(1).max(500),
+  answer: z.string().min(1).max(1000),
+});
+
+/**
+ * Owner adds a brand-new Q&A pair directly, rather than answering a question
+ * the AI was actually asked. Writes an already-`answered` knowledge_gaps row
+ * (source "manual") so it shows up in history the same way a taught gap does,
+ * then folds the answer into the AI's context exactly like teachKnowledgeGap.
+ * Fail-soft like the rest of this file.
+ */
+export async function addKnowledgeAnswer(form: FormData): Promise<void> {
+  const { orgId, userId } = await requireOrg();
+  await assertEntitled(orgId);
+
+  const parsed = AddSchema.safeParse({
+    question: form.get("question"),
+    answer: form.get("answer"),
+  });
+  if (!parsed.success) {
+    throw new Error(`Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`);
+  }
+  const { question, answer } = parsed.data;
+  const questionNorm = normalizeQuestion(question);
+
+  try {
+    await withTenant(orgId, async (tx) => {
+      const gap = await tx.knowledgeGap.create({
+        data: {
+          organizationId: orgId,
+          question,
+          questionNorm,
+          source: "manual",
+          status: "answered",
+          answerText: answer,
+          answeredAt: new Date(),
+          answeredBy: userId,
+          hitCount: 0,
+        },
+        select: { id: true },
+      });
+
+      const profile = await tx.aiTrainingProfile.findUnique({
+        where: { organizationId: orgId },
+        select: { customPrompt: true, taughtFacts: true },
+      });
+      const next = applyTaughtFact({
+        question,
+        answer,
+        customPrompt: profile?.customPrompt ?? null,
+        taughtFacts: profile?.taughtFacts ?? null,
+      });
+
+      if (profile) {
+        await tx.aiTrainingProfile.update({
+          where: { organizationId: orgId },
+          data: { customPrompt: next.customPrompt, taughtFacts: next.taughtFacts },
+        });
+      } else {
+        await tx.aiTrainingProfile.create({
+          data: {
+            organizationId: orgId,
+            customPrompt: next.customPrompt,
+            taughtFacts: next.taughtFacts,
+          },
+        });
+      }
+
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "ai.kb.taught",
+          resourceType: "knowledge_gap",
+          resourceId: gap.id,
+          afterData: {
+            question: question.slice(0, 200),
+            answerLength: answer.length,
+            source: "manual",
+          },
+        },
+      });
+    });
+  } catch (err) {
+    if (isMissingRelationError(err)) {
+      logger.warn(
+        { event: "kb.add.table_missing", orgId },
+        "knowledge_gaps not migrated yet — add no-op (fail-soft)",
+      );
+      revalidatePath("/ai");
+      return;
+    }
+    throw err;
+  }
+
+  revalidatePath("/ai");
 }
 
 /**
@@ -315,5 +417,5 @@ export async function dismissKnowledgeGap(form: FormData): Promise<void> {
     if (!isMissingRelationError(err)) throw err;
   }
 
-  revalidatePath("/ai/training");
+  revalidatePath("/ai");
 }

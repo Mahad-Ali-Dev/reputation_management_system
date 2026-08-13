@@ -4,6 +4,7 @@ import { saveAutopilotConfig } from "@/lib/autopilot/config-actions";
 import type { ActivityFeedItem, AutopilotConfigView } from "@/lib/autopilot/queries";
 import { type JSX, useState, useTransition } from "react";
 import { ActivityPanel } from "./activity-panel";
+import { ComingSoonOverlay } from "./coming-soon-overlay";
 import { ControlsPanel, type LoopKey } from "./controls-panel";
 import { RoiPanel, type RoiPanelData } from "./roi-panel";
 
@@ -111,7 +112,13 @@ export function AutopilotShell({
           />
         </div>
         <div hidden={tab !== "roi"}>
-          <RoiPanel data={roi} />
+          {/* ROI is built and wired to live data, but is being held back a
+              release — deliberately not deleted (see coming-soon-overlay.tsx),
+              just blurred with a "coming soon" message instead of the tab
+              rendering blank while it's held back. */}
+          <ComingSoonOverlay message="The ROI dashboard is on its way in a future release.">
+            <RoiPanel data={roi} />
+          </ComingSoonOverlay>
         </div>
       </div>
     </div>

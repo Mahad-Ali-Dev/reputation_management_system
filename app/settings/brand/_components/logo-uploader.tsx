@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { useToast } from "@/components/toast";
 import { uploadOrgLogo } from "@/lib/account/actions";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useTransition } from "react";
@@ -14,28 +15,29 @@ import { useRef, useState, useTransition } from "react";
  * `type="reset"` button mislabeled "Upload logo" that did nothing (reported bug:
  * "Brand → upload file → not working"). The "Logo URL" field remains as the
  * paste-a-URL alternative.
+ *
+ * Success/failure surfaces as a themed toast (useToast) instead of an inline
+ * banner — this is an upload-and-refresh action, not a form with a fixed spot
+ * near a submit button, so a toast is the more natural confirmation here.
  */
 export function LogoUploader() {
   const router = useRouter();
+  const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
-  const [ok, setOk] = useState(false);
   const [dragging, setDragging] = useState(false);
 
   function upload(file: File | null | undefined) {
     if (!file) return;
-    setError(null);
-    setOk(false);
     const form = new FormData();
     form.set("logo", file);
     startTransition(async () => {
       const res = await uploadOrgLogo(form);
       if (res.ok) {
-        setOk(true);
+        toast.success("Logo updated.");
         router.refresh();
       } else {
-        setError(res.error);
+        toast.error(res.error);
       }
     });
   }
@@ -77,16 +79,6 @@ export function LogoUploader() {
           onChange={(e) => upload(e.target.files?.[0])}
         />
       </label>
-      {error && (
-        <p role="alert" style={{ marginTop: 8, fontSize: 12.5, color: "#e14d62" }}>
-          {error}
-        </p>
-      )}
-      {ok && !error && (
-        <output style={{ display: "block", marginTop: 8, fontSize: 12.5, color: "#10b981" }}>
-          Logo updated.
-        </output>
-      )}
     </>
   );
 }
