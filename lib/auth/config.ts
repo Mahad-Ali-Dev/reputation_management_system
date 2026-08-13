@@ -1,5 +1,6 @@
 import { TRIAL_DAYS } from "@/lib/billing/plans";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import { senderFor } from "@/lib/email/senders";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import NextAuth from "next-auth";
 import type { NextAuthConfig } from "next-auth";
@@ -51,9 +52,9 @@ if (process.env.RESEND_API_KEY) {
   providers.push(
     Resend({
       apiKey: process.env.RESEND_API_KEY,
-      from: process.env.EMAIL_FROM ?? "Repulabs <auth@repulabs.com>",
+      from: senderFor("auth"),
       async sendVerificationRequest({ identifier: email, url, provider }) {
-        const fromAddress = provider.from ?? process.env.EMAIL_FROM ?? "auth@repulabs.com";
+        const fromAddress = provider.from ?? senderFor("auth");
         // Magic link was the ONE sender that skipped this guard, so a
         // *.resend.dev sandbox `from` failed silently here: Resend accepts the
         // send and returns no error, but only delivers to the Resend account

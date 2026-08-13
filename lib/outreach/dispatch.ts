@@ -225,6 +225,7 @@ export async function dispatchReviewRequest(
 
     const result = await sendReviewRequestEmail({
       to: rr.recipient,
+      businessName,
       // The customer thinks they're emailing the business, so their reply must
       // reach the business — not a Repulabs address with no mailbox.
       replyTo: await resolveBusinessReplyTo(orgId, org?.ownerEmail),

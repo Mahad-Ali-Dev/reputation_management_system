@@ -26,6 +26,7 @@ import { createHmac } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import { senderFor } from "@/lib/email/senders";
 import { ctaButton, emailHeading, emailParagraph, emailShell } from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
@@ -384,7 +385,7 @@ export async function sendAutopilotDigestForOrg(
     return { sent: 0, skipped: 1, errors: [] };
   }
 
-  const from = process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  const from = senderFor("notify");
   assertSendableEmailConfig(from);
   let sent = 0;
   const errors: string[] = [];

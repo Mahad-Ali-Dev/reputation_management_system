@@ -21,6 +21,7 @@ import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { type EmailBrand, emailShell } from "@/lib/email/templates";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { Resend } from "resend";
+import { senderFor } from "./senders";
 
 let _resend: Resend | null = null;
 function getResend(): Resend {
@@ -214,7 +215,7 @@ async function sendOnce(args: {
 export function defaultFromAddress(businessName: string): string {
   // Send-from defaults to a per-business display name with our verified
   // sending domain. Hosts can override later via per-org sender config.
-  const verified = process.env.EMAIL_FROM ?? "bookings@repulabs.com";
+  const verified = senderFor("bookings");
   const display = sanitizeDisplay(businessName);
   return display.length > 0 ? `${display} <${verified}>` : verified;
 }

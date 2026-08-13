@@ -1,3 +1,4 @@
+import { senderAsBusiness } from "@/lib/email/senders";
 import {
   ctaButton,
   emailHeading,
@@ -39,6 +40,8 @@ export async function sendReviewRequestEmail(args: {
   bodyHtml: string;
   unsubscribeUrl: string;
   fromOverride?: string;
+  /** Business name shown as the sender's display name. */
+  businessName?: string | null;
   /** Where a customer reply goes. See lib/email/reply-to.ts. */
   replyTo?: string | null;
 }): Promise<EmailSendResult> {
@@ -46,7 +49,11 @@ export async function sendReviewRequestEmail(args: {
   // EMAIL_FROM is misconfigured (unset → fallback, or a *.resend.dev sandbox
   // address), assertSendableEmailConfig emits a loud, deduped warning so the
   // otherwise-silent sandbox delivery failure is visible in logs.
-  const from = args.fromOverride ?? process.env.EMAIL_FROM ?? "notifications@repulabs.com";
+  // Shows the BUSINESS in the recipient's inbox over our verified address, e.g.
+  // `Chaaye Khana <feedback@repulabs.com>`. The customer is theirs, not ours, so
+  // the sender name should be the business they actually dealt with — while the
+  // envelope address stays on repulabs.com, which is what's verified in Resend.
+  const from = args.fromOverride ?? senderAsBusiness("outreach", args.businessName ?? null);
   assertSendableEmailConfig(from);
 
   try {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db/client";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
+import { senderFor } from "@/lib/email/senders";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getCronSecret, verifyCronRequest } from "@/lib/secrets";
@@ -106,7 +107,7 @@ async function sendDueReminders(): Promise<SendSummary> {
     return { candidatesFound: candidates.length, sent: 0, skipped: candidates.length, failed: 0 };
   }
   const resend = new Resend(resendKey);
-  const fromAddress = process.env.EMAIL_FROM ?? "bookings@repulabs.com";
+  const fromAddress = senderFor("bookings");
   assertSendableEmailConfig(fromAddress);
 
   for (const c of candidates) {
