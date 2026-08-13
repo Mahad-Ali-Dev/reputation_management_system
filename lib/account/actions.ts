@@ -485,45 +485,144 @@ const RemoveMemberSchema = z.object({
   membershipId: z.string().uuid(),
 });
 
-export async function removeMember(form: FormData): Promise<void> {
-  // Managing the team is an owner/admin action.
-  const { orgId, userId, role } = await requireRole("admin");
-  const { membershipId } = RemoveMemberSchema.parse({ membershipId: form.get("membershipId") });
+export type TeamActionResult = { ok: true } | { ok: false; error: string };
 
-  await withTenant(orgId, async (tx) => {
-    // Guard: prevent removing the last owner.
-    const target = await tx.membership.findFirst({
-      where: { id: membershipId, organizationId: orgId },
-      select: { role: true, userId: true },
-    });
-    if (!target) return;
-    // Only an owner may remove another owner or an admin.
-    if ((target.role === "owner" || target.role === "admin") && role !== "owner") {
-      throw new ForbiddenError("owner", role);
-    }
-    if (target.role === "owner") {
-      const ownerCount = await tx.membership.count({
-        where: { organizationId: orgId, role: "owner" },
+/** True for the special Next.js control-flow errors (redirect/notFound) that
+ *  must propagate untouched — swallowing one into {ok:false} would turn a
+ *  real navigation into a silently-eaten error. */
+function isNextControlFlowError(err: unknown): boolean {
+  const digest = (err as { digest?: unknown } | null)?.digest;
+  return typeof digest === "string" && digest.startsWith("NEXT_");
+}
+
+export async function removeMember(form: FormData): Promise<TeamActionResult> {
+  try {
+    // Managing the team is an owner/admin action.
+    const { orgId, userId, role } = await requireRole("admin");
+    const { membershipId } = RemoveMemberSchema.parse({ membershipId: form.get("membershipId") });
+
+    await withTenant(orgId, async (tx) => {
+      // Guard: prevent removing the last owner.
+      const target = await tx.membership.findFirst({
+        where: { id: membershipId, organizationId: orgId },
+        select: { role: true, userId: true },
       });
-      if (ownerCount <= 1) {
-        throw new Error("Cannot remove the last owner");
+      if (!target) return;
+      // Only an owner may remove another owner or an admin.
+      if ((target.role === "owner" || target.role === "admin") && role !== "owner") {
+        throw new ForbiddenError("owner", role);
       }
-    }
-    await tx.membership.delete({ where: { id: membershipId } });
-    await tx.auditLog.create({
-      data: {
-        organizationId: orgId,
-        actorType: "user",
-        actorId: userId,
-        action: "team.removed",
-        resourceType: "membership",
-        resourceId: membershipId,
-        beforeData: { removedUserId: target.userId, role: target.role },
-      },
+      if (target.role === "owner") {
+        const ownerCount = await tx.membership.count({
+          where: { organizationId: orgId, role: "owner" },
+        });
+        if (ownerCount <= 1) {
+          throw new Error("Cannot remove the last owner");
+        }
+      }
+      await tx.membership.delete({ where: { id: membershipId } });
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "team.removed",
+          resourceType: "membership",
+          resourceId: membershipId,
+          beforeData: { removedUserId: target.userId, role: target.role },
+        },
+      });
     });
-  });
 
-  revalidatePath("/settings", "layout");
+    revalidatePath("/settings", "layout");
+    return { ok: true };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Could not remove member." };
+  }
+}
+
+const UpdateMemberRoleSchema = z.object({
+  membershipId: z.string().uuid(),
+  role: z.enum(["owner", "admin", "manager", "viewer"]),
+});
+
+/**
+ * Change an existing member's role. Same escalation + last-owner guards as
+ * invite/remove: only an owner can grant or revoke owner/admin, and the last
+ * owner can't be demoted away (that would leave the org ownerless).
+ */
+export async function updateMemberRole(form: FormData): Promise<TeamActionResult> {
+  try {
+    const { orgId, userId, role: actorRole } = await requireRole("admin");
+    const parsed = UpdateMemberRoleSchema.safeParse({
+      membershipId: form.get("membershipId"),
+      role: form.get("role"),
+    });
+    if (!parsed.success) {
+      return {
+        ok: false,
+        error: `Validation: ${parsed.error.issues.map((i) => i.message).join("; ")}`,
+      };
+    }
+    const { membershipId, role: nextRole } = parsed.data;
+
+    await withTenant(orgId, async (tx) => {
+      const target = await tx.membership.findFirst({
+        where: { id: membershipId, organizationId: orgId },
+        select: { role: true, userId: true },
+      });
+      if (!target) return;
+      if (target.role === nextRole) return;
+      // Editing your OWN role is blocked entirely — an owner (accidentally or
+      // not) demoting themselves is the exact self-lockout this prevents. Ask
+      // another owner/admin to change it instead. Checked here too, not just
+      // hidden in the UI, since this form is reachable directly.
+      if (target.userId === userId) {
+        throw new Error("You can't change your own role — ask another owner or admin to change it.");
+      }
+
+      // Only an owner may grant OR revoke owner/admin — otherwise an admin
+      // could promote themselves (or a manager) to owner.
+      if (
+        (target.role === "owner" ||
+          target.role === "admin" ||
+          nextRole === "owner" ||
+          nextRole === "admin") &&
+        actorRole !== "owner"
+      ) {
+        throw new ForbiddenError("owner", actorRole);
+      }
+      if (target.role === "owner" && nextRole !== "owner") {
+        const ownerCount = await tx.membership.count({
+          where: { organizationId: orgId, role: "owner" },
+        });
+        if (ownerCount <= 1) {
+          throw new Error("Cannot change role: this is the last owner");
+        }
+      }
+
+      await tx.membership.update({ where: { id: membershipId }, data: { role: nextRole } });
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "team.role_updated",
+          resourceType: "membership",
+          resourceId: membershipId,
+          beforeData: { role: target.role },
+          afterData: { role: nextRole },
+        },
+      });
+    });
+
+    revalidatePath("/settings", "layout");
+    return { ok: true };
+  } catch (err) {
+    if (isNextControlFlowError(err)) throw err;
+    return { ok: false, error: err instanceof Error ? err.message : "Could not update role." };
+  }
 }
 
 // ============================================================

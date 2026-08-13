@@ -50,7 +50,7 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
   }
 
   return (
-    <div className="cd-card" style={{ marginTop: 16 }}>
+    <div className="cd-card">
       <div className="cd-sec-head" style={{ borderBottom: "none" }}>
         <div>
           <h3 className="cd-sec-title">Export contacts</h3>
@@ -58,10 +58,6 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
         </div>
       </div>
       <div className="cd-export">
-        <div className="cd-export__art">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`${ART}/export-list.svg`} alt="" aria-hidden className="cd-illus cd-illus--export" />
-        </div>
         <div className="cd-export__ctrls">
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
             <legend
@@ -96,7 +92,7 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
             </label>
           )}
 
-          <div className="row" style={{ gap: 12, alignItems: "center", marginTop: 16 }}>
+          <div className="row" style={{ gap: 12, alignItems: "center", marginTop: 16, flexWrap: "wrap" }}>
             <button type="button" className="btn btn--pri btn--sm" disabled={pending} onClick={run}>
               <Icon name="download" size={13} />
               {pending ? "Preparing…" : "Export CSV"}
@@ -113,6 +109,10 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
               </span>
             )}
           </div>
+        </div>
+        <div className="cd-export__art">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={`${ART}/export-list.svg`} alt="" aria-hidden className="cd-illus cd-illus--export" />
         </div>
       </div>
     </div>

@@ -19,9 +19,11 @@ export async function ImportExportPanel({ orgId }: { orgId: string }) {
     <div>
       <div className="cd-ie-grid" style={{ alignItems: "stretch" }}>
         <CsvImporter />
-        <ShopifySyncCard connected={connected.has("shopify")} />
+        {/* <ShopifySyncCard connected={connected.has("shopify")} /> */}
+        <ExportControls
+          segments={SEGMENTS.map((s) => ({ key: s.key, label: s.label }))}
+        />
       </div>
-      <ExportControls segments={SEGMENTS.map((s) => ({ key: s.key, label: s.label }))} />
     </div>
   );
 }
