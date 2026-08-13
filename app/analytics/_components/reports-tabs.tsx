@@ -2,7 +2,7 @@
 
 import { TabBar, type TabItem } from "@/components/tab-bar";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useCallback, type ReactNode } from "react";
+import { type ReactNode, useCallback } from "react";
 import { PanelBoundary } from "./panel-boundary";
 
 /**
@@ -65,8 +65,9 @@ export function ReportsTabs({
 
   // If the active tab is a locked paid tab, fall back to Overview for rendering
   // (the user can't actually be on it; the padlock routed them to upgrade).
-  const effectiveActive: ReportTabKey =
-    tabs.find((t) => t.key === activeTab)?.locked ? "overview" : activeTab;
+  const effectiveActive: ReportTabKey = tabs.find((t) => t.key === activeTab)?.locked
+    ? "overview"
+    : activeTab;
 
   return (
     <div>
@@ -75,7 +76,13 @@ export function ReportsTabs({
       </div>
       <div>
         {REPORT_TABS.map((t) => (
-          <div key={t.key} hidden={t.key !== effectiveActive} id={`panel-${t.key}`} role="tabpanel" aria-labelledby={`tab-${t.key}`}>
+          <div
+            key={t.key}
+            hidden={t.key !== effectiveActive}
+            id={`panel-${t.key}`}
+            role="tabpanel"
+            aria-labelledby={`tab-${t.key}`}
+          >
             <PanelBoundary label={t.label}>{panels[t.key]}</PanelBoundary>
           </div>
         ))}

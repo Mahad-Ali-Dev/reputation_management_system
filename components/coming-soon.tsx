@@ -43,17 +43,6 @@ export const LOCKED_MODULES = {
       "Moderation rules that hide spam automatically",
     ],
   },
-  reports: {
-    title: "Business Reports",
-    crumbs: ["Insights", "Business Reports"],
-    blurb:
-      "Deep reporting on your rating trends, local search visibility, competitor movement and where your reviews actually come from.",
-    bullets: [
-      "Rating and review-volume trends over time",
-      "Local search visibility and competitor benchmarks",
-      "Scheduled PDF summaries to your inbox",
-    ],
-  },
 } as const;
 
 export type LockedModuleKey = keyof typeof LOCKED_MODULES;

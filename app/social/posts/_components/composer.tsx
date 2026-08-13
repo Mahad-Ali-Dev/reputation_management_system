@@ -35,7 +35,10 @@ type PlatformDef = { id: PreviewPlatform; label: string; icon: IconName };
 const PLATFORMS: PlatformDef[] = [
   { id: "facebook", label: "Facebook", icon: "fb" },
   { id: "instagram", label: "Instagram", icon: "insta" },
-  { id: "twitter", label: "X", icon: "twitter" },
+  // X/Twitter delisted 2026-08 — not shipping this launch. Kept in
+  // PLATFORM_LIMITS / previews / calendar so ALREADY-PUBLISHED posts still
+  // render; only the picker drops it. Re-add this line to bring it back.
+  // { id: "twitter", label: "X", icon: "twitter" },
   { id: "linkedin", label: "LinkedIn", icon: "linkedin" },
 ];
 

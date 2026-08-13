@@ -42,7 +42,14 @@ export function ExecSummaryCard({
       }}
     >
       <div className="ds-card__body">
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 12,
+          }}
+        >
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: "var(--pri)", display: "inline-flex" }}>
               <Icon name="sparkle" size={16} />
@@ -51,7 +58,10 @@ export function ExecSummaryCard({
               Executive summary
             </h3>
             {ai && (
-              <span className="chip chip--pri" style={{ height: 18, padding: "0 7px", fontSize: 10 }}>
+              <span
+                className="chip chip--pri"
+                style={{ height: 18, padding: "0 7px", fontSize: 10 }}
+              >
                 AI
               </span>
             )}
@@ -70,7 +80,15 @@ export function ExecSummaryCard({
           )}
         </div>
 
-        <p style={{ fontSize: 14, lineHeight: 1.55, color: "var(--ink)", margin: "10px 0 0", maxWidth: 760 }}>
+        <p
+          style={{
+            fontSize: 14,
+            lineHeight: 1.55,
+            color: "var(--ink)",
+            margin: "10px 0 0",
+            maxWidth: 760,
+          }}
+        >
           {summary}
         </p>
 

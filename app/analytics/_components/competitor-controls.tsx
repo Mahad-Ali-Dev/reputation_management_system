@@ -62,21 +62,50 @@ export function CompetitorControls({
       {open && !atCap && (
         <div
           className="ds-card"
-          style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", zIndex: 20, width: 320, boxShadow: "var(--shadow-lg, 0 8px 24px rgba(0,0,0,0.12))" }}
+          style={{
+            position: "absolute",
+            right: 0,
+            top: "calc(100% + 8px)",
+            zIndex: 20,
+            width: 320,
+            boxShadow: "var(--shadow-lg, 0 8px 24px rgba(0,0,0,0.12))",
+          }}
         >
-          <form onSubmit={onSubmit} className="ds-card__body" style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          <form
+            onSubmit={onSubmit}
+            className="ds-card__body"
+            style={{ display: "flex", flexDirection: "column", gap: 10 }}
+          >
             <div style={{ fontSize: 13, fontWeight: 600, color: "var(--ink)" }}>Add competitor</div>
             <label style={lbl}>
               Business name
-              <input name="name" required maxLength={160} className="input" placeholder="e.g. Downtown Dental" style={inp} />
+              <input
+                name="name"
+                required
+                maxLength={160}
+                className="input"
+                placeholder="e.g. Downtown Dental"
+                style={inp}
+              />
             </label>
             <label style={lbl}>
               Website (optional)
-              <input name="websiteUrl" type="url" maxLength={500} className="input" placeholder="https://…" style={inp} />
+              <input
+                name="websiteUrl"
+                type="url"
+                maxLength={500}
+                className="input"
+                placeholder="https://…"
+                style={inp}
+              />
             </label>
             {error && <div style={{ fontSize: 12, color: "var(--bad)" }}>{error}</div>}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-              <button type="button" className="btn btn--sm btn--ghost" onClick={() => setOpen(false)}>
+              <button
+                type="button"
+                className="btn btn--sm btn--ghost"
+                onClick={() => setOpen(false)}
+              >
                 Cancel
               </button>
               <button type="submit" className="btn btn--sm btn--pri" disabled={pending}>
@@ -112,7 +141,14 @@ function RemoveButton({ id, establishmentId }: { id: string; establishmentId: st
       disabled={pending}
       aria-label="Remove competitor"
       title="Remove"
-      style={{ background: "none", border: "none", cursor: "pointer", color: "var(--rl-muted-2)", display: "inline-flex", padding: 2 }}
+      style={{
+        background: "none",
+        border: "none",
+        cursor: "pointer",
+        color: "var(--rl-muted-2)",
+        display: "inline-flex",
+        padding: 2,
+      }}
     >
       <Icon name="x" size={13} />
     </button>
@@ -121,5 +157,18 @@ function RemoveButton({ id, establishmentId }: { id: string; establishmentId: st
 
 CompetitorControls.RemoveButton = RemoveButton;
 
-const lbl: React.CSSProperties = { display: "flex", flexDirection: "column", gap: 4, fontSize: 12, color: "var(--rl-muted)" };
-const inp: React.CSSProperties = { padding: "7px 9px", borderRadius: 6, border: "1px solid var(--line)", fontSize: 13, background: "var(--surface)", color: "var(--ink)" };
+const lbl: React.CSSProperties = {
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+  fontSize: 12,
+  color: "var(--rl-muted)",
+};
+const inp: React.CSSProperties = {
+  padding: "7px 9px",
+  borderRadius: 6,
+  border: "1px solid var(--line)",
+  fontSize: 13,
+  background: "var(--surface)",
+  color: "var(--ink)",
+};

@@ -1,0 +1,653 @@
+/*
+ * Business Report — screen + print.
+ *
+ * The print block is what makes "Export PDF" work: the whole app shell is
+ * hidden and the report is lifted to the top-left of the page, so the export is
+ * the report alone rather than a screenshot of the app with a sidebar in it.
+ * `visibility` (not `display`) is used for the blanket hide because it keeps
+ * the report's own subtree paintable while collapsing everything around it —
+ * a `display:none` on ancestors would take the report with them.
+ */
+
+.brp {
+  display: grid;
+  gap: 16px;
+  padding-bottom: 32px;
+}
+
+/* ── brand header (also the PDF cover strip) ───────────────── */
+.brp-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 20px 22px;
+  border: 1px solid var(--rl-border, #e5e9f0);
+  border-radius: 12px;
+  background: var(--rl-surface, #fff);
+}
+.brp-brand__logo {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  object-fit: contain;
+  background: #f4f6fa;
+  flex-shrink: 0;
+}
+.brp-brand__fallback {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--rl-primary, #2563eb);
+}
+.brp-brand__meta {
+  min-width: 0;
+  flex: 1;
+}
+.brp-brand__name {
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0;
+}
+.brp-brand__line {
+  font-size: 12.5px;
+  color: var(--rl-muted, #667085);
+  margin: 2px 0 0;
+}
+.brp-brand__right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.brp-brand__title {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--rl-primary, #2563eb);
+  margin: 0;
+}
+.brp-brand__period {
+  font-size: 12.5px;
+  color: var(--rl-muted, #667085);
+  margin: 2px 0 0;
+}
+
+/* ── controls ──────────────────────────────────────────────── */
+.brp-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.brp-range {
+  display: grid;
+  gap: 10px;
+}
+.brp-range__presets {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.brp-chip {
+  border: 1px solid var(--rl-border, #e5e9f0);
+  background: var(--rl-surface, #fff);
+  color: var(--rl-ink, #101828);
+  border-radius: 999px;
+  padding: 6px 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.brp-chip:hover:not(:disabled) {
+  border-color: var(--rl-primary, #2563eb);
+}
+.brp-chip.is-active {
+  background: var(--rl-primary, #2563eb);
+  border-color: var(--rl-primary, #2563eb);
+  color: #fff;
+}
+.brp-chip:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.brp-range__custom {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.brp-range__field {
+  display: grid;
+  gap: 4px;
+  font-size: 11.5px;
+  color: var(--rl-muted, #667085);
+}
+.brp-range__field input {
+  border: 1px solid var(--rl-border, #e5e9f0);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--rl-ink, #101828);
+  background: var(--rl-surface, #fff);
+}
+.brp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--rl-border, #e5e9f0);
+  background: var(--rl-surface, #fff);
+  color: var(--rl-ink, #101828);
+}
+.brp-btn--primary {
+  background: var(--rl-primary, #2563eb);
+  border-color: var(--rl-primary, #2563eb);
+  color: #fff;
+}
+.brp-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* ── cards + stats ─────────────────────────────────────────── */
+.brp-card {
+  border: 1px solid var(--rl-border, #e5e9f0);
+  border-radius: 12px;
+  background: var(--rl-surface, #fff);
+  padding: 18px 20px;
+}
+.brp-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.brp-card__title {
+  font-size: 14px;
+  font-weight: 700;
+  margin: 0;
+}
+.brp-card__sub {
+  font-size: 12px;
+  color: var(--rl-muted, #667085);
+  margin: 2px 0 0;
+}
+
+.brp-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+.brp-stat__value {
+  font-size: 24px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -0.01em;
+}
+.brp-stat__label {
+  font-size: 11.5px;
+  color: var(--rl-muted, #667085);
+  margin-top: 3px;
+}
+.brp-delta {
+  font-size: 11.5px;
+  font-weight: 600;
+  margin-left: 6px;
+}
+.brp-delta--up {
+  color: #067647;
+}
+.brp-delta--down {
+  color: #b42318;
+}
+
+/* horizontal bar rows (star split, per-platform, per-location) */
+.brp-bars {
+  display: grid;
+  gap: 7px;
+}
+.brp-bar {
+  display: grid;
+  grid-template-columns: 92px 1fr 44px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.brp-bar__track {
+  height: 8px;
+  border-radius: 999px;
+  background: #eef1f6;
+  overflow: hidden;
+}
+.brp-bar__fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--rl-primary, #2563eb);
+}
+.brp-bar__value {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--rl-muted, #667085);
+}
+
+.brp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+.brp-table th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rl-muted, #667085);
+  font-weight: 600;
+  padding: 0 8px 8px 0;
+  border-bottom: 1px solid var(--rl-border, #e5e9f0);
+}
+.brp-table td {
+  padding: 8px 8px 8px 0;
+  border-bottom: 1px solid var(--rl-border-soft, #f1f4f9);
+  vertical-align: top;
+}
+.brp-table tr:last-child td {
+  border-bottom: 0;
+}
+.brp-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.brp-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(272px, 1fr));
+  gap: 16px;
+}
+
+.brp-card__badge {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  background: color-mix(in srgb, var(--rl-primary, #2563eb) 10%, transparent);
+  color: var(--rl-primary, #2563eb);
+}
+
+.brp-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 16px;
+}
+
+.brp-empty {
+  font-size: 12.5px;
+  color: var(--rl-muted, #667085);
+  padding: 6px 0;
+}
+
+/* survey detail */
+.brp-response {
+  border: 1px solid var(--rl-border-soft, #f1f4f9);
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+}
+.brp-response__head {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--rl-muted, #667085);
+  margin-bottom: 8px;
+}
+.brp-response__who {
+  font-weight: 600;
+  color: var(--rl-ink, #101828);
+}
+.brp-qa {
+  font-size: 12.5px;
+  margin: 0 0 6px;
+}
+.brp-qa:last-child {
+  margin-bottom: 0;
+}
+.brp-qa__q {
+  color: var(--rl-muted, #667085);
+}
+.brp-qa__a {
+  margin-top: 1px;
+}
+
+/* ── charts (inline SVG + CSS keyframes) ───────────────────── */
+.brp-chart {
+  margin: 0;
+}
+.brp-chart__title {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rl-ink, #101828);
+  margin-bottom: 8px;
+}
+.brp-chart__svg {
+  width: 100%;
+  height: 170px;
+  overflow: visible;
+}
+.brp-chart__grid {
+  stroke: var(--rl-border-soft, #eef1f6);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+.brp-chart__ylab,
+.brp-chart__xlab {
+  fill: var(--rl-muted, #98a2b3);
+  font-size: 9px;
+  font-family: inherit;
+}
+.brp-chart__ylab {
+  text-anchor: end;
+}
+.brp-chart__xlab {
+  text-anchor: middle;
+}
+
+/* pathLength=1 normalises the dash maths, so one keyframe draws any path. */
+.brp-chart__line {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: brp-draw 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-chart__area {
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: brp-grow-y 700ms cubic-bezier(0.4, 0, 0.2, 1) 200ms forwards;
+}
+.brp-chart__dot {
+  fill: #fff;
+  stroke: var(--rl-primary, #2563eb);
+  stroke-width: 2;
+  opacity: 0;
+  animation: brp-pop 260ms ease-out forwards;
+}
+
+.brp-spark {
+  width: 100%;
+  height: 44px;
+  overflow: visible;
+}
+.brp-spark__flat {
+  stroke: var(--rl-border, #d7dee9);
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-dasharray: 3 6;
+}
+
+.brp-daybars {
+  width: 100%;
+  height: 64px;
+  overflow: visible;
+}
+.brp-daybar {
+  fill: var(--rl-primary, #2563eb);
+  transform-box: fill-box;
+  transform-origin: bottom;
+  transform: scaleY(0);
+  animation: brp-grow-y 480ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* donut */
+.brp-donut {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.brp-donut__ring {
+  position: relative;
+  width: 132px;
+  flex-shrink: 0;
+}
+.brp-donut__ring svg {
+  width: 100%;
+  transform: rotate(-90deg);
+}
+.brp-donut__track {
+  fill: none;
+  stroke: var(--rl-border-soft, #eef1f6);
+  stroke-width: 5.5;
+}
+.brp-donut__arc {
+  fill: none;
+  stroke-width: 5.5;
+  stroke-linecap: butt;
+  stroke-dasharray: 0 100;
+  animation: brp-arc 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-donut__center {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  text-align: center;
+  line-height: 1.1;
+}
+.brp-donut__total {
+  display: block;
+  font-size: 22px;
+  font-weight: 700;
+}
+.brp-donut__caption {
+  display: block;
+  font-size: 10.5px;
+  color: var(--rl-muted, #667085);
+}
+.brp-donut__legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.brp-donut__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.brp-donut__swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.brp-donut__name {
+  flex: 1;
+  min-width: 0;
+}
+.brp-donut__count {
+  font-variant-numeric: tabular-nums;
+  color: var(--rl-muted, #667085);
+}
+
+/* stacked bar */
+.brp-stack__bar {
+  display: flex;
+  height: 9px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--rl-border-soft, #eef1f6);
+}
+.brp-stack__seg {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: brp-grow-x 620ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-stack__foot {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: var(--rl-muted, #667085);
+  margin-top: 8px;
+}
+
+/* the horizontal distribution bars animate on the same clock */
+.brp-bar__fill {
+  transform: scaleX(0);
+  transform-origin: left;
+  animation: brp-grow-x 620ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes brp-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+@keyframes brp-grow-y {
+  to {
+    transform: scaleY(1);
+  }
+}
+@keyframes brp-grow-x {
+  to {
+    transform: scaleX(1);
+  }
+}
+@keyframes brp-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes brp-arc {
+  to {
+    stroke-dasharray: var(--len) 100;
+  }
+}
+
+/*
+ * Motion is decoration here — the numbers are already on the page. Anyone who
+ * has asked the OS for less of it gets the final frame immediately.
+ */
+@media (prefers-reduced-motion: reduce) {
+  .brp-chart__line,
+  .brp-chart__area,
+  .brp-chart__dot,
+  .brp-daybar,
+  .brp-donut__arc,
+  .brp-stack__seg,
+  .brp-bar__fill {
+    animation: none !important;
+    opacity: 1;
+    transform: none;
+    stroke-dashoffset: 0;
+    stroke-dasharray: var(--len, none) 100;
+  }
+}
+
+/* ── print / PDF ───────────────────────────────────────────── */
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  /* Hide the app shell without unmounting the report's ancestors. */
+  body * {
+    visibility: hidden !important;
+  }
+  #business-report,
+  #business-report * {
+    visibility: visible !important;
+  }
+  #business-report {
+    position: absolute !important;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Flat, ink-friendly cards that don't split across a page boundary. */
+  .brp-card,
+  .brp-brand,
+  .brp-response {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    border: 1px solid #d0d5dd !important;
+    background: #fff !important;
+  }
+
+  .brp-bar__fill,
+  .brp-chip.is-active {
+    /* Keep the accent visible in print — browsers drop backgrounds otherwise. */
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /*
+   * Charts must print as FINISHED. Print rendering doesn't wait for CSS
+   * animations, so an un-frozen chart exports mid-draw — a line at 40% length,
+   * bars at zero height. Killing the animations lands every element on its
+   * final geometry.
+   */
+  .brp-chart__line {
+    animation: none !important;
+    stroke-dashoffset: 0 !important;
+  }
+  .brp-chart__area,
+  .brp-daybar {
+    animation: none !important;
+    transform: none !important;
+  }
+  .brp-chart__dot {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .brp-donut__arc {
+    animation: none !important;
+    stroke-dasharray: var(--len) 100 !important;
+  }
+  .brp-stack__seg,
+  .brp-bar__fill {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .brp-chart__svg,
+  .brp-daybars,
+  .brp-spark,
+  .brp-donut__arc,
+  .brp-stack__seg,
+  .brp-daybar {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .brp-section-break {
+    break-before: page;
+    page-break-before: page;
+  }
+}

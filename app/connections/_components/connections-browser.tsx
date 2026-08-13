@@ -63,17 +63,20 @@ const CATS: CatDef[] = [
   {
     key: "social",
     title: "Social publishing",
-    desc: "Post to Facebook, Instagram, LinkedIn and X.",
+    desc: "Post to Facebook, Instagram and LinkedIn.",
     asset: "meta.svg",
     glyph: null,
   },
-  {
-    key: "email",
-    title: "Email",
-    desc: "Connect Gmail to send from your own address.",
-    asset: "email-crm.svg",
-    glyph: null,
-  },
+  // Email category delisted 2026-08 alongside the Gmail provider. This list is
+  // rendered in full with no empty-state guard, so leaving the entry in would
+  // show a category chip that filters to zero tiles.
+  // {
+  //   key: "email",
+  //   title: "Email",
+  //   desc: "Connect Gmail to send from your own address.",
+  //   asset: "email-crm.svg",
+  //   glyph: null,
+  // },
 ];
 
 const ASSET_BASE = "/assets/repulabs/connections/";

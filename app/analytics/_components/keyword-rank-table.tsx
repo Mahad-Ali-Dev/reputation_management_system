@@ -32,7 +32,11 @@ export function KeywordRankTable({ ranks }: { ranks: KeywordRankView[] }) {
             <tr key={r.keyword} style={{ borderTop: "1px solid var(--line)" }}>
               <td style={{ ...td, fontWeight: 500, color: "var(--ink)" }}>{r.keyword}</td>
               <td style={{ ...td, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>
-                {r.position == null ? <span style={{ color: "var(--rl-muted-2)" }}>—</span> : `#${r.position}`}
+                {r.position == null ? (
+                  <span style={{ color: "var(--rl-muted-2)" }}>—</span>
+                ) : (
+                  `#${r.position}`
+                )}
               </td>
               <td style={{ ...td, textAlign: "center" }}>
                 <Delta current={r.position} previous={r.previousPosition} />
@@ -46,7 +50,14 @@ export function KeywordRankTable({ ranks }: { ranks: KeywordRankView[] }) {
                   <span style={{ color: "var(--rl-muted-2)" }}>—</span>
                 )}
               </td>
-              <td style={{ ...td, textAlign: "right", fontVariantNumeric: "tabular-nums", color: "var(--rl-muted)" }}>
+              <td
+                style={{
+                  ...td,
+                  textAlign: "right",
+                  fontVariantNumeric: "tabular-nums",
+                  color: "var(--rl-muted)",
+                }}
+              >
                 {r.searchVolume != null ? r.searchVolume.toLocaleString() : "—"}
               </td>
             </tr>
@@ -89,4 +100,11 @@ function Delta({ current, previous }: { current: number | null; previous: number
 
 const th: React.CSSProperties = { padding: "8px 10px", fontWeight: 600 };
 const td: React.CSSProperties = { padding: "9px 10px", color: "var(--rl-muted)" };
-const chipSm: React.CSSProperties = { height: 18, padding: "0 6px", fontSize: 10.5, display: "inline-flex", alignItems: "center", gap: 3 };
+const chipSm: React.CSSProperties = {
+  height: 18,
+  padding: "0 6px",
+  fontSize: 10.5,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 3,
+};
