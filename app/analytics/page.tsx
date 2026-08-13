@@ -362,7 +362,7 @@ function SurveysCard({ data }: { data: BusinessReport["surveys"] }) {
   return (
     <Card
       title="Customer surveys"
-      sub="What customers told you, in their own words"
+      sub="Who you reached, who responded, and how they scored you"
       icon="survey"
       breakBefore
     >
@@ -371,60 +371,79 @@ function SurveysCard({ data }: { data: BusinessReport["surveys"] }) {
       ) : (
         <>
           <div className="brp-stats" style={{ marginBottom: 16 }}>
+            <Stat value={data.sent} label="Sent" />
             <Stat value={data.responses} label="Responses" />
-            <Stat value={data.completed} label="Completed" />
+            <Stat value={data.responseRate !== null ? `${data.responseRate}%` : "—"} label="Response rate" />
             <Stat value={data.avgRating ?? "—"} label="Average score" />
           </div>
 
-          {data.byCampaign.length > 0 && (
-            <div style={{ marginBottom: 16 }}>
-              <p className="brp-card__sub" style={{ marginBottom: 8 }}>
-                By survey
-              </p>
-              <Bars
-                rows={data.byCampaign.map((c) => ({ label: c.campaign, count: c.responses }))}
-              />
-            </div>
-          )}
-
-          {data.detail.length === 0 ? (
-            <p className="brp-empty">No survey responses in this period.</p>
+          {data.byCampaign.length === 0 ? (
+            <p className="brp-empty">No survey activity in this period.</p>
           ) : (
-            <>
-              <p className="brp-card__sub" style={{ marginBottom: 8 }}>
-                Individual responses
-                {data.responses > data.detail.length &&
-                  ` — showing the ${data.detail.length} most recent of ${data.responses}`}
-              </p>
-              {data.detail.map((r) => (
-                <article className="brp-response" key={r.id}>
-                  <div className="brp-response__head">
-                    <span className="brp-response__who">{r.recipient ?? "Anonymous"}</span>
-                    <span>
-                      {r.campaign}
-                      {r.rating !== null && ` · ${r.rating}`}
-                      {r.submittedAt &&
-                        ` · ${new Date(r.submittedAt).toLocaleDateString("en-AU", {
-                          day: "numeric",
-                          month: "short",
-                          year: "numeric",
-                        })}`}
-                    </span>
-                  </div>
-                  {r.answers.length === 0 ? (
-                    <p className="brp-empty">No answers recorded.</p>
-                  ) : (
-                    r.answers.map((a, i) => (
-                      <p className="brp-qa" key={`${r.id}-${i}`}>
-                        <span className="brp-qa__q">{a.prompt}</span>
-                        <br />
-                        <span className="brp-qa__a">{a.value}</span>
-                      </p>
-                    ))
-                  )}
-                </article>
-              ))}
-            </>
+            <table className="brp-table">
+              <thead>
+                <tr>
+                  <th>Survey</th>
+                  <th className="brp-num">Sent</th>
+                  <th className="brp-num">Responses</th>
+                  <th className="brp-num">Response rate</th>
+                  <th>Rating breakdown</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.byCampaign.map((c) => {
+                  const rated = c.promoters + c.passives + c.detractors;
+                  return (
+                    <tr key={c.campaign}>
+                      <td>
+                        {c.campaign}
+                        <div className="brp-td-sub">
+                          {c.avgRating !== null ? `${c.avgRating.toFixed(1)} avg score` : "No ratings yet"}
+                        </div>
+                      </td>
+                      <td className="brp-num">{c.sent > 0 ? c.sent.toLocaleString() : "—"}</td>
+                      <td className="brp-num">{c.responses.toLocaleString()}</td>
+                      <td className="brp-num">
+                        {c.responseRate !== null ? `${c.responseRate}%` : "—"}
+                      </td>
+                      <td>
+                        {rated === 0 ? (
+                          <span className="brp-td-sub">No ratings yet</span>
+                        ) : (
+                          <div className="brp-dist">
+                            <div className="brp-dist__track">
+                              <span
+                                style={{ width: `${(c.promoters / rated) * 100}%`, background: "var(--ok)" }}
+                              />
+                              <span
+                                style={{ width: `${(c.passives / rated) * 100}%`, background: "var(--warn)" }}
+                              />
+                              <span
+                                style={{ width: `${(c.detractors / rated) * 100}%`, background: "var(--bad)" }}
+                              />
+                            </div>
+                            <div className="brp-dist__legend">
+                              <span>
+                                <i style={{ background: "var(--ok)" }} />
+                                {c.promoters} promoters
+                              </span>
+                              <span>
+                                <i style={{ background: "var(--warn)" }} />
+                                {c.passives} passive
+                              </span>
+                              <span>
+                                <i style={{ background: "var(--bad)" }} />
+                                {c.detractors} detractors
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </>
       )}
