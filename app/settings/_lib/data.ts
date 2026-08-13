@@ -40,6 +40,7 @@ export type SettingsBlob = {
     webhookUrl?: string | null;
     webhookSecret?: string | null;
   };
+  brand?: { colors?: Partial<Record<"primary" | "secondary" | "accent" | "neutral" | "light", string>> };
 };
 
 export type SettingsData = {

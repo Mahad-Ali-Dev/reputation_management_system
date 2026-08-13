@@ -72,7 +72,20 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
   return (
     <ToastContext.Provider value={ctx}>
       {children}
-      <div className="pointer-events-none fixed top-4 right-4 z-[100] flex w-full max-w-sm flex-col gap-2">
+      <div
+        style={{
+          position: "fixed",
+          top: 16,
+          right: 16,
+          zIndex: 100,
+          display: "flex",
+          flexDirection: "column",
+          gap: 8,
+          width: "100%",
+          maxWidth: 360,
+          pointerEvents: "none",
+        }}
+      >
         {toasts.map((t) => (
           <ToastItem key={t.id} toast={t} onClose={() => dismiss(t.id)} />
         ))}
@@ -96,11 +109,17 @@ export function useToast(): ToastContextValue {
   return ctx;
 }
 
-const KIND_STYLES: Record<ToastKind, { bar: string; bg: string; icon: string; iconColor: string; text: string }> = {
-  success: { bar: "bg-emerald-500", bg: "bg-emerald-50", icon: "✓", iconColor: "text-emerald-600", text: "text-emerald-900" },
-  error:   { bar: "bg-rose-500",    bg: "bg-rose-50",    icon: "✕", iconColor: "text-rose-600",    text: "text-rose-900" },
-  info:    { bar: "bg-indigo-500",  bg: "bg-indigo-50",  icon: "ℹ", iconColor: "text-indigo-600",  text: "text-indigo-900" },
-  warning: { bar: "bg-amber-500",   bg: "bg-amber-50",   icon: "⚠", iconColor: "text-amber-600",   text: "text-amber-900" },
+/**
+ * Colors reuse the app's own status tokens (design-system.css/globals.css —
+ * the same --ok/--bad/--warn/--info pair the settings banners and chips use)
+ * rather than a separate Tailwind palette, so a toast reads as the same
+ * product as everything else instead of a bolted-on component.
+ */
+const KIND_STYLES: Record<ToastKind, { fg: string; soft: string; icon: string }> = {
+  success: { fg: "var(--ok)", soft: "var(--ok-soft)", icon: "✓" },
+  error: { fg: "var(--bad)", soft: "var(--bad-soft)", icon: "✕" },
+  info: { fg: "var(--info)", soft: "var(--info-soft)", icon: "ℹ" },
+  warning: { fg: "var(--warn)", soft: "var(--warn-soft)", icon: "⚠" },
 };
 
 function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
@@ -109,17 +128,53 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     <div
       role="status"
       aria-live="polite"
-      className={`pointer-events-auto flex items-start gap-3 rounded-lg border border-slate-200 ${s.bg} p-3 shadow-lg animate-in slide-in-from-right-4`}
+      className="row"
+      style={{
+        pointerEvents: "auto",
+        alignItems: "flex-start",
+        gap: 10,
+        background: "var(--surface)",
+        border: "1px solid var(--line)",
+        borderRadius: "var(--r-sm)",
+        boxShadow: "var(--sh-pop)",
+        padding: 12,
+      }}
     >
-      <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-white ${s.iconColor} font-bold text-sm`}>
+      <span
+        aria-hidden="true"
+        style={{
+          display: "flex",
+          flexShrink: 0,
+          width: 24,
+          height: 24,
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "999px",
+          background: s.soft,
+          color: s.fg,
+          fontWeight: 700,
+          fontSize: 12.5,
+        }}
+      >
         {s.icon}
       </span>
-      <p className={`flex-1 text-sm ${s.text}`}>{toast.message}</p>
+      <p style={{ flex: 1, margin: 0, fontSize: 13, lineHeight: 1.5, color: "var(--ink)" }}>
+        {toast.message}
+      </p>
       <button
         type="button"
         onClick={onClose}
-        className="text-slate-400 hover:text-slate-900 -mt-0.5 -mr-0.5"
         aria-label="Dismiss"
+        style={{
+          background: "none",
+          border: "none",
+          cursor: "pointer",
+          color: "var(--rl-muted)",
+          fontSize: 16,
+          lineHeight: 1,
+          padding: 0,
+          marginTop: -1,
+        }}
       >
         ×
       </button>

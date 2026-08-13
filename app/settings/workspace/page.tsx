@@ -1,6 +1,9 @@
+import { SaveToast } from "@/components/save-toast";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { updateAccountSettings } from "@/lib/account/actions";
+import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData, memberRoleLabel } from "../_lib/data";
 import { COUNTRIES, prettyPlan } from "../_lib/sections";
@@ -9,6 +12,10 @@ import { COUNTRIES, prettyPlan } from "../_lib/sections";
  * Workspace settings (designs/settings/workspace/workspace.png) — owner profile
  * + business details (bound to updateAccountSettings) and a read-only workspace
  * summary. Default landing section of the settings shell.
+ *
+ * Save confirmation is a toast (<SaveToast>), not a static banner: `saveAction`
+ * redirects with `?saved=1|error` (same signal `/establishments/[id]/settings`
+ * uses for its banner) and the toast fires from that, then cleans the URL.
  */
 export const dynamic = "force-dynamic";
 
@@ -18,14 +25,32 @@ export default async function WorkspaceSettingsPage() {
   const ownerDisplayName =
     org.ownerName ?? sessionUser.name ?? sessionUser.email?.split("@")[0] ?? "Owner";
 
+  async function saveAction(form: FormData) {
+    "use server";
+    try {
+      await updateAccountSettings(form);
+    } catch (err) {
+      // redirect()/notFound() control-flow must propagate (e.g. an expired
+      // session redirecting to /login from inside the action).
+      const digest = (err as { digest?: unknown } | null)?.digest;
+      if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+      redirect("/settings/workspace?saved=error");
+    }
+    redirect("/settings/workspace?saved=1");
+  }
+
   return (
     <SettingsFrame>
+      <Suspense fallback={null}>
+        <SaveToast successMessage="Workspace settings saved." />
+      </Suspense>
+
       {/* Profile + business details */}
       <section className="set-card">
         <h2 className="set-card__title set-card__title--sm">Profile</h2>
         <p className="set-card__sub">Owner identity and business details.</p>
 
-        <form action={updateAccountSettings}>
+        <form action={saveAction}>
           <div className="set-preview__row" style={{ margin: "18px 0" }}>
             <Avatar name={ownerDisplayName} size={56} tone={5} />
             <div>

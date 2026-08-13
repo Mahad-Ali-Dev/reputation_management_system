@@ -72,8 +72,12 @@ export function defaultReviewRequestHtml(args: {
   businessName: string;
   reviewLink: string;
   unsubscribeUrl: string;
+  /** Org's brand primary color (Settings → Brand), CTA button background.
+   *  Falls back to the original fixed indigo when the org hasn't set one. */
+  accentColor?: string;
 }): { html: string; text: string } {
   const name = args.reviewerName ?? "there";
+  const accent = args.accentColor ?? "#4f46e5";
   const text = `Hi ${name},
 
 Thanks for choosing ${args.businessName}! If you have a moment, we'd love your honest feedback on Google:
@@ -93,7 +97,7 @@ To unsubscribe: ${args.unsubscribeUrl}`;
       <h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Hi ${escapeHtml(name)},</h1>
       <p style="color:#475569;">Thanks for choosing <strong>${escapeHtml(args.businessName)}</strong>! If you have a moment, we'd love your honest feedback on Google.</p>
       <p style="margin:24px 0;">
-        <a href="${args.reviewLink}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a>
+        <a href="${args.reviewLink}" style="display:inline-block;background:${accent};color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Leave a review →</a>
       </p>
       <p style="color:#94a3b8;font-size:13px;">Your review helps us improve and helps other locals find us. Thank you!</p>
       <hr style="border:none;border-top:1px solid #e2e8f0;margin:24px 0;" />
