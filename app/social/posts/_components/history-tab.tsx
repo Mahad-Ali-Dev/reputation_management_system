@@ -385,6 +385,12 @@ function fmtDate(d: Date): string {
  */
 function friendlyPublishError(raw: string): string {
   const e = raw.toLowerCase();
+  if (e.includes("publish_disabled")) {
+    return "Publishing to this channel is switched off on the server. An admin needs to enable it before posts can go out.";
+  }
+  if (e.includes("not_connected") || e.includes("no_connected_platform")) {
+    return "No connected account for this channel. Connect it under Connections, then retry.";
+  }
   if (
     e.includes("token") &&
     (e.includes("expire") || e.includes("invalid") || e.includes("revoke"))

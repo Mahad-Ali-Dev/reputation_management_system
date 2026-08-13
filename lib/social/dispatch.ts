@@ -146,8 +146,15 @@ export async function dispatchDuePost(postId: string, orgId: string): Promise<Di
   // Nothing connected/enabled on any platform.
   if (allSkipped) {
     if (isProductionRuntime()) {
-      await markFailed(orgId, postId, "no_connected_platform");
-      return { status: "failed", postId, error: "no_connected_platform" };
+      // Name the platform AND the reason. A bare "no_connected_platform" was
+      // wrong half the time: the usual cause is the server-side publish flag
+      // being off, not a missing connection.
+      const detail = results
+        .map((r) => `${r.platform}: ${"skipped" in r ? r.skipped : "skipped"}`)
+        .join("; ")
+        .slice(0, 500);
+      await markFailed(orgId, postId, detail || "no_connected_platform");
+      return { status: "failed", postId, error: detail || "no_connected_platform" };
     }
     // Dev stub: let the demo flow without live creds.
     await markPublished(orgId, postId, {}, "(stub: no platform connected)");

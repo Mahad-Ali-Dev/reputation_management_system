@@ -21,18 +21,18 @@
  * the "no paid call" guarantee can be asserted by spying on `fetch`.
  */
 
-import { decryptAccessToken } from "@/lib/connections/adapters/refresh";
 import { GRAPH_VERSION } from "@/lib/connections/adapters/meta";
-import { platformToProvider, type SocialPlatform } from "@/lib/social/connections";
+import { decryptAccessToken } from "@/lib/connections/adapters/refresh";
+import { withTenant } from "@/lib/db/with-tenant";
+import { logger } from "@/lib/logger";
 import {
   isInstagramPublishEnabled,
   publishToInstagram,
   resolveIgBusinessId,
 } from "@/lib/social/adapters/instagram";
-import { isTwitterPublishEnabled, postTweet } from "@/lib/social/adapters/twitter";
 import { isLinkedInPublishEnabled, postToLinkedIn } from "@/lib/social/adapters/linkedin";
-import { withTenant } from "@/lib/db/with-tenant";
-import { logger } from "@/lib/logger";
+import { isTwitterPublishEnabled, postTweet } from "@/lib/social/adapters/twitter";
+import { type SocialPlatform, platformToProvider } from "@/lib/social/connections";
 
 /** Result for a single platform within a publish attempt. */
 export type PlatformPublishResult =
@@ -98,9 +98,7 @@ async function loadActiveConnection(
         where: {
           provider,
           status: "active",
-          ...(establishmentId
-            ? { OR: [{ establishmentId }, { establishmentId: null }] }
-            : {}),
+          ...(establishmentId ? { OR: [{ establishmentId }, { establishmentId: null }] } : {}),
         },
         orderBy: { createdAt: "desc" },
         select: {
@@ -143,14 +141,18 @@ async function publishToPlatform(
   // Env gate FIRST — proves no paid call in the default path even when a
   // connection exists. Each platform has its OWN explicit opt-in flag; absent it
   // we never reach the connection lookup or any network call.
+  // These two are NOT the same thing and must not report as one. Both used to
+  // return "not_configured", which surfaced as "no_connected_platform" — telling
+  // an owner their channel wasn't connected while the Connections page showed it
+  // connected, and sending them to reconnect a channel that was already fine.
   if (!isPlatformPublishEnabled(platform)) {
-    return { platform, ok: false, skipped: "not_configured" };
+    return { platform, ok: false, skipped: "publish_disabled" };
   }
 
   const provider = platformToProvider(platform); // meta | x | linkedin
   const conn = await loadActiveConnection(orgId, provider, post.establishmentId);
   if (!conn) {
-    return { platform, ok: false, skipped: "not_configured" };
+    return { platform, ok: false, skipped: "not_connected" };
   }
 
   const token = decryptAccessToken({
