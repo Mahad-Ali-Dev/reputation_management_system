@@ -22,16 +22,16 @@
  *   - All writes go through `withTenant`. Never throws to the caller.
  */
 
-import { isProductionRuntime } from "@/lib/secrets";
-import { getPostQuota } from "@/lib/social/quota";
-import {
-  publishSocialPost,
-  type PlatformPublishResult,
-  type PublishablePost,
-} from "@/lib/social/publish";
-import { validatePost } from "@/lib/social/connections";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
+import { isProductionRuntime } from "@/lib/secrets";
+import { validatePost } from "@/lib/social/connections";
+import {
+  type PlatformPublishResult,
+  type PublishablePost,
+  publishSocialPost,
+} from "@/lib/social/publish";
+import { getPostQuota } from "@/lib/social/quota";
 
 export type DispatchResult =
   | { status: "published"; postId: string; externalIds: Record<string, string> }
@@ -115,7 +115,10 @@ export async function dispatchDuePost(postId: string, orgId: string): Promise<Di
     media: mediaList(post),
   });
   if (!validation.ok) {
-    const error = validation.issues.map((i) => i.message).join("; ").slice(0, 500);
+    const error = validation.issues
+      .map((i) => i.message)
+      .join("; ")
+      .slice(0, 500);
     await markFailed(orgId, postId, error);
     return { status: "failed", postId, error };
   }
@@ -129,11 +132,8 @@ export async function dispatchDuePost(postId: string, orgId: string): Promise<Di
     return { status: "failed", postId, error };
   }
 
-  const published = results.filter(
-    (r): r is Extract<PlatformPublishResult, { ok: true }> => r.ok,
-  );
-  const allSkipped =
-    results.length > 0 && results.every((r) => !r.ok && "skipped" in r);
+  const published = results.filter((r): r is Extract<PlatformPublishResult, { ok: true }> => r.ok);
+  const allSkipped = results.length > 0 && results.every((r) => !r.ok && "skipped" in r);
 
   // At least one real publish → published.
   if (published.length > 0) {
@@ -155,11 +155,12 @@ export async function dispatchDuePost(postId: string, orgId: string): Promise<Di
   }
 
   // Some platforms errored (and none succeeded).
-  const error = results
-    .filter((r) => !r.ok && "error" in r)
-    .map((r) => `${r.platform}: ${(r as { error: string }).error}`)
-    .join("; ")
-    .slice(0, 500) || "publish_failed";
+  const error =
+    results
+      .filter((r) => !r.ok && "error" in r)
+      .map((r) => `${r.platform}: ${(r as { error: string }).error}`)
+      .join("; ")
+      .slice(0, 500) || "publish_failed";
   await markFailed(orgId, postId, error);
   return { status: "failed", postId, error };
 }
@@ -202,6 +203,13 @@ async function markPublished(
 }
 
 async function markFailed(orgId: string, postId: string, error: string): Promise<void> {
+  // The reason lands on the row, but nothing logged it under a stable event, so
+  // a publish failure was invisible to `journalctl` — the only way to find out
+  // why was to read the database. Every failure now leaves a greppable line.
+  logger.warn(
+    { orgId, postId, error, event: "social.publish.failed" },
+    "social post failed to publish",
+  );
   try {
     await withTenant(orgId, async (tx) => {
       await tx.socialPost.updateMany({
