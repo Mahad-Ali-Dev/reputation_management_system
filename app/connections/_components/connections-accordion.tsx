@@ -38,7 +38,11 @@ const PILL_CLASS: Record<ConnPillTone, string> = {
   neutral: "chip chip--out",
 };
 
-function StatusPill({ conns }: { conns: SerializedProviderRow["connections"] }) {
+function StatusPill({
+  conns,
+}: {
+  conns: SerializedProviderRow["connections"];
+}) {
   const pill = connectionPill(conns);
   return (
     <span className={PILL_CLASS[pill.tone]}>
@@ -58,7 +62,8 @@ function RowAction({
 }) {
   const connected = isConnected(provider.connections);
   const liveConn =
-    provider.connections.find((c) => c.status === "active") ?? provider.connections[0];
+    provider.connections.find((c) => c.status === "active") ??
+    provider.connections[0];
 
   // CSV import → route to the contacts importer.
   if (provider.connType === "csv") {
@@ -73,7 +78,10 @@ function RowAction({
   // Embed (Live Chat widget) → manage detail where the snippet lives.
   if (provider.connType === "embed") {
     return (
-      <Link href={`/connections/${provider.id}`} className="btn btn--xs btn--pri">
+      <Link
+        href={`/connections/${provider.id}`}
+        className="btn btn--xs btn--pri"
+      >
         <Icon name="chat" size={11} />
         Get embed code
       </Link>
@@ -101,7 +109,10 @@ function RowAction({
   // where the secure form lives — not via an OAuth redirect.
   if (provider.connType === "api_key" && provider.ready) {
     return (
-      <Link href={`/connections/${provider.id}`} className="btn btn--xs btn--pri">
+      <Link
+        href={`/connections/${provider.id}`}
+        className="btn btn--xs btn--pri"
+      >
         Connect
         <Icon name="arrowR" size={11} />
       </Link>
@@ -149,7 +160,8 @@ function ProviderRow({
 }) {
   const connected = isConnected(provider.connections);
   const liveConn =
-    provider.connections.find((c) => c.status === "active") ?? provider.connections[0];
+    provider.connections.find((c) => c.status === "active") ??
+    provider.connections[0];
   const sync = newestSync(provider.connections);
   const syncHint = syncsLabel(provider.syncs);
 
@@ -302,7 +314,11 @@ function Section({
         >
           <div className="col" style={{ gap: 8 }}>
             {section.providers.map((p) => (
-              <ProviderRow key={p.id} provider={p} disconnectAction={disconnectAction} />
+              <ProviderRow
+                key={p.id}
+                provider={p}
+                disconnectAction={disconnectAction}
+              />
             ))}
           </div>
         </div>
@@ -338,7 +354,10 @@ export function ConnectionsAccordion({
   // sees all hits at once (no hunting through collapsed groups).
   const filtered = q
     ? sections
-        .map((s) => ({ ...s, providers: s.providers.filter((p) => providerMatches(p, q)) }))
+        .map((s) => ({
+          ...s,
+          providers: s.providers.filter((p) => providerMatches(p, q)),
+        }))
         .filter((s) => s.providers.length > 0)
     : sections;
 
@@ -347,7 +366,10 @@ export function ConnectionsAccordion({
 
   return (
     <section aria-labelledby="band-all" className="col" style={{ gap: 12 }}>
-      <div className="ds-card__head" style={{ paddingBottom: 4, borderBottom: "none" }}>
+      <div
+        className="ds-card__head"
+        style={{ paddingBottom: 4, borderBottom: "none" }}
+      >
         <div className="row" style={{ gap: 12, minWidth: 0 }}>
           <span
             aria-hidden="true"
@@ -414,7 +436,10 @@ export function ConnectionsAccordion({
           }}
         >
           No integrations match “{query.trim()}”. Try a different name, or{" "}
-          <a href="mailto:hello@repulabs.com?subject=Integration%20request">request it</a>.
+          <a href="mailto:hello@repulabs.com?subject=Integration%20request">
+            request it
+          </a>
+          .
         </div>
       ) : (
         filtered.map((section) => (
@@ -422,7 +447,9 @@ export function ConnectionsAccordion({
             key={section.key}
             section={section}
             isOpen={searching || openKey === section.key}
-            onToggle={() => setOpenKey((cur) => (cur === section.key ? null : section.key))}
+            onToggle={() =>
+              setOpenKey((cur) => (cur === section.key ? null : section.key))
+            }
             disconnectAction={disconnectAction}
           />
         ))

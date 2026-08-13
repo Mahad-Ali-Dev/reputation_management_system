@@ -154,11 +154,13 @@ export default async function AiSettingsPage({
     throw err;
   });
 
-  // Knowledge gaps: open feeds Test "questions to teach"; answered feeds the
-  // Knowledge "recent learning" timeline. Already fail-soft → [] / zeros.
+  // Knowledge gaps: open feeds Test "questions to teach"; answered feeds both
+  // the Knowledge "recent learning" timeline AND the Test tab's "Taught
+  // answers" list (so adding/teaching a question shows up right where you
+  // added it, not just on a different tab). Already fail-soft → [] / zeros.
   const [openGaps, answeredGaps, stats] = await Promise.all([
     listKnowledgeGaps(orgId, { status: "open", limit: 6 }),
-    listKnowledgeGaps(orgId, { status: "answered", limit: 3 }),
+    listKnowledgeGaps(orgId, { status: "answered", limit: 8 }),
     learningStats(orgId),
   ]);
 
@@ -563,16 +565,12 @@ export default async function AiSettingsPage({
         {tab === "behaviour" && <BehaviourSettings initial={behaviourInitial} />}
 
         {/* ---------- Test tab ---------- */}
-        {/* teachHref: the Teach MODAL lives in learning-monitor-tab.tsx, rendered
-            by /ai/training#test. It used to point at "/ai?tab=test" — the page
-            the button is already on — so clicking Teach navigated to itself and
-            appeared to do nothing. */}
+        {/* Teach/Add-question now open an in-page dialog (test-console.tsx) instead
+            of linking out — they used to point at "/ai/training#test", but that
+            route is a permanent redirect back to plain "/ai" (see
+            app/ai/training/page.tsx), so the link went nowhere useful. */}
         {tab === "test" && (
-          <TestConsole
-            suggestions={suggestions}
-            openGaps={openGaps}
-            teachHref="/ai/training#test"
-          />
+          <TestConsole suggestions={suggestions} openGaps={openGaps} answeredGaps={answeredGaps} />
         )}
       </div>
     </AppShellServer>

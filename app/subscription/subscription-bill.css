@@ -211,21 +211,21 @@
    Kit PNGs carry a baked near-white bg → multiply blends it onto the card. */
 .bill-card__art {
   position: absolute;
-  top: 40px;
+  top: 44px;
   right: 12px;
-  height: 118px;
+  height: 100px;
   width: auto;
   pointer-events: none;
   mix-blend-mode: multiply;
 }
 .bill-card--pro .bill-card__art {
-  height: 132px;
-  top: 48px;
+  height: 112px;
+  top: 52px;
   right: 6px;
 }
 .bill-card--scale .bill-card__art {
-  height: 122px;
-  top: 44px;
+  height: 104px;
+  top: 48px;
   right: 4px;
 }
 
@@ -235,7 +235,7 @@
   justify-content: center;
   width: 100%;
   height: 44px;
-  margin-top: 18px;
+  margin-top: 26px;
   border-radius: 11px;
   font-family: var(--f-ui);
   font-size: 14px;
