@@ -165,7 +165,7 @@
 .brp-card__head {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 10px;
   margin-bottom: 14px;
 }
@@ -264,6 +264,13 @@
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* `.brp-table th` sets text-align:left with higher specificity (class+tag)
+   than the plain `.brp-num` class, so a numeric header silently stayed
+   left-aligned while its data column turned right-aligned — headers and
+   values drifted apart instead of lining up. */
+.brp-table th.brp-num {
+  text-align: right;
+}
 
 .brp-grid-3 {
   display: grid;
@@ -294,37 +301,46 @@
   padding: 6px 0;
 }
 
-/* survey detail */
-.brp-response {
-  border: 1px solid var(--rl-border-soft, #f1f4f9);
-  border-radius: 10px;
-  padding: 12px 14px;
-  margin-bottom: 10px;
+/* survey stats: small muted line under a table cell's main value */
+.brp-td-sub {
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--rl-muted, #667085);
 }
-.brp-response__head {
+
+/* survey rating breakdown: promoter/passive/detractor stacked bar + legend */
+.brp-dist {
+  min-width: 180px;
+}
+.brp-dist__track {
   display: flex;
-  justify-content: space-between;
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: #eef1f6;
+}
+.brp-dist__track span {
+  height: 100%;
+}
+.brp-dist__legend {
+  display: flex;
+  flex-wrap: wrap;
   gap: 10px;
-  font-size: 12px;
-  color: var(--rl-muted, #667085);
-  margin-bottom: 8px;
-}
-.brp-response__who {
-  font-weight: 600;
-  color: var(--rl-ink, #101828);
-}
-.brp-qa {
-  font-size: 12.5px;
-  margin: 0 0 6px;
-}
-.brp-qa:last-child {
-  margin-bottom: 0;
-}
-.brp-qa__q {
+  margin-top: 6px;
+  font-size: 11px;
   color: var(--rl-muted, #667085);
 }
-.brp-qa__a {
-  margin-top: 1px;
+.brp-dist__legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+.brp-dist__legend i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 /* ── charts (inline SVG + CSS keyframes) ───────────────────── */
@@ -590,8 +606,7 @@
 
   /* Flat, ink-friendly cards that don't split across a page boundary. */
   .brp-card,
-  .brp-brand,
-  .brp-response {
+  .brp-brand {
     break-inside: avoid;
     page-break-inside: avoid;
     box-shadow: none !important;
@@ -599,8 +614,17 @@
     background: #fff !important;
   }
 
+  /* Each survey's row (name + sub-line + rating breakdown) reads as one unit —
+     don't let a page boundary land between the bar and its legend. */
+  .brp-table tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
   .brp-bar__fill,
-  .brp-chip.is-active {
+  .brp-chip.is-active,
+  .brp-dist__track span,
+  .brp-dist__legend i {
     /* Keep the accent visible in print — browsers drop backgrounds otherwise. */
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;

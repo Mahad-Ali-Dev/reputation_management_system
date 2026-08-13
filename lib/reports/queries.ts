@@ -68,22 +68,31 @@ export type DevicesSection = Available<{
   byLocation: Array<{ location: string; scans: number }>;
 }>;
 
-export type SurveyAnswerRow = { prompt: string; value: string };
-export type SurveyResponseRow = {
-  id: string;
+/**
+ * Per-survey stats — sent (tokens issued), responses, response rate, and a
+ * Promoter/Passive/Detractor breakdown (same NPS buckets the live Surveys tab
+ * uses — see npsDistribution in lib/surveys/queries.ts — bucketed from the
+ * same ratingSummary the average score already comes from, just per-campaign
+ * instead of org-wide).
+ */
+export type SurveyCampaignStat = {
   campaign: string;
-  recipient: string | null;
-  rating: number | null;
-  submittedAt: string | null;
-  answers: SurveyAnswerRow[];
+  sent: number;
+  responses: number;
+  responseRate: number | null;
+  avgRating: number | null;
+  promoters: number;
+  passives: number;
+  detractors: number;
 };
 
 export type SurveysSection = Available<{
   responses: number;
   completed: number;
   avgRating: number | null;
-  byCampaign: Array<{ campaign: string; responses: number }>;
-  detail: SurveyResponseRow[];
+  sent: number;
+  responseRate: number | null;
+  byCampaign: SurveyCampaignStat[];
 }>;
 
 export type BusinessReport = {
@@ -153,23 +162,6 @@ function toSeries(dates: Date[], range: ReportRange): DailyPoint[] {
 function pct(current: number, previous: number): number | null {
   if (previous <= 0) return null;
   return Math.round(((current - previous) / previous) * 100);
-}
-
-/** Answer values are free-form JSON; render something a human can read. */
-function answerToText(value: unknown): string {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "string") return value;
-  if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (Array.isArray(value)) return value.map(answerToText).filter(Boolean).join(", ");
-  if (typeof value === "object") {
-    const o = value as Record<string, unknown>;
-    // Common shapes from the survey renderer before falling back to raw JSON.
-    for (const k of ["label", "text", "value", "answer"]) {
-      if (typeof o[k] === "string") return o[k] as string;
-    }
-    return JSON.stringify(value);
-  }
-  return String(value);
 }
 
 // ── the report ───────────────────────────────────────────────────
@@ -395,35 +387,24 @@ async function devicesSection(orgId: string, window: Window): Promise<DevicesSec
   });
 }
 
-/** Detail rows shown in the report + PDF. Bounded so one busy org can't produce
- *  a hundred-page export. */
-const SURVEY_DETAIL_LIMIT = 50;
+/** NPS bucket a 1–5 ratingSummary falls into, on the app's usual 0–10 scale
+ *  (ratingSummary/5)*10 — same mapping as npsDistribution in lib/surveys/queries.ts. */
+function npsBucketOf(ratingSummary: number): "promoter" | "passive" | "detractor" {
+  const nps = (ratingSummary / 5) * 10;
+  if (nps >= 9) return "promoter";
+  if (nps >= 7) return "passive";
+  return "detractor";
+}
 
 async function surveysSection(orgId: string, window: Window): Promise<SurveysSection> {
   return withTenant(orgId, async (tx) => {
-    const rows = await tx.surveyResponse.findMany({
-      where: { createdAt: window },
-      select: {
-        id: true,
-        recipient: true,
-        ratingSummary: true,
-        completedAt: true,
-        createdAt: true,
-        campaign: { select: { name: true } },
-        answers: {
-          select: { value: true, question: { select: { prompt: true, position: true } } },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-      take: SURVEY_DETAIL_LIMIT,
-    });
-
-    // Totals come from counts, not from the capped detail list, so the headline
-    // numbers stay correct once an org exceeds the limit.
-    const [responses, completed, agg, byCampaignRaw] = await Promise.all([
+    const [responses, completed, agg, sent, byCampaignRaw] = await Promise.all([
       tx.surveyResponse.count({ where: { createdAt: window } }),
       tx.surveyResponse.count({ where: { createdAt: window, completedAt: { not: null } } }),
       tx.surveyResponse.aggregate({ where: { createdAt: window }, _avg: { ratingSummary: true } }),
+      // "Sent" = invite tokens issued in the window — lets the report show
+      // e.g. "140 of 200 responded" instead of just a raw response count.
+      tx.surveyResponseToken.count({ where: { createdAt: window } }),
       tx.surveyResponse.groupBy({
         by: ["campaignId"],
         where: { createdAt: window },
@@ -431,36 +412,79 @@ async function surveysSection(orgId: string, window: Window): Promise<SurveysSec
       }),
     ]);
 
-    const campaigns = byCampaignRaw.length
-      ? await tx.surveyCampaign.findMany({
-          where: { id: { in: byCampaignRaw.map((c) => c.campaignId) } },
+    const campaignIds = byCampaignRaw.map((c) => c.campaignId);
+    let campaigns: Array<{ id: string; name: string }> = [];
+    let sentByCampaignRaw: Array<{ campaignId: string; _count: { _all: number } }> = [];
+    let ratingRows: Array<{ campaignId: string; ratingSummary: unknown }> = [];
+    if (campaignIds.length > 0) {
+      [campaigns, sentByCampaignRaw, ratingRows] = await Promise.all([
+        tx.surveyCampaign.findMany({
+          where: { id: { in: campaignIds } },
           select: { id: true, name: true },
-        })
-      : [];
+        }),
+        tx.surveyResponseToken.groupBy({
+          by: ["campaignId"],
+          where: { campaignId: { in: campaignIds }, createdAt: window },
+          _count: { _all: true },
+        }),
+        tx.surveyResponse.findMany({
+          where: { campaignId: { in: campaignIds }, createdAt: window },
+          select: { campaignId: true, ratingSummary: true },
+        }),
+      ]);
+    }
     const campaignName = new Map(campaigns.map((c) => [c.id, c.name]));
+    const sentByCampaign = new Map(sentByCampaignRaw.map((s) => [s.campaignId, s._count._all]));
+
+    // Per-campaign average rating + NPS bucket counts, computed from the same
+    // raw rows (a groupBy _avg can't also give per-bucket counts).
+    type Bucket = { sum: number; count: number; promoters: number; passives: number; detractors: number };
+    const bucketsByCampaign = new Map<string, Bucket>();
+    for (const r of ratingRows) {
+      const rating = r.ratingSummary == null ? null : Number(r.ratingSummary);
+      const b = bucketsByCampaign.get(r.campaignId) ?? {
+        sum: 0,
+        count: 0,
+        promoters: 0,
+        passives: 0,
+        detractors: 0,
+      };
+      if (rating != null) {
+        b.sum += rating;
+        b.count += 1;
+        const bucket = npsBucketOf(rating);
+        if (bucket === "promoter") b.promoters++;
+        else if (bucket === "passive") b.passives++;
+        else b.detractors++;
+      }
+      bucketsByCampaign.set(r.campaignId, b);
+    }
+
+    const byCampaign: SurveyCampaignStat[] = byCampaignRaw
+      .map((c) => {
+        const sentCount = sentByCampaign.get(c.campaignId) ?? 0;
+        const b = bucketsByCampaign.get(c.campaignId);
+        return {
+          campaign: campaignName.get(c.campaignId) ?? "Untitled survey",
+          sent: sentCount,
+          responses: c._count._all,
+          responseRate: sentCount > 0 ? Math.round((c._count._all / sentCount) * 100) : null,
+          avgRating: b && b.count > 0 ? Number((b.sum / b.count).toFixed(2)) : null,
+          promoters: b?.promoters ?? 0,
+          passives: b?.passives ?? 0,
+          detractors: b?.detractors ?? 0,
+        };
+      })
+      .sort((a, b) => b.responses - a.responses);
 
     return {
       available: true,
       responses,
       completed,
       avgRating: agg._avg.ratingSummary ? Number(Number(agg._avg.ratingSummary).toFixed(2)) : null,
-      byCampaign: byCampaignRaw
-        .map((c) => ({
-          campaign: campaignName.get(c.campaignId) ?? "Untitled survey",
-          responses: c._count._all,
-        }))
-        .sort((a, b) => b.responses - a.responses),
-      detail: rows.map((r) => ({
-        id: r.id,
-        campaign: r.campaign?.name ?? "Untitled survey",
-        recipient: r.recipient,
-        rating: r.ratingSummary === null ? null : Number(r.ratingSummary),
-        submittedAt: (r.completedAt ?? r.createdAt).toISOString(),
-        answers: r.answers
-          .slice()
-          .sort((a, b) => (a.question?.position ?? 0) - (b.question?.position ?? 0))
-          .map((a) => ({ prompt: a.question?.prompt ?? "Question", value: answerToText(a.value) })),
-      })),
+      sent,
+      responseRate: sent > 0 ? Math.round((responses / sent) * 100) : null,
+      byCampaign,
     };
   });
 }
