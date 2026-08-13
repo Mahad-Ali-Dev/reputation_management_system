@@ -366,7 +366,7 @@
   max-width: 420px;
 }
 .cd-illus--export {
-  width: 250px;
+  width: 170px;
 }
 
 /* Info strip (lavender) */
@@ -600,12 +600,12 @@
 }
 .cd-export__art {
   flex-shrink: 0;
-  padding-right: 28px;
-  border-right: 1px solid var(--cd-line-2);
 }
 .cd-export__ctrls {
   flex: 1;
   min-width: 0;
+  padding-right: 28px;
+  border-right: 1px solid var(--cd-line-2);
 }
 .cd-fmt {
   display: inline-flex;
@@ -623,7 +623,7 @@
     align-items: flex-start;
     gap: 18px;
   }
-  .cd-export__art {
+  .cd-export__ctrls {
     border-right: none;
     padding-right: 0;
   }

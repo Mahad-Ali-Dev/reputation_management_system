@@ -1,21 +1,23 @@
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
 import { accessTabLabel } from "@/lib/access/tabs";
-import { removeMember } from "@/lib/account/actions";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
 import { prettyPlan } from "../_lib/sections";
+import { EditRoleModal } from "./_components/edit-role-modal";
 import { InviteTeammateModal } from "./_components/invite-teammate-modal";
+import { RemoveMemberModal } from "./_components/remove-member-modal";
 
 /**
  * Team & roles (designs/settings/team n roles/team n roles.png) — membership
- * table + invite flow. Bound to the existing inviteTeammate / removeMember
- * server actions.
+ * table + invite flow. Bound to the existing inviteTeammate server action,
+ * plus updateMemberRole / removeMember (both in lib/account/actions.ts).
  *
  * <InviteTeammateModal> owns the trigger button + centered dialog; its email
  * + role fields post straight to `inviteTeammate`, and the tab-access grid
  * lives alongside them in <InviteTeammateForm> (client component — it needs
- * state for the Full/Custom toggle and "select all").
+ * state for the Full/Custom toggle and "select all"). <EditRoleModal> and
+ * <RemoveMemberModal> follow the same dialog shape, one per member row.
  */
 export const dynamic = "force-dynamic";
 
@@ -110,19 +112,25 @@ export default async function TeamSettingsPage() {
                     )}
                   </td>
                   <td style={{ textAlign: "right" }}>
-                    {isYou ? null : (
-                      <form action={removeMember}>
-                        <input type="hidden" name="membershipId" value={m.id} />
-                        <button
-                          type="submit"
-                          className="set-btable__dl"
-                          aria-label="Remove member"
-                          title="Remove member"
-                        >
-                          <Icon name="trash" size={15} />
-                        </button>
-                      </form>
-                    )}
+                    <div className="row" style={{ gap: 4, justifyContent: "flex-end" }}>
+                      {/* You can edit a teammate's role, but not your own — an
+                          owner demoting themselves (accidentally or not) is
+                          exactly the kind of self-lockout this hides. Removing
+                          yourself is blocked the same way below. */}
+                      {isYou ? null : (
+                        <>
+                          <EditRoleModal
+                            membershipId={m.id}
+                            memberName={m.user.name ?? m.user.email ?? "This member"}
+                            currentRole={m.role}
+                          />
+                          <RemoveMemberModal
+                            membershipId={m.id}
+                            memberName={m.user.name ?? m.user.email ?? "This member"}
+                          />
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               );

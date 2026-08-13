@@ -351,27 +351,10 @@ export default async function DashboardPage({
         {/* ============================================================
             2 — Google Reviews Overview · Recent Reviews · Setup Progress
             ============================================================ */}
-        <div className="dk-cols">
-          <GoogleOverviewCard
-            avg={avgRating}
-            total={total}
-            byRating={byRating}
-            googlePlaceUrl={d.googlePlaceUrl}
-          />
-          <RecentReviewsCard reviews={d.liveReviews} />
-          <SetupProgressCard setup={setup} isEmpty={isEmpty} />
-        </div>
 
-        {/* ============================================================
-            3 — Key Insights
-            ============================================================ */}
         <section aria-label="Key insights">
           <div className="dk-insights__head">
             <h2 className="dk-insights__title">Key Insights</h2>
-            {/* Kit shows a "30 days ⌄" chip here, but these four cards are NOT
-                range-scoped: response rate and sentiment are lifetime ratios and
-                Trend is a fixed 7d comparison. Labelled for what they actually
-                are rather than echoing the topbar window and lying about it. */}
             <span className="dk-insights__range">All time · 7d trend</span>
           </div>
           <div className="dk-insights__grid">
@@ -426,6 +409,78 @@ export default async function DashboardPage({
             />
           </div>
         </section>
+
+        <div className="dk-cols">
+          <GoogleOverviewCard
+            avg={avgRating}
+            total={total}
+            byRating={byRating}
+            googlePlaceUrl={d.googlePlaceUrl}
+          />
+          <RecentReviewsCard reviews={d.liveReviews} />
+          <SetupProgressCard setup={setup} isEmpty={isEmpty} />
+        </div>
+
+        {/* ============================================================
+            3 — Key Insights
+            ============================================================ */}
+        {/* <section aria-label="Key insights">
+          <div className="dk-insights__head">
+            <h2 className="dk-insights__title">Key Insights</h2>
+            <span className="dk-insights__range">All time · 7d trend</span>
+          </div>
+          <div className="dk-insights__grid">
+            <InsightCard
+              label="Response Rate"
+              art="kit-insight-response-rate.png"
+              value={total > 0 ? `${responseRate}%` : null}
+            />
+            <InsightCard
+              label="Avg. Response Time"
+              art="kit-insight-response-time.png"
+              value={
+                d.avgResponseHours !== null
+                  ? fmtHours(d.avgResponseHours)
+                  : null
+              }
+            />
+            <InsightCard
+              label="Sentiment"
+              art="kit-insight-sentiment.png"
+              value={total > 0 ? sentimentLabel(d.sentiment).label : null}
+              chip={
+                total > 0
+                  ? {
+                      text: `${sentimentLabel(d.sentiment).pct}%`,
+                      dir: sentimentLabel(d.sentiment).dir,
+                      arrow: false,
+                    }
+                  : undefined
+              }
+            />
+            <InsightCard
+              label="Trend"
+              art="kit-insight-trend.png"
+              value={
+                total > 0
+                  ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
+                    ? "Improving"
+                    : "Steady"
+                  : null
+              }
+              chip={
+                total > 0 &&
+                d.reviews7dDeltaPct !== null &&
+                d.reviews7dDeltaPct !== 0
+                  ? {
+                      text: `${Math.abs(d.reviews7dDeltaPct)}%`,
+                      dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
+                    }
+                  : undefined
+              }
+            />
+          </div>
+        </section> */}
 
         {/* ============================================================
             4 — Your AI copilot (wired to the global Ask-AI assistant)
