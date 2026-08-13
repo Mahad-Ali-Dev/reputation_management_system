@@ -405,6 +405,36 @@
   color: var(--ap-green);
 }
 
+/* ---------- Setup list: "coming soon" step (kept, not removed — see
+   comingSoon on SetupStep in page.tsx) ---------- */
+.ap2-setup__item--soon {
+  /* The done/chevron state column is a fixed 18px — too tight for a "Soon"
+     chip, so this row alone gets a flexible 3rd column. */
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+}
+
+.ap2-setup__icon--soon,
+.ap2-setup__copy--soon {
+  filter: blur(3px);
+  opacity: 0.6;
+  user-select: none;
+}
+
+.ap2-setup__soonchip {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: var(--ap-indigo-soft);
+  color: var(--ap-indigo);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .ap2-setup__guide {
   width: 100%;
   margin-top: 10px;

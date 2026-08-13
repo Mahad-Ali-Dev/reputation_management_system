@@ -3,7 +3,7 @@
 import { Icon } from "@/components/shell/icon";
 import { autosaveAiTraining } from "@/lib/ai/training-actions";
 import Image from "next/image";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 /**
  * Behaviour tab — kit "AI Behaviour Settings" surface.
@@ -59,13 +59,32 @@ const SUPPORT_OPTS: Array<[string, string]> = [
   ["proactive_recommendations", "Proactive recommendations"],
 ];
 
-const RULES = [
-  "Be polite, respectful and professional",
-  "Never make up information",
-  "Do not guarantee results",
-  "Protect customer privacy",
-  "Follow business policies",
-  "Stay on topic and concise",
+const RULES: Array<{ title: string; detail: string }> = [
+  {
+    title: "Be polite, respectful and professional",
+    detail: "Every reply is screened for a toxic or hostile tone before it can be sent.",
+  },
+  {
+    title: "Never make up information",
+    detail: "Unverifiable factual claims are flagged and blocked rather than shipped.",
+  },
+  {
+    title: "Do not guarantee results",
+    detail: "Medical, legal and financial claims are blocked — those need a human's sign-off.",
+  },
+  {
+    title: "Protect customer privacy",
+    detail:
+      "Replies can't introduce emails, phone numbers or names that weren't already in the conversation.",
+  },
+  {
+    title: "Follow business policies",
+    detail: "Off-brand language is flagged so replies stay consistent with how you run things.",
+  },
+  {
+    title: "Stay on topic and concise",
+    detail: "Attempts to redirect the AI off-task (prompt injection) are detected and refused.",
+  },
 ];
 
 function labelFor(opts: Array<[string, string]>, value: string): string {
@@ -87,8 +106,24 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
   const [fields, setFields] = useState<BehaviourFields>(initial);
   const savedRef = useRef<BehaviourFields>(initial);
   const [status, setStatus] = useState<"saved" | "dirty" | "saving" | "error">("saved");
+  const [rulesOpen, setRulesOpen] = useState(false);
 
   const dirty = status === "dirty" || status === "error";
+
+  // Esc closes the rules dialog; lock body scroll while it's open.
+  useEffect(() => {
+    if (!rulesOpen) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setRulesOpen(false);
+    }
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [rulesOpen]);
 
   function patch(p: Partial<BehaviourFields>) {
     setFields((f) => ({ ...f, ...p }));
@@ -341,16 +376,21 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
 
           <div className="akb-rules">
             {RULES.map((r) => (
-              <div className="akb-rule" key={r}>
+              <div className="akb-rule" key={r.title}>
                 <span className="akb-rule__check" aria-hidden="true">
                   <Icon name="check" size={13} />
                 </span>
-                {r}
+                {r.title}
               </div>
             ))}
           </div>
 
-          <a className="akb-btn-outline" href="/ai?tab=behaviour" style={{ marginTop: 24 }}>
+          <button
+            type="button"
+            className="akb-btn-outline"
+            style={{ marginTop: 24 }}
+            onClick={() => setRulesOpen(true)}
+          >
             <Image
               src={`${ASSET}/beh-manage-rules.svg`}
               alt=""
@@ -360,9 +400,63 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
               aria-hidden="true"
             />
             Manage rules
-          </a>
+          </button>
         </div>
       </div>
+
+      {rulesOpen && (
+        <div className="akb-rules-backdrop">
+          <button
+            type="button"
+            aria-label="Close conversation rules dialog"
+            className="akb-rules-scrim"
+            onClick={() => setRulesOpen(false)}
+          />
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="akb-rules-title"
+            className="akb-rules-modal"
+          >
+            <div className="akb-rules-modal__head">
+              <h3 id="akb-rules-title" className="akb-rules-modal__title">
+                Conversation rules
+              </h3>
+              <button
+                type="button"
+                aria-label="Close"
+                className="akb-rules-modal__close"
+                onClick={() => setRulesOpen(false)}
+              >
+                <Icon name="x" size={16} stroke={2.2} />
+              </button>
+            </div>
+            <p className="akb-rules-modal__sub">
+              These are enforced automatically by a safety check on every AI reply, across every
+              channel — there&rsquo;s no toggle to turn them off, so your customers are always
+              covered.
+            </p>
+            <div className="akb-rules-modal__list">
+              {RULES.map((r) => (
+                <div className="akb-rules-modal__item" key={r.title}>
+                  <span className="akb-rule__check" aria-hidden="true">
+                    <Icon name="check" size={13} />
+                  </span>
+                  <div>
+                    <div className="akb-rules-modal__item-title">{r.title}</div>
+                    <div className="akb-rules-modal__item-detail">{r.detail}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="akb-rules-modal__foot">
+              <button type="button" className="akb-btn-primary" onClick={() => setRulesOpen(false)}>
+                Got it
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
 
       {/* channel info bar */}
       <div className="akb-beh-info">

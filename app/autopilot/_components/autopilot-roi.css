@@ -214,16 +214,22 @@
 
 .apr-rev__body {
   display: flex;
-  /* Kit: KPI + pills hug the header (top-left); only the chart sits low. */
+  /* Kit: KPI + pills hug the header (top-left); only the chart sits low.
+     flex-wrap is a safety net: .apr-rev__chart doesn't shrink (flex-shrink:0),
+     so if the card is ever narrower than KPI+pills+CTA plus the 132px chart
+     combined, the chart wraps onto its own line instead of the two flex items
+     overlapping. */
   align-items: flex-start;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 14px;
   flex: 1;
   margin-top: 10px;
 }
 
 .apr-rev__left {
-  min-width: 0;
+  min-width: 200px;
+  flex: 1 1 auto;
 }
 
 .apr-kpi {

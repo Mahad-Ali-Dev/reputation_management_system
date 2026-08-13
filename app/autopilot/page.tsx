@@ -123,7 +123,7 @@ export default async function AutopilotPage({
       body: "We'll use this to prioritize opportunities and measure ROI.",
       icon: `${ASSETS}/setup-dollar.png`,
       done: settings.averageJobValue != null,
-      href: "/autopilot?tab=roi",
+      comingSoon: true,
     },
   ];
 
@@ -282,16 +282,26 @@ type SetupStep = {
   icon: string;
   done: boolean;
   href?: string;
+  /** Held back a release (see ComingSoonOverlay on the ROI tab this step
+   *  links to) — kept in the checklist per product's request rather than
+   *  removed, but shown blurred with a "Coming soon" tag instead of being
+   *  clickable/completable. */
+  comingSoon?: boolean;
 };
 
 function SetupCard({ steps }: { steps: SetupStep[] }) {
-  const doneCount = steps.filter((s) => s.done).length;
-  const pct = Math.round((doneCount / steps.length) * 100);
+  // Coming-soon steps aren't completable yet, so they're excluded from the
+  // fraction — otherwise it gets permanently stuck (the same problem that got
+  // the old Voice→Review step removed entirely; this time product wants the
+  // row kept, just blurred, so we fix the denominator instead of the list).
+  const countable = steps.filter((s) => !s.comingSoon);
+  const doneCount = countable.filter((s) => s.done).length;
+  const pct = Math.round((doneCount / Math.max(countable.length, 1)) * 100);
   return (
     <section className="ap2-card ap2-setup" aria-label="Get Autopilot running">
       <h2 className="ap2-setup__title">Get Autopilot Running</h2>
       <div className="ap2-setup__progresslabel">
-        {doneCount}/{steps.length} complete
+        {doneCount}/{countable.length} complete
       </div>
       {/* Decorative — the "n/3 complete" text above is the accessible value. */}
       <div className="ap2-setup__track" aria-hidden="true">
@@ -300,12 +310,15 @@ function SetupCard({ steps }: { steps: SetupStep[] }) {
 
       <div className="ap2-setup__list">
         {steps.map((step) =>
-          step.href && !step.done ? (
+          step.href && !step.done && !step.comingSoon ? (
             <Link key={step.key} href={step.href} className="ap2-setup__item ap2-setup__item--link">
               <SetupRow step={step} />
             </Link>
           ) : (
-            <div key={step.key} className="ap2-setup__item">
+            <div
+              key={step.key}
+              className={`ap2-setup__item${step.comingSoon ? " ap2-setup__item--soon" : ""}`}
+            >
               <SetupRow step={step} />
             </div>
           ),
@@ -323,6 +336,23 @@ function SetupCard({ steps }: { steps: SetupStep[] }) {
 
 /** One checklist row's content (icon / copy / done-state indicator). */
 function SetupRow({ step }: { step: SetupStep }) {
+  if (step.comingSoon) {
+    return (
+      <>
+        <img
+          className={`ap2-setup__icon ap2-setup__icon--${step.key} ap2-setup__icon--soon`}
+          src={step.icon}
+          alt=""
+          aria-hidden="true"
+        />
+        <span className="ap2-setup__copy ap2-setup__copy--soon" aria-hidden="true">
+          <span className="ap2-setup__steptitle">{step.title}</span>
+          <span className="ap2-setup__stepbody">{step.body}</span>
+        </span>
+        <span className="ap2-setup__soonchip">Soon</span>
+      </>
+    );
+  }
   return (
     <>
       <img className={`ap2-setup__icon ap2-setup__icon--${step.key}`} src={step.icon} alt="" />
