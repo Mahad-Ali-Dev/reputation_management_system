@@ -48,13 +48,13 @@ export default function LandingPage() {
     <main className="overflow-x-clip bg-white">
       <LandingHero />
       <LandingWorkspace />
+      <LandingAiRobot />
       <LandingTour />
       <LandingSteps />
       <LandingMetricsCards />
       <LandingCommandCenter />
       <LandingIntegrations />
       <LandingLocations />
-      <LandingAiRobot />
       <LandingFrames />
       <LandingFaq />
       <LandingReady />

@@ -757,33 +757,35 @@ function GoogleOverviewCard({
                 Based on {total.toLocaleString()} reviews
               </div>
             </div>
-            <div className="dk-google__dist">
-              {[5, 4, 3, 2, 1].map((r) => (
-                <div key={r} className="dk-dist-row">
-                  <span className="dk-dist-row__label">
-                    {r}
-                    <span
-                      className="dk-star"
-                      style={{ color: "var(--dk-star)" }}
-                      aria-hidden
-                    >
-                      ★
+            <div className="dk-google__row2">
+              <div className="dk-google__dist">
+                {[5, 4, 3, 2, 1].map((r) => (
+                  <div key={r} className="dk-dist-row">
+                    <span className="dk-dist-row__label">
+                      {r}
+                      <span
+                        className="dk-star"
+                        style={{ color: "var(--dk-star)" }}
+                        aria-hidden
+                      >
+                        ★
+                      </span>
                     </span>
-                  </span>
-                  <span className="dk-dist-row__track">
-                    <span
-                      className="dk-dist-row__fill"
-                      style={{
-                        width: `${Math.round((byRating(r) / max) * 100)}%`,
-                        background: BAR_COLORS[r],
-                      }}
-                    />
-                  </span>
-                  <span className="dk-dist-row__count">{byRating(r)}</span>
-                </div>
-              ))}
+                    <span className="dk-dist-row__track">
+                      <span
+                        className="dk-dist-row__fill"
+                        style={{
+                          width: `${Math.round((byRating(r) / max) * 100)}%`,
+                          background: BAR_COLORS[r],
+                        }}
+                      />
+                    </span>
+                    <span className="dk-dist-row__count">{byRating(r)}</span>
+                  </div>
+                ))}
+              </div>
+              <RatingDonut total={total} byRating={byRating} />
             </div>
-            <RatingDonut total={total} byRating={byRating} />
           </div>
           <Link href="/reviews" className="dk-btn-outline dk-btn-outline--end">
             <Icon name="chat" size={13} /> Manage Reviews{" "}

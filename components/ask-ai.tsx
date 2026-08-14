@@ -46,7 +46,26 @@ export function AskAi() {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [available, setAvailable] = useState(true);
+  // null = still checking; the chat area blurs with an upgrade message once
+  // this resolves to false, instead of only surfacing the plan gate after a
+  // free-plan visitor types a question and the POST comes back 402.
+  const [entitled, setEntitled] = useState<boolean | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/ai/assistant")
+      .then((res) => (res.ok ? res.json() : { entitled: true }))
+      .then((data: { entitled?: boolean }) => {
+        if (!cancelled) setEntitled(data.entitled !== false);
+      })
+      .catch(() => {
+        if (!cancelled) setEntitled(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const close = useCallback(() => setOpen(false), []);
 
@@ -86,6 +105,10 @@ export function AskAi() {
         });
         if (res.status === 401) {
           setAvailable(false);
+          return;
+        }
+        if (res.status === 402) {
+          setEntitled(false);
           return;
         }
         const data = (await res.json().catch(() => ({}))) as {
@@ -278,6 +301,19 @@ export function AskAi() {
               </button>
             </header>
 
+            <div style={{ position: "relative", flex: 1, display: "flex", flexDirection: "column", minHeight: 0 }}>
+            <div
+              inert={entitled === false ? true : undefined}
+              style={{
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                minHeight: 0,
+                ...(entitled === false
+                  ? { filter: "blur(4px)", opacity: 0.55, userSelect: "none" }
+                  : {}),
+              }}
+            >
             <div
               ref={scrollRef}
               style={{
@@ -401,7 +437,7 @@ export function AskAi() {
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 placeholder="Type your question…"
-                disabled={pending}
+                disabled={pending || entitled === false}
                 style={{
                   flex: 1,
                   height: 38,
@@ -413,11 +449,11 @@ export function AskAi() {
                   outline: "none",
                 }}
                 // biome-ignore lint/a11y/noAutofocus: chat input gets focus when panel opens (desired UX)
-                autoFocus
+                autoFocus={entitled !== false}
               />
               <button
                 type="submit"
-                disabled={pending || draft.trim().length === 0}
+                disabled={pending || entitled === false || draft.trim().length === 0}
                 style={{
                   height: 38,
                   padding: "0 14px",
@@ -434,6 +470,76 @@ export function AskAi() {
                 Send
               </button>
             </form>
+            </div>
+
+            {entitled === false && (
+              <div
+                style={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: 8,
+                  padding: 24,
+                  textAlign: "center",
+                  background: "rgba(255,255,255,0.4)",
+                }}
+              >
+                <span
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    padding: "3px 10px",
+                    borderRadius: 999,
+                    background: "var(--pri-50, #eff6ff)",
+                    border: "1px solid var(--pri-100, #dbeafe)",
+                    color: "var(--pri, #2563eb)",
+                    fontSize: 10.5,
+                    fontWeight: 700,
+                    letterSpacing: "0.04em",
+                    textTransform: "uppercase",
+                  }}
+                >
+                  Pro feature
+                </span>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: "var(--ink, #0f172a)" }}>
+                  Available for Pro
+                </p>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: 12,
+                    color: "var(--rl-muted, #64748b)",
+                    maxWidth: 260,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Upgrade to unlock the in-app AI assistant for your whole team.
+                </p>
+                <a
+                  href="/subscription"
+                  onClick={close}
+                  style={{
+                    marginTop: 6,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    height: 34,
+                    padding: "0 16px",
+                    borderRadius: 10,
+                    background: "var(--pri, #2563eb)",
+                    color: "#fff",
+                    fontSize: 12.5,
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  Upgrade to Pro
+                </a>
+              </div>
+            )}
+            </div>
           </aside>
         </>
       )}

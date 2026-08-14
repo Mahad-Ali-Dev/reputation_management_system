@@ -32,7 +32,12 @@ const DAY_LABELS: Array<[string, string]> = [
   ["sunday", "Su"],
 ];
 
-export type BusinessDetailRow = { id: string; icon: IconName; title: string; body: string | null };
+export type BusinessDetailRow = {
+  id: string;
+  icon: IconName;
+  title: string;
+  body: string | null;
+};
 export type RecentLearningRow = {
   id: string;
   title: string;
@@ -77,7 +82,10 @@ export function KnowledgeSummary({
   return (
     <div className="akb-summary">
       {/* knowledge strength */}
-      <section className="akb-card akb-readiness" aria-label="Knowledge strength">
+      <section
+        className="akb-card akb-readiness"
+        aria-label="Knowledge strength"
+      >
         <span className="akb-readiness__tile" aria-hidden="true">
           <Image
             src={`${ASSET}/knowledge-strength.svg`}
@@ -93,7 +101,8 @@ export function KnowledgeSummary({
             <Icon name="info" size={12} />
           </span>
           <h3 className="akb-readiness__metric">
-            Brain readiness: <span style={{ color: "var(--akb-success)" }}>{readinessPct}%</span>
+            Brain readiness:{" "}
+            <span style={{ color: "var(--akb-success)" }}>{readinessPct}%</span>
           </h3>
           <p className="akb-readiness__copy">{readinessCopy}</p>
           {/* biome-ignore lint/a11y/useFocusableInteractive: progressbar is a display-only ARIA value, not a focusable control */}
@@ -105,12 +114,27 @@ export function KnowledgeSummary({
             aria-valuemin={0}
             aria-valuemax={100}
           >
-            <div className="akb-progress__fill" style={{ width: `${readinessPct}%` }} />
+            <div
+              className="akb-progress__fill"
+              style={{ width: `${readinessPct}%` }}
+            />
           </div>
         </div>
         <div className="akb-ring" aria-hidden="true">
-          <svg width="134" height="134" viewBox="0 0 134 134" aria-hidden="true">
-            <circle cx="67" cy="67" r={R} fill="none" stroke="var(--akb-track)" strokeWidth="8" />
+          <svg
+            width="134"
+            height="134"
+            viewBox="0 0 134 134"
+            aria-hidden="true"
+          >
+            <circle
+              cx="67"
+              cy="67"
+              r={R}
+              fill="none"
+              stroke="var(--akb-track)"
+              strokeWidth="8"
+            />
             <circle
               cx="67"
               cy="67"
@@ -156,7 +180,9 @@ export function KnowledgeSummary({
               />
             </span>
             <span className="akb-stat__label">Active sources</span>
-            {activeSources > 0 && <span className="akb-stat__dot" aria-hidden="true" />}
+            {activeSources > 0 && (
+              <span className="akb-stat__dot" aria-hidden="true" />
+            )}
           </div>
           <div className="akb-stat__value">{activeSources}</div>
         </div>
@@ -180,12 +206,20 @@ export function KnowledgeSummary({
         <div className="akb-stat">
           <div className="akb-stat__head">
             <span className="akb-stat__tile" aria-hidden="true">
-              <Image src={`${ASSET}/stat-status.svg`} alt="" width={30} height={30} unoptimized />
+              <Image
+                src={`${ASSET}/stat-status.svg`}
+                alt=""
+                width={30}
+                height={30}
+                unoptimized
+              />
             </span>
             <span className="akb-stat__label">Status</span>
           </div>
           <div style={{ marginTop: 12 }}>
-            <span className={`akb-pill ${hasSources ? "akb-pill--success" : "akb-pill--warning"}`}>
+            <span
+              className={`akb-pill ${hasSources ? "akb-pill--success" : "akb-pill--warning"}`}
+            >
               {statusLabel}
             </span>
           </div>
@@ -213,9 +247,13 @@ export function KnowledgeBody({
   location: LocationData;
   recentLearning: RecentLearningRow[];
 }) {
-  const filledDetails = businessDetails.filter((d) => d.body && d.body.trim().length > 0);
+  const filledDetails = businessDetails.filter(
+    (d) => d.body && d.body.trim().length > 0,
+  );
   const hasOverview = filledDetails.length > 0;
-  const hasLocation = Boolean(location.address && location.address.trim().length > 0);
+  const hasLocation = Boolean(
+    location.address && location.address.trim().length > 0,
+  );
   const hasLearning = recentLearning.length > 0;
 
   return (
@@ -223,7 +261,10 @@ export function KnowledgeBody({
       {/* sources + quick actions */}
       <div className="akb-main-row">
         {/* knowledge sources */}
-        <section className="akb-card akb-card__pad" aria-label="Knowledge sources">
+        <section
+          className="akb-card akb-card__pad"
+          aria-label="Knowledge sources"
+        >
           <h3 className="akb-card__title">Knowledge sources</h3>
           <p className="akb-card__sub">
             Upload documents or connect sources for your AI to learn from.
@@ -246,7 +287,9 @@ export function KnowledgeBody({
                 </span>
                 <span className="akb-source__title">Upload documents</span>
                 <span className="akb-source__desc">PDF, DOCX, TXT</span>
-                <span className="akb-source__desc">Drag &amp; drop or click to browse</span>
+                <span className="akb-source__desc">
+                  Drag &amp; drop or click to browse
+                </span>
               </button>
               <button
                 type="button"
@@ -264,15 +307,23 @@ export function KnowledgeBody({
                 </span>
                 <span className="akb-source__body">
                   <span className="akb-source__title">Connect website</span>
-                  <span className="akb-source__desc">Auto-scrape your website</span>
+                  <span className="akb-source__desc">
+                    Auto-scrape your website
+                  </span>
                 </span>
-                {websiteActive && <span className="akb-pill akb-pill--success">Active</span>}
+                {websiteActive && (
+                  <span className="akb-pill akb-pill--success">Active</span>
+                )}
               </button>
             </div>
           ) : (
             <div className="akb-sources__empty">
               {/* large "Business grid" dashed dropzone (kit empty layout) */}
-              <button type="button" className="akb-source akb-source--grid" data-kb-action="upload">
+              <button
+                type="button"
+                className="akb-source akb-source--grid"
+                data-kb-action="upload"
+              >
                 <span className="akb-source__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/upload-doc.svg`}
@@ -284,7 +335,8 @@ export function KnowledgeBody({
                 </span>
                 <span className="akb-source__title">Business grid</span>
                 <span className="akb-source__desc">
-                  Upload documents or connect a website to be searchable for AI knowledge.
+                  Upload documents or connect a website to be searchable for AI
+                  knowledge.
                 </span>
               </button>
               {/* right column: two stacked dashed action boxes */}
@@ -324,7 +376,9 @@ export function KnowledgeBody({
                   </span>
                   <span className="akb-source__body">
                     <span className="akb-source__title">Connect website</span>
-                    <span className="akb-source__desc">Auto-scrape your website</span>
+                    <span className="akb-source__desc">
+                      Auto-scrape your website
+                    </span>
                   </span>
                 </button>
               </div>
@@ -342,7 +396,11 @@ export function KnowledgeBody({
           <h3 className="akb-card__title">Quick actions</h3>
           <div className="akb-qa" style={{ marginTop: 14 }}>
             <div className="akb-qa__list">
-              <button type="button" className="akb-qa__row" data-kb-action="upload">
+              <button
+                type="button"
+                className="akb-qa__row"
+                data-kb-action="upload"
+              >
                 <span className="akb-qa__icon" aria-hidden="true">
                   <Image
                     src={`${ASSET}/qa-add-source.svg`}
@@ -354,7 +412,9 @@ export function KnowledgeBody({
                 </span>
                 <span>
                   <div className="akb-qa__title">Add new source</div>
-                  <div className="akb-qa__desc">Upload docs or connect a website</div>
+                  <div className="akb-qa__desc">
+                    Upload docs or connect a website
+                  </div>
                 </span>
               </button>
               <Link className="akb-qa__row" href="/ai?tab=test">
@@ -384,7 +444,9 @@ export function KnowledgeBody({
                 </span>
                 <span>
                   <div className="akb-qa__title">View learning insights</div>
-                  <div className="akb-qa__desc">Track what AI knows and learns.</div>
+                  <div className="akb-qa__desc">
+                    Track what AI knows and learns.
+                  </div>
                 </span>
               </Link>
             </div>
@@ -404,9 +466,14 @@ export function KnowledgeBody({
       {/* bottom row */}
       <div className="akb-bottom-row">
         {/* business overview */}
-        <section className="akb-card akb-card__pad" aria-label="Business overview">
+        <section
+          className="akb-card akb-card__pad"
+          aria-label="Business overview"
+        >
           <h3 className="akb-card__title">Business overview</h3>
-          <p className="akb-card__sub">Give AI context about who you are and what you do.</p>
+          <p className="akb-card__sub">
+            Give AI context about who you are and what you do.
+          </p>
           {hasOverview ? (
             <>
               <div style={{ marginTop: 8 }}>
@@ -417,7 +484,13 @@ export function KnowledgeBody({
                     </span>
                     <div className="akb-bo__body">
                       <div className="akb-bo__t">
-                        <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+                        <span
+                          style={{
+                            minWidth: 0,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
                           {d.title}
                         </span>
                         <span className="akb-saved">
@@ -474,7 +547,10 @@ export function KnowledgeBody({
         </section>
 
         {/* business location */}
-        <section className="akb-card akb-card__pad" aria-label="Business location">
+        <section
+          className="akb-card akb-card__pad"
+          aria-label="Business location"
+        >
           <h3 className="akb-card__title">Business location</h3>
           <p className="akb-card__sub">Where is your business based?</p>
           {hasLocation ? (
@@ -482,11 +558,20 @@ export function KnowledgeBody({
                dropdown chevrons and a fake toggle — they looked interactive and
                did nothing. Editing now happens here, saving through the same
                autosaveAiTraining action the training workspace uses. */
-            <LocationHoursEditor address={location.address} hours={location.hours} />
+            <LocationHoursEditor
+              address={location.address}
+              hours={location.hours}
+            />
           ) : (
             <div className="akb-empty">
               <span className="akb-empty__icon" aria-hidden="true">
-                <Image src={`${ASSET}/location.svg`} alt="" width={44} height={44} unoptimized />
+                <Image
+                  src={`${ASSET}/location.svg`}
+                  alt=""
+                  width={44}
+                  height={44}
+                  unoptimized
+                />
               </span>
               <div className="akb-empty__t">No location added</div>
               <div className="akb-empty__d">
@@ -509,7 +594,10 @@ export function KnowledgeBody({
         </section>
 
         {/* recent learning */}
-        <section className="akb-card akb-card__pad" aria-label="Recent learning">
+        <section
+          className="akb-card akb-card__pad"
+          aria-label="Recent learning"
+        >
           <h3 className="akb-card__title">Recent learning</h3>
           <p className="akb-card__sub">Last learned or updated by AI.</p>
           {hasLearning ? (
@@ -517,7 +605,10 @@ export function KnowledgeBody({
               <div style={{ marginTop: 6 }}>
                 {recentLearning.map((r) => (
                   <Link href="/ai?tab=test" className="akb-rl__row" key={r.id}>
-                    <span className={`akb-rl__dot akb-rl__dot--${r.tone}`} aria-hidden="true" />
+                    <span
+                      className={`akb-rl__dot akb-rl__dot--${r.tone}`}
+                      aria-hidden="true"
+                    />
                     <span style={{ minWidth: 0 }}>
                       <div className="akb-rl__t">{r.title}</div>
                       <div className="akb-rl__meta">Learned {r.when}</div>
@@ -546,7 +637,11 @@ export function KnowledgeBody({
               <div className="akb-empty__d">
                 AI learning updates will appear here once you add sources.
               </div>
-              <Link href="/ai?tab=test" className="akb-link" style={{ marginTop: 6 }}>
+              <Link
+                href="/ai?tab=test"
+                className="akb-link"
+                style={{ marginTop: 6 }}
+              >
                 View all insights <Icon name="arrowR" size={13} />
               </Link>
             </div>

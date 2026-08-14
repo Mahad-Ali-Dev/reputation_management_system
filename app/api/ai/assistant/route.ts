@@ -149,6 +149,20 @@ async function buildOrgContext(orgId: string): Promise<string> {
   }
 }
 
+/**
+ * GET /api/ai/assistant — entitlement check only, no model call.
+ *
+ * The floating launcher (components/ask-ai.tsx) always opens for a signed-in
+ * user, but the chat area itself is Pro-gated: this lets the panel know
+ * up-front (on mount) whether to blur the chat with an upgrade message,
+ * rather than only finding out after the visitor types a question and the
+ * POST comes back 402.
+ */
+export async function GET() {
+  const { orgId } = await getOrgContext();
+  return NextResponse.json({ entitled: await isOrgEntitled(orgId) });
+}
+
 export async function POST(req: NextRequest) {
   const { orgId, userId } = await getOrgContext();
 
