@@ -15,7 +15,7 @@ export function GET() {
   // Expires roughly 1 year from now. Keep this updated.
   const expires = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
   const body = [
-    "Contact: mailto:security@repulabs.com",
+    "Contact: mailto:info@repulabs.com",
     `Expires: ${expires}`,
     "Preferred-Languages: en",
     "Canonical: https://repulabs.com/.well-known/security.txt",

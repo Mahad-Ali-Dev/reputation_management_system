@@ -217,8 +217,8 @@ export default async function StatusPage() {
             style={{ fontSize: 14, color: C.mute, maxWidth: 520, lineHeight: 1.6 }}
           >
             Reach out to{" "}
-            <a href="mailto:support@repulabs.com" style={{ color: C.pri }}>
-              support@repulabs.com
+            <a href="mailto:info@repulabs.com" style={{ color: C.pri }}>
+              info@repulabs.com
             </a>{" "}
             and we'll get back to you.
           </p>

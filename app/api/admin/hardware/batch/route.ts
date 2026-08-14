@@ -450,7 +450,7 @@ function buildNfcReadme(
     "keeps a one-way hash). If you lose it, an admin can re-download ONCE from the",
     "batch history before it expires; after that the codes are unrecoverable.",
     "",
-    "Questions: ops@repulabs.com",
+    "Questions: info@repulabs.com",
     "",
   ]
     .filter(Boolean)

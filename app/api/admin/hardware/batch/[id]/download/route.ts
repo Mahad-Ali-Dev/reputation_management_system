@@ -336,7 +336,7 @@ function buildNfcReadme(
     "  2. Print the `activation_code` (5-char) on the card / packaging.",
     "  3. Optional: record the serial for inventory tracking.",
     "",
-    "Questions: ops@repulabs.com",
+    "Questions: info@repulabs.com",
     "",
   ].join("\n");
 }

@@ -9,7 +9,7 @@ export default function SecurityPage() {
     <>
       <h1>Security overview</h1>
       <p className="text-sm text-muted-foreground">
-        Last reviewed: 2026-05-17 · Owner: security@repulabs.com
+        Last reviewed: 2026-05-17 · Owner: info@repulabs.com
       </p>
 
       <p>
@@ -17,7 +17,7 @@ export default function SecurityPage() {
         numbers, email addresses, OAuth tokens, and AI training samples in your brand voice. This
         page is the short, honest version of how we protect it. The long version lives in our SOC 2
         Type II report, available under NDA from{" "}
-        <a href="mailto:security@repulabs.com">security@repulabs.com</a>.
+        <a href="mailto:info@repulabs.com">info@repulabs.com</a>.
       </p>
 
       <h2>1. Encryption</h2>
@@ -121,7 +121,7 @@ export default function SecurityPage() {
 
       <h2>7. Vulnerability disclosure</h2>
       <p>
-        Found something? Email <a href="mailto:security@repulabs.com">security@repulabs.com</a>. PGP
+        Found something? Email <a href="mailto:info@repulabs.com">info@repulabs.com</a>. PGP
         key fingerprint: <code>4F8B 7C12 9E4D 1A56 8B33 7E92 0F1D 6A8C C5E7 D421</code>. We
         acknowledge within 24 hours and aim to remediate critical vulnerabilities within 7 business
         days.

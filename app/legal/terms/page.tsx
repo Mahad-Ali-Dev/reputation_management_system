@@ -84,7 +84,7 @@ export default function TermsPage() {
 
       <h2>Contact</h2>
       <p>
-        <a href="mailto:legal@repulabs.com">legal@repulabs.com</a>
+        <a href="mailto:info@repulabs.com">info@repulabs.com</a>
       </p>
     </>
   );

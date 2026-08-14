@@ -55,7 +55,7 @@ export default function DPAPage() {
         Repulabs engages sub-processors listed at{" "}
         <a href="/legal/subprocessors">/legal/subprocessors</a>. New sub-processors are notified by
         email at least 30 days in advance. The Customer may object in writing to{" "}
-        <a href="mailto:dpa@repulabs.com">dpa@repulabs.com</a>; if Repulabs cannot accommodate the
+        <a href="mailto:info@repulabs.com">info@repulabs.com</a>; if Repulabs cannot accommodate the
         objection, the Customer may terminate the Agreement for the affected service.
       </p>
 
@@ -107,7 +107,7 @@ export default function DPAPage() {
       <h2>9. Signing this DPA</h2>
       <p>
         This DPA is countersigned automatically by acceptance of the Agreement. A countersigned PDF
-        is available on request at <a href="mailto:dpa@repulabs.com">dpa@repulabs.com</a>.
+        is available on request at <a href="mailto:info@repulabs.com">info@repulabs.com</a>.
       </p>
     </>
   );

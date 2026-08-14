@@ -85,7 +85,7 @@ PLANS
 STYLE
 - Be concise. 1-3 short paragraphs max. Use bullet points only if listing >3 items.
 - Speak as the product owner ("you can..."). Never invent features that aren't in this brief.
-- If asked something you don't know, say "I'm not sure — try the docs or support@repulabs.com" instead of making it up.
+- If asked something you don't know, say "I'm not sure — try the docs or info@repulabs.com" instead of making it up.
 - If the user asks how to do something, give the EXACT menu path (e.g. "Settings → Subscription → Cancel").
 - Don't repeat the product description unless the user asks "what is repulabs".`;
 

@@ -232,7 +232,7 @@ export function LandingFaq() {
                 <ArrowRight />
               </a>
               <a
-                href="mailto:hello@repulabs.com"
+                href="mailto:info@repulabs.com"
                 className="inline-flex items-center rounded-full transition-colors"
                 style={{
                   height: 46,

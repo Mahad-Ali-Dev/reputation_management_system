@@ -84,7 +84,7 @@ export function FinalCtaBeams() {
             <ArrowRight size={15} />
           </Link>
           <Link
-            href="mailto:sales@repulabs.com"
+            href="mailto:info@repulabs.com"
             className="inline-flex items-center gap-2 transition-colors hover:bg-white"
             style={{
               height: 50,
