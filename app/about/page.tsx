@@ -146,7 +146,7 @@ export default function AboutPage() {
             </p>
           </div>
           <a
-            href="mailto:hello@repulabs.com"
+            href="mailto:info@repulabs.com"
             className="inline-flex items-center gap-1.5 rounded-full px-5 py-2.5 text-[13px] font-semibold transition-transform hover:-translate-y-px"
             style={{
               background: "linear-gradient(135deg, var(--pri, #2457ff) 0%, #1b3fd1 100%)",
@@ -154,7 +154,7 @@ export default function AboutPage() {
               boxShadow: "0 10px 26px -10px rgba(36, 87, 255, 0.55)",
             }}
           >
-            Say hello → hello@repulabs.com
+            Say hello → info@repulabs.com
           </a>
         </div>
       </section>

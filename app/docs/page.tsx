@@ -156,8 +156,8 @@ export default function DocsPage() {
             </li>
             <li>
               <strong>3. Email a human</strong> at{" "}
-              <a href="mailto:help@repulabs.com" style={{ color: C.pri }}>
-                help@repulabs.com
+              <a href="mailto:info@repulabs.com" style={{ color: C.pri }}>
+                info@repulabs.com
               </a>{" "}
               — median first response 3 business hours.
             </li>

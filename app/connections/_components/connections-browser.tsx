@@ -373,7 +373,7 @@ export function ConnectionsBrowser({
           >
             No integrations match “{query.trim()}”. Try a different name, or{" "}
             <a
-              href="mailto:hello@repulabs.com?subject=Integration%20request"
+              href="mailto:info@repulabs.com?subject=Integration%20request"
               style={{ color: "var(--conn-indigo)" }}
             >
               request it

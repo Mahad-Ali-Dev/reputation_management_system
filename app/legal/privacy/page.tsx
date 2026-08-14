@@ -78,7 +78,7 @@ export default function PrivacyPage() {
       <h2>5. Your rights</h2>
       <p>
         You can export, correct, or delete your data at any time. Email{" "}
-        <a href="mailto:privacy@repulabs.com">privacy@repulabs.com</a>. Under GDPR and CCPA you
+        <a href="mailto:info@repulabs.com">info@repulabs.com</a>. Under GDPR and CCPA you
         have the right to access, rectify, delete, restrict processing, and port your data.
         We respond within 30 days.
       </p>
@@ -93,8 +93,8 @@ export default function PrivacyPage() {
 
       <h2>7. Contact</h2>
       <p>
-        Data Protection Officer: <a href="mailto:privacy@repulabs.com">privacy@repulabs.com</a>.
-        General: <a href="mailto:support@repulabs.com">support@repulabs.com</a>.
+        Data Protection Officer and general inquiries:{" "}
+        <a href="mailto:info@repulabs.com">info@repulabs.com</a>.
       </p>
     </>
   );

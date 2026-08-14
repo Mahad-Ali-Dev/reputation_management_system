@@ -384,7 +384,7 @@ export default async function ConnectionsPage({
               Import CSV
             </Link> */}
             <a
-              href="mailto:hello@repulabs.com?subject=Integration%20request"
+              href="mailto:info@repulabs.com?subject=Integration%20request"
               className="conn-btn conn-btn--pri"
             >
               <Icon name="plus" size={15} />
@@ -472,7 +472,7 @@ export default async function ConnectionsPage({
             </p>
             <div className="conn-panel__cta">
               <a
-                href="mailto:hello@repulabs.com?subject=Integration%20request"
+                href="mailto:info@repulabs.com?subject=Integration%20request"
                 className="conn-btn conn-btn--pri"
               >
                 <Icon name="plus" size={15} />

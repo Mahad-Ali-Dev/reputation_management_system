@@ -99,11 +99,11 @@ export default function PressPage() {
               hours on business days.
             </p>
             <a
-              href="mailto:press@repulabs.com"
+              href="mailto:info@repulabs.com"
               className="mt-5 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium"
               style={{ border: `1px solid ${C.line}`, background: C.surface }}
             >
-              press@repulabs.com
+              info@repulabs.com
               <ArrowUpRight size={13} />
             </a>
           </div>

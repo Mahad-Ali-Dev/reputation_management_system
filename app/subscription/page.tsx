@@ -289,7 +289,7 @@ export default async function SubscriptionPage({
             <div className="bill-card__period">10+ locations · multi-brand</div>
 
             <a
-              href="mailto:sales@repulabs.com?subject=Scale%20plan%20enquiry"
+              href="mailto:info@repulabs.com?subject=Scale%20plan%20enquiry"
               className="bill-card__cta"
             >
               Talk to sales
@@ -370,7 +370,7 @@ export default async function SubscriptionPage({
                 grow.
               </span>
               <a
-                href="mailto:sales@repulabs.com?subject=More%20capacity"
+                href="mailto:info@repulabs.com?subject=More%20capacity"
                 className="bill-banner__cta"
               >
                 Talk to sales

@@ -227,13 +227,13 @@ export default function ApiReferencePage() {
             style={{ fontSize: 14, color: C.mute, maxWidth: 520, lineHeight: 1.6 }}
           >
             Available on Scale plan and above. Reach{" "}
-            <a href="mailto:sales@repulabs.com" style={{ color: C.pri }}>
-              sales@repulabs.com
+            <a href="mailto:info@repulabs.com" style={{ color: C.pri }}>
+              info@repulabs.com
             </a>{" "}
             for the full OpenAPI spec, webhook signing details, and Postman collection.
           </p>
           <a
-            href="mailto:sales@repulabs.com"
+            href="mailto:info@repulabs.com"
             className="mt-6 inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-[13px] font-medium"
             style={{ background: C.ink, color: "#fff" }}
           >
