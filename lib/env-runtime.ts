@@ -39,7 +39,21 @@ export function runtimeEnv(name: string, buildTimeValue?: string): string | unde
   return process.env[key] ?? buildTimeValue;
 }
 
-/** True only for the exact string "true" — an unset flag must never read as on. */
+/**
+ * Truthy env flag.
+ *
+ * Accepts the forms people actually write in a `.env` — `true`, `1`, `yes`, `on`
+ * — case- and whitespace-insensitive. Matching only the exact string "true" is
+ * a trap: `LINKEDIN_PUBLISH_ENABLED=1` is an entirely reasonable thing to write,
+ * silently read as OFF, and produced a failure ("publishing is switched off")
+ * that flatly contradicted the config the operator was looking at.
+ *
+ * Still false for unset, empty, `false`, `0`, `no`, `off` or anything else, so a
+ * flag can never be on by accident.
+ */
+const TRUTHY = new Set(["true", "1", "yes", "on"]);
+
 export function runtimeFlag(name: string, buildTimeValue?: string): boolean {
-  return runtimeEnv(name, buildTimeValue) === "true";
+  const raw = runtimeEnv(name, buildTimeValue);
+  return raw !== undefined && TRUTHY.has(raw.trim().toLowerCase());
 }
