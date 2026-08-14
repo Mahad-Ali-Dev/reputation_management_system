@@ -398,10 +398,17 @@
 
 .dk-google__body {
   display: flex;
+  flex-direction: column;
   gap: 18px;
-  align-items: center;
   flex: 1;
-  flex-wrap: nowrap; /* kit: rating · bars · donut on ONE row */
+}
+
+/* Row 2: star-distribution bars (left, flexible) + the total-reviews donut
+   (right, fixed size) — the rating itself sits above on its own row. */
+.dk-google__row2 {
+  display: flex;
+  align-items: center;
+  gap: 18px;
 }
 
 .dk-google__avg {
@@ -994,6 +1001,6 @@
   .dk-copilot { padding: 18px; }
   .dk-copilot__bot { display: none; }
   .dk-train__cta { width: 100%; justify-content: center; }
-  .dk-google__body { flex-wrap: wrap; gap: 14px; }
+  .dk-google__row2 { flex-wrap: wrap; gap: 14px; }
   .dk-btn-outline--end { align-self: center; }
 }

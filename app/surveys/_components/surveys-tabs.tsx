@@ -309,30 +309,30 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
 
       <div className="surv-routes" style={{ marginTop: 16 }}>
         <div className="surv-route surv-route--happy">
-          <span className="surv-route__icon" aria-hidden>
-            <img src={`${KIT}/campaigns/happy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
-          </span>
-          <div style={{ minWidth: 0 }}>
+          <div className="surv-route__top">
+            <span className="surv-route__icon" aria-hidden>
+              <img src={`${KIT}/campaigns/happy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
+            </span>
             <div className="surv-route__title">Happy → Public review</div>
-            <div className="surv-route__sub">Scores 8–10 get a review request</div>
+            <div className="surv-route__count">
+              <b>{routing.routedReview.toLocaleString()}</b>
+              <span>routed · all surveys</span>
+            </div>
           </div>
-          <div className="surv-route__count">
-            <b>{routing.routedReview.toLocaleString()}</b>
-            <span>routed · all surveys</span>
-          </div>
+          <div className="surv-route__sub">Scores 8–10 get a review request</div>
         </div>
         <div className="surv-route surv-route--unhappy">
-          <span className="surv-route__icon" aria-hidden>
-            <img src={`${KIT}/campaigns/unhappy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
-          </span>
-          <div style={{ minWidth: 0 }}>
+          <div className="surv-route__top">
+            <span className="surv-route__icon" aria-hidden>
+              <img src={`${KIT}/campaigns/unhappy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
+            </span>
             <div className="surv-route__title">Unhappy → Private recovery</div>
-            <div className="surv-route__sub">Scores 0–6 alert your team privately</div>
+            <div className="surv-route__count">
+              <b>{routing.routedAlert.toLocaleString()}</b>
+              <span>alerted · all surveys</span>
+            </div>
           </div>
-          <div className="surv-route__count">
-            <b>{routing.routedAlert.toLocaleString()}</b>
-            <span>alerted · all surveys</span>
-          </div>
+          <div className="surv-route__sub">Scores 0–6 alert your team privately</div>
         </div>
       </div>
 

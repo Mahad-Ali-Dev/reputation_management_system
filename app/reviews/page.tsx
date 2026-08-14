@@ -306,14 +306,48 @@ export default async function ReviewsPage({
           display: grid;
           grid-template-columns: 264px minmax(280px, 360px) 1fr;
           gap: 14px;
-          align-items: start;
+          /* stretch (not start): pane 1 (the filter rail) is never
+             scroll-clipped, so it's what sets the row's height — panes 2 & 3
+             are flex columns with min-height:0 + internal overflow-y:auto,
+             so they defer to that height and scroll their own content
+             instead of growing the whole page taller as reviews load in. */
+          align-items: stretch;
         }
-        .rev-detail { position: sticky; top: 12px; }
+        .rev-list {
+          display: flex;
+          flex-direction: column;
+          min-height: 0;
+          /* Hard ceiling, not just "match pane 1" — pane 1 can itself run
+             long (many status filters, wide rating distribution), and this
+             list must never grow past the viewport no matter what its
+             siblings do. 200px ≈ topbar + page header + padding above the
+             3-pane row. */
+          max-height: calc(100vh - 200px);
+        }
+        .rev-list .ds-card {
+          display: flex;
+          flex-direction: column;
+          flex: 1;
+          min-height: 0;
+        }
+        .rev-list__items {
+          flex: 1;
+          min-height: 0;
+          overflow-y: auto;
+        }
+        .rev-detail {
+          min-height: 0;
+          overflow-y: auto;
+        }
         @media (max-width: 1100px) {
-          .rev-inbox { grid-template-columns: 240px 1fr; }
+          .rev-inbox { grid-template-columns: 240px 1fr; align-items: start; }
+          .rev-list { min-height: unset; max-height: unset; }
+          .rev-list .ds-card { flex: unset; min-height: unset; }
+          .rev-list__items { flex: unset; min-height: unset; overflow-y: visible; }
           .rev-detail {
             grid-column: 1 / -1;
-            position: static;
+            min-height: unset;
+            overflow-y: visible;
           }
           /* Once a review is open, fold the list to give the detail room. */
           .rev-list[data-detail-open="1"] { display: none; }

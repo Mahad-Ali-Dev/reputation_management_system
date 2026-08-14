@@ -414,7 +414,9 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
       </section>
 
       {/* ── 5 · Metric cards ── */}
-      <div className="rr-metrics">
+      {/* rr-metrics--3: 3 cards while the SMS card below is commented out —
+          restore both together (drop the modifier too) if SMS comes back. */}
+      <div className="rr-metrics rr-metrics--3">
         <MetricCard
           tile="pri"
           img="/assets/repulabs/review-request/metric-plane.svg"
@@ -439,7 +441,9 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           deltaKind={totalCh > 0 ? "neutral" : "muted"}
           color="var(--rr-ok)"
         />
-        <MetricCard
+        {/* SMS is commented out end-to-end for now (see send-composer.tsx /
+            bulk-send-form.tsx) — hiding this metric card to match. */}
+        {/* <MetricCard
           tile="blue"
           img="/assets/repulabs/review-request/metric-sms.svg"
           label="SMS"
@@ -447,7 +451,7 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           delta={totalCh > 0 ? `${fmtPct(smsPct)}%` : "No data yet"}
           deltaKind={totalCh > 0 ? "blue" : "muted"}
           color="var(--rr-blue)"
-        />
+        /> */}
         <MetricCard
           tile="orange"
           img="/assets/repulabs/review-request/metric-time.svg"

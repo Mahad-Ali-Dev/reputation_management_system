@@ -369,10 +369,16 @@
     grid-template-columns: 1fr;
   }
 }
+/* Icon + title + description + count used to all fight for room on ONE row,
+   which at this tile's width (half the card, per .surv-routes' 2-col grid)
+   wrapped the title AND the description into a 3-line mess with the count
+   stranded off to the right. Split into two rows instead: icon + title +
+   count share the top row (title is short enough to fit there), and the
+   description gets its own full-width row below with real room to lay out. */
 .surv-route {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
   padding: 14px 16px;
   border-radius: 11px;
   border: 1px solid transparent;
@@ -387,10 +393,15 @@
   background: #fff4f2;
   border-color: #f8d4cd;
 }
+.surv-route__top {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 .surv-route__icon {
   flex: none;
-  width: 38px;
-  height: 38px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
   display: grid;
   place-items: center;
@@ -404,6 +415,8 @@
   color: var(--surv-bad);
 }
 .surv-route__title {
+  flex: 1;
+  min-width: 0;
   font-size: 12.5px;
   font-weight: 700;
   color: var(--surv-ink);
@@ -411,12 +424,12 @@
 .surv-route__sub {
   font-size: 10.5px;
   color: var(--surv-muted);
-  margin-top: 2px;
+  /* Lines up under the title, past the icon, instead of starting flush left. */
+  padding-left: 44px;
 }
 .surv-route__count {
-  margin-left: auto;
-  text-align: right;
   flex: none;
+  text-align: right;
 }
 .surv-route__count b {
   display: block;
