@@ -21,8 +21,6 @@ import { motion } from "motion/react";
 import { useState } from "react";
 import { Reveal, ShinyText } from "@/components/landing/anim";
 
-const ART = "/assets/repulabs/landing/tour";
-
 interface Frame {
   id: number;
   image: string;
@@ -35,12 +33,54 @@ interface Frame {
 }
 
 const FRAMES: Frame[] = [
-  { id: 1, image: "dashboard.png", label: "Command dashboard", accent: "#2563eb", defaultPos: { x: 0, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 2, image: "inbox.png", label: "Unified inbox", accent: "#7c3aed", defaultPos: { x: 4, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 3, image: "outreach.png", label: "Review requests", accent: "#0891b2", defaultPos: { x: 8, y: 0, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 4, image: "surveys.png", label: "Surveys & NPS", accent: "#16a34a", defaultPos: { x: 0, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 5, image: "qr.png", label: "QR stands", accent: "#ea580c", defaultPos: { x: 4, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
-  { id: 6, image: "social.png", label: "Social studio", accent: "#db2777", defaultPos: { x: 8, y: 4, w: 4, h: 4 }, mediaSize: 1.05 },
+  {
+    id: 1,
+    image: "/assets/repulabs/landingPage/image_1.jpeg",
+    label: "Command dashboard",
+    accent: "#2563eb",
+    defaultPos: { x: 0, y: 0, w: 4, h: 4 },
+    mediaSize: 1.05,
+  },
+  {
+    id: 2,
+    image: "/assets/repulabs/landingPage/image_2.jpeg",
+    label: "AI Knowledge Base",
+    accent: "#7c3aed",
+    defaultPos: { x: 4, y: 0, w: 4, h: 4 },
+    mediaSize: 1.05,
+  },
+  {
+    id: 3,
+    image: "/assets/repulabs/landingPage/image_3.jpeg",
+    label: "Dispute Center",
+    accent: "#0891b2",
+    defaultPos: { x: 8, y: 0, w: 4, h: 4 },
+    mediaSize: 1.05,
+  },
+  {
+    id: 4,
+    image: "/assets/repulabs/landingPage/image_4.jpeg",
+    label: "Social Studio",
+    accent: "#16a34a",
+    defaultPos: { x: 0, y: 4, w: 4, h: 4 },
+    mediaSize: 1.05,
+  },
+  {
+    id: 5,
+    image: "/assets/repulabs/landingPage/image_5.jpeg",
+    label: "Surveys",
+    accent: "#ea580c",
+    defaultPos: { x: 4, y: 4, w: 4, h: 4 },
+    mediaSize: 1.05,
+  },
+  {
+    id: 6,
+    image: "/assets/repulabs/landingPage/image_6.jpeg",
+    label: "Connections",
+    accent: "#db2777",
+    defaultPos: { x: 8, y: 4, w: 4, h: 4 },
+    mediaSize: 1.05,
+  },
 ];
 
 /* how far a hovered track grows — rows sum to 8fr (2 tracks), cols to 12fr (3 tracks) */
@@ -66,7 +106,8 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
           boxShadow: isHovered
             ? `0 26px 55px -24px ${frame.accent}59`
             : "0 16px 38px -24px rgba(26,43,95,0.28)",
-          transition: "border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
+          transition:
+            "border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out",
         }}
       >
         {/* media — the original's mediaSize scale, now driven by hover */}
@@ -80,7 +121,7 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={`${ART}/${frame.image}`}
+            src={frame.image}
             alt={`repulabs — ${frame.label}`}
             loading="lazy"
             draggable={false}
@@ -114,7 +155,9 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
 
 /* ── DynamicFrameLayout — the grid-template hover-expand mechanic, 3×2 ── */
 function DynamicFrameGrid() {
-  const [hovered, setHovered] = useState<{ row: number; col: number } | null>(null);
+  const [hovered, setHovered] = useState<{ row: number; col: number } | null>(
+    null,
+  );
 
   const getRowSizes = () => {
     if (hovered === null) return "4fr 4fr";
@@ -127,7 +170,9 @@ function DynamicFrameGrid() {
     if (hovered === null) return "4fr 4fr 4fr";
     const nonHoveredSize = (12 - HOVER_COL) / 2;
     return [0, 1, 2]
-      .map((c) => (c === hovered.col ? `${HOVER_COL}fr` : `${nonHoveredSize}fr`))
+      .map((c) =>
+        c === hovered.col ? `${HOVER_COL}fr` : `${nonHoveredSize}fr`,
+      )
       .join(" ");
   };
 
@@ -145,13 +190,17 @@ function DynamicFrameGrid() {
         gridTemplateRows: getRowSizes(),
         gridTemplateColumns: getColSizes(),
         gap: `${GAP_SIZE}px`,
-        transition: "grid-template-rows 0.4s ease, grid-template-columns 0.4s ease",
+        transition:
+          "grid-template-rows 0.4s ease, grid-template-columns 0.4s ease",
       }}
     >
       {FRAMES.map((frame) => {
         const row = Math.floor(frame.defaultPos.y / 4);
         const col = Math.floor(frame.defaultPos.x / 4);
-        const transformOrigin = getTransformOrigin(frame.defaultPos.x, frame.defaultPos.y);
+        const transformOrigin = getTransformOrigin(
+          frame.defaultPos.x,
+          frame.defaultPos.y,
+        );
 
         return (
           <motion.div
@@ -189,7 +238,10 @@ export function LandingFrames() {
           <Reveal>
             <span
               className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
-              style={{ borderColor: "#D9DDF7", background: "rgba(255,255,255,0.65)" }}
+              style={{
+                borderColor: "#D9DDF7",
+                background: "rgba(255,255,255,0.65)",
+              }}
             >
               <ShinyText
                 text="✦ PRODUCT TOUR"
