@@ -222,10 +222,14 @@ export function LandingTour() {
                 }}
               />
               <div
-                className="w-[560px] max-w-full overflow-hidden rounded-2xl border border-[#E1E6F0] bg-white"
+                className="w-[680px] max-w-full overflow-hidden rounded-2xl border border-[#E1E6F0] bg-white"
                 style={{ boxShadow: "0 34px 70px -34px rgba(26,43,95,0.38)" }}
               >
-                <div className="aspect-[16/11] w-full overflow-hidden">
+                {/* aspect-video (16:9) matches the recordings' native ratio —
+                    at the old 16:11 frame, cover had to crop the LEFT/RIGHT
+                    edges to fill the narrower box (16:11 < 16:9). Matching the
+                    ratio means cover has nothing left to crop on that axis. */}
+                <div className="aspect-video w-full overflow-hidden">
                   <video
                     ref={videoRefs[index]}
                     src={section.video}
@@ -234,13 +238,12 @@ export function LandingTour() {
                     loop
                     playsInline
                     preload="metadata"
-                    /* The source recordings have a thin black letterbox baked into
-                       the footage (measured ~3% top + ~3% bottom on reviews.mp4).
-                       object-fit:cover doesn't crop it: these clips are 16:9
-                       (wider than this 16:11 frame), so `cover` scales to fill
-                       WIDTH and crops the sides — the full height, bars
-                       included, maps straight through. A slight scale-up crops
-                       those bars out instead. */
+                    /* The source recordings ALSO have a thin black letterbox
+                       baked into the footage itself (measured ~3% top + ~3%
+                       bottom on reviews.mp4) — separate from the box-ratio
+                       crop above, and not fixable by object-fit/aspect-ratio
+                       since it's baked into the pixels. A slight scale-up
+                       crops those bars out instead. */
                     className="h-full w-full scale-[1.12] object-cover"
                   >
                     <track kind="captions" />
