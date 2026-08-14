@@ -58,8 +58,11 @@ export type PublishablePost = {
  */
 export function isMetaPublishEnabled(): boolean {
   return (
-    runtimeFlag("META_GRAPH_ENABLED") &&
-    Boolean(runtimeEnv("META_GRAPH_TOKEN") || runtimeEnv("META_APP_ID"))
+    runtimeFlag("META_GRAPH_ENABLED", process.env.META_GRAPH_ENABLED) &&
+    Boolean(
+      runtimeEnv("META_GRAPH_TOKEN", process.env.META_GRAPH_TOKEN) ||
+        runtimeEnv("META_APP_ID", process.env.META_APP_ID),
+    )
   );
 }
 

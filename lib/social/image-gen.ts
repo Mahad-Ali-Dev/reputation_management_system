@@ -44,9 +44,13 @@ export type ImageGenAvailability = {
  * no paid call. Mirrors the connections adapter-availability pattern.
  */
 export function isImageGenEnabled(): boolean {
-  const provider = (runtimeEnv("IMAGE_GEN_PROVIDER") ?? "").toLowerCase();
-  if (provider === "openai") return Boolean(runtimeEnv("OPENAI_API_KEY"));
-  if (provider === "stability") return Boolean(runtimeEnv("STABILITY_API_KEY"));
+  const provider = (
+    runtimeEnv("IMAGE_GEN_PROVIDER", process.env.IMAGE_GEN_PROVIDER) ?? ""
+  ).toLowerCase();
+  if (provider === "openai")
+    return Boolean(runtimeEnv("OPENAI_API_KEY", process.env.OPENAI_API_KEY));
+  if (provider === "stability")
+    return Boolean(runtimeEnv("STABILITY_API_KEY", process.env.STABILITY_API_KEY));
   return false;
 }
 

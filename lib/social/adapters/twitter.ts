@@ -117,7 +117,7 @@ function safeDate(s: string): Date | null {
 
 /** Live publish enabled? Explicit opt-in flag only — mirrors isMetaPublishEnabled. */
 export function isTwitterPublishEnabled(): boolean {
-  return runtimeFlag("TWITTER_PUBLISH_ENABLED");
+  return runtimeFlag("TWITTER_PUBLISH_ENABLED", process.env.TWITTER_PUBLISH_ENABLED);
 }
 
 const API_BASE = "https://api.twitter.com/2";

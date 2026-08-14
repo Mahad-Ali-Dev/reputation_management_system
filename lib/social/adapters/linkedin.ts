@@ -106,7 +106,7 @@ export function parseLinkedInResponse(args: {
 
 /** Live publish enabled? Explicit opt-in flag only. */
 export function isLinkedInPublishEnabled(): boolean {
-  return runtimeFlag("LINKEDIN_PUBLISH_ENABLED");
+  return runtimeFlag("LINKEDIN_PUBLISH_ENABLED", process.env.LINKEDIN_PUBLISH_ENABLED);
 }
 
 const API_BASE = "https://api.linkedin.com/v2";
