@@ -77,6 +77,45 @@ export async function generateCaptionsForComposer(input: {
 }
 
 /**
+ * Turn the image provider's rejection into something actionable.
+ *
+ * "Try again" is wrong advice for every common cause here — an unverified
+ * OpenAI org, an exhausted quota, a bad key — none of which resolve by
+ * retrying. The provider's own message is carried through when we don't
+ * recognise the shape, rather than swallowed.
+ */
+function describeImageFailure(raw: string): string {
+  const e = raw.toLowerCase();
+  if (e.includes("image_gen_upload_failed")) {
+    // The images exist and were paid for — only storage failed. Say so, because
+    // "try again" regenerates and bills again without fixing anything.
+    return `The images were generated but couldn't be saved. Storage isn't writable — check UPLOAD_DIR exists and is owned by the app user (${raw.slice(0, 140)}).`;
+  }
+  if (e.includes("image_gen_no_output")) {
+    return "The provider returned no images for that brief. Try rewording it.";
+  }
+  if (e.includes("must be verified") || (e.includes("403") && e.includes("verif"))) {
+    return "OpenAI requires organisation verification before gpt-image-1 can be used. Verify your org in the OpenAI dashboard, or set IMAGE_GEN_MODEL=dall-e-3 on the server to use a model that doesn't need it.";
+  }
+  if (e.includes("http_401") || e.includes("invalid_api_key") || e.includes("incorrect api key")) {
+    return "The image provider rejected the API key. Check OPENAI_API_KEY on the server.";
+  }
+  if (e.includes("billing") || e.includes("quota") || e.includes("insufficient")) {
+    return "The image provider reports no available credit. Top up billing on that account.";
+  }
+  if (e.includes("http_429")) {
+    return "The image provider is rate-limiting this account. Wait a moment and retry.";
+  }
+  if (e.includes("content_policy") || e.includes("safety")) {
+    return "That brief was refused by the provider's content policy. Reword it and try again.";
+  }
+  if (e.includes("abort")) {
+    return "Image generation timed out after 60s. Try fewer variations.";
+  }
+  return `Image generation failed: ${raw.slice(0, 180)}`;
+}
+
+/**
  * Creatives modal adapter — injects the server-trusted orgId and returns the
  * public URLs of the generated creatives.
  *
@@ -115,11 +154,9 @@ export async function generateCreativesForComposer(input: {
     if (name === "PlanInactiveError" || name === "EntitlementError") {
       return { ok: false, code: "plan", error: "AI creatives are a paid feature." };
     }
-    logger.error({
-      event: "composer.creatives.failed",
-      error: err instanceof Error ? err.message : String(err),
-    });
-    return { ok: false, code: "error", error: "Image generation failed. Try again." };
+    const raw = err instanceof Error ? err.message : String(err);
+    logger.error({ event: "composer.creatives.failed", error: raw });
+    return { ok: false, code: "error", error: describeImageFailure(raw) };
   }
 }
 

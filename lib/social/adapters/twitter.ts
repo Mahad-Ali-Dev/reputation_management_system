@@ -16,6 +16,7 @@
  * in `tests/social/twitter-adapter.test.ts`.
  */
 
+import { runtimeFlag } from "@/lib/env-runtime";
 import { PLATFORM_LIMITS } from "@/lib/social/connections";
 
 /** Tweet hard limit (v2). Mirrors PLATFORM_LIMITS.twitter.maxChars. */
@@ -116,7 +117,7 @@ function safeDate(s: string): Date | null {
 
 /** Live publish enabled? Explicit opt-in flag only — mirrors isMetaPublishEnabled. */
 export function isTwitterPublishEnabled(): boolean {
-  return process.env.TWITTER_PUBLISH_ENABLED === "true";
+  return runtimeFlag("TWITTER_PUBLISH_ENABLED", process.env.TWITTER_PUBLISH_ENABLED);
 }
 
 const API_BASE = "https://api.twitter.com/2";

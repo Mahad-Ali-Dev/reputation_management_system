@@ -1,9 +1,10 @@
+import { assertEntitled, isOrgEntitled } from "@/lib/billing/entitlements";
 // Server-side library (NOT a "use server" actions file): it exports a class +
 // sync helpers + types, and is invoked only from server components and the
 // use-server composer-actions bridge — never imported directly by a client.
-import { assertEntitled, isOrgEntitled } from "@/lib/billing/entitlements";
-import { uploadToBlob } from "@/lib/uploads/blob";
+import { runtimeEnv } from "@/lib/env-runtime";
 import { logger } from "@/lib/logger";
+import { uploadToBlob } from "@/lib/uploads/blob";
 
 /**
  * AI Image Creatives adapter (Module 10, Wave 3d) — the ONE genuinely new
@@ -43,9 +44,13 @@ export type ImageGenAvailability = {
  * no paid call. Mirrors the connections adapter-availability pattern.
  */
 export function isImageGenEnabled(): boolean {
-  const provider = (process.env.IMAGE_GEN_PROVIDER ?? "").toLowerCase();
-  if (provider === "openai") return Boolean(process.env.OPENAI_API_KEY);
-  if (provider === "stability") return Boolean(process.env.STABILITY_API_KEY);
+  const provider = (
+    runtimeEnv("IMAGE_GEN_PROVIDER", process.env.IMAGE_GEN_PROVIDER) ?? ""
+  ).toLowerCase();
+  if (provider === "openai")
+    return Boolean(runtimeEnv("OPENAI_API_KEY", process.env.OPENAI_API_KEY));
+  if (provider === "stability")
+    return Boolean(runtimeEnv("STABILITY_API_KEY", process.env.STABILITY_API_KEY));
   return false;
 }
 
@@ -110,6 +115,11 @@ export async function generateCreatives(
   });
 
   const out: GeneratedCreative[] = [];
+  // Keep the upload failures. Demoting them to a warn and then reporting the
+  // generic "no output" hid the actual fault: the images HAD been generated (and
+  // billed), and it was storage that failed. The owner was told "try again",
+  // which regenerates and bills again without touching the cause.
+  const uploadErrors: string[] = [];
   for (let i = 0; i < images.length; i++) {
     const img = images[i]!;
     try {
@@ -122,15 +132,22 @@ export async function generateCreatives(
       });
       out.push(uploaded);
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      uploadErrors.push(msg);
       logger.warn({
         orgId: input.orgId,
         event: "social.image_gen.upload_failed",
-        error: err instanceof Error ? err.message : String(err),
+        error: msg,
       });
     }
   }
 
-  if (out.length === 0) throw new Error("image_gen_no_output");
+  if (out.length === 0) {
+    if (uploadErrors.length > 0) {
+      throw new Error(`image_gen_upload_failed: ${uploadErrors[0]}`);
+    }
+    throw new Error("image_gen_no_output");
+  }
   logger.info({ orgId: input.orgId, event: "social.image_gen.ok", count: out.length });
   return out;
 }
@@ -164,42 +181,49 @@ async function callOpenAiImages(args: {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) throw new ImageGenNotConfiguredError();
 
-  const palette = args.brandColors.length > 0 ? ` Brand colors: ${args.brandColors.join(", ")}.` : "";
+  const palette =
+    args.brandColors.length > 0 ? ` Brand colors: ${args.brandColors.join(", ")}.` : "";
   const styleHint = args.style ? ` Style: ${args.style}.` : "";
   const prompt = `${args.brief}.${styleHint}${palette} Marketing-ready, no text overlays.`;
+
+  const model = process.env.IMAGE_GEN_MODEL || "gpt-image-1";
+  // dall-e-3 rejects n > 1 ("You may only generate 1 image at a time"), while
+  // gpt-image-1 batches happily. Asking for 2 variations on dall-e-3 would fail
+  // the whole request, so fan out into single-image calls instead.
+  const batches = model.startsWith("dall-e-3")
+    ? Array.from({ length: args.count }, () => 1)
+    : [args.count];
 
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 60_000);
   try {
-    const res = await fetch("https://api.openai.com/v1/images/generations", {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: process.env.IMAGE_GEN_MODEL || "gpt-image-1",
-        prompt,
-        n: args.count,
-        size: "1024x1024",
-      }),
-      signal: ctrl.signal,
-    });
-    if (!res.ok) {
-      const txt = await res.text().catch(() => "");
-      throw new Error(`image_gen_http_${res.status}: ${txt.slice(0, 200)}`);
-    }
-    const json = (await res.json()) as { data?: Array<{ b64_json?: string; url?: string }> };
-    const data = json.data ?? [];
     const out: Array<{ buffer: Buffer; mimeType: string }> = [];
-    for (const item of data) {
-      if (item.b64_json) {
-        out.push({ buffer: Buffer.from(item.b64_json, "base64"), mimeType: "image/png" });
-      } else if (item.url) {
-        const imgRes = await fetch(item.url, { signal: ctrl.signal });
-        if (imgRes.ok) {
-          const ab = await imgRes.arrayBuffer();
-          out.push({ buffer: Buffer.from(ab), mimeType: "image/png" });
+    for (const n of batches) {
+      const res = await fetch("https://api.openai.com/v1/images/generations", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify({ model, prompt, n, size: "1024x1024" }),
+        signal: ctrl.signal,
+      });
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        // Carries the provider's own words through — the caller turns this into
+        // something the owner can act on rather than "try again".
+        throw new Error(`image_gen_http_${res.status}: ${txt.slice(0, 300)}`);
+      }
+      const json = (await res.json()) as { data?: Array<{ b64_json?: string; url?: string }> };
+      for (const item of json.data ?? []) {
+        if (item.b64_json) {
+          out.push({ buffer: Buffer.from(item.b64_json, "base64"), mimeType: "image/png" });
+        } else if (item.url) {
+          const imgRes = await fetch(item.url, { signal: ctrl.signal });
+          if (imgRes.ok) {
+            const ab = await imgRes.arrayBuffer();
+            out.push({ buffer: Buffer.from(ab), mimeType: "image/png" });
+          }
         }
       }
     }

@@ -20,6 +20,7 @@
  * `tests/social/linkedin-adapter.test.ts`.
  */
 
+import { runtimeFlag } from "@/lib/env-runtime";
 import { PLATFORM_LIMITS } from "@/lib/social/connections";
 
 export const LINKEDIN_MAX_CHARS = PLATFORM_LIMITS.linkedin.maxChars; // 3000
@@ -51,19 +52,32 @@ export function formatLinkedInText(caption: string | null, hashtags: string[] = 
   return joined.length <= LINKEDIN_MAX_CHARS ? joined : joined.slice(0, LINKEDIN_MAX_CHARS);
 }
 
+const API_BASE = "https://api.linkedin.com/v2";
+
 /**
- * Build a UGC Posts body (text or article/image share). PURE.
- * `mediaUrl` (when present) is attached as an ARTICLE share — the simplest media
- * mode that needs no separate asset-register round-trip.
+ * Build a UGC Posts body. PURE.
+ *
+ * An `assetUrn` (from registerAndUploadImage) produces a real IMAGE share.
+ * Passing `mediaUrl` alone produces an ARTICLE share, which LinkedIn renders as
+ * a LINK CARD showing the URL — not the picture. That used to be the only mode
+ * here, chosen to avoid the asset-upload round-trip, and it meant every image
+ * post went out as a bare link to our media endpoint.
  */
 export function buildLinkedInPayload(args: {
   authorUrn: string;
   caption: string | null;
   hashtags?: string[];
   mediaUrl?: string | null;
+  assetUrn?: string | null;
 }): Record<string, unknown> {
   const text = formatLinkedInText(args.caption, args.hashtags ?? []);
-  const hasMedia = Boolean(args.mediaUrl);
+  const category = args.assetUrn ? "IMAGE" : args.mediaUrl ? "ARTICLE" : "NONE";
+
+  const media = args.assetUrn
+    ? [{ status: "READY", media: args.assetUrn }]
+    : args.mediaUrl
+      ? [{ status: "READY", originalUrl: args.mediaUrl }]
+      : null;
 
   return {
     author: args.authorUrn,
@@ -71,21 +85,95 @@ export function buildLinkedInPayload(args: {
     specificContent: {
       "com.linkedin.ugc.ShareContent": {
         shareCommentary: { text },
-        shareMediaCategory: hasMedia ? "ARTICLE" : "NONE",
-        ...(hasMedia
-          ? {
-              media: [
-                {
-                  status: "READY",
-                  originalUrl: args.mediaUrl,
-                },
-              ],
-            }
-          : {}),
+        shareMediaCategory: category,
+        ...(media ? { media } : {}),
       },
     },
     visibility: { "com.linkedin.ugc.MemberNetworkVisibility": "PUBLIC" },
   };
+}
+
+/**
+ * Upload an image to LinkedIn and return its asset URN.
+ *
+ * LinkedIn will not accept a remote URL for a picture: it has to be registered,
+ * then PUT as bytes, then referenced by URN. Three round-trips, which is why the
+ * original code took the ARTICLE shortcut.
+ *
+ * Throws on failure rather than silently degrading to a link card — a marketing
+ * post quietly losing its image is worse than one that fails and can be retried.
+ */
+export async function registerAndUploadImage(args: {
+  token: string;
+  authorUrn: string;
+  imageUrl: string;
+  timeoutMs?: number;
+}): Promise<string> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), args.timeoutMs ?? 30_000);
+  const headers = {
+    authorization: `Bearer ${args.token}`,
+    "content-type": "application/json",
+    "x-restli-protocol-version": "2.0.0",
+  };
+
+  try {
+    // 1. Register the upload and get a one-time URL + the asset URN.
+    const regRes = await fetch(`${API_BASE}/assets?action=registerUpload`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        registerUploadRequest: {
+          recipes: ["urn:li:digitalmediaRecipe:feedshare-image"],
+          owner: args.authorUrn,
+          serviceRelationships: [
+            { relationshipType: "OWNER", identifier: "urn:li:userGeneratedContent" },
+          ],
+        },
+      }),
+      signal: ctrl.signal,
+    });
+    const regJson = (await regRes.json().catch(() => null)) as {
+      value?: {
+        asset?: string;
+        uploadMechanism?: Record<string, { uploadUrl?: string }>;
+      };
+      message?: string;
+    } | null;
+    if (!regRes.ok) {
+      throw new Error(
+        `linkedin_asset_register_${regRes.status}: ${regJson?.message ?? ""}`.slice(0, 200),
+      );
+    }
+    const asset = regJson?.value?.asset;
+    const uploadUrl =
+      regJson?.value?.uploadMechanism?.[
+        "com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest"
+      ]?.uploadUrl;
+    if (!asset || !uploadUrl) throw new Error("linkedin_asset_register_incomplete");
+
+    // 2. Fetch our own copy of the image.
+    const imgRes = await fetch(args.imageUrl, { signal: ctrl.signal });
+    if (!imgRes.ok) {
+      throw new Error(`linkedin_image_fetch_${imgRes.status}`);
+    }
+    const bytes = Buffer.from(await imgRes.arrayBuffer());
+
+    // 3. PUT the bytes. LinkedIn returns 201 with an empty body.
+    const putRes = await fetch(uploadUrl, {
+      method: "PUT",
+      headers: { authorization: `Bearer ${args.token}` },
+      body: new Uint8Array(bytes),
+      signal: ctrl.signal,
+    });
+    if (!putRes.ok) {
+      throw new Error(`linkedin_image_upload_${putRes.status}`);
+    }
+
+    return asset;
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 /**
@@ -105,10 +193,8 @@ export function parseLinkedInResponse(args: {
 
 /** Live publish enabled? Explicit opt-in flag only. */
 export function isLinkedInPublishEnabled(): boolean {
-  return process.env.LINKEDIN_PUBLISH_ENABLED === "true";
+  return runtimeFlag("LINKEDIN_PUBLISH_ENABLED", process.env.LINKEDIN_PUBLISH_ENABLED);
 }
-
-const API_BASE = "https://api.linkedin.com/v2";
 
 /**
  * Post to LinkedIn via POST /v2/ugcPosts. The ONLY function that makes a live
@@ -123,11 +209,24 @@ export async function postToLinkedIn(args: {
   mediaUrl?: string | null;
   timeoutMs?: number;
 }): Promise<string> {
+  // Register + upload the image FIRST so the post is a real IMAGE share rather
+  // than a link card pointing at our media endpoint.
+  let assetUrn: string | null = null;
+  if (args.mediaUrl) {
+    assetUrn = await registerAndUploadImage({
+      token: args.token,
+      authorUrn: args.authorUrn,
+      imageUrl: args.mediaUrl,
+      timeoutMs: args.timeoutMs,
+    });
+  }
+
   const payload = buildLinkedInPayload({
     authorUrn: args.authorUrn,
     caption: args.caption,
     hashtags: args.hashtags,
     mediaUrl: args.mediaUrl,
+    assetUrn,
   });
 
   const ctrl = new AbortController();

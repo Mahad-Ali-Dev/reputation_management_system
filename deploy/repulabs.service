@@ -59,8 +59,21 @@ ProtectControlGroups=true
 RestrictSUIDSGID=true
 RestrictRealtime=true
 LockPersonality=true
-# Allow writes only to the app dir (uploads, .next/cache, logs)
+# Allow writes only to the app dir (.next/cache, logs)
 ReadWritePaths=/var/www/repulabs
+
+# Persistent state directory for user-uploaded media (UPLOAD_DIR).
+#
+# systemd creates /var/lib/repulabs, chowns it to User= and adds it to the
+# read-write set automatically — which matters because ProtectSystem=strict
+# above makes the rest of the filesystem read-only. Creating the directory by
+# hand is NOT enough on its own: without this line the service still can't write
+# to it, and uploads fail with ENOENT/EROFS after the images have already been
+# generated and billed.
+#
+# Deliberately outside the deploy checkout: customer media must outlive any
+# single release, and a deploy that cleans the working tree would take it.
+StateDirectory=repulabs
 
 # ---- Logging ----
 # Send stdout/stderr to journald. Use `journalctl -u repulabs --since "1 hour ago"`.

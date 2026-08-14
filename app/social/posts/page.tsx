@@ -6,8 +6,8 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import {
   ALL_PLATFORMS,
-  getConnectedPlatforms,
   type SocialPlatform,
+  getConnectedPlatforms,
 } from "@/lib/social/connections";
 import { imageGenAvailability } from "@/lib/social/image-gen";
 import { listLibraryAssets } from "@/lib/social/library";
@@ -19,8 +19,8 @@ import {
   recommendTimesForComposer,
 } from "./_components/composer-actions";
 import { HistoryTab } from "./_components/history-tab";
-import { LibraryTab } from "./_components/library-tab";
 import type { LibraryAsset as PickerAsset } from "./_components/library-modal";
+import { LibraryTab } from "./_components/library-tab";
 import { StudioKpis, StudioTabs } from "./_components/studio-kit";
 import "./social-compose.css";
 
@@ -151,7 +151,7 @@ export default async function SocialPostsPage({
         <PageHeader
           kicker="Cross-channel scheduler"
           title="Social studio"
-          description="Compose once, preview per platform, and schedule across Facebook, Instagram, LinkedIn and X — with AI captions and creatives."
+          description="Compose once, preview per platform, and schedule across Facebook, Instagram and LinkedIn — with AI captions and creatives."
           actions={
             <>
               <Link href="/social/posts?tab=create" className="btn sk-hbtn">
@@ -248,51 +248,55 @@ async function CreatePanel({
   const monthStart = new Date(new Date(now.getFullYear(), now.getMonth(), 1).getTime() - PAD_MS);
   const monthEnd = new Date(new Date(now.getFullYear(), now.getMonth() + 1, 1).getTime() + PAD_MS);
 
-  const [establishments, libraryAssetsRaw, imageGen, initialPostRow, monthPosts] = await Promise.all([
-    withTenant(orgId, async (tx) =>
-      tx.establishment.findMany({
-        where: { deletedAt: null },
-        select: { id: true, name: true, brandVoice: true },
-        orderBy: { createdAt: "asc" },
-      }),
-    ).catch(() => []),
-    listLibraryAssets(orgId, { take: 60 }),
-    imageGenAvailability(orgId).catch(() => ({ available: false, reason: "not_configured" as const })),
-    isUuid(postId)
-      ? withTenant(orgId, async (tx) =>
-          tx.socialPost.findFirst({
-            where: { id: postId },
-            select: {
-              id: true,
-              caption: true,
-              hashtags: true,
-              platforms: true,
-              mediaUrl: true,
-              approvedCreativeUrls: true,
-              scheduledFor: true,
-              establishmentId: true,
-              status: true,
-            },
-          }),
-        ).catch(() => null)
-      : Promise.resolve(null),
-    // Mini-calendar source: same shape the /social/calendar query uses, narrowed
-    // to the current month. FAIL-SOFT — an unmigrated relation just renders an
-    // unmarked grid instead of crashing the composer.
-    withTenant(orgId, async (tx) =>
-      tx.socialPost.findMany({
-        where: {
-          status: { in: ["scheduled", "published", "posted"] },
-          OR: [
-            { scheduledFor: { gte: monthStart, lt: monthEnd } },
-            { postedAt: { gte: monthStart, lt: monthEnd } },
-          ],
-        },
-        select: { status: true, scheduledFor: true, postedAt: true },
-        take: 500,
-      }),
-    ).catch(() => []),
-  ]);
+  const [establishments, libraryAssetsRaw, imageGen, initialPostRow, monthPosts] =
+    await Promise.all([
+      withTenant(orgId, async (tx) =>
+        tx.establishment.findMany({
+          where: { deletedAt: null },
+          select: { id: true, name: true, brandVoice: true },
+          orderBy: { createdAt: "asc" },
+        }),
+      ).catch(() => []),
+      listLibraryAssets(orgId, { take: 60 }),
+      imageGenAvailability(orgId).catch(() => ({
+        available: false,
+        reason: "not_configured" as const,
+      })),
+      isUuid(postId)
+        ? withTenant(orgId, async (tx) =>
+            tx.socialPost.findFirst({
+              where: { id: postId },
+              select: {
+                id: true,
+                caption: true,
+                hashtags: true,
+                platforms: true,
+                mediaUrl: true,
+                approvedCreativeUrls: true,
+                scheduledFor: true,
+                establishmentId: true,
+                status: true,
+              },
+            }),
+          ).catch(() => null)
+        : Promise.resolve(null),
+      // Mini-calendar source: same shape the /social/calendar query uses, narrowed
+      // to the current month. FAIL-SOFT — an unmigrated relation just renders an
+      // unmarked grid instead of crashing the composer.
+      withTenant(orgId, async (tx) =>
+        tx.socialPost.findMany({
+          where: {
+            status: { in: ["scheduled", "published", "posted"] },
+            OR: [
+              { scheduledFor: { gte: monthStart, lt: monthEnd } },
+              { postedAt: { gte: monthStart, lt: monthEnd } },
+            ],
+          },
+          select: { status: true, scheduledFor: true, postedAt: true },
+          take: 500,
+        }),
+      ).catch(() => []),
+    ]);
 
   // Serializable posts for the client-side mini-calendar (it buckets by the
   // BROWSER's timezone; the server no longer picks the day).

@@ -325,22 +325,32 @@ export function CreativesModal({
                       </span>
                     )}
                   </div>
-                  <div style={{ display: "flex", borderTop: "1px solid var(--line)" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      borderTop: "1px solid var(--line)",
+                      overflow: "hidden",
+                    }}
+                  >
                     <TileBtn
                       label="Approve"
                       icon="check"
+                      toggle
                       active={t.status === "approved"}
                       onClick={() => setStatus(i, t.status === "approved" ? "pending" : "approved")}
                     />
                     <TileBtn
                       label="Reject"
                       icon="x"
+                      toggle
                       active={t.status === "rejected"}
                       onClick={() => setStatus(i, t.status === "rejected" ? "pending" : "rejected")}
                     />
                     <TileBtn
-                      label="Redo"
+                      label="Regenerate this image"
+                      shortLabel="Redo"
                       icon="refresh"
+                      iconOnly
                       onClick={() => redo(i)}
                       disabled={pending}
                     />
@@ -386,18 +396,37 @@ export function CreativesModal({
   );
 }
 
+/**
+ * One action under a creative tile.
+ *
+ * Three labelled buttons don't fit a tile this narrow: `flex:1` keeps its
+ * default `min-width:auto`, so the labels couldn't shrink, overflowed the card
+ * and "Redo" was rendered clipped to "Re". Approve/Reject keep their words
+ * because they're the actual decision; Redo is secondary and goes icon-only with
+ * an accessible name. `minWidth:0` lets the remaining two shrink instead of
+ * spilling.
+ */
 function TileBtn({
   label,
+  shortLabel,
   icon,
   onClick,
   active,
   disabled,
+  iconOnly,
+  toggle,
 }: {
+  /** Accessible name — also the tooltip. */
   label: string;
+  /** Visible text when it differs from the accessible name. */
+  shortLabel?: string;
   icon: import("@/components/shell/icon").IconName;
   onClick: () => void;
   active?: boolean;
   disabled?: boolean;
+  iconOnly?: boolean;
+  /** Approve/Reject are toggles, so they expose pressed state. */
+  toggle?: boolean;
 }) {
   return (
     <button
@@ -405,14 +434,24 @@ function TileBtn({
       onClick={onClick}
       disabled={disabled}
       title={label}
+      aria-label={iconOnly ? label : undefined}
+      aria-pressed={toggle ? Boolean(active) : undefined}
       style={{
-        flex: 1,
+        // Icon-only takes just its own width; the labelled pair splits the rest
+        // and is allowed to shrink (minWidth:0) rather than overflow.
+        flex: iconOnly ? "0 0 auto" : "1 1 0",
+        minWidth: 0,
+        width: iconOnly ? 38 : undefined,
         display: "inline-flex",
         alignItems: "center",
         justifyContent: "center",
-        gap: 4,
-        padding: "7px 4px",
-        fontSize: 11,
+        gap: 5,
+        padding: "8px 6px",
+        fontSize: 11.5,
+        fontWeight: active ? 600 : 500,
+        lineHeight: 1,
+        whiteSpace: "nowrap",
+        overflow: "hidden",
         background: active ? "var(--pri-50)" : "none",
         color: active ? "var(--pri)" : "var(--ink-2)",
         border: "none",
@@ -422,7 +461,9 @@ function TileBtn({
       }}
     >
       <Icon name={icon} size={12} />
-      {label}
+      {!iconOnly && (
+        <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>{shortLabel ?? label}</span>
+      )}
     </button>
   );
 }
