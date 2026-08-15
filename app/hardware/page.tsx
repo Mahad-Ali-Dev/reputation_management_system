@@ -157,6 +157,10 @@ export default async function QrCodesPage({
   }
 
   const activeDevices = devices.filter((d) => d.status === "active");
+  // Needed BEFORE the empty-state return: deleting your only device drops you
+  // into that state, and it used to render a hardcoded "Trash (0)" — so the
+  // device you just deleted became invisible and Restore was unreachable.
+  const retiredCount = devices.filter((d) => d.status === "retired").length;
 
   if (activeDevices.length === 0) {
     return (
@@ -165,6 +169,7 @@ export default async function QrCodesPage({
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
+        retiredCount={retiredCount}
       />
     );
   }
@@ -180,6 +185,7 @@ export default async function QrCodesPage({
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
+        retiredCount={retiredCount}
       />
     );
 
@@ -200,7 +206,6 @@ export default async function QrCodesPage({
     selectedDevice.productKind,
   );
   const qrDownloadHref = `/api/devices/${selectedDevice.id}/qr?format=png${selectedPlatform ? `&platform=${selectedPlatform}` : ""}`;
-  const retiredCount = devices.filter((d) => d.status === "retired").length;
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
@@ -456,11 +461,15 @@ function EmptyState({
   recentActivation,
   detectedQrUrl = null,
   detectedSerial = null,
+  retiredCount = 0,
 }: {
   establishments: Array<{ id: string; name: string }>;
   recentActivation?: string;
   detectedQrUrl?: string | null;
   detectedSerial?: string | null;
+  /** Retired devices this org still has. Deleting your last active device
+   *  lands you here, so this MUST be real — a hardcoded 0 hid them entirely. */
+  retiredCount?: number;
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
@@ -510,7 +519,7 @@ function EmptyState({
           <div className="seg">
             <span className="seg__t is-active">Active (0)</span>
             <Link href="/hardware?view=trash" className="seg__t" style={{ textDecoration: "none" }}>
-              Trash (0)
+              Trash ({retiredCount})
             </Link>
           </div>
           <div style={{ flex: 1 }} />
@@ -532,11 +541,24 @@ function EmptyState({
               aria-hidden
               className="md-blank__art"
             />
-            <h3 className="md-blank__title">No devices added yet</h3>
+            <h3 className="md-blank__title">
+              {retiredCount > 0 ? "No active devices" : "No devices added yet"}
+            </h3>
             <p className="md-blank__body">
-              Got a ReviewBoost card, plaque, or stand? Add your first device to start collecting
-              scans and engage more customers — enter the code from your package and we&rsquo;ll
-              route every scan to your Google review page.
+              {retiredCount > 0 ? (
+                <>
+                  You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
+                  <Link href="/hardware?view=trash">Trash</Link> — restoring one brings back the
+                  same QR, code and redirect, so a plaque you&rsquo;ve already printed keeps
+                  working. Or add a new device below.
+                </>
+              ) : (
+                <>
+                  Got a ReviewBoost card, plaque, or stand? Add your first device to start
+                  collecting scans and engage more customers — enter the code from your package and
+                  we&rsquo;ll route every scan to your Google review page.
+                </>
+              )}
             </p>
             <div className="md-blank__cta">
               <ConnectDeviceModal
