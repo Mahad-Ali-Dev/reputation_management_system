@@ -14,6 +14,7 @@ import {
   formatConversionPct,
   getDeviceDashboardExtras,
   getDeviceMetrics,
+  getScannedDevice,
   listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
@@ -134,12 +135,20 @@ export default async function QrCodesPage({
 }) {
   const { orgId } = await getOrgContext();
 
-  const [devices, establishments] = await Promise.all([
+  const [devices, establishments, scanned] = await Promise.all([
     listOrgDevicesWithProduct(orgId),
     listEstablishments(orgId),
+    // The stand this browser last scanned, if any — pre-fills the Add-device
+    // wizard so the customer only types the 5-character code.
+    getScannedDevice(orgId),
   ]);
   const businessOptions = establishments.map((e) => ({ id: e.id, name: e.name }));
   const sp = await searchParams;
+
+  // Only offer a device that's actually still claimable; a stale cookie
+  // pointing at an already-activated stand would pre-fill a dead end.
+  const detectedQrUrl = scanned?.claimable ? publicQrUrl(scanned.slug) : null;
+  const detectedSerial = scanned?.claimable ? scanned.serial : null;
 
   // Trash view — show only retired devices with a Restore button per card.
   if (sp.view === "trash") {
@@ -150,7 +159,14 @@ export default async function QrCodesPage({
   const activeDevices = devices.filter((d) => d.status === "active");
 
   if (activeDevices.length === 0) {
-    return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
+    return (
+      <EmptyState
+        establishments={businessOptions}
+        recentActivation={sp.activated}
+        detectedQrUrl={detectedQrUrl}
+        detectedSerial={detectedSerial}
+      />
+    );
   }
 
   // Use ?selected=<deviceId> to focus the QR + analytics panels on a specific
@@ -158,7 +174,14 @@ export default async function QrCodesPage({
   const selectedDevice =
     (sp.selected && activeDevices.find((d) => d.id === sp.selected)) || activeDevices[0];
   if (!selectedDevice)
-    return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
+    return (
+      <EmptyState
+        establishments={businessOptions}
+        recentActivation={sp.activated}
+        detectedQrUrl={detectedQrUrl}
+        detectedSerial={detectedSerial}
+      />
+    );
 
   // Org-aggregate metrics + entitlement + dashboard extras (all live, fail-soft).
   const [metrics, isPro, extras] = await Promise.all([
@@ -195,7 +218,11 @@ export default async function QrCodesPage({
             <Icon name="qr" size={12} />
             Generate QR
           </Link>
-          <ConnectDeviceModal establishments={businessOptions} />
+          <ConnectDeviceModal
+            establishments={businessOptions}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         <MdHero />
@@ -265,7 +292,11 @@ export default async function QrCodesPage({
           <span className="md-devhead__count">
             {activeDevices.length} active device{activeDevices.length === 1 ? "" : "s"}
           </span>
-          <ConnectDeviceModal establishments={businessOptions} />
+          <ConnectDeviceModal
+            establishments={businessOptions}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         <DeviceTable
@@ -423,9 +454,13 @@ function QrProductCard({
 function EmptyState({
   establishments,
   recentActivation,
+  detectedQrUrl = null,
+  detectedSerial = null,
 }: {
   establishments: Array<{ id: string; name: string }>;
   recentActivation?: string;
+  detectedQrUrl?: string | null;
+  detectedSerial?: string | null;
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
@@ -442,7 +477,11 @@ function EmptyState({
             <Icon name="qr" size={12} />
             Generate QR
           </Link>
-          <ConnectDeviceModal establishments={establishments} />
+          <ConnectDeviceModal
+            establishments={establishments}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         <MdHero />
@@ -476,7 +515,11 @@ function EmptyState({
           </div>
           <div style={{ flex: 1 }} />
           <span className="md-devhead__count">0 active devices</span>
-          <ConnectDeviceModal establishments={establishments} />
+          <ConnectDeviceModal
+            establishments={establishments}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         {/* Empty devices panel — kit illustration + connect CTA. */}
@@ -498,6 +541,8 @@ function EmptyState({
             <div className="md-blank__cta">
               <ConnectDeviceModal
                 establishments={establishments}
+                detectedQrUrl={detectedQrUrl}
+                detectedSerial={detectedSerial}
                 triggerClassName="btn btn--pri btn--lg"
                 triggerLabel="Add device"
               />

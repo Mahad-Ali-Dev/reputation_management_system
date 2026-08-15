@@ -1,5 +1,57 @@
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { readPendingSlug } from "@/lib/hardware/pending-slug";
+
+/**
+ * The device this browser most recently scanned, if we can still see it.
+ *
+ * `/r/{slug}` drops the slug in a cookie on every scan of an unactivated stand
+ * (see lib/hardware/pending-slug.ts), which is what lets both activation
+ * surfaces — `/activate` and the Connect-a-device modal — fill the device in
+ * for the customer so all they type is the 5-character code. That matters
+ * because the current batch has ONE code printed on every card, so the code
+ * can't identify a unit on its own.
+ *
+ * Resolved INSIDE tenant RLS: the devices policy exposes rows that are
+ * unclaimed (`organization_id IS NULL`) or already this org's, so `device:
+ * null` means "unknown slug, or someone else owns it" and we never have to
+ * reason about surfacing a stranger's hardware.
+ *
+ * `serial` comes back so the UI can show a support-friendly product ID —
+ * when a customer gets stuck, that's the string that identifies the physical
+ * unit in the fulfillment records.
+ */
+export type ScannedDevice = {
+  slug: string;
+  /** Ops/inventory serial printed on the unit, e.g. RB-X7K2P1-A3M9-2026. */
+  serial: string | null;
+  /** False when it's already active — claimable devices are still unactivated. */
+  claimable: boolean;
+  /** True when this org already owns it (already activated by them). */
+  mine: boolean;
+};
+
+export async function getScannedDevice(orgId: string): Promise<ScannedDevice | null> {
+  const slug = await readPendingSlug();
+  if (!slug) return null;
+
+  const device = await withTenant(orgId, (tx) =>
+    tx.device.findFirst({
+      where: { shortSlug: slug },
+      select: { serial: true, status: true, organizationId: true },
+    }),
+  );
+  // Unknown slug or another org's — report the slug anyway so support can still
+  // be quoted a product ID, but never claim it's actionable.
+  if (!device) return { slug, serial: null, claimable: false, mine: false };
+
+  return {
+    slug,
+    serial: device.serial,
+    claimable: device.status === "unactivated",
+    mine: device.organizationId === orgId,
+  };
+}
 
 export async function listProducts() {
   return prisma.hardwareProduct.findMany({

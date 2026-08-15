@@ -353,6 +353,51 @@
 }
 
 /* Callout */
+/* Product ID readout — the identifiers support asks for when a customer is
+   stuck. Sits directly under the QR link so what we detected is always visible,
+   never hidden behind a "why did it pick that stand?" support ticket. */
+.cdm-pid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e5e0ff;
+  border-radius: 12px;
+  background: #faf9ff;
+}
+.cdm-pid__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e9e3ff;
+  color: #5b3fd8;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.cdm-pid__label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8b93b5;
+}
+.cdm-pid__val {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #3d2f8f;
+  background: #f1ecff;
+  border-radius: 7px;
+  padding: 3px 9px;
+  user-select: all;
+}
+
 .cdm-callout {
   display: flex;
   align-items: center;

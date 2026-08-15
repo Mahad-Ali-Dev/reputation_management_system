@@ -13,6 +13,8 @@ import {
   isStorableRedirectUrl,
   signSlug,
 } from "@/lib/hardware/codes";
+import { clearPendingSlug, readPendingSlug } from "@/lib/hardware/pending-slug";
+import { parseSlug } from "@/lib/hardware/slug";
 import { logger } from "@/lib/logger";
 import { APP_URL, stripe } from "@/lib/stripe/client";
 import { revalidatePath } from "next/cache";
@@ -260,14 +262,31 @@ export async function activateDevice(
   // The activation code was mass-printed IDENTICALLY across the current
   // production batch, so it can no longer identify a single device on its own.
   // The per-unit identifier that IS unique is the QR slug (10-char Crockford
-  // base32) — so when the owner scans their stand, `/activate?slug=…` carries it
-  // through and we bind THAT exact device. The code is still verified, but
-  // against the specific device the slug resolves to (so a future batch with
-  // unique codes is secure again with no code change — the slug just narrows to
-  // one device and its real code must still match). See lib/hardware/codes.ts.
-  const slug =
-    typeof slugRaw === "string" ? slugRaw.replace(/[\s-]/g, "").toUpperCase() : "";
-  const hasSlug = /^[0-9A-HJKMNP-TV-Z]{10}$/.test(slug);
+  // base32) — so when the owner scans their stand we bind THAT exact device. The
+  // code is still verified, but against the specific device the slug resolves to
+  // (so a future batch with unique codes is secure again with no code change —
+  // the slug just narrows to one device and its real code must still match).
+  //
+  // Three ways the slug reaches us, in priority order:
+  //   1. The form field — `/activate`'s device box (pre-filled from the scan) or
+  //      the pasted QR link in the Connect-a-device modal. `parseSlug` accepts a
+  //      full link, a bare path or the raw slug.
+  //   2. The `rl_pending_slug` cookie that `/r/{slug}` set when they scanned.
+  //      This is what survives signup → magic link → onboarding → first
+  //      business, none of which can carry a query string.
+  //   3. Neither — we refuse to guess, see the `not_found` branch below.
+  const slugTyped = typeof slugRaw === "string" ? slugRaw.trim() : "";
+  const slugFromForm = parseSlug(slugTyped);
+  // A non-empty box we can't parse must NOT fall through to the cookie: they
+  // typed one device and the cookie remembers another, and silently preferring
+  // the cookie would bind the wrong stand to their business.
+  if (slugTyped.length > 0 && slugFromForm === null) {
+    return {
+      error:
+        "That doesn’t look like a device link. Paste the whole QR link printed on your product — it looks like repulabs.com/r/ABCD123456.",
+    };
+  }
+  const slug = slugFromForm ?? (await readPendingSlug());
 
   // Optional pasted URL — must parse AND pass the storable-redirect check
   // (rejects javascript:/data:/file: schemes, IP-literal hosts, localhost in
@@ -302,11 +321,22 @@ export async function activateDevice(
     //    code (the mis-printed batch), we refuse and ask them to scan — never
     //    guess a device, so we can't bind the wrong QR to a business.
     let device: Awaited<ReturnType<typeof tx.device.findFirst>> = null;
-    if (hasSlug) {
+    if (slug) {
       device = await tx.device.findFirst({
         where: { shortSlug: slug, status: "unactivated", activationCodeUsedAt: null },
       });
       if (!device) {
+        // Not claimable. Before calling it an error, check whether it's already
+        // OURS — a double-tapped submit, or a stale /activate tab reopened after
+        // the same stand was activated from the dashboard. RLS only shows us
+        // unclaimed rows and our own, so a hit here is unambiguously this org's.
+        const mine = await tx.device.findFirst({
+          where: { shortSlug: slug },
+          select: { organizationId: true, shortSlug: true },
+        });
+        if (mine?.organizationId === orgId) {
+          return { ok: false as const, reason: "already_yours" as const, slug: mine.shortSlug };
+        }
         // Unknown slug OR already claimed by another business (RLS hides other
         // orgs' devices) — one QR, one business, and it's already taken/invalid.
         return { ok: false as const, reason: "slug_unavailable" as const };
@@ -394,6 +424,11 @@ export async function activateDevice(
             : estab.googlePlaceId
               ? "place_id"
               : "search_fallback",
+          // Whether this activation leaned on the mis-printed shared batch code
+          // rather than the unit's own code. Recorded so the override's real
+          // blast radius is auditable, and so we can tell when the last of the
+          // bad batch has been redeemed and the env flag can be turned off.
+          batchOverride: device.activationCodeHash !== codeHash,
         },
       },
     });
@@ -401,6 +436,13 @@ export async function activateDevice(
   });
 
   if (!result.ok) {
+    if (result.reason === "already_yours") {
+      // Idempotent: the stand they're pointing at is already live on this
+      // account. Land them on it instead of showing a scary failure.
+      await clearPendingSlug();
+      revalidatePath("/hardware");
+      redirect(`/hardware?activated=${result.slug}`);
+    }
     if (result.reason === "ambiguous") {
       return {
         error:
@@ -423,9 +465,24 @@ export async function activateDevice(
     }
     if (result.reason === "not_found" || result.reason === "race_lost") {
       logger.warn(
-        { orgId, event: "device.activation.miss" },
+        {
+          orgId,
+          hadSlug: slug !== null,
+          batchCode: isBatchOverride,
+          event: "device.activation.miss",
+        },
         "activation code did not match any unactivated device",
       );
+      if (isBatchOverride && slug === null) {
+        // The dead end this whole change exists to remove: they typed the code
+        // printed on the card, but every card in this batch carries the SAME
+        // code, so on its own it matches nothing. Tell them how to give us the
+        // one thing that does identify their unit.
+        return {
+          error:
+            "We need to know which stand you’re setting up. Scan its QR with your phone and tap “Activate this QR”, or paste the QR link printed on the product into the “Your device” box above — the code on the card is the same on every stand in this batch, so it can’t identify yours by itself.",
+        };
+      }
       return {
         error:
           "We couldn’t match that activation code. Double-check the 5 characters from the card inside your package — codes are one-time-use and can’t be reused once redeemed.",
@@ -444,10 +501,15 @@ export async function activateDevice(
       deviceId: device.id,
       slug: device.shortSlug,
       establishmentId,
+      batchOverride: device.activationCodeHash !== codeHash,
       event: "device.activated",
     },
     "device activated",
   );
+
+  // This stand is bound now — forget the scan so the next activation on this
+  // browser starts from a clean slate rather than re-offering a live device.
+  await clearPendingSlug();
 
   revalidatePath("/hardware");
   revalidatePath(`/establishments/${establishmentId}`);

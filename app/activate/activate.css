@@ -1,62 +1,203 @@
 /* ============================================================
-   Activation form — premium repulabs input skin.
+   Activation page — repulabs "my devices" kit skin.
 
-   Restyle only. Every field name, `required`, `maxLength`, the hidden
-   slug input and the useActionState wiring live in activate-form.tsx
-   and are untouched. Shared between /activate (in-app, inside the app
-   shell) and the standalone form render; colors are pinned to the
-   brand palette, fonts reuse the app's Inter (--f-ui) / mono (--f-mono).
+   Matched to the Connect-a-device wizard
+   (app/hardware/_components/connect-device-modal.css) so both activation
+   surfaces read as one system: indigo/violet accent, soft lavender tints,
+   2px fields with a violet focus ring, segmented code slots, 14px radii.
+
+   Palette is the kit's, kept literal here exactly as the .cdm- sheet does:
+     accent      #6c4dff   deep #5b3fd8   focus #7a39f2
+     soft fills  #f1ecff   #f0effc   #faf9ff
+     hairlines   #c9b8ff   #d7d0ff   #e5e0ff
+     ink / muted #111936 / #5f6b8f
+     verified    #12b998 (the kit's "Trust" teal — status only)
+
+   Every field name, `required`, `maxLength`, the slug input and the
+   useActionState wiring live in activate-form.tsx and are untouched.
    ============================================================ */
 
-/* /activate page chrome — two-column (form + guide) that collapses to a
-   single column on narrow / phone viewports so the form never squishes. */
+/* Two-column (form + guide), collapsing on narrow viewports so the form
+   never squishes. The guide sticks on tall desktop screens — it's reference
+   material, and losing it mid-scroll is what made the old page feel bare. */
 .af-page-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.85fr);
   gap: 18px;
   align-items: flex-start;
 }
-@media (max-width: 900px) {
+@media (max-width: 980px) {
   .af-page-grid {
     grid-template-columns: 1fr;
+  }
+}
+@media (min-width: 981px) {
+  .af-guide {
+    position: sticky;
+    top: 18px;
+  }
+}
+
+/* Kit treatment for this page's cards only — scoped under the grid so the
+   shared .ds-card component is unchanged everywhere else. */
+.af-page-grid .ds-card {
+  border: 1px solid #ece8ff;
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: 0 18px 44px -30px rgba(49, 43, 230, 0.4);
+}
+.af-page-grid .ds-card__head {
+  border-bottom: 1px solid #f1eeff;
+}
+.af-page-grid .ds-card__title {
+  color: #111936;
+}
+.af-page-grid .chip {
+  border: 1px solid #e5e0ff;
+  background: #f5f2ff;
+  color: #5b3fd8;
+  font-weight: 600;
+}
+.af-formcard .ds-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ── hero ────────────────────────────────────────────────────
+   Fronts the form with what's actually left to do, so four fields read as a
+   short checklist instead of a wall. */
+.af-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 22px;
+  border-radius: 17px;
+  overflow: hidden;
+  border: 1px solid #e5e0ff;
+  background: radial-gradient(circle at 86% 18%, rgba(124, 92, 255, 0.2), transparent 58%),
+    linear-gradient(134deg, #f5f2ff 0%, #efeeff 56%, #f8f5ff 100%);
+}
+.af-hero__copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.af-hero__pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: #fff;
+  border: 1px solid #ded5ff;
+  color: #5b3fd8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.af-hero__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #b7a2ff;
+}
+.af-hero--ready .af-hero__dot {
+  background: #12b998;
+  box-shadow: 0 0 0 3px rgba(18, 185, 152, 0.18);
+}
+.af-hero__title {
+  margin: 10px 0 5px;
+  font-size: 19px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #111936;
+}
+.af-hero__sub {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #5a628a;
+  max-width: 46ch;
+}
+.af-hero__art {
+  flex: 0 0 auto;
+  width: 172px;
+  height: 129px;
+}
+@media (max-width: 620px) {
+  .af-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .af-hero__art {
+    align-self: center;
+    width: 148px;
+    height: 111px;
   }
 }
 
 .af {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: 20px;
 }
 
-/* prefilled-slug context banner */
+/* ── banners ─────────────────────────────────────────────── */
 .af-banner {
-  padding: 12px 14px;
-  border-radius: 12px;
-  background: #eef4ff;
-  border: 1px solid #dbe6ff;
-  color: #1e3a8a;
+  padding: 13px 15px;
+  border-radius: 13px;
+  background: #f0effc;
+  border: 1px solid #ddd6ff;
+  color: #3a3570;
   font-size: 13px;
   line-height: 1.55;
 }
 .af-banner strong {
   display: block;
   margin-bottom: 2px;
-  color: #0b1220;
+  color: #111936;
 }
 .af-banner code {
   font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  background: #dbe6ff;
-  color: #1e40af;
+  background: #e4dcff;
+  color: #4c2fd0;
   padding: 1px 6px;
   border-radius: 6px;
   font-size: 12px;
   letter-spacing: 0.08em;
 }
+.af-banner a {
+  color: #5b3fd8;
+  font-weight: 600;
+}
+.af-banner--ok {
+  background: #ecfdf5;
+  border-color: #b6f0dd;
+  color: #14532d;
+}
+.af-banner--ok code {
+  background: #d1fae5;
+  color: #047857;
+}
+.af-banner--ok a {
+  color: #047857;
+}
+.af-banner--warn {
+  background: #fffbeb;
+  border-color: #fde68a;
+  color: #78350f;
+}
+.af-banner--warn code {
+  background: #fef3c7;
+  color: #92400e;
+}
 
-/* inline server-action error */
 .af-error {
-  padding: 12px 14px;
-  border-radius: 12px;
+  padding: 13px 15px;
+  border-radius: 13px;
   background: #fef2f2;
   border: 1px solid #fecaca;
   color: #7f1d1d;
@@ -68,89 +209,108 @@
   margin-bottom: 2px;
 }
 
-/* labelled field */
+.af-warn {
+  padding: 15px 16px;
+  border-radius: 14px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #78350f;
+  font-size: 13px;
+  line-height: 1.55;
+}
+.af-warn a {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+}
+
+/* ── fields ──────────────────────────────────────────────── */
 .af-field {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
 }
 .af-label {
   display: flex;
   align-items: center;
-  gap: 7px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #0b1220;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13.5px;
+  font-weight: 650;
+  color: #111936;
 }
 .af-label .af-num {
   display: inline-grid;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 999px;
-  background: #e6effe;
-  color: #2563eb;
+  background: #f1ecff;
+  color: #6c4dff;
   font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 }
 .af-label .af-opt {
-  margin-left: 8px;
+  margin-left: 2px;
   font-weight: 500;
   font-size: 11.5px;
-  color: #8a93a6;
+  color: #8b93b5;
 }
 .af-hint {
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.55;
-  color: #5b6473;
+  color: #5f6b8f;
 }
 .af-hint a {
-  color: #2563eb;
+  color: #6c4dff;
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
 }
 .af-hint a:hover {
   text-decoration: underline;
+}
+
+.af-detected {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #dcfbf0;
+  color: #0b7d64;
+  font-size: 11px;
+  font-weight: 700;
 }
 
 /* inputs + select */
 .af-input,
 .af-select {
   width: 100%;
-  height: 48px;
-  padding: 0 15px;
+  height: 54px;
+  padding: 0 16px;
   border-radius: 14px;
-  border: 1px solid #dce4f2;
-  background: #ffffff;
-  color: #0b1220;
+  border: 2px solid #ddd6ff;
+  background: #fff;
+  color: #111936;
   font-size: 14px;
   font-family: var(--f-ui, "Inter", -apple-system, system-ui, sans-serif);
   outline: none;
+  box-shadow: 0 8px 18px rgba(79, 70, 229, 0.05);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .af-input::placeholder {
-  color: #aab3c5;
+  color: #a8afc9;
 }
 .af-input:hover,
 .af-select:hover {
-  border-color: #c6d2e8;
+  border-color: #c9b8ff;
 }
 .af-input:focus,
 .af-select:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+  border-color: #7a39f2;
+  box-shadow: 0 0 0 4px rgba(122, 57, 242, 0.14);
 }
-
-/* the activation code — mono, uppercase, tracked */
-.af-input--code {
-  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  font-size: 20px;
-  font-weight: 500;
-  letter-spacing: 0.3em;
-  text-transform: uppercase;
-}
-/* the review URL — mono, smaller so long links stay legible */
 .af-input--url {
   font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 13px;
@@ -158,30 +318,244 @@
 
 .af-select {
   appearance: none;
-  padding-right: 40px;
-  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' stroke='%235b6473' stroke-width='1.6' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'><path d='M1 1.5l5 5 5-5' stroke='%236c4dff' stroke-width='1.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/></svg>");
   background-repeat: no-repeat;
-  background-position: right 15px center;
+  background-position: right 16px center;
 }
 
-/* actions */
+/* ── the detected device, as a card ──────────────────────────
+   The customer's job here is to CONFIRM, not to transcribe a URL — so when we
+   know the stand we show it rather than asking for it. */
+.af-device {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 15px;
+  border: 2px solid #d7d0ff;
+  background: linear-gradient(180deg, #fdfcff, #faf9ff);
+  box-shadow: 0 10px 22px -14px rgba(79, 70, 229, 0.4);
+}
+.af-device__tile {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: #f1ecff;
+  color: #6c4dff;
+}
+.af-device__body {
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+.af-device__link {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 13px;
+  font-weight: 600;
+  color: #3d2f8f;
+  overflow-wrap: anywhere;
+}
+
+/* ── scan prompt ─────────────────────────────────────────────
+   Shown instead of a URL box when we haven't identified a stand. Scanning is
+   the only route that works for everyone: the slug is never printed as
+   readable text (see the manufacturer instructions in lib/hardware/batch.ts),
+   so it lives only inside the QR image. Typing the link is the disclosed
+   fallback for "scanned on my phone, setting up on my laptop". */
+.af-scan {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 15px;
+  border: 2px dashed #d7d0ff;
+  background: linear-gradient(180deg, #fdfcff, #f8f6ff);
+}
+.af-scan__tile {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: #f1ecff;
+  color: #6c4dff;
+}
+.af-scan__body {
+  min-width: 0;
+}
+.af-scan__t {
+  font-size: 13.5px;
+  font-weight: 650;
+  color: #111936;
+}
+.af-scan__d {
+  margin-top: 3px;
+  font-size: 12px;
+  line-height: 1.55;
+  color: #5f6b8f;
+}
+
+/* Inline text button that has to sit inside a <span> of hint copy. */
+.af-linkbtn {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: #6c4dff;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 600;
+}
+.af-linkbtn:hover {
+  text-decoration: underline;
+}
+
+/* "Setting up a different stand?" / "Can't scan right now?" — quiet escape
+   hatches, never a dead end. */
+.af-swap {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: -1px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: #6c4dff;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 600;
+}
+.af-swap:hover {
+  text-decoration: underline;
+}
+
+/* ── product ID readout ──────────────────────────────────────
+   The identifiers support asks for when a customer is stuck. Mirrors
+   .cdm-pid in the Connect-a-device wizard. */
+.af-pid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.af-pid__label {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8b93b5;
+}
+.af-pid__val {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #3d2f8f;
+  background: #f1ecff;
+  border: 1px solid #e5e0ff;
+  border-radius: 7px;
+  padding: 2px 8px;
+  user-select: all;
+}
+
+/* ── segmented code input ────────────────────────────────────
+   One real <input> under a 5-slot display, same as the wizard. The wrapper is
+   a <label>, so clicking a slot focuses the input with no JS. */
+.af-code {
+  position: relative;
+  display: block;
+  height: 84px;
+  border-radius: 15px;
+  border: 2px solid #d7d0ff;
+  background: #fff;
+  box-shadow: 0 12px 24px rgba(49, 43, 230, 0.06);
+  cursor: text;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.af-code:hover {
+  border-color: #c9b8ff;
+}
+.af-code:focus-within {
+  border-color: #6a55ff;
+  box-shadow: 0 0 0 5px rgba(93, 50, 245, 0.12);
+}
+.af-code__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  border: 0;
+  background: transparent;
+  /* Keeps the caret/selection out of sight while staying focusable. */
+  color: transparent;
+}
+.af-code__slots {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  pointer-events: none;
+}
+.af-slot {
+  width: 32px;
+  height: 4px;
+  border-radius: 999px;
+  background: #d8dbe6;
+  display: grid;
+  place-items: center;
+  transition: background 0.12s ease;
+}
+.af-slot--has {
+  width: auto;
+  min-width: 26px;
+  height: auto;
+  background: transparent;
+  color: #6c4dff;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+}
+@media (max-width: 560px) {
+  .af-code__slots {
+    gap: 12px;
+  }
+  .af-slot--has {
+    font-size: 26px;
+  }
+}
+
+/* ── actions ─────────────────────────────────────────────── */
 .af-actions {
   display: flex;
   justify-content: flex-end;
   align-items: center;
   gap: 10px;
-  margin-top: 4px;
+  padding-top: 18px;
+  border-top: 1px solid #f1eeff;
 }
 .af-cancel {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 46px;
-  padding: 0 18px;
-  border-radius: 12px;
-  border: 1px solid #dce4f2;
-  background: #ffffff;
-  color: #0b1220;
+  height: 48px;
+  padding: 0 20px;
+  border-radius: 13px;
+  border: 1px solid #e2ddf7;
+  background: #fff;
+  color: #4a5178;
   font-size: 13.5px;
   font-weight: 600;
   white-space: nowrap;
@@ -189,43 +563,40 @@
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .af-cancel:hover {
-  border-color: #c6d2e8;
-  background: #f7f9fd;
+  border-color: #c9b8ff;
+  background: #f7f6ff;
 }
 .af-submit {
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  height: 46px;
-  padding: 0 22px;
+  height: 48px;
+  padding: 0 24px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 13px;
   cursor: pointer;
-  background: linear-gradient(180deg, #2f6bff, #1e40af);
+  background: linear-gradient(180deg, #7b5cff, #5b3fd8);
   color: #ffffff;
   font-size: 13.5px;
   font-weight: 650;
   font-family: var(--f-ui, "Inter", -apple-system, system-ui, sans-serif);
-  box-shadow: 0 14px 34px -14px rgba(35, 82, 255, 0.5);
+  box-shadow: 0 14px 32px -12px rgba(91, 63, 216, 0.62);
   white-space: nowrap;
   transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
 }
 .af-submit:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 18px 40px -16px rgba(35, 82, 255, 0.6);
+  box-shadow: 0 18px 40px -14px rgba(91, 63, 216, 0.7);
 }
 .af-submit:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #2563eb;
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #7a39f2;
 }
 .af-submit:disabled {
   cursor: wait;
   filter: saturate(0.7);
   opacity: 0.7;
 }
-
-/* Narrow screens: stack the actions full-width (primary on top) so button
-   labels never wrap inside a fixed-height pill. */
 @media (max-width: 460px) {
   .af-actions {
     flex-direction: column-reverse;
@@ -235,4 +606,90 @@
   .af-actions .af-submit {
     width: 100%;
   }
+}
+
+/* ── side guide ("How activation works") ─────────────────────
+   A connected rail rather than four loose rows — it reads as a sequence,
+   which is what it is. */
+.af-rail {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+.af-rail__item {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding-bottom: 18px;
+}
+.af-rail__item:last-child {
+  padding-bottom: 0;
+}
+.af-rail__item::before {
+  content: "";
+  position: absolute;
+  left: 12px;
+  top: 28px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(#e2dcff, #f4f2ff);
+}
+.af-rail__item:last-child::before {
+  display: none;
+}
+.af-rail__n {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 26px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #f1ecff;
+  border: 1px solid #e0d8ff;
+  color: #6c4dff;
+  font-size: 12px;
+  font-weight: 700;
+}
+.af-rail__body {
+  min-width: 0;
+  padding-top: 2px;
+}
+.af-rail__t {
+  font-weight: 650;
+  font-size: 13px;
+  color: #111936;
+}
+.af-rail__d {
+  margin-top: 2px;
+  font-size: 12px;
+  line-height: 1.58;
+  color: #5f6b8f;
+}
+
+.af-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 13px 14px;
+  border-radius: 13px;
+  background: #f0effc;
+  border: 1px solid #ddd6ff;
+  color: #46407e;
+  font-size: 12px;
+  line-height: 1.58;
+}
+.af-note__icon {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #6c4dff;
+}
+.af-note a {
+  color: #5b3fd8;
+  font-weight: 600;
 }
