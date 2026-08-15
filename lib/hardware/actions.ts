@@ -885,6 +885,96 @@ export async function deleteDevice(form: FormData): Promise<void> {
 }
 
 /**
+ * Permanently delete a retired device. IRREVERSIBLE.
+ *
+ * Deliberately narrower than `deleteDevice` (the soft delete) in three ways:
+ *
+ *   1. **Admin-gated, not manager.** Soft delete is recoverable from Trash, so
+ *      manager is fine there. This one destroys data — hold it to a higher bar.
+ *   2. **Only operates on `retired` rows.** You must soft-delete first, which
+ *      makes "delete forever" a two-decision path rather than one misclick on
+ *      a live device. An active QR can never be destroyed in a single action.
+ *   3. **Audit-logged BEFORE the row goes**, with the full device payload in
+ *      `beforeData` — slug, serial, SKU, redirect URL, scan count. Once the row
+ *      is gone that audit entry is the only remaining evidence it ever existed,
+ *      and it's what support has to work from if a customer disputes this.
+ *
+ * What actually goes: the `devices` row and, via `ON DELETE CASCADE`, all its
+ * `device_scans`. So the unit's scan history disappears from analytics totals.
+ * Reviews keep their `attributed_device_id` (a plain column, no FK), so they
+ * survive as orphaned attributions rather than being deleted with the device.
+ *
+ * The QR itself is NOT recoverable afterwards: the slug is freed, so a printed
+ * plaque bearing it becomes permanently dead (a scan 302s to /not-activated).
+ * The UI says this in as many words before the second click.
+ */
+const PurgeDeviceSchema = z.object({
+  deviceId: z.string().uuid(),
+});
+
+export async function permanentlyDeleteDevice(form: FormData): Promise<void> {
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) redirect("/login");
+  const { orgId, userId, role } = sessionOrg;
+  if (!roleAtLeast(role, "admin")) throw new ForbiddenError("admin", role);
+
+  const parsed = PurgeDeviceSchema.safeParse({ deviceId: form.get("deviceId") });
+  if (!parsed.success) throw new Error("invalid_device_id");
+
+  await withTenant(orgId, async (tx) => {
+    const device = await tx.device.findFirst({
+      where: { id: parsed.data.deviceId },
+      select: {
+        id: true,
+        shortSlug: true,
+        serial: true,
+        productSku: true,
+        status: true,
+        redirectUrl: true,
+        establishmentId: true,
+        scanCount: true,
+        activatedAt: true,
+      },
+    });
+    if (!device) throw new Error("device_not_found");
+    // Guard: only ever destroy something already in Trash.
+    if (device.status !== "retired") throw new Error("device_not_retired");
+
+    // Write the tombstone FIRST — if the delete then fails we have a spurious
+    // audit row, which is far better than destroying a device with no record.
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "device.purged",
+        resourceType: "device",
+        resourceId: device.id,
+        beforeData: {
+          shortSlug: device.shortSlug,
+          serial: device.serial,
+          productSku: device.productSku,
+          redirectUrl: device.redirectUrl ?? null,
+          establishmentId: device.establishmentId,
+          scanCount: device.scanCount,
+          activatedAt: device.activatedAt?.toISOString() ?? null,
+        },
+      },
+    });
+
+    await tx.device.delete({ where: { id: device.id } });
+  });
+
+  logger.warn(
+    { event: "device.purged", orgId, userId, deviceId: parsed.data.deviceId },
+    "device permanently deleted",
+  );
+
+  revalidatePath("/hardware");
+  redirect("/hardware?view=trash&purged=1");
+}
+
+/**
  * Restore a soft-deleted device. Flips status from "retired" back to "active".
  *
  * Why this exists: customers occasionally hit the Delete button by mistake,

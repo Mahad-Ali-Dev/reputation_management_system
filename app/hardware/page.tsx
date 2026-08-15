@@ -5,6 +5,7 @@ import { QrCode } from "@/components/shell/qr-code";
 import { TopBar } from "@/components/topbar";
 import { getAdminSession } from "@/lib/admin/session";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { roleAtLeast } from "@/lib/auth/rbac";
 import { orgHasFeature } from "@/lib/billing/feature-access";
 import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
@@ -34,6 +35,7 @@ import { DeviceTable } from "./_components/device-table";
 import { recordNfcUid } from "./_components/nfc-actions";
 import { NfcConfigCard } from "./_components/nfc-config-card";
 import { QrActions } from "./_components/qr-actions";
+import { TrashDeviceCard } from "./_components/trash-device-card";
 import "./devices.css";
 import "./my-devices.css";
 
@@ -131,9 +133,11 @@ export default async function QrCodesPage({
     restored?: string;
     /** Result of an NFC-UID save (see recordNfcUid): saved|duplicate|bad_uid|… */
     nfc?: string;
+    /** "1" after a permanent delete, to confirm the device is really gone. */
+    purged?: string;
   }>;
 }) {
-  const { orgId } = await getOrgContext();
+  const { orgId, role } = await getOrgContext();
 
   const [devices, establishments, scanned] = await Promise.all([
     listOrgDevicesWithProduct(orgId),
@@ -153,7 +157,14 @@ export default async function QrCodesPage({
   // Trash view — show only retired devices with a Restore button per card.
   if (sp.view === "trash") {
     const retiredDevices = devices.filter((d) => d.status === "retired");
-    return <TrashView devices={retiredDevices} justRestored={sp.restored} />;
+    return (
+      <TrashView
+        devices={retiredDevices}
+        justRestored={sp.restored}
+        justPurged={sp.purged === "1"}
+        canPurge={roleAtLeast(role, "admin")}
+      />
+    );
   }
 
   const activeDevices = devices.filter((d) => d.status === "active");
@@ -697,9 +708,14 @@ type RetiredDevice = Awaited<ReturnType<typeof listOrgDevices>>[number];
 function TrashView({
   devices,
   justRestored,
+  justPurged,
+  canPurge,
 }: {
   devices: RetiredDevice[];
   justRestored?: string;
+  justPurged?: boolean;
+  /** Whether this member may permanently destroy a device (admin+). */
+  canPurge: boolean;
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Trash"]}>
@@ -722,6 +738,23 @@ function TrashView({
         >
           <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
           QR restored. Visit <Link href="/hardware">Active QRs</Link> to confirm.
+        </div>
+      )}
+
+      {justPurged && (
+        <div
+          className="ds-card"
+          style={{
+            padding: "10px 14px",
+            marginBottom: 16,
+            fontSize: 12.5,
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#7f1d1d",
+          }}
+        >
+          Device permanently deleted. Its QR code can never be reused, and the deletion is recorded
+          in your audit log.
         </div>
       )}
 
@@ -796,7 +829,19 @@ function TrashView({
       ) : (
         <div className="grid-3" style={{ gap: 16 }}>
           {devices.map((d) => (
-            <TrashedDeviceCard key={d.id} device={d} />
+            <TrashDeviceCard
+              key={d.id}
+              canPurge={canPurge}
+              device={{
+                id: d.id,
+                shortSlug: d.shortSlug,
+                productSku: d.productSku,
+                redirectUrl: d.redirectUrl,
+                createdAt: new Date(d.createdAt).toISOString(),
+                establishmentName: d.establishment?.name ?? null,
+                scanCount: d.scanCount,
+              }}
+            />
           ))}
         </div>
       )}
@@ -819,94 +864,5 @@ function TrashView({
         make sure that&rsquo;s what you want.
       </div>
     </AppShellServer>
-  );
-}
-
-function TrashedDeviceCard({ device: d }: { device: RetiredDevice }) {
-  return (
-    <div
-      className="ds-card"
-      style={{
-        padding: 18,
-        opacity: 0.92,
-        background: "var(--surface)",
-        border: "1px solid var(--line)",
-      }}
-    >
-      <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
-        <span
-          style={{
-            fontSize: 10.5,
-            fontFamily: "var(--f-mono)",
-            letterSpacing: ".12em",
-            color: "var(--rl-muted)",
-            fontWeight: 600,
-          }}
-        >
-          CODE · {d.shortSlug}
-        </span>
-        <span
-          style={{
-            fontSize: 10.5,
-            fontFamily: "var(--f-mono)",
-            letterSpacing: ".08em",
-            color: "#b91c1c",
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            padding: "1px 6px",
-            borderRadius: 4,
-            fontWeight: 600,
-          }}
-        >
-          RETIRED
-        </span>
-      </div>
-      <h3
-        style={{
-          fontSize: 15,
-          fontWeight: 600,
-          letterSpacing: "-0.015em",
-          margin: 0,
-        }}
-      >
-        {d.establishment?.name ?? "Unassigned"}
-      </h3>
-      <p
-        style={{
-          fontSize: 11.5,
-          color: "var(--rl-muted)",
-          marginTop: 4,
-          marginBottom: 12,
-        }}
-      >
-        SKU: {d.productSku} · Created {new Date(d.createdAt).toLocaleDateString()}
-      </p>
-      <div
-        style={{
-          padding: "8px 10px",
-          background: "var(--surface-2, #fafbf8)",
-          border: "1px solid var(--line)",
-          borderRadius: 8,
-          fontSize: 11.5,
-          fontFamily: "var(--f-mono)",
-          color: "var(--ink-2)",
-          wordBreak: "break-all",
-          marginBottom: 14,
-        }}
-      >
-        {d.redirectUrl ?? "—"}
-      </div>
-      <form action={restoreDevice}>
-        <input type="hidden" name="deviceId" value={d.id} />
-        <button
-          type="submit"
-          className="btn btn--pri"
-          style={{ width: "100%", justifyContent: "center" }}
-        >
-          <Icon name="arrowR" size={11} />
-          Restore QR
-        </button>
-      </form>
-    </div>
   );
 }

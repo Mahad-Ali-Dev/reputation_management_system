@@ -83,6 +83,9 @@ export function ConnectDeviceModal({
   // editable — a stale detection (second stand, shared browser) must never
   // leave them stuck with the wrong device.
   const [link, setLink] = useState(detectedQrUrl ?? "");
+  // Whether the manual link box is disclosed. Closed by default in both states
+  // — see the step-2 panel for why scanning is the primary path.
+  const [manualOpen, setManualOpen] = useState(false);
   const [platform, setPlatform] = useState("google");
   const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
   const [state, formAction] = useActionState(activateDevice, initialState);
@@ -116,6 +119,13 @@ export function ConnectDeviceModal({
   const slugComplete = slug !== null;
   // "Detected" holds only while the box still contains what we filled in.
   const autoDetected = !!detectedQrUrl && link === detectedQrUrl;
+
+  function openManual() {
+    // Clear a detected link on the way in: they've told us this isn't the stand
+    // in their hands, and leaving it pre-filled invites binding the wrong unit.
+    setLink("");
+    setManualOpen(true);
+  }
 
   return (
     <>
@@ -184,48 +194,85 @@ export function ConnectDeviceModal({
 
                       <p className="cdm-helper">
                         {autoDetected
-                          ? "We recognised the stand you scanned, so this is already filled in. Just enter the code below."
-                          : "Paste the QR link printed on your product — or scan the QR and copy the link. This is how we bind the right device to your business."}
+                          ? "We recognised the stand you scanned, so it's already identified below. Just enter the code from the card."
+                          : "Scanning your stand's QR is what tells us which unit you're holding — the code on the card is the same on every stand in this batch, so it can't identify yours on its own."}
                       </p>
-                      <div className="cdm-field">
-                        <span className="cdm-field__icon" aria-hidden>
-                          <Icon name="qr" size={20} />
-                        </span>
-                        <input
-                          type="text"
-                          value={link}
-                          onChange={(e) => setLink(e.target.value)}
-                          placeholder="repulabs.com/r/XXXXXXXXXX"
-                          aria-label="Your device QR link"
-                          autoComplete="off"
-                          spellCheck={false}
-                          className="cdm-select"
-                          style={{ textTransform: "none" }}
-                        />
-                      </div>
-                      {/* the parsed slug is what actually activates the device */}
-                      <input type="hidden" name="slug" value={slug ?? ""} />
 
-                      {/* Product ID — the string support needs when a customer
-                          gets stuck. Shown as soon as we can read a slug, from
-                          the scan or from what they pasted. */}
-                      {slug && (
-                        <div className="cdm-pid">
-                          {autoDetected && (
+                      {/* Same disclosure pattern as /activate: never open with a
+                          URL box. Scanning works for everyone; typing the link
+                          is the fallback for "scanned on my phone, setting up on
+                          my laptop". The slug is not printed as readable text on
+                          the product (see lib/hardware/batch.ts), so it only
+                          ever reaches us via a scan or a pasted link. */}
+                      {autoDetected && !manualOpen ? (
+                        <>
+                          <input type="hidden" name="slug" value={link} />
+                          <div className="cdm-pid">
                             <span className="cdm-pid__chip">
                               <Icon name="check" size={12} />
                               Detected
                             </span>
+                            <span className="cdm-pid__label">Product ID</span>
+                            <code className="cdm-pid__val">{slug}</code>
+                            {detectedSerial && (
+                              <>
+                                <span className="cdm-pid__label">Serial</span>
+                                <code className="cdm-pid__val">{detectedSerial}</code>
+                              </>
+                            )}
+                          </div>
+                          <button type="button" className="cdm-swap" onClick={openManual}>
+                            <Icon name="qr" size={12} />
+                            Setting up a different stand?
+                          </button>
+                        </>
+                      ) : manualOpen ? (
+                        <>
+                          <div className="cdm-field">
+                            <span className="cdm-field__icon" aria-hidden>
+                              <Icon name="qr" size={20} />
+                            </span>
+                            <input
+                              type="text"
+                              name="slug"
+                              value={link}
+                              onChange={(e) => setLink(e.target.value)}
+                              placeholder="repulabs.com/r/XXXXXXXXXX"
+                              aria-label="Your device QR link"
+                              autoComplete="off"
+                              spellCheck={false}
+                              className="cdm-select"
+                              style={{ textTransform: "none" }}
+                            />
+                          </div>
+                          {slug && (
+                            <div className="cdm-pid">
+                              <span className="cdm-pid__label">Product ID</span>
+                              <code className="cdm-pid__val">{slug}</code>
+                            </div>
                           )}
-                          <span className="cdm-pid__label">Product ID</span>
-                          <code className="cdm-pid__val">{slug}</code>
-                          {detectedSerial && autoDetected && (
-                            <>
-                              <span className="cdm-pid__label">Serial</span>
-                              <code className="cdm-pid__val">{detectedSerial}</code>
-                            </>
-                          )}
-                        </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="cdm-scan">
+                            <span className="cdm-scan__tile" aria-hidden>
+                              <Icon name="qr" size={22} />
+                            </span>
+                            <div>
+                              <div className="cdm-scan__t">
+                                Scan your stand&rsquo;s QR with your phone
+                              </div>
+                              <div className="cdm-scan__d">
+                                Open the link it lands on and we&rsquo;ll identify your stand
+                                automatically — nothing to type here.
+                              </div>
+                            </div>
+                          </div>
+                          <button type="button" className="cdm-swap" onClick={openManual}>
+                            <Icon name="qr" size={12} />
+                            Can&rsquo;t scan right now? Enter the link manually
+                          </button>
+                        </>
                       )}
 
                       <p className="cdm-helper" style={{ marginTop: 16 }}>
@@ -444,9 +491,7 @@ function BusinessSelect({
         aria-label="Select your business"
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="cdm-combo__label">
-          {selected?.name ?? "Select a business"}
-        </span>
+        <span className="cdm-combo__label">{selected?.name ?? "Select a business"}</span>
       </button>
       <Icon name="chevD" size={18} className={`cdm-field__chev${open ? " is-open" : ""}`} />
 
