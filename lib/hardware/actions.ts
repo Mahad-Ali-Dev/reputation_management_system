@@ -885,51 +885,48 @@ export async function deleteDevice(form: FormData): Promise<void> {
 }
 
 /**
- * Remove a retired device from the workspace for good.
+ * Release a retired device from the workspace.
  *
- * What that MEANS depends on whether the device physically exists:
+ * "Delete" here means "get it off my account", NOT "destroy it". The row is
+ * kept and returned to unactivated inventory — organization, establishment and
+ * redirect cleared, activation re-armed — so the owner can set the same unit up
+ * again at any time through the ordinary flow: scan the QR, enter the printed
+ * code, pick a business.
  *
- *   • Physical (stand / plaque / card) → RELEASED. Unbound from this business
- *     and returned to unactivated inventory. The row survives, so the printed
- *     QR keeps resolving and the stand can simply be activated again. Deleting
- *     the row instead would brick a product the customer paid for.
- *   • Virtual (`self-service-qr`) → row DELETED. Nothing was ever printed, so
- *     there's no hardware to strand.
- *
- * Either way it leaves the workspace, which is what the person clicking means.
+ * That distinction is the whole point. An earlier version deleted the row, and
+ * because a physical stand exists in the world whether or not its row does,
+ * that bricked working plaques: /r/{slug} stopped resolving, so the printed QR
+ * dead-ended at /not-activated with no row left to activate. Releasing gives
+ * the customer the same visible outcome (it is gone from their devices) with
+ * none of that. It applies to virtual self-service QRs too, so there is exactly
+ * one behaviour to reason about and no path that can strand a printed code.
  *
  * Deliberately narrower than `deleteDevice` (the soft delete) in three ways:
  *
- *   1. **Admin-gated, not manager.** Soft delete is recoverable from Trash, so
- *      manager is fine there. This one destroys data — hold it to a higher bar.
- *   2. **Only operates on `retired` rows.** You must soft-delete first, which
- *      makes "delete forever" a two-decision path rather than one misclick on
- *      a live device. An active QR can never be destroyed in a single action.
- *   3. **Audit-logged BEFORE the row goes**, with the full device payload in
- *      `beforeData` — slug, serial, SKU, redirect URL, scan count. Once the row
- *      is gone that audit entry is the only remaining evidence it ever existed,
- *      and it's what support has to work from if a customer disputes this.
+ *   1. **Admin-gated, not manager.** Soft delete drops a device into Trash
+ *      where it is one click from coming back with its redirect intact. This
+ *      unbinds it and clears the destination, so hold it to a higher bar.
+ *   2. **Only operates on `retired` rows.** You must soft-delete first, so a
+ *      live QR can never be unbound by a single misclick.
+ *   3. **Audit-logged with the full payload** — slug, serial, SKU, redirect URL,
+ *      establishment and scan count — because the binding it records is
+ *      otherwise gone from the row.
  *
- * What actually goes: the `devices` row and, via `ON DELETE CASCADE`, all its
- * `device_scans`. So the unit's scan history disappears from analytics totals.
- * Reviews keep their `attributed_device_id` (a plain column, no FK), so they
- * survive as orphaned attributions rather than being deleted with the device.
- *
- * The QR itself is NOT recoverable afterwards: the slug is freed, so a printed
- * plaque bearing it becomes permanently dead (a scan 302s to /not-activated).
- * The UI says this in as many words before the second click.
+ * Scan history (`device_scans`) is preserved: the row survives, so nothing
+ * cascades. Re-activating later starts a fresh binding against the same
+ * hardware.
  */
-const PurgeDeviceSchema = z.object({
+const ReleaseDeviceSchema = z.object({
   deviceId: z.string().uuid(),
 });
 
-export async function permanentlyDeleteDevice(form: FormData): Promise<void> {
+export async function releaseDevice(form: FormData): Promise<void> {
   const sessionOrg = await resolveSessionOrg();
   if (!sessionOrg) redirect("/login");
   const { orgId, userId, role } = sessionOrg;
   if (!roleAtLeast(role, "admin")) throw new ForbiddenError("admin", role);
 
-  const parsed = PurgeDeviceSchema.safeParse({ deviceId: form.get("deviceId") });
+  const parsed = ReleaseDeviceSchema.safeParse({ deviceId: form.get("deviceId") });
   if (!parsed.success) throw new Error("invalid_device_id");
 
   await withTenant(orgId, async (tx) => {
@@ -944,71 +941,18 @@ export async function permanentlyDeleteDevice(form: FormData): Promise<void> {
         redirectUrl: true,
         establishmentId: true,
         scanCount: true,
-        activatedAt: true,
       },
     });
     if (!device) throw new Error("device_not_found");
-    // Guard: only ever destroy something already in Trash.
+    // Guard: only ever release something already in Trash.
     if (device.status !== "retired") throw new Error("device_not_retired");
 
-    // A physical stand exists in the world whether or not its row does. Deleting
-    // the row doesn't tidy anything up — it BRICKS the product: /r/{slug} stops
-    // resolving, so the printed QR dead-ends at /not-activated forever and
-    // there's no row left to activate. (Learned the hard way: emptying Trash
-    // killed a customer's working plaques.)
-    //
-    // So for anything physical we RELEASE instead — unbind it from this
-    // business and return it to unactivated inventory. The device leaves your
-    // account, which is what "delete" means to the person clicking, and the
-    // plaque in their hand can simply be set up again.
-    //
-    // Only self-service QRs — generated in-app, never printed by us — have no
-    // physical counterpart, so destroying the row is safe and correct there.
-    const isVirtual = device.productSku === "self-service-qr";
-    if (!isVirtual) {
-      await tx.auditLog.create({
-        data: {
-          organizationId: orgId,
-          actorType: "user",
-          actorId: userId,
-          action: "device.released",
-          resourceType: "device",
-          resourceId: device.id,
-          beforeData: {
-            shortSlug: device.shortSlug,
-            serial: device.serial,
-            productSku: device.productSku,
-            redirectUrl: device.redirectUrl ?? null,
-            establishmentId: device.establishmentId,
-            scanCount: device.scanCount,
-          },
-          afterData: { status: "unactivated", organizationId: null },
-        },
-      });
-      await tx.device.update({
-        where: { id: device.id },
-        data: {
-          organizationId: null,
-          establishmentId: null,
-          status: "unactivated",
-          // Re-arm activation: the code must be redeemable again, and the
-          // CHECK constraint only permits a null redirect while unactivated.
-          activationCodeUsedAt: null,
-          redirectUrl: null,
-          activatedAt: null,
-        },
-      });
-      return;
-    }
-
-    // Write the tombstone FIRST — if the delete then fails we have a spurious
-    // audit row, which is far better than destroying a device with no record.
     await tx.auditLog.create({
       data: {
         organizationId: orgId,
         actorType: "user",
         actorId: userId,
-        action: "device.purged",
+        action: "device.released",
         resourceType: "device",
         resourceId: device.id,
         beforeData: {
@@ -1018,21 +962,36 @@ export async function permanentlyDeleteDevice(form: FormData): Promise<void> {
           redirectUrl: device.redirectUrl ?? null,
           establishmentId: device.establishmentId,
           scanCount: device.scanCount,
-          activatedAt: device.activatedAt?.toISOString() ?? null,
         },
+        afterData: { status: "unactivated", organizationId: null },
       },
     });
 
-    await tx.device.delete({ where: { id: device.id } });
+    await tx.device.update({
+      where: { id: device.id },
+      data: {
+        organizationId: null,
+        establishmentId: null,
+        status: "unactivated",
+        // Re-arm activation. redirect_url must go too: the
+        // devices_redirect_when_active CHECK only tolerates a null redirect
+        // while the row is unactivated, and leaving a stale destination on
+        // unclaimed inventory would point the next owner's scans at the
+        // previous owner's review page.
+        activationCodeUsedAt: null,
+        redirectUrl: null,
+        activatedAt: null,
+      },
+    });
   });
 
-  logger.warn(
-    { event: "device.purged", orgId, userId, deviceId: parsed.data.deviceId },
-    "device permanently deleted",
+  logger.info(
+    { event: "device.released", orgId, userId, deviceId: parsed.data.deviceId },
+    "device released back to unactivated inventory",
   );
 
   revalidatePath("/hardware");
-  redirect("/hardware?view=trash&purged=1");
+  redirect("/hardware?view=trash&released=1");
 }
 
 /**

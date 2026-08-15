@@ -133,8 +133,8 @@ export default async function QrCodesPage({
     restored?: string;
     /** Result of an NFC-UID save (see recordNfcUid): saved|duplicate|bad_uid|… */
     nfc?: string;
-    /** "1" after a permanent delete, to confirm the device is really gone. */
-    purged?: string;
+    /** "1" after a device is released back to unactivated inventory. */
+    released?: string;
   }>;
 }) {
   const { orgId, role } = await getOrgContext();
@@ -161,8 +161,8 @@ export default async function QrCodesPage({
       <TrashView
         devices={retiredDevices}
         justRestored={sp.restored}
-        justPurged={sp.purged === "1"}
-        canPurge={roleAtLeast(role, "admin")}
+        justReleased={sp.released === "1"}
+        canRelease={roleAtLeast(role, "admin")}
       />
     );
   }
@@ -708,14 +708,14 @@ type RetiredDevice = Awaited<ReturnType<typeof listOrgDevices>>[number];
 function TrashView({
   devices,
   justRestored,
-  justPurged,
-  canPurge,
+  justReleased,
+  canRelease,
 }: {
   devices: RetiredDevice[];
   justRestored?: string;
-  justPurged?: boolean;
-  /** Whether this member may permanently destroy a device (admin+). */
-  canPurge: boolean;
+  justReleased?: boolean;
+  /** Whether this member may unbind a device from the workspace (admin+). */
+  canRelease: boolean;
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Trash"]}>
@@ -741,7 +741,7 @@ function TrashView({
         </div>
       )}
 
-      {justPurged && (
+      {justReleased && (
         <div
           className="ds-card"
           style={{
@@ -753,8 +753,8 @@ function TrashView({
             color: "#7f1d1d",
           }}
         >
-          Device removed from this workspace. A physical stand goes back to unactivated inventory —
-          scan it and enter its code to set it up again. Recorded in your audit log either way.
+          Device removed from this workspace. The unit itself is untouched — scan it and enter its
+          code whenever you want to set it up again. Recorded in your audit log.
         </div>
       )}
 
@@ -831,7 +831,7 @@ function TrashView({
           {devices.map((d) => (
             <TrashDeviceCard
               key={d.id}
-              canPurge={canPurge}
+              canRelease={canRelease}
               device={{
                 id: d.id,
                 shortSlug: d.shortSlug,

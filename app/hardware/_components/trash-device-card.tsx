@@ -1,23 +1,26 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import { permanentlyDeleteDevice, restoreDevice } from "@/lib/hardware/actions";
+import { releaseDevice, restoreDevice } from "@/lib/hardware/actions";
 import { useState } from "react";
 import { useFormStatus } from "react-dom";
 
 /**
  * One card in My Devices → Trash.
  *
- * Client-side because "Delete forever" is irreversible and must not be a single
- * click. The destructive action is disclosed in two steps: the card flips into
- * a confirm state that spells out exactly what is lost — the QR slug is freed,
- * so a plaque already printed with it dies permanently — and only then offers
- * the real button. Restore stays a one-click primary action, because it is the
- * safe path and the one people are here for.
+ * Two ways out of Trash, and they differ in what happens to the binding:
+ *   • Restore — puts the device back exactly as it was, same destination.
+ *   • Remove  — releases it from this workspace. The unit itself is untouched,
+ *               so it can be set up again any time through the normal flow.
  *
- * Both buttons post to server actions; nothing about the delete is decided on
- * the client (permanentlyDeleteDevice re-checks role and that the row is
- * actually retired).
+ * Client-side because Remove clears the destination and unbinds the business,
+ * which is worth a beat of thought. It discloses in two steps: the card flips
+ * to a confirm state explaining what changes and what does not, and only then
+ * offers the button. Restore stays one click, being the safe path most people
+ * came here for.
+ *
+ * Nothing is decided on the client — releaseDevice re-checks the role and that
+ * the row is actually retired.
  */
 
 export type TrashCardDevice = {
@@ -32,17 +35,13 @@ export type TrashCardDevice = {
 
 export function TrashDeviceCard({
   device: d,
-  canPurge,
+  canRelease,
 }: {
   device: TrashCardDevice;
-  /** Only admins/owners may destroy a device — see permanentlyDeleteDevice. */
-  canPurge: boolean;
+  /** Only admins/owners may unbind a device — see releaseDevice. */
+  canRelease: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
-  // Self-service QRs are generated in-app and never printed, so destroying the
-  // row strands nothing. Physical stands are released back to unactivated
-  // inventory instead — see permanentlyDeleteDevice.
-  const isVirtual = d.productSku === "self-service-qr";
   const scanNote =
     d.scanCount > 0
       ? `, and its ${d.scanCount.toLocaleString("en-US")} scans leave your analytics`
@@ -69,19 +68,12 @@ export function TrashDeviceCard({
         <div className="tdc__confirm">
           <div className="tdc__warn">
             <Icon name="info" size={14} className="tdc__warn-icon" />
-            {isVirtual ? (
-              <span>
-                This cannot be undone. QR <code>{d.shortSlug}</code> is deleted for good
-                {scanNote}. Nothing was printed for this one, so no physical product is affected.
-              </span>
-            ) : (
-              <span>
-                This removes <code>{d.shortSlug}</code> from your account and unlinks it from{" "}
-                {d.establishmentName ?? "your business"}
-                {scanNote}. The stand itself keeps working — scan it and enter the code again to set
-                it up fresh, here or on a different business.
-              </span>
-            )}
+            <span>
+              <strong>{d.shortSlug}</strong> leaves this workspace and unlinks from{" "}
+              {d.establishmentName ?? "your business"}, and its destination is cleared
+              {scanNote}. The device itself is not destroyed — scan it and enter the code again
+              whenever you want to set it up, here or on a different business.
+            </span>
           </div>
           <div className="tdc__confirm-row">
             <button
@@ -91,9 +83,9 @@ export function TrashDeviceCard({
             >
               Keep it
             </button>
-            <form action={permanentlyDeleteDevice} className="tdc__form">
+            <form action={releaseDevice} className="tdc__form">
               <input type="hidden" name="deviceId" value={d.id} />
-              <PurgeButton label={isVirtual ? "Delete forever" : "Remove it"} />
+              <ReleaseButton />
             </form>
           </div>
         </div>
@@ -103,7 +95,7 @@ export function TrashDeviceCard({
             <input type="hidden" name="deviceId" value={d.id} />
             <RestoreButton />
           </form>
-          {canPurge && (
+          {canRelease && (
             <button
               type="button"
               className="tdc__btn tdc__btn--danger"
@@ -111,7 +103,7 @@ export function TrashDeviceCard({
               aria-label={`Remove ${d.shortSlug} from this workspace`}
             >
               <Icon name="trash" size={13} />
-              {isVirtual ? "Delete forever" : "Remove device"}
+              Remove device
             </button>
           )}
         </div>
@@ -130,12 +122,12 @@ function RestoreButton() {
   );
 }
 
-function PurgeButton({ label }: { label: string }) {
+function ReleaseButton() {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="tdc__btn tdc__btn--danger-solid" disabled={pending}>
       <Icon name="trash" size={13} />
-      {pending ? "Working…" : label}
+      {pending ? "Removing…" : "Remove device"}
     </button>
   );
 }
