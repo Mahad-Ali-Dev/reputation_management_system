@@ -78,7 +78,7 @@ export function TrashDeviceCard({
             >
               Keep it
             </button>
-            <form action={permanentlyDeleteDevice} style={{ flex: 1 }}>
+            <form action={permanentlyDeleteDevice} className="tdc__form">
               <input type="hidden" name="deviceId" value={d.id} />
               <PurgeButton />
             </form>
@@ -86,7 +86,7 @@ export function TrashDeviceCard({
         </div>
       ) : (
         <div className="tdc__actions">
-          <form action={restoreDevice} style={{ flex: 1 }}>
+          <form action={restoreDevice} className="tdc__form">
             <input type="hidden" name="deviceId" value={d.id} />
             <RestoreButton />
           </form>

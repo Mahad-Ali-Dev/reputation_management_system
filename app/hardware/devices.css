@@ -235,15 +235,29 @@
    appears. See app/hardware/_components/trash-device-card.tsx.
    ============================================================ */
 
+/* Own grid rather than the shared .grid-3: three fixed columns squeeze these
+   cards on a laptop, and `min(300px, 100%)` keeps the floor from exceeding the
+   viewport on a phone (a bare 300px minimum would overflow a 280px screen). */
+.tdc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr));
+  gap: 20px;
+}
+
 .tdc {
   display: flex;
   flex-direction: column;
-  padding: 18px;
+  padding: 22px;
   border-radius: 18px;
   border: 1px solid #ece8ff;
   background: radial-gradient(circle at 100% 0%, rgba(124, 92, 255, 0.06), transparent 52%), #fff;
   box-shadow: 0 16px 38px -30px rgba(49, 43, 230, 0.42);
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  /* REQUIRED. .grid-3 is `repeat(3, 1fr)`, and `1fr` means `minmax(auto, 1fr)`
+     — the auto floor is the item's min-content width. A nowrap review URL has
+     a huge min-content, so without this the track grows to fit the longest
+     link and the whole page scrolls sideways instead of the URL truncating. */
+  min-width: 0;
 }
 .tdc:hover {
   border-color: #ddd6ff;
@@ -262,7 +276,7 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  margin-bottom: 11px;
+  margin-bottom: 15px;
 }
 .tdc__code {
   font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
@@ -296,19 +310,29 @@
 
 .tdc__name {
   margin: 0;
+  min-width: 0;
   font-size: 15.5px;
   font-weight: 650;
   letter-spacing: -0.012em;
   color: #111936;
+  /* Establishment names are user-supplied — a long unbroken one must wrap
+     rather than widen the card. */
+  overflow-wrap: anywhere;
 }
 .tdc__meta {
-  margin: 4px 0 12px;
+  margin: 6px 0 16px;
+  min-width: 0;
   font-size: 11.5px;
   color: #5f6b8f;
+  overflow-wrap: anywhere;
 }
 
 .tdc__url {
-  padding: 9px 11px;
+  /* min-width:0 + the truncation trio is what actually clips a long URL. The
+     truncation alone does nothing while an ancestor can still grow to fit it. */
+  min-width: 0;
+  max-width: 100%;
+  padding: 11px 13px;
   border-radius: 11px;
   background: #faf9ff;
   border: 1px solid #e5e0ff;
@@ -316,7 +340,6 @@
   font-size: 11.5px;
   line-height: 1.5;
   color: #4a4478;
-  /* Long review URLs must not stretch the grid column. */
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -326,8 +349,15 @@
 .tdc__confirm-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-top: 14px;
+  gap: 10px;
+  margin-top: 18px;
+  min-width: 0;
+}
+/* The forms wrapping Restore / Delete are flex items; they need the same
+   min-width:0 or their nowrap button labels re-inflate the card. */
+.tdc__form {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .tdc__btn {
@@ -336,8 +366,11 @@
   justify-content: center;
   gap: 7px;
   width: 100%;
-  height: 42px;
-  padding: 0 14px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  /* Labels are short; clip rather than push the card wider on a tight column. */
+  overflow: hidden;
   border-radius: 12px;
   border: 1px solid transparent;
   cursor: pointer;
@@ -400,13 +433,13 @@
 }
 
 .tdc__confirm {
-  margin-top: 14px;
+  margin-top: 18px;
 }
 .tdc__warn {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  padding: 11px 12px;
+  padding: 13px 14px;
   border-radius: 11px;
   background: #fef2f2;
   border: 1px solid #fecaca;
@@ -428,5 +461,5 @@
   letter-spacing: 0.06em;
 }
 .tdc__confirm-row {
-  margin-top: 10px;
+  margin-top: 12px;
 }

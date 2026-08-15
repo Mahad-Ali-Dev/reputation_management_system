@@ -827,7 +827,7 @@ function TrashView({
           </Link>
         </div>
       ) : (
-        <div className="grid-3" style={{ gap: 16 }}>
+        <div className="tdc-grid">
           {devices.map((d) => (
             <TrashDeviceCard
               key={d.id}
