@@ -981,6 +981,14 @@ export async function releaseDevice(form: FormData): Promise<void> {
         activationCodeUsedAt: null,
         redirectUrl: null,
         activatedAt: null,
+        // scanCount is a denormalized counter on the DEVICE row, and
+        // getDeviceMetrics sums it per org. Carrying it across a release would
+        // hand the next owner — possibly a different business — a head start of
+        // scans they never earned. The device_scans rows are left alone: each
+        // carries its own organization_id, so the previous owner's history
+        // stays intact and correctly attributed to them.
+        scanCount: 0,
+        lastScanAt: null,
       },
     });
   });

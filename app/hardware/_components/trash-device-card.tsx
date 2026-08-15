@@ -42,10 +42,12 @@ export function TrashDeviceCard({
   canRelease: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
+  // Reads inline as "Its destination and 2 scans reset." / "Its destination is
+  // reset." — one sentence either way, and singular when there's one scan.
   const scanNote =
     d.scanCount > 0
-      ? `, and its ${d.scanCount.toLocaleString("en-US")} scans leave your analytics`
-      : "";
+      ? ` and ${d.scanCount.toLocaleString("en-US")} scan${d.scanCount === 1 ? "" : "s"} are`
+      : " is";
 
   return (
     <div className={confirming ? "tdc tdc--confirming" : "tdc"}>
@@ -57,7 +59,8 @@ export function TrashDeviceCard({
       <h3 className="tdc__name">{d.establishmentName ?? "Unassigned"}</h3>
       <p className="tdc__meta">
         {d.productSku} · added {new Date(d.createdAt).toLocaleDateString()}
-        {d.scanCount > 0 && ` · ${d.scanCount.toLocaleString("en-US")} scans`}
+        {d.scanCount > 0 &&
+          ` · ${d.scanCount.toLocaleString("en-US")} scan${d.scanCount === 1 ? "" : "s"}`}
       </p>
 
       <div className="tdc__url" title={d.redirectUrl ?? undefined}>
@@ -70,9 +73,9 @@ export function TrashDeviceCard({
             <Icon name="info" size={14} className="tdc__warn-icon" />
             <span>
               <strong>{d.shortSlug}</strong> leaves this workspace and unlinks from{" "}
-              {d.establishmentName ?? "your business"}, and its destination is cleared
-              {scanNote}. The device itself is not destroyed — scan it and enter the code again
-              whenever you want to set it up, here or on a different business.
+              {d.establishmentName ?? "your business"}. Its destination{scanNote} reset. The device
+              itself is not destroyed — scan it and enter the code again whenever you want to set it
+              up, here or on a different business.
             </span>
           </div>
           <div className="tdc__confirm-row">
