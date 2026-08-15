@@ -885,7 +885,18 @@ export async function deleteDevice(form: FormData): Promise<void> {
 }
 
 /**
- * Permanently delete a retired device. IRREVERSIBLE.
+ * Remove a retired device from the workspace for good.
+ *
+ * What that MEANS depends on whether the device physically exists:
+ *
+ *   • Physical (stand / plaque / card) → RELEASED. Unbound from this business
+ *     and returned to unactivated inventory. The row survives, so the printed
+ *     QR keeps resolving and the stand can simply be activated again. Deleting
+ *     the row instead would brick a product the customer paid for.
+ *   • Virtual (`self-service-qr`) → row DELETED. Nothing was ever printed, so
+ *     there's no hardware to strand.
+ *
+ * Either way it leaves the workspace, which is what the person clicking means.
  *
  * Deliberately narrower than `deleteDevice` (the soft delete) in three ways:
  *
@@ -939,6 +950,56 @@ export async function permanentlyDeleteDevice(form: FormData): Promise<void> {
     if (!device) throw new Error("device_not_found");
     // Guard: only ever destroy something already in Trash.
     if (device.status !== "retired") throw new Error("device_not_retired");
+
+    // A physical stand exists in the world whether or not its row does. Deleting
+    // the row doesn't tidy anything up — it BRICKS the product: /r/{slug} stops
+    // resolving, so the printed QR dead-ends at /not-activated forever and
+    // there's no row left to activate. (Learned the hard way: emptying Trash
+    // killed a customer's working plaques.)
+    //
+    // So for anything physical we RELEASE instead — unbind it from this
+    // business and return it to unactivated inventory. The device leaves your
+    // account, which is what "delete" means to the person clicking, and the
+    // plaque in their hand can simply be set up again.
+    //
+    // Only self-service QRs — generated in-app, never printed by us — have no
+    // physical counterpart, so destroying the row is safe and correct there.
+    const isVirtual = device.productSku === "self-service-qr";
+    if (!isVirtual) {
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "device.released",
+          resourceType: "device",
+          resourceId: device.id,
+          beforeData: {
+            shortSlug: device.shortSlug,
+            serial: device.serial,
+            productSku: device.productSku,
+            redirectUrl: device.redirectUrl ?? null,
+            establishmentId: device.establishmentId,
+            scanCount: device.scanCount,
+          },
+          afterData: { status: "unactivated", organizationId: null },
+        },
+      });
+      await tx.device.update({
+        where: { id: device.id },
+        data: {
+          organizationId: null,
+          establishmentId: null,
+          status: "unactivated",
+          // Re-arm activation: the code must be redeemable again, and the
+          // CHECK constraint only permits a null redirect while unactivated.
+          activationCodeUsedAt: null,
+          redirectUrl: null,
+          activatedAt: null,
+        },
+      });
+      return;
+    }
 
     // Write the tombstone FIRST — if the delete then fails we have a spurious
     // audit row, which is far better than destroying a device with no record.

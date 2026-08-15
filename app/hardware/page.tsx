@@ -753,8 +753,8 @@ function TrashView({
             color: "#7f1d1d",
           }}
         >
-          Device permanently deleted. Its QR code can never be reused, and the deletion is recorded
-          in your audit log.
+          Device removed from this workspace. A physical stand goes back to unactivated inventory —
+          scan it and enter its code to set it up again. Recorded in your audit log either way.
         </div>
       )}
 

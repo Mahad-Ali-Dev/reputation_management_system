@@ -39,6 +39,14 @@ export function TrashDeviceCard({
   canPurge: boolean;
 }) {
   const [confirming, setConfirming] = useState(false);
+  // Self-service QRs are generated in-app and never printed, so destroying the
+  // row strands nothing. Physical stands are released back to unactivated
+  // inventory instead — see permanentlyDeleteDevice.
+  const isVirtual = d.productSku === "self-service-qr";
+  const scanNote =
+    d.scanCount > 0
+      ? `, and its ${d.scanCount.toLocaleString("en-US")} scans leave your analytics`
+      : "";
 
   return (
     <div className={confirming ? "tdc tdc--confirming" : "tdc"}>
@@ -61,14 +69,19 @@ export function TrashDeviceCard({
         <div className="tdc__confirm">
           <div className="tdc__warn">
             <Icon name="info" size={14} className="tdc__warn-icon" />
-            <span>
-              This cannot be undone. The QR code <code>{d.shortSlug}</code> is freed and any plaque
-              already printed with it stops working for good
-              {d.scanCount > 0
-                ? `, and its ${d.scanCount.toLocaleString("en-US")} scans leave your analytics`
-                : ""}
-              .
-            </span>
+            {isVirtual ? (
+              <span>
+                This cannot be undone. QR <code>{d.shortSlug}</code> is deleted for good
+                {scanNote}. Nothing was printed for this one, so no physical product is affected.
+              </span>
+            ) : (
+              <span>
+                This removes <code>{d.shortSlug}</code> from your account and unlinks it from{" "}
+                {d.establishmentName ?? "your business"}
+                {scanNote}. The stand itself keeps working — scan it and enter the code again to set
+                it up fresh, here or on a different business.
+              </span>
+            )}
           </div>
           <div className="tdc__confirm-row">
             <button
@@ -80,7 +93,7 @@ export function TrashDeviceCard({
             </button>
             <form action={permanentlyDeleteDevice} className="tdc__form">
               <input type="hidden" name="deviceId" value={d.id} />
-              <PurgeButton />
+              <PurgeButton label={isVirtual ? "Delete forever" : "Remove it"} />
             </form>
           </div>
         </div>
@@ -95,10 +108,10 @@ export function TrashDeviceCard({
               type="button"
               className="tdc__btn tdc__btn--danger"
               onClick={() => setConfirming(true)}
-              aria-label={`Delete ${d.shortSlug} permanently`}
+              aria-label={`Remove ${d.shortSlug} from this workspace`}
             >
               <Icon name="trash" size={13} />
-              Delete forever
+              {isVirtual ? "Delete forever" : "Remove device"}
             </button>
           )}
         </div>
@@ -117,12 +130,12 @@ function RestoreButton() {
   );
 }
 
-function PurgeButton() {
+function PurgeButton({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
     <button type="submit" className="tdc__btn tdc__btn--danger-solid" disabled={pending}>
       <Icon name="trash" size={13} />
-      {pending ? "Deleting…" : "Delete forever"}
+      {pending ? "Working…" : label}
     </button>
   );
 }
