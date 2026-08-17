@@ -12,6 +12,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EstablishmentMenu } from "../_components/establishment-menu";
 import { PlacePicker } from "../_components/place-picker";
+import { DeleteEstablishmentModal } from "./_components/delete-establishment-modal";
 
 /**
  * Establishment detail — repulabs v2 design.
@@ -322,17 +323,13 @@ export default async function EstablishmentDetailPage({
               </h3>
             </div>
             <div className="ds-card__body">
-              <form
+              <DeleteEstablishmentModal
+                establishmentName={establishment.name}
                 action={async () => {
                   "use server";
                   await deleteEstablishment(establishment.id);
                 }}
-              >
-                <button type="submit" className="btn btn--danger btn--sm">
-                  <Icon name="trash" size={11} />
-                  Delete establishment
-                </button>
-              </form>
+              />
               <p className="dim" style={{ fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
                 Soft-deletes the record. Reviews remain attached. You have 30 days to undo via
                 support.
