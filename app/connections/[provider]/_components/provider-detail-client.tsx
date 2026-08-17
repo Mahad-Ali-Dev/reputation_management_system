@@ -24,6 +24,7 @@ import { META_APP_UNDER_REVIEW, MetaReviewModal } from "../../_components/meta-r
 import {
   type ConnPillTone,
   type SerializedConnection,
+  authorizeRouteSlug,
   connectionPill,
   isConnected,
   newestSync,
@@ -94,7 +95,7 @@ export function ProviderDetailClient({
   const canResync = provider.syncs === "contacts" && liveConn?.status === "active";
 
   // The authorize route the Connect / Reconnect anchors hit.
-  const authorizeHref = `/api/connections/${provider.id}/authorize`;
+  const authorizeHref = `/api/connections/${authorizeRouteSlug(provider.id)}/authorize`;
 
   // API-key providers (e.g. WhatsApp) connect via a paste form rendered by the
   // server page, NOT an OAuth redirect — so the hero must not show OAuth
@@ -135,16 +136,16 @@ export function ProviderDetailClient({
 
               {connected ? (
                 <>
-                  {provider.ready && !isApiKey && (
-                    provider.id === "meta" && META_APP_UNDER_REVIEW ? (
+                  {provider.ready &&
+                    !isApiKey &&
+                    (provider.id === "meta" && META_APP_UNDER_REVIEW ? (
                       <MetaReviewModal triggerClassName="btn btn--sm" triggerLabel="Reconnect" />
                     ) : (
                       <Link href={authorizeHref} className="btn btn--sm" prefetch={false}>
                         <Icon name="refresh" size={12} />
                         Reconnect
                       </Link>
-                    )
-                  )}
+                    ))}
                   {liveConn && (
                     <DisconnectDialog
                       connectionId={liveConn.id}

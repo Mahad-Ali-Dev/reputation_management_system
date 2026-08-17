@@ -3,7 +3,7 @@ import { Badge } from "@/components/admin/admin-ui";
 import { disableProviderApp, saveProviderApp } from "@/lib/admin/providers";
 import { META_PROVIDER } from "@/lib/connections/adapters/meta-overlay";
 import { prisma } from "@/lib/db/client";
-import { PROVIDERS } from "@/lib/providers/registry";
+import { PROVIDERS, authorizeRouteSlug } from "@/lib/providers/registry";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
@@ -240,7 +240,7 @@ export default async function ProviderConfigurePage({
           <li>
             Set the redirect URI to:{" "}
             <code className="mono" style={chipCode}>
-              {`${(process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com").replace(/\/+$/, "")}/api/connections/${provider}/callback`}
+              {`${(process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com").replace(/\/+$/, "")}/api/connections/${authorizeRouteSlug(provider)}/callback`}
             </code>
           </li>
           <li>Request the scopes listed above (some platforms call these "permissions").</li>

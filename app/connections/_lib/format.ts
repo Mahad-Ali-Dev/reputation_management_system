@@ -120,6 +120,12 @@ export function relativeTime(iso: string | null, now: number = Date.now()): stri
   return `${Math.floor(months / 12)}y ago`;
 }
 
+// Re-exported so existing `./_lib/format` imports across this route tree
+// don't need to change — canonical definition lives in the provider registry
+// since app/admin/providers/** needs it too (the setup instructions' callback
+// URL), not just this route tree.
+export { authorizeRouteSlug } from "@/lib/providers/registry";
+
 /** Title-case a provider id: `square_pos` → `Square Pos`. */
 export function prettyProvider(p: string): string {
   return p

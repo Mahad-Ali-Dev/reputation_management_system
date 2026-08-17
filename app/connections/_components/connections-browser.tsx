@@ -23,6 +23,7 @@ import { useMemo, useState } from "react";
 import {
   type SerializedProviderRow,
   type SerializedSection,
+  authorizeRouteSlug,
   isConnected,
   newestSync,
   relativeTime,
@@ -162,7 +163,7 @@ function RowAction({
   if (needsReconnect) {
     const href =
       provider.connType === "oauth" && provider.ready && provider.configured
-        ? `/api/connections/${provider.id}/authorize`
+        ? `/api/connections/${authorizeRouteSlug(provider.id)}/authorize`
         : `/connections/${provider.id}`;
     return (
       <Link
@@ -188,7 +189,7 @@ function RowAction({
   if (provider.ready && provider.configured) {
     return (
       <Link
-        href={`/api/connections/${provider.id}/authorize`}
+        href={`/api/connections/${authorizeRouteSlug(provider.id)}/authorize`}
         className="conn-act conn-act--connect"
         prefetch={false}
       >
