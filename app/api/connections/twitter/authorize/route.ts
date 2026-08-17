@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/config";
 import { logger } from "@/lib/logger";
-import { oauthCallbackUrl } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
 import { type NextRequest, NextResponse } from "next/server";
@@ -30,13 +30,15 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const clientId = process.env.X_CLIENT_ID;
   if (!clientId) {
     logger.warn({ event: "oauth.twitter.not_configured" });
-    return NextResponse.redirect(new URL("/connections?error=twitter_not_configured", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=twitter_not_configured", oauthBase(req)),
+    );
   }
 
   const {

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth/config";
 import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
-import { oauthCallbackUrl } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   let establishmentId = req.nextUrl.searchParams.get("establishmentId");
@@ -40,16 +40,16 @@ export async function GET(req: NextRequest) {
       establishmentId = candidates[0]?.id ?? null;
     } else if (candidates.length === 0) {
       return NextResponse.redirect(
-        new URL("/establishments?connect=google&connect_error=no_location", req.url),
+        new URL("/establishments?connect=google&connect_error=no_location", oauthBase(req)),
       );
     } else {
       // Multiple locations — the user must pick which one to connect.
-      return NextResponse.redirect(new URL("/establishments?connect=google", req.url));
+      return NextResponse.redirect(new URL("/establishments?connect=google", oauthBase(req)));
     }
   }
   if (!establishmentId) {
     return NextResponse.redirect(
-      new URL("/establishments?connect=google&connect_error=no_location", req.url),
+      new URL("/establishments?connect=google&connect_error=no_location", oauthBase(req)),
     );
   }
 
@@ -57,7 +57,7 @@ export async function GET(req: NextRequest) {
   if (!clientId) {
     logger.error({ event: "oauth.google.no_client_id" });
     return NextResponse.redirect(
-      new URL("/connections?connect_error=google_not_configured", req.url),
+      new URL("/connections?connect_error=google_not_configured", oauthBase(req)),
     );
   }
 

@@ -4,6 +4,7 @@ import {
   loadProviderApp,
   signProviderState,
 } from "@/lib/connections/oauth-helpers";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -19,17 +20,19 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session?.user || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const shop = req.nextUrl.searchParams.get("shop");
   if (!shop || !/^[a-z0-9-]+\.myshopify\.com$/i.test(shop)) {
-    return NextResponse.redirect(new URL("/connections?error=invalid_shop_domain", req.url));
+    return NextResponse.redirect(new URL("/connections?error=invalid_shop_domain", oauthBase(req)));
   }
 
   const app = await loadProviderApp("shopify");
   if (!app) {
-    return NextResponse.redirect(new URL("/connections?error=shopify_not_configured", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=shopify_not_configured", oauthBase(req)),
+    );
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
