@@ -30,9 +30,9 @@
 
 import { Reveal, ShinyText } from "@/components/landing/anim";
 import { cn } from "@/lib/utils";
-import { ArrowDown } from "lucide-react";
-import { motion, useInView, useScroll, useTransform } from "motion/react";
-import { useEffect, useRef } from "react";
+import { ArrowDown, Maximize2, X } from "lucide-react";
+import { AnimatePresence, motion, useInView, useScroll, useTransform } from "motion/react";
+import { useEffect, useRef, useState } from "react";
 
 const VIDEO = "/assets/repulabs/landingPageVideos";
 
@@ -104,13 +104,23 @@ export function LandingTour() {
   // paused rather than all three decoding + looping off-screen at once.
   const inViews = SECTIONS.map((_, index) => useInView(sectionRefs[index]!, { amount: 0.5 }));
 
+  // Click a panel's video to watch it full-size with real controls — the
+  // scroll thumbnails are muted/looping/cropped-to-fill, not meant for
+  // actually watching.
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const openSection = openIndex === null ? null : SECTIONS[openIndex]!;
+
+  // A thumbnail plays only when its panel is in view AND its full-size modal
+  // isn't the one open — single source of truth, so closing the modal
+  // correctly resumes the thumbnail (if still in view) instead of leaving it
+  // paused from whatever last touched it.
   SECTIONS.forEach((_, index) => {
     const videoRef = videoRefs[index]!;
-    const inView = inViews[index];
+    const shouldPlay = inViews[index] && openIndex !== index;
     useEffect(() => {
       const el = videoRef.current;
       if (!el) return;
-      if (inView) {
+      if (shouldPlay) {
         el.play().catch(() => {
           /* autoplay can be blocked before any user interaction — the poster
              frame still shows, so this fails silently rather than erroring. */
@@ -118,10 +128,25 @@ export function LandingTour() {
       } else {
         el.pause();
       }
-    }, [inView, videoRef]);
+    }, [shouldPlay, videoRef]);
   });
 
+  useEffect(() => {
+    if (openIndex === null) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenIndex(null);
+    }
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [openIndex]);
+
   return (
+    <>
     <section
       id="tour"
       aria-labelledby="tour-heading"
@@ -221,15 +246,18 @@ export function LandingTour() {
                   background: `radial-gradient(60% 60% at 50% 45%, ${section.accent}3d 0%, transparent 70%)`,
                 }}
               />
-              <div
-                className="w-[680px] max-w-full overflow-hidden rounded-2xl border border-[#E1E6F0] bg-white"
+              <button
+                type="button"
+                onClick={() => setOpenIndex(index)}
+                aria-label={`Watch ${section.kicker} full-size`}
+                className="group block w-[680px] max-w-full cursor-pointer overflow-hidden rounded-2xl border border-[#E1E6F0] bg-white text-left"
                 style={{ boxShadow: "0 34px 70px -34px rgba(26,43,95,0.38)" }}
               >
                 {/* aspect-video (16:9) matches the recordings' native ratio —
                     at the old 16:11 frame, cover had to crop the LEFT/RIGHT
                     edges to fill the narrower box (16:11 < 16:9). Matching the
                     ratio means cover has nothing left to crop on that axis. */}
-                <div className="aspect-video w-full overflow-hidden">
+                <div className="relative aspect-video w-full overflow-hidden">
                   <video
                     ref={videoRefs[index]}
                     src={section.video}
@@ -248,13 +276,81 @@ export function LandingTour() {
                   >
                     <track kind="captions" />
                   </video>
+
+                  {/* click-to-expand affordance — shows on hover/focus */}
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/0 opacity-0 transition-all duration-200 group-hover:bg-black/25 group-hover:opacity-100 group-focus-visible:bg-black/25 group-focus-visible:opacity-100">
+                    <span className="grid h-12 w-12 place-items-center rounded-full bg-white/90 text-[#0b1220] shadow-lg">
+                      <Maximize2 size={20} />
+                    </span>
+                  </div>
                 </div>
-              </div>
+              </button>
             </motion.div>
           </div>
         ))}
       </div>
     </section>
+
+    {/* full-size video modal — the scroll thumbnails are muted, looping and
+        cropped-to-fill; this is the real "watch it" experience */}
+    <AnimatePresence>
+      {openSection && (
+        <motion.div
+          key="tour-video-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${openSection.kicker} — full-size video`}
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <button
+            type="button"
+            aria-label="Close video"
+            onClick={() => setOpenIndex(null)}
+            className="absolute inset-0 cursor-default bg-black/70 backdrop-blur-sm"
+          />
+          <motion.div
+            className="relative w-full max-w-[1100px]"
+            initial={{ opacity: 0, scale: 0.96, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 12 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+          >
+            <button
+              type="button"
+              onClick={() => setOpenIndex(null)}
+              aria-label="Close"
+              className="absolute -top-12 right-0 grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white transition-colors hover:bg-white/20 sm:-top-14"
+            >
+              <X size={20} />
+            </button>
+            <div
+              className="overflow-hidden rounded-2xl border border-white/10 bg-black"
+              style={{ boxShadow: "0 40px 100px -30px rgba(0,0,0,0.7)" }}
+            >
+              <div className="aspect-video w-full">
+                {/* biome-ignore lint/a11y/useMediaCaption: product demo has no dialogue/narration to caption */}
+                <video
+                  key={openSection.id}
+                  src={openSection.video}
+                  autoPlay
+                  controls
+                  playsInline
+                  className="h-full w-full"
+                />
+              </div>
+            </div>
+            <p className="mt-4 text-center text-[13px] font-semibold tracking-[0.1em] text-white/70">
+              {openSection.kicker.toUpperCase()}
+            </p>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+    </>
   );
 }
 
