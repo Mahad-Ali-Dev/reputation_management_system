@@ -104,7 +104,8 @@ export function AreaTrend({
           />
         ))}
         {[max, Math.round(max / 2), 0].map((v, i) => (
-          <text key={v} x={padL - 6} y={padT + plotH * (i / 2) + 3} className="brp-chart__ylab">
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed 3-item [max, mid, 0] axis labels, order never changes
+          <text key={i} x={padL - 6} y={padT + plotH * (i / 2) + 3} className="brp-chart__ylab">
             {v}
           </text>
         ))}
