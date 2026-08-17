@@ -20,9 +20,11 @@ import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { DisconnectDialog } from "../../_components/disconnect-dialog";
+import { META_APP_UNDER_REVIEW, MetaReviewModal } from "../../_components/meta-review-modal";
 import {
   type ConnPillTone,
   type SerializedConnection,
+  authorizeRouteSlug,
   connectionPill,
   isConnected,
   newestSync,
@@ -93,7 +95,7 @@ export function ProviderDetailClient({
   const canResync = provider.syncs === "contacts" && liveConn?.status === "active";
 
   // The authorize route the Connect / Reconnect anchors hit.
-  const authorizeHref = `/api/connections/${provider.id}/authorize`;
+  const authorizeHref = `/api/connections/${authorizeRouteSlug(provider.id)}/authorize`;
 
   // API-key providers (e.g. WhatsApp) connect via a paste form rendered by the
   // server page, NOT an OAuth redirect — so the hero must not show OAuth
@@ -134,12 +136,16 @@ export function ProviderDetailClient({
 
               {connected ? (
                 <>
-                  {provider.ready && !isApiKey && (
-                    <Link href={authorizeHref} className="btn btn--sm" prefetch={false}>
-                      <Icon name="refresh" size={12} />
-                      Reconnect
-                    </Link>
-                  )}
+                  {provider.ready &&
+                    !isApiKey &&
+                    (provider.id === "meta" && META_APP_UNDER_REVIEW ? (
+                      <MetaReviewModal triggerClassName="btn btn--sm" triggerLabel="Reconnect" />
+                    ) : (
+                      <Link href={authorizeHref} className="btn btn--sm" prefetch={false}>
+                        <Icon name="refresh" size={12} />
+                        Reconnect
+                      </Link>
+                    ))}
                   {liveConn && (
                     <DisconnectDialog
                       connectionId={liveConn.id}
@@ -151,7 +157,9 @@ export function ProviderDetailClient({
                   )}
                 </>
               ) : isApiKey ? // The paste form below is the connect affordance — no hero CTA.
-              null : provider.ready ? (
+              null : provider.id === "meta" && META_APP_UNDER_REVIEW ? (
+                <MetaReviewModal triggerClassName="btn btn--sm btn--pri" triggerLabel="Connect" />
+              ) : provider.ready ? (
                 <Link href={authorizeHref} className="btn btn--sm btn--pri" prefetch={false}>
                   Connect
                   <Icon name="arrowR" size={12} />

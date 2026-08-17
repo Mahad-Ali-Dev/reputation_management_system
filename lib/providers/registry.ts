@@ -810,3 +810,18 @@ export function getProvidersByCategory(): Record<ProviderCategory, ProviderEntry
   }
   return grouped as Record<ProviderCategory, ProviderEntry[]>;
 }
+
+/**
+ * Maps a catalog provider id to the API route slug that actually serves its
+ * OAuth authorize/callback routes. Every other provider's id matches its
+ * route slug 1:1, but Google Business Profile's id is `google_business`
+ * (matches this registry's `review_source` category + the
+ * `connections.provider` column) while its OAuth routes have always lived
+ * under the shorter /api/connections/google/ path (see
+ * app/api/connections/google/). Building an authorize/callback URL straight
+ * from the raw provider id 404s for this one provider — route through this
+ * helper instead.
+ */
+export function authorizeRouteSlug(providerId: string): string {
+  return providerId === "google_business" ? "google" : providerId;
+}

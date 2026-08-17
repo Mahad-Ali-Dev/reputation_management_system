@@ -23,6 +23,7 @@ import { useMemo, useState } from "react";
 import {
   type SerializedProviderRow,
   type SerializedSection,
+  authorizeRouteSlug,
   isConnected,
   newestSync,
   relativeTime,
@@ -30,6 +31,7 @@ import {
 } from "../_lib/format";
 import { DisconnectDialog } from "./disconnect-dialog";
 import { KitLogo } from "./kit-logo";
+import { META_APP_UNDER_REVIEW, MetaReviewModal } from "./meta-review-modal";
 
 /** A flattened, category-tagged provider row for the list. */
 type FlatRow = SerializedProviderRow & { categoryKey: string };
@@ -110,6 +112,14 @@ function RowAction({
   const needsReconnect =
     !connected && provider.connections.some((c) => c.status === "expired" || c.status === "error");
 
+  // Meta is gated behind Meta's own App Review — until that lands, every
+  // connect/reconnect entry point shows an explainer modal instead of the
+  // live OAuth link (which works today the moment admin creds are pasted in,
+  // independent of Meta's approval). See meta-review-modal.tsx to remove.
+  if (provider.id === "meta" && META_APP_UNDER_REVIEW && !connected) {
+    return <MetaReviewModal triggerClassName="conn-act conn-act--connect" triggerLabel="Connect" />;
+  }
+
   // CSV import → the contacts importer.
   if (provider.connType === "csv") {
     return (
@@ -153,7 +163,7 @@ function RowAction({
   if (needsReconnect) {
     const href =
       provider.connType === "oauth" && provider.ready && provider.configured
-        ? `/api/connections/${provider.id}/authorize`
+        ? `/api/connections/${authorizeRouteSlug(provider.id)}/authorize`
         : `/connections/${provider.id}`;
     return (
       <Link
@@ -179,7 +189,7 @@ function RowAction({
   if (provider.ready && provider.configured) {
     return (
       <Link
-        href={`/api/connections/${provider.id}/authorize`}
+        href={`/api/connections/${authorizeRouteSlug(provider.id)}/authorize`}
         className="conn-act conn-act--connect"
         prefetch={false}
       >

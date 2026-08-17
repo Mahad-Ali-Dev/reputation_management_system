@@ -12,6 +12,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { EstablishmentMenu } from "../_components/establishment-menu";
 import { PlacePicker } from "../_components/place-picker";
+import { DeleteEstablishmentModal } from "./_components/delete-establishment-modal";
 
 /**
  * Establishment detail — repulabs v2 design.
@@ -133,6 +134,19 @@ export default async function EstablishmentDetailPage({
       />
 
       {/* Header card */}
+      <style>{`
+        @media (max-width: 640px) {
+          .estab-header__info { min-width: 0 !important; }
+          .estab-header__actions { width: 100%; align-items: stretch !important; }
+          .estab-header__actions a { width: 100%; justify-content: center; }
+        }
+        @media (max-width: 900px) {
+          .estab-overview-grid { grid-template-columns: 1fr !important; }
+        }
+        @media (max-width: 480px) {
+          .estab-tabs { overflow-x: auto; flex-wrap: nowrap; }
+        }
+      `}</style>
       <div
         className="ds-card"
         style={{ padding: 20, position: "relative", overflow: "hidden", marginBottom: 16 }}
@@ -151,7 +165,7 @@ export default async function EstablishmentDetailPage({
         />
         <div style={{ display: "flex", gap: 16, position: "relative", flexWrap: "wrap" }}>
           <Avatar name={establishment.name} size={64} tone={5} />
-          <div style={{ flex: 1, minWidth: 280 }}>
+          <div className="estab-header__info" style={{ flex: 1, minWidth: 280 }}>
             <div className="row" style={{ gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <h2
                 style={{
@@ -197,7 +211,7 @@ export default async function EstablishmentDetailPage({
               <Stat l="Connections" v={String(establishment.connections.length)} />
             </div>
           </div>
-          <div className="col" style={{ gap: 6, alignItems: "flex-end" }}>
+          <div className="estab-header__actions col" style={{ gap: 6, alignItems: "flex-end" }}>
             {!googleConn && (
               <a
                 href={`/api/connections/google/authorize?establishmentId=${establishment.id}`}
@@ -212,7 +226,7 @@ export default async function EstablishmentDetailPage({
       </div>
 
       {/* Tabs */}
-      <div className="tabs" style={{ marginBottom: 16 }}>
+      <div className="estab-tabs tabs" style={{ marginBottom: 16 }}>
         <button type="button" className="tabs__t is-active">
           Overview
         </button>
@@ -249,6 +263,7 @@ export default async function EstablishmentDetailPage({
 
       {/* Overview grid */}
       <div
+        className="estab-overview-grid"
         style={{
           display: "grid",
           gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.4fr)",
@@ -308,17 +323,13 @@ export default async function EstablishmentDetailPage({
               </h3>
             </div>
             <div className="ds-card__body">
-              <form
+              <DeleteEstablishmentModal
+                establishmentName={establishment.name}
                 action={async () => {
                   "use server";
                   await deleteEstablishment(establishment.id);
                 }}
-              >
-                <button type="submit" className="btn btn--danger btn--sm">
-                  <Icon name="trash" size={11} />
-                  Delete establishment
-                </button>
-              </form>
+              />
               <p className="dim" style={{ fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
                 Soft-deletes the record. Reviews remain attached. You have 30 days to undo via
                 support.
@@ -403,7 +414,7 @@ export default async function EstablishmentDetailPage({
                       <div className="lbl-mono" style={{ margin: 0, marginBottom: 4 }}>
                         Linked place
                       </div>
-                      <code className="mono" style={{ fontSize: 11.5 }}>
+                      <code className="mono" style={{ fontSize: 11.5, wordBreak: "break-all" }}>
                         {establishment.googlePlaceId}
                       </code>
                     </div>

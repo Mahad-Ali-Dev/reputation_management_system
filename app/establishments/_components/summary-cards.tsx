@@ -9,8 +9,8 @@ import type { EstTint } from "./card-state";
  * (Avg. Rating · Total Reviews · vs last 30d).
  *
  * Pure presentational server component — every number is precomputed by the
- * page from real establishment rows. Clicking a card scrolls to that
- * business's row below (`#est-{id}`, highlighted via the :target ring).
+ * page from real establishment rows. Clicking a card opens that business's
+ * detail page.
  */
 export type SummaryCard = {
   id: string;
@@ -27,7 +27,7 @@ export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
   return (
     <div className="est-summary">
       {cards.map((c) => (
-        <a key={c.id} href={`#est-${c.id}`} className="est-scard">
+        <Link key={c.id} href={`/establishments/${c.id}`} className="est-scard">
           <div className="est-scard__top">
             <span className={`est-tile est-tile--${c.tint}`}>
               {/* biome-ignore lint/performance/noImgElement: static kit SVG glyph */}
@@ -83,7 +83,7 @@ export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
               <div className="est-metric__lbl">vs last 30d</div>
             </div>
           </div>
-        </a>
+        </Link>
       ))}
 
       <Link href="/establishments/new" className="est-scard est-scard--add">

@@ -148,7 +148,11 @@ export function MergeTagEditor({
         {/* Footer: SMS counter + unknown-tag warning */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
           {unknownTags.length > 0 ? (
-            <span className="chip chip--warn" title={unknownTags.map((t) => `{{${t}}}`).join(" ")}>
+            <span
+              className="chip chip--warn"
+              title={unknownTags.map((t) => `{{${t}}}`).join(" ")}
+              style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}
+            >
               Unknown tag{unknownTags.length > 1 ? "s" : ""}: {unknownTags.map((t) => `{{${t}}}`).join(", ")}
             </span>
           ) : (
@@ -158,6 +162,7 @@ export function MergeTagEditor({
           {channel === "sms" && (
             <span
               style={{
+                flexShrink: 0,
                 fontSize: 11.5,
                 fontVariantNumeric: "tabular-nums",
                 color: smsOverLimit ? "var(--warn)" : smsApproaching ? "var(--warn)" : "var(--rl-muted)",
@@ -171,7 +176,7 @@ export function MergeTagEditor({
           )}
           {channel !== "sms" && typeof maxLength === "number" && (
             <span
-              style={{ fontSize: 11.5, fontVariantNumeric: "tabular-nums", color: "var(--rl-muted)" }}
+              style={{ flexShrink: 0, fontSize: 11.5, fontVariantNumeric: "tabular-nums", color: "var(--rl-muted)" }}
             >
               {value.length}/{maxLength}
             </span>
