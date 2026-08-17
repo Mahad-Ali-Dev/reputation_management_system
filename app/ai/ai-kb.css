@@ -13,6 +13,7 @@
    ===================================================================== */
 
 .akb {
+  grid-template-columns: minmax(0, 1fr);
   --akb-primary: #4f2cff;
   --akb-primary-blue: #3157ff;
   --akb-primary-purple: #5d32f5;
@@ -162,6 +163,7 @@
   align-items: stretch;
   gap: 6px;
   min-height: 50px;
+  min-width: 0;
   overflow-x: auto;
 }
 .akb-tab {
@@ -1578,14 +1580,28 @@
   .akb-hero__art {
     justify-self: start;
     max-width: 320px;
+    /* the 96px reserve was clearing the absolutely-positioned CTA, which is
+       position:static below — no longer needed, and was shrinking + off-
+       centering the art for no reason at this width. */
+    margin-right: 0;
   }
   .akb-hero__cta {
     position: static;
     transform: none;
     margin-top: 16px;
   }
+  /* Tile + body still share a row (body has min-width:0 and wraps its own
+     text), but the ring is a fixed 134px circle that can't shrink — on a
+     phone-width viewport there's no room left for it next to tile+body, so
+     it was overflowing past the screen edge instead of dropping to its own
+     line. flex-basis:100% forces exactly that: its own full-width row, where
+     the existing place-items:center on .akb-ring centers it. */
   .akb-readiness {
     flex-wrap: wrap;
+  }
+  .akb-ring {
+    flex-basis: 100%;
+    margin-top: 4px;
   }
   .akb-bottom-row {
     grid-template-columns: 1fr;

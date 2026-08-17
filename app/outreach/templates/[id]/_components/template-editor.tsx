@@ -89,14 +89,24 @@ export function TemplateEditor({
   }
 
   return (
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "minmax(0,1fr) minmax(0,1fr)",
-        gap: 18,
-        alignItems: "start",
-      }}
-    >
+    <div className="tpl-editor" style={{ display: "grid", gap: 18, alignItems: "start" }}>
+      <style>{`
+        .tpl-editor {
+          grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        }
+        .tpl-editor__preview {
+          position: sticky;
+          top: 12px;
+        }
+        @media (max-width: 860px) {
+          .tpl-editor {
+            grid-template-columns: 1fr;
+          }
+          .tpl-editor__preview {
+            position: static;
+          }
+        }
+      `}</style>
       {/* Left: form */}
       {/* `ds-card` carries no padding of its own — every other usage in the app
           passes it explicitly. Without it the form's fields sat flush against
@@ -245,7 +255,7 @@ export function TemplateEditor({
 
       {/* Right: recipient preview. Matches the form's top padding so the two
           column headings sit on the same baseline. */}
-      <div style={{ position: "sticky", top: 12, paddingTop: 20 }}>
+      <div className="tpl-editor__preview" style={{ paddingTop: 20 }}>
         <span className="lbl">Preview — what the recipient sees</span>
         {channel === "email" ? (
           <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
