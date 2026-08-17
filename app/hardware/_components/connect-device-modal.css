@@ -353,6 +353,106 @@
 }
 
 /* Callout */
+/* Scan prompt — what step 2 opens with when we haven't identified a stand.
+   Scanning is the only route that works for everyone: the slug is never printed
+   as readable text (see the manufacturer instructions in lib/hardware/batch.ts),
+   so it lives only inside the QR image. */
+.cdm-scan {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  border-radius: 14px;
+  border: 2px dashed #d7d0ff;
+  background: linear-gradient(180deg, #fdfcff, #f8f6ff);
+}
+.cdm-scan__tile {
+  flex: 0 0 46px;
+  width: 46px;
+  height: 46px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  background: #f1ecff;
+  color: #6c4dff;
+}
+.cdm-scan__t {
+  font-size: 14px;
+  font-weight: 650;
+  color: #111936;
+}
+.cdm-scan__d {
+  margin-top: 3px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #5f6b8f;
+}
+
+/* Quiet escape hatches — "different stand?" / "can't scan right now?". */
+.cdm-swap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: #6c4dff;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+}
+.cdm-swap:hover {
+  text-decoration: underline;
+}
+
+/* Product ID readout — the identifiers support asks for when a customer is
+   stuck. Sits directly under the QR link so what we detected is always visible,
+   never hidden behind a "why did it pick that stand?" support ticket. */
+.cdm-pid {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 10px 14px;
+  border: 1px solid #e5e0ff;
+  border-radius: 12px;
+  background: #faf9ff;
+}
+.cdm-pid__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e9e3ff;
+  color: #5b3fd8;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.cdm-pid__label {
+  font-size: 11.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: #8b93b5;
+}
+.cdm-pid__val {
+  font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: #3d2f8f;
+  background: #f1ecff;
+  border-radius: 7px;
+  padding: 3px 9px;
+  user-select: all;
+}
+
 .cdm-callout {
   display: flex;
   align-items: center;

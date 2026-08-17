@@ -5,6 +5,7 @@ import { QrCode } from "@/components/shell/qr-code";
 import { TopBar } from "@/components/topbar";
 import { getAdminSession } from "@/lib/admin/session";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { roleAtLeast } from "@/lib/auth/rbac";
 import { orgHasFeature } from "@/lib/billing/feature-access";
 import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
@@ -14,6 +15,7 @@ import {
   formatConversionPct,
   getDeviceDashboardExtras,
   getDeviceMetrics,
+  getScannedDevice,
   listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
@@ -33,6 +35,7 @@ import { DeviceTable } from "./_components/device-table";
 import { recordNfcUid } from "./_components/nfc-actions";
 import { NfcConfigCard } from "./_components/nfc-config-card";
 import { QrActions } from "./_components/qr-actions";
+import { TrashDeviceCard } from "./_components/trash-device-card";
 import "./devices.css";
 import "./my-devices.css";
 
@@ -130,27 +133,56 @@ export default async function QrCodesPage({
     restored?: string;
     /** Result of an NFC-UID save (see recordNfcUid): saved|duplicate|bad_uid|… */
     nfc?: string;
+    /** "1" after a device is released back to unactivated inventory. */
+    released?: string;
   }>;
 }) {
-  const { orgId } = await getOrgContext();
+  const { orgId, role } = await getOrgContext();
 
-  const [devices, establishments] = await Promise.all([
+  const [devices, establishments, scanned] = await Promise.all([
     listOrgDevicesWithProduct(orgId),
     listEstablishments(orgId),
+    // The stand this browser last scanned, if any — pre-fills the Add-device
+    // wizard so the customer only types the 5-character code.
+    getScannedDevice(orgId),
   ]);
   const businessOptions = establishments.map((e) => ({ id: e.id, name: e.name }));
   const sp = await searchParams;
 
+  // Only offer a device that's actually still claimable; a stale cookie
+  // pointing at an already-activated stand would pre-fill a dead end.
+  const detectedQrUrl = scanned?.claimable ? publicQrUrl(scanned.slug) : null;
+  const detectedSerial = scanned?.claimable ? scanned.serial : null;
+
   // Trash view — show only retired devices with a Restore button per card.
   if (sp.view === "trash") {
     const retiredDevices = devices.filter((d) => d.status === "retired");
-    return <TrashView devices={retiredDevices} justRestored={sp.restored} />;
+    return (
+      <TrashView
+        devices={retiredDevices}
+        justRestored={sp.restored}
+        justReleased={sp.released === "1"}
+        canRelease={roleAtLeast(role, "admin")}
+      />
+    );
   }
 
   const activeDevices = devices.filter((d) => d.status === "active");
+  // Needed BEFORE the empty-state return: deleting your only device drops you
+  // into that state, and it used to render a hardcoded "Trash (0)" — so the
+  // device you just deleted became invisible and Restore was unreachable.
+  const retiredCount = devices.filter((d) => d.status === "retired").length;
 
   if (activeDevices.length === 0) {
-    return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
+    return (
+      <EmptyState
+        establishments={businessOptions}
+        recentActivation={sp.activated}
+        detectedQrUrl={detectedQrUrl}
+        detectedSerial={detectedSerial}
+        retiredCount={retiredCount}
+      />
+    );
   }
 
   // Use ?selected=<deviceId> to focus the QR + analytics panels on a specific
@@ -158,7 +190,15 @@ export default async function QrCodesPage({
   const selectedDevice =
     (sp.selected && activeDevices.find((d) => d.id === sp.selected)) || activeDevices[0];
   if (!selectedDevice)
-    return <EmptyState establishments={businessOptions} recentActivation={sp.activated} />;
+    return (
+      <EmptyState
+        establishments={businessOptions}
+        recentActivation={sp.activated}
+        detectedQrUrl={detectedQrUrl}
+        detectedSerial={detectedSerial}
+        retiredCount={retiredCount}
+      />
+    );
 
   // Org-aggregate metrics + entitlement + dashboard extras (all live, fail-soft).
   const [metrics, isPro, extras] = await Promise.all([
@@ -177,7 +217,6 @@ export default async function QrCodesPage({
     selectedDevice.productKind,
   );
   const qrDownloadHref = `/api/devices/${selectedDevice.id}/qr?format=png${selectedPlatform ? `&platform=${selectedPlatform}` : ""}`;
-  const retiredCount = devices.filter((d) => d.status === "retired").length;
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
@@ -195,7 +234,11 @@ export default async function QrCodesPage({
             <Icon name="qr" size={12} />
             Generate QR
           </Link>
-          <ConnectDeviceModal establishments={businessOptions} />
+          <ConnectDeviceModal
+            establishments={businessOptions}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         <MdHero />
@@ -265,7 +308,11 @@ export default async function QrCodesPage({
           <span className="md-devhead__count">
             {activeDevices.length} active device{activeDevices.length === 1 ? "" : "s"}
           </span>
-          <ConnectDeviceModal establishments={businessOptions} />
+          <ConnectDeviceModal
+            establishments={businessOptions}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         <DeviceTable
@@ -423,9 +470,17 @@ function QrProductCard({
 function EmptyState({
   establishments,
   recentActivation,
+  detectedQrUrl = null,
+  detectedSerial = null,
+  retiredCount = 0,
 }: {
   establishments: Array<{ id: string; name: string }>;
   recentActivation?: string;
+  detectedQrUrl?: string | null;
+  detectedSerial?: string | null;
+  /** Retired devices this org still has. Deleting your last active device
+   *  lands you here, so this MUST be real — a hardcoded 0 hid them entirely. */
+  retiredCount?: number;
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
@@ -442,7 +497,11 @@ function EmptyState({
             <Icon name="qr" size={12} />
             Generate QR
           </Link>
-          <ConnectDeviceModal establishments={establishments} />
+          <ConnectDeviceModal
+            establishments={establishments}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         <MdHero />
@@ -471,12 +530,16 @@ function EmptyState({
           <div className="seg">
             <span className="seg__t is-active">Active (0)</span>
             <Link href="/hardware?view=trash" className="seg__t" style={{ textDecoration: "none" }}>
-              Trash (0)
+              Trash ({retiredCount})
             </Link>
           </div>
           <div style={{ flex: 1 }} />
           <span className="md-devhead__count">0 active devices</span>
-          <ConnectDeviceModal establishments={establishments} />
+          <ConnectDeviceModal
+            establishments={establishments}
+            detectedQrUrl={detectedQrUrl}
+            detectedSerial={detectedSerial}
+          />
         </div>
 
         {/* Empty devices panel — kit illustration + connect CTA. */}
@@ -489,15 +552,30 @@ function EmptyState({
               aria-hidden
               className="md-blank__art"
             />
-            <h3 className="md-blank__title">No devices added yet</h3>
+            <h3 className="md-blank__title">
+              {retiredCount > 0 ? "No active devices" : "No devices added yet"}
+            </h3>
             <p className="md-blank__body">
-              Got a ReviewBoost card, plaque, or stand? Add your first device to start collecting
-              scans and engage more customers — enter the code from your package and we&rsquo;ll
-              route every scan to your Google review page.
+              {retiredCount > 0 ? (
+                <>
+                  You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
+                  <Link href="/hardware?view=trash">Trash</Link> — restoring one brings back the
+                  same QR, code and redirect, so a plaque you&rsquo;ve already printed keeps
+                  working. Or add a new device below.
+                </>
+              ) : (
+                <>
+                  Got a ReviewBoost card, plaque, or stand? Add your first device to start
+                  collecting scans and engage more customers — enter the code from your package and
+                  we&rsquo;ll route every scan to your Google review page.
+                </>
+              )}
             </p>
             <div className="md-blank__cta">
               <ConnectDeviceModal
                 establishments={establishments}
+                detectedQrUrl={detectedQrUrl}
+                detectedSerial={detectedSerial}
                 triggerClassName="btn btn--pri btn--lg"
                 triggerLabel="Add device"
               />
@@ -630,9 +708,14 @@ type RetiredDevice = Awaited<ReturnType<typeof listOrgDevices>>[number];
 function TrashView({
   devices,
   justRestored,
+  justReleased,
+  canRelease,
 }: {
   devices: RetiredDevice[];
   justRestored?: string;
+  justReleased?: boolean;
+  /** Whether this member may unbind a device from the workspace (admin+). */
+  canRelease: boolean;
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Trash"]}>
@@ -655,6 +738,23 @@ function TrashView({
         >
           <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
           QR restored. Visit <Link href="/hardware">Active QRs</Link> to confirm.
+        </div>
+      )}
+
+      {justReleased && (
+        <div
+          className="ds-card"
+          style={{
+            padding: "10px 14px",
+            marginBottom: 16,
+            fontSize: 12.5,
+            background: "#fef2f2",
+            border: "1px solid #fecaca",
+            color: "#7f1d1d",
+          }}
+        >
+          Device removed from this workspace. The unit itself is untouched — scan it and enter its
+          code whenever you want to set it up again. Recorded in your audit log.
         </div>
       )}
 
@@ -727,9 +827,21 @@ function TrashView({
           </Link>
         </div>
       ) : (
-        <div className="grid-3" style={{ gap: 16 }}>
+        <div className="tdc-grid">
           {devices.map((d) => (
-            <TrashedDeviceCard key={d.id} device={d} />
+            <TrashDeviceCard
+              key={d.id}
+              canRelease={canRelease}
+              device={{
+                id: d.id,
+                shortSlug: d.shortSlug,
+                productSku: d.productSku,
+                redirectUrl: d.redirectUrl,
+                createdAt: new Date(d.createdAt).toISOString(),
+                establishmentName: d.establishment?.name ?? null,
+                scanCount: d.scanCount,
+              }}
+            />
           ))}
         </div>
       )}
@@ -752,94 +864,5 @@ function TrashView({
         make sure that&rsquo;s what you want.
       </div>
     </AppShellServer>
-  );
-}
-
-function TrashedDeviceCard({ device: d }: { device: RetiredDevice }) {
-  return (
-    <div
-      className="ds-card"
-      style={{
-        padding: 18,
-        opacity: 0.92,
-        background: "var(--surface)",
-        border: "1px solid var(--line)",
-      }}
-    >
-      <div className="row" style={{ justifyContent: "space-between", marginBottom: 8 }}>
-        <span
-          style={{
-            fontSize: 10.5,
-            fontFamily: "var(--f-mono)",
-            letterSpacing: ".12em",
-            color: "var(--rl-muted)",
-            fontWeight: 600,
-          }}
-        >
-          CODE · {d.shortSlug}
-        </span>
-        <span
-          style={{
-            fontSize: 10.5,
-            fontFamily: "var(--f-mono)",
-            letterSpacing: ".08em",
-            color: "#b91c1c",
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            padding: "1px 6px",
-            borderRadius: 4,
-            fontWeight: 600,
-          }}
-        >
-          RETIRED
-        </span>
-      </div>
-      <h3
-        style={{
-          fontSize: 15,
-          fontWeight: 600,
-          letterSpacing: "-0.015em",
-          margin: 0,
-        }}
-      >
-        {d.establishment?.name ?? "Unassigned"}
-      </h3>
-      <p
-        style={{
-          fontSize: 11.5,
-          color: "var(--rl-muted)",
-          marginTop: 4,
-          marginBottom: 12,
-        }}
-      >
-        SKU: {d.productSku} · Created {new Date(d.createdAt).toLocaleDateString()}
-      </p>
-      <div
-        style={{
-          padding: "8px 10px",
-          background: "var(--surface-2, #fafbf8)",
-          border: "1px solid var(--line)",
-          borderRadius: 8,
-          fontSize: 11.5,
-          fontFamily: "var(--f-mono)",
-          color: "var(--ink-2)",
-          wordBreak: "break-all",
-          marginBottom: 14,
-        }}
-      >
-        {d.redirectUrl ?? "—"}
-      </div>
-      <form action={restoreDevice}>
-        <input type="hidden" name="deviceId" value={d.id} />
-        <button
-          type="submit"
-          className="btn btn--pri"
-          style={{ width: "100%", justifyContent: "center" }}
-        >
-          <Icon name="arrowR" size={11} />
-          Restore QR
-        </button>
-      </form>
-    </div>
   );
 }

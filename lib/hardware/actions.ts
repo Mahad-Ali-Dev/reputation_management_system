@@ -13,6 +13,8 @@ import {
   isStorableRedirectUrl,
   signSlug,
 } from "@/lib/hardware/codes";
+import { clearPendingSlug, readPendingSlug } from "@/lib/hardware/pending-slug";
+import { parseSlug } from "@/lib/hardware/slug";
 import { logger } from "@/lib/logger";
 import { APP_URL, stripe } from "@/lib/stripe/client";
 import { revalidatePath } from "next/cache";
@@ -186,6 +188,25 @@ export type ActivateDeviceState = {
 };
 
 /**
+ * Is this a lost-connection failure rather than a real rejection?
+ *
+ * Prisma surfaces a dropped Postgres connection as
+ * `Error in PostgreSQL connection: Error { kind: Closed, cause: None }`, which
+ * is routine against a pooler or an auto-suspending compute: an idle connection
+ * gets reaped and the next transaction to pick it up dies. The transaction is
+ * fully rolled back when this happens, so the caller can safely re-run it.
+ *
+ * Matched on the message because these arrive as plain `Error`s from the query
+ * engine, not as `PrismaClientKnownRequestError` with a code we could switch on.
+ */
+function isTransientDbError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return /kind:\s*Closed|Connection reset|ECONNRESET|EPIPE|Timed out fetching a new connection|closed the connection|Can't reach database server|Transaction .* already closed/i.test(
+    message,
+  );
+}
+
+/**
  * Shared batch override code. The current production batch was mis-printed with
  * ONE code (84219) on every card instead of each unit's real code, so during
  * this batch we accept 84219 for ANY scanned device (the unique QR slug is what
@@ -238,7 +259,8 @@ export async function activateDevice(
   } catch (err) {
     if (err instanceof ForbiddenError) {
       return {
-        error: "You need manager access to activate a device. Ask an admin or owner to activate it.",
+        error:
+          "You need manager access to activate a device. Ask an admin or owner to activate it.",
       };
     }
     throw err;
@@ -260,14 +282,31 @@ export async function activateDevice(
   // The activation code was mass-printed IDENTICALLY across the current
   // production batch, so it can no longer identify a single device on its own.
   // The per-unit identifier that IS unique is the QR slug (10-char Crockford
-  // base32) — so when the owner scans their stand, `/activate?slug=…` carries it
-  // through and we bind THAT exact device. The code is still verified, but
-  // against the specific device the slug resolves to (so a future batch with
-  // unique codes is secure again with no code change — the slug just narrows to
-  // one device and its real code must still match). See lib/hardware/codes.ts.
-  const slug =
-    typeof slugRaw === "string" ? slugRaw.replace(/[\s-]/g, "").toUpperCase() : "";
-  const hasSlug = /^[0-9A-HJKMNP-TV-Z]{10}$/.test(slug);
+  // base32) — so when the owner scans their stand we bind THAT exact device. The
+  // code is still verified, but against the specific device the slug resolves to
+  // (so a future batch with unique codes is secure again with no code change —
+  // the slug just narrows to one device and its real code must still match).
+  //
+  // Three ways the slug reaches us, in priority order:
+  //   1. The form field — `/activate`'s device box (pre-filled from the scan) or
+  //      the pasted QR link in the Connect-a-device modal. `parseSlug` accepts a
+  //      full link, a bare path or the raw slug.
+  //   2. The `rl_pending_slug` cookie that `/r/{slug}` set when they scanned.
+  //      This is what survives signup → magic link → onboarding → first
+  //      business, none of which can carry a query string.
+  //   3. Neither — we refuse to guess, see the `not_found` branch below.
+  const slugTyped = typeof slugRaw === "string" ? slugRaw.trim() : "";
+  const slugFromForm = parseSlug(slugTyped);
+  // A non-empty box we can't parse must NOT fall through to the cookie: they
+  // typed one device and the cookie remembers another, and silently preferring
+  // the cookie would bind the wrong stand to their business.
+  if (slugTyped.length > 0 && slugFromForm === null) {
+    return {
+      error:
+        "That doesn’t look like a device link. Paste the whole QR link printed on your product — it looks like repulabs.com/r/ABCD123456.",
+    };
+  }
+  const slug = slugFromForm ?? (await readPendingSlug());
 
   // Optional pasted URL — must parse AND pass the storable-redirect check
   // (rejects javascript:/data:/file: schemes, IP-literal hosts, localhost in
@@ -293,114 +332,185 @@ export async function activateDevice(
   // reads/writes where organization_id IS NULL OR = current_org(), so we can
   // find the unactivated device (org NULL) and update it to point at this org
   // in the same transaction.
-  const result = await withTenant(orgId, async (tx) => {
-    // Resolve the ONE device being activated.
-    //  • Scanned (slug present): the slug is unique, so it pins the exact device.
-    //    We still require the entered code to match THAT device's stored code.
-    //  • Typed code only (no slug): only works when the code maps to exactly one
-    //    unactivated device (a unique-code batch). If several devices share the
-    //    code (the mis-printed batch), we refuse and ask them to scan — never
-    //    guess a device, so we can't bind the wrong QR to a business.
-    let device: Awaited<ReturnType<typeof tx.device.findFirst>> = null;
-    if (hasSlug) {
-      device = await tx.device.findFirst({
-        where: { shortSlug: slug, status: "unactivated", activationCodeUsedAt: null },
+  //
+  // Kept as a callable (not awaited inline) so a transient database drop can be
+  // retried — see the try/catch below.
+  const claimDevice = () =>
+    withTenant(orgId, async (tx) => {
+      // Resolve the ONE device being activated.
+      //  • Scanned (slug present): the slug is unique, so it pins the exact device.
+      //    We still require the entered code to match THAT device's stored code.
+      //  • Typed code only (no slug): only works when the code maps to exactly one
+      //    unactivated device (a unique-code batch). If several devices share the
+      //    code (the mis-printed batch), we refuse and ask them to scan — never
+      //    guess a device, so we can't bind the wrong QR to a business.
+      let device: Awaited<ReturnType<typeof tx.device.findFirst>> = null;
+      if (slug) {
+        device = await tx.device.findFirst({
+          where: { shortSlug: slug, status: "unactivated", activationCodeUsedAt: null },
+        });
+        if (!device) {
+          // Not claimable. Before calling it an error, check whether it's already
+          // OURS — a double-tapped submit, or a stale /activate tab reopened after
+          // the same stand was activated from the dashboard. RLS only shows us
+          // unclaimed rows and our own, so a hit here is unambiguously this org's.
+          const mine = await tx.device.findFirst({
+            where: { shortSlug: slug },
+            select: { organizationId: true, shortSlug: true },
+          });
+          if (mine?.organizationId === orgId) {
+            return { ok: false as const, reason: "already_yours" as const, slug: mine.shortSlug };
+          }
+          // Unknown slug OR already claimed by another business (RLS hides other
+          // orgs' devices) — one QR, one business, and it's already taken/invalid.
+          return { ok: false as const, reason: "slug_unavailable" as const };
+        }
+        // Accept the device's real code OR the mis-printed batch code (84219).
+        // The slug already pinned the exact unit; the batch override just tolerates
+        // the wrong code printed on this batch's cards. Remove the override at the
+        // next production run to require each unit's real code again.
+        if (device.activationCodeHash !== codeHash && !isBatchOverride) {
+          return { ok: false as const, reason: "code_mismatch" as const };
+        }
+      } else {
+        const matches = await tx.device.findMany({
+          where: {
+            activationCodeHash: codeHash,
+            status: "unactivated",
+            activationCodeUsedAt: null,
+          },
+          take: 2,
+        });
+        if (matches.length > 1) {
+          return { ok: false as const, reason: "ambiguous" as const };
+        }
+        device = matches[0] ?? null;
+        if (!device) {
+          return { ok: false as const, reason: "not_found" as const };
+        }
+      }
+
+      const estab = await tx.establishment.findFirst({
+        where: { id: establishmentId, deletedAt: null },
+        select: { id: true, googlePlaceId: true, name: true },
       });
-      if (!device) {
-        // Unknown slug OR already claimed by another business (RLS hides other
-        // orgs' devices) — one QR, one business, and it's already taken/invalid.
-        return { ok: false as const, reason: "slug_unavailable" as const };
+      if (!estab) {
+        return { ok: false as const, reason: "establishment_not_found" as const };
       }
-      // Accept the device's real code OR the mis-printed batch code (84219).
-      // The slug already pinned the exact unit; the batch override just tolerates
-      // the wrong code printed on this batch's cards. Remove the override at the
-      // next production run to require each unit's real code again.
-      if (device.activationCodeHash !== codeHash && !isBatchOverride) {
-        return { ok: false as const, reason: "code_mismatch" as const };
-      }
-    } else {
-      const matches = await tx.device.findMany({
+
+      // Precedence: pasted URL > establishment's googlePlaceId > Google search fallback.
+      const redirectUrl = pastedUrl ?? googleReviewUrl(estab.googlePlaceId, estab.name);
+      // Read the clock ONCE. /r/[slug] recomputes the signature expiry from
+      // device.activatedAt, so the signed expiry base must be the exact instant
+      // we persist as activatedAt — two separate clock reads can straddle a
+      // second boundary and permanently break verification.
+      const activatedAt = new Date();
+      const expiresAtUnix = Math.floor(activatedAt.getTime() / 1000) + 60 * 60 * 24 * 365 * 5; // 5 years
+      const signature = signSlug(device.shortSlug, redirectUrl, expiresAtUnix);
+
+      // Race-safe activation: only claim if it's still unactivated AND the org is
+      // still NULL. Two concurrent activations of the same code can both pass the
+      // findFirst above, but only one will satisfy this WHERE.
+      const claimed = await tx.device.updateMany({
         where: {
-          activationCodeHash: codeHash,
+          id: device.id,
           status: "unactivated",
           activationCodeUsedAt: null,
+          organizationId: null,
         },
-        take: 2,
-      });
-      if (matches.length > 1) {
-        return { ok: false as const, reason: "ambiguous" as const };
-      }
-      device = matches[0] ?? null;
-      if (!device) {
-        return { ok: false as const, reason: "not_found" as const };
-      }
-    }
-
-    const estab = await tx.establishment.findFirst({
-      where: { id: establishmentId, deletedAt: null },
-      select: { id: true, googlePlaceId: true, name: true },
-    });
-    if (!estab) {
-      return { ok: false as const, reason: "establishment_not_found" as const };
-    }
-
-    // Precedence: pasted URL > establishment's googlePlaceId > Google search fallback.
-    const redirectUrl = pastedUrl ?? googleReviewUrl(estab.googlePlaceId, estab.name);
-    // Read the clock ONCE. /r/[slug] recomputes the signature expiry from
-    // device.activatedAt, so the signed expiry base must be the exact instant
-    // we persist as activatedAt — two separate clock reads can straddle a
-    // second boundary and permanently break verification.
-    const activatedAt = new Date();
-    const expiresAtUnix = Math.floor(activatedAt.getTime() / 1000) + 60 * 60 * 24 * 365 * 5; // 5 years
-    const signature = signSlug(device.shortSlug, redirectUrl, expiresAtUnix);
-
-    // Race-safe activation: only claim if it's still unactivated AND the org is
-    // still NULL. Two concurrent activations of the same code can both pass the
-    // findFirst above, but only one will satisfy this WHERE.
-    const claimed = await tx.device.updateMany({
-      where: {
-        id: device.id,
-        status: "unactivated",
-        activationCodeUsedAt: null,
-        organizationId: null,
-      },
-      data: {
-        organizationId: orgId,
-        establishmentId,
-        activationCodeUsedAt: new Date(),
-        redirectUrl,
-        slugSignature: signature,
-        status: "active",
-        activatedAt,
-      },
-    });
-    if (claimed.count === 0) {
-      return { ok: false as const, reason: "race_lost" as const };
-    }
-    await tx.auditLog.create({
-      data: {
-        organizationId: orgId,
-        actorType: "user",
-        actorId: userId,
-        action: "device.activated",
-        resourceType: "device",
-        resourceId: device.id,
-        afterData: {
-          slug: device.shortSlug,
+        data: {
+          organizationId: orgId,
           establishmentId,
+          activationCodeUsedAt: new Date(),
           redirectUrl,
-          redirectSource: pastedUrl
-            ? "pasted_url"
-            : estab.googlePlaceId
-              ? "place_id"
-              : "search_fallback",
+          slugSignature: signature,
+          status: "active",
+          activatedAt,
         },
-      },
+      });
+      if (claimed.count === 0) {
+        return { ok: false as const, reason: "race_lost" as const };
+      }
+      await tx.auditLog.create({
+        data: {
+          organizationId: orgId,
+          actorType: "user",
+          actorId: userId,
+          action: "device.activated",
+          resourceType: "device",
+          resourceId: device.id,
+          afterData: {
+            slug: device.shortSlug,
+            establishmentId,
+            redirectUrl,
+            redirectSource: pastedUrl
+              ? "pasted_url"
+              : estab.googlePlaceId
+                ? "place_id"
+                : "search_fallback",
+            // Whether this activation leaned on the mis-printed shared batch code
+            // rather than the unit's own code. Recorded so the override's real
+            // blast radius is auditable, and so we can tell when the last of the
+            // bad batch has been redeemed and the env flag can be turned off.
+            batchOverride: device.activationCodeHash !== codeHash,
+          },
+        },
+      });
+      return { ok: true as const, device };
     });
-    return { ok: true as const, device };
-  });
+
+  // A dropped Postgres connection (Prisma logs `kind: Closed` — routine on
+  // pooled or auto-suspending Postgres) aborts the interactive transaction
+  // mid-flight. That used to throw straight out of the action, which means
+  // `useActionState` never received a state update: the form just sat there,
+  // the customer saw NOTHING happen, and the device stayed unactivated with no
+  // clue as to why. Both halves of that are fixed here — retry once, and if it
+  // still fails, SAY so.
+  //
+  // Retrying is safe: the transaction rolled back, so nothing partial was
+  // applied, and the claim is guarded on `status: "unactivated"` +
+  // `organizationId: null`, so a re-run can never double-bind a device.
+  let result: Awaited<ReturnType<typeof claimDevice>>;
+  try {
+    result = await claimDevice();
+  } catch (err) {
+    if (isTransientDbError(err)) {
+      logger.warn(
+        { orgId, err: String(err), event: "device.activation.db_retry" },
+        "database connection dropped mid-activation — retrying once",
+      );
+      try {
+        result = await claimDevice();
+      } catch (retryErr) {
+        logger.error(
+          { orgId, err: String(retryErr), event: "device.activation.db_failed" },
+          "activation failed after retry",
+        );
+        return {
+          error:
+            "We couldn’t reach the database just then, so nothing was changed. Give it a moment and try again.",
+        };
+      }
+    } else {
+      logger.error(
+        { orgId, err: String(err), event: "device.activation.failed" },
+        "activation transaction threw",
+      );
+      return {
+        error:
+          "Something went wrong activating this stand, and nothing was changed. Try again — if it keeps happening, contact support and quote the Product ID shown above.",
+      };
+    }
+  }
 
   if (!result.ok) {
+    if (result.reason === "already_yours") {
+      // Idempotent: the stand they're pointing at is already live on this
+      // account. Land them on it instead of showing a scary failure.
+      await clearPendingSlug();
+      revalidatePath("/hardware");
+      redirect(`/hardware?activated=${result.slug}`);
+    }
     if (result.reason === "ambiguous") {
       return {
         error:
@@ -423,9 +533,24 @@ export async function activateDevice(
     }
     if (result.reason === "not_found" || result.reason === "race_lost") {
       logger.warn(
-        { orgId, event: "device.activation.miss" },
+        {
+          orgId,
+          hadSlug: slug !== null,
+          batchCode: isBatchOverride,
+          event: "device.activation.miss",
+        },
         "activation code did not match any unactivated device",
       );
+      if (isBatchOverride && slug === null) {
+        // The dead end this whole change exists to remove: they typed the code
+        // printed on the card, but every card in this batch carries the SAME
+        // code, so on its own it matches nothing. Tell them how to give us the
+        // one thing that does identify their unit.
+        return {
+          error:
+            "We need to know which stand you’re setting up. Scan its QR with your phone and tap “Activate this QR”, or paste the QR link printed on the product into the “Your device” box above — the code on the card is the same on every stand in this batch, so it can’t identify yours by itself.",
+        };
+      }
       return {
         error:
           "We couldn’t match that activation code. Double-check the 5 characters from the card inside your package — codes are one-time-use and can’t be reused once redeemed.",
@@ -444,10 +569,15 @@ export async function activateDevice(
       deviceId: device.id,
       slug: device.shortSlug,
       establishmentId,
+      batchOverride: device.activationCodeHash !== codeHash,
       event: "device.activated",
     },
     "device activated",
   );
+
+  // This stand is bound now — forget the scan so the next activation on this
+  // browser starts from a clean slate rather than re-offering a live device.
+  await clearPendingSlug();
 
   revalidatePath("/hardware");
   revalidatePath(`/establishments/${establishmentId}`);
@@ -752,6 +882,124 @@ export async function deleteDevice(form: FormData): Promise<void> {
 
   revalidatePath("/hardware");
   redirect("/hardware?deleted=1");
+}
+
+/**
+ * Release a retired device from the workspace.
+ *
+ * "Delete" here means "get it off my account", NOT "destroy it". The row is
+ * kept and returned to unactivated inventory — organization, establishment and
+ * redirect cleared, activation re-armed — so the owner can set the same unit up
+ * again at any time through the ordinary flow: scan the QR, enter the printed
+ * code, pick a business.
+ *
+ * That distinction is the whole point. An earlier version deleted the row, and
+ * because a physical stand exists in the world whether or not its row does,
+ * that bricked working plaques: /r/{slug} stopped resolving, so the printed QR
+ * dead-ended at /not-activated with no row left to activate. Releasing gives
+ * the customer the same visible outcome (it is gone from their devices) with
+ * none of that. It applies to virtual self-service QRs too, so there is exactly
+ * one behaviour to reason about and no path that can strand a printed code.
+ *
+ * Deliberately narrower than `deleteDevice` (the soft delete) in three ways:
+ *
+ *   1. **Admin-gated, not manager.** Soft delete drops a device into Trash
+ *      where it is one click from coming back with its redirect intact. This
+ *      unbinds it and clears the destination, so hold it to a higher bar.
+ *   2. **Only operates on `retired` rows.** You must soft-delete first, so a
+ *      live QR can never be unbound by a single misclick.
+ *   3. **Audit-logged with the full payload** — slug, serial, SKU, redirect URL,
+ *      establishment and scan count — because the binding it records is
+ *      otherwise gone from the row.
+ *
+ * Scan history (`device_scans`) is preserved: the row survives, so nothing
+ * cascades. Re-activating later starts a fresh binding against the same
+ * hardware.
+ */
+const ReleaseDeviceSchema = z.object({
+  deviceId: z.string().uuid(),
+});
+
+export async function releaseDevice(form: FormData): Promise<void> {
+  const sessionOrg = await resolveSessionOrg();
+  if (!sessionOrg) redirect("/login");
+  const { orgId, userId, role } = sessionOrg;
+  if (!roleAtLeast(role, "admin")) throw new ForbiddenError("admin", role);
+
+  const parsed = ReleaseDeviceSchema.safeParse({ deviceId: form.get("deviceId") });
+  if (!parsed.success) throw new Error("invalid_device_id");
+
+  await withTenant(orgId, async (tx) => {
+    const device = await tx.device.findFirst({
+      where: { id: parsed.data.deviceId },
+      select: {
+        id: true,
+        shortSlug: true,
+        serial: true,
+        productSku: true,
+        status: true,
+        redirectUrl: true,
+        establishmentId: true,
+        scanCount: true,
+      },
+    });
+    if (!device) throw new Error("device_not_found");
+    // Guard: only ever release something already in Trash.
+    if (device.status !== "retired") throw new Error("device_not_retired");
+
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "device.released",
+        resourceType: "device",
+        resourceId: device.id,
+        beforeData: {
+          shortSlug: device.shortSlug,
+          serial: device.serial,
+          productSku: device.productSku,
+          redirectUrl: device.redirectUrl ?? null,
+          establishmentId: device.establishmentId,
+          scanCount: device.scanCount,
+        },
+        afterData: { status: "unactivated", organizationId: null },
+      },
+    });
+
+    await tx.device.update({
+      where: { id: device.id },
+      data: {
+        organizationId: null,
+        establishmentId: null,
+        status: "unactivated",
+        // Re-arm activation. redirect_url must go too: the
+        // devices_redirect_when_active CHECK only tolerates a null redirect
+        // while the row is unactivated, and leaving a stale destination on
+        // unclaimed inventory would point the next owner's scans at the
+        // previous owner's review page.
+        activationCodeUsedAt: null,
+        redirectUrl: null,
+        activatedAt: null,
+        // scanCount is a denormalized counter on the DEVICE row, and
+        // getDeviceMetrics sums it per org. Carrying it across a release would
+        // hand the next owner — possibly a different business — a head start of
+        // scans they never earned. The device_scans rows are left alone: each
+        // carries its own organization_id, so the previous owner's history
+        // stays intact and correctly attributed to them.
+        scanCount: 0,
+        lastScanAt: null,
+      },
+    });
+  });
+
+  logger.info(
+    { event: "device.released", orgId, userId, deviceId: parsed.data.deviceId },
+    "device released back to unactivated inventory",
+  );
+
+  revalidatePath("/hardware");
+  redirect("/hardware?view=trash&released=1");
 }
 
 /**

@@ -2,6 +2,7 @@
 
 import { Icon } from "@/components/shell/icon";
 import { type ActivateDeviceState, activateDevice } from "@/lib/hardware/actions";
+import { parseSlug } from "@/lib/hardware/slug";
 import Link from "next/link";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
@@ -60,34 +61,31 @@ function normalizeCode(value: string): string {
 /** Activation code length — matches ACTIVATION_LEN in lib/hardware/codes.ts. */
 const CODE_LEN = 5;
 
-/**
- * Pull the 10-char QR slug out of what the customer pastes — either the full QR
- * link (https://repulabs.com/r/XXXXXXXXXX) or the raw slug. The slug is the ONLY
- * per-unit identifier now that the batch shares one printed code, so manual
- * dashboard activation needs it to know which device to bind. Matches the slug
- * shape validated in lib/hardware/actions.ts (Crockford base32, 10 chars).
- */
-function parseSlug(value: string): string {
-  const m = value.trim().match(/\/r\/([0-9a-z]+)/i);
-  return (m?.[1] ?? value)
-    .toUpperCase()
-    .replace(/[^0-9A-HJKMNP-TV-Z]/g, "")
-    .slice(0, 10);
-}
-
 export function ConnectDeviceModal({
   establishments,
+  detectedQrUrl = null,
+  detectedSerial = null,
   triggerClassName = "btn btn--pri",
   triggerLabel = "Add device",
 }: {
   establishments: Array<{ id: string; name: string }>;
+  /** QR link of the stand this browser last scanned, resolved server-side. */
+  detectedQrUrl?: string | null;
+  /** Ops serial of that stand, shown as the support-facing product ID. */
+  detectedSerial?: string | null;
   triggerClassName?: string;
   triggerLabel?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(1);
   const [code, setCode] = useState("");
-  const [link, setLink] = useState("");
+  // Seeded from the scan so the customer types nothing but the code. Still
+  // editable — a stale detection (second stand, shared browser) must never
+  // leave them stuck with the wrong device.
+  const [link, setLink] = useState(detectedQrUrl ?? "");
+  // Whether the manual link box is disclosed. Closed by default in both states
+  // — see the step-2 panel for why scanning is the primary path.
+  const [manualOpen, setManualOpen] = useState(false);
   const [platform, setPlatform] = useState("google");
   const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
   const [state, formAction] = useActionState(activateDevice, initialState);
@@ -115,8 +113,19 @@ export function ConnectDeviceModal({
 
   const noBusinesses = establishments.length === 0;
   const codeComplete = code.length === CODE_LEN;
+  // Shared with /activate and the server action, so all three agree on what a
+  // pasted link means (see lib/hardware/slug.ts). null = not a usable slug yet.
   const slug = parseSlug(link);
-  const slugComplete = slug.length === 10;
+  const slugComplete = slug !== null;
+  // "Detected" holds only while the box still contains what we filled in.
+  const autoDetected = !!detectedQrUrl && link === detectedQrUrl;
+
+  function openManual() {
+    // Clear a detected link on the way in: they've told us this isn't the stand
+    // in their hands, and leaving it pre-filled invites binding the wrong unit.
+    setLink("");
+    setManualOpen(true);
+  }
 
   return (
     <>
@@ -184,27 +193,87 @@ export function ConnectDeviceModal({
                       <SectionHead n={2} icon="qr" title="Enter Your Device" />
 
                       <p className="cdm-helper">
-                        Paste the QR link printed on your product — or scan the QR and copy the
-                        link. This is how we bind the right device to your business.
+                        {autoDetected
+                          ? "We recognised the stand you scanned, so it's already identified below. Just enter the code from the card."
+                          : "Scanning your stand's QR is what tells us which unit you're holding — the code on the card is the same on every stand in this batch, so it can't identify yours on its own."}
                       </p>
-                      <div className="cdm-field">
-                        <span className="cdm-field__icon" aria-hidden>
-                          <Icon name="qr" size={20} />
-                        </span>
-                        <input
-                          type="text"
-                          value={link}
-                          onChange={(e) => setLink(e.target.value)}
-                          placeholder="repulabs.com/r/XXXXXXXXXX"
-                          aria-label="Your device QR link"
-                          autoComplete="off"
-                          spellCheck={false}
-                          className="cdm-select"
-                          style={{ textTransform: "none" }}
-                        />
-                      </div>
-                      {/* the parsed slug is what actually activates the device */}
-                      <input type="hidden" name="slug" value={slug} />
+
+                      {/* Same disclosure pattern as /activate: never open with a
+                          URL box. Scanning works for everyone; typing the link
+                          is the fallback for "scanned on my phone, setting up on
+                          my laptop". The slug is not printed as readable text on
+                          the product (see lib/hardware/batch.ts), so it only
+                          ever reaches us via a scan or a pasted link. */}
+                      {autoDetected && !manualOpen ? (
+                        <>
+                          <input type="hidden" name="slug" value={link} />
+                          <div className="cdm-pid">
+                            <span className="cdm-pid__chip">
+                              <Icon name="check" size={12} />
+                              Detected
+                            </span>
+                            <span className="cdm-pid__label">Product ID</span>
+                            <code className="cdm-pid__val">{slug}</code>
+                            {detectedSerial && (
+                              <>
+                                <span className="cdm-pid__label">Serial</span>
+                                <code className="cdm-pid__val">{detectedSerial}</code>
+                              </>
+                            )}
+                          </div>
+                          <button type="button" className="cdm-swap" onClick={openManual}>
+                            <Icon name="qr" size={12} />
+                            Setting up a different stand?
+                          </button>
+                        </>
+                      ) : manualOpen ? (
+                        <>
+                          <div className="cdm-field">
+                            <span className="cdm-field__icon" aria-hidden>
+                              <Icon name="qr" size={20} />
+                            </span>
+                            <input
+                              type="text"
+                              name="slug"
+                              value={link}
+                              onChange={(e) => setLink(e.target.value)}
+                              placeholder="repulabs.com/r/XXXXXXXXXX"
+                              aria-label="Your device QR link"
+                              autoComplete="off"
+                              spellCheck={false}
+                              className="cdm-select"
+                              style={{ textTransform: "none" }}
+                            />
+                          </div>
+                          {slug && (
+                            <div className="cdm-pid">
+                              <span className="cdm-pid__label">Product ID</span>
+                              <code className="cdm-pid__val">{slug}</code>
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="cdm-scan">
+                            <span className="cdm-scan__tile" aria-hidden>
+                              <Icon name="qr" size={22} />
+                            </span>
+                            <div>
+                              <div className="cdm-scan__t">
+                                Scan your stand&rsquo;s QR with your phone
+                              </div>
+                              <div className="cdm-scan__d">
+                                Open the link it lands on and we&rsquo;ll identify your stand
+                                automatically — nothing to type here.
+                              </div>
+                            </div>
+                          </div>
+                          <button type="button" className="cdm-swap" onClick={openManual}>
+                            <Icon name="qr" size={12} />
+                            Can&rsquo;t scan right now? Enter the link manually
+                          </button>
+                        </>
+                      )}
 
                       <p className="cdm-helper" style={{ marginTop: 16 }}>
                         Now enter the 5-character code from the card inside your package.
@@ -422,9 +491,7 @@ function BusinessSelect({
         aria-label="Select your business"
         onClick={() => setOpen((o) => !o)}
       >
-        <span className="cdm-combo__label">
-          {selected?.name ?? "Select a business"}
-        </span>
+        <span className="cdm-combo__label">{selected?.name ?? "Select a business"}</span>
       </button>
       <Icon name="chevD" size={18} className={`cdm-field__chev${open ? " is-open" : ""}`} />
 

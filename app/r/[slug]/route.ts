@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { isAllowedReviewHost, verifySlugSignature } from "@/lib/hardware/codes";
+import { rememberPendingSlug } from "@/lib/hardware/pending-slug";
 import { logger } from "@/lib/logger";
 import { resolveReviewRequestClick } from "@/lib/outreach/tracking";
 import { checkRateLimit } from "@/lib/ratelimit";
@@ -74,9 +75,17 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ slug
   if (device.status !== "active") {
     // Pass the slug through so /not-activated can pre-fill the activate form
     // and the "Activate this QR" CTA routes the owner to the right place.
-    return NextResponse.redirect(
+    //
+    // ALSO stash it in a cookie. The query string survives exactly one click;
+    // a new owner's real path to activation is scan → signup → magic link →
+    // onboarding → add a business → /activate, and every hop there drops it.
+    // The cookie is what lets /activate still know which unit they scanned, so
+    // they only have to type the code. See lib/hardware/pending-slug.ts.
+    const res = NextResponse.redirect(
       publicUrl(`/not-activated?reason=inactive&slug=${normalizedSlug}`, req),
     );
+    rememberPendingSlug(res, normalizedSlug);
+    return res;
   }
 
   // Multi-platform picker — instead of a 302 to one destination, redirect
