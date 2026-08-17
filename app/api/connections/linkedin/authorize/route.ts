@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth/config";
 import { resolveOAuthCredentials } from "@/lib/connections/oauth-helpers";
 import { logger } from "@/lib/logger";
-import { oauthCallbackUrl } from "@/lib/oauth/redirect";
+import { oauthBase, oauthCallbackUrl } from "@/lib/oauth/redirect";
 import { signOAuthState } from "@/lib/oauth/state";
 import { PROVIDERS } from "@/lib/providers/registry";
 import { type NextRequest, NextResponse } from "next/server";
@@ -29,7 +29,7 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   // Admin-configured credentials (DB) win; env is the fallback so existing
@@ -42,7 +42,9 @@ export async function GET(req: NextRequest) {
   );
   if (!creds) {
     logger.warn({ event: "oauth.linkedin.not_configured" });
-    return NextResponse.redirect(new URL("/connections?error=linkedin_not_configured", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=linkedin_not_configured", oauthBase(req)),
+    );
   }
   const clientId = creds.clientId;
 

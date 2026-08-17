@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth/config";
 import { toastApiBase, toastEnvConfigured } from "@/lib/connections/adapters/toast";
 import { loadProviderApp, signProviderState } from "@/lib/connections/oauth-helpers";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -18,18 +19,23 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session?.user || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const app = await loadProviderApp("toast");
   const clientId = app?.clientId ?? process.env.TOAST_CLIENT_ID;
   if (!clientId || (!app && !toastEnvConfigured())) {
-    return NextResponse.redirect(new URL("/connections?error=toast_not_configured", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=toast_not_configured", oauthBase(req)),
+    );
   }
 
   // Strip any trailing slash so `${appUrl}/api/...` can't become a double-slash
   // redirect_uri that fails the provider's exact-match check.
-  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin).replace(/\/+$/, "");
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin).replace(
+    /\/+$/,
+    "",
+  );
   const redirectUri = `${appUrl}/api/connections/toast/callback`;
   const { state, cookieHash } = await signProviderState({ orgId, userId, provider: "toast" });
 

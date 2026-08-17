@@ -4,6 +4,7 @@ import {
   loadProviderApp,
   signProviderState,
 } from "@/lib/connections/oauth-helpers";
+import { oauthBase } from "@/lib/oauth/redirect";
 import { cookies } from "next/headers";
 import { type NextRequest, NextResponse } from "next/server";
 
@@ -21,12 +22,14 @@ export async function GET(req: NextRequest) {
   const orgId = (session as { orgId?: string } | null)?.orgId;
   const userId = session?.user?.id;
   if (!session?.user || !orgId || !userId) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    return NextResponse.redirect(new URL("/login", oauthBase(req)));
   }
 
   const app = await loadProviderApp("hubspot");
   if (!app) {
-    return NextResponse.redirect(new URL("/connections?error=hubspot_not_configured", req.url));
+    return NextResponse.redirect(
+      new URL("/connections?error=hubspot_not_configured", oauthBase(req)),
+    );
   }
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? new URL("/", req.url).origin;
