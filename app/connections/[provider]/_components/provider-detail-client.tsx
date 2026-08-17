@@ -20,6 +20,7 @@ import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
 import { useFormStatus } from "react-dom";
 import { DisconnectDialog } from "../../_components/disconnect-dialog";
+import { META_APP_UNDER_REVIEW, MetaReviewModal } from "../../_components/meta-review-modal";
 import {
   type ConnPillTone,
   type SerializedConnection,
@@ -135,10 +136,14 @@ export function ProviderDetailClient({
               {connected ? (
                 <>
                   {provider.ready && !isApiKey && (
-                    <Link href={authorizeHref} className="btn btn--sm" prefetch={false}>
-                      <Icon name="refresh" size={12} />
-                      Reconnect
-                    </Link>
+                    provider.id === "meta" && META_APP_UNDER_REVIEW ? (
+                      <MetaReviewModal triggerClassName="btn btn--sm" triggerLabel="Reconnect" />
+                    ) : (
+                      <Link href={authorizeHref} className="btn btn--sm" prefetch={false}>
+                        <Icon name="refresh" size={12} />
+                        Reconnect
+                      </Link>
+                    )
                   )}
                   {liveConn && (
                     <DisconnectDialog
@@ -151,7 +156,9 @@ export function ProviderDetailClient({
                   )}
                 </>
               ) : isApiKey ? // The paste form below is the connect affordance — no hero CTA.
-              null : provider.ready ? (
+              null : provider.id === "meta" && META_APP_UNDER_REVIEW ? (
+                <MetaReviewModal triggerClassName="btn btn--sm btn--pri" triggerLabel="Connect" />
+              ) : provider.ready ? (
                 <Link href={authorizeHref} className="btn btn--sm btn--pri" prefetch={false}>
                   Connect
                   <Icon name="arrowR" size={12} />

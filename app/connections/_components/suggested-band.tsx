@@ -16,6 +16,7 @@
 import { BrandLogo } from "@/components/shell/brand-logo";
 import { Icon } from "@/components/shell/icon";
 import Link from "next/link";
+import { META_APP_UNDER_REVIEW, MetaReviewModal } from "./meta-review-modal";
 
 /** One resolved suggestion the page hands to this band. JSON-safe. */
 export type SuggestedCard = {
@@ -146,6 +147,8 @@ export function SuggestedBand({ cards }: { cards: SuggestedCard[] }) {
                     <span className="dot" />
                     Connected
                   </span>
+                ) : card.providerId === "meta" && META_APP_UNDER_REVIEW ? (
+                  <MetaReviewModal triggerClassName="btn btn--xs btn--pri" triggerLabel="Connect" />
                 ) : (
                   <Link
                     href={card.connectHref}
