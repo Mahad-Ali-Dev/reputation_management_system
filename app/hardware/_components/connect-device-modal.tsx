@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { QrCameraScanner } from "@/components/qr-scanner";
 import {
   type CreateEstablishmentQuickState,
   createEstablishmentQuick,
@@ -109,6 +110,19 @@ export function ConnectDeviceModal({
   const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
   const [state, formAction] = useActionState(activateDevice, initialState);
   const codeInputRef = useRef<HTMLInputElement>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  // The camera scanner hands back raw decoded text; only accept it (and stop
+  // the camera) if it's actually one of our slugs — a stray/unrelated QR
+  // code should be rejected so the camera keeps looking, not silently fill
+  // the link field with garbage.
+  function handleScanned(text: string): boolean {
+    if (!parseSlug(text)) return false;
+    setLink(text);
+    setManualOpen(true);
+    setScannerOpen(false);
+    return true;
+  }
 
   // Local copy of the establishments list so adding a business inline (below)
   // can flip the wizard straight to the normal "select a business" step
@@ -141,6 +155,7 @@ export function ConnectDeviceModal({
     if (open) {
       setStep(1);
       setShowAddForm(false);
+      setScannerOpen(false);
     }
   }, [open]);
 
@@ -311,7 +326,11 @@ export function ConnectDeviceModal({
                         </>
                       ) : (
                         <>
-                          <div className="cdm-scan">
+                          <button
+                            type="button"
+                            className="cdm-scan"
+                            onClick={() => setScannerOpen(true)}
+                          >
                             <span className="cdm-scan__tile" aria-hidden>
                               <Icon name="qr" size={22} />
                             </span>
@@ -320,11 +339,11 @@ export function ConnectDeviceModal({
                                 Scan your stand&rsquo;s QR with your phone
                               </div>
                               <div className="cdm-scan__d">
-                                Open the link it lands on and we&rsquo;ll identify your stand
-                                automatically — nothing to type here.
+                                Tap to open your camera — we&rsquo;ll fill in the link the moment
+                                we recognize it.
                               </div>
                             </div>
-                          </div>
+                          </button>
                           <button type="button" className="cdm-swap" onClick={openManual}>
                             <Icon name="qr" size={12} />
                             Can&rsquo;t scan right now? Enter the link manually
@@ -487,6 +506,14 @@ export function ConnectDeviceModal({
           </section>
         </div>
       )}
+
+      <QrCameraScanner
+        open={scannerOpen}
+        onScan={handleScanned}
+        onClose={() => setScannerOpen(false)}
+        title="Scan your stand's QR"
+        instructions="Point your camera at the QR on your stand"
+      />
     </>
   );
 }

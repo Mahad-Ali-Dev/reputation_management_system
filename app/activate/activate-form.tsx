@@ -1,5 +1,6 @@
 "use client";
 
+import { QrCameraScanner } from "@/components/qr-scanner";
 import { Icon } from "@/components/shell/icon";
 import {
   type CreateEstablishmentQuickState,
@@ -90,6 +91,19 @@ export function ActivateForm({
   // can't cover: scanned on a phone, activating on a laptop.
   const [manualOpen, setManualOpen] = useState(false);
   const codeRef = useRef<HTMLInputElement>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+
+  // The camera scanner hands back raw decoded text; only accept it (and stop
+  // the camera) if it's actually one of our slugs — a stray/unrelated QR
+  // code should be rejected so the camera keeps looking, not silently fill
+  // the link field with garbage.
+  function handleScanned(text: string): boolean {
+    if (!parseSlug(text)) return false;
+    setQrLink(text);
+    setManualOpen(true);
+    setScannerOpen(false);
+    return true;
+  }
 
   // Local copy of the establishments list so adding a business inline (below)
   // drops straight into the normal step-3 picker without navigating away to
@@ -158,222 +172,234 @@ export function ActivateForm({
   }
 
   return (
-    <form action={formAction} className="af">
-      {deviceState === "yours" && detectedSlug && (
-        <div className="af-banner af-banner--ok">
-          <strong>
-            QR <code>{detectedSlug}</code> is already active on your account
-          </strong>
-          Nothing to do here — you can change where it points from{" "}
-          <Link href="/hardware">My devices</Link>. To set up a different stand, use the link below.
-        </div>
-      )}
+    <>
+      <form action={formAction} className="af">
+        {deviceState === "yours" && detectedSlug && (
+          <div className="af-banner af-banner--ok">
+            <strong>
+              QR <code>{detectedSlug}</code> is already active on your account
+            </strong>
+            Nothing to do here — you can change where it points from{" "}
+            <Link href="/hardware">My devices</Link>. To set up a different stand, use the link
+            below.
+          </div>
+        )}
 
-      {deviceState === "unavailable" && detectedSlug && (
-        <div className="af-banner af-banner--warn">
-          <strong>
-            We don&rsquo;t recognize QR <code>{detectedSlug}</code>
-          </strong>
-          It may already belong to another business. Check the link matches the one printed on your
-          stand, or contact support.
-        </div>
-      )}
+        {deviceState === "unavailable" && detectedSlug && (
+          <div className="af-banner af-banner--warn">
+            <strong>
+              We don&rsquo;t recognize QR <code>{detectedSlug}</code>
+            </strong>
+            It may already belong to another business. Check the link matches the one printed on
+            your stand, or contact support.
+          </div>
+        )}
 
-      {state.error && (
-        <div role="alert" className="af-error">
-          <strong>Couldn&rsquo;t activate this code.</strong>
-          {state.error}
-        </div>
-      )}
+        {state.error && (
+          <div role="alert" className="af-error">
+            <strong>Couldn&rsquo;t activate this code.</strong>
+            {state.error}
+          </div>
+        )}
 
-      {/* ── 1 · the device ───────────────────────────────────────────
+        {/* ── 1 · the device ───────────────────────────────────────────
           The slug is what binds activation to one exact unit; the printed
           code can't, because this batch shares one code. See activateDevice. */}
-      <div className="af-field">
-        <span className="af-label">
-          <span className="af-num">1</span> Your device
-          {confirmed && (
-            <span className="af-detected">
-              <Icon name="check" size={11} />
-              Detected from your scan
-            </span>
-          )}
-        </span>
-
-        {confirmed ? (
-          <>
-            <input type="hidden" name="slug" value={qrLink} />
-            <div className="af-device">
-              <span className="af-device__tile" aria-hidden>
-                <Icon name="qr" size={22} />
+        <div className="af-field">
+          <span className="af-label">
+            <span className="af-num">1</span> Your device
+            {confirmed && (
+              <span className="af-detected">
+                <Icon name="check" size={11} />
+                Detected from your scan
               </span>
-              <div className="af-device__body">
-                <div className="af-device__link">{qrLink}</div>
+            )}
+          </span>
+
+          {confirmed ? (
+            <>
+              <input type="hidden" name="slug" value={qrLink} />
+              <div className="af-device">
+                <span className="af-device__tile" aria-hidden>
+                  <Icon name="qr" size={22} />
+                </span>
+                <div className="af-device__body">
+                  <div className="af-device__link">{qrLink}</div>
+                  <div className="af-pid">
+                    <span className="af-pid__label">Product ID</span>
+                    <code className="af-pid__val">{shownSlug ?? "—"}</code>
+                    {detectedSerial && (
+                      <>
+                        <span className="af-pid__label">Serial</span>
+                        <code className="af-pid__val">{detectedSerial}</code>
+                      </>
+                    )}
+                  </div>
+                </div>
+              </div>
+              <button type="button" className="af-swap" onClick={openManual}>
+                <Icon name="qr" size={12} />
+                Setting up a different stand?
+              </button>
+            </>
+          ) : manualOpen ? (
+            <>
+              <input
+                type="text"
+                name="slug"
+                value={qrLink}
+                onChange={(e) => setQrLink(e.target.value)}
+                placeholder="repulabs.com/r/XXXXXXXXXX"
+                aria-label="Your device QR link"
+                autoComplete="off"
+                spellCheck={false}
+                // Required so an empty box can't be submitted: the server would
+                // fall back to the scan cookie and bind a stand they just told
+                // us isn't the one in their hands.
+                required
+                className="af-input af-input--url"
+              />
+              {shownSlug && (
                 <div className="af-pid">
                   <span className="af-pid__label">Product ID</span>
-                  <code className="af-pid__val">{shownSlug ?? "—"}</code>
-                  {detectedSerial && (
-                    <>
-                      <span className="af-pid__label">Serial</span>
-                      <code className="af-pid__val">{detectedSerial}</code>
-                    </>
-                  )}
+                  <code className="af-pid__val">{shownSlug}</code>
                 </div>
-              </div>
-            </div>
-            <button type="button" className="af-swap" onClick={openManual}>
-              <Icon name="qr" size={12} />
-              Setting up a different stand?
-            </button>
-          </>
-        ) : manualOpen ? (
-          <>
-            <input
-              type="text"
-              name="slug"
-              value={qrLink}
-              onChange={(e) => setQrLink(e.target.value)}
-              placeholder="repulabs.com/r/XXXXXXXXXX"
-              aria-label="Your device QR link"
-              autoComplete="off"
-              spellCheck={false}
-              // Required so an empty box can't be submitted: the server would
-              // fall back to the scan cookie and bind a stand they just told
-              // us isn't the one in their hands.
-              required
-              className="af-input af-input--url"
-            />
-            {shownSlug && (
-              <div className="af-pid">
-                <span className="af-pid__label">Product ID</span>
-                <code className="af-pid__val">{shownSlug}</code>
-              </div>
-            )}
-            <span className="af-hint">
-              Open your stand&rsquo;s QR on any phone and copy the link it lands on.
-              {detectedSlug && (
-                <>
-                  {" "}
-                  <button type="button" className="af-linkbtn" onClick={useDetected}>
-                    Or go back to the stand you scanned ({detectedSlug})
-                  </button>
-                </>
               )}
-            </span>
-          </>
-        ) : (
-          <>
-            {/* Default when we know nothing: point at the one action that works
+              <span className="af-hint">
+                Open your stand&rsquo;s QR on any phone and copy the link it lands on.
+                {detectedSlug && (
+                  <>
+                    {" "}
+                    <button type="button" className="af-linkbtn" onClick={useDetected}>
+                      Or go back to the stand you scanned ({detectedSlug})
+                    </button>
+                  </>
+                )}
+              </span>
+            </>
+          ) : (
+            <>
+              {/* Default when we know nothing: point at the one action that works
                 for everyone rather than opening with a URL box. */}
-            <div className="af-scan">
-              <span className="af-scan__tile" aria-hidden>
-                <Icon name="qr" size={22} />
-              </span>
-              <div className="af-scan__body">
-                <div className="af-scan__t">Scan your stand&rsquo;s QR with your phone</div>
-                <div className="af-scan__d">
-                  Open the link it lands on and we&rsquo;ll identify your stand automatically —
-                  nothing to type here.
+              <button type="button" className="af-scan" onClick={() => setScannerOpen(true)}>
+                <span className="af-scan__tile" aria-hidden>
+                  <Icon name="qr" size={22} />
+                </span>
+                <div className="af-scan__body">
+                  <div className="af-scan__t">Scan your stand&rsquo;s QR with your phone</div>
+                  <div className="af-scan__d">
+                    Tap to open your camera — we&rsquo;ll fill in the link the moment we recognize
+                    it.
+                  </div>
                 </div>
-              </div>
-            </div>
-            <button type="button" className="af-swap" onClick={openManual}>
-              <Icon name="qr" size={12} />
-              Can&rsquo;t scan right now? Enter the link manually
-            </button>
-          </>
-        )}
-      </div>
+              </button>
+              <button type="button" className="af-swap" onClick={openManual}>
+                <Icon name="qr" size={12} />
+                Can&rsquo;t scan right now? Enter the link manually
+              </button>
+            </>
+          )}
+        </div>
 
-      {/* ── 2 · the code ─────────────────────────────────────────── */}
-      <div className="af-field">
-        <span className="af-label">
-          <span className="af-num">2</span> Activation code
-        </span>
-        {/* <label> wrapper = click any slot to focus the real input, natively. */}
-        <label className="af-code">
-          <input
-            ref={codeRef}
-            name="activationCode"
-            value={code}
-            onChange={(e) => setCode(normalizeCode(e.target.value))}
+        {/* ── 2 · the code ─────────────────────────────────────────── */}
+        <div className="af-field">
+          <span className="af-label">
+            <span className="af-num">2</span> Activation code
+          </span>
+          {/* <label> wrapper = click any slot to focus the real input, natively. */}
+          <label className="af-code">
+            <input
+              ref={codeRef}
+              name="activationCode"
+              value={code}
+              onChange={(e) => setCode(normalizeCode(e.target.value))}
+              required
+              maxLength={CODE_LEN}
+              inputMode="text"
+              autoComplete="off"
+              autoCapitalize="characters"
+              aria-label="Activation code"
+              className="af-code__input"
+            />
+            <span className="af-code__slots" aria-hidden>
+              {Array.from({ length: CODE_LEN }).map((_, i) => (
+                <span
+                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-slot display
+                  key={`slot-${i}`}
+                  className={code[i] ? "af-slot af-slot--has" : "af-slot"}
+                >
+                  {code[i] ?? ""}
+                </span>
+              ))}
+            </span>
+          </label>
+          <span className="af-hint">
+            The 5-character code printed on the card inside your package.
+          </span>
+        </div>
+
+        {/* ── 3 · the business ─────────────────────────────────────── */}
+        <label className="af-field">
+          <span className="af-label">
+            <span className="af-num">3</span> Which business is this QR for?
+          </span>
+          <select
+            name="establishmentId"
             required
-            maxLength={CODE_LEN}
-            inputMode="text"
-            autoComplete="off"
-            autoCapitalize="characters"
-            aria-label="Activation code"
-            className="af-code__input"
-          />
-          <span className="af-code__slots" aria-hidden>
-            {Array.from({ length: CODE_LEN }).map((_, i) => (
-              <span
-                // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-slot display
-                key={`slot-${i}`}
-                className={code[i] ? "af-slot af-slot--has" : "af-slot"}
-              >
-                {code[i] ?? ""}
-              </span>
+            defaultValue={businesses[0]?.id}
+            className="af-select"
+          >
+            {businesses.map((e) => (
+              <option key={e.id} value={e.id}>
+                {e.name}
+              </option>
             ))}
+          </select>
+          <span className="af-hint">
+            Need a new listing? <Link href="/establishments/new">Add a listing →</Link>
           </span>
         </label>
-        <span className="af-hint">
-          The 5-character code printed on the card inside your package.
-        </span>
-      </div>
 
-      {/* ── 3 · the business ─────────────────────────────────────── */}
-      <label className="af-field">
-        <span className="af-label">
-          <span className="af-num">3</span> Which business is this QR for?
-        </span>
-        <select
-          name="establishmentId"
-          required
-          defaultValue={businesses[0]?.id}
-          className="af-select"
-        >
-          {businesses.map((e) => (
-            <option key={e.id} value={e.id}>
-              {e.name}
-            </option>
-          ))}
-        </select>
-        <span className="af-hint">
-          Need a new listing? <Link href="/establishments/new">Add a listing →</Link>
-        </span>
-      </label>
+        {/* ── 4 · the destination ──────────────────────────────────── */}
+        <label className="af-field">
+          <span className="af-label">
+            <span className="af-num">4</span> Paste your Google review link
+            <span className="af-opt">Strongly recommended</span>
+          </span>
+          <input
+            type="url"
+            name="reviewUrl"
+            placeholder="https://g.page/r/... or https://search.google.com/local/writereview?placeid=..."
+            autoComplete="off"
+            className="af-input af-input--url"
+          />
+          <span className="af-hint">
+            Where scans should land. Get it from{" "}
+            <a href="https://business.google.com/" target="_blank" rel="noopener noreferrer">
+              Google Business Profile
+            </a>{" "}
+            → Customers → Reviews → <strong>Share review form</strong>. Leave blank to derive
+            automatically from your business — you can always change it later via Edit on the QR
+            card.
+          </span>
+        </label>
 
-      {/* ── 4 · the destination ──────────────────────────────────── */}
-      <label className="af-field">
-        <span className="af-label">
-          <span className="af-num">4</span> Paste your Google review link
-          <span className="af-opt">Strongly recommended</span>
-        </span>
-        <input
-          type="url"
-          name="reviewUrl"
-          placeholder="https://g.page/r/... or https://search.google.com/local/writereview?placeid=..."
-          autoComplete="off"
-          className="af-input af-input--url"
-        />
-        <span className="af-hint">
-          Where scans should land. Get it from{" "}
-          <a href="https://business.google.com/" target="_blank" rel="noopener noreferrer">
-            Google Business Profile
-          </a>{" "}
-          → Customers → Reviews → <strong>Share review form</strong>. Leave blank to derive
-          automatically from your business — you can always change it later via Edit on the QR card.
-        </span>
-      </label>
+        <div className="af-actions">
+          <Link href="/hardware" className="af-cancel">
+            Cancel
+          </Link>
+          <SubmitButton />
+        </div>
+      </form>
 
-      <div className="af-actions">
-        <Link href="/hardware" className="af-cancel">
-          Cancel
-        </Link>
-        <SubmitButton />
-      </div>
-    </form>
+      <QrCameraScanner
+        open={scannerOpen}
+        onScan={handleScanned}
+        onClose={() => setScannerOpen(false)}
+        title="Scan your stand's QR"
+        instructions="Point your camera at the QR on your stand"
+      />
+    </>
   );
 }
 
