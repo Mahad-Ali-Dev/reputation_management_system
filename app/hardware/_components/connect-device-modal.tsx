@@ -1,9 +1,14 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import {
+  type CreateEstablishmentQuickState,
+  createEstablishmentQuick,
+} from "@/lib/establishments/actions";
 import { type ActivateDeviceState, activateDevice } from "@/lib/hardware/actions";
 import { parseSlug } from "@/lib/hardware/slug";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useActionState, useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import "./connect-device-modal.css";
@@ -28,6 +33,20 @@ import "./connect-device-modal.css";
  */
 
 const initialState: ActivateDeviceState = { error: null };
+const createBusinessInitialState: CreateEstablishmentQuickState = { error: null };
+
+const CATEGORY_OPTIONS = [
+  "Cafe",
+  "Restaurant",
+  "Retail",
+  "Dental",
+  "Salon",
+  "Fitness",
+  "Automotive",
+  "IT Services",
+  "Professional Services",
+  "Other",
+];
 
 const SETUP_VIDEO_URL = process.env.NEXT_PUBLIC_SETUP_VIDEO_URL ?? null;
 const ASSET = "/assets/repulabs/my-devices";
@@ -91,9 +110,38 @@ export function ConnectDeviceModal({
   const [state, formAction] = useActionState(activateDevice, initialState);
   const codeInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset to step 1 each time the modal opens.
+  // Local copy of the establishments list so adding a business inline (below)
+  // can flip the wizard straight to the normal "select a business" step
+  // without waiting on the server page to re-render with fresh props.
+  const [businesses, setBusinesses] = useState(establishments);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [createState, createAction] = useActionState(
+    createEstablishmentQuick,
+    createBusinessInitialState,
+  );
+
+  // A business was just created inline — select it and drop back into the
+  // normal wizard instead of the "no businesses yet" notice. router.refresh()
+  // re-fetches this server page's props so any OTHER <ConnectDeviceModal>
+  // instance on /hardware (and establishment counts elsewhere) pick up the
+  // new business too, not just this one's local state.
+  const router = useRouter();
   useEffect(() => {
-    if (open) setStep(1);
+    const created = createState.establishment;
+    if (!created) return;
+    setBusinesses((prev) => (prev.some((b) => b.id === created.id) ? prev : [...prev, created]));
+    setEstablishmentId(created.id);
+    setShowAddForm(false);
+    router.refresh();
+  }, [createState.establishment, router]);
+
+  // Reset to step 1 (and the add-business notice, not the form) each time the
+  // modal opens.
+  useEffect(() => {
+    if (open) {
+      setStep(1);
+      setShowAddForm(false);
+    }
   }, [open]);
 
   // Esc closes; lock body scroll while open.
@@ -111,7 +159,7 @@ export function ConnectDeviceModal({
     };
   }, [open]);
 
-  const noBusinesses = establishments.length === 0;
+  const noBusinesses = businesses.length === 0;
   const codeComplete = code.length === CODE_LEN;
   // Shared with /activate and the server action, so all three agree on what a
   // pasted link means (see lib/hardware/slug.ts). null = not a usable slug yet.
@@ -160,7 +208,16 @@ export function ConnectDeviceModal({
             {noBusinesses ? (
               <div className="cdm-pad">
                 <Header step={step} />
-                <NoBusinessNotice />
+                {showAddForm ? (
+                  <InlineAddBusinessForm
+                    action={createAction}
+                    error={createState.error}
+                    fieldErrors={createState.fieldErrors}
+                    onCancel={() => setShowAddForm(false)}
+                  />
+                ) : (
+                  <NoBusinessNotice onAdd={() => setShowAddForm(true)} />
+                )}
               </div>
             ) : (
               <form action={formAction} className="cdm-form">
@@ -178,7 +235,7 @@ export function ConnectDeviceModal({
                     <div className="cdm-panel" hidden={step !== 1}>
                       <SectionHead n={1} icon="building" title="Select Your Business" />
                       <BusinessSelect
-                        establishments={establishments}
+                        establishments={businesses}
                         value={establishmentId}
                         onChange={setEstablishmentId}
                       />
@@ -444,6 +501,15 @@ export function ConnectDeviceModal({
  * (`establishmentId`) so activateDevice's `form.get("establishmentId")` is
  * unchanged.
  */
+/** Fixed-position rect for a combobox popup, anchored to its field. `.cdm-modal`
+ *  clips overflow (so its own rounded corners hide the footer's square
+ *  background), which silently clips the popup too whenever a field sits
+ *  close to the modal's bottom edge — e.g. the "add a business" panel's
+ *  Category field. Rendering the popup with `position: fixed` at these
+ *  viewport coordinates (instead of `position: absolute` within the field)
+ *  escapes that clipping entirely. */
+type PopupRect = { top: number; left: number; width: number };
+
 function BusinessSelect({
   establishments,
   value,
@@ -454,9 +520,18 @@ function BusinessSelect({
   onChange: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [rect, setRect] = useState<PopupRect | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const selected = establishments.find((e) => e.id === value) ?? establishments[0];
+
+  function toggleOpen() {
+    if (!open) {
+      const r = rootRef.current?.getBoundingClientRect();
+      if (r) setRect({ top: r.bottom + 8, left: r.left, width: r.width });
+    }
+    setOpen((o) => !o);
+  }
 
   useEffect(() => {
     if (!open) return;
@@ -489,14 +564,20 @@ function BusinessSelect({
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label="Select your business"
-        onClick={() => setOpen((o) => !o)}
+        onClick={toggleOpen}
       >
         <span className="cdm-combo__label">{selected?.name ?? "Select a business"}</span>
       </button>
       <Icon name="chevD" size={18} className={`cdm-field__chev${open ? " is-open" : ""}`} />
 
-      {open && (
-        <div className="cdm-combo__list" role="listbox" aria-label="Businesses" tabIndex={-1}>
+      {open && rect && (
+        <div
+          className="cdm-combo__list"
+          role="listbox"
+          aria-label="Businesses"
+          tabIndex={-1}
+          style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width, right: "auto" }}
+        >
           {establishments.map((e) => {
             const isSel = e.id === selected?.id;
             return (
@@ -513,6 +594,115 @@ function BusinessSelect({
                 }}
               >
                 <span className="cdm-combo__opttext">{e.name}</span>
+                {isSel && <Icon name="check" size={14} />}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** Same combobox pattern as `BusinessSelect`, for the "add a business" form's
+ *  category field — a native `<select>` here rendered its options popup with
+ *  the browser's own plain list (see the screenshot that prompted this), so
+ *  it's swapped for the same styled trigger + listbox, submitting via a
+ *  hidden input (`category`) the parent form already renders. */
+function CategorySelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (category: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [rect, setRect] = useState<PopupRect | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: PointerEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        setOpen(false);
+        triggerRef.current?.focus();
+      }
+    }
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  function toggleOpen() {
+    if (!open) {
+      const r = rootRef.current?.getBoundingClientRect();
+      if (r) setRect({ top: r.bottom + 8, left: r.left, width: r.width });
+    }
+    setOpen((o) => !o);
+  }
+
+  function choose(next: string) {
+    onChange(next);
+    setOpen(false);
+    triggerRef.current?.focus();
+  }
+
+  return (
+    <div className="cdm-field" ref={rootRef}>
+      <span className="cdm-field__icon" aria-hidden>
+        <Icon name="tag" size={20} />
+      </span>
+      <button
+        ref={triggerRef}
+        type="button"
+        className="cdm-combo__trigger"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label="Category"
+        onClick={toggleOpen}
+      >
+        <span className={`cdm-combo__label${value ? "" : " cdm-combo__label--placeholder"}`}>
+          {value || "Category (optional)"}
+        </span>
+      </button>
+      <Icon name="chevD" size={18} className={`cdm-field__chev${open ? " is-open" : ""}`} />
+
+      {open && rect && (
+        <div
+          className="cdm-combo__list"
+          role="listbox"
+          aria-label="Category"
+          tabIndex={-1}
+          style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width, right: "auto" }}
+        >
+          <button
+            type="button"
+            role="option"
+            aria-selected={value === ""}
+            className={`cdm-combo__opt${value === "" ? " is-sel" : ""}`}
+            onClick={() => choose("")}
+          >
+            <span className="cdm-combo__opttext cdm-combo__opttext--muted">None</span>
+          </button>
+          {CATEGORY_OPTIONS.map((c) => {
+            const isSel = c === value;
+            return (
+              <button
+                key={c}
+                type="button"
+                role="option"
+                aria-selected={isSel}
+                className={`cdm-combo__opt${isSel ? " is-sel" : ""}`}
+                onClick={() => choose(c)}
+              >
+                <span className="cdm-combo__opttext">{c}</span>
                 {isSel && <Icon name="check" size={14} />}
               </button>
             );
@@ -602,17 +792,90 @@ function Callout({
   );
 }
 
-function NoBusinessNotice() {
+function NoBusinessNotice({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="col" style={{ gap: 14, marginTop: 24 }}>
       <p style={{ margin: 0, fontSize: 14, color: "var(--rl-muted)", lineHeight: 1.55 }}>
         Add a business first — a device has to point its scans at one of your listings.
       </p>
-      <Link href="/establishments/new" className="cdm-cta" style={{ alignSelf: "flex-start" }}>
+      <button
+        type="button"
+        onClick={onAdd}
+        className="cdm-cta"
+        style={{ alignSelf: "flex-start" }}
+      >
         <Icon name="plus" size={15} />
         Add a business
-      </Link>
+      </button>
     </div>
+  );
+}
+
+/** Quick inline "add a business" form for step 1 when the org has none yet —
+ *  keeps the customer inside the device wizard instead of bouncing them to
+ *  the full /establishments/new page (which has its own unrelated stepper +
+ *  promo layout and would lose their place in this flow). Only Name +
+ *  Category are collected here; timezone defaults to UTC and the rest can be
+ *  filled in later from the establishment's own page. */
+function InlineAddBusinessForm({
+  action,
+  error,
+  fieldErrors,
+  onCancel,
+}: {
+  action: (formData: FormData) => void;
+  error: string | null;
+  fieldErrors?: Partial<Record<string, string>>;
+  onCancel: () => void;
+}) {
+  const [category, setCategory] = useState("");
+
+  return (
+    <form action={action} className="col" style={{ gap: 14, marginTop: 24 }}>
+      <input type="hidden" name="timezone" value="UTC" />
+      <input type="hidden" name="category" value={category} />
+
+      {error && (
+        <div className="cdm-error" role="alert">
+          {error}
+        </div>
+      )}
+
+      <div className="cdm-field">
+        <span className="cdm-field__icon" aria-hidden>
+          <Icon name="building" size={20} />
+        </span>
+        <input
+          type="text"
+          name="name"
+          required
+          placeholder="Business name"
+          aria-label="Business name"
+          aria-invalid={!!fieldErrors?.name}
+          autoComplete="off"
+          className="cdm-select"
+        />
+      </div>
+
+      <CategorySelect value={category} onChange={setCategory} />
+
+      <div className="row" style={{ gap: 10 }}>
+        <button type="button" className="cdm-back" onClick={onCancel}>
+          Cancel
+        </button>
+        <AddBusinessSubmitButton />
+      </div>
+    </form>
+  );
+}
+
+function AddBusinessSubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button type="submit" className="cdm-cta" disabled={pending}>
+      <Icon name="plus" size={15} />
+      {pending ? "Adding…" : "Add business"}
+    </button>
   );
 }
 

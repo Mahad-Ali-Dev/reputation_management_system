@@ -324,6 +324,69 @@
   background-position: right 16px center;
 }
 
+/* ── custom category combobox ────────────────────────────────
+   The trigger reuses .af-select's own look (border, radius, chevron); only
+   the options POPUP is custom (a native <select>'s popup is plain
+   OS-rendered chrome that can't be restyled) — matches the "Connect a
+   device" modal's dropdown so both "add a business" flows look consistent. */
+.af-combo__trigger {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  text-align: left;
+}
+.af-combo__label {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.af-combo__label--placeholder {
+  color: #a8afc9;
+}
+.af-combo__list {
+  z-index: 20;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid #e4defc;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 16px 36px rgba(43, 33, 110, 0.14);
+  max-height: 240px;
+  overflow-y: auto;
+}
+.af-combo__opt {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #111936;
+  font-size: 14px;
+  text-align: left;
+  cursor: pointer;
+}
+.af-combo__opt:hover,
+.af-combo__opt:focus-visible {
+  background: #f1ecff;
+}
+.af-combo__opt.is-sel {
+  background: #f1ecff;
+  color: #6c4dff;
+}
+.af-combo__opttext {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.af-combo__opttext--muted {
+  color: #8b93b5;
+}
+
 /* ── the detected device, as a card ──────────────────────────
    The customer's job here is to CONFIRM, not to transcribe a URL — so when we
    know the stand we show it rather than asking for it. */
@@ -560,6 +623,7 @@
   font-weight: 600;
   white-space: nowrap;
   text-decoration: none;
+  cursor: pointer;
   transition: border-color 0.15s ease, background 0.15s ease;
 }
 .af-cancel:hover {

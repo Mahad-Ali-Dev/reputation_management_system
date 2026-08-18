@@ -135,6 +135,77 @@ export async function createEstablishment(form: FormData): Promise<void> {
   redirect(`/establishments/${created.id}`);
 }
 
+/** State shape for `createEstablishmentQuick`'s `useActionState` hook. */
+export type CreateEstablishmentQuickState = {
+  error: string | null;
+  fieldErrors?: Partial<Record<string, string>>;
+  establishment?: { id: string; name: string } | null;
+};
+
+/**
+ * Same create as `createEstablishment`, minus address fields, shaped for
+ * `useActionState` instead of throwing + redirecting — used by the
+ * "Connect a device" modal's inline "add a business" step, where a redirect
+ * would navigate the user away from /hardware mid-wizard. Returns the created
+ * `{id, name}` so the caller can select it locally without a full reload.
+ */
+export async function createEstablishmentQuick(
+  _prev: CreateEstablishmentQuickState,
+  form: FormData,
+): Promise<CreateEstablishmentQuickState> {
+  const { orgId, userId } = await requireRole("admin");
+
+  const parsed = CreateSchema.pick({ name: true, category: true, timezone: true }).safeParse({
+    name: fd(form, "name"),
+    category: fd(form, "category"),
+    timezone: fd(form, "timezone") ?? "UTC",
+  });
+  if (!parsed.success) {
+    const fieldErrors: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0];
+      if (typeof key === "string") fieldErrors[key] = issue.message;
+    }
+    return {
+      error: "Please correct the highlighted fields and try again.",
+      fieldErrors,
+    };
+  }
+  const data = parsed.data;
+
+  const created = await withTenant(orgId, async (tx) => {
+    const e = await tx.establishment.create({
+      data: {
+        organizationId: orgId,
+        name: data.name,
+        category: data.category || null,
+        timezone: data.timezone,
+      },
+    });
+    await tx.auditLog.create({
+      data: {
+        organizationId: orgId,
+        actorType: "user",
+        actorId: userId,
+        action: "establishment.created",
+        resourceType: "establishment",
+        resourceId: e.id,
+        afterData: { id: e.id, name: e.name },
+      },
+    });
+    return e;
+  });
+
+  logger.info(
+    { orgId, establishmentId: created.id, event: "establishment.created" },
+    "establishment created (quick, from device modal)",
+  );
+
+  revalidatePath("/establishments");
+  revalidatePath("/hardware");
+  return { error: null, establishment: { id: created.id, name: created.name } };
+}
+
 export async function updateEstablishment(id: string, form: FormData): Promise<void> {
   const { orgId, userId } = await requireRole("manager");
 

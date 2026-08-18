@@ -160,8 +160,8 @@
 }
 .cdm-step.is-active {
   color: #fff;
-  background: linear-gradient(135deg, #315dff 0%, #6d46f0 100%);
-  box-shadow: 0 8px 16px rgba(49, 93, 255, 0.22);
+  background: linear-gradient(135deg, #a855f7 0%, #6d46f0 100%);
+  box-shadow: 0 8px 16px rgba(147, 51, 234, 0.22);
 }
 .cdm-step.is-done {
   color: #6c4dff;
@@ -302,6 +302,9 @@
   white-space: nowrap;
   text-overflow: ellipsis;
 }
+.cdm-combo__label--placeholder {
+  color: #8a92aa;
+}
 
 .cdm-combo__list {
   position: absolute;
@@ -350,6 +353,9 @@
   overflow: hidden;
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+.cdm-combo__opttext--muted {
+  color: #8a92aa;
 }
 
 /* Callout */
@@ -605,7 +611,7 @@
 .cdm-plat--sel .cdm-plat__radio {
   border: 0;
   color: #fff;
-  background: linear-gradient(145deg, #3157ff 0%, #5a31f4 100%);
+  background: linear-gradient(145deg, #a855f7 0%, #5a31f4 100%);
 }
 .cdm-plat__soon {
   position: absolute;
@@ -683,8 +689,8 @@
   font-size: 15px;
   font-weight: 700;
   cursor: pointer;
-  background: linear-gradient(100deg, #172ecf 0%, #3955ff 48%, #7836dd 100%);
-  box-shadow: 0 14px 26px rgba(66, 45, 192, 0.26);
+  background: linear-gradient(100deg, #7e22ce 0%, #a855f7 48%, #7836dd 100%);
+  box-shadow: 0 14px 26px rgba(147, 51, 234, 0.26);
   transition: transform 0.16s ease, filter 0.16s ease;
 }
 .cdm-cta:hover:not(:disabled) {
@@ -749,7 +755,6 @@
 @media (max-width: 560px) {
   .cdm-backdrop {
     padding: 12px;
-    align-items: flex-start;
   }
   .cdm-modal {
     max-height: calc(100vh - 24px);
