@@ -131,27 +131,16 @@ export default async function ActivatePage({
               <StandArt />
             </div>
 
-            {establishments.length === 0 ? (
-              <div className="af-warn">
-                <strong>Add a location first.</strong> A stand has to point at one of your
-                establishments. <Link href="/establishments/new">Create one</Link> and come back.
-                {detectedQrUrl && (
-                  <>
-                    {" "}
-                    We&rsquo;ll still remember the stand you scanned
-                    {scannedSlug ? ` (${scannedSlug})` : ""} when you do.
-                  </>
-                )}
-              </div>
-            ) : (
-              <ActivateForm
-                establishments={establishments}
-                detectedQrUrl={detectedQrUrl}
-                detectedSlug={scannedSlug}
-                detectedSerial={device?.serial ?? null}
-                deviceState={deviceState}
-              />
-            )}
+            {/* ActivateForm itself shows an inline "add a business" step when
+                `establishments` is empty, instead of sending the customer away
+                to /establishments/new and losing the scanned-stand context. */}
+            <ActivateForm
+              establishments={establishments}
+              detectedQrUrl={detectedQrUrl}
+              detectedSlug={scannedSlug}
+              detectedSerial={device?.serial ?? null}
+              deviceState={deviceState}
+            />
           </div>
         </section>
 
