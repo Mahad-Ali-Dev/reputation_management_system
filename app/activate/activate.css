@@ -435,10 +435,19 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  width: 100%;
   padding: 16px;
   border-radius: 15px;
   border: 2px dashed #d7d0ff;
   background: linear-gradient(180deg, #fdfcff, #f8f6ff);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.af-scan:hover,
+.af-scan:focus-visible {
+  border-color: #b9a8ff;
+  background: linear-gradient(180deg, #f8f6ff, #f1ecff);
 }
 .af-scan__tile {
   flex: 0 0 46px;
