@@ -565,7 +565,7 @@ function EmptyState({
                 </>
               ) : (
                 <>
-                  Got a ReviewBoost card, plaque, or stand? Add your first device to start
+                  Got a repulabs card, plaque, or stand? Add your first device to start
                   collecting scans and engage more customers — enter the code from your package and
                   we&rsquo;ll route every scan to your Google review page.
                 </>

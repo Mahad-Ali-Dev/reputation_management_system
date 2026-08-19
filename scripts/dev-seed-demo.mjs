@@ -193,7 +193,7 @@ async function main() {
 
   // ---- hardware products + order + devices + scans ----
   const prods = {};
-  for (const [sku, nm, cents, kind] of [["RB-CARD","ReviewBoost Card",2900,"nfc"],["RB-PLAQUE","ReviewBoost Plaque",4900,"qr"],["RB-STAND","ReviewBoost Stand",6900,"qr"]]) {
+  for (const [sku, nm, cents, kind] of [["RB-CARD","Repulabs Card",2900,"nfc"],["RB-PLAQUE","Repulabs Plaque",4900,"qr"],["RB-STAND","Repulabs Stand",6900,"qr"]]) {
     prods[kind] = await prisma.hardwareProduct.upsert({ where: { sku }, update: {}, create: { sku, name: nm, priceCents: cents, hasNfc: kind === "nfc" } }).catch(async () => prisma.hardwareProduct.findUnique({ where: { sku } }));
   }
   const order = await prisma.hardwareOrder.create({ data: { organizationId: oid, status: "delivered", shippingAddress: { line1: "412 Congress Ave", city: "Austin", state: "TX", postalCode: "78701", country: "US" }, totalCents: 11700, deliveredAt: daysAgo(40), items: { create: [ { productId: prods.qr.id, establishmentId: est.id, quantity: 1, unitPriceCents: 4900 }, { productId: prods.nfc.id, establishmentId: est.id, quantity: 2, unitPriceCents: 2900 } ] } } });
