@@ -62,7 +62,14 @@ const nextConfig = {
       "frame-src 'self' https://js.stripe.com https://hooks.stripe.com",
       "connect-src 'self' https://api.stripe.com https://api.anthropic.com https://*.googleapis.com",
       "frame-ancestors 'none'",
-      "form-action 'self'",
+      // Google sign-in is a <form action={serverAction}> POST that answers with a
+      // redirect to accounts.google.com. WebKit and Firefox enforce form-action
+      // against the REDIRECT target; Chrome only checks the form's initial
+      // target. So 'self' alone let Google login work in Chrome while Safari
+      // blocked the navigation silently. Listing the authorization endpoint
+      // fixes Safari without loosening anything else -- the OAuth "connect an
+      // account" flows are plain <a href> GETs, which form-action never covers.
+      "form-action 'self' https://accounts.google.com",
       "base-uri 'self'",
       "object-src 'none'",
     ].join("; ");
