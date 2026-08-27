@@ -351,7 +351,7 @@ export default async function ConnectionsPage({
   const isEmpty = connectedCount === 0;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Settings", "App Connections"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Account", "App Connections"]}>
       <div className="conn-page">
         {/* ── Hero header ─────────────────────────────────────────────── */}
         <div className="ph">

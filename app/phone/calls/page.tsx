@@ -33,7 +33,7 @@ export default async function PhoneCallsPage() {
   }
 
   return (
-    <AppShellServer topBar={<TopBar title="Calls" />} crumbs={["Intelligence", "AI Receptionist", "Calls"]}>
+    <AppShellServer topBar={<TopBar title="Calls" />} crumbs={["AI Tools", "AI Receptionist", "Calls"]}>
       <PageHeader
         title="Recent calls"
         description="Every call your AI receptionist has handled."

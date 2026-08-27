@@ -27,7 +27,7 @@ export default async function BulkSocialPostsPage() {
   );
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Engagement", "Social Studio", "Bulk schedule"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Inbox & Social", "Social Studio", "Bulk schedule"]}>
       <div className="sk-page">
         {/* hero */}
         <div className="sk-bulk-hero">

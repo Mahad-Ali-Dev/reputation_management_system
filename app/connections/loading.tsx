@@ -10,7 +10,7 @@ import { TopBar } from "@/components/topbar";
  */
 export default function ConnectionsLoading() {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Settings", "App Connections"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Account", "App Connections"]}>
       <PageHeader
         title="Connections"
         description="Pull customer data from your CRM and POS, listen on social, and let repulabs ship review requests at the moment of truth."
