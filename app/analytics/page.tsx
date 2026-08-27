@@ -50,7 +50,7 @@ export default async function AnalyticsPage({
   return (
     <AppShellServer
       topBar={<TopBar title="Analytics" />}
-      crumbs={["Insights", "Analytics"]}
+      crumbs={["Data & Insights", "Analytics"]}
     >
       <div className="brp" id="business-report">
         <BrandHeader brand={brand} period={range.label} />

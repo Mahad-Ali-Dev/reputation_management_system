@@ -22,7 +22,7 @@ const HERO_ART = "/assets/repulabs/settings/hero.svg";
 
 export default function SettingsLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Settings"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Account"]}>
       <div className="set-shell">
         {/* ── Hero banner (shared across every settings page) ─────────── */}
         <header className="set-hero">

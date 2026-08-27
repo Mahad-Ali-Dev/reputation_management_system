@@ -43,7 +43,7 @@ async function SupportInboxPageLocked({
   const sp = await searchParams;
 
   return (
-    <AppShellServer topBar={<TopBar title="Message Center" />} crumbs={["Engagement", "Message Center"]}>
+    <AppShellServer topBar={<TopBar title="Message Center" />} crumbs={["Inbox & Social", "Message Center"]}>
       <PageHeader
         title="Message Center"
         titleBadge={
@@ -71,7 +71,7 @@ async function SupportInboxPageLocked({
           </span>
         }
         description="DMs, comments, website chat, SMS, email, and phone callbacks in one queue."
-        breadcrumb={[{ label: "Engagement" }, { label: "Unified Inbox" }]}
+        breadcrumb={[{ label: "Inbox & Social" }, { label: "Message Center" }]}
         actions={
           <Link href="/connections" className="btn btn--sm">
             <Icon name="plug" size={13} />

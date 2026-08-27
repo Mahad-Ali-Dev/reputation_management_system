@@ -131,7 +131,7 @@ export default async function SubscriptionPage({
           : ["STANDARD", "FREE FOREVER", "1 LOCATION"];
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Settings", "Plan & Billing"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Account", "Plan & Billing"]}>
       <div className="bill">
         {/* ── Header ──────────────────────────────────────────────── */}
         <header className="bill-head">

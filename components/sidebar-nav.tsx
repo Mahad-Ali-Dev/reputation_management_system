@@ -68,20 +68,20 @@ const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
   { href: "/autopilot", label: "AI Autopilot", icon: "bolt", badge: "AI", tab: "autopilot" },
 
-  { group: "Device Setup" },
+  { group: "Business Setup" },
   { href: "/establishments", label: "My Businesses", icon: "pin", tab: "establishments" },
   { href: "/hardware", label: "Device Manager", icon: "qr", tab: "hardware" },
 
-  { group: "AI Engine" },
+  { group: "AI Tools" },
   { href: "/ai", label: "AI Brain", icon: "brain", tab: "ai" },
   { href: "/phone", label: "AI Receptionist", icon: "phone", badge: "Soon", tab: "phone" },
 
-  { group: "Reviews" },
+  { group: "Reputation" },
   { href: "/reviews", label: "Review Inbox", icon: "star", tab: "reviews" },
   { href: "/outreach", label: "Review Outreach", icon: "send", tab: "outreach" },
   { href: "/reviews/dispute", label: "Dispute Manager", icon: "flag", tab: "dispute" },
 
-  { group: "Social & Messaging" },
+  { group: "Inbox & Social" },
   { href: "/support", label: "Message Center", icon: "chat", badge: "Soon", tab: "support" },
   {
     href: "/support?tab=meetings",
@@ -98,7 +98,7 @@ const NAV: NavItem[] = [
     tab: "social",
   },
 
-  { group: "Engagement & CRM" },
+  { group: "CRM" },
   {
     href: "/surveys",
     label: "Customer Feedback",
@@ -108,10 +108,10 @@ const NAV: NavItem[] = [
   },
   { href: "/contacts", label: "Customer Directory", icon: "users", tab: "contacts" },
 
-  { group: "Intelligence" },
+  { group: "Data & Insights" },
   { href: "/analytics", label: "Analytics", icon: "bars", tab: "analytics" },
 
-  { group: "Settings" },
+  { group: "Account" },
   { href: "/connections", label: "App Connections", icon: "plug", tab: "connections" },
   { href: "/subscription", label: "Plan & Billing", icon: "card", tab: "subscription" },
   { href: "/settings", label: "General Settings", icon: "settings" },

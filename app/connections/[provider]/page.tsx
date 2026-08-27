@@ -206,7 +206,7 @@ export default async function ConnectionProviderPage({
     const [config, key] = await Promise.all([getWidgetConfig(orgId), getPrimaryWidgetKey(orgId)]);
 
     return (
-      <AppShellServer topBar={<TopBar />} crumbs={["Settings", "App Connections", entry.displayName]}>
+      <AppShellServer topBar={<TopBar />} crumbs={["Account", "App Connections", entry.displayName]}>
         <BackLink />
         <PageHeader
           kicker="Live chat widget"
@@ -271,7 +271,7 @@ export default async function ConnectionProviderPage({
   const connectable = entry.ready || adminApp?.status === "configured";
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Settings", "App Connections", entry.displayName]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Account", "App Connections", entry.displayName]}>
       <BackLink />
       <PageHeader
         kicker={connTypeLabel(meta.connType)}

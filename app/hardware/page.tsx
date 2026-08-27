@@ -219,7 +219,7 @@ export default async function QrCodesPage({
   const qrDownloadHref = `/api/devices/${selectedDevice.id}/qr?format=png${selectedPlatform ? `&platform=${selectedPlatform}` : ""}`;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager"]}>
       <div className="md">
         {/* Hero + top-right actions */}
         <div
@@ -483,7 +483,7 @@ function EmptyState({
   retiredCount?: number;
 }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager"]}>
       <div className="md">
         <div
           className="row"
@@ -718,7 +718,7 @@ function TrashView({
   canRelease: boolean;
 }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager", "Trash"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager", "Trash"]}>
       <PageHeader
         kicker="Device manager · trash"
         title="Restore a deleted device"

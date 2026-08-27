@@ -43,7 +43,7 @@ export default async function SurveyDetailPage({
   if (!campaign) notFound();
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Customer Feedback", campaign.name]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["CRM", "Customer Feedback", campaign.name]}>
       <PageHeader
         kicker={`${campaign.type.toUpperCase()} · ${campaign._count.tokens} sent · ${campaign._count.responses} responses`}
         title={campaign.name}

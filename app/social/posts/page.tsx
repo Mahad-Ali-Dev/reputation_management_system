@@ -146,7 +146,7 @@ export default async function SocialPostsPage({
   const drafts = counts.draft ?? 0;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Engagement", "Social Studio"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Inbox & Social", "Social Studio"]}>
       <div className="sk-page">
         <PageHeader
           kicker="Cross-channel scheduler"

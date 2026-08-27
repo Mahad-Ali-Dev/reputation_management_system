@@ -111,7 +111,7 @@ export default async function ContentCalendarPage({
   ).length;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Engagement", "Social Studio", "Calendar"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Inbox & Social", "Social Studio", "Calendar"]}>
       <div className="sk-page">
         <PageHeader
           kicker={`${totalThisMonth} posts this month`}
