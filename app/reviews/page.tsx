@@ -155,7 +155,7 @@ export default async function ReviewsPage({
   const isEmpty = reviews.length === 0;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Reviews"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Inbox"]}>
       {/* Inbox header — "Review Inbox" branding per the Review Feed design kit:
           title + live total/avg subtitle + "View disputes" deep-link. The `rf`
           scope supplies the kit's CSS vars; figures bind to the real reviewStats

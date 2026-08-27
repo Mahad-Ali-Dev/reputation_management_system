@@ -43,9 +43,9 @@ async function SupportInboxPageLocked({
   const sp = await searchParams;
 
   return (
-    <AppShellServer topBar={<TopBar title="Unified Inbox" />} crumbs={["Engagement", "Unified Inbox"]}>
+    <AppShellServer topBar={<TopBar title="Message Center" />} crumbs={["Engagement", "Message Center"]}>
       <PageHeader
-        title="Unified Inbox"
+        title="Message Center"
         titleBadge={
           <span
             style={{

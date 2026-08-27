@@ -72,12 +72,12 @@ export default async function DisputeCenterPage({
   const hasDisputes = all.length > 0;
 
   return (
-    <AppShellServer topBar={<TopBar title="Dispute Center" />}>
+    <AppShellServer topBar={<TopBar title="Dispute Manager" />}>
       <div className="dc">
         <PageHeader
-          title="Dispute Center"
+          title="Dispute Manager"
           description="Resolve fake, off-topic, or policy-violating reviews with AI-powered insights and a human touch."
-          breadcrumb={[{ label: "Reviews", href: "/reviews" }, { label: "Disputes" }]}
+          breadcrumb={[{ label: "Reviews", href: "/reviews" }, { label: "Dispute Manager" }]}
           actions={
             <Link href="/reviews/dispute/new" className="btn btn--pri">
               <PlusIcon /> File New Dispute

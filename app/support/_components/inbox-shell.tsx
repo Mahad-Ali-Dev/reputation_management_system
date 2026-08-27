@@ -96,7 +96,7 @@ export async function InboxShell({
           feature="advanced_inbox"
           hasAccess={false}
           mode="replace"
-          title="Unified Inbox is a Pro feature"
+          title="Message Center is a Pro feature"
           description="Upgrade to bring reviews, DMs, comments, live chat and meeting requests into one workspace — with AI replies and automation."
         >
           <span />

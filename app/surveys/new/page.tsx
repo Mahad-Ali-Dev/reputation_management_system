@@ -55,7 +55,7 @@ export default async function NewSurveyPage({
   }));
 
   return (
-    <AppShellServer topBar={<TopBar title="New Survey" />} crumbs={["Reputation", "Surveys", "New"]}>
+    <AppShellServer topBar={<TopBar title="New Survey" />} crumbs={["Reputation", "Customer Feedback", "New"]}>
       <PageHeader
         kicker="Send in 3 steps"
         title="New survey"

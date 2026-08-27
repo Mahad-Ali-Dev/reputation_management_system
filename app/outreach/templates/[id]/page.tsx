@@ -62,7 +62,7 @@ export default async function TemplateEditorPage({
   };
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Requests", "Templates"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Outreach", "Templates"]}>
       <PageHeader
         title={isNew ? "New template" : initial.name || "Edit template"}
         description="Edit on the left, preview exactly what the recipient sees on the right."

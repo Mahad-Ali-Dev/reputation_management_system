@@ -27,7 +27,7 @@ export default async function SurveyTemplatesPage() {
   const templates = await listSurveyTemplates(orgId);
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Surveys", "Templates"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Customer Feedback", "Templates"]}>
       <PageHeader
         kicker="Build once · reuse everywhere"
         title="Survey templates"

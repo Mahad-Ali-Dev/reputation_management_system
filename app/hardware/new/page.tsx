@@ -45,7 +45,7 @@ export default async function NewQrPage({
 
   if (establishments.length === 0) {
     return (
-      <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Generate"]}>
+      <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager", "Generate"]}>
         <PageHeader
           kicker="Generate a QR code"
           title="Add a listing first"
@@ -90,7 +90,7 @@ export default async function NewQrPage({
   }
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Generate"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager", "Generate"]}>
       <div className="gq">
         {/* Hero — header (left) · 3D QR-on-pedestal illustration (center) ·
             back button (right), matching the Generate-QR mockup. */}

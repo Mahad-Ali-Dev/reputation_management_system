@@ -128,7 +128,7 @@ export default async function AutopilotPage({
   ];
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Grow", "Autopilot"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Grow", "AI Autopilot"]}>
       <div className="ap2-page">
         {/* ---- Hero: intro + at-a-glance metrics ---- */}
         <header className="ap2-hero">

@@ -53,7 +53,7 @@ export default async function ContactProfilePage({
     "Unnamed contact";
 
   return (
-    <AppShellServer topBar={<TopBar title={displayName} />} crumbs={["CRM", "Contacts", displayName]}>
+    <AppShellServer topBar={<TopBar title={displayName} />} crumbs={["CRM", "Customer Directory", displayName]}>
       <PageHeader
         title={displayName}
         breadcrumb={[{ label: "Contacts", href: "/contacts" }, { label: displayName }]}

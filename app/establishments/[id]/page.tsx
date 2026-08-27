@@ -106,7 +106,7 @@ export default async function EstablishmentDetailPage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "Establishments", establishment.name]}
+      crumbs={["Workspace", "My Businesses", establishment.name]}
     >
       <PageHeader
         kicker={

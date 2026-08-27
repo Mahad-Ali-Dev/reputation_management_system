@@ -25,7 +25,7 @@ export default async function SurveyTemplateEditorPage({
   if (!template) notFound();
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Surveys", "Templates", "Edit"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Customer Feedback", "Templates", "Edit"]}>
       <PageHeader
         kicker="Live preview · updates as you type"
         title={template.name}

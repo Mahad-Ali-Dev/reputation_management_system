@@ -73,7 +73,7 @@ export default async function EditDevicePage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "QR Stands", device.shortSlug]}
+      crumbs={["Workspace", "Device Manager", device.shortSlug]}
     >
       <PageHeader
         kicker={`QR code · ${device.shortSlug}`}
