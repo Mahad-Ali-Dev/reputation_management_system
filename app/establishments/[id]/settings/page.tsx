@@ -71,7 +71,7 @@ export default async function EstablishmentSettingsPage({
   return (
     <AppShellServer
       topBar={<TopBar />}
-      crumbs={["Workspace", "Establishments", establishment.name, "Settings"]}
+      crumbs={["Workspace", "My Businesses", establishment.name, "Settings"]}
     >
       <PageHeader
         kicker="Location settings"

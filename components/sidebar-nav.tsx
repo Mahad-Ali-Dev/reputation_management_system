@@ -66,33 +66,33 @@ const isGroup = (x: NavItem): x is NavGroup => "group" in x;
  */
 const NAV: NavItem[] = [
   { href: "/dashboard", label: "Dashboard", icon: "home" },
-  { href: "/autopilot", label: "Autopilot", icon: "bolt", badge: "AI", tab: "autopilot" },
+  { href: "/autopilot", label: "AI Autopilot", icon: "bolt", badge: "AI", tab: "autopilot" },
 
   { group: "Device Setup" },
-  { href: "/establishments", label: "My Establishments", icon: "pin", tab: "establishments" },
-  { href: "/hardware", label: "My Devices", icon: "qr", tab: "hardware" },
+  { href: "/establishments", label: "My Businesses", icon: "pin", tab: "establishments" },
+  { href: "/hardware", label: "Device Manager", icon: "qr", tab: "hardware" },
 
   { group: "AI Engine" },
-  { href: "/ai", label: "AI Knowledge Base", icon: "brain", tab: "ai" },
-  { href: "/phone", label: "AI Phone Receptionist", icon: "phone", badge: "Soon", tab: "phone" },
+  { href: "/ai", label: "AI Brain", icon: "brain", tab: "ai" },
+  { href: "/phone", label: "AI Receptionist", icon: "phone", badge: "Soon", tab: "phone" },
 
   { group: "Reviews" },
-  { href: "/reviews", label: "Review Feed", icon: "star", tab: "reviews" },
-  { href: "/outreach", label: "Review Requests", icon: "send", tab: "outreach" },
-  { href: "/reviews/dispute", label: "Dispute Center", icon: "flag", tab: "dispute" },
+  { href: "/reviews", label: "Review Inbox", icon: "star", tab: "reviews" },
+  { href: "/outreach", label: "Review Outreach", icon: "send", tab: "outreach" },
+  { href: "/reviews/dispute", label: "Dispute Manager", icon: "flag", tab: "dispute" },
 
   { group: "Social & Messaging" },
-  { href: "/support", label: "Unified Inbox", icon: "chat", badge: "Soon", tab: "support" },
+  { href: "/support", label: "Message Center", icon: "chat", badge: "Soon", tab: "support" },
   {
     href: "/support?tab=meetings",
-    label: "Meeting Requests",
+    label: "Booking Requests",
     icon: "cal",
     badge: "Soon",
     tab: "support",
   },
   {
     href: "/social/posts",
-    label: "Post Creator",
+    label: "Social Studio",
     icon: "share",
     pro: "image_creatives",
     tab: "social",
@@ -101,20 +101,20 @@ const NAV: NavItem[] = [
   { group: "Engagement & CRM" },
   {
     href: "/surveys",
-    label: "Customer Surveys",
+    label: "Customer Feedback",
     icon: "survey",
     pro: "surveys_insights",
     tab: "surveys",
   },
-  { href: "/contacts", label: "Contact Directory", icon: "users", tab: "contacts" },
+  { href: "/contacts", label: "Customer Directory", icon: "users", tab: "contacts" },
 
   { group: "Intelligence" },
-  { href: "/analytics", label: "Business Reports", icon: "bars", tab: "analytics" },
+  { href: "/analytics", label: "Analytics", icon: "bars", tab: "analytics" },
 
   { group: "Settings" },
-  { href: "/connections", label: "Connections", icon: "plug", tab: "connections" },
-  { href: "/subscription", label: "Account & Billing", icon: "card", tab: "subscription" },
-  { href: "/settings", label: "Settings", icon: "settings" },
+  { href: "/connections", label: "App Connections", icon: "plug", tab: "connections" },
+  { href: "/subscription", label: "Plan & Billing", icon: "card", tab: "subscription" },
+  { href: "/settings", label: "General Settings", icon: "settings" },
 ];
 
 function pathMatches(pathname: string, href: string, activeTab: string | null): boolean {

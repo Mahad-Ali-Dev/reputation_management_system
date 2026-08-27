@@ -68,7 +68,7 @@ export default async function ReadyToSendPage({ params }: { params: Promise<{ id
           title="Your Dispute is Ready!"
           description="We've prepared everything you need to send to Google. Choose your preferred way to proceed."
           breadcrumb={[
-            { label: "Dispute Center", href: "/reviews/dispute" },
+            { label: "Dispute Manager", href: "/reviews/dispute" },
             { label: "New Dispute", href: "/reviews/dispute/new" },
             { label: "Review & Send" },
           ]}

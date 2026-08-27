@@ -92,7 +92,7 @@ export default async function OutreachPage({
     ) : undefined;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Requests"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Outreach"]}>
       <div className="rr">
         <div className="rr-hero">
           {meta.hero && (

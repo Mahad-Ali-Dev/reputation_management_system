@@ -74,7 +74,7 @@ export default async function EstablishmentsPage({
   const allDevices: DeviceSummary[] = cards.flatMap((c) => c.devices);
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Establishments"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Businesses"]}>
       <div className="est">
         <Hero />
 
@@ -153,7 +153,7 @@ function Hero() {
  */
 function EmptyEstablishments() {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Establishments"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Businesses"]}>
       <div className="est">
         <Hero />
         <SummaryCounters />

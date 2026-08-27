@@ -64,7 +64,7 @@ export default async function ContactsPage({
   const isEmpty = forceEmpty || stats.total === 0;
 
   return (
-    <AppShellServer topBar={<TopBar title="Contacts" />} crumbs={["CRM", "Contacts"]}>
+    <AppShellServer topBar={<TopBar title="Customer Directory" />} crumbs={["CRM", "Customer Directory"]}>
       <div className="cd-page">
         <PageHeader
           title="Contacts"

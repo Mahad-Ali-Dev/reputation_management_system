@@ -79,7 +79,7 @@ export default async function NewEstablishmentPage() {
   await getOrgContext();
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Establishments"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Businesses"]}>
       <div className="est">
         <div className="est-toprow">
           <span className="est-hero__eyebrow">

@@ -250,8 +250,8 @@ export default async function AiSettingsPage({
 
   return (
     <AppShellServer
-      topBar={<TopBar title="AI Knowledge Base" />}
-      crumbs={["AI Engine", "AI Knowledge Base"]}
+      topBar={<TopBar title="AI Brain" />}
+      crumbs={["AI Engine", "AI Brain"]}
     >
       <div className="akb">
         {/* ---------- hero banner (Knowledge tab only — the Behaviour/Test

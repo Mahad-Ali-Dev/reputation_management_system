@@ -219,7 +219,7 @@ export default async function QrCodesPage({
   const qrDownloadHref = `/api/devices/${selectedDevice.id}/qr?format=png${selectedPlatform ? `&platform=${selectedPlatform}` : ""}`;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager"]}>
       <div className="md">
         {/* Hero + top-right actions */}
         <div
@@ -483,7 +483,7 @@ function EmptyState({
   retiredCount?: number;
 }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager"]}>
       <div className="md">
         <div
           className="row"
@@ -718,9 +718,9 @@ function TrashView({
   canRelease: boolean;
 }) {
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "My Devices", "Trash"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Workspace", "Device Manager", "Trash"]}>
       <PageHeader
-        kicker="My devices · trash"
+        kicker="Device manager · trash"
         title="Restore a deleted device"
         description="Soft-deleted devices live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL — no need to re-enter anything."
         actions={

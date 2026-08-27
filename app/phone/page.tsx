@@ -108,7 +108,7 @@ async function PhoneDashboardPageLocked() {
     <div className="pr">
       <AppShellServer
         topBar={<TopBar />}
-        crumbs={["Intelligence", "Phone Receptionist"]}
+        crumbs={["Intelligence", "AI Receptionist"]}
       >
         {/* ── Hero — kit composition: copy left, actions top-right, headset
             illustration lower-right (real kit asset main.svg) ── */}
