@@ -381,7 +381,7 @@ export default async function ListingAnalyticsPage({
           <div className="ds-card__body">
             {data.recentUnanswered.length === 0 ? (
               <p className="dim" style={{ fontSize: 13 }}>
-                Inbox is clear — every review has a reply.
+                Inbox is clear every review has a reply.
               </p>
             ) : (
               <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>

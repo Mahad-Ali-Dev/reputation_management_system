@@ -85,7 +85,7 @@ export default async function FlagsPage() {
               >
                 {f.key}
               </code>
-              <span style={{ color: "var(--rl-muted)", marginLeft: 8 }}>— {f.description}</span>
+              <span style={{ color: "var(--rl-muted)", marginLeft: 8 }}>{f.description}</span>
             </li>
           ))}
         </ul>
@@ -114,7 +114,7 @@ export default async function FlagsPage() {
           </FormField>
           <FormField label="Org (blank = global)">
             <select name="organizationId" style={inputStyle}>
-              <option value="">— Global —</option>
+              <option value="">Global</option>
               {orgs.map((o) => (
                 <option key={o.id} value={o.id}>
                   {o.name}
@@ -189,7 +189,7 @@ export default async function FlagsPage() {
         <h3 className="ds-card__title">Current flags ({flags.length})</h3>
         {flags.length === 0 ? (
           <p style={{ marginTop: 10, fontSize: 13, color: "var(--rl-muted)" }}>
-            No flags configured yet — everything uses code-level defaults.
+            No flags configured yet everything uses code-level defaults.
           </p>
         ) : (
           <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 10 }}>
@@ -240,7 +240,6 @@ export default async function FlagsPage() {
                           {f.organizationId
                             ? (orgsById.get(f.organizationId) ?? `org:${f.organizationId.slice(0, 8)}`)
                             : "Global default"}{" "}
-                          —{" "}
                           {f.enabled ? (
                             <Badge tone="ok">
                               {f.rolloutPct < 100 ? `enabled @${f.rolloutPct}%` : "enabled"}

@@ -336,7 +336,7 @@ export function AskAi() {
                       lineHeight: 1.55,
                     }}
                   >
-                    Hi — I'm your in-app guide. Ask me how anything works, or pick a starter below.
+                    Hi I'm your in-app guide. Ask me how anything works, or pick a starter below.
                   </p>
                   <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                     {SUGGESTIONS.map((s) => (

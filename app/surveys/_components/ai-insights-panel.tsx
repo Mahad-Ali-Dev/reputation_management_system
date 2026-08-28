@@ -79,7 +79,7 @@ export function AiInsightsPanel({
             AI Insights
           </h3>
           <p className="dim" style={{ margin: "4px 0 0", fontSize: 12.5, maxWidth: 540, lineHeight: 1.55 }}>
-            Claude reads all your survey responses and surfaces the few things worth acting on —
+            Claude reads all your survey responses and surfaces the few things worth acting on
             ranked by priority, with a concrete recommendation each.
           </p>
         </div>
@@ -150,7 +150,7 @@ function GatedState({ responseCount }: { responseCount: number }) {
           from your surveys
         </h2>
         <p className="surv-ai-intro">
-          Our AI analyzes responses and highlights what matters most — so you can take action with
+          Our AI analyzes responses and highlights what matters most so you can take action with
           confidence.
         </p>
         <div className="surv-ai-benefits">
@@ -163,7 +163,7 @@ function GatedState({ responseCount }: { responseCount: number }) {
         <img src="/assets/repulabs/customer-surveys/results/over-time.svg" alt="" aria-hidden style={{ width: "min(300px, 80%)" }} />
         <h3 className="surv-ai-threshold-h">Collect at least {MIN_RESPONSES_FOR_INSIGHTS} responses</h3>
         <p className="surv-ai-threshold-copy">
-          You have <strong>{responseCount}</strong> so far — {remaining} more to go. Insights get more
+          You have <strong>{responseCount}</strong> so far {remaining} more to go. Insights get more
           accurate the more responses you gather.
         </p>
         <span className="surv-ai-pill">

@@ -55,7 +55,7 @@ const ROWS: Row[] = [
     file: "feat-reviews.png",
     eyebrow: "REVIEWS · AI REPLIES",
     title: "Every review, answered in your voice",
-    lead: "Google, Facebook and listing reviews land in one feed. The AI drafts a reply trained on your brand guide, service catalog and refund policy — you approve and publish in a single click.",
+    lead: "Google, Facebook and listing reviews land in one feed. The AI drafts a reply trained on your brand guide, service catalog and refund policy you approve and publish in a single click.",
     points: [
       "Unified feed across every review host",
       "Drafts that match your exact tone",
@@ -69,7 +69,7 @@ const ROWS: Row[] = [
     file: "feat-autopilot.png",
     eyebrow: "AUTOPILOT",
     title: "Your reputation, running itself",
-    lead: "Drag-and-drop rules trigger from your POS or CRM, wait the right amount of time, then send the perfect follow-up — so a great visit becomes a 5-star review without anyone lifting a finger.",
+    lead: "Drag-and-drop rules trigger from your POS or CRM, wait the right amount of time, then send the perfect follow-up so a great visit becomes a 5-star review without anyone lifting a finger.",
     points: [
       "Triggers from POS, CRM and bookings",
       "Smart timing windows, not spam",
@@ -84,7 +84,7 @@ const ROWS: Row[] = [
     file: "feat-ai-phone.png",
     eyebrow: "AI PHONE RECEPTIONIST",
     title: "A receptionist that never sleeps",
-    lead: "Answer every call in a voice cloned from yours. The AI books appointments, answers FAQs and writes the booking straight to your calendar — 24/7, even when the front desk is slammed.",
+    lead: "Answer every call in a voice cloned from yours. The AI books appointments, answers FAQs and writes the booking straight to your calendar 24/7, even when the front desk is slammed.",
     points: [
       "Cloned-voice answering, around the clock",
       "Books appointments into your calendar",
@@ -113,7 +113,7 @@ const ROWS: Row[] = [
     file: "feat-surveys.png",
     eyebrow: "SURVEYS · SMART ROUTING",
     title: "Send happy customers public, route the rest privately",
-    lead: "Smart surveys read the sentiment and act on it: delighted customers get nudged toward a public review, while anyone unhappy is routed straight to you — before it ever hits Google.",
+    lead: "Smart surveys read the sentiment and act on it: delighted customers get nudged toward a public review, while anyone unhappy is routed straight to you before it ever hits Google.",
     points: [
       "Sentiment-based routing, automatically",
       "Public reviews from your happiest guests",
@@ -252,7 +252,7 @@ function ShowcaseFrame({
       />
       <PremiumIllustration
         src={`${ART}/${file}`}
-        alt={`${title} — repulabs product illustration`}
+        alt={`${title} repulabs product illustration`}
         glyph={glyph}
         ratio="4 / 3"
         rounded={16}

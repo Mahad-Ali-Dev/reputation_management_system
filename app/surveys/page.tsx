@@ -166,7 +166,7 @@ export default async function SurveysPage({
           <PageHeader
             kicker="Campaigns · Builder · Results ·"
             title="Surveys"
-            description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters — all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
+            description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
             actions={
               <a href="/surveys/new" className="btn btn--pri">
                 <Icon name="plus" size={12} />

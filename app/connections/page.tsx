@@ -202,7 +202,7 @@ export default async function ConnectionsPage({
   const showImport = sp.import === "1";
   const connectError =
     sp.connect_error === "google_not_configured"
-      ? "Google connection isn't configured on this server yet (missing OAuth client). Contact support — nothing is wrong with your account."
+      ? "Google connection isn't configured on this server yet (missing OAuth client). Contact support nothing is wrong with your account."
       : null;
 
   const [connections, providerApps, latestRun] = await Promise.all([
@@ -480,7 +480,7 @@ export default async function ConnectionsPage({
             tone="violet"
             asset="link-icon.svg"
             title="Connect a source"
-            body="Link your CRM, POS, e-commerce, or accounting tool — or just bring a CSV. This is where customer contacts come from."
+            body="Link your CRM, POS, e-commerce, or accounting tool or just bring a CSV. This is where customer contacts come from."
           />
           <Step
             n={2}
@@ -494,7 +494,7 @@ export default async function ConnectionsPage({
             tone="violet"
             asset="paper-plane-icon.svg"
             title="Requests fire automatically"
-            body="New customers sync every 15 minutes and flow into review requests at the perfect moment — no manual work."
+            body="New customers sync every 15 minutes and flow into review requests at the perfect moment no manual work."
           />
         </div>
 
@@ -705,7 +705,7 @@ function StatusBanner({
             {empty ? "Not connected yet" : hasError ? "Attention needed" : "Connected"}
           </div>
           <div className="conn-banner__sub">
-            Everything currently feeding your data spine — status and last sync.
+            Everything currently feeding your data spine status and last sync.
           </div>
         </div>
         <span className="conn-banner__active">

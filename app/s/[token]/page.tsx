@@ -47,7 +47,7 @@ export default async function SurveyResponsePage({
   if (!rl.success) {
     return (
       <main style={{ minHeight: "100dvh", display: "grid", placeItems: "center", padding: 24, fontFamily: "system-ui" }}>
-        <p style={{ color: "#475569" }}>Too many requests — please slow down and try again in a minute.</p>
+        <p style={{ color: "#475569" }}>Too many requests please slow down and try again in a minute.</p>
       </main>
     );
   }
@@ -138,7 +138,7 @@ function ResponsePage({
             <rect x="3" y="11" width="18" height="11" rx="2" />
             <path d="M7 11V7a5 5 0 0 1 10 0v4" />
           </svg>
-          Secure &amp; private — your answers are confidential
+          Secure &amp; private your answers are confidential
         </div>
       </div>
     </main>

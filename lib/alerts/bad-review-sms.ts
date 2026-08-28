@@ -88,9 +88,9 @@ export function formatAlertSms(args: {
   // platform header in a single SMS segment).
   const preview = args.bodyPreview
     ? `"${truncateForSms(args.bodyPreview, 80)}"`
-    : "(no text — star rating only)";
+    : "(no text, star rating only)";
 
-  return `⚠ ${args.rating}★ ${platform} review at ${args.establishmentName} from ${who}: ${preview} — open: ${args.dashboardUrl}`;
+  return `⚠ ${args.rating}★ ${platform} review at ${args.establishmentName} from ${who}: ${preview}, open: ${args.dashboardUrl}`;
 }
 
 /**

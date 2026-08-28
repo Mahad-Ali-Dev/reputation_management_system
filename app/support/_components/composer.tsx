@@ -167,7 +167,7 @@ export function Composer({
       </div>
       {!aiEnabled && (
         <p className="uik-mut" style={{ fontSize: 11, margin: "6px 2px 0" }}>
-          AI Suggest is a Pro feature — upgrade to draft replies from your knowledge base.
+          AI Suggest is a Pro feature upgrade to draft replies from your knowledge base.
         </p>
       )}
     </div>

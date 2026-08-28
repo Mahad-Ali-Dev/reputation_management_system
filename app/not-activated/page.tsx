@@ -80,7 +80,7 @@ export default async function NotActivatedPage({
             <div className="na__cta-title">Activate this QR{slug ? ` · ${slug}` : ""}</div>
             <div className="na__cta-sub">
               {isSignedIn
-                ? "Enter your activation code — takes 30 seconds."
+                ? "Enter your activation code takes 30 seconds."
                 : "Free workspace, 30-day trial, no card required."}
             </div>
           </span>
@@ -119,7 +119,7 @@ export default async function NotActivatedPage({
 
         {/* Footer reassurance */}
         <p className="na__foot">
-          This QR was made by <Link href="/">repulabs.com</Link> — every code is one-time-use and
+          This QR was made by <Link href="/">repulabs.com</Link> every code is one-time-use and
           tied to a single business. We never sell or share scanner data.
         </p>
       </div>

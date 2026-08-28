@@ -183,7 +183,7 @@ export async function ProfileDrawer({
         <p className="crm-drawer__kicker">Timeline</p>
         {timeline.events.length === 0 ? (
           <p className="dim" style={{ fontSize: 12.5, margin: 0 }}>
-            No activity yet — reviews, requests, surveys, and messages will appear here.
+            No activity yet reviews, requests, surveys, and messages will appear here.
           </p>
         ) : (
           <ol className="crm-tl">
@@ -263,20 +263,20 @@ function computeEligibility(
   recentRequest: { createdAt: Date } | null | undefined,
 ): Eligibility {
   if (contact.consentStatus === "opted_out") {
-    return { tone: "bad", icon: "xCircle", message: "Opted out — do not send review requests." };
+    return { tone: "bad", icon: "xCircle", message: "Opted out do not send review requests." };
   }
   if (!contact.email && !contact.phone) {
     return {
       tone: "warn",
       icon: "alert",
-      message: "Not reachable — add an email or phone number to send a request.",
+      message: "Not reachable add an email or phone number to send a request.",
     };
   }
   if (recentRequest === undefined) {
     return {
       tone: "warn",
       icon: "alert",
-      message: "Recent-request check unavailable — verify before sending.",
+      message: "Recent-request check unavailable verify before sending.",
     };
   }
   if (recentRequest) {
@@ -284,14 +284,14 @@ function computeEligibility(
     return {
       tone: "warn",
       icon: "clock",
-      message: `Requested ${days <= 0 ? "today" : `${days}d ago`} — recently contacted, consider waiting.`,
+      message: `Requested ${days <= 0 ? "today" : `${days}d ago`} recently contacted, consider waiting.`,
     };
   }
   const channels = [contact.email && "email", contact.phone && "SMS"].filter(Boolean).join(" or ");
   return {
     tone: "ok",
     icon: "checkCircle",
-    message: `Eligible — reachable via ${channels}, no recent review request.`,
+    message: `Eligible reachable via ${channels}, no recent review request.`,
   };
 }
 

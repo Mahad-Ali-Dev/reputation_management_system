@@ -224,7 +224,7 @@ export default async function BillingSettingsPage() {
         >
           <p className="set-dim" style={{ fontSize: 13.5, margin: 0, lineHeight: 1.5 }}>
             {isPro
-              ? "Your full invoice history — receipts, amounts and downloads — lives in the Stripe billing portal."
+              ? "Your full invoice history receipts, amounts and downloads lives in the Stripe billing portal."
               : "Invoices appear here once you're on a paid plan."}
           </p>
           <Link href="/subscription" className="set-link" style={{ marginTop: 12 }}>

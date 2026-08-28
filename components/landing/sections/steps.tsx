@@ -78,7 +78,7 @@ const STEPS: Step[] = [
     key: "grow",
     title: "Grow",
     color: TEAL,
-    body: "Watch your rating, local rank and booked calls climb — with a weekly report that shows exactly what the system earned you.",
+    body: "Watch your rating, local rank and booked calls climb, with a weekly report that shows exactly what the system earned you.",
   },
 ];
 
@@ -405,7 +405,7 @@ function GrowCard() {
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={`${ART}/chart.svg`}
-          alt="Reviews over time — an upward trend across the week"
+          alt="Reviews over time an upward trend across the week"
           className="mt-1 h-auto w-full"
           width={2200}
           height={800}
@@ -580,7 +580,7 @@ export function LandingSteps() {
 
           <Reveal delay={0.12}>
             <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.5] text-[#5b6473] sm:text-[19px]">
-              Just your name and website — no engineer, no 40-field setup form.
+              Just your name and website, no engineer, no 40-field setup form.
               Most teams are sending automated requests within six minutes.
             </p>
           </Reveal>

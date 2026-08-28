@@ -274,7 +274,7 @@ function GeoDoItButton({
     // Honest: a draft was saved for review — it is NOT auto-published.
     return (
       <Link href="/social/posts" className="btn btn--sm">
-        <Icon name="check" size={12} /> Draft saved — review in Social →
+        <Icon name="check" size={12} /> Draft saved review in Social →
       </Link>
     );
   }
@@ -291,7 +291,7 @@ function GeoView({ geoGrid }: { geoGrid: GeoGridProps | null }) {
       <div className="ds-card__head">
         <div className="ds-card__title">Geo-location strategy</div>
         <div className="ds-card__sub">
-          Your 5-mile ranking heatmap. Click a weak cell to draft a geo-tagged post — it’s saved to
+          Your 5-mile ranking heatmap. Click a weak cell to draft a geo-tagged post it’s saved to
           Social for you to review and publish.
         </div>
       </div>
@@ -314,7 +314,7 @@ function PhotoView() {
     {
       icon: "qr" as const,
       title: "Place a QR plaque on the counter",
-      body: "Customers scan it to leave a review with a photo — photos boost listing rank + trust.",
+      body: "Customers scan it to leave a review with a photo photos boost listing rank + trust.",
     },
     {
       icon: "image" as const,

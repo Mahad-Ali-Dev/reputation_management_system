@@ -147,7 +147,7 @@ export default async function PhoneVoicesPage() {
               />
             </span>
             <div>
-              <div className="pr-banner__title">How to use — Train &amp; use</div>
+              <div className="pr-banner__title">How to use Train &amp; use</div>
               <div className="pr-banner__body">
                 Learn how to clone your voice, add it to AI, and test it in
                 minutes.
@@ -181,7 +181,7 @@ export default async function PhoneVoicesPage() {
                   <p className="pr-lead__sub">
                     {usingClone
                       ? `Using cloned voice ${voices.find((v) => v.externalVoiceId === activeVoiceId)?.displayName ?? "(unknown)"}.`
-                      : `Using Twilio's built-in voice "${assistant?.voice ?? "alice"}" — stable and instant, no latency.`}
+                      : `Using Twilio's built-in voice "${assistant?.voice ?? "alice"}" stable and instant, no latency.`}
                   </p>
                 </div>
                 {usingClone && (

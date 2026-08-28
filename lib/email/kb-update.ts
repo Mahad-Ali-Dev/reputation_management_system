@@ -68,7 +68,7 @@ export async function sendKbUpdateEmail(args: {
   const trainingUrl = `${appUrl}/ai/training`;
 
   const text = [
-    `${args.businessName} — your AI knowledge base updated itself`,
+    `${args.businessName}, your AI knowledge base updated itself`,
     "",
     `Your AI re-scanned your website and noticed your ${fieldsPhrase} changed. It updated its knowledge automatically, so replies, DMs and chats stay accurate.`,
     "",

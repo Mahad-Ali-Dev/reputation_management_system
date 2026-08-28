@@ -42,7 +42,7 @@ export default async function AuditPage({
     <>
       <AdminPageHeader
         title="Audit log"
-        description="Every privileged action — admin impersonation, plan changes, refunds, OAuth credential changes, feature-flag toggles. Hash-chained per the security review."
+        description="Every privileged action admin impersonation, plan changes, refunds, OAuth credential changes, feature-flag toggles. Hash-chained per the security review."
       />
 
       <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>

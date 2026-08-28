@@ -34,14 +34,14 @@ const TIMEOUTS: Array<[string, string]> = [
 
 const TOTP_ERROR_MESSAGES: Record<string, string> = {
   invalid_code: "That code didn't match. Check your authenticator app and try again.",
-  rate_limited: "Too many attempts — wait a few minutes and try again.",
-  no_setup: "Setup expired — start again below.",
+  rate_limited: "Too many attempts wait a few minutes and try again.",
+  no_setup: "Setup expired start again below.",
 };
 
 const TOTP_SUCCESS_MESSAGES: Record<string, string> = {
   enabled: "Two-factor authentication is on. Save your backup codes somewhere safe.",
   disabled: "Two-factor authentication has been turned off.",
-  codes_regenerated: "New backup codes generated — your old codes no longer work.",
+  codes_regenerated: "New backup codes generated your old codes no longer work.",
 };
 
 /** Groups of 4 for readability: "ABCDEFGHIJ..." -> "ABCD EFGH IJ..." */
@@ -340,7 +340,7 @@ export default async function SecuritySettingsPage({
 
       <FeatureRow
         title="Single sign-on (SSO)"
-        sub="Google Workspace + Microsoft 365 — included in the Scale plan."
+        sub="Google Workspace + Microsoft 365 included in the Scale plan."
         icon="users"
         status="plan_locked"
       />

@@ -38,9 +38,9 @@ import { LandingWorkspace } from "@/components/landing/sections/workspace";
  */
 
 export const metadata = {
-  title: "repulabs — Run your reputation like a system.",
+  title: "repulabs Run your reputation like a system.",
   description:
-    "The reputation OS for local teams. Reviews, AI replies, requests, a unified inbox, AI phone, social, local SEO and autopilot — one premium workspace that keeps every customer moment on brand and on time.",
+    "The reputation OS for local teams. Reviews, AI replies, requests, a unified inbox, AI phone, social, local SEO and autopilot one premium workspace that keeps every customer moment on brand and on time.",
 };
 
 export default function LandingPage() {

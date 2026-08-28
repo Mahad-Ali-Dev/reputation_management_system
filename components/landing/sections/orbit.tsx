@@ -195,7 +195,7 @@ export function LandingOrbit() {
             <Reveal delay={0.12}>
               <p className="mx-auto mt-4 max-w-lg text-[16px] leading-[1.55] text-[#5b6473] sm:text-[17px] lg:mx-0">
                 Every channel and tool you already use feeds the same reputation
-                engine — nothing to migrate, nothing to re-learn.
+                engine nothing to migrate, nothing to re-learn.
               </p>
             </Reveal>
 

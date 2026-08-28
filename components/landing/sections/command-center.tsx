@@ -317,7 +317,7 @@ const FEED: FeedMessage[] = [
   {
     title: "Google Reviews",
     time: "1m ago",
-    content: "New 5★ review — “Best front desk experience I've ever had.”",
+    content: "New 5★ review “Best front desk experience I've ever had.”",
     brand: "google.svg",
   },
   {
@@ -329,7 +329,7 @@ const FEED: FeedMessage[] = [
   {
     title: "AI Phone",
     time: "6m ago",
-    content: "Missed call answered — callback booked for 2:30 pm.",
+    content: "Missed call answered callback booked for 2:30 pm.",
     Icon: Phone,
     tint: "#7c3aed",
   },
@@ -343,13 +343,13 @@ const FEED: FeedMessage[] = [
   {
     title: "Instagram",
     time: "12m ago",
-    content: "New comment on your latest post — awaiting a reply.",
+    content: "New comment on your latest post awaiting a reply.",
     brand: "instagram.svg",
   },
   {
     title: "Weekly Report",
     time: "15m ago",
-    content: "Your Monday digest is ready — rating climbed to 4.8.",
+    content: "Your Monday digest is ready rating climbed to 4.8.",
     Icon: BarChart3,
     tint: "#0891b2",
   },
@@ -662,7 +662,7 @@ export function LandingCommandCenter() {
           <Reveal delay={0.12}>
             <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#5b6473] sm:text-[19px]">
               Reviews, messages, calls and reports from every storefront stream
-              into one live command center — so nothing slips, anywhere.
+              into one live command center so nothing slips, anywhere.
             </p>
           </Reveal>
         </div>
@@ -720,7 +720,7 @@ export function LandingCommandCenter() {
               <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
                 Watch the volume climb.{" "}
                 <span className="font-normal text-[#5b6473]">
-                  Requests out, reviews in — trending up every month.
+                  Requests out, reviews in trending up every month.
                 </span>
               </h3>
               <VolumeChart />
@@ -734,7 +734,7 @@ export function LandingCommandCenter() {
                 icon={<Bot className="h-4 w-4" />}
                 title="Autopilot"
                 subtitle="Approval gates on every loop."
-                description="AI drafts every reply and request — nothing ships without your yes."
+                description="AI drafts every reply and request nothing ships without your yes."
                 chips={["Draft → approve", "Escalation rules", "Tone controls"]}
                 art={<AutopilotArt />}
               />

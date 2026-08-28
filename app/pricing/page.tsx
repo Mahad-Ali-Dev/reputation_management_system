@@ -39,19 +39,19 @@ const CTA: Record<PlanKey, { label: string; href: string }> = {
 const FAQ: Array<[string, string]> = [
   [
     "Is the trial really free?",
-    `Yes — ${TRIAL_DAYS} days of Pro with no charge. We ask for a card so your workspace keeps running when the trial ends, and you can cancel before then without being billed.`,
+    `Yes ${TRIAL_DAYS} days of Pro with no charge. We ask for a card so your workspace keeps running when the trial ends, and you can cancel before then without being billed.`,
   ],
   [
     "What counts as a location?",
-    "One physical business address — one Google Business Profile. If you run three cafés, that's three locations. Each gets its own reviews, devices and brand voice, all under one login.",
+    "One physical business address one Google Business Profile. If you run three cafés, that's three locations. Each gets its own reviews, devices and brand voice, all under one login.",
   ],
   [
     "Can I change plans later?",
-    "Any time. Upgrades apply immediately; downgrades take effect at the end of the billing period. Nothing is locked in — there's no contract on Standard or Pro.",
+    "Any time. Upgrades apply immediately; downgrades take effect at the end of the billing period. Nothing is locked in there's no contract on Standard or Pro.",
   ],
   [
     "Do I need to buy hardware?",
-    "No. The QR and NFC cards, plaques and stands are optional — they just make it far easier for customers to leave a review on the spot. The software works with or without them.",
+    "No. The QR and NFC cards, plaques and stands are optional they just make it far easier for customers to leave a review on the spot. The software works with or without them.",
   ],
   [
     "What happens to my data if I cancel?",

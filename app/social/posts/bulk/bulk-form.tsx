@@ -210,7 +210,7 @@ export function BulkScheduleForm({ establishments }: { establishments: Establish
           </span>
         </div>
         <span style={{ display: "block", marginTop: 6, fontSize: 12, color: "var(--sk-muted)" }}>
-          {rows.length}/{MAX_ROWS} posts · captions over a platform’s limit (X: 280) will fail — split
+          {rows.length}/{MAX_ROWS} posts · captions over a platform’s limit (X: 280) will fail split
           those into shorter lines first.
         </span>
       </div>

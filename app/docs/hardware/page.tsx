@@ -12,7 +12,7 @@ export default function HardwareDocsPage() {
   return (
     <DocShell
       kicker="Hardware"
-      title="Cards, plaques and stands — from box to first scan."
+      title="Cards, plaques and stands from box to first scan."
       description="Every device carries a unique code that routes customers straight to your Google review page."
     >
       <Step n={1} title="Order your devices">
@@ -21,7 +21,7 @@ export default function HardwareDocsPage() {
           bags; plaques and stands suit a counter or reception desk.
         </p>
         <p>
-          The software works fine without hardware — a device just removes the friction of asking.
+          The software works fine without hardware a device just removes the friction of asking.
         </p>
       </Step>
 
@@ -43,7 +43,7 @@ export default function HardwareDocsPage() {
           on that location's review page.
         </p>
         <Note>
-          Activation codes are <strong>one-time-use</strong> — once a device is redeemed, that code
+          Activation codes are <strong>one-time-use</strong> once a device is redeemed, that code
           can't be reused. Activate each device with the card that came in its own package.
         </Note>
       </Step>
@@ -55,7 +55,7 @@ export default function HardwareDocsPage() {
           from its row.
         </p>
         <p>
-          Because each device has its own code, you can see which placements actually earn reviews —
+          Because each device has its own code, you can see which placements actually earn reviews
           the stand by the till versus the cards in takeaway bags.
         </p>
       </Step>
@@ -63,17 +63,17 @@ export default function HardwareDocsPage() {
       <Step n={4} title="Placement that works">
         <List
           items={[
-            "At the till, facing the customer — the single highest-traffic spot.",
+            "At the till, facing the customer the single highest-traffic spot.",
             "On the table or with the bill, where there's a natural pause.",
             "Reception desks and waiting areas, where people are already looking around.",
-            "In takeaway bags — the review often lands after they get home.",
+            "In takeaway bags the review often lands after they get home.",
           ]}
         />
       </Step>
 
       <Note>
         <strong>A code won't activate?</strong> Check you're using the card from that device's own
-        package, and that the code hasn't already been redeemed. Codes are 5 characters — dashes and
+        package, and that the code hasn't already been redeemed. Codes are 5 characters dashes and
         spaces are ignored. Still stuck?{" "}
         <a href="/contact" style={{ textDecoration: "underline" }}>
           Contact support

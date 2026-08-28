@@ -115,7 +115,7 @@ export default async function PickerPage({ params, searchParams }: PageProps) {
           <a href="/" style={{ color: "#64748b", textDecoration: "none" }}>
             repulabs.com
           </a>{" "}
-          — every choice you make routes you straight to the platform&rsquo;s review page.
+          every choice you make routes you straight to the platform&rsquo;s review page.
         </p>
       </div>
     </main>
@@ -201,7 +201,7 @@ function buildPlatformList(device: {
       label: "Book directly next time",
       url: e.directBookingUrl,
       accent: "#0b0d0e",
-      blurb: "Save the Airbnb fee — book through the host directly.",
+      blurb: "Save the Airbnb fee book through the host directly.",
     });
   }
 

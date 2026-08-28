@@ -104,7 +104,7 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "Review follow-ups, reply drafts, and social posts run on autopilot with approval gates — the front desk stays focused on customers, not tabs.",
+      "Review follow-ups, reply drafts, and social posts run on autopilot with approval gates, the front desk stays focused on customers, not tabs.",
     initials: "CM",
     persona: "For busy front desks",
     sub: "Cafes, salons & local shops",
@@ -116,7 +116,7 @@ const TESTIMONIALS: Testimonial[] = [
   },
   {
     quote:
-      "One inbox for every location's reviews, DMs, comments, and calls — with an AI phone line that books, answers, and asks for the review afterward.",
+      "One inbox for every location's reviews, DMs, comments, and calls, with an AI phone line that books, answers, and asks for the review afterward.",
     initials: "OL",
     persona: "For operations leads",
     sub: "Multi-location groups",

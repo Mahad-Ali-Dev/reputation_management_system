@@ -274,7 +274,7 @@ export function AdminShell({
               >
                 {session.imp.orgId.slice(0, 8)}
               </code>{" "}
-              read-only — reason: <strong>{session.imp.reason}</strong>
+              read-only reason: <strong>{session.imp.reason}</strong>
             </span>
             <form action="/api/admin/impersonate" method="POST" style={{ marginLeft: "auto" }}>
               <input type="hidden" name="action" value="end" />

@@ -82,7 +82,7 @@ export async function sendCustomerBookingEmail(args: {
       ${phoneLine}
       ${args.ctx.notes ? `<p>What we noted from your call: <em>${escapeHtml(args.ctx.notes)}</em></p>` : ""}
       <p>To reschedule or cancel, just reply to this email and a human at ${escapeHtml(args.ctx.businessName)} will get back to you.</p>
-      <p style="margin-top:32px;color:#64748b;font-size:13px;">— The team at ${escapeHtml(args.ctx.businessName)}</p>
+      <p style="margin-top:32px;color:#64748b;font-size:13px;">The team at ${escapeHtml(args.ctx.businessName)}</p>
     `,
   });
   const text = [
@@ -96,7 +96,7 @@ export async function sendCustomerBookingEmail(args: {
     "",
     `To reschedule or cancel, just reply to this email and a human at ${args.ctx.businessName} will get back to you.`,
     "",
-    `— The team at ${args.ctx.businessName}`,
+    `The team at ${args.ctx.businessName}`,
   ]
     .filter(Boolean)
     .join("\n");
@@ -122,7 +122,7 @@ export async function sendOwnerBookingEmail(args: {
   fromOverride?: string;
 }): Promise<BookingEmailResult> {
   const when = formatHuman(args.ctx.startAt, args.ctx.timezone);
-  const subject = `New booking via AI receptionist — ${when}`;
+  const subject = `New booking via AI receptionist, ${when}`;
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com";
   const callDetailUrl = `${appUrl}/phone/calls/${encodeURIComponent(args.callId)}`;
 

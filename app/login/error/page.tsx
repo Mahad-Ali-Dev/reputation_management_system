@@ -8,12 +8,12 @@ import "../auth.css";
  * on the same mint canvas as /login.
  */
 export const metadata = {
-  title: "Sign-in problem — Repulabs",
+  title: "Sign-in problem Repulabs",
 };
 
 const DEFAULT_COPY = {
   title: "We couldn't sign you in",
-  body: "Something went wrong during sign-in. It's usually temporary — head back and try again.",
+  body: "Something went wrong during sign-in. It's usually temporary head back and try again.",
 };
 
 const ERROR_COPY: Record<string, { title: string; body: string }> = {
@@ -27,11 +27,11 @@ const ERROR_COPY: Record<string, { title: string; body: string }> = {
   },
   OAuthAccountNotLinked: {
     title: "Email already in use",
-    body: "That email is already registered with a different sign-in method. Try continuing with your work email instead — we'll send you a secure link.",
+    body: "That email is already registered with a different sign-in method. Try continuing with your work email instead we'll send you a secure link.",
   },
   Configuration: {
     title: "Something's off on our end",
-    body: "A configuration problem stopped the sign-in. Try again in a minute — if it keeps happening, reach out and we'll sort it fast.",
+    body: "A configuration problem stopped the sign-in. Try again in a minute if it keeps happening, reach out and we'll sort it fast.",
   },
   Default: DEFAULT_COPY,
 };

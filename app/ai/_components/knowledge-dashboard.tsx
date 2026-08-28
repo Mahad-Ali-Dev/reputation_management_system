@@ -76,7 +76,7 @@ export function KnowledgeSummary({
     readinessPct >= 90
       ? "Excellent! Your AI has a deep understanding of your business."
       : readinessPct >= 40
-        ? "Solid foundation — keep adding sources to raise answer confidence."
+        ? "Solid foundation keep adding sources to raise answer confidence."
         : "Let's get started! Build your knowledge base to make your AI smarter.";
 
   return (

@@ -23,37 +23,37 @@ export default function SecurityPage() {
       <h2>1. Encryption</h2>
       <ul>
         <li>
-          <strong>In transit</strong> — TLS 1.3 everywhere. HSTS preloaded with 1-year max-age and
+          <strong>In transit</strong> TLS 1.3 everywhere. HSTS preloaded with 1-year max-age and
           subdomain inclusion. No mixed-content fallback paths.
         </li>
         <li>
-          <strong>At rest</strong> — Postgres rows are stored on Neon, which uses transparent disk
+          <strong>At rest</strong> Postgres rows are stored on Neon, which uses transparent disk
           encryption. Sensitive columns (OAuth tokens, refresh tokens, voice clone samples) are
           encrypted a second time using <strong>AES-256-GCM</strong> with per-row IVs and a per-org
           encryption context. Keys never log; rotation is automated quarterly.
         </li>
         <li>
-          <strong>Activation codes</strong> — Hardware activation codes are SHA-256 hashed at
+          <strong>Activation codes</strong> Hardware activation codes are SHA-256 hashed at
           insert. The plaintext exists only in the admin batch ZIP and the customer&rsquo;s memory
-          during redemption — there is no path to recover a code from the database.
+          during redemption there is no path to recover a code from the database.
         </li>
       </ul>
 
       <h2>2. Access control</h2>
       <ul>
         <li>
-          <strong>Tenant isolation</strong> — every read and write runs through{" "}
+          <strong>Tenant isolation</strong> every read and write runs through{" "}
           <code>withTenant(orgId, ...)</code> which sets a Postgres session variable that
           row-level-security policies enforce. A bug that forgets the wrapper still cannot read
           another tenant&rsquo;s rows because RLS rejects the query.
         </li>
         <li>
-          <strong>Admin separation</strong> — admin sessions live on a separate cookie scoped to
+          <strong>Admin separation</strong> admin sessions live on a separate cookie scoped to
           <code>admin.repulabs.com</code> with <code>SameSite=Strict; HttpOnly; Secure</code>. Admin
           actions are audit-logged with actor ID and origin-host check on every endpoint.
         </li>
         <li>
-          <strong>Employee access</strong> — break-glass production access is logged to an
+          <strong>Employee access</strong> break-glass production access is logged to an
           append-only audit table and requires two-person review. We do not have raw database
           consoles in production.
         </li>
@@ -106,15 +106,15 @@ export default function SecurityPage() {
       <h2>6. Compliance</h2>
       <ul>
         <li>
-          <strong>SOC 2 Type II</strong> — annual audit by an independent CPA firm. Report available
+          <strong>SOC 2 Type II</strong> annual audit by an independent CPA firm. Report available
           under NDA.
         </li>
         <li>
-          <strong>GDPR + Australian Privacy Act</strong> — full data subject rights pipeline
+          <strong>GDPR + Australian Privacy Act</strong> full data subject rights pipeline
           (access, deletion, portability). DPA available at <a href="/legal/dpa">/legal/dpa</a>.
         </li>
         <li>
-          <strong>Sub-processors</strong> — listed at{" "}
+          <strong>Sub-processors</strong> listed at{" "}
           <a href="/legal/subprocessors">/legal/subprocessors</a> with 30-day notice for additions.
         </li>
       </ul>

@@ -78,7 +78,7 @@ export default async function NewQrPage({
           <h3 style={{ fontSize: 17, fontWeight: 600 }}>No listings yet</h3>
           <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
             Add the listing this QR will point to. Once it exists, you can connect Google Business
-            Profile to pull reviews automatically — or paste your Google review link directly.
+            Profile to pull reviews automatically or paste your Google review link directly.
           </p>
           <Link href="/establishments/new" className="btn btn--pri" style={{ marginTop: 16 }}>
             <Icon name="plus" size={12} />
@@ -101,7 +101,7 @@ export default async function NewQrPage({
               Generate a <em>QR code</em>
             </h1>
             <p className="gq-hero__sub">
-              Customers scan, land on your Google review page, leave a review. No hardware needed —
+              Customers scan, land on your Google review page, leave a review. No hardware needed
               print this QR on receipts, signage, business cards, or just embed it on your site.
             </p>
             <Link href="/hardware" className="btn" style={{ marginTop: 14 }}>
@@ -254,7 +254,7 @@ export default async function NewQrPage({
                     <div className="gq-tl__title">Paste a Google link (or skip)</div>
                     <p className="gq-tl__copy">
                       If your business is on Google, we&rsquo;ll generate the review link
-                      automatically. Or paste your existing share link — it works both ways.
+                      automatically. Or paste your existing share link it works both ways.
                     </p>
                   </li>
                   <li className="gq-tl__item">

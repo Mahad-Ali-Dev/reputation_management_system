@@ -68,7 +68,7 @@ export function NotesEditor({ contactId, initialNotes }: { contactId: string; in
         {status === "error" && (
           <p className="row" style={{ gap: 6, fontSize: 12, color: "var(--bad)", marginTop: 8 }}>
             <Icon name="alert" size={12} />
-            Couldn’t save — check your connection and try again.
+            Couldn’t save check your connection and try again.
           </p>
         )}
       </div>

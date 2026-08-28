@@ -19,7 +19,7 @@ import { useEffect, useRef } from "react";
 export function SaveToast({
   param = "saved",
   successMessage = "Changes saved.",
-  errorMessage = "Couldn't save — check the fields and try again.",
+  errorMessage = "Couldn't save, check the fields and try again.",
 }: {
   param?: string;
   successMessage?: string;

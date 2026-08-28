@@ -89,7 +89,7 @@ export function PlacePicker({
       }
       setNotice(
         res.inserted > 0
-          ? `Linked ${c.title} — imported ${res.inserted} review${res.inserted === 1 ? "" : "s"}.`
+          ? `Linked ${c.title} imported ${res.inserted} review${res.inserted === 1 ? "" : "s"}.`
           : `Linked ${c.title}. No public reviews found yet.`,
       );
       setResults([]);
@@ -132,7 +132,7 @@ export function PlacePicker({
         style={{ display: "block", marginTop: 6, fontSize: 12.5, color: "var(--rl-muted)" }}
       >
         Search your business name and suburb, then pick your listing. We&rsquo;ll import its reviews
-        straight away — no Google account needed.
+        straight away no Google account needed.
       </span>
 
       {searching && (

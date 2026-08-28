@@ -30,7 +30,7 @@ export function NextStepBanner({ isPro }: { isPro: boolean }) {
         gradient="linear-gradient(135deg, var(--ok) 0%, #0d9488 100%)"
         icon="sparkle"
         eyebrow="All devices connected"
-        title="Your scans are flowing — now teach the AI to reply"
+        title="Your scans are flowing now teach the AI to reply"
         body="Train your AI on your business so it can draft on-brand responses to every review you collect."
         cta={
           <Link

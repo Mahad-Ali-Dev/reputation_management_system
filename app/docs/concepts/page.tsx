@@ -5,7 +5,7 @@ export const dynamic = "force-static";
 export const metadata = {
   title: "Concepts · Repulabs Docs",
   description:
-    "Organizations, establishments, devices, connections and brand voice — the mental model the rest of the docs assumes.",
+    "Organizations, establishments, devices, connections and brand voice the mental model the rest of the docs assumes.",
 };
 
 export default function ConceptsPage() {
@@ -22,13 +22,13 @@ export default function ConceptsPage() {
         </p>
         <p>
           Team members are invited into the organization with a role. Billing is per{" "}
-          <em>location</em>, not per seat — adding a colleague doesn't change your bill.
+          <em>location</em>, not per seat adding a colleague doesn't change your bill.
         </p>
       </Block>
 
       <Block title="Establishment (a location)">
         <p>
-          One physical address — one Google Business Profile. Three cafés means three
+          One physical address one Google Business Profile. Three cafés means three
           establishments. Each has its own reviews, devices, settings and brand voice, all under the
           same login.
         </p>
@@ -40,7 +40,7 @@ export default function ConceptsPage() {
 
       <Block title="Connection (a linked account)">
         <p>
-          An authorisation to act on your behalf somewhere else — Google Business Profile, a
+          An authorisation to act on your behalf somewhere else Google Business Profile, a
           mailbox, a social account. Created at <Code>/connections</Code>.
         </p>
         <p>
@@ -55,7 +55,7 @@ export default function ConceptsPage() {
           a customer straight to your review page.
         </p>
         <p>
-          A device is inert until <strong>activated</strong> — that's what ties it to your business.
+          A device is inert until <strong>activated</strong> that's what ties it to your business.
           See the{" "}
           <a href="/docs/hardware" style={{ textDecoration: "underline" }}>
             hardware guide
@@ -67,11 +67,11 @@ export default function ConceptsPage() {
       <Block title="Brand voice">
         <p>
           The tone the AI writes in. Rather than generic corporate replies, it learns how you
-          actually speak — warm or brisk, formal or casual, and the phrases you'd never use.
+          actually speak warm or brisk, formal or casual, and the phrases you'd never use.
         </p>
         <p>
           Every AI-drafted reply, survey follow-up and social caption is generated against it. Train
-          it at <Code>/ai</Code> — see{" "}
+          it at <Code>/ai</Code> see{" "}
           <a href="/docs/ai-training" style={{ textDecoration: "underline" }}>
             AI reply training
           </a>

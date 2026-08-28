@@ -167,7 +167,7 @@ export function TestAiTab({ suggestions }: { suggestions: string[] }) {
                     </button>
                     <button
                       type="button"
-                      aria-label="Bad answer — teach the AI"
+                      aria-label="Bad answer teach the AI"
                       onClick={() => rate(t, "down")}
                       className={`btn btn--xs ${t.rated === "down" ? "btn--danger" : ""}`}
                     >
@@ -249,7 +249,7 @@ export function TestAiTab({ suggestions }: { suggestions: string[] }) {
             </button>
           ))}
           <div className="dim" style={{ fontSize: 11, marginTop: 4, lineHeight: 1.5 }}>
-            Try a question your knowledge base doesn&apos;t cover — a thumbs-down sends it to the
+            Try a question your knowledge base doesn&apos;t cover a thumbs-down sends it to the
             Learning Monitor so you can teach it.
           </div>
         </div>

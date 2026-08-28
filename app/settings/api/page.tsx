@@ -55,7 +55,7 @@ export default async function ApiSettingsPage() {
           <div className="set-callout set-callout--success" style={{ marginTop: 16 }}>
             <Icon name="checkCircle" size={16} className="set-callout__ic" />
             <div>
-              <strong>New API key — copy it now.</strong> It won&apos;t be shown again.
+              <strong>New API key copy it now.</strong> It won&apos;t be shown again.
               <code
                 style={{
                   display: "block",

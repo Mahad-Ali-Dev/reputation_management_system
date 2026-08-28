@@ -179,7 +179,7 @@ export function ActivateForm({
             <strong>
               QR <code>{detectedSlug}</code> is already active on your account
             </strong>
-            Nothing to do here — you can change where it points from{" "}
+            Nothing to do here you can change where it points from{" "}
             <Link href="/hardware">My devices</Link>. To set up a different stand, use the link
             below.
           </div>
@@ -288,7 +288,7 @@ export function ActivateForm({
                 <div className="af-scan__body">
                   <div className="af-scan__t">Scan your stand&rsquo;s QR with your phone</div>
                   <div className="af-scan__d">
-                    Tap to open your camera — we&rsquo;ll fill in the link the moment we recognize
+                    Tap to open your camera we&rsquo;ll fill in the link the moment we recognize
                     it.
                   </div>
                 </div>
@@ -379,7 +379,7 @@ export function ActivateForm({
               Google Business Profile
             </a>{" "}
             → Customers → Reviews → <strong>Share review form</strong>. Leave blank to derive
-            automatically from your business — you can always change it later via Edit on the QR
+            automatically from your business you can always change it later via Edit on the QR
             card.
           </span>
         </label>

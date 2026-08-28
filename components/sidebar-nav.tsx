@@ -231,9 +231,9 @@ export function SidebarNav({
               }
               title={
                 restricted
-                  ? `${n.label} — restricted by your workspace admin`
+                  ? `${n.label} restricted by your workspace admin`
                   : locked
-                    ? `${n.label} — upgrade to Pro`
+                    ? `${n.label} upgrade to Pro`
                     : undefined
               }
               style={locked ? { color: "var(--rl-muted-2)" } : undefined}

@@ -74,7 +74,7 @@ export function TrashDeviceCard({
             <span>
               <strong>{d.shortSlug}</strong> leaves this workspace and unlinks from{" "}
               {d.establishmentName ?? "your business"}. Its destination{scanNote} reset. The device
-              itself is not destroyed — scan it and enter the code again whenever you want to set it
+              itself is not destroyed scan it and enter the code again whenever you want to set it
               up, here or on a different business.
             </span>
           </div>

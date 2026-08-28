@@ -10,12 +10,12 @@ import "../auth.css";
 export const dynamic = "force-dynamic";
 
 export const metadata = {
-  title: "Two-factor verification — Repulabs",
+  title: "Two-factor verification Repulabs",
 };
 
 const ERROR_MESSAGES: Record<string, string> = {
   invalid_code: "That code didn't match. Check your authenticator app and try again.",
-  rate_limited: "Too many attempts — wait a few minutes and try again.",
+  rate_limited: "Too many attempts wait a few minutes and try again.",
 };
 
 function safeCallback(raw: string | undefined): string {

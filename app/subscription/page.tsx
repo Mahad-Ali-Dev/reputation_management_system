@@ -46,15 +46,15 @@ const ASSET = "/assets/repulabs/billing";
  */
 const BILLING_ERRORS: Record<string, string> = {
   not_configured:
-    "Billing isn't finished being set up — STRIPE_PRO_PRICE_ID isn't set on the server. Add the Pro price ID from your Stripe dashboard and restart the app.",
+    "Billing isn't finished being set up STRIPE_PRO_PRICE_ID isn't set on the server. Add the Pro price ID from your Stripe dashboard and restart the app.",
   wrong_id_type:
     "STRIPE_PRO_PRICE_ID is set to a Stripe PRODUCT id (prod_…) instead of a PRICE id (price_…). In Stripe → Product catalog → your Pro product, copy the API ID from the Pricing row (it starts with price_), then restart the app.",
   bad_price:
-    "Stripe doesn't have that price. STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID must be from the SAME Stripe mode — price ids are mode-specific, so a live price is invisible to a test key and vice versa. Swap the key, the price id, the webhook secret and the publishable key together as one set.",
+    "Stripe doesn't have that price. STRIPE_SECRET_KEY and STRIPE_PRO_PRICE_ID must be from the SAME Stripe mode price ids are mode-specific, so a live price is invisible to a test key and vice versa. Swap the key, the price id, the webhook secret and the publishable key together as one set.",
   no_key:
     "Stripe isn't configured on the server (missing STRIPE_SECRET_KEY). Add it to the environment and restart.",
   auth: "Stripe rejected the API key. Check STRIPE_SECRET_KEY is the live key for the account that owns the Pro price.",
-  no_customer: "No Stripe customer exists for this workspace yet — start a subscription first.",
+  no_customer: "No Stripe customer exists for this workspace yet start a subscription first.",
   org: "We couldn't load this workspace. Refresh and try again.",
   failed: "Something went wrong reaching Stripe. Try again, or contact support if it persists.",
 };
@@ -188,7 +188,7 @@ export default async function SubscriptionPage({
         {/* ── Pricing cards ───────────────────────────────────────── */}
         <div className="bill-plans">
           {/* STANDARD */}
-          <section className="bill-card bill-card--standard" aria-label="Standard plan — Free">
+          <section className="bill-card bill-card--standard" aria-label="Standard plan Free">
             <span className="bill-card__tier bill-card__tier--standard">Standard</span>
             {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
             <img
@@ -223,7 +223,7 @@ export default async function SubscriptionPage({
           {/* PRO — highlighted */}
           <section
             className="bill-card bill-card--pro"
-            aria-label={`Pro plan — A$${PRO_PRICE_AUD} per month`}
+            aria-label={`Pro plan A$${PRO_PRICE_AUD} per month`}
           >
             <span className="bill-card__tier bill-card__tier--pro">Pro</span>
             <span className="bill-card__badge">
@@ -274,7 +274,7 @@ export default async function SubscriptionPage({
           </section>
 
           {/* SCALE */}
-          <section className="bill-card bill-card--scale" aria-label="Scale plan — Custom pricing">
+          <section className="bill-card bill-card--scale" aria-label="Scale plan Custom pricing">
             <span className="bill-card__tier bill-card__tier--scale">Scale</span>
             {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
             <img
@@ -366,7 +366,7 @@ export default async function SubscriptionPage({
                 aria-hidden="true"
               />
               <span className="bill-banner__txt">
-                Need more capacity? Upgrade your plan or reach out — we&apos;re here to help you
+                Need more capacity? Upgrade your plan or reach out we&apos;re here to help you
                 grow.
               </span>
               <a

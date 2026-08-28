@@ -31,7 +31,7 @@ export { upgradeHref };
 const FEATURE_COPY: Record<FeatureKey, { title: string; description: string }> = {
   ai_autopilot: {
     title: "Reputation Autopilot",
-    description: "Let AI monitor, draft, and escalate across your reputation — on a Pro plan.",
+    description: "Let AI monitor, draft, and escalate across your reputation, on a Pro plan.",
   },
   competitor_intel: {
     title: "Competitor Insights",
@@ -39,7 +39,7 @@ const FEATURE_COPY: Record<FeatureKey, { title: string; description: string }> =
   },
   image_creatives: {
     title: "AI Image Creatives",
-    description: "Generate on-brand post images with AI — available on Pro.",
+    description: "Generate on-brand post images with AI, available on Pro.",
   },
   advanced_inbox: {
     title: "Advanced Inbox",
@@ -51,7 +51,7 @@ const FEATURE_COPY: Record<FeatureKey, { title: string; description: string }> =
   },
   rank_tracking: {
     title: "Rank Tracking",
-    description: "Track keyword ranks for your locations — upgrade to Pro.",
+    description: "Track keyword ranks for your locations, upgrade to Pro.",
   },
 };
 

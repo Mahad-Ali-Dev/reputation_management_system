@@ -128,7 +128,7 @@ async function PhoneDashboardPageLocked() {
             </h1>
             <p className="pr-hero__sub">
               Number provisioning, AI receptionist settings, call logs, and
-              review conversion — your AI answers, qualifies, books, and asks
+              review conversion your AI answers, qualifies, books, and asks
               happy callers for a review.
             </p>
           </div>
@@ -164,7 +164,7 @@ async function PhoneDashboardPageLocked() {
             icon="phone"
             label="Calls · 30d"
             value={hasActivity ? String(totalCalls) : "—"}
-            sub={avgMinutes ? `${avgMinutes}m avg per call` : "— vs last 30d"}
+            sub={avgMinutes ? `${avgMinutes}m avg per call` : "vs last 30d"}
             positive={hasActivity}
           />
           <Kpi
@@ -172,7 +172,7 @@ async function PhoneDashboardPageLocked() {
             icon="sound"
             label="Minutes handled"
             value={hasActivity ? String(totalMinutes) : "—"}
-            sub={hasActivity ? "AI on the phone" : "— vs last 30d"}
+            sub={hasActivity ? "AI on the phone" : "vs last 30d"}
             positive={hasActivity}
           />
           <Kpi
@@ -180,7 +180,7 @@ async function PhoneDashboardPageLocked() {
             icon="card"
             label="AI cost · 30d"
             value={hasActivity ? `$${totalCost}` : "—"}
-            sub={hasActivity ? "Pay-as-you-talk" : "— vs last 30d"}
+            sub={hasActivity ? "Pay-as-you-talk" : "vs last 30d"}
             positive={hasActivity}
           />
           <Kpi
@@ -451,7 +451,7 @@ async function PhoneDashboardPageLocked() {
               }}
             >
               {voiceReview.enabled
-                ? `Resolved calls become Google review requests automatically — ${voiceReview.last30d} created in the last 30 days.`
+                ? `Resolved calls become Google review requests automatically ${voiceReview.last30d} created in the last 30 days.`
                 : "Turn resolved phone calls into Google reviews automatically. Manage in Autopilot."}
             </div>
           </div>

@@ -130,7 +130,7 @@ export default async function EstablishmentSettingsPage({
           }}
         >
           <Icon name="alert" size={13} style={{ color: "var(--bad)" }} />
-          Couldn&apos;t save — check the fields and try again.
+          Couldn&apos;t save check the fields and try again.
         </div>
       )}
 
@@ -236,8 +236,8 @@ export default async function EstablishmentSettingsPage({
                 {establishment.reviewLinkOverride
                   ? "Review requests send customers here."
                   : establishment.googlePlaceId
-                    ? "Empty — review requests use your connected Google Business Profile. Set a link here to send customers somewhere specific instead."
-                    : "Empty and no Google Business Profile connected — review requests will fall back to a generic Google search. Paste your review link to fix this."}
+                    ? "Empty review requests use your connected Google Business Profile. Set a link here to send customers somewhere specific instead."
+                    : "Empty and no Google Business Profile connected review requests will fall back to a generic Google search. Paste your review link to fix this."}
               </p>
 
               <div className="row" style={{ justifyContent: "flex-end", marginTop: 4 }}>

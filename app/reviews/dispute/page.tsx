@@ -415,7 +415,7 @@ function DraftPanel({ dispute }: { dispute: DisputeWithReview | null }) {
           <div>
             <div className="dc-evidence__k">Dispute argument</div>
             <p className="dc-argument" style={{ marginTop: 6 }}>
-              {dispute.details ?? "(no argument recorded — open the wizard to draft one)"}
+              {dispute.details ?? "(no argument recorded open the wizard to draft one)"}
             </p>
           </div>
 

@@ -65,7 +65,7 @@ export function WorkspaceSwitcher({ workspaces }: { workspaces: Workspace[] }) {
         className="tb__ws"
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={`Workspace: ${active.name}${hasOthers ? " — switch workspace" : ""}`}
+        aria-label={`Workspace: ${active.name}${hasOthers ? " switch workspace" : ""}`}
         onClick={() => setOpen((v) => !v)}
       >
         <Avatar name={active.name} size={20} tone={toneFor(Math.max(activeIndex, 0))} />

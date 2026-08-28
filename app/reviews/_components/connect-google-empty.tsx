@@ -177,7 +177,7 @@ export function ConnectGoogleEmpty({ hasGoogle }: { hasGoogle: boolean }) {
           <h2 className="rf-syncing__title">All caught up!</h2>
           <p className="rf-syncing__text">
             Your Google Business Profile is connected. New reviews sync into this queue within ~15
-            minutes of being posted — AI will draft replies for you to approve.
+            minutes of being posted AI will draft replies for you to approve.
           </p>
         </div>
         <BenefitStrip />

@@ -319,7 +319,7 @@ function MoveToSmsBar({ session }: { session: SessionView }) {
         className="dim"
         style={{ padding: "12px 20px", borderTop: "1px solid var(--line)", fontSize: 12.5 }}
       >
-        <Icon name="check" size={13} style={{ color: "#16a34a" }} /> Moved to SMS — continue in
+        <Icon name="check" size={13} style={{ color: "#16a34a" }} /> Moved to SMS continue in
         the SMS thread under Conversations.
       </div>
     );

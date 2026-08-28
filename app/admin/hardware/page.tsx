@@ -105,7 +105,7 @@ export default async function AdminHardwarePage() {
     <>
       <AdminPageHeader
         title="Hardware batches"
-        description="Generate QR + NFC activation codes in bulk for factory production. Downloads as a single ZIP — streamed incrementally so even 500-unit runs never time out — with the manifest and per-unit QR/NFC assets ready for the factory."
+        description="Generate QR + NFC activation codes in bulk for factory production. Downloads as a single ZIP streamed incrementally so even 500-unit runs never time out with the manifest and per-unit QR/NFC assets ready for the factory."
         actions={
           <ActionLink href="/admin/audit?action=hardware.batch" icon="lock">
             View batch audit log
@@ -148,7 +148,7 @@ export default async function AdminHardwarePage() {
         }}
       >
         <strong>⚠ Save the ZIP immediately.</strong> Activation codes are SHA-256 hashed on the
-        device row — the plaintext only lives in the ZIP. The batch keeps an encrypted copy so you
+        device row the plaintext only lives in the ZIP. The batch keeps an encrypted copy so you
         can re-download <strong>once</strong> from the list below if the original download is lost;
         after that re-download (or after 7 days) the codes are purged and unrecoverable.
       </div>
@@ -195,7 +195,7 @@ export default async function AdminHardwarePage() {
             <FormField label="Product SKU">
               <select name="productSku" required style={inputStyle} defaultValue="">
                 <option value="" disabled>
-                  — Pick a product —
+                  Pick a product
                 </option>
                 {products.length === 0 ? (
                   <option value="" disabled>
@@ -204,7 +204,7 @@ export default async function AdminHardwarePage() {
                 ) : (
                   products.map((p) => (
                     <option key={p.sku} value={p.sku}>
-                      {p.sku} — {p.name} (${(p.priceCents / 100).toFixed(2)} {p.currency})
+                      {p.sku} {p.name} (${(p.priceCents / 100).toFixed(2)} {p.currency})
                     </option>
                   ))
                 )}
@@ -222,17 +222,17 @@ export default async function AdminHardwarePage() {
 
             <FormField label="Product kind">
               <select name="productKind" required style={inputStyle} defaultValue="qr">
-                <option value="qr">QR plaque — print-ready PNG + SVG per unit</option>
-                <option value="nfc">NFC card — encode URL manifest + small QR companion</option>
-                <option value="wifi">WiFi NFC card — same encode kit as NFC</option>
+                <option value="qr">QR plaque print-ready PNG + SVG per unit</option>
+                <option value="nfc">NFC card encode URL manifest + small QR companion</option>
+                <option value="wifi">WiFi NFC card same encode kit as NFC</option>
                 <option value="multi_platform">
-                  Multi-platform QR — picker QR with the multi glyph
+                  Multi-platform QR picker QR with the multi glyph
                 </option>
               </select>
               <span style={hintStyle}>
                 <strong>QR</strong> emits 1024px print PNGs + vector SVGs. <strong>NFC/WiFi</strong>{" "}
                 emit a manifest with the per-card encode URL (write it to the chip) plus a small QR
-                companion — no heavy PNGs.
+                companion no heavy PNGs.
               </span>
             </FormField>
 
@@ -260,7 +260,7 @@ export default async function AdminHardwarePage() {
                 style={inputStyle}
               />
               <span style={hintStyle}>
-                Recorded on the batch + audit log only — not printed on the unit or shared with the
+                Recorded on the batch + audit log only not printed on the unit or shared with the
                 factory.
               </span>
             </FormField>
@@ -286,7 +286,7 @@ export default async function AdminHardwarePage() {
                 Generate batch + download ZIP
               </button>
               <span style={{ alignSelf: "center", fontSize: 11.5, color: "var(--rl-muted)" }}>
-                The ZIP streams as it builds — the download starts immediately even for 500-unit
+                The ZIP streams as it builds the download starts immediately even for 500-unit
                 runs.
               </span>
             </div>
@@ -305,22 +305,22 @@ export default async function AdminHardwarePage() {
               lineHeight: 1.7,
             }}
           >
-            <li>Generate the batch — the ZIP streams down. Save it.</li>
+            <li>Generate the batch the ZIP streams down. Save it.</li>
             <li>
               Send the ZIP to your factory. Inside they'll find:
               <ul style={{ marginTop: 4, paddingLeft: 16, lineHeight: 1.55 }}>
                 <li>
-                  <strong>README.txt</strong> — print / encode instructions
+                  <strong>README.txt</strong> print / encode instructions
                 </li>
                 <li>
-                  <strong>manifest.csv</strong> — slug ↔ code ↔ serial table (NFC adds an{" "}
+                  <strong>manifest.csv</strong> slug ↔ code ↔ serial table (NFC adds an{" "}
                   <strong>encode_url</strong> column)
                 </li>
                 <li>
-                  <strong>qr-png/&lt;slug&gt;.png</strong> — 1024×1024 print PNG (QR kind only)
+                  <strong>qr-png/&lt;slug&gt;.png</strong> 1024×1024 print PNG (QR kind only)
                 </li>
                 <li>
-                  <strong>qr-svg/&lt;slug&gt;.svg</strong> — vector QR with centered logo
+                  <strong>qr-svg/&lt;slug&gt;.svg</strong> vector QR with centered logo
                 </li>
               </ul>
             </li>
@@ -333,7 +333,7 @@ export default async function AdminHardwarePage() {
               <code className="mono" style={chipStyle}>
                 /activate
               </code>{" "}
-              — the unit goes live.
+              the unit goes live.
             </li>
           </ol>
         </div>

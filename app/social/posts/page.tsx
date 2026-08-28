@@ -151,7 +151,7 @@ export default async function SocialPostsPage({
         <PageHeader
           kicker="Cross-channel scheduler"
           title="Social studio"
-          description="Compose once, preview per platform, and schedule across Facebook, Instagram and LinkedIn — with AI captions and creatives."
+          description="Compose once, preview per platform, and schedule across Facebook, Instagram and LinkedIn with AI captions and creatives."
           actions={
             <>
               <Link href="/social/posts?tab=create" className="btn sk-hbtn">

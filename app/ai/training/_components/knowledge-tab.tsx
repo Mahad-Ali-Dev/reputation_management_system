@@ -68,7 +68,7 @@ export function KnowledgeTab({
             <h3 className="ds-card__title">Knowledge sources</h3>
             <div className="ds-card__sub">
               {sources.length === 0
-                ? "No sources yet — your AI answers from the profile fields below."
+                ? "No sources yet your AI answers from the profile fields below."
                 : `${sources.length} source${sources.length === 1 ? "" : "s"} · ${totalChunks} indexed chunk${totalChunks === 1 ? "" : "s"}`}
             </div>
           </div>
@@ -101,7 +101,7 @@ export function KnowledgeTab({
               <Icon name={result.changed ? "sparkle" : "checkCircle"} size={12} />
               {result.changed
                 ? `Updated ${result.fields.length} field${result.fields.length === 1 ? "" : "s"}: ${result.fields.join(", ")}`
-                : "Re-scan complete — no changes detected on your site."}
+                : "Re-scan complete no changes detected on your site."}
             </div>
           )}
           {result?.ok === false && (

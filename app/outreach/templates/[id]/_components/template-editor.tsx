@@ -190,7 +190,7 @@ export function TemplateEditor({
                 />
               ) : (
                 <span className="dim" style={{ fontSize: 12 }}>
-                  No logo set — falls back to your business name.
+                  No logo set falls back to your business name.
                 </span>
               )}
               <Link href={changeLogoHref} className="btn" style={{ height: 30 }}>
@@ -256,7 +256,7 @@ export function TemplateEditor({
       {/* Right: recipient preview. Matches the form's top padding so the two
           column headings sit on the same baseline. */}
       <div className="tpl-editor__preview" style={{ paddingTop: 20 }}>
-        <span className="lbl">Preview — what the recipient sees</span>
+        <span className="lbl">Preview what the recipient sees</span>
         {channel === "email" ? (
           <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
             <div

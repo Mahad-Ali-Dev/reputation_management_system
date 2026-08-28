@@ -108,7 +108,7 @@ function HeroTitle() {
           style={{ fontSize: 17.5, lineHeight: 1.6, color: C.ink3 }}
         >
           Reviews, requests, a unified inbox, AI replies, surveys, QR stands and
-          an AI phone receptionist — one premium workspace for local service
+          an AI phone receptionist one premium workspace for local service
           teams, with every reply in your brand voice.
         </p>
 

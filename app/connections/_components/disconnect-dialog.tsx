@@ -164,7 +164,7 @@ export function DisconnectDialog({
                   color: "var(--ink-2)",
                 }}
               >
-                {DISCONNECT_WARNING} Existing data already pulled into your contacts stays — but new
+                {DISCONNECT_WARNING} Existing data already pulled into your contacts stays but new
                 customers from {label} will no longer flow in, and any review requests that rely on
                 this connection will pause.
               </p>

@@ -122,7 +122,7 @@ export function MergeTagEditor({
               type="button"
               className="chip chip--info"
               onClick={() => insertTag(t.key)}
-              title={`Insert {{${t.key}}} — e.g. “${t.example}”`}
+              title={`Insert {{${t.key}}} e.g. “${t.example}”`}
               style={{ cursor: "pointer", border: "1px solid var(--line)" }}
             >
               + {t.label}
@@ -171,7 +171,7 @@ export function MergeTagEditor({
               title="Counts the rendered message length (after merge tags resolve)."
             >
               {renderedLen} chars · {smsSegments} SMS segment{smsSegments === 1 ? "" : "s"}
-              {smsOverLimit ? " — over limit" : ""}
+              {smsOverLimit ? " over limit" : ""}
             </span>
           )}
           {channel !== "sms" && typeof maxLength === "number" && (

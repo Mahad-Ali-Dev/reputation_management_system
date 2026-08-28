@@ -97,7 +97,7 @@ export function InviteTeammateForm({ onSubmitted }: { onSubmitted?: () => void }
       {accessMode === "full" ? (
         <p className="set-field__hint" style={{ margin: 0 }}>
           Sees every tab their role allows. Switch to Custom access to limit them to specific
-          tabs — useful for contractors or single-purpose teammates.
+          tabs useful for contractors or single-purpose teammates.
         </p>
       ) : (
         <>
@@ -185,7 +185,7 @@ export function InviteTeammateForm({ onSubmitted }: { onSubmitted?: () => void }
         Send invitation
       </button>
       <p className="set-field__hint">
-        The invite link is valid for 14 days. We&apos;ll log it for now — email delivery ships
+        The invite link is valid for 14 days. We&apos;ll log it for now email delivery ships
         next release.
       </p>
     </form>

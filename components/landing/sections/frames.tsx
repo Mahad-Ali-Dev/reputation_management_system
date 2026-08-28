@@ -122,7 +122,7 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={frame.image}
-            alt={`repulabs — ${frame.label}`}
+            alt={`repulabs ${frame.label}`}
             loading="lazy"
             draggable={false}
             className="h-full w-full object-cover object-top"
@@ -264,7 +264,7 @@ export function LandingFrames() {
 
           <Reveal delay={0.12}>
             <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#5b6473] sm:text-[19px]">
-              Six more modules, one login. Hover any panel — everything below
+              Six more modules, one login. Hover any panel everything below
               ships in every plan, already wired together.
             </p>
           </Reveal>

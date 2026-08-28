@@ -4,7 +4,7 @@ export const dynamic = "force-static";
 
 export const metadata = {
   title: "Changelog · Repulabs",
-  description: "Every release, every breaking change, every shipped improvement — annotated.",
+  description: "Every release, every breaking change, every shipped improvement annotated.",
 };
 
 const C = {

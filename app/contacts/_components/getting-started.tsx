@@ -67,7 +67,7 @@ export function ContactsGettingStarted() {
               Build your contact directory
             </h3>
             <p style={{ fontSize: 13, color: "var(--rl-muted)", marginTop: 4, maxWidth: 560 }}>
-              Every customer who touches your business lands here automatically — from reviews,
+              Every customer who touches your business lands here automatically from reviews,
               surveys, live chat and more. Kick it off in one of three ways:
             </p>
           </div>

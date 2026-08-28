@@ -6,7 +6,7 @@ export const dynamic = "force-static";
 export const metadata = {
   title: "Customers · Repulabs",
   description:
-    "Cafes, dentists, gyms, salons, contractors — see how Repulabs customers are running their reputation as a system.",
+    "Cafes, dentists, gyms, salons, contractors see how Repulabs customers are running their reputation as a system.",
 };
 
 const C = {
@@ -35,8 +35,8 @@ const STORIES: Array<{
     location: "Brighton, VIC · 4 chairs",
     metric: { label: "★ uplift in 90 days", value: "+0.7" },
     quote:
-      "Repulabs turned post-visit SMS into an actual workflow. The AI reply drafts read like our practice manager wrote them — we publish 90% as-is.",
-    signer: "— Dr. M. Klein, Owner",
+      "Repulabs turned post-visit SMS into an actual workflow. The AI reply drafts read like our practice manager wrote them we publish 90% as-is.",
+    signer: "Dr. M. Klein, Owner",
     stars: 5,
   },
   {
@@ -46,7 +46,7 @@ const STORIES: Array<{
     metric: { label: "monthly Google reviews", value: "48 → 215" },
     quote:
       "The QR plaques on tables outperform our newsletter 9-to-1. We hit 4.9★ on all three sites within four months.",
-    signer: "— J. Tanaka, Co-founder",
+    signer: "J. Tanaka, Co-founder",
     stars: 5,
   },
   {
@@ -56,7 +56,7 @@ const STORIES: Array<{
     metric: { label: "negative reviews intercepted", value: "12 / mo" },
     quote:
       "The dispute service is a quiet superpower. Repulabs flags ToS-violating Google reviews and gets them removed without us lifting a finger.",
-    signer: "— K. O&apos;Brien, GM",
+    signer: "K. O&apos;Brien, GM",
     stars: 5,
   },
   {
@@ -66,7 +66,7 @@ const STORIES: Array<{
     metric: { label: "review-request conversion", value: "27% → 41%" },
     quote:
       "The AI phone receptionist books after-hours service calls and asks for a Google review when the job&apos;s done. It feels unfair.",
-    signer: "— D. Cohen, Director",
+    signer: "D. Cohen, Director",
     stars: 5,
   },
 ];
@@ -86,7 +86,7 @@ export default function CustomersPage() {
       <StubHero
         kicker="Customers"
         title="2,400+ small businesses running reputation on autopilot."
-        description="Every story below is real — names changed only at customer request. Press the case study buttons to read the full breakdown."
+        description="Every story below is real names changed only at customer request. Press the case study buttons to read the full breakdown."
       />
 
       <section className="border-y" style={{ borderColor: C.line, background: C.surface2 }}>

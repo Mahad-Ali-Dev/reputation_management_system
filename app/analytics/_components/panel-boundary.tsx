@@ -41,7 +41,7 @@ export class PanelBoundary extends Component<
           }}
         >
           {this.props.label ? `The ${this.props.label} view` : "This view"} couldn’t load with your
-          current data. The rest of your report is unaffected — refresh to try again.
+          current data. The rest of your report is unaffected refresh to try again.
         </div>
       );
     }

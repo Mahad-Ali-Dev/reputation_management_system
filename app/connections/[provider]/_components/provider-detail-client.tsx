@@ -312,7 +312,7 @@ export function ProviderDetailClient({
           >
             {provider.syncs === "contacts"
               ? "No sync runs yet. Re-sync now to pull recent customers."
-              : "This connection doesn't run a contact sync — engagement flows in live."}
+              : "This connection doesn't run a contact sync engagement flows in live."}
           </div>
         ) : (
           <div style={{ overflowX: "auto" }}>

@@ -40,11 +40,11 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com"),
   title: {
-    default: "Repulabs — Run your reputation like a system.",
+    default: "Repulabs Run your reputation like a system.",
     template: "%s · Repulabs",
   },
   description:
-    "The reputation OS for local businesses. Requests, replies, surveys, social, phone — all rooted in your brand voice, all in one workspace.",
+    "The reputation OS for local businesses. Requests, replies, surveys, social, phone all rooted in your brand voice, all in one workspace.",
   applicationName: "Repulabs",
   authors: [{ name: "Repulabs" }],
   keywords: [
@@ -78,9 +78,9 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Repulabs",
-    title: "Repulabs — Run your reputation like a system.",
+    title: "Repulabs Run your reputation like a system.",
     description:
-      "The reputation OS for local businesses. AI-drafted replies, review requests, surveys, social, and an AI phone receptionist — all in one workspace.",
+      "The reputation OS for local businesses. AI-drafted replies, review requests, surveys, social, and an AI phone receptionist all in one workspace.",
     url: process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com",
     images: [
       {
@@ -93,9 +93,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Repulabs — Run your reputation like a system.",
+    title: "Repulabs Run your reputation like a system.",
     description:
-      "AI-drafted replies, review requests, surveys, social, and an AI phone receptionist — all in one workspace.",
+      "AI-drafted replies, review requests, surveys, social, and an AI phone receptionist all in one workspace.",
     images: ["/repulabs-logo.png"],
   },
   robots: {

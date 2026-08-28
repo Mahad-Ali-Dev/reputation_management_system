@@ -67,7 +67,7 @@ export default async function DataSettingsPage() {
             </h2>
             <p className="set-card__sub" style={{ color: "var(--set-ink-2)", maxWidth: 640 }}>
               Deleting <strong>{org.name}</strong> schedules the workspace for removal and
-              immediately revokes access for all {memberLabel}. This cannot be undone from here —
+              immediately revokes access for all {memberLabel}. This cannot be undone from here
               contact support within 30 days to recover.
             </p>
           </div>

@@ -41,7 +41,7 @@ export function CompetitorControls({
               ? "Enter a valid name (and URL if provided)."
               : res.reason === "unmigrated"
                 ? "Reporting tables aren't set up yet."
-                : "Couldn't add — try again.",
+                : "Couldn't add try again.",
         );
       }
     });

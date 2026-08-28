@@ -32,7 +32,7 @@ export function ResendButton({ requestId }: { requestId: string }) {
         title={state.error ?? undefined}
       >
         <Icon name={state.error ? "alert" : "refresh"} size={11} />
-        {pending ? "Queuing…" : state.done ? "Queued" : state.error ? "Failed — retry" : "Resend"}
+        {pending ? "Queuing…" : state.done ? "Queued" : state.error ? "Failed retry" : "Resend"}
       </button>
       {state.error && (
         <span role="alert" className="dim" style={{ display: "block", fontSize: 10.5, color: "var(--bad)", marginTop: 2 }}>

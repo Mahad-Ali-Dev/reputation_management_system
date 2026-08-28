@@ -97,7 +97,7 @@ export async function InboxShell({
           hasAccess={false}
           mode="replace"
           title="Message Center is a Pro feature"
-          description="Upgrade to bring reviews, DMs, comments, live chat and meeting requests into one workspace — with AI replies and automation."
+          description="Upgrade to bring reviews, DMs, comments, live chat and meeting requests into one workspace with AI replies and automation."
         >
           <span />
         </ProGate>

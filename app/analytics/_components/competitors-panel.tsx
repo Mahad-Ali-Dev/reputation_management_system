@@ -164,7 +164,7 @@ export function CompetitorsPanel({ data }: { data: CompetitorsPanelData }) {
                 </div>
               ) : (
                 <p style={{ fontSize: 13, color: "var(--rl-muted)", margin: 0 }}>
-                  No keyword gap data yet — it populates after the next rank-tracking crawl.
+                  No keyword gap data yet it populates after the next rank-tracking crawl.
                 </p>
               )}
             </div>

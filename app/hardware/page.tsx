@@ -508,7 +508,7 @@ function EmptyState({
 
         {recentActivation && (
           <Banner tone="ok">
-            Device activated, but it appears inactive — refresh to see it here.
+            Device activated, but it appears inactive refresh to see it here.
           </Banner>
         )}
 
@@ -559,14 +559,14 @@ function EmptyState({
               {retiredCount > 0 ? (
                 <>
                   You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
-                  <Link href="/hardware?view=trash">Trash</Link> — restoring one brings back the
+                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the
                   same QR, code and redirect, so a plaque you&rsquo;ve already printed keeps
                   working. Or add a new device below.
                 </>
               ) : (
                 <>
                   Got a repulabs card, plaque, or stand? Add your first device to start
-                  collecting scans and engage more customers — enter the code from your package and
+                  collecting scans and engage more customers enter the code from your package and
                   we&rsquo;ll route every scan to your Google review page.
                 </>
               )}
@@ -722,7 +722,7 @@ function TrashView({
       <PageHeader
         kicker="Device manager · trash"
         title="Restore a deleted device"
-        description="Soft-deleted devices live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL — no need to re-enter anything."
+        description="Soft-deleted devices live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL no need to re-enter anything."
         actions={
           <Link href="/hardware" className="btn">
             <Icon name="chevL" size={12} />
@@ -753,7 +753,7 @@ function TrashView({
             color: "#7f1d1d",
           }}
         >
-          Device removed from this workspace. The unit itself is untouched — scan it and enter its
+          Device removed from this workspace. The unit itself is untouched scan it and enter its
           code whenever you want to set it up again. Recorded in your audit log.
         </div>
       )}
@@ -860,7 +860,7 @@ function TrashView({
       >
         <strong style={{ color: "var(--ink-2)" }}>Heads up.</strong> Restoring a QR brings back the
         original slug, redirect URL, and HMAC signature. If you&rsquo;ve printed new plaques with
-        the same code in the meantime, scanners of the old plaque will route to the restored URL —
+        the same code in the meantime, scanners of the old plaque will route to the restored URL
         make sure that&rsquo;s what you want.
       </div>
     </AppShellServer>

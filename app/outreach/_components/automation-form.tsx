@@ -93,7 +93,7 @@ export function AutomationForm({
             marginInline: "auto",
           }}
         >
-          Automated review requests fire when a connected platform reports an event — e.g. a
+          Automated review requests fire when a connected platform reports an event e.g. a
           completed Shopify order. Connect a store or CRM to turn this on.
         </p>
         <Link href="/connections" className="btn btn--pri">
@@ -132,10 +132,10 @@ export function AutomationForm({
         Trigger
         <select className="ds-input" value={trigger} onChange={(e) => setTrigger(e.target.value)}>
           <option value="post_purchase" disabled={!purchaseConnected}>
-            After Purchase (Shopify / WooCommerce){purchaseConnected ? "" : " — not connected"}
+            After Purchase (Shopify / WooCommerce){purchaseConnected ? "" : " not connected"}
           </option>
           <option value="post_visit" disabled={!apptConnected}>
-            After Appointment (HubSpot){apptConnected ? "" : " — not connected"}
+            After Appointment (HubSpot){apptConnected ? "" : " not connected"}
           </option>
         </select>
       </label>

@@ -64,7 +64,7 @@ export function IncentivesPanel({
         <div style={{ minWidth: 0 }}>
           <h2 className="surv-card-h">Redeem a coupon</h2>
           <p className="surv-card-sub" style={{ maxWidth: 620 }}>
-            A customer hands you a code at the counter — enter it here and the system marks it used.
+            A customer hands you a code at the counter enter it here and the system marks it used.
             Codes are single-use.
           </p>
           <CouponRedeemForm />

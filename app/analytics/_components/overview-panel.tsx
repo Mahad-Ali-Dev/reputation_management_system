@@ -359,7 +359,7 @@ function LocalPackCard({
           </span>
           <p className="anx-connect__title">Awaiting first crawl</p>
           <p className="anx-connect__sub">
-            Rank tracking is connected — your local-pack position appears after the next crawl.
+            Rank tracking is connected your local-pack position appears after the next crawl.
           </p>
         </div>
       </div>
@@ -403,7 +403,7 @@ function LocalPackCard({
           <p className="anx-pack__foot">You hold position #{position} in the map pack.</p>
         ) : (
           <p className="anx-pack__foot anx-pack__foot--out">
-            You're #{position} — outside the 3-pack. See Recommendations to climb.
+            You're #{position} outside the 3-pack. See Recommendations to climb.
           </p>
         )}
       </div>

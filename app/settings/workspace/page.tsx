@@ -99,7 +99,7 @@ export default async function WorkspaceSettingsPage() {
             <label className="set-field">
               <span className="set-field__label">Country</span>
               <select className="set-select" name="country" defaultValue={org.country ?? ""}>
-                <option value="">— Select —</option>
+                <option value="">Select</option>
                 {COUNTRIES.map(([code, label]) => (
                   <option key={code} value={code}>
                     {label}
@@ -127,7 +127,7 @@ export default async function WorkspaceSettingsPage() {
               defaultValue={org.businessDescription ?? ""}
               rows={4}
               maxLength={2000}
-              placeholder="Tell customers what you do — services, hours, specialties. Used by the AI to personalize replies."
+              placeholder="Tell customers what you do services, hours, specialties. Used by the AI to personalize replies."
             />
           </label>
 
