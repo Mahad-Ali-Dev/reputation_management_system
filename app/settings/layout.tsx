@@ -30,7 +30,7 @@ export default function SettingsLayout({ children }: { children: React.ReactNode
             <p className="set-hero__eyebrow">Workspace settings</p>
             <h1 className="set-hero__title">Settings</h1>
             <p className="set-hero__sub">
-              Workspace, team, billing, brand, notifications, security and data — all in one place.
+              Workspace, team, billing, brand, notifications, security and data all in one place.
             </p>
           </div>
           {/* Decorative kit hero scene (baked bg → multiply blend). */}

@@ -68,7 +68,7 @@ const FAQS: Faq[] = [
     id: "faq-voice",
     question: "Does the AI actually sound like me?",
     answer:
-      "It learns from your past reviews, replies and website, then drafts every response in your brand's tone and vocabulary. You stay in control — approve, tweak or auto-send, and it sharpens with each edit you make.",
+      "It learns from your past reviews, replies and website, then drafts every response in your brand's tone and vocabulary. You stay in control, approve, tweak or auto-send, and it sharpens with each edit you make.",
     accent: "#176bff",
     rgb: "23, 107, 255",
     tile: { kind: "img", src: `${ASSET}/ai.svg`, sizePct: 133 },
@@ -77,7 +77,7 @@ const FAQS: Faq[] = [
     id: "faq-phone",
     question: "Can I use the AI receptionist with my existing number?",
     answer:
-      "Yes. Keep your current number and forward missed or after-hours calls to your AI receptionist, or port it across entirely. It answers 24/7, books jobs and texts callers back — with recording and consent handled to stay compliant.",
+      "Yes. Keep your current number and forward missed or after-hours calls to your AI receptionist, or port it across entirely. It answers 24/7, books jobs and texts callers back, with recording and consent handled to stay compliant.",
     accent: "#16b875",
     rgb: "22, 184, 117",
     tile: {
@@ -101,7 +101,7 @@ const FAQS: Faq[] = [
     id: "faq-cancel",
     question: "Can I cancel anytime?",
     answer:
-      "Always. There are no lock-in contracts — cancel in one click and keep access until the end of your billing period. Start on a 14-day free trial with no card required, and take your data with you whenever you like.",
+      "Always. There are no lock-in contracts, cancel in one click and keep access until the end of your billing period. Start on a 14-day free trial with no card required, and take your data with you whenever you like.",
     accent: "#f23a86",
     rgb: "242, 58, 134",
     tile: { kind: "img", src: `${ASSET}/cancel.svg`, sizePct: 135 },
@@ -211,7 +211,7 @@ export function LandingFaq() {
                 Still have questions?
               </div>
               <div className="mt-0.5" style={{ fontSize: 14, color: C.mute }}>
-                Talk to a specialist — no pressure, no sales script.
+                Talk to a specialist, no pressure, no sales script.
               </div>
             </div>
             <div className="flex flex-shrink-0 items-center gap-2.5">

@@ -75,7 +75,7 @@ function detailSummary(item: ActivityFeedItem): string | null {
 function subLine(item: ActivityFeedItem): string {
   const summary = detailSummary(item);
   if (summary) return summary;
-  if (item.status === "failed") return "Failed — needs another try";
+  if (item.status === "failed") return "Failed needs another try";
   if (item.requiresHuman) return "Waiting for your approval";
   if (item.status === "pending") return "Queued to run";
   switch (item.action) {
@@ -196,7 +196,7 @@ export function ActivityPanel({
               width={150}
               height={150}
             />
-            <p className="apa-empty__text">All caught up — nothing needs your attention right now.</p>
+            <p className="apa-empty__text">All caught up nothing needs your attention right now.</p>
           </div>
         ) : (
           <div className="apa-list">
@@ -252,7 +252,7 @@ function NeedsRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const desc =
     detailSummary(item) ??
     (failed
-      ? "Failed — check and retry"
+      ? "Failed check and retry"
       : item.loop === "escalation"
         ? "High priority"
         : "Waiting for your approval");

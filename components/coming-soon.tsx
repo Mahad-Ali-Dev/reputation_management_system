@@ -36,7 +36,7 @@ export const LOCKED_MODULES = {
     title: "Unified Inbox",
     crumbs: ["Engage", "Unified Inbox"],
     blurb:
-      "Every customer conversation — reviews, DMs, comments, live chat and meeting requests — in one place, with AI-drafted replies.",
+      "Every customer conversation reviews, DMs, comments, live chat and meeting requests in one place, with AI-drafted replies.",
     bullets: [
       "One thread per customer across every channel",
       "AI reply suggestions you approve before sending",

@@ -162,7 +162,7 @@ export function AiAssistPanel({
           className="ds-input"
           value={tone}
           onChange={(e) => setTone(e.target.value)}
-          placeholder="Tone (optional) — e.g. warm, formal"
+          placeholder="Tone (optional) e.g. warm, formal"
           disabled={status === "loading"}
           style={{ flex: 1, minWidth: 160 }}
           aria-label="Tone hint"
@@ -239,7 +239,7 @@ export function AiAssistPanel({
                       title={
                         opt.blocked
                           ? `Flagged: ${opt.safetyFlags.join(", ") || "review needed"}`
-                          : "Low confidence — review before use"
+                          : "Low confidence review before use"
                       }
                       style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 10.5 }}
                     >
@@ -312,7 +312,7 @@ export function AiAssistPanel({
             {result?.knowledgeGapId && (
               <span
                 className="chip chip--info"
-                title="The AI was unsure — saved as a knowledge gap to improve future answers."
+                title="The AI was unsure saved as a knowledge gap to improve future answers."
                 style={{ fontSize: 10.5, display: "inline-flex", alignItems: "center", gap: 4 }}
               >
                 <Icon name="brain" size={11} />

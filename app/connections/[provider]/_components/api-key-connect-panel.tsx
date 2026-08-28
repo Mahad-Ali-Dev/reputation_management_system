@@ -52,7 +52,7 @@ function errorMessage(spec: ApiKeyPanelSpec, code: string | null): string | null
   switch (code) {
     case "not_configured":
     case "whatsapp_not_configured":
-      return `Couldn't save the connection — ${spec.displayName} isn't enabled on this database yet. Contact your administrator.`;
+      return `Couldn't save the connection ${spec.displayName} isn't enabled on this database yet. Contact your administrator.`;
     // Legacy WhatsApp-specific codes (kept so old links still read well).
     case "invalid_phone_number_id":
       return spec.fields.find((f) => f.name === "phoneNumberId")?.invalidMessage ?? null;

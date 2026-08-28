@@ -298,7 +298,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
             <span className="surv-pill-on">{routing.enabled ? "On" : "Off"}</span>
           </div>
           <p className="surv-card-sub">
-            Based on “{routing.sourceName}” — happy customers go public, unhappy ones stay private.
+            Based on “{routing.sourceName}” happy customers go public, unhappy ones stay private.
           </p>
         </div>
         <Link href={routing.editHref} className="surv-tab-action" style={{ marginLeft: "auto", height: 34 }}>
@@ -336,7 +336,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
         </div>
       </div>
 
-      <p className="surv-route-foot">One question, two outcomes — passives (7) are simply recorded.</p>
+      <p className="surv-route-foot">One question, two outcomes passives (7) are simply recorded.</p>
     </div>
   );
 }
@@ -387,7 +387,7 @@ function AiThemesRail({
           <img src={`${KIT}/campaigns/ai-themes.svg`} alt="" style={{ width: "min(140px, 55%)" }} />
           <p className="surv-card-sub" style={{ textAlign: "center" }}>
             {hasAccess
-              ? "No themes yet — they appear once AI analysis runs on 10+ responses."
+              ? "No themes yet they appear once AI analysis runs on 10+ responses."
               : "AI theme detection is a Pro feature. Open the AI Insights tab to learn more."}
           </p>
           {hasAccess && completed < 10 && (
@@ -586,7 +586,7 @@ function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {
                       <div className="surv-tpl__desc">
                         {c.responses > 0
                           ? `${c.responses.toLocaleString()} responses collected so far.`
-                          : "Reusable question set — send it or wire it into an automation."}
+                          : "Reusable question set send it or wire it into an automation."}
                       </div>
                       <div className="surv-tpl__tags">
                         <span className="surv-tag" style={tone.tag}>

@@ -254,7 +254,7 @@ export default async function SettingsOverviewPage() {
           </div>
           {members.length === 0 ? (
             <p className="set-dim" style={{ fontSize: 13 }}>
-              No team members yet —{" "}
+              No team members yet{" "}
               <Link href="/settings/team" className="set-link">
                 invite your first teammate
               </Link>
@@ -438,7 +438,7 @@ export default async function SettingsOverviewPage() {
           </div>
         ) : (
           <p className="set-dim" style={{ fontSize: 13, marginTop: 16 }}>
-            Usage counters are unavailable right now — see the{" "}
+            Usage counters are unavailable right now see the{" "}
             <Link href="/subscription" className="set-link">
               billing page
             </Link>{" "}

@@ -99,7 +99,7 @@ export function ConnectedSystemsTable({
           <div>
             <h3 className="ds-card__title">Connected systems</h3>
             <div className="ds-card__sub">
-              Your live connections — manage, re-sync, or disconnect.
+              Your live connections manage, re-sync, or disconnect.
             </div>
           </div>
         </div>

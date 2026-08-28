@@ -78,7 +78,7 @@ export function ArgumentEditor({
 
         <p style={{ fontSize: 12, color: "var(--rl-muted)", margin: 0 }}>
           {kbChunksUsed > 0
-            ? "AI used your Knowledge Base to ground this argument in facts about your business. Review it carefully — you are responsible for what you send to Google."
+            ? "AI used your Knowledge Base to ground this argument in facts about your business. Review it carefully you are responsible for what you send to Google."
             : "Your Knowledge Base had no matching facts, so this argument is based only on the policy violation. Add facts to your Knowledge Base for a stronger, business-specific argument."}
         </p>
 

@@ -36,7 +36,7 @@ const KIND_COPY: Record<
 > = {
   nfc: {
     label: "NFC card",
-    lede: "Tap-to-review NFC chip. Write the URL below to the chip and a guest's phone opens your review page on tap — no app needed.",
+    lede: "Tap-to-review NFC chip. Write the URL below to the chip and a guest's phone opens your review page on tap no app needed.",
     payloadLabel: "URL to write to the chip",
   },
   wifi: {
@@ -46,7 +46,7 @@ const KIND_COPY: Record<
   },
   multi_platform: {
     label: "Multi-platform NFC",
-    lede: "Tap-to-choose NFC chip. Write the URL below to the chip — a tap opens the “where would you like to review?” picker page.",
+    lede: "Tap-to-choose NFC chip. Write the URL below to the chip a tap opens the “where would you like to review?” picker page.",
     payloadLabel: "URL to write to the chip",
   },
 };
@@ -185,7 +185,7 @@ export function NfcConfigCard({
           }}
         >
           <li>
-            On an NFC-capable phone, install a free writer app — e.g.{" "}
+            On an NFC-capable phone, install a free writer app e.g.{" "}
             <strong>NFC Tools</strong> (iOS/Android) or <strong>NXP TagWriter</strong> (Android).
           </li>
           <li>
@@ -197,13 +197,13 @@ export function NfcConfigCard({
             <strong>Write</strong> and hold the phone to the blank NFC chip until it confirms.
           </li>
           <li>
-            Test it: tap any phone to the chip — your review page should open. Optionally{" "}
+            Test it: tap any phone to the chip your review page should open. Optionally{" "}
             <strong>lock</strong> the tag in the app to make it read-only.
           </li>
         </ol>
         <p className="dim" style={{ fontSize: 11.5, marginTop: 8, lineHeight: 1.5 }}>
           Most chips ship blank so you can program them in seconds. Pre-encoded chips from our store
-          already point here — no writing needed.
+          already point here no writing needed.
         </p>
       </details>
 
@@ -216,7 +216,7 @@ export function NfcConfigCard({
         </label>
         <div className="dim" style={{ fontSize: 11.5, lineHeight: 1.5, marginBottom: 2 }}>
           The chip&rsquo;s hardware serial (shown by your writer app after a scan). Recording it lets
-          you match a physical tag to this device later — it doesn&rsquo;t change where taps route.
+          you match a physical tag to this device later it doesn&rsquo;t change where taps route.
         </div>
         <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
           <input

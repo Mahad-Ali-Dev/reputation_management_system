@@ -34,7 +34,7 @@ export function LabelField() {
           </button>
         ))}
       </div>
-      <p className="gq-note">Just for your dashboard — customers never see this.</p>
+      <p className="gq-note">Just for your dashboard customers never see this.</p>
     </div>
   );
 }

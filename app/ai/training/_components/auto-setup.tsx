@@ -47,7 +47,7 @@ export function AutoSetup({ onSkip }: { onSkip: () => void }) {
         </h2>
         <p style={{ fontSize: 13.5, color: "var(--rl-muted)", lineHeight: 1.6, margin: "0 auto 22px", maxWidth: 440 }}>
           Drop in your website and we&apos;ll scan it to learn what your business does, your services,
-          pricing and hours — then set up your AI automatically.
+          pricing and hours then set up your AI automatically.
         </p>
 
         <form action={handleSubmit} className="col" style={{ gap: 12, maxWidth: 460, margin: "0 auto" }}>
@@ -103,7 +103,7 @@ export function AutoSetup({ onSkip }: { onSkip: () => void }) {
             className="btn btn--ghost btn--sm"
             disabled={pending}
           >
-            Skip — I&apos;ll fill it in manually
+            Skip I&apos;ll fill it in manually
           </button>
         </div>
 

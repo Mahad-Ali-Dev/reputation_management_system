@@ -17,27 +17,27 @@ const ASSETS = "/assets/repulabs/autopilot";
  *  `${code} ${amount}` string (see fmtMoney below), so any ISO 4217-style
  *  code works; this is just a curated pick list instead of free text. */
 const CURRENCY_OPTIONS = [
-  { code: "USD", label: "USD — US Dollar" },
-  { code: "EUR", label: "EUR — Euro" },
-  { code: "GBP", label: "GBP — British Pound" },
-  { code: "CAD", label: "CAD — Canadian Dollar" },
-  { code: "AUD", label: "AUD — Australian Dollar" },
-  { code: "NZD", label: "NZD — New Zealand Dollar" },
-  { code: "INR", label: "INR — Indian Rupee" },
-  { code: "PKR", label: "PKR — Pakistani Rupee" },
-  { code: "AED", label: "AED — UAE Dirham" },
-  { code: "SAR", label: "SAR — Saudi Riyal" },
-  { code: "SGD", label: "SGD — Singapore Dollar" },
-  { code: "HKD", label: "HKD — Hong Kong Dollar" },
-  { code: "JPY", label: "JPY — Japanese Yen" },
-  { code: "CNY", label: "CNY — Chinese Yuan" },
-  { code: "ZAR", label: "ZAR — South African Rand" },
-  { code: "BRL", label: "BRL — Brazilian Real" },
-  { code: "MXN", label: "MXN — Mexican Peso" },
-  { code: "CHF", label: "CHF — Swiss Franc" },
-  { code: "SEK", label: "SEK — Swedish Krona" },
-  { code: "NOK", label: "NOK — Norwegian Krone" },
-  { code: "DKK", label: "DKK — Danish Krone" },
+  { code: "USD", label: "USD US Dollar" },
+  { code: "EUR", label: "EUR Euro" },
+  { code: "GBP", label: "GBP British Pound" },
+  { code: "CAD", label: "CAD Canadian Dollar" },
+  { code: "AUD", label: "AUD Australian Dollar" },
+  { code: "NZD", label: "NZD New Zealand Dollar" },
+  { code: "INR", label: "INR Indian Rupee" },
+  { code: "PKR", label: "PKR Pakistani Rupee" },
+  { code: "AED", label: "AED UAE Dirham" },
+  { code: "SAR", label: "SAR Saudi Riyal" },
+  { code: "SGD", label: "SGD Singapore Dollar" },
+  { code: "HKD", label: "HKD Hong Kong Dollar" },
+  { code: "JPY", label: "JPY Japanese Yen" },
+  { code: "CNY", label: "CNY Chinese Yuan" },
+  { code: "ZAR", label: "ZAR South African Rand" },
+  { code: "BRL", label: "BRL Brazilian Real" },
+  { code: "MXN", label: "MXN Mexican Peso" },
+  { code: "CHF", label: "CHF Swiss Franc" },
+  { code: "SEK", label: "SEK Swedish Krona" },
+  { code: "NOK", label: "NOK Norwegian Krone" },
+  { code: "DKK", label: "DKK Danish Krone" },
 ] as const;
 
 /**
@@ -359,7 +359,7 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
               </span>
               <div className="apr-head__text">
                 <h3 className="apr-title">Estimated booked revenue</h3>
-                <p className="apr-sub">Estimated from your review funnel — not booked revenue.</p>
+                <p className="apr-sub">Estimated from your review funnel not booked revenue.</p>
               </div>
             </div>
             <div className="apr-minis">
@@ -620,7 +620,7 @@ export function RoiPanel({ data }: { data: RoiPanelData }): JSX.Element {
             <div className="apr-foot apr-foot--blue">
               {isEmpty
                 ? "Connect sources to estimate revenue by acquisition"
-                : `${cur} model active — revenue by acquisition source`}
+                : `${cur} model active revenue by acquisition source`}
             </div>
           </section>
         </div>

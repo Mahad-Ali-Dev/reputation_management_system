@@ -55,7 +55,7 @@ export function TourHero() {
           >
             Every star, review and
             <br />
-            conversation —{" "}
+            conversation{" "}
             <span
               style={{
                 background: `linear-gradient(100deg, ${TOUR.blue}, ${TOUR.teal})`,
@@ -77,7 +77,7 @@ export function TourHero() {
           >
             Scroll through the whole platform in two minutes. Reviews, an AI phone
             receptionist, QR plaques, a unified inbox, surveys, analytics and
-            autopilot — one calm operating system for your reputation.
+            autopilot, one calm operating system for your reputation.
           </motion.p>
 
           <motion.div

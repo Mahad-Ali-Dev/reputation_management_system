@@ -17,11 +17,11 @@ const POST_PURCHASE_BODY = `Hi {{first_name}},
 
 Thanks for choosing {{business_name}}! We'd love to hear about your experience.
 
-If you have a moment, please leave us a quick review — it really helps:
+If you have a moment, please leave us a quick review, it really helps:
 {{review_link}}
 
 Thank you!
-— The {{business_name}} team`;
+The {{business_name}} team`;
 
 const QUICK_SMS_BODY = `Hi {{first_name}}, thanks for visiting {{business_name}}! Mind leaving us a quick review? {{review_link}}`;
 

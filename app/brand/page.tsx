@@ -192,7 +192,7 @@ export default function BrandPage() {
               contrast ratio below 4.5:1.
             </li>
             <li>
-              ❌ Don&rsquo;t imply endorsement — use of brand assets does not signal partnership
+              ❌ Don&rsquo;t imply endorsement use of brand assets does not signal partnership
               unless explicitly authorized.
             </li>
           </ul>

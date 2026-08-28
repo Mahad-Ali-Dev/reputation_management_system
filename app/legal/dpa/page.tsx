@@ -31,21 +31,21 @@ export default function DPAPage() {
       <h2>2. Nature, purpose, and categories of data</h2>
       <ul>
         <li>
-          <strong>Categories of data subjects</strong> — the Customer&rsquo;s reviewers, recipients
+          <strong>Categories of data subjects</strong> the Customer&rsquo;s reviewers, recipients
           of review requests, callers to the AI receptionist, survey respondents, and authorized
           users of the Customer&rsquo;s workspace.
         </li>
         <li>
-          <strong>Categories of personal data</strong> — names, email addresses, phone numbers, IP
+          <strong>Categories of personal data</strong> names, email addresses, phone numbers, IP
           addresses, review content, voice recordings (for AI phone calls), and free-text
           submissions in survey or feedback forms.
         </li>
         <li>
-          <strong>Special categories</strong> — none processed unless voluntarily submitted by a
+          <strong>Special categories</strong> none processed unless voluntarily submitted by a
           data subject in free-text fields. Repulabs does not request special-category data.
         </li>
         <li>
-          <strong>Purpose</strong> — providing the reputation management platform, including review
+          <strong>Purpose</strong> providing the reputation management platform, including review
           syndication, outreach delivery, AI reply drafting, AI phone reception, and analytics.
         </li>
       </ul>

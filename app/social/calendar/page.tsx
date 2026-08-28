@@ -116,7 +116,7 @@ export default async function ContentCalendarPage({
         <PageHeader
           kicker={`${totalThisMonth} posts this month`}
           title="Content calendar"
-          description="See every scheduled and published post across your channels — drag to reschedule."
+          description="See every scheduled and published post across your channels drag to reschedule."
           actions={
             <>
               <Link href="/social/posts?tab=create" className="btn btn--pri">

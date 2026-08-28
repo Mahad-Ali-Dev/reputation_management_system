@@ -32,7 +32,7 @@ const COVERAGE = [
   },
   {
     outlet: "ProductHunt",
-    title: "Repulabs — #1 Product of the Day for reputation automation",
+    title: "Repulabs #1 Product of the Day for reputation automation",
     date: "January 2026",
   },
 ];
@@ -43,7 +43,7 @@ export default function PressPage() {
       <StubHero
         kicker="Press"
         title="Everything you need to write about Repulabs."
-        description="Press kit, founder bios, product screenshots, and a logo pack — all under permissive terms for editorial use."
+        description="Press kit, founder bios, product screenshots, and a logo pack all under permissive terms for editorial use."
       />
 
       <section className="mx-auto max-w-[1080px] px-6 py-20">
@@ -65,7 +65,7 @@ export default function PressPage() {
               Press kit
             </h2>
             <p className="mt-2" style={{ fontSize: 14, color: C.mute, lineHeight: 1.6 }}>
-              The full package — logos in SVG and PNG, brand color hex codes, screenshots of the
+              The full package logos in SVG and PNG, brand color hex codes, screenshots of the
               product, founder headshots, and a 200-word company description.
             </p>
             <a

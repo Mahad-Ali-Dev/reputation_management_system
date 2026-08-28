@@ -183,7 +183,7 @@ export default async function EditDevicePage({
             >
               {device.redirectUrl ?? (
                 <span style={{ color: "var(--warn, #a16207)" }}>
-                  ⚠ Not configured yet — scans go to a generic "not activated" page until you set a URL below.
+                  ⚠ Not configured yet scans go to a generic "not activated" page until you set a URL below.
                 </span>
               )}
             </div>
@@ -259,7 +259,7 @@ export default async function EditDevicePage({
                       textDecoration: "none",
                     }}
                   >
-                    No Place ID set — add it on your establishment page →
+                    No Place ID set add it on your establishment page →
                   </Link>
                 )}
               </div>
@@ -331,7 +331,7 @@ export default async function EditDevicePage({
               >
                 https://search.google.com/local/writereview?placeid=...
               </code>
-              — both work.
+              both work.
             </p>
           </div>
 
@@ -362,7 +362,7 @@ export default async function EditDevicePage({
               Soft-delete. After deletion, any future scans of this QR will show the
               "not activated" page. The audit log keeps a record. If you've printed
               this QR on a plaque, scans will no longer route reviewers anywhere
-              useful — recreate it under a new code or restore via support.
+              useful recreate it under a new code or restore via support.
             </p>
             <form action={deleteDevice}>
               <input type="hidden" name="deviceId" value={device.id} />

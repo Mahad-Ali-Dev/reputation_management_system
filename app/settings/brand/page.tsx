@@ -133,8 +133,8 @@ export default async function BrandSettingsPage() {
             />
             <span className="set-field__hint">
               {org.logoUrl?.startsWith("data:")
-                ? "Your current logo came from the uploader without cloud storage configured, so there's no public URL to show here — paste one to replace it, or keep using the uploader."
-                : "Paste a public image URL (PNG, JPG or WebP; square works best) — or use the uploader above to upload directly."}
+                ? "Your current logo came from the uploader without cloud storage configured, so there's no public URL to show here paste one to replace it, or keep using the uploader."
+                : "Paste a public image URL (PNG, JPG or WebP; square works best) or use the uploader above to upload directly."}
             </span>
           </div>
 

@@ -100,7 +100,7 @@ function ConfigCard({ config }: { config: ModerationConfigView }) {
       <div className="sops-card__head">
         <div>
           <h3 className="sops-card__title">Automatic moderation</h3>
-          <p className="sops-card__sub">FB · IG · Live chat — Google reviews are never moderated</p>
+          <p className="sops-card__sub">FB · IG · Live chat Google reviews are never moderated</p>
         </div>
         <span className="sops__mono" style={{ fontSize: 10, color: "var(--sops-faint)" }}>
           RULE BUILDER
@@ -128,14 +128,14 @@ function ConfigCard({ config }: { config: ModerationConfigView }) {
           defaultChecked={config.autoHideSpam}
           title="Auto-hide obvious spam"
           badge={{ label: "Auto-hide", cls: "sops-chip--warn" }}
-          help="Link-stuffing / scam patterns. Off by default — turn on only if you see spam."
+          help="Link-stuffing / scam patterns. Off by default turn on only if you see spam."
         />
         <ToggleRow
           name="flagNegativity"
           defaultChecked={config.flagNegativity}
           title="Flag negative content for review"
           badge={{ label: "Flag only", cls: "sops-chip--info" }}
-          help="Strongly negative/abusive content is sent to the queue for a human to review — NEVER auto-hidden. Legitimate criticism stays visible."
+          help="Strongly negative/abusive content is sent to the queue for a human to review NEVER auto-hidden. Legitimate criticism stays visible."
         />
 
         <label style={{ display: "grid", gap: 5 }}>
@@ -220,7 +220,7 @@ function KeywordCard({ keywords }: { keywords: KeywordRuleView[] }) {
         <div>
           <h3 className="sops-card__title">Rule Library</h3>
           <p className="sops-card__sub">
-            Keyword rules — {keywords.length} total · {totalHidden} hidden so far
+            Keyword rules {keywords.length} total · {totalHidden} hidden so far
           </p>
         </div>
         <span className="sops-chip sops-chip--danger">Auto-hide</span>
@@ -418,7 +418,7 @@ function TipsCard() {
         </div>
         <p className="sops-tips__p">
           Use the negativity threshold to reduce false positives, and combine keyword rules with AI
-          detection for the best results. Negative sentiment is only ever flagged for review — never
+          detection for the best results. Negative sentiment is only ever flagged for review never
           auto-hidden.
         </p>
       </div>

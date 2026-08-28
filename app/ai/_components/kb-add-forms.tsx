@@ -78,7 +78,7 @@ export function KbAddForms({
     async (_prev: FormState, form: FormData): Promise<FormState> => {
       const file = form.get("file");
       if (file instanceof File && file.size > MAX_PDF_BYTES) {
-        return { error: `That file is ${(file.size / 1024 / 1024).toFixed(1)} MB — the limit is 8 MB.`, success: null };
+        return { error: `That file is ${(file.size / 1024 / 1024).toFixed(1)} MB the limit is 8 MB.`, success: null };
       }
       const res = await uploadAiDocument(form);
       if (res.ok) uploadFormRef.current?.reset();
@@ -122,7 +122,7 @@ export function KbAddForms({
             className="aikb-textarea"
           />
           <span className="aikb-hint">
-            Use ## headings to organize sections — the AI uses them as context. Re-uploading the
+            Use ## headings to organize sections the AI uses them as context. Re-uploading the
             same title replaces the previous version.
           </span>
         </label>
@@ -137,7 +137,7 @@ export function KbAddForms({
             />
             <span className="aikb-hint">
               PDFs are text-extracted server-side (max 8 MB). Scanned/image-only PDFs won&apos;t
-              extract — paste the text instead. A file takes priority over pasted content.
+              extract paste the text instead. A file takes priority over pasted content.
             </span>
           </label>
         </div>

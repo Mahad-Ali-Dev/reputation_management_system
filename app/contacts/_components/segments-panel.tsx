@@ -32,7 +32,7 @@ const SEG_META: Record<string, SegMeta> = {
   new_this_month: { icon: "plus", tile: "cd-kpi__tile--green", rule: "Joined since the start of this calendar month." },
   has_phone: { icon: "phone", tile: "cd-kpi__tile--vio", rule: "Has a phone number on file (SMS-reachable)." },
   has_email: { icon: "mail", tile: "cd-kpi__tile--vio", rule: "Has an email address on file." },
-  no_contact_info: { icon: "alert", tile: "cd-kpi__tile--orange", rule: "Neither email nor phone — enrich these." },
+  no_contact_info: { icon: "alert", tile: "cd-kpi__tile--orange", rule: "Neither email nor phone enrich these." },
   shopify: { art: "shopify-bag.svg", tile: "cd-kpi__tile--green", rule: "Synced from a connected Shopify store." },
 };
 

@@ -23,7 +23,7 @@ function nextStep(f: OnboardingFacts): Step | null {
     return {
       key: "establishment",
       title: "Add your first listing",
-      body: "Tell us about the listing you're managing — name, address, hours. Takes 30 seconds.",
+      body: "Tell us about the listing you're managing, name, address, hours. Takes 30 seconds.",
       cta: "Add listing",
       href: "/establishments",
     };

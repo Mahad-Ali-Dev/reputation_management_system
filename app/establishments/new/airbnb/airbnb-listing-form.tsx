@@ -69,7 +69,7 @@ export function AirbnbListingForm() {
       <FieldTextarea
         label="4. House rules (optional)"
         name="house_rules"
-        placeholder="No shoes inside, checkout by 10 AM, dogs welcome — please brush off sand from the beach before coming in."
+        placeholder="No shoes inside, checkout by 10 AM, dogs welcome please brush off sand from the beach before coming in."
         hint="Shown to guests when they tap the welcome card on arrival."
         rows={4}
         fieldError={state.fieldErrors?.houseRules}
@@ -95,7 +95,7 @@ export function AirbnbListingForm() {
             lineHeight: 1.55,
           }}
         >
-          Stored encrypted at rest (AES-256-GCM). Used for the optional WiFi NFC card — if you
+          Stored encrypted at rest (AES-256-GCM). Used for the optional WiFi NFC card if you
           don&rsquo;t plan to issue one, leave blank.
         </p>
         <div
@@ -129,7 +129,7 @@ export function AirbnbListingForm() {
         {state.fieldErrors?.wifiPassword === "encryption_failed" && (
           <div style={{ ...errorBoxStyle, marginTop: 10 }}>
             We couldn&rsquo;t securely store the WiFi password (server-side crypto issue). Leave it
-            blank for now — you can add it later from the listing&rsquo;s edit page.
+            blank for now you can add it later from the listing&rsquo;s edit page.
           </div>
         )}
       </fieldset>

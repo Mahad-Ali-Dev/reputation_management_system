@@ -105,7 +105,7 @@ export default async function AiTestPage({
               <li>&ldquo;How much does a haircut cost?&rdquo;</li>
               <li>&ldquo;Where are you located?&rdquo;</li>
               <li>
-                A question your knowledge base <strong>doesn&apos;t</strong> cover — the AI should
+                A question your knowledge base <strong>doesn&apos;t</strong> cover the AI should
                 gracefully say it doesn&apos;t know and offer to escalate.
               </li>
             </ul>

@@ -42,7 +42,7 @@ const TAB_META: Record<
   },
   send: {
     title: "Review requests",
-    description: "Send a personalized review request by email or SMS — one-off or in bulk.",
+    description: "Send a personalized review request by email or SMS one-off or in bulk.",
     hero: { src: "/assets/repulabs/review-request/send-review.svg", w: 300 },
   },
   templates: {
@@ -56,7 +56,7 @@ const TAB_META: Record<
   },
   history: {
     title: "Sent history",
-    description: "Every request — manual and automated — with live delivery statuses.",
+    description: "Every request manual and automated with live delivery statuses.",
   },
 };
 

@@ -798,7 +798,12 @@ model User {
   emailVerified   DateTime? @map("email_verified")
   image           String?
   passwordHash    String?   @map("password_hash")
-  totpSecret      String?   @map("totp_secret") // encrypted
+  totpSecret      String?   @map("totp_secret") // encrypted (see lib/auth/totp.ts)
+  totpEnabled     Boolean   @default(false) @map("totp_enabled")
+  totpBackupCodes String[]  @default([]) @map("totp_backup_codes") // sha256 hashes, never plaintext
+  // The last TOTP time-step successfully consumed — rejects re-submitting the
+  // same still-valid code a second time within its 30s window (replay guard).
+  totpLastUsedStep Int?     @map("totp_last_used_step")
   lastLoginAt     DateTime? @map("last_login_at")
   createdAt       DateTime  @default(now()) @map("created_at")
 
@@ -835,6 +840,9 @@ model Session {
   sessionToken String   @unique @map("session_token")
   userId       String   @map("user_id") @db.Uuid
   expires      DateTime
+  // Set once this session has passed TOTP verification (lib/auth/active-org.ts).
+  // Not managed by the Auth.js Prisma adapter — only by our own 2FA actions.
+  twoFactorVerified Boolean @default(false) @map("two_factor_verified")
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("sessions")

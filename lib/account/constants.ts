@@ -35,3 +35,6 @@ export const NOTIFICATION_EVENTS = [
 
 /** Cookie used to surface a freshly generated API key exactly once (then it expires). */
 export const NEW_API_KEY_COOKIE = "rl_new_api_key";
+
+/** Cookie used to surface freshly generated 2FA backup codes exactly once. */
+export const NEW_2FA_BACKUP_CODES_COOKIE = "rl_new_2fa_codes";

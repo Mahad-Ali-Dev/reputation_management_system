@@ -632,6 +632,14 @@
 .set-callout--success .set-callout__ic {
   color: var(--set-emerald);
 }
+.set-callout--danger {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+}
+.set-callout--danger .set-callout__ic {
+  color: #dc2626;
+}
 
 /* ============================================================
    OVERVIEW HUB (/settings)

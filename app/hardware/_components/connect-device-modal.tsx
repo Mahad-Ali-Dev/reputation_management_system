@@ -267,7 +267,7 @@ export function ConnectDeviceModal({
                       <p className="cdm-helper">
                         {autoDetected
                           ? "We recognised the stand you scanned, so it's already identified below. Just enter the code from the card."
-                          : "Scanning your stand's QR is what tells us which unit you're holding — the code on the card is the same on every stand in this batch, so it can't identify yours on its own."}
+                          : "Scanning your stand's QR is what tells us which unit you're holding the code on the card is the same on every stand in this batch, so it can't identify yours on its own."}
                       </p>
 
                       {/* Same disclosure pattern as /activate: never open with a
@@ -339,7 +339,7 @@ export function ConnectDeviceModal({
                                 Scan your stand&rsquo;s QR with your phone
                               </div>
                               <div className="cdm-scan__d">
-                                Tap to open your camera — we&rsquo;ll fill in the link the moment
+                                Tap to open your camera we&rsquo;ll fill in the link the moment
                                 we recognize it.
                               </div>
                             </div>
@@ -397,7 +397,7 @@ export function ConnectDeviceModal({
                         >
                           Create a free digital QR
                         </Link>{" "}
-                        — no card needed.
+                        no card needed.
                       </p>
                     </div>
 
@@ -823,7 +823,7 @@ function NoBusinessNotice({ onAdd }: { onAdd: () => void }) {
   return (
     <div className="col" style={{ gap: 14, marginTop: 24 }}>
       <p style={{ margin: 0, fontSize: 14, color: "var(--rl-muted)", lineHeight: 1.55 }}>
-        Add a business first — a device has to point its scans at one of your listings.
+        Add a business first a device has to point its scans at one of your listings.
       </p>
       <button
         type="button"

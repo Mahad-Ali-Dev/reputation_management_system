@@ -77,7 +77,7 @@ export default async function NewAirbnbListingPage() {
             >
               <p style={{ marginTop: 0 }}>
                 Airbnb doesn&rsquo;t expose a public API for review access. We use the email channel
-                they already send you — set up one Gmail filter and reviews land in your Repulabs
+                they already send you set up one Gmail filter and reviews land in your Repulabs
                 inbox automatically.
               </p>
 
@@ -131,7 +131,7 @@ export default async function NewAirbnbListingPage() {
                   </code>
                 </li>
                 <li>
-                  Gmail emails you to confirm the new forward address — click the confirmation link
+                  Gmail emails you to confirm the new forward address click the confirmation link
                   and you&rsquo;re done.
                 </li>
               </ol>
@@ -149,7 +149,7 @@ export default async function NewAirbnbListingPage() {
                 }}
               >
                 <strong>Privacy.</strong> We only parse the review fields out of each forwarded
-                email (reviewer name, rating, body). We never read other emails — Gmail's filter
+                email (reviewer name, rating, body). We never read other emails Gmail's filter
                 sends us only the ones that match.
               </div>
             </div>
@@ -171,7 +171,7 @@ export default async function NewAirbnbListingPage() {
               <Step
                 n={2}
                 t="AI drafts a reply in your voice"
-                d="We use your prior approved replies (or your brand-voice doc) to draft three options — concise, warm, or detailed."
+                d="We use your prior approved replies (or your brand-voice doc) to draft three options concise, warm, or detailed."
               />
               <Step
                 n={3}

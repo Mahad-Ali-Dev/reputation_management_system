@@ -69,7 +69,7 @@ export async function HistoryTab({ orgId }: { orgId: string }) {
           <img src="/assets/repulabs/review-request/recipients.svg" alt="" aria-hidden="true" />
           <div className="rr-emptybig__title">No review requests sent yet</div>
           <p className="rr-emptybig__sub">
-            Sent requests — manual and automated — show up here with live delivery statuses.
+            Sent requests manual and automated show up here with live delivery statuses.
           </p>
         </div>
       ) : (

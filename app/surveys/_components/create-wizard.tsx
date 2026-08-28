@@ -110,7 +110,7 @@ export function CreateWizard({
         // Resolve the campaign: existing template or create a fresh one.
         let campaignId = templateChoice;
         if (templateChoice === "blank") {
-          const name = campaignName.trim() || `Survey — ${new Date().toLocaleDateString()}`;
+          const name = campaignName.trim() || `Survey ${new Date().toLocaleDateString()}`;
           const created = await createSurveyCampaignReturningId({
             name,
             establishmentId: defaultEstablishmentId,
@@ -282,7 +282,7 @@ export function CreateWizard({
                 className="ds-textarea"
                 value={campaignName}
                 onChange={(e) => setCampaignName(e.target.value)}
-                placeholder={`Survey — ${new Date().toLocaleDateString()}`}
+                placeholder={`Survey ${new Date().toLocaleDateString()}`}
                 maxLength={120}
                 style={{ fontFamily: "inherit", padding: "8px 10px" }}
               />

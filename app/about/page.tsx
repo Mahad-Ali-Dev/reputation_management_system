@@ -70,7 +70,7 @@ export default function AboutPage() {
             <div>
               <p style={{ fontSize: 15, lineHeight: 1.65, color: C.ink2 }}>
                 The founder spent six years running an ecommerce brand chasing reviews like every
-                other owner — manual SMS blasts, awkward signs at checkout, dashboards across five
+                other owner manual SMS blasts, awkward signs at checkout, dashboards across five
                 tools, and an AI reply tab open in a sixth.
               </p>
               <p className="mt-4" style={{ fontSize: 15, lineHeight: 1.65, color: C.ink2 }}>
@@ -89,7 +89,7 @@ export default function AboutPage() {
               <Stat
                 label="Review requests sent"
                 value="380K"
-                hint="In the last 30 days — and the corresponding 41K reviews collected"
+                hint="In the last 30 days and the corresponding 41K reviews collected"
               />
               <Stat
                 label="Star delta"

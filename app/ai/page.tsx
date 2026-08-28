@@ -266,7 +266,7 @@ export default async function AiSettingsPage({
               <h1 className="akb-hero__title">AI Knowledge Base</h1>
               <p className="akb-hero__copy">
                 Teach your AI about your business, voice and policies. It uses this to answer
-                reviews, DMs, surveys and phone calls — and learns from every question it can&apos;t
+                reviews, DMs, surveys and phone calls and learns from every question it can&apos;t
                 answer.
               </p>
             </div>
@@ -350,7 +350,7 @@ export default async function AiSettingsPage({
             }}
           >
             That action couldn&apos;t be completed. You may not have permission (manager role
-            required), or the item was already removed — refresh and try again.
+            required), or the item was already removed refresh and try again.
           </div>
         )}
 
@@ -382,7 +382,7 @@ export default async function AiSettingsPage({
             </h4>
             {documents.length === 0 ? (
               <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
-                No documents yet — paste your FAQ above or crawl your website to start.
+                No documents yet paste your FAQ above or crawl your website to start.
               </p>
             ) : (
               <div>
@@ -545,7 +545,7 @@ export default async function AiSettingsPage({
             </h4>
             {widgets.length === 0 ? (
               <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
-                Generate a key above first — the test page renders the live widget.
+                Generate a key above first the test page renders the live widget.
               </p>
             ) : (
               <Button asChild variant="outline">

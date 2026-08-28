@@ -353,7 +353,7 @@ export function ConnectionsBrowser({
           <div>
             <h3 className="conn-sec__title">Connected integrations</h3>
             <div className="conn-sec__sub">
-              Every platform, by category — connect the ones you use.
+              Every platform, by category connect the ones you use.
             </div>
           </div>
           <span className="conn-sec__count" style={{ marginLeft: 10 }}>

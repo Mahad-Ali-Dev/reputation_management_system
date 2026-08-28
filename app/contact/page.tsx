@@ -18,7 +18,7 @@ export const dynamic = "force-static";
 
 export const metadata = {
   title: "Contact · Repulabs",
-  description: "Reach Repulabs for anything — sales, support, security, partnerships, press. One inbox, real humans, fast replies.",
+  description: "Reach Repulabs for anything sales, support, security, partnerships, press. One inbox, real humans, fast replies.",
 };
 
 const CONTACT_EMAIL = "info@repulabs.com";
@@ -71,10 +71,10 @@ export default function ContactPage() {
               className="mt-5"
               style={{ fontSize: 22, fontWeight: 600, letterSpacing: "-0.02em", color: C.ink }}
             >
-              Email us — one address, real humans
+              Email us one address, real humans
             </h2>
             <p className="mt-2 max-w-[46ch]" style={{ fontSize: 14, color: C.mute, lineHeight: 1.6 }}>
-              Sales, support, security, partnerships, press — it all comes to the same inbox and
+              Sales, support, security, partnerships, press it all comes to the same inbox and
               we route it to the right person fast. No maze of aliases to guess between.
             </p>
             <div className="mt-6 flex flex-wrap items-center gap-3">

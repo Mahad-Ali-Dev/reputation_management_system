@@ -83,7 +83,7 @@ export default async function MrrPage() {
     <>
       <AdminPageHeader
         title="Revenue"
-        description="Computed from our local subscription mirror. Stripe is authoritative — reconcile via Stripe Sigma when numbers feel off."
+        description="Computed from our local subscription mirror. Stripe is authoritative reconcile via Stripe Sigma when numbers feel off."
       />
 
       <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>

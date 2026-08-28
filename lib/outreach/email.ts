@@ -101,7 +101,7 @@ ${args.reviewLink}
 
 Your review helps us improve and helps other locals find us. Thank you!
 
-— The ${args.businessName} team
+The ${args.businessName} team
 
 To unsubscribe: ${args.unsubscribeUrl}`;
 
@@ -122,7 +122,7 @@ To unsubscribe: ${args.unsubscribeUrl}`;
       ${emailHeading(`Hi ${name},`)}
       ${emailParagraph(`Thanks for choosing <strong>${escapeHtml(args.businessName)}</strong>! If you have a moment, we'd love your honest feedback on Google.`)}
       <div style="margin:26px 0;">${ctaButton({ url: args.reviewLink, label: "Leave a review", accent: args.accentColor ?? null })}</div>
-      ${emailParagraph("Your review helps us improve — and helps other locals find us. Thank you!")}
+      ${emailParagraph("Your review helps us improve and helps other locals find us. Thank you!")}
     `,
     footerNote: `Don't want these emails? <a href="${args.unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe</a>`,
   });

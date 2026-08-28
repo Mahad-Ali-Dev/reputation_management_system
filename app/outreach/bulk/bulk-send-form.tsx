@@ -36,7 +36,7 @@ export function BulkSendForm({
         success:
           `Queued ${res.inserted.toLocaleString()} request${res.inserted === 1 ? "" : "s"}` +
           (res.skipped > 0
-            ? ` — skipped ${res.skipped.toLocaleString()} (unsubscribed or contacted in the last 30 days)`
+            ? ` skipped ${res.skipped.toLocaleString()} (unsubscribed or contacted in the last 30 days)`
             : "") +
           ". Delivery runs on the send scheduler.",
       };

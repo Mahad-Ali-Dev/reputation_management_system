@@ -82,7 +82,7 @@ export default async function CampaignsPage() {
                   className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm"
                 >
                   {phoneNumbers.length === 0 ? (
-                    <option disabled>No numbers — add one at /phone/setup</option>
+                    <option disabled>No numbers add one at /phone/setup</option>
                   ) : (
                     phoneNumbers.map((p) => (
                       <option key={p.id} value={p.id}>

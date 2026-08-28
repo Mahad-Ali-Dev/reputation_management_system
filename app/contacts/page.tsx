@@ -68,7 +68,7 @@ export default async function ContactsPage({
       <div className="cd-page">
         <PageHeader
           title="Contacts"
-          description="Your cross-channel customer directory — every person who interacts with your business, in one place."
+          description="Your cross-channel customer directory every person who interacts with your business, in one place."
           breadcrumb={[{ label: "CRM" }, { label: "Contacts" }]}
           actions={
             <Link href="/contacts?tab=import" className="btn btn--pri btn--sm">

@@ -158,7 +158,7 @@ export function RemoveMemberModal({
 
             <p style={{ margin: "0 0 18px", fontSize: 13.5, color: "var(--set-mut, var(--rl-muted))", lineHeight: 1.55 }}>
               <strong style={{ color: "var(--set-ink-2, var(--ink))" }}>{memberName}</strong> will
-              immediately lose access to this workspace. This can&rsquo;t be undone — they&rsquo;d
+              immediately lose access to this workspace. This can&rsquo;t be undone they&rsquo;d
               need a new invitation to rejoin.
             </p>
 

@@ -164,7 +164,7 @@ export default async function AdminUsersPage({
               <Td>{u.name ?? <span style={{ color: "var(--rl-muted)" }}>—</span>}</Td>
               <Td>
                 {u.memberships.length === 0 ? (
-                  <span style={{ color: "var(--rl-muted)" }}>— none</span>
+                  <span style={{ color: "var(--rl-muted)" }}>none</span>
                 ) : (
                   <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
                     {u.memberships.map((m) => (

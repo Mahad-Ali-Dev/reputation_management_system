@@ -26,7 +26,7 @@ import { useMemo, useRef, useState, useTransition } from "react";
  */
 
 const FIELD_OPTIONS: { value: ImportField | "skip"; label: string }[] = [
-  { value: "skip", label: "— Skip —" },
+  { value: "skip", label: "Skip" },
   { value: "name", label: "Full name" },
   { value: "firstName", label: "First name" },
   { value: "lastName", label: "Last name" },
@@ -226,7 +226,7 @@ export function CsvImporter() {
             </div>
             {parsed.truncated && (
               <p className="chip chip--warn" style={{ display: "inline-flex", marginBottom: 12 }}>
-                File exceeded {MAX_IMPORT_ROWS.toLocaleString()} rows — only the first {MAX_IMPORT_ROWS.toLocaleString()} will import.
+                File exceeded {MAX_IMPORT_ROWS.toLocaleString()} rows only the first {MAX_IMPORT_ROWS.toLocaleString()} will import.
               </p>
             )}
 

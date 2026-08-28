@@ -46,9 +46,9 @@ const SECTIONS = [
     accentSoft: "#eaf1ff",
     title: "Every review, one inbox",
     description:
-      "Google, Facebook and Yelp stream into a single queue the moment they land. AI drafts the reply in your voice — you skim, approve and move on with your day.",
+      "Google, Facebook and Yelp stream into a single queue the moment they land. AI drafts the reply in your voice, you skim, approve and move on with your day.",
     video: `${VIDEO}/reviews.mp4`,
-    alt: "repulabs Reviews — every platform in one moderated queue",
+    alt: "repulabs Reviews every platform in one moderated queue",
     reverse: false,
   },
   {
@@ -58,9 +58,9 @@ const SECTIONS = [
     accentSoft: "#e6f8fb",
     title: "Teach your AI once, it never forgets",
     description:
-      "Upload your FAQs, policies and pricing — the AI learns your business and uses it everywhere: replies, chat, every customer question. Always accurate, always on-brand.",
+      "Upload your FAQs, policies and pricing, the AI learns your business and uses it everywhere: replies, chat, every customer question. Always accurate, always on-brand.",
     video: `${VIDEO}/ai_knowledge_base.mp4`,
-    alt: "repulabs AI Knowledge Base — upload docs, the AI learns your business",
+    alt: "repulabs AI Knowledge Base upload docs, the AI learns your business",
     reverse: true,
   },
   {
@@ -70,9 +70,9 @@ const SECTIONS = [
     accentSoft: "#f2eeff",
     title: "Schedule once, post everywhere",
     description:
-      "Draft a week of posts in minutes, publish to Facebook and Instagram on schedule, and keep an eye on every comment — without ever leaving repulabs.",
+      "Draft a week of posts in minutes, publish to Facebook and Instagram on schedule, and keep an eye on every comment, without ever leaving repulabs.",
     video: `${VIDEO}/social_studio.mp4`,
-    alt: "repulabs Social Studio — scheduled posts and comment monitoring",
+    alt: "repulabs Social Studio scheduled posts and comment monitoring",
     reverse: false,
   },
 ] as const;
@@ -299,7 +299,7 @@ export function LandingTour() {
           key="tour-video-modal"
           role="dialog"
           aria-modal="true"
-          aria-label={`${openSection.kicker} — full-size video`}
+          aria-label={`${openSection.kicker} full-size video`}
           className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-8"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

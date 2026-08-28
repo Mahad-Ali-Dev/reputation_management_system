@@ -45,7 +45,7 @@ const FEATURES: Feature[] = [
     icon: <Star size={18} />,
     eyebrow: "REVIEWS",
     title: "Reviews, answered in your voice",
-    desc: "Every Google, Facebook and listing review in one feed. The AI drafts a reply trained on your brand guide, service catalog and policies — approve and publish in a single click.",
+    desc: "Every Google, Facebook and listing review in one feed. The AI drafts a reply trained on your brand guide, service catalog and policies approve and publish in a single click.",
     wide: true,
   },
   {
@@ -86,7 +86,7 @@ const FEATURES: Feature[] = [
     icon: <BarChart3 size={18} />,
     eyebrow: "ANALYTICS",
     title: "Reputation analytics",
-    desc: "Rating trends, sentiment and channel mix — with revenue attribution per location.",
+    desc: "Rating trends, sentiment and channel mix with revenue attribution per location.",
   },
   {
     glyph: "autopilot",

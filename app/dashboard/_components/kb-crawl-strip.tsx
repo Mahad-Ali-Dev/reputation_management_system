@@ -96,7 +96,7 @@ export function KbCrawlStrip({ initial }: { initial: CrawlRow[] }) {
             <span style={{ minWidth: 0, flex: 1 }}>
               <strong style={{ fontWeight: 600 }}>{r.title}</strong>{" "}
               <span style={{ color: "var(--rl-muted)" }}>
-                — {STAGE_COPY[r.stage]}
+                {STAGE_COPY[r.stage]}
                 {r.stage === "indexing" && r.chunks > 0 && ` ${r.chunks} sections`}
                 {done && r.chunks > 0 && ` · ${r.chunks} sections`}
               </span>

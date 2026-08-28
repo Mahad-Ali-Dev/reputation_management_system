@@ -358,7 +358,7 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
                         {avgFirstReply !== null ? formatMinutes(avgFirstReply) : "—"} avg
                       </div>
                       <div className="sops-emptybox__p">
-                        {slaHit >= 80 ? "Great — you're responding quickly." : "Aim to reply within an hour."}
+                        {slaHit >= 80 ? "Great you're responding quickly." : "Aim to reply within an hour."}
                       </div>
                     </div>
                   </div>

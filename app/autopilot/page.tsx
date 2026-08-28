@@ -142,8 +142,8 @@ export default async function AutopilotPage({
                 </span>
               </div>
               <p className="ap2-hero__desc">
-                One switch runs your whole reputation loop — AI replies published for 5-star
-                reviews, everything else drafted for you to approve — then sends a weekly digest of
+                One switch runs your whole reputation loop AI replies published for 5-star
+                reviews, everything else drafted for you to approve then sends a weekly digest of
                 what it did and the few things that need you.
               </p>
             </div>
@@ -480,7 +480,7 @@ function UpsellTeaser() {
         style={{ fontSize: 13, maxWidth: 460, margin: "0 auto 16px", lineHeight: 1.6 }}
       >
         Upgrade to let Autopilot reply to reviews, send review requests, turn phone calls into
-        Google reviews, and show you the revenue — all on one toggle, with a weekly digest.
+        Google reviews, and show you the revenue all on one toggle, with a weekly digest.
       </p>
       <a href="/subscription?feature=ai_autopilot" className="btn btn--pri">
         Upgrade to Pro

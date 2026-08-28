@@ -105,7 +105,7 @@ export function CommentsPanel({
           <Icon name="info" size={12} />
         </span>
         <span style={{ fontSize: 12, color: "#253550", lineHeight: 1.4 }}>
-          These are <strong>social comments</strong> on your Facebook &amp; Instagram posts — you can
+          These are <strong>social comments</strong> on your Facebook &amp; Instagram posts you can
           reply to or hide them. Google reviews are <strong>reply-only</strong> and can never be hidden.
         </span>
         <div className="row" style={{ gap: 6, marginLeft: "auto", flexShrink: 0 }}>
@@ -341,7 +341,7 @@ function CommentDetail({ row }: { row: CommentRowView }) {
       {!row.isSocial && (
         <div className="row" style={{ gap: 6, fontSize: 11.5, color: "var(--uik-mut)", alignItems: "flex-start" }}>
           <Icon name="info" size={13} style={{ marginTop: 1 }} />
-          <span>Google content is reply-only. It can&apos;t be hidden — reply publicly below.</span>
+          <span>Google content is reply-only. It can&apos;t be hidden reply publicly below.</span>
         </div>
       )}
 

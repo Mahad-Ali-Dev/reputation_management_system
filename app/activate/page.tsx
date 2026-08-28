@@ -120,12 +120,12 @@ export default async function ActivatePage({
                   {ready ? "Stand detected" : "Let's find your stand"}
                 </span>
                 <h2 className="af-hero__title">
-                  {ready ? "Almost there — just the code" : "Activate your stand"}
+                  {ready ? "Almost there just the code" : "Activate your stand"}
                 </h2>
                 <p className="af-hero__sub">
                   {ready
                     ? "We recognised the QR you scanned, so it's filled in below. Enter the 5-character code from the card in your package and choose the business it points to."
-                    : "Scan the QR on your stand with the phone or laptop you're setting up on — that's how we identify which unit is yours. Then enter the 5-character code from the card in your package."}
+                    : "Scan the QR on your stand with the phone or laptop you're setting up on that's how we identify which unit is yours. Then enter the 5-character code from the card in your package."}
                 </p>
               </div>
               <StandArt />
@@ -154,7 +154,7 @@ export default async function ActivatePage({
               <Step
                 n={1}
                 t="Identify the stand"
-                d="Scanning your QR is what tells us which unit you're holding — it fills itself in here. Scanned on a different device? Enter the link manually instead."
+                d="Scanning your QR is what tells us which unit you're holding it fills itself in here. Scanned on a different device? Enter the link manually instead."
               />
               <Step
                 n={2}
@@ -164,19 +164,19 @@ export default async function ActivatePage({
               <Step
                 n={3}
                 t="Pick the business"
-                d="Choose which establishment this QR represents — scans get attributed to that location for analytics."
+                d="Choose which establishment this QR represents scans get attributed to that location for analytics."
               />
               <Step
                 n={4}
                 t="Set the destination"
-                d="Paste your Google review link so scans land on the review form directly. Optional — we'll derive one from your Place ID if you leave it blank."
+                d="Paste your Google review link so scans land on the review form directly. Optional we'll derive one from your Place ID if you leave it blank."
               />
             </ol>
             <div className="af-note">
               <Icon name="info" size={15} className="af-note__icon" />
               <span>
                 One QR binds to one business. After activation you can change where it points any
-                time from <Link href="/hardware">My devices</Link> — no re-printing needed.
+                time from <Link href="/hardware">My devices</Link> no re-printing needed.
               </span>
             </div>
           </div>

@@ -62,7 +62,7 @@ export function FinalCtaBeams() {
           style={{ fontSize: 16.5, color: C.mute, lineHeight: 1.6 }}
         >
           Start free, connect your first channel in minutes, and let the AI
-          handle the busywork — in your voice.
+          handle the busywork in your voice.
         </p>
 
         <div className="mt-9 flex flex-wrap items-center justify-center gap-3">

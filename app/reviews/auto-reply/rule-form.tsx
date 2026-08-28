@@ -395,7 +395,7 @@ export function AutoReplyRuleForm({
                 }}
               >
                 <strong>Heads-up:</strong> Auto-publish goes live without your review. We still run
-                a safety classifier and any flagged draft is held for manual approval — but the
+                a safety classifier and any flagged draft is held for manual approval but the
                 normal "drafted, awaiting approval" buffer is skipped.
               </p>
             </div>

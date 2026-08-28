@@ -93,7 +93,7 @@ export default async function ReadyToSendPage({ params }: { params: Promise<{ id
           <p className="dc-compliance__t">You send this from your own Google account</p>
           <p className="dc-compliance__s">
             Google only accepts review-removal requests submitted by the business owner directly. We
-            don&apos;t submit on your behalf — use the options below to email Google yourself. This
+            don&apos;t submit on your behalf use the options below to email Google yourself. This
             keeps your request legitimate and avoids it being flagged as spam. Outcomes vary; removal
             is never guaranteed.
           </p>
@@ -108,7 +108,7 @@ export default async function ReadyToSendPage({ params }: { params: Promise<{ id
             <div className="dc-method__tile dc-method__tile--pri"><PlaneIcon /></div>
             <h3 className="dc-method__title">Send from Your Email</h3>
             <p className="dc-method__body">
-              Open a pre-filled Gmail draft addressed to Google — review it, then hit send from your
+              Open a pre-filled Gmail draft addressed to Google review it, then hit send from your
               own account.
             </p>
             <div className="dc-method__feature dc-method__feature--pri"><ShieldCheckIcon /> Fastest &amp; most reliable</div>
@@ -121,7 +121,7 @@ export default async function ReadyToSendPage({ params }: { params: Promise<{ id
             <div className="dc-method__tile dc-method__tile--blue"><MailIcon /></div>
             <h3 className="dc-method__title">Copy the Details</h3>
             <p className="dc-method__body">
-              Copy the ready-to-use email — address, subject and argument — to paste into any email
+              Copy the ready-to-use email address, subject and argument to paste into any email
               client you prefer.
             </p>
             <div className="dc-method__feature dc-method__feature--blue"><MailIcon /> Use your own email account</div>

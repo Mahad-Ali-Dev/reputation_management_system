@@ -206,8 +206,8 @@ function TeachModal({ gap, onClose }: { gap: KnowledgeGapRow; onClose: () => voi
             Teach your AI
           </h2>
           <p style={{ margin: 0, fontSize: 13, color: "var(--rl-muted, #94a3b8)", lineHeight: 1.55 }}>
-            Your answer is added to the AI&apos;s instructions so it can answer this — and similar
-            questions — correctly from now on.
+            Your answer is added to the AI&apos;s instructions so it can answer this and similar
+            questions correctly from now on.
           </p>
         </div>
 

@@ -32,12 +32,12 @@ type Assistant = {
 } | null;
 
 const VOICES: { id: string; label: string }[] = [
-  { id: "alice", label: "Alice — Female, Calm, Clear (en-US)" },
-  { id: "Polly.Joanna", label: "Joanna — Female, Natural (en-US)" },
-  { id: "Polly.Matthew", label: "Matthew — Male, Natural (en-US)" },
-  { id: "Polly.Amy", label: "Amy — Female (en-GB)" },
-  { id: "Polly.Brian", label: "Brian — Male (en-GB)" },
-  { id: "Polly.Aditi", label: "Aditi — Female (en-IN)" },
+  { id: "alice", label: "Alice Female, Calm, Clear (en-US)" },
+  { id: "Polly.Joanna", label: "Joanna Female, Natural (en-US)" },
+  { id: "Polly.Matthew", label: "Matthew Male, Natural (en-US)" },
+  { id: "Polly.Amy", label: "Amy Female (en-GB)" },
+  { id: "Polly.Brian", label: "Brian Male (en-GB)" },
+  { id: "Polly.Aditi", label: "Aditi Female (en-IN)" },
 ];
 
 const LANGUAGES: [string, string][] = [
@@ -285,7 +285,7 @@ export function AssistantConfigForm({ assistant }: { assistant: Assistant }) {
               value={instructions}
               onChange={(e) => setInstructions(e.target.value)}
               placeholder={
-                "Always ask for the caller's name first if they haven't given it.\nIf they're asking about a refund, immediately transfer them — don't try to handle it.\nIf the call lasts more than 5 minutes, suggest they email us at support@repulabs.com."
+                "Always ask for the caller's name first if they haven't given it.\nIf they're asking about a refund, immediately transfer them don't try to handle it.\nIf the call lasts more than 5 minutes, suggest they email us at support@repulabs.com."
               }
             />
             <span className="pr-counter">{instructions.length}/2000</span>

@@ -411,7 +411,7 @@ function AutomationForm({
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12.5 }}>
           <span className="surv-field-lbl">Survey template</span>
           <select name="campaignId" className="surv-input" defaultValue={editing?.campaignId ?? ""} style={{ fontFamily: "inherit" }}>
-            <option value="">— Select —</option>
+            <option value=""> Select </option>
             {campaigns.map((c) => (
               <option key={c.id} value={c.id}>
                 {c.name}

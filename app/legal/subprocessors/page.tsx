@@ -30,7 +30,7 @@ const SUBPROCESSORS = [
     name: "Anthropic",
     purpose: "Large language model (Claude) for review-reply drafting, safety classification, chatbot",
     location: "USA",
-    dataTypes: "Review content, knowledge-base docs, chatbot turns — opt-out of training enabled",
+    dataTypes: "Review content, knowledge-base docs, chatbot turns opt-out of training enabled",
     dpa: "https://www.anthropic.com/legal/dpa",
   },
   {

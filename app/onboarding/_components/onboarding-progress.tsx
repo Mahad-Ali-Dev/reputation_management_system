@@ -121,7 +121,7 @@ export function OnboardingProgress({
           ) : isNeedsUser ? (
             <>
               {run.businessName ?? "Your workspace"} is set up. Connect your review platforms below
-              to finish — or head straight to your dashboard.
+              to finish or head straight to your dashboard.
             </>
           ) : (
             <>

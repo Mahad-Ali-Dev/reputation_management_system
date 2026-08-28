@@ -301,14 +301,14 @@ export function ReviewsInboxScene() {
           name: "Jamie L.",
           rating: 5,
           text: "Incredible food and service. The pad thai is everything I want in a Thai meal.",
-          ai: "Thank you so much, Jamie! We're thrilled you enjoyed the pad thai — our chef put serious love into that recipe. Hope to see you again soon!",
+          ai: "Thank you so much, Jamie! We're thrilled you enjoyed the pad thai our chef put serious love into that recipe. Hope to see you again soon!",
           time: "8m",
         },
         {
           name: "Marcus T.",
           rating: 3,
           text: "Food was good but service was slow on Friday. Took 25 minutes for an iced coffee.",
-          ai: "Marcus, we're sorry the wait felt long — Fridays at peak hours are our busiest. We've added a second barista on weekends since to fix exactly this.",
+          ai: "Marcus, we're sorry the wait felt long Fridays at peak hours are our busiest. We've added a second barista on weekends since to fix exactly this.",
           time: "1h",
         },
       ].map((r) => (
@@ -627,7 +627,7 @@ export function OutreachScene() {
             letterSpacing: "-0.02em",
           }}
         >
-          Ask for the review — 30 seconds after they leave
+          Ask for the review 30 seconds after they leave
         </h3>
       </div>
 
@@ -834,7 +834,7 @@ export function PhoneScene() {
             { who: "caller", text: "Hi, do you have a table for two tonight at 7?" },
             {
               who: "ai",
-              text: "Hey! Let me check… yes, I have a window-side table at 7:15 — would that work?",
+              text: "Hey! Let me check… yes, I have a window-side table at 7:15 would that work?",
             },
             { who: "caller", text: "Yes, perfect. Under the name Casey." },
             {
@@ -876,7 +876,7 @@ export function PhoneScene() {
           }}
         >
           <span style={{ fontWeight: 700 }}>✓</span>
-          Booking written to Cal.com — Casey, 2 guests, 7:15 PM
+          Booking written to Cal.com Casey, 2 guests, 7:15 PM
         </div>
       </div>
     </div>

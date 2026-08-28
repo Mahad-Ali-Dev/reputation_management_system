@@ -495,7 +495,7 @@ function QueueRow({
               onClick={() => onResolve(item.id, "reply")}
               disabled={busy}
               aria-label={`Mark replied for ${item.authorName ?? "Anonymous"}`}
-              title="Mark handled — reply in the Comments tab"
+              title="Mark handled reply in the Comments tab"
             >
               <Icon name="reply" size={14} />
             </button>
@@ -530,7 +530,7 @@ function EmptyQueue({ status }: { status: string }) {
           <div className="sops-empty__notice">
             <Icon name="google" size={16} />
             <span>
-              Google reviews can&apos;t be hidden through the API — they can only be replied to, so
+              Google reviews can&apos;t be hidden through the API they can only be replied to, so
               they never appear in this queue.
             </span>
           </div>

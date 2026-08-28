@@ -221,11 +221,11 @@ export function magicLinkEmail(url: string): { html: string; text: string } {
   `;
 
   const html = emailShell({
-    preheader: "Your sign-in link for Repulabs — expires in 15 minutes.",
+    preheader: "Your sign-in link for Repulabs, expires in 15 minutes.",
     title: "Sign in to Repulabs",
     body,
     footerNote:
-      "If you didn't request this, you can safely ignore this email — your account stays secure.",
+      "If you didn't request this, you can safely ignore this email, your account stays secure.",
   });
 
   const text = [
@@ -237,7 +237,7 @@ export function magicLinkEmail(url: string): { html: string; text: string } {
     "",
     "If you didn't request this email, you can safely ignore it.",
     "",
-    "— Repulabs",
+    "Repulabs",
     siteUrl(),
   ].join("\n");
 
@@ -280,7 +280,7 @@ export function teamInviteEmail(opts: {
     "",
     "This invitation expires in 7 days.",
     "",
-    "— Repulabs",
+    "Repulabs",
     siteUrl(),
   ].join("\n");
 
@@ -307,14 +307,14 @@ export function reviewRequestEmail(opts: {
     ${ctaButton({ url: opts.reviewUrl, label: "Leave a Google review" })}
 
     <p style="margin:24px 0 0;color:${BRAND.muted};font-size:13px;line-height:1.55;">
-      Thanks for the support — it means everything.
+      Thanks for the support, it means everything.
       <br><br>
-      — The team at ${escapeHtml(opts.businessName)}
+      The team at ${escapeHtml(opts.businessName)}
     </p>
   `;
 
   const html = emailShell({
-    preheader: `A quick favor from ${opts.businessName} — would you leave us a review?`,
+    preheader: `A quick favor from ${opts.businessName}, would you leave us a review?`,
     title: `A quick favor from ${opts.businessName}`,
     body,
     footerNote: `Sent on behalf of ${escapeHtml(opts.businessName)}. <a href="${opts.unsubscribeUrl}" style="color:${BRAND.muted};text-decoration:underline;">Unsubscribe</a>`,
@@ -327,9 +327,9 @@ export function reviewRequestEmail(opts: {
     "",
     opts.reviewUrl,
     "",
-    "Thanks for the support — it means everything.",
+    "Thanks for the support, it means everything.",
     "",
-    `— The team at ${opts.businessName}`,
+    `The team at ${opts.businessName}`,
     "",
     `Unsubscribe: ${opts.unsubscribeUrl}`,
   ].join("\n");

@@ -129,7 +129,7 @@ export default async function ReviewDetailPage({
             {dispute && dispute.status !== "withdrawn" ? (
               <div className="space-y-3">
                 <p className="text-sm">
-                  Filed on {new Date(dispute.createdAt).toLocaleString()} — reason:{" "}
+                  Filed on {new Date(dispute.createdAt).toLocaleString()} reason:{" "}
                   <strong>{dispute.reason.replace(/_/g, " ")}</strong>
                 </p>
                 {dispute.details && (
@@ -170,7 +170,7 @@ export default async function ReviewDetailPage({
                     <option value="conflict_of_interest">
                       Conflict of interest (competitor / employee)
                     </option>
-                    <option value="wrong_business">Wrong business — meant for someone else</option>
+                    <option value="wrong_business">Wrong business meant for someone else</option>
                     <option value="other">Other</option>
                   </select>
                 </label>
@@ -180,7 +180,7 @@ export default async function ReviewDetailPage({
                     name="details"
                     rows={3}
                     maxLength={2000}
-                    placeholder="Anything that helps us understand the situation — e.g. they never came in, they have a grudge from a public dispute, etc."
+                    placeholder="Anything that helps us understand the situation e.g. they never came in, they have a grudge from a public dispute, etc."
                     className="mt-1 w-full rounded-md border border-input px-3 py-2 text-sm"
                   />
                 </label>
@@ -278,7 +278,7 @@ function PublishForm({
         </Button>
         {status === "pending_review" && (
           <span className="text-xs text-muted-foreground">
-            Safety classifier flagged this — review before posting publicly.
+            Safety classifier flagged this review before posting publicly.
           </span>
         )}
       </div>

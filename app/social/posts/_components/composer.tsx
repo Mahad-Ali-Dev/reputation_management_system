@@ -97,7 +97,7 @@ const CREATIVE_IDEAS: CreativeIdea[] = [
     sub: "Turn your latest praise into proof.",
     art: "/assets/repulabs/post-creator/cp-publish.svg",
     caption:
-      "⭐⭐⭐⭐⭐ Review of the week!\n\n“[paste your favorite recent review here]”\n\nThank you, [customer name] — feedback like this is why we do what we do.",
+      "⭐⭐⭐⭐⭐ Review of the week!\n\n“[paste your favorite recent review here]”\n\nThank you, [customer name] feedback like this is why we do what we do.",
     hashtags: ["fivestars", "customerlove"],
   },
   {
@@ -106,13 +106,13 @@ const CREATIVE_IDEAS: CreativeIdea[] = [
     sub: "A limited-time deal with a clear CTA.",
     art: "/assets/repulabs/post-creator/cp-scheduled.svg",
     caption:
-      "🎉 This week only: [your offer].\n\nMention this post in store or book online to claim it — ends [date].",
+      "🎉 This week only: [your offer].\n\nMention this post in store or book online to claim it ends [date].",
     hashtags: ["offer", "local"],
   },
   {
     id: "milestone",
     name: "Celebrate a milestone",
-    sub: "Reviews, years, customers — mark the moment.",
+    sub: "Reviews, years, customers mark the moment.",
     art: "/assets/repulabs/post-creator/cp-published.svg",
     caption:
       "Milestone unlocked 🚀 We just hit [X reviews / X years / X customers].\n\nA huge thank-you to every one of you who got us here.",
@@ -124,7 +124,7 @@ const CREATIVE_IDEAS: CreativeIdea[] = [
     sub: "A simple gratitude post that invites replies.",
     art: "/assets/repulabs/post-creator/cp-drafts.svg",
     caption:
-      "To everyone who shared feedback with us this month — thank you. We read every single review, and it shapes what we do next.\n\nHad a great experience? We'd love to hear about it too.",
+      "To everyone who shared feedback with us this month thank you. We read every single review, and it shapes what we do next.\n\nHad a great experience? We'd love to hear about it too.",
     hashtags: ["thankyou", "community"],
   },
 ];
@@ -848,7 +848,7 @@ export function Composer({
           <div>
             <h3 className="sk-card__title">Creative ideas</h3>
             <p className="sk-card__sub">
-              Starter angles — tap one to prefill the editor, then make it yours.
+              Starter angles tap one to prefill the editor, then make it yours.
             </p>
           </div>
         </div>
@@ -1012,7 +1012,7 @@ function MiniCalendar({ posts }: { posts: MiniCalPost[] }) {
               ]
                 .filter(Boolean)
                 .join(" ")}
-              aria-label={`Open the content calendar — ${monthName} ${day}`}
+              aria-label={`Open the content calendar ${monthName} ${day}`}
             >
               {day}
             </Link>
@@ -1187,7 +1187,7 @@ function NothingConnected() {
           <h3 className="sk-empty__title">Connect a channel to start posting</h3>
           <p className="sk-empty__body">
             Link Facebook, Instagram, X or LinkedIn and you’ll be able to compose, schedule, and
-            publish across all of them from here — with AI captions and a live preview.
+            publish across all of them from here with AI captions and a live preview.
           </p>
           <Link href="/connections" className="btn btn--pri" style={{ height: 46 }}>
             <Icon name="plug" size={14} />

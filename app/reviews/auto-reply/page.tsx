@@ -91,7 +91,7 @@ export default async function AutoReplyRulesPage() {
               padding: "0 4px",
             }}
           >
-            Evaluated top-to-bottom — first match wins
+            Evaluated top-to-bottom first match wins
           </div>
           {rules.map((r, idx) => (
             <RuleCard key={r.id} rule={r} order={idx + 1} />
@@ -317,7 +317,7 @@ function HowItWorks() {
       >
         <li>
           When a review arrives, we evaluate rules top-to-bottom. The first rule whose criteria all
-          match wins — others are skipped.
+          match wins others are skipped.
         </li>
         <li>
           <strong>Draft for approval</strong> rules generate a draft and leave it under{" "}
@@ -327,7 +327,7 @@ function HowItWorks() {
           for you to approve.
         </li>
         <li>
-          <strong>Auto-publish</strong> rules publish to Google after the delay window — you can
+          <strong>Auto-publish</strong> rules publish to Google after the delay window you can
           still pull the draft back before it goes live. We never auto-publish if our safety
           classifier flags the text.
         </li>

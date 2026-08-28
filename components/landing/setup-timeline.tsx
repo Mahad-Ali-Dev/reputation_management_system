@@ -26,7 +26,7 @@ export function SetupTimeline() {
         <StepCard
           minutes="~30 sec"
           title="Tell us who you are"
-          desc="Type your business name and website — that's the whole form. The onboarding agent crawls your site to understand what you do, your tone and your policies."
+          desc="Type your business name and website, that's the whole form. The onboarding agent crawls your site to understand what you do, your tone and your policies."
           points={[
             "Business name + website",
             "Agent reads your site",
@@ -41,7 +41,7 @@ export function SetupTimeline() {
         <StepCard
           minutes="~2 min"
           title="The agent finds & links everything"
-          desc="repulabs locates your Google Business and social listings, imports your historical reviews and builds a voice model from your own content — all on its own."
+          desc="repulabs locates your Google Business and social listings, imports your historical reviews and builds a voice model from your own content, all on its own."
           points={[
             "Finds your listings for you",
             "Imports historical reviews",

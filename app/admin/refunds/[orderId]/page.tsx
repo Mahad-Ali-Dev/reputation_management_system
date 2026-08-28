@@ -225,7 +225,7 @@ export default async function RefundOrderPage({
                 name="internalNote"
                 rows={2}
                 maxLength={500}
-                placeholder="Why we're issuing this — link to support ticket, etc."
+                placeholder="Why we're issuing this link to support ticket, etc."
                 style={{ ...inputStyle, resize: "vertical" }}
               />
             </FormField>

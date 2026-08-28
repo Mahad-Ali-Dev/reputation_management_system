@@ -106,7 +106,7 @@ export function CancelSubscriptionButton() {
                   }}
                 >
                   <option value="" disabled>
-                    — Pick one —
+                    Pick one
                   </option>
                   <option value="too_expensive">Too expensive</option>
                   <option value="missing_feature">Missing a feature I need</option>

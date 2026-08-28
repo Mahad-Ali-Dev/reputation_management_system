@@ -71,7 +71,7 @@ export function GeoGrid({
         setError(
           res.reason === "unmigrated"
             ? "Reporting isn't set up yet."
-            : "Couldn't save the draft — try again.",
+            : "Couldn't save the draft try again.",
         );
       }
     });
@@ -140,7 +140,7 @@ export function GeoGrid({
           <a href="/social/posts" style={{ color: "inherit", textDecoration: "underline" }}>
             Social
           </a>
-          . Review, then publish or schedule there — geo-posts aren’t published automatically.
+          . Review, then publish or schedule there geo-posts aren’t published automatically.
         </p>
       )}
 

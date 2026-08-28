@@ -110,7 +110,7 @@ export function CaptionModal({
     <ModalShell
       onClose={onClose}
       title="AI caption generator"
-      subtitle="Describe the post — we'll draft 3 options you can drop straight in."
+      subtitle="Describe the post we'll draft 3 options you can drop straight in."
       icon="sparkle"
     >
       {/* Controls */}

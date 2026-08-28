@@ -246,7 +246,7 @@ export function QrCameraScanner({
               }}
             >
               {rejected
-                ? "That doesn't look like a repulabs stand code — try again"
+                ? "That doesn't look like a repulabs stand code, try again"
                 : instructions}
             </div>
           </>

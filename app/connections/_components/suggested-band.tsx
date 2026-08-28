@@ -65,7 +65,7 @@ export function SuggestedBand({ cards }: { cards: SuggestedCard[] }) {
               Suggested for you
             </h3>
             <div className="ds-card__sub">
-              We spotted these on your website during setup — connect in one click.
+              We spotted these on your website during setup connect in one click.
             </div>
           </div>
         </div>

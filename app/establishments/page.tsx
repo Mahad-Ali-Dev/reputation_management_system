@@ -98,7 +98,7 @@ export default async function EstablishmentsPage({
             <span style={{ fontSize: 13, color: "var(--est-body)" }}>
               {sp.connect_error === "no_location"
                 ? "Create your business first, then connect it to Google from its row."
-                : "Choose which business to connect — use the Connect button on its row below."}
+                : "Choose which business to connect use the Connect button on its row below."}
             </span>
           </div>
         )}

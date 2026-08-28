@@ -70,7 +70,7 @@ const RULES: Array<{ title: string; detail: string }> = [
   },
   {
     title: "Do not guarantee results",
-    detail: "Medical, legal and financial claims are blocked — those need a human's sign-off.",
+    detail: "Medical, legal and financial claims are blocked those need a human's sign-off.",
   },
   {
     title: "Protect customer privacy",
@@ -433,7 +433,7 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
             </div>
             <p className="akb-rules-modal__sub">
               These are enforced automatically by a safety check on every AI reply, across every
-              channel — there&rsquo;s no toggle to turn them off, so your customers are always
+              channel there&rsquo;s no toggle to turn them off, so your customers are always
               covered.
             </p>
             <div className="akb-rules-modal__list">
@@ -522,7 +522,7 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
           )}
           {status === "error" && (
             <span role="alert" style={{ color: "#e14d62" }}>
-              Save failed — retry
+              Save failed retry
             </span>
           )}
         </span>

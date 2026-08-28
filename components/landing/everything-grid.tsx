@@ -27,7 +27,7 @@ export function EverythingGrid() {
       icon: <BrainCircuit size={20} />,
       title: "AI Knowledge Base",
       description:
-        "A trained brain that knows your services, hours, policies and FAQs — so every reply and call answer is accurate.",
+        "A trained brain that knows your services, hours, policies and FAQs so every reply and call answer is accurate.",
     },
     {
       icon: <Sparkles size={20} />,
@@ -39,7 +39,7 @@ export function EverythingGrid() {
       icon: <Users size={20} />,
       title: "Contact directory (CRM)",
       description:
-        "Every customer, with their full reputation timeline — reviews, messages, calls and survey responses.",
+        "Every customer, with their full reputation timeline reviews, messages, calls and survey responses.",
     },
     {
       icon: <Zap size={20} />,
@@ -57,7 +57,7 @@ export function EverythingGrid() {
       icon: <Bell size={20} />,
       title: "Smart alerts",
       description:
-        "Get pinged the moment a 1-star lands or a dispute opens — escalate to the right person instantly.",
+        "Get pinged the moment a 1-star lands or a dispute opens escalate to the right person instantly.",
     },
     {
       icon: <Building2 size={20} />,

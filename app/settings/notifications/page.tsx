@@ -72,7 +72,7 @@ export default async function NotificationsSettingsPage() {
                       className="set-check"
                       name={`${ev.key}_email`}
                       defaultChecked={pref.email ?? true}
-                      aria-label={`${ev.label} — Email`}
+                      aria-label={`${ev.label} Email`}
                     />
                   </td>
                   <td className="set-col-c">
@@ -81,7 +81,7 @@ export default async function NotificationsSettingsPage() {
                       className="set-check"
                       name={`${ev.key}_inApp`}
                       defaultChecked={pref.inApp ?? true}
-                      aria-label={`${ev.label} — In-app`}
+                      aria-label={`${ev.label} In-app`}
                     />
                   </td>
                 </tr>

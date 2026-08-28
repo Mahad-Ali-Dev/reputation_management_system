@@ -38,7 +38,7 @@ export default async function OrderDetailPage({
       <div className="space-y-6">
         {sp.status === "success" && (
           <div className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900">
-            ✓ Payment received. We've started preparing your order — check your email for the
+            ✓ Payment received. We've started preparing your order check your email for the
             shipment notification, then follow the activation card in the box.
           </div>
         )}

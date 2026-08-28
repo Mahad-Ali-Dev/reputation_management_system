@@ -87,7 +87,7 @@ export async function AutomationTab({ orgId }: { orgId: string }) {
             color: "var(--rr-muted)",
           }}
         >
-          Upgrade to automatically request reviews after every purchase or appointment — with delay
+          Upgrade to automatically request reviews after every purchase or appointment with delay
           timing and per-customer frequency caps.
         </p>
         <Link href="/subscription" className="btn btn--pri">

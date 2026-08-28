@@ -317,7 +317,7 @@ export function KbSourceActions({ establishmentId }: { establishmentId?: string 
                     </button>
                   ) : (
                     <p style={{ fontSize: 12.5, color: "var(--rl-muted)", margin: 0 }}>
-                      This runs in the background — you can close this and come back.
+                      This runs in the background you can close this and come back.
                     </p>
                   )}
                 </div>

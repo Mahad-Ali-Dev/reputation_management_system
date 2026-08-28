@@ -28,7 +28,7 @@ export function ShopifySyncCard({ connected }: { connected: boolean }) {
       try {
         const r = await syncShopifyContacts(new FormData());
         if (r.skipped) {
-          setMessage({ kind: "warn", text: "Shopify isn’t fully configured yet — nothing to sync." });
+          setMessage({ kind: "warn", text: "Shopify isn’t fully configured yet nothing to sync." });
         } else {
           setSynced(r.synced);
           setMessage({ kind: "ok", text: `Synced ${r.synced.toLocaleString()} customer${r.synced === 1 ? "" : "s"}.` });

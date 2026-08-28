@@ -57,7 +57,7 @@ export default async function OnboardingPage() {
     {
       key: "business",
       label: "Business",
-      subTodo: "Name + website — the agent builds the rest",
+      subTodo: "Name + website the agent builds the rest",
       subDone: "Profile created",
       href: null, // step 1 lives on this page
       done: signals.hasEstablishment,
@@ -107,7 +107,7 @@ export default async function OnboardingPage() {
             <span className="ph__kicker">Setup</span>
             <h1 className="ph__title">Launch reputation operations in four steps</h1>
             <p className="ph__sub">
-              Business setup, connections, and first request flow — your progress is saved
+              Business setup, connections, and first request flow your progress is saved
               automatically.
             </p>
           </div>
@@ -176,7 +176,7 @@ export default async function OnboardingPage() {
             </div>
             <ChecklistRail hasLogo={hasLogo} signals={signals} />
             <p className="onb-check__note">
-              The AI setup agent can complete this checklist with your approval — every step stays
+              The AI setup agent can complete this checklist with your approval every step stays
               reversible.
             </p>
           </aside>
@@ -204,13 +204,13 @@ function bannerCopy({
   if (allDone) {
     return {
       title: "You're all set",
-      sub: "Every setup step is complete — your workspace is live. Head to the dashboard to see it working.",
+      sub: "Every setup step is complete your workspace is live. Head to the dashboard to see it working.",
     };
   }
   if (runActive && currentIndex === 0) {
     return {
       title: "The agent is building your workspace",
-      sub: "We're reading your website and configuring everything. Watch the progress below — usually under a minute.",
+      sub: "We're reading your website and configuring everything. Watch the progress below usually under a minute.",
     };
   }
   const key = steps[currentIndex]?.key;
@@ -223,17 +223,17 @@ function bannerCopy({
     case "request":
       return {
         title: "Send your first review request",
-        sub: "Email, SMS or QR — your first request takes about a minute and starts the review flywheel.",
+        sub: "Email, SMS or QR your first request takes about a minute and starts the review flywheel.",
       };
     case "team":
       return {
         title: "Invite your team",
-        sub: "Share the inbox, approvals, and reporting with teammates — roles keep everyone in their lane.",
+        sub: "Share the inbox, approvals, and reporting with teammates roles keep everyone in their lane.",
       };
     default:
       return {
         title: "Tell us about your business",
-        sub: "Add your name and website below — our AI agent reads your site and builds the rest of your workspace for you.",
+        sub: "Add your name and website below our AI agent reads your site and builds the rest of your workspace for you.",
       };
   }
 }
@@ -259,7 +259,7 @@ function WizardStepCell({
       <span className="onb-step__sub">{step.done ? step.subDone : step.subTodo}</span>
     </>
   );
-  const aria = `Step ${index + 1}: ${step.label} — ${
+  const aria = `Step ${index + 1}: ${step.label} ${
     state === "done" ? "complete" : state === "current" ? "current step" : "not started"
   }`;
 

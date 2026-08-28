@@ -17,7 +17,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Product tour · Repulabs",
   description:
-    "A guided scroll through the entire Repulabs platform — reviews, AI phone receptionist, QR plaques, unified inbox, surveys, analytics and autopilot.",
+    "A guided scroll through the entire Repulabs platform reviews, AI phone receptionist, QR plaques, unified inbox, surveys, analytics and autopilot.",
 };
 
 const ILLO = "/assets/repulabs/illustrations";
@@ -25,7 +25,7 @@ const ILLO = "/assets/repulabs/illustrations";
 /** The seven module beats of the tour, in narrative order. */
 const MODULES: ModuleSectionProps[] = [
   {
-    kicker: "01 — Reviews",
+    kicker: "01 Reviews",
     title: "Turn happy customers into five-star proof",
     body: "Collect, monitor and respond to reviews across Google, Facebook and beyond from one screen. AI drafts replies in your brand voice the moment a review lands.",
     points: [
@@ -38,9 +38,9 @@ const MODULES: ModuleSectionProps[] = [
     accent: TOUR.blue,
   },
   {
-    kicker: "02 — AI Phone",
+    kicker: "02 AI Phone",
     title: "An AI receptionist that never misses a call",
-    body: "Every missed call is a lost customer. Our AI answers, books, qualifies and routes — then turns the happy ones into review requests automatically.",
+    body: "Every missed call is a lost customer. Our AI answers, books, qualifies and routes then turns the happy ones into review requests automatically.",
     points: [
       "24/7 natural-voice answering and booking",
       "Live transcripts and call summaries",
@@ -52,7 +52,7 @@ const MODULES: ModuleSectionProps[] = [
     reverse: true,
   },
   {
-    kicker: "03 — QR & NFC",
+    kicker: "03 QR & NFC",
     title: "One tap from the counter to a glowing review",
     body: "Branded QR plaques and NFC stands route customers straight to your review funnel. Smart routing sends the delighted to Google and the unhappy to private feedback.",
     points: [
@@ -65,9 +65,9 @@ const MODULES: ModuleSectionProps[] = [
     accent: TOUR.blue,
   },
   {
-    kicker: "04 — Inbox",
+    kicker: "04 Inbox",
     title: "Every conversation in one calm inbox",
-    body: "Reviews, comments, DMs, SMS and live chat land in a single unified inbox. Assign, moderate and reply with AI suggestions — never juggle eight tabs again.",
+    body: "Reviews, comments, DMs, SMS and live chat land in a single unified inbox. Assign, moderate and reply with AI suggestions never juggle eight tabs again.",
     points: [
       "Reviews, social, SMS and live chat together",
       "Assignment, status and team moderation",
@@ -79,7 +79,7 @@ const MODULES: ModuleSectionProps[] = [
     reverse: true,
   },
   {
-    kicker: "05 — Surveys",
+    kicker: "05 Surveys",
     title: "Hear the whole story, not just the stars",
     body: "Launch NPS and CSAT surveys that feed straight into your reputation engine. Spot churn risk early and convert promoters into public reviews.",
     points: [
@@ -92,7 +92,7 @@ const MODULES: ModuleSectionProps[] = [
     accent: TOUR.blue,
   },
   {
-    kicker: "06 — Analytics",
+    kicker: "06 Analytics",
     title: "Reputation, measured in revenue",
     body: "See exactly how reviews, response time and sentiment move your bottom line. Location-level breakdowns and ROI attribution turn reputation into a number.",
     points: [
@@ -106,7 +106,7 @@ const MODULES: ModuleSectionProps[] = [
     reverse: true,
   },
   {
-    kicker: "07 — Autopilot",
+    kicker: "07 Autopilot",
     title: "The whole system, running itself",
     body: "Set your guardrails once. Autopilot collects reviews, answers calls, replies in your voice, escalates the tricky ones and reports back every week.",
     points: [
@@ -147,7 +147,7 @@ export default function TourPage() {
             <SectionHeading
               kicker="The full walkthrough"
               title="Seven modules. One reputation engine."
-              subtitle="Scroll down to meet each part of the platform — and see how they hand work off to each other automatically."
+              subtitle="Scroll down to meet each part of the platform and see how they hand work off to each other automatically."
             />
           </div>
 
@@ -235,7 +235,7 @@ export default function TourPage() {
               content: (
                 <p style={{ color: TOUR.ink2, fontSize: 15.5, lineHeight: 1.7, maxWidth: 520 }}>
                   Flip on autopilot with your guardrails. Requests go out, calls
-                  get answered, replies get drafted — all within your rules.
+                  get answered, replies get drafted all within your rules.
                 </p>
               ),
             },

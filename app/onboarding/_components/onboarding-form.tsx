@@ -76,7 +76,7 @@ export function OnboardingForm({
         <h1 className="rl-h1 text-rl-text">Let's build your dashboard.</h1>
         <p className="rl-body mt-3 text-rl-text-muted">
           Tell us your business and website. Our agent will read your site, build your AI, and set
-          everything up for you — usually in under a minute.
+          everything up for you usually in under a minute.
         </p>
 
         <form className="mt-8 grid gap-5" noValidate onSubmit={onSubmit}>

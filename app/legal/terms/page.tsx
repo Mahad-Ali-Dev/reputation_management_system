@@ -33,7 +33,7 @@ export default function TermsPage() {
       <h2>3. AI-generated content</h2>
       <p>
         The Service uses third-party language models to draft replies, classify safety, and
-        power the chatbot. You are the author of the replies you publish — review and approve
+        power the chatbot. You are the author of the replies you publish review and approve
         each one before it goes live. We don't guarantee any AI-generated content is accurate,
         non-infringing, or appropriate. You bear final responsibility for what you publish.
       </p>

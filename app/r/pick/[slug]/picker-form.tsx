@@ -148,7 +148,7 @@ export function PickerForm({
             }}
           />
           <p style={{ fontSize: 11.5, color: "#64748b", marginTop: 6, lineHeight: 1.5 }}>
-            We&rsquo;ll send one email tomorrow with the direct link — no marketing, no spam.
+            We&rsquo;ll send one email tomorrow with the direct link no marketing, no spam.
             Submitted only when you tap an Airbnb option above.
           </p>
         </div>

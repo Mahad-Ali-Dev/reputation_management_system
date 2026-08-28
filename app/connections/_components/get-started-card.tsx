@@ -22,7 +22,7 @@ const STEPS: Step[] = [
     n: 1,
     icon: "plug",
     title: "Connect a source",
-    body: "Link your CRM, POS, e-commerce, or accounting tool — or just bring a CSV. This is where customer contacts come from.",
+    body: "Link your CRM, POS, e-commerce, or accounting tool or just bring a CSV. This is where customer contacts come from.",
   },
   {
     n: 2,
@@ -34,7 +34,7 @@ const STEPS: Step[] = [
     n: 3,
     icon: "send",
     title: "Requests fire automatically",
-    body: "New customers sync every 15 minutes and flow into review requests at the perfect moment — no manual work.",
+    body: "New customers sync every 15 minutes and flow into review requests at the perfect moment no manual work.",
   },
 ];
 

@@ -511,6 +511,20 @@
   margin-bottom: 4px;
 }
 
+.auth-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  border-radius: 12px;
+  padding: 11px 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  text-align: left;
+}
+
 /* mobile-only slim brand header */
 .auth-mobile-brand {
   display: none;

@@ -49,7 +49,7 @@ type Stat = { icon: typeof PhoneCall; label: string };
 
 /* Three proof chips under the CTA. */
 const STATS: Stat[] = [
-  { icon: PhoneCall, label: "24/7 — never misses a call" },
+  { icon: PhoneCall, label: "24/7 never misses a call" },
   { icon: CalendarCheck, label: "Books & reschedules" },
   { icon: Star, label: "Asks for the review" },
 ];
@@ -153,7 +153,7 @@ export function LandingAiRobot() {
             >
               Every missed call is a missed review. Your repulabs AI phone line
               answers instantly, books and reschedules appointments, follows up
-              after the visit — and turns happy callers into five-star
+              after the visit and turns happy callers into five-star
               reviewers.
             </p>
           </Reveal>
@@ -230,7 +230,7 @@ export function LandingAiRobot() {
             </div>
           </div>
           <p className="mt-2 text-center text-[13px] font-medium text-white/40">
-            He follows your cursor. Go on — give him a click.
+            He follows your cursor. Go on, give him a click.
           </p>
         </Reveal>
       </div>

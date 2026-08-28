@@ -100,15 +100,15 @@ export default function CookiesPage() {
       <h2>5. Your choices</h2>
       <ul>
         <li>
-          <strong>Browser controls</strong> — every major browser lets you block or delete cookies.
+          <strong>Browser controls</strong> every major browser lets you block or delete cookies.
           Blocking essential cookies will sign you out and disable OAuth connections.
         </li>
         <li>
-          <strong>Do Not Track</strong> — we respect the DNT header. Sites with DNT enabled receive
+          <strong>Do Not Track</strong> we respect the DNT header. Sites with DNT enabled receive
           no preference cookies and no analytics pings.
         </li>
         <li>
-          <strong>Delete your account</strong> — see <a href="/legal/privacy">our Privacy Policy</a>{" "}
+          <strong>Delete your account</strong> see <a href="/legal/privacy">our Privacy Policy</a>{" "}
           for the full data-deletion pipeline.
         </li>
       </ul>

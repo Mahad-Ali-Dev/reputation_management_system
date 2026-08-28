@@ -349,7 +349,7 @@ export function TestConsole({
                         </button>
                         <button
                           type="button"
-                          aria-label="Bad answer — teach the AI"
+                          aria-label="Bad answer teach the AI"
                           onClick={() => rate(t, "down")}
                           className="akb-icon-btn"
                           style={{ color: t.rated === "down" ? "#e14d62" : undefined }}
@@ -858,7 +858,7 @@ function TeachDialog({
         </div>
         <p className="akb-teach-modal__sub">
           {gap
-            ? "Your answer is added to the AI's instructions so it can answer this — and similar questions — correctly from now on."
+            ? "Your answer is added to the AI's instructions so it can answer this and similar questions correctly from now on."
             : "Add a question your AI should know, with the correct answer. It's saved straight into the AI's knowledge, no need to wait for a customer to ask it first."}
         </p>
 

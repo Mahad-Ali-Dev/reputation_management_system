@@ -6,7 +6,7 @@ export const dynamic = "force-static";
 export const metadata = {
   title: "Quickstart · Repulabs Docs",
   description:
-    "Sign up, connect your Google Business Profile, and send your first review request — in about ten minutes.",
+    "Sign up, connect your Google Business Profile, and send your first review request in about ten minutes.",
 };
 
 export default function QuickstartPage() {
@@ -18,8 +18,8 @@ export default function QuickstartPage() {
     >
       <Step n={1} title="Create your workspace">
         <p>
-          Sign up at <Code>/signup</Code> with email or Google. Your first workspace — the
-          organisation everything else hangs off — is created automatically, with you as owner.
+          Sign up at <Code>/signup</Code> with email or Google. Your first workspace the
+          organisation everything else hangs off is created automatically, with you as owner.
         </p>
         <p>
           New workspaces start on a <strong>{TRIAL_DAYS}-day Pro trial</strong>, so AI replies,
@@ -33,12 +33,12 @@ export default function QuickstartPage() {
           You'll be sent to Google's consent screen, then back to Repulabs.
         </p>
         <p>
-          Pick the locations you want to manage. Each one becomes an <em>establishment</em> — its
+          Pick the locations you want to manage. Each one becomes an <em>establishment</em> its
           own reviews, devices and brand voice, all under the same login.
         </p>
         <Note>
           Connect with the Google account that already manages the listing. Repulabs can only ever
-          see locations that account manages — it can't reach anyone else's business.
+          see locations that account manages it can't reach anyone else's business.
         </Note>
       </Step>
 
@@ -54,20 +54,20 @@ export default function QuickstartPage() {
       <Step n={4} title="Send your first review request">
         <p>
           Open <Code>/outreach</Code>, add a customer (or import a list), and send a request by
-          email or SMS. Pick a template or write your own — you can save it for reuse.
+          email or SMS. Pick a template or write your own you can save it for reuse.
         </p>
         <p>Then, to make asking effortless in person:</p>
         <List
           items={[
             <>
-              Set up a QR or NFC device — see the{" "}
+              Set up a QR or NFC device see the{" "}
               <a href="/docs/hardware" style={{ textDecoration: "underline" }}>
                 hardware guide
               </a>
               .
             </>,
             <>
-              Teach the assistant your tone — see{" "}
+              Teach the assistant your tone see{" "}
               <a href="/docs/ai-training" style={{ textDecoration: "underline" }}>
                 AI reply training
               </a>
@@ -82,7 +82,7 @@ export default function QuickstartPage() {
         <a href="/contact" style={{ textDecoration: "underline" }}>
           Talk to us
         </a>{" "}
-        — we'll walk you through the connection live.
+        we'll walk you through the connection live.
       </Note>
     </DocShell>
   );

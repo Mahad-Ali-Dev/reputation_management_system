@@ -8,7 +8,7 @@ import "../auth.css";
  * redirect:false). Centered card on the same mint canvas as /login.
  */
 export const metadata = {
-  title: "Check your email — Repulabs",
+  title: "Check your email Repulabs",
 };
 
 export default function VerifyRequestPage() {
@@ -46,7 +46,7 @@ export default function VerifyRequestPage() {
             Your sign-in link is on its way
           </h1>
           <p className="auth-sub">
-            We emailed you a secure sign-in link. Click it on this device to continue — it expires
+            We emailed you a secure sign-in link. Click it on this device to continue it expires
             in 15 minutes. Didn&rsquo;t get it? Check your spam folder.
           </p>
           <div className="auth-solo-actions">

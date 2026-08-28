@@ -5,7 +5,7 @@ export const dynamic = "force-static";
 export const metadata = {
   title: "AI reply training · Repulabs Docs",
   description:
-    "Teach the assistant your brand voice so AI-drafted replies sound like you wrote them — not like a corporate template.",
+    "Teach the assistant your brand voice so AI-drafted replies sound like you wrote them not like a corporate template.",
 };
 
 export default function AiTrainingPage() {
@@ -34,15 +34,15 @@ export default function AiTrainingPage() {
         <List
           items={[
             <>
-              <strong>What you do</strong> — services, specialities, what makes you different. Stops
+              <strong>What you do</strong> services, specialities, what makes you different. Stops
               generic replies.
             </>,
             <>
-              <strong>Tone</strong> — warm or brisk, first names or formal, emoji or never. Include
+              <strong>Tone</strong> warm or brisk, first names or formal, emoji or never. Include
               phrases you'd never use.
             </>,
             <>
-              <strong>Common situations</strong> — the complaints and compliments you get
+              <strong>Common situations</strong> the complaints and compliments you get
               repeatedly, and how you like to answer each.
             </>,
           ]}
@@ -63,19 +63,19 @@ export default function AiTrainingPage() {
       <Block title="Then let autopilot take over">
         <p>
           Once drafts consistently read like you, turn on autopilot so routine replies go out
-          without you. Keep a human in the loop for anything negative — that's where a wrong tone
+          without you. Keep a human in the loop for anything negative that's where a wrong tone
           costs most.
         </p>
         <Note>
-          Review the AI's output periodically even after it's dialled in. Your business changes —
-          new staff, new services, new complaints — and the training should follow.
+          Review the AI's output periodically even after it's dialled in. Your business changes
+          new staff, new services, new complaints and the training should follow.
         </Note>
       </Block>
 
       <Block title="Good practice">
         <List
           items={[
-            "Never have the AI dispute facts in a negative review — acknowledge, then take it offline.",
+            "Never have the AI dispute facts in a negative review acknowledge, then take it offline.",
             "Keep replies short. Long replies read as defensive.",
             "Don't promise refunds or outcomes in an automated reply.",
             "Thank people by name where the platform gives you one.",

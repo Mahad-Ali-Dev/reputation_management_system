@@ -96,7 +96,7 @@ function CustomizeView({ config }: { config: WidgetConfigView }) {
           <Field label="Mode">
             <Segmented options={[["light", "Light"], ["dark", "Dark"]]} value={mode} onChange={(v) => setMode(v as typeof mode)} />
           </Field>
-          <Field label={`Corner radius — ${radius}px`}>
+          <Field label={`Corner radius ${radius}px`}>
             <input type="range" min={0} max={28} value={radius} onChange={(e) => setRadius(Number(e.target.value))} aria-label="Corner radius" style={{ width: "100%", accentColor: "var(--uik-purple)" }} />
           </Field>
           <Field label="Shadow">

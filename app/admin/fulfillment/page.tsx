@@ -150,7 +150,7 @@ export default async function FulfillmentPage() {
                       </span>
                     </h3>
                     <p style={{ marginTop: 4, fontSize: 12.5, color: "var(--rl-muted)" }}>
-                      {o.items.map((i) => `${i.quantity}× ${i.product.name}`).join(", ")} —{" "}
+                      {o.items.map((i) => `${i.quantity}× ${i.product.name}`).join(", ")}{" "}
                       <strong style={{ color: "var(--ink-2)" }}>
                         ${(o.totalCents / 100).toFixed(2)}
                       </strong>{" "}

@@ -33,7 +33,7 @@ export function GenerateNowButton({ entitled }: { entitled: boolean }) {
         setMsg(
           res.reason === "unmigrated"
             ? "Reporting tables aren't set up yet."
-            : "Couldn't generate — try again.",
+            : "Couldn't generate try again.",
         );
       }
     });

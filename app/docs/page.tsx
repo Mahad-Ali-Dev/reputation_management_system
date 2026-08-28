@@ -26,14 +26,14 @@ const SECTIONS = [
     icon: <Zap size={18} />,
     title: "Quickstart",
     blurb:
-      "Sign up, connect Google Business Profile, send your first review request — in under 10 minutes.",
+      "Sign up, connect Google Business Profile, send your first review request in under 10 minutes.",
     href: "/docs/quickstart",
   },
   {
     icon: <Layers size={18} />,
     title: "Concepts",
     blurb:
-      "Organizations, establishments, devices, brand voice — the mental model the rest of the docs assumes.",
+      "Organizations, establishments, devices, brand voice the mental model the rest of the docs assumes.",
     href: "/docs/concepts",
   },
   {
@@ -69,7 +69,7 @@ export default function DocsPage() {
     <MarketingShell>
       <StubHero
         kicker="Documentation"
-        title="From zero to running reputation on autopilot — in one cup of coffee."
+        title="From zero to running reputation on autopilot in one cup of coffee."
         description="Practical, copy-pasteable, no fluff. Every guide has a working code sample at the bottom."
         actions={
           <Link
@@ -147,11 +147,11 @@ export default function DocsPage() {
           </h2>
           <ol className="mt-6 space-y-4" style={{ fontSize: 15, color: C.ink2, lineHeight: 1.65 }}>
             <li>
-              <strong>1. Search the docs</strong> — use the search bar (cmd+K) at the top. Indexed
+              <strong>1. Search the docs</strong> use the search bar (cmd+K) at the top. Indexed
               hourly.
             </li>
             <li>
-              <strong>2. Ask the chatbot</strong> — bottom-right of every page. Pulls answers from
+              <strong>2. Ask the chatbot</strong> bottom-right of every page. Pulls answers from
               the docs, the changelog, and our public Q&amp;A.
             </li>
             <li>
@@ -159,7 +159,7 @@ export default function DocsPage() {
               <a href="mailto:info@repulabs.com" style={{ color: C.pri }}>
                 info@repulabs.com
               </a>{" "}
-              — median first response 3 business hours.
+              median first response 3 business hours.
             </li>
           </ol>
         </div>

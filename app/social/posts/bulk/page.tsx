@@ -36,7 +36,7 @@ export default async function BulkSocialPostsPage() {
             <h1 className="ph__title">Bulk schedule</h1>
             <p className="ph__sub">
               Compose once, preview per platform, and schedule across Facebook, Instagram, LinkedIn
-              and X — with AI captions and creatives.
+              and X with AI captions and creatives.
             </p>
           </div>
           <div className="sk-bulk-hero__art" aria-hidden>

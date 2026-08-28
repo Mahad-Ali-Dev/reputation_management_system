@@ -65,7 +65,7 @@ export default async function PhoneSetupPage() {
               <span className="pr-setup-badge">1</span>
             </div>
             <div>
-              <h2 className="pr-setup-title">Step 1 — Buy a number in Twilio</h2>
+              <h2 className="pr-setup-title">Step 1 Buy a number in Twilio</h2>
               <ul className="pr-check-list">
                 <li>
                   <span className="pr-check">
@@ -113,7 +113,7 @@ export default async function PhoneSetupPage() {
               <span className="pr-setup-badge">2</span>
             </div>
             <div>
-              <h2 className="pr-setup-title">Step 2 — Configure webhooks</h2>
+              <h2 className="pr-setup-title">Step 2 Configure webhooks</h2>
               <p className="pr-setup-sub">
                 Paste these URLs into Twilio's number config.
               </p>
@@ -147,7 +147,7 @@ export default async function PhoneSetupPage() {
               <span className="pr-setup-badge pr-setup-badge--teal">3</span>
             </div>
             <div>
-              <h2 className="pr-setup-title">Step 3 — Register the number here</h2>
+              <h2 className="pr-setup-title">Step 3 Register the number here</h2>
               <p className="pr-setup-sub">
                 From the Twilio number's Properties page.
               </p>
@@ -191,7 +191,7 @@ export default async function PhoneSetupPage() {
                     <input
                       id="pr-friendly"
                       name="friendlyName"
-                      placeholder="Main line — Springfield"
+                      placeholder="Main line Springfield"
                       className="pr-input pr-input--sm"
                     />
                   </div>
@@ -241,7 +241,7 @@ export default async function PhoneSetupPage() {
               <span className="pr-setup-badge">4</span>
             </div>
             <div>
-              <h2 className="pr-setup-title">Step 4 — Configure the AI assistant</h2>
+              <h2 className="pr-setup-title">Step 4 Configure the AI assistant</h2>
               <p className="pr-setup-sub" style={{ marginBottom: 0 }}>
                 Set the greeting, voice, and behavior on the{" "}
                 <Link href="/phone/assistant" className="pr-link">

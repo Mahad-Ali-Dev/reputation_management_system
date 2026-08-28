@@ -172,7 +172,7 @@ export function AutopilotToggle({
           <div className="ap2-control__confirmtitle">Turn on Autopilot?</div>
           <p className="ap2-control__confirmbody">
             Autopilot will reply to 5★ reviews and send review requests on your behalf, following
-            your risk tolerance. It never auto-replies to negative reviews — those are always
+            your risk tolerance. It never auto-replies to negative reviews those are always
             drafted or escalated to you, and you get a weekly digest of everything it did.
           </p>
           <div className="ap2-control__confirmrow">

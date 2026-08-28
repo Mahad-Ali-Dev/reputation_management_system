@@ -367,7 +367,7 @@ function ImpersonateForm({ orgId, disabled }: { orgId: string; disabled: boolean
           name="reason"
           required
           minLength={6}
-          placeholder="ticket #1234 — debugging"
+          placeholder="ticket #1234 debugging"
           style={{
             padding: "8px 12px",
             borderRadius: 8,

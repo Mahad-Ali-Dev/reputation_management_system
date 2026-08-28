@@ -16,7 +16,7 @@ import { type JSX, useRef, useState } from "react";
  * note rather than crashing.
  */
 
-const LIBRARY_NOT_MIGRATED = "Storage isn’t set up yet — ask your admin to finish setup.";
+const LIBRARY_NOT_MIGRATED = "Storage isn’t set up yet ask your admin to finish setup.";
 
 export function LibraryUploader({
   folder,
@@ -120,7 +120,7 @@ export function LibraryUploader({
             <p className="sk-empty-center__body">
               {busy
                 ? "Uploading…"
-                : "Upload images or videos to reuse them across posts — or generate AI creatives from the composer."}
+                : "Upload images or videos to reuse them across posts or generate AI creatives from the composer."}
             </p>
             {error && (
               <span className="sk-alert sk-alert--err" role="alert">
