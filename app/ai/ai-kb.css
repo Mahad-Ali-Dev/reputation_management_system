@@ -577,9 +577,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  width: 100%;
   padding: 8px;
+  border: 0;
   border-radius: 10px;
+  background: none;
   text-decoration: none;
+  text-align: left;
+  font: inherit;
   color: inherit;
   cursor: pointer;
   transition: background 0.15s ease;
