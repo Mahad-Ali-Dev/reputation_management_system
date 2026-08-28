@@ -54,6 +54,7 @@ const LIMITER_CONFIGS = {
   scan_redirect: { max: 60, windowSec: 60, prefix: "rl:scan" }, // 60/min per IP per slug
   survey_token: { max: 30, windowSec: 60, prefix: "rl:survey_token" }, // 30/min per IP — public survey page lookup
   hardware_batch: { max: 3, windowSec: 3600, prefix: "rl:hw_batch" }, // 3/hour per admin — bounds DoS via 500-device QR generation
+  totp_verify: { max: 8, windowSec: 300, prefix: "rl:totp" }, // 8/5min per user — bounds brute-forcing a 6-digit code
 } as const satisfies Record<string, LimiterConfig>;
 
 export type LimiterName = keyof typeof LIMITER_CONFIGS;

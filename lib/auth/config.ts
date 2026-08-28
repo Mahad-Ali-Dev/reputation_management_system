@@ -108,6 +108,15 @@ function authCookieDomain(): string | undefined {
 const USE_SECURE_COOKIES = process.env.NODE_ENV === "production";
 const COOKIE_DOMAIN = authCookieDomain();
 const COOKIE_PREFIX = USE_SECURE_COOKIES ? "__Secure-" : "";
+
+/**
+ * Name of the Auth.js database-session cookie — exported so 2FA code
+ * (lib/auth/active-org.ts, app/login/2fa) can read the raw session token
+ * straight off the request cookie and look up its `Session` row directly,
+ * since `auth()` doesn't expose the token itself.
+ */
+export const SESSION_COOKIE_NAME = `${COOKIE_PREFIX}authjs.session-token`;
+
 const sharedCookie = {
   httpOnly: true,
   sameSite: "lax" as const,
@@ -124,7 +133,7 @@ export const authConfig: NextAuthConfig = {
   // Pin cookies for the reverse-proxy + multi-subdomain setup. The PKCE/state
   // cookies in particular must survive the sign-in → Google → callback round-trip.
   cookies: {
-    sessionToken: { name: `${COOKIE_PREFIX}authjs.session-token`, options: sharedCookie },
+    sessionToken: { name: SESSION_COOKIE_NAME, options: sharedCookie },
     callbackUrl: { name: `${COOKIE_PREFIX}authjs.callback-url`, options: sharedCookie },
     pkceCodeVerifier: {
       name: `${COOKIE_PREFIX}authjs.pkce.code_verifier`,

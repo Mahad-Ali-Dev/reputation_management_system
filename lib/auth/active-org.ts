@@ -1,6 +1,7 @@
-import { auth } from "@/lib/auth/config";
+import { SESSION_COOKIE_NAME, auth } from "@/lib/auth/config";
 import { prisma } from "@/lib/db/client";
 import { cookies } from "next/headers";
+import { redirect } from "next/navigation";
 import { cache } from "react";
 
 /**
@@ -66,7 +67,26 @@ export const resolveSessionOrg = cache(async (): Promise<SessionOrg | null> => {
 
   const identity = { userId, email: session.user.email ?? null, name: session.user.name ?? null };
 
-  const requestedOrgId = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value;
+  // 2FA gate: a signed-in-but-unverified session (TOTP enabled, this session
+  // hasn't passed the code check yet) may not resolve an org — every tenant
+  // page goes through here, so this one check covers all of them. `/login/2fa`
+  // itself reads `auth()` directly and never calls this, so there's no loop.
+  const jar = await cookies();
+  const sessionToken = jar.get(SESSION_COOKIE_NAME)?.value;
+  if (sessionToken) {
+    const sessionRow = await prisma.session.findUnique({
+      where: { sessionToken },
+      select: { twoFactorVerified: true, user: { select: { totpEnabled: true } } },
+    });
+    if (sessionRow?.user.totpEnabled && !sessionRow.twoFactorVerified) {
+      redirect("/login/2fa");
+    }
+  } else {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { totpEnabled: true } });
+    if (user?.totpEnabled) redirect("/login/2fa");
+  }
+
+  const requestedOrgId = jar.get(ACTIVE_ORG_COOKIE)?.value;
   const targetOrgId = requestedOrgId ?? sessionOrgId;
 
   let membership = await prisma.membership.findUnique({
