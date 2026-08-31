@@ -13,6 +13,7 @@ import { buildOtpAuthUri, decryptTotpSecret } from "@/lib/auth/totp";
 import { prisma } from "@/lib/db/client";
 import { cookies } from "next/headers";
 import QRCode from "qrcode";
+import { DownloadBackupCodesButton } from "../_components/download-backup-codes-button";
 import { SettingsFrame } from "../_components/settings-frame";
 import { loadSettingsData } from "../_lib/data";
 
@@ -69,6 +70,7 @@ export default async function SecuritySettingsPage({
   const totpError = sp.totp_error ? (TOTP_ERROR_MESSAGES[sp.totp_error] ?? null) : null;
   const totpSuccess = sp.totp ? (TOTP_SUCCESS_MESSAGES[sp.totp] ?? null) : null;
   const revealedBackupCodes = (await cookies()).get(NEW_2FA_BACKUP_CODES_COOKIE)?.value;
+  const revealedBackupCodesArray = revealedBackupCodes ? revealedBackupCodes.split(",") : [];
 
   const isPendingSetup = !user?.totpEnabled && !!user?.totpSecret;
   let qrDataUrl: string | null = null;
@@ -184,9 +186,12 @@ export default async function SecuritySettingsPage({
               fontSize: 13,
             }}
           >
-            {revealedBackupCodes.split(",").map((c) => (
+            {revealedBackupCodesArray.map((c) => (
               <span key={c}>{c}</span>
             ))}
+          </div>
+          <div style={{ marginTop: 10 }}>
+            <DownloadBackupCodesButton codes={revealedBackupCodesArray} />
           </div>
         </div>
       )}
