@@ -81,6 +81,21 @@ function applySecurityHeaders(res: NextResponse, pathname: string): NextResponse
  * Local dev: works on `app.localhost:3000` and `admin.localhost:3000`. Add to /etc/hosts:
  *   127.0.0.1 app.localhost admin.localhost r.localhost
  */
+/**
+ * Pin a rewrite target to the app server's own origin.
+ *
+ * Behind nginx, `req.nextUrl` inherits `https:` from X-Forwarded-Proto while
+ * `next start` itself only speaks plain HTTP. Next treats a rewrite whose origin
+ * differs from its own as EXTERNAL and proxies it — to https://localhost:3000,
+ * a TLS handshake against an HTTP port → EPROTO "wrong version number" → 500.
+ * That broke the bare https://app.repulabs.com/ and https://admin.repulabs.com/.
+ * Rewrites are always internal here, so the scheme is always http.
+ */
+function internal(url: URL): URL {
+  url.protocol = "http:";
+  return url;
+}
+
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host") ?? "";
   const url = req.nextUrl.clone();
@@ -146,7 +161,7 @@ export function middleware(req: NextRequest) {
     if (pathname === "/") {
       url.pathname = "/dashboard";
       return applySecurityHeaders(
-        NextResponse.rewrite(url, { request: { headers: requestHeaders } }),
+        NextResponse.rewrite(internal(url), { request: { headers: requestHeaders } }),
         pathname,
       );
     }
@@ -160,14 +175,14 @@ export function middleware(req: NextRequest) {
     if (pathname === "/") {
       url.pathname = "/admin";
       return applySecurityHeaders(
-        NextResponse.rewrite(url, { request: { headers: requestHeaders } }),
+        NextResponse.rewrite(internal(url), { request: { headers: requestHeaders } }),
         pathname,
       );
     }
     if (!pathname.startsWith("/admin") && !pathname.startsWith("/api")) {
       url.pathname = `/admin${pathname}`;
       return applySecurityHeaders(
-        NextResponse.rewrite(url, { request: { headers: requestHeaders } }),
+        NextResponse.rewrite(internal(url), { request: { headers: requestHeaders } }),
         pathname,
       );
     }
