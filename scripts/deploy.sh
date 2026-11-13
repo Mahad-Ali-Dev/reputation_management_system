@@ -12,9 +12,13 @@
 #   7. Wait for /api/health to return 200, then roll back on failure
 #
 # Run from /var/www/repulabs (or wherever APP_DIR points):
-#   pnpm deploy                 # ship HEAD of main
-#   pnpm deploy --ref=v1.2.3    # ship a specific tag
-#   pnpm deploy --dry-run       # print what would happen, change nothing
+#   pnpm run deploy                 # ship HEAD of main
+#   pnpm run deploy --ref=v1.2.3    # ship a specific tag
+#   pnpm run deploy --dry-run       # print what would happen, change nothing
+#
+# NOTE: `pnpm run deploy`, not `pnpm deploy` — pnpm 10 has a BUILT-IN `deploy`
+# command (workspace packaging) that shadows this script and fails with
+# ERR_PNPM_NOTHING_TO_DEPLOY.
 #
 # Exit non-zero on any failure. Designed to be idempotent — re-running after
 # a partial failure is safe.
@@ -128,7 +132,9 @@ fi
 # skip rather than aborting the whole deploy.
 if grep -q '^DIRECT_URL=' "$ENV_FILE" 2>/dev/null; then
   log "Running Prisma migrate deploy"
-  run "pnpm db:migrate:deploy"
+  # Load the env file first: the Prisma CLI only auto-reads `.env`, not
+  # `.env.production`, so without this it fails P1012 "DIRECT_URL not found".
+  run "set -a; . ./$ENV_FILE; set +a; pnpm db:migrate:deploy"
 else
   warn "DIRECT_URL not in $ENV_FILE — skipping prisma migrate deploy."
   warn "If this deploy includes schema changes, run migrations manually:"

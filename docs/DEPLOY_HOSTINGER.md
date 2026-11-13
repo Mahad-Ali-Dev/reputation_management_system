@@ -290,7 +290,7 @@ From your laptop after pushing to `main`, SSH in and run:
 ```bash
 ssh deploy@<vps-ip>
 cd /var/www/repulabs
-pnpm deploy
+pnpm run deploy   # NOT `pnpm deploy` — pnpm 10's built-in shadows the script
 ```
 
 The `scripts/deploy.sh` script:
@@ -325,7 +325,7 @@ sudo journalctl -u repulabs --since "1 hour ago" -p err
 ```bash
 cd /var/www/repulabs
 cat .deploy-previous-sha
-pnpm deploy --ref=<that-sha>
+pnpm run deploy --ref=<that-sha>
 ```
 
 ### Database backups

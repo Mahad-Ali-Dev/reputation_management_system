@@ -1,51 +1,61 @@
 [Unit]
 # Repulabs SaaS — Next.js production server
-# Path: /etc/systemd/system/repulabs.service  (symlink or copy)
-# Install:   sudo systemctl daemon-reload && sudo systemctl enable repulabs
+# Path: /etc/systemd/system/repulabs.service  (copy)
+# Install:   sudo cp deploy/repulabs.service /etc/systemd/system/ && sudo systemctl daemon-reload && sudo systemctl enable repulabs
 # Status:    sudo systemctl status repulabs
 # Logs:      sudo journalctl -u repulabs -f
+#
+# Layout matches the real VPS: checkout at /opt/repulabs, owned by and run as
+# the `deploy` user (the same user that runs `pnpm deploy` and the crontab).
 
 Description=Repulabs Next.js production server
-Documentation=https://github.com/repulabs/repulabs (or your repo URL)
 After=network-online.target
 Wants=network-online.target
+# After 3 crashes in 30s, give up — prevents a crash loop hammering the DB.
+# (These belong in [Unit]; systemd ignores them under [Service].)
+StartLimitIntervalSec=30
+StartLimitBurst=3
 
 [Service]
 Type=simple
 
 # ---- Identity ----
-# Create with: sudo adduser --system --group --no-create-home --shell /bin/false repulabs
-User=repulabs
-Group=repulabs
+User=deploy
+Group=deploy
 
 # ---- Working directory ----
-WorkingDirectory=/var/www/repulabs
-# Env file (mode 600, owned by repulabs:repulabs)
-EnvironmentFile=/var/www/repulabs/.env.production
+WorkingDirectory=/opt/repulabs
+
+# ---- Env ----
+# Runtime env comes from this file. Because systemd reads it on every START,
+# an env-only change needs just `sudo systemctl restart repulabs` — no rebuild.
+# (Exception: NEXT_PUBLIC_* values are inlined at BUILD time, so changing one of
+# those still needs `pnpm deploy`.) deploy.sh sources the same file for the build.
+#
+# Format note: systemd parses this file itself — no `export`, no `$VAR`
+# expansion. Keep it plain KEY=value / KEY="value" lines.
+EnvironmentFile=/opt/repulabs/.env.production
+Environment=NODE_ENV=production
+Environment=PORT=3000
 
 # ---- Command ----
-# pnpm must be on the PATH for the service user. Either install via corepack
-# system-wide (`corepack enable; corepack prepare pnpm@latest --activate`) or
-# point to the absolute path of pnpm in this ExecStart.
-ExecStart=/usr/bin/pnpm exec next start -p 3000
+# Run Next directly with node rather than through pnpm: no dependency on a
+# pnpm shim or its per-user cache (which ProtectHome would hide). Bound to
+# loopback — only nginx talks to it.
+ExecStart=/usr/bin/node /opt/repulabs/node_modules/next/dist/bin/next start -p 3000 -H 127.0.0.1
 
 # ---- Lifecycle ----
-# Reload-on-edit: send SIGHUP for graceful reload. Next.js handles SIGTERM
-# for connection draining (~10s by default).
 KillSignal=SIGTERM
 TimeoutStopSec=20
 Restart=always
 RestartSec=5
-# After 3 crashes in 30s, give up — prevents fork bombs.
-StartLimitIntervalSec=30
-StartLimitBurst=3
 
 # ---- Resource limits ----
 LimitNOFILE=65536
-# Cap memory at 1.5GB on a typical 2GB Hostinger VPS — kills runaway leaks
-# before they OOM the box.
-MemoryMax=1536M
-MemoryHigh=1280M
+# Sized for the 8 GB VPS: leaves headroom for `next build` (which runs outside
+# this unit during a deploy) while capping a runaway leak.
+MemoryMax=3G
+MemoryHigh=2560M
 
 # ---- Security hardening (systemd sandboxing) ----
 NoNewPrivileges=true
@@ -59,24 +69,22 @@ ProtectControlGroups=true
 RestrictSUIDSGID=true
 RestrictRealtime=true
 LockPersonality=true
-# Allow writes only to the app dir (.next/cache, logs)
-ReadWritePaths=/var/www/repulabs
+# Writable: the checkout (.next/cache, logs).
+ReadWritePaths=/opt/repulabs
 
-# Persistent state directory for user-uploaded media (UPLOAD_DIR).
+# Persistent state directory for user-uploaded media: set
+# UPLOAD_DIR=/var/lib/repulabs/uploads in the env file.
 #
 # systemd creates /var/lib/repulabs, chowns it to User= and adds it to the
 # read-write set automatically — which matters because ProtectSystem=strict
-# above makes the rest of the filesystem read-only. Creating the directory by
-# hand is NOT enough on its own: without this line the service still can't write
-# to it, and uploads fail with ENOENT/EROFS after the images have already been
-# generated and billed.
+# above makes the rest of the filesystem read-only. Deliberately outside the
+# checkout: customer media must outlive any single release.
 #
-# Deliberately outside the deploy checkout: customer media must outlive any
-# single release, and a deploy that cleans the working tree would take it.
+# BACK THIS DIRECTORY UP. It is the only copy of uploaded logos and post images;
+# losing the VPS without a copy loses them (this happened once already).
 StateDirectory=repulabs
 
 # ---- Logging ----
-# Send stdout/stderr to journald. Use `journalctl -u repulabs --since "1 hour ago"`.
 StandardOutput=journal
 StandardError=journal
 SyslogIdentifier=repulabs

@@ -12,7 +12,7 @@
 #
 # Env overrides (optional):
 #   REPULABS_ENV       path to env file  (default /opt/repulabs/.env.production)
-#   REPULABS_BASE      base URL          (default https://repulabs.com)
+#   REPULABS_BASE      base URL          (default http://127.0.0.1:3000)
 #   REPULABS_CRON_LOG  log file          (default /opt/repulabs/logs/cron.log)
 #
 set -euo pipefail
@@ -24,7 +24,11 @@ export PATH
 
 endpoint="${1:?usage: cron-hit.sh <endpoint>}"
 env_file="${REPULABS_ENV:-/opt/repulabs/.env.production}"
-base="${REPULABS_BASE:-https://repulabs.com}"
+# Loopback, not https://repulabs.com: the job runs on the same box as the app, so
+# going out through DNS + TLS + nginx only adds failure modes — and if DNS ever
+# points somewhere else (it once pointed at a stranger's server after an IP
+# reassignment), the public URL would hand them CRON_SECRET every minute.
+base="${REPULABS_BASE:-http://127.0.0.1:3000}"
 log_file="${REPULABS_CRON_LOG:-/opt/repulabs/logs/cron.log}"
 
 # WHY THIS LOG EXISTS: stdout went to /dev/null and stderr went to cron's
