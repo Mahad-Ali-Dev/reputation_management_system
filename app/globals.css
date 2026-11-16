@@ -1251,3 +1251,414 @@
     transition: none !important;
   }
 }
+
+/* ============================================================
+   GLASSMORPHISM foundation — ADDITIVE, opt-in via `.glass-theme`.
+   Two token sets ship from the start: a light "frosted" set (the
+   default) and a dark "aurora" set, flipped by `data-glass-mode`.
+   Everything here is net-new (`--glass-*`, `.glass-*`, `.aurora-*`);
+   no existing token or class is overridden, so production pages and
+   the existing .rl-theme / M3 system are untouched. Brand hues
+   (--pri royal blue, --trust teal) are reused so the glass stays on
+   brand. Scope: wrap a subtree in `.glass-theme` (usually together
+   with `.glass-canvas`) and set data-glass-mode="light" | "dark".
+   ============================================================ */
+
+@layer base {
+  /* ── LIGHT (frosted) — the default when .glass-theme is present ── */
+  .glass-theme,
+  .glass-theme[data-glass-mode="light"] {
+    color-scheme: light;
+
+    /* translucent surface fills, by elevation */
+    --glass-fill: rgba(255, 255, 255, 0.55);
+    --glass-fill-strong: rgba(255, 255, 255, 0.72);
+    --glass-fill-subtle: rgba(255, 255, 255, 0.4);
+    --glass-fill-solid: rgba(255, 255, 255, 0.92); /* reduced-transparency fallback */
+
+    /* hairlines + highlights */
+    --glass-border: rgba(255, 255, 255, 0.7);
+    --glass-border-soft: rgba(16, 24, 40, 0.06);
+    --glass-highlight: rgba(255, 255, 255, 0.85);
+    --glass-sheen: rgba(255, 255, 255, 0.5);
+
+    /* frost strength */
+    --glass-blur: 18px;
+    --glass-blur-strong: 28px;
+    --glass-saturate: 150%;
+
+    /* layered depth: contact + ambient + inner top highlight */
+    --glass-shadow: 0 1px 1px rgba(16, 24, 40, 0.04), 0 12px 32px -14px rgba(16, 24, 40, 0.2),
+      inset 0 1px 0 var(--glass-highlight);
+    --glass-shadow-lg: 0 2px 2px rgba(16, 24, 40, 0.05), 0 28px 60px -20px rgba(16, 24, 40, 0.3),
+      inset 0 1px 0 var(--glass-highlight);
+
+    /* ink on glass */
+    --glass-text: #101a33;
+    --glass-text-muted: #45506b;
+    --glass-text-subtle: #697490;
+
+    /* accent — brand royal blue reads well on light frost */
+    --glass-accent: #2457ff;
+    --glass-accent-hover: #1b3fd1;
+    --glass-accent-contrast: #ffffff;
+    --glass-accent-soft: rgba(36, 87, 255, 0.12);
+    --glass-ring: rgba(36, 87, 255, 0.55);
+
+    /* aurora canvas — soft light base + brand blobs */
+    --glass-canvas-base: #eef1fb;
+    --glass-canvas-gradient: linear-gradient(135deg, #f3f5fd 0%, #eaf3f1 55%, #eef1fb 100%);
+    --aurora-1: rgba(36, 87, 255, 0.34); /* blue */
+    --aurora-2: rgba(18, 185, 152, 0.28); /* teal */
+    --aurora-3: rgba(111, 92, 255, 0.26); /* violet */
+    --aurora-opacity: 0.9;
+  }
+
+  /* ── DARK (aurora) ── */
+  .glass-theme[data-glass-mode="dark"] {
+    color-scheme: dark;
+
+    --glass-fill: rgba(255, 255, 255, 0.08);
+    --glass-fill-strong: rgba(255, 255, 255, 0.13);
+    --glass-fill-subtle: rgba(255, 255, 255, 0.05);
+    --glass-fill-solid: rgba(22, 28, 46, 0.94);
+
+    --glass-border: rgba(255, 255, 255, 0.16);
+    --glass-border-soft: rgba(255, 255, 255, 0.08);
+    --glass-highlight: rgba(255, 255, 255, 0.22);
+    --glass-sheen: rgba(255, 255, 255, 0.14);
+
+    --glass-blur: 20px;
+    --glass-blur-strong: 32px;
+    --glass-saturate: 165%;
+
+    --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 20px 50px -18px rgba(0, 0, 0, 0.65),
+      inset 0 1px 0 var(--glass-highlight);
+    --glass-shadow-lg: 0 2px 2px rgba(0, 0, 0, 0.4), 0 36px 80px -24px rgba(0, 0, 0, 0.75),
+      inset 0 1px 0 var(--glass-highlight);
+
+    --glass-text: #f3f6fe;
+    --glass-text-muted: #afb9d1;
+    --glass-text-subtle: #808cab;
+
+    --glass-accent: #6f93ff;
+    --glass-accent-hover: #8aa7ff;
+    --glass-accent-contrast: #081023;
+    --glass-accent-soft: rgba(111, 147, 255, 0.18);
+    --glass-ring: rgba(132, 162, 255, 0.65);
+
+    --glass-canvas-base: #070b18;
+    --glass-canvas-gradient: linear-gradient(140deg, #0a1022 0%, #070b18 50%, #0b0f1e 100%);
+    --aurora-1: rgba(36, 87, 255, 0.5);
+    --aurora-2: rgba(18, 185, 152, 0.4);
+    --aurora-3: rgba(139, 92, 246, 0.48);
+    --aurora-opacity: 1;
+  }
+
+  .glass-theme {
+    color: var(--glass-text);
+    font-family: var(--f-ui);
+    font-feature-settings: "cv11", "ss01";
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* ── CANVAS ──────────────────────────────────────────────────────
+     The backdrop the frost refracts. A base wash + three drifting
+     aurora blobs painted in ::before / ::after. Give it a stacking
+     context so glass layers sit above the blobs. */
+  .glass-canvas {
+    position: relative;
+    isolation: isolate;
+    min-height: 100vh;
+    width: 100%;
+    /* clip horizontal overflow only — `overflow: hidden` here would break
+       position: sticky for the shell's sidebar + top bar. The aurora blobs
+       are position: fixed (below), so they never expand the scroll area. */
+    overflow-x: clip;
+    background-color: var(--glass-canvas-base);
+    background-image: var(--glass-canvas-gradient);
+  }
+  /* aurora blobs sit on a fixed backdrop layer so the page scrolls over them
+     and nothing needs clipping. */
+  .glass-canvas::before,
+  .glass-canvas::after {
+    content: "";
+    position: fixed;
+    z-index: -1;
+    pointer-events: none;
+    border-radius: 999px;
+    filter: blur(80px);
+    opacity: var(--aurora-opacity);
+  }
+  /* two large blobs top-left + bottom-right; a third via box-shadow layering */
+  .glass-canvas::before {
+    top: -12%;
+    left: -8%;
+    width: 48vw;
+    height: 48vw;
+    max-width: 720px;
+    max-height: 720px;
+    background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 62%);
+    animation: glass-drift-a 22s ease-in-out infinite;
+  }
+  .glass-canvas::after {
+    right: -10%;
+    bottom: -14%;
+    width: 52vw;
+    height: 52vw;
+    max-width: 760px;
+    max-height: 760px;
+    background: radial-gradient(circle at 65% 65%, var(--aurora-2), transparent 60%),
+      radial-gradient(circle at 20% 80%, var(--aurora-3), transparent 55%);
+    animation: glass-drift-b 26s ease-in-out infinite;
+  }
+  /* the content wrapper the app lays out inside */
+  .glass-content {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── SURFACE / CARD ──────────────────────────────────────────────
+     The core frosted panel. --raised / --subtle shift elevation;
+     --flush drops the radius for edge-to-edge bars. */
+  .glass-surface {
+    position: relative;
+    isolation: isolate;
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border: 1px solid var(--glass-border);
+    border-radius: var(--shape-lg, 20px);
+    box-shadow: var(--glass-shadow);
+    color: var(--glass-text);
+  }
+  /* a faint diagonal sheen across the top-left for the "glass" read */
+  .glass-surface::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: linear-gradient(135deg, var(--glass-sheen) 0%, transparent 42%);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  .glass-card {
+    padding: 24px;
+  }
+  .glass-surface--raised {
+    background: var(--glass-fill-strong);
+    box-shadow: var(--glass-shadow-lg);
+  }
+  .glass-surface--subtle {
+    background: var(--glass-fill-subtle);
+  }
+  .glass-surface--flush {
+    border-radius: 0;
+  }
+  .glass-surface--hover {
+    transition: transform var(--dur-2, 200ms) var(--ease-standard, cubic-bezier(0.2, 0, 0, 1)),
+      box-shadow var(--dur-2, 200ms) var(--ease-standard, cubic-bezier(0.2, 0, 0, 1));
+  }
+  .glass-surface--hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--glass-shadow-lg);
+  }
+
+  /* ── TOP BAR / NAV ── a stronger, stickier frost ── */
+  .glass-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--glass-fill-strong);
+    -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+    border-bottom: 1px solid var(--glass-border);
+    box-shadow: 0 8px 24px -18px rgba(16, 24, 40, 0.3);
+  }
+
+  /* ── BUTTON ──────────────────────────────────────────────────── */
+  .glass-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 40px;
+    padding: 0 18px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    font: 550 14px / 1 var(--f-ui);
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    cursor: pointer;
+    color: var(--glass-text);
+    background: var(--glass-fill);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    border-color: var(--glass-border);
+    box-shadow: var(--glass-shadow);
+    transition: transform var(--dur-1, 150ms) var(--ease-standard, cubic-bezier(0.2, 0, 0, 1)),
+      background var(--dur-1, 150ms), border-color var(--dur-1, 150ms),
+      box-shadow var(--dur-1, 150ms);
+  }
+  .glass-btn:hover {
+    background: var(--glass-fill-strong);
+  }
+  .glass-btn:active {
+    transform: translateY(1px);
+  }
+  .glass-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--glass-canvas-base), 0 0 0 4px var(--glass-ring);
+  }
+  .glass-btn:disabled {
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .glass-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  .glass-btn--primary {
+    color: var(--glass-accent-contrast);
+    background: var(--glass-accent);
+    border-color: transparent;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.2), 0 10px 24px -8px var(--glass-accent),
+      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+  }
+  .glass-btn--primary:hover {
+    background: var(--glass-accent-hover);
+  }
+  .glass-btn--ghost {
+    background: var(--glass-fill-subtle);
+  }
+  .glass-btn--sm {
+    height: 32px;
+    padding: 0 14px;
+    font-size: 13px;
+  }
+  .glass-btn--lg {
+    height: 48px;
+    padding: 0 24px;
+    font-size: 15px;
+  }
+
+  /* ── INPUT ───────────────────────────────────────────────────── */
+  .glass-input {
+    width: 100%;
+    height: 40px;
+    padding: 0 14px;
+    border-radius: 12px;
+    background: var(--glass-fill-subtle);
+    border: 1px solid var(--glass-border);
+    -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+    color: var(--glass-text);
+    font: 400 14px / 1.4 var(--f-ui);
+    transition: border-color var(--dur-1, 150ms), box-shadow var(--dur-1, 150ms),
+      background var(--dur-1, 150ms);
+  }
+  .glass-input::placeholder {
+    color: var(--glass-text-subtle);
+  }
+  .glass-input:focus {
+    outline: none;
+    border-color: var(--glass-accent);
+    box-shadow: 0 0 0 3px var(--glass-accent-soft);
+  }
+  textarea.glass-input {
+    height: auto;
+    min-height: 96px;
+    padding: 10px 14px;
+    resize: vertical;
+  }
+
+  /* ── CHIP / PILL ── */
+  .glass-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 12px;
+    border-radius: 999px;
+    background: var(--glass-fill-subtle);
+    border: 1px solid var(--glass-border);
+    color: var(--glass-text-muted);
+    font: 550 12px / 1 var(--f-ui);
+    white-space: nowrap;
+  }
+  .glass-chip--accent {
+    color: var(--glass-accent);
+    background: var(--glass-accent-soft);
+    border-color: transparent;
+  }
+  .glass-chip svg {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* ── text helpers scoped to glass ── */
+  .glass-muted {
+    color: var(--glass-text-muted);
+  }
+  .glass-subtle {
+    color: var(--glass-text-subtle);
+  }
+  .glass-divider {
+    height: 1px;
+    width: 100%;
+    background: var(--glass-border-soft);
+    border: 0;
+  }
+}
+
+/* aurora drift — gentle, long-period float. Disabled under reduced motion. */
+@keyframes glass-drift-a {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(6%, 8%) scale(1.08);
+  }
+}
+@keyframes glass-drift-b {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  50% {
+    transform: translate(-7%, -6%) scale(1.1);
+  }
+}
+
+/* Graceful fallbacks: when the browser can't frost, or the viewer asks for
+   less transparency, swap translucent fills for near-solid ones so text stays
+   legible. */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .glass-surface,
+  .glass-bar,
+  .glass-btn,
+  .glass-input,
+  .glass-chip {
+    background: var(--glass-fill-solid);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .glass-surface,
+  .glass-bar {
+    background: var(--glass-fill-solid);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .glass-canvas::before,
+  .glass-canvas::after {
+    animation: none !important;
+  }
+  .glass-surface--hover,
+  .glass-btn {
+    transition: none !important;
+  }
+}

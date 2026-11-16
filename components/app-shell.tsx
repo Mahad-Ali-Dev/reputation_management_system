@@ -36,6 +36,7 @@ export function AppShell({
   dateLabels,
   workspaces,
   allowedTabs,
+  variant,
 }: {
   children: React.ReactNode;
   topBar?: React.ReactNode;
@@ -45,6 +46,13 @@ export function AppShell({
   dateLabels?: Record<string, string>;
   workspaces?: Workspace[];
   allowedTabs?: string[];
+  /**
+   * Opt-in visual skin. "glass" adds the `app--glass glass-theme` scope +
+   * `data-glass-mode`, so a page (currently just /dashboard) can render the
+   * glassmorphism look WITHOUT changing this shell for every other page. The
+   * actual glass styling lives in the page's own CSS, scoped under `.app--glass`.
+   */
+  variant?: "glass";
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -63,8 +71,13 @@ export function AppShell({
     return () => window.removeEventListener("keydown", handler);
   }, [drawerOpen]);
 
+  const isGlass = variant === "glass";
+
   return (
-    <div className="app app--responsive app--canvas">
+    <div
+      className={`app app--responsive app--canvas${isGlass ? " app--glass glass-theme" : ""}`}
+      data-glass-mode={isGlass ? "light" : undefined}
+    >
       {/* Desktop sidebar */}
       <div className="app__sb-desktop">
         <SidebarNav orgName={orgName} planLabel={planLabel} allowedTabs={allowedTabs} />

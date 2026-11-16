@@ -23,10 +23,14 @@ export async function AppShellServer({
   children,
   topBar,
   crumbs,
+  variant,
 }: {
   children: React.ReactNode;
   topBar?: React.ReactNode;
   crumbs?: string[];
+  /** Opt-in visual skin passed through to <AppShell>. "glass" scopes the
+   *  glassmorphism look to this page only (see app-shell.tsx). */
+  variant?: "glass";
 }) {
   const { org, orgId, userId, allowedTabs } = await getOrgContext();
 
@@ -52,6 +56,7 @@ export async function AppShellServer({
       dateLabels={dateLabels}
       workspaces={workspaces}
       allowedTabs={allowedTabs}
+      variant={variant}
     >
       {children}
     </AppShell>

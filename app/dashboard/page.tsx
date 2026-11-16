@@ -20,6 +20,7 @@ import { redirect } from "next/navigation";
 import { CopilotChips, CopilotPrompt } from "./_components/copilot-panel";
 import { KbCrawlStrip } from "./_components/kb-crawl-strip";
 import "./dashboard-kit.css";
+import "./dashboard-glass.css";
 
 /**
  * Dashboard — rebuilt 1:1 to the delivered design kit
@@ -160,7 +161,7 @@ export default async function DashboardPage({
     arr.length >= 2 && arr.some((v) => v > 0) ? arr : undefined;
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]}>
+    <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]} variant="glass">
       {/* Website crawls run as background jobs, so the owner can start one and
           close the modal. This is the only place they'd otherwise see it's
           still working. Renders nothing when there's nothing in flight. */}
