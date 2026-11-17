@@ -6,6 +6,91 @@
  * line joins so they read as a coherent set.
  */
 
+import {
+  Archive,
+  ArrowDown,
+  ArrowDownRight,
+  ArrowRight,
+  ArrowUp,
+  ArrowUpRight,
+  Bell,
+  BookOpen,
+  Bot,
+  Box,
+  Brain,
+  Building2,
+  Calendar,
+  ChartColumn,
+  ChartPie,
+  Check,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
+  Circle,
+  CircleCheck,
+  CircleHelp,
+  CircleX,
+  ClipboardList,
+  Clock,
+  Copy,
+  CreditCard,
+  Download,
+  Ellipsis,
+  EllipsisVertical,
+  ExternalLink,
+  Eye,
+  EyeOff,
+  File,
+  Filter,
+  Flag,
+  Folder,
+  Globe,
+  GripVertical,
+  Hash,
+  House,
+  Image,
+  Info,
+  LayoutGrid,
+  Lock,
+  LogOut,
+  type LucideIcon,
+  Mail,
+  MapPin,
+  Menu,
+  MessageCircle,
+  Minus,
+  Move,
+  Pause,
+  PenLine,
+  Phone,
+  Play,
+  Plug,
+  Plus,
+  Presentation,
+  QrCode,
+  RefreshCw,
+  Reply,
+  Search,
+  Send,
+  Settings,
+  Share2,
+  SlidersHorizontal,
+  Smartphone,
+  Sparkles,
+  Star,
+  Tag,
+  Target,
+  Trash2,
+  TrendingUp,
+  TriangleAlert,
+  Upload,
+  User,
+  Users,
+  Volume2,
+  X,
+  Zap,
+} from "lucide-react";
 import type { CSSProperties } from "react";
 
 export type IconName =
@@ -98,6 +183,108 @@ export type IconName =
   | "dotsH"
   | "file"
   | "folder";
+
+/**
+ * Lucide drawings for the shared icon names.
+ *
+ * One icon language across the app: the glass components already drew with
+ * Lucide while everything else used this hand-drawn set, so the same screen
+ * mixed two stroke styles. Mapping by NAME means all ~214 call sites move at
+ * once with no API change.
+ *
+ * Lucide rather than Apple's SF Symbols because SF Symbols are licensed only
+ * for apps on Apple platforms. Lucide is the closest open equivalent — single
+ * stroke, rounded caps and joins, the same 24×24 grid as before.
+ *
+ * Deliberately NOT mapped, so they keep their original drawings below:
+ *   - brand marks (insta, fb, twitter, linkedin, google): Lucide's brand icons
+ *     are deprecated and it has no Google mark at all;
+ *   - triangleR: it's a FILLED glyph, and Lucide's outline Play would change it.
+ */
+const LUCIDE: Partial<Record<IconName, LucideIcon>> = {
+  home: House,
+  grid: LayoutGrid,
+  building: Building2,
+  box: Box,
+  star: Star,
+  send: Send,
+  sparkle: Sparkles,
+  chat: MessageCircle,
+  share: Share2,
+  survey: ClipboardList,
+  book: BookOpen,
+  flag: Flag,
+  brain: Brain,
+  phone: Phone,
+  settings: Settings,
+  plug: Plug,
+  card: CreditCard,
+  lock: Lock,
+  plus: Plus,
+  chevR: ChevronRight,
+  chevD: ChevronDown,
+  chevU: ChevronUp,
+  chevL: ChevronLeft,
+  arrowR: ArrowRight,
+  arrowU: ArrowUp,
+  arrowD: ArrowDown,
+  arrowUR: ArrowUpRight,
+  arrowDR: ArrowDownRight,
+  search: Search,
+  bell: Bell,
+  menu: Menu,
+  filter: Filter,
+  sliders: SlidersHorizontal,
+  download: Download,
+  upload: Upload,
+  qr: QrCode,
+  edit: PenLine,
+  trash: Trash2,
+  check: Check,
+  checkCircle: CircleCheck,
+  x: X,
+  xCircle: CircleX,
+  clock: Clock,
+  cal: Calendar,
+  play: Play,
+  pause: Pause,
+  sound: Volume2,
+  image: Image,
+  user: User,
+  users: Users,
+  pin: MapPin,
+  eye: Eye,
+  eyeOff: EyeOff,
+  reply: Reply,
+  bot: Bot,
+  hash: Hash,
+  grip: GripVertical,
+  bolt: Zap,
+  target: Target,
+  trend: TrendingUp,
+  pie: ChartPie,
+  bars: ChartColumn,
+  mail: Mail,
+  smartphone: Smartphone,
+  info: Info,
+  alert: TriangleAlert,
+  help: CircleHelp,
+  move: Move,
+  refresh: RefreshCw,
+  archive: Archive,
+  ext: ExternalLink,
+  logout: LogOut,
+  copy: Copy,
+  minus: Minus,
+  round: Circle,
+  presentation: Presentation,
+  globe: Globe,
+  tag: Tag,
+  more: EllipsisVertical,
+  dotsH: Ellipsis,
+  file: File,
+  folder: Folder,
+};
 
 const PATHS: Record<IconName, React.ReactNode> = {
   home: (
@@ -535,7 +722,9 @@ const PATHS: Record<IconName, React.ReactNode> = {
 export function Icon({
   name,
   size = 16,
-  stroke = 1.6,
+  // 1.75 matches GlassButton and the rest of the glass kit, so an icon in a
+  // button and an icon in the sidebar carry the same weight.
+  stroke = 1.75,
   style,
   className,
   title,
@@ -547,6 +736,21 @@ export function Icon({
   className?: string;
   title?: string;
 }) {
+  const Drawn = LUCIDE[name];
+  if (Drawn) {
+    return (
+      <Drawn
+        size={size}
+        strokeWidth={stroke}
+        style={style}
+        className={className}
+        role={title ? "img" : "presentation"}
+        aria-label={title}
+        aria-hidden={title ? undefined : true}
+        focusable="false"
+      />
+    );
+  }
   return (
     <svg
       width={size}
