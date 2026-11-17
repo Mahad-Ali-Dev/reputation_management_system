@@ -1276,8 +1276,11 @@
     --glass-fill-subtle: rgba(255, 255, 255, 0.4);
     --glass-fill-solid: rgba(255, 255, 255, 0.92); /* reduced-transparency fallback */
 
-    /* hairlines + highlights */
-    --glass-border: rgba(255, 255, 255, 0.7);
+    /* hairlines + highlights.
+       Dark hairline, not white: on the warm off-white canvas a white border
+       has nothing to contrast against and the panel edge disappears. The
+       white light-catch lives in --glass-highlight (the inset top line). */
+    --glass-border: rgba(16, 24, 40, 0.08);
     --glass-border-soft: rgba(16, 24, 40, 0.06);
     --glass-highlight: rgba(255, 255, 255, 0.85);
     --glass-sheen: rgba(255, 255, 255, 0.5);
@@ -1285,7 +1288,9 @@
     /* frost strength */
     --glass-blur: 18px;
     --glass-blur-strong: 28px;
-    --glass-saturate: 150%;
+    /* 180%: the glass is achromatic, so saturate is what makes the colour it
+       borrows from behind read vivid rather than washed out. */
+    --glass-saturate: 180%;
 
     /* layered depth: contact + ambient + inner top highlight */
     --glass-shadow: 0 1px 1px rgba(16, 24, 40, 0.04), 0 12px 32px -14px rgba(16, 24, 40, 0.2),
@@ -1305,13 +1310,18 @@
     --glass-accent-soft: rgba(36, 87, 255, 0.12);
     --glass-ring: rgba(36, 87, 255, 0.55);
 
-    /* aurora canvas — soft light base + brand blobs */
-    --glass-canvas-base: #eef1fb;
-    --glass-canvas-gradient: linear-gradient(135deg, #f3f5fd 0%, #eaf3f1 55%, #eef1fb 100%);
-    --aurora-1: rgba(36, 87, 255, 0.34); /* blue */
-    --aurora-2: rgba(18, 185, 152, 0.28); /* teal */
-    --aurora-3: rgba(111, 92, 255, 0.26); /* violet */
-    --aurora-opacity: 0.9;
+    /* aurora canvas — ONE hue.
+       Was blue + teal + violet, which broke the spec's "never two accent hues
+       on one screen" and is what made the glass read muddy: three colours
+       blurred together through frost average out to grey-lavender. Now the
+       spec's warm off-white with blooms of the single brand blue, and a faint
+       warm wash so the page doesn't go cold. */
+    --glass-canvas-base: #fbfaf6;
+    --glass-canvas-gradient: linear-gradient(135deg, #fbfaf6 0%, #f6f7f4 55%, #fbfaf6 100%);
+    --aurora-1: rgba(36, 87, 255, 0.2); /* brand blue */
+    --aurora-2: rgba(36, 87, 255, 0.12); /* brand blue, second bloom */
+    --aurora-3: rgba(245, 166, 35, 0.07); /* warm wash — the spec's star amber, barely there */
+    --aurora-opacity: 1;
   }
 
   /* ── DARK (aurora) ── */
