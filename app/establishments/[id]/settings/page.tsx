@@ -1,4 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import "../establishment-detail-glass.css";
 import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
@@ -73,6 +74,7 @@ export default async function EstablishmentSettingsPage({
       topBar={<TopBar />}
       crumbs={["Business Setup", "My Businesses", establishment.name, "Settings"]}
     >
+      <div className="estab-detail">
       <PageHeader
         kicker="Location settings"
         title={establishment.name}
@@ -309,6 +311,7 @@ export default async function EstablishmentSettingsPage({
           </div>
           )}
         </div>
+      </div>
       </div>
     </AppShellServer>
   );

@@ -23,3 +23,68 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Clean header — eyebrow + title + subtitle on the left, primary action
+   top-right. Replaces the old hero with the big laptop/phone illustration. */
+.app--glass .est-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.app--glass .est-head__text {
+  min-width: 0;
+}
+.app--glass .est-head .est-hero__title {
+  margin: 4px 0 6px;
+}
+
+/* Business-list container + linked-device cards → transparent glass (match the
+   summary cards). The purple connect banner and small icon tiles keep their fills. */
+.app--glass .est-list,
+.app--glass .est-devcard,
+.app--glass .est-devempty {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+
+/* /establishments/new wizard — transparent form + stepper cards, frosted inputs. */
+.app--glass .est-form,
+.app--glass .est-stepper {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+.app--glass .est-input {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .est-input:focus,
+.app--glass .est-input:focus-visible {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--est-indigo));
+}
+
+/* /new wizard full width; form fields in a 2-column grid. */
+.app--glass .est-wizard {
+  grid-template-columns: minmax(0, 1fr);
+}
+.app--glass .est-formgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 8px;
+}
+.app--glass .est-formgrid__full {
+  grid-column: 1 / -1;
+}
+@media (max-width: 640px) {
+  .app--glass .est-formgrid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,45 @@
+/* ============================================================
+   establishment-detail-glass.css — glass skin for the establishment DETAIL
+   page (/establishments/[id]). Chrome is global (app/glass-chrome.css).
+
+   This page uses the SHARED `.ds-card`, so everything is scoped to
+   `.app--glass .estab-detail` (the page wrapper) to keep every other page's
+   `.ds-card` untouched. Imported by this page's page.tsx.
+   ============================================================ */
+
+/* Transparent cards — aurora shows through; hairline border, no shadow. */
+.app--glass .estab-detail .ds-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+/* Card sub-heads keep only their hairline divider, no fill. */
+.app--glass .estab-detail .ds-card__head {
+  background: transparent;
+}
+
+/* Inputs (e.g. the Google-listing search) → frosted glass instead of solid white. */
+.app--glass .estab-detail .set-input {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .estab-detail .set-input:focus,
+.app--glass .estab-detail .set-input:focus-visible {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--pri));
+}
+
+/* Settings-page inputs (.ds-input) → frosted glass too. */
+.app--glass .estab-detail .ds-input {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .estab-detail .ds-input:focus,
+.app--glass .estab-detail .ds-input:focus-visible {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--pri));
+}

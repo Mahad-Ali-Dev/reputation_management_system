@@ -61,9 +61,9 @@
 
 /* ---- sidebar ----------------------------------------------------- */
 .app--glass .sb {
-  background: var(--glass-fill-strong);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   border-right: 1px solid var(--glass-border);
 }
 .app--glass .sb__search {
@@ -90,18 +90,53 @@
   border-color: var(--glass-border);
 }
 
+/* Sidebar nav scrollbar — the default OS scrollbar (chunky thumb + arrow
+   buttons) clashes with the transparent glass chrome. Make it a thin,
+   buttonless, subtle overlay scrollbar. */
+.app--glass .sb nav {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(100, 116, 139, 0.32) transparent;
+}
+.app--glass .sb nav::-webkit-scrollbar {
+  width: 6px;
+}
+.app--glass .sb nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+.app--glass .sb nav::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 999px;
+}
+.app--glass .sb nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+.app--glass .sb nav::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
 /* ---- top bar ----------------------------------------------------- */
 .app--glass .tb {
-  background: var(--glass-fill-strong);
-  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
-  border-bottom: 1px solid var(--glass-border);
+  /* Not sticky — the navbar is a normal in-flow component that scrolls away
+     with the page (overrides the base `.tb` position: sticky). */
+  position: static;
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  border-bottom: none;
 }
-.app--glass .tb__search,
+/* Workspace switcher + user menu — persistent soft fill (the old hover look),
+   no border/shadow, with a slightly stronger hover. */
 .app--glass .tb__ws,
-.app--glass .tb__datebtn {
+.app--glass .tb__user {
   background: var(--glass-fill-subtle);
-  border-color: var(--glass-border);
+  border-color: transparent;
+  box-shadow: none;
+}
+.app--glass .tb__ws:hover,
+.app--glass .tb__user:hover {
+  background: var(--glass-fill);
 }
 .app--glass .tb__iconbtn:hover {
   background: var(--glass-fill-subtle);
@@ -142,12 +177,12 @@
 
   /* Navbar floats centered at 80% width, gap on all sides, rounded. */
   .app--glass .tb {
-    width: 80%;
-    margin: var(--glass-gap) auto;
-    border: 1px solid var(--glass-border);
-    border-radius: 18px;
+    width: 100%;
+    margin: var(--glass-gap) 0;
+    border: none;
+    border-radius: 0;
     top: var(--glass-gap);
-    box-shadow: var(--glass-shadow);
+    box-shadow: none;
   }
 }
 
@@ -157,9 +192,175 @@
   .app--glass .tb {
     width: auto;
     margin: var(--glass-gap);
-    border: 1px solid var(--glass-border);
-    border-radius: 16px;
+    border: none;
+    border-radius: 0;
     top: var(--glass-gap);
-    box-shadow: var(--glass-shadow);
+    box-shadow: none;
   }
+}
+
+/* ============================================================
+   Navbar CENTER metric strip (dashboard-only, injected via centerBar).
+   Compact label/value/delta row that fits the 64px navbar, with a hover /
+   focus trend popover that drops below the bar. `.dash-*` classes only exist
+   on the dashboard (no centerBar elsewhere), so these rules are inert on other
+   tabs. Colors use the glass theme tokens (with safe fallbacks).
+   ============================================================ */
+.tb__center {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+/* 3-part navbar: workspace (left) · metrics (center) · actions (right). Equal
+   flex on the side sections keeps the center section truly centered. */
+.app--glass .tb__left {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app--glass .tb__right {
+  flex: 1 1 0;
+  margin-left: 0;
+  justify-content: flex-end;
+}
+.dash-metrics {
+  display: flex;
+  align-items: center;
+  gap: 26px;
+}
+.dash-metric {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  outline: none;
+}
+.dash-metric__label {
+  font-size: 10.5px;
+  font-weight: 500;
+  color: var(--glass-text-muted, #64748b);
+  white-space: nowrap;
+  line-height: 1.25;
+}
+.dash-metric__row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.dash-metric__value {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--glass-text, #0f172a);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.dash-metric__rule {
+  width: 24px;
+  height: 1px;
+  background: rgba(100, 116, 139, 0.35);
+  border-radius: 1px;
+}
+.dash-metric__delta {
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.dash-metric__delta--up { color: #16a34a; }
+.dash-metric__delta--down { color: #ef4444; }
+.dash-metric__delta--flat { color: var(--glass-text-muted, #64748b); }
+
+/* ---- hover / focus trend popover (drops below the navbar) ---- */
+.dash-metric__pop {
+  position: absolute;
+  top: calc(100% + 16px);
+  left: 50%;
+  transform: translate(-50%, -4px);
+  z-index: 60;
+  width: min(460px, 80vw);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px;
+  border-radius: 16px;
+  background: #ffffff;
+  border: 1px solid var(--glass-border, rgba(15, 23, 42, 0.08));
+  box-shadow: 0 18px 50px -12px rgba(15, 23, 42, 0.22);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.14s ease, transform 0.14s ease, visibility 0.14s;
+  pointer-events: none;
+}
+.dash-metric:hover .dash-metric__pop,
+.dash-metric:focus .dash-metric__pop,
+.dash-metric:focus-within .dash-metric__pop {
+  opacity: 1;
+  visibility: visible;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+/* Keep the edge metrics' popovers inside the viewport. */
+.dash-metric:first-child .dash-metric__pop {
+  left: 0;
+  transform: translate(0, -4px);
+}
+.dash-metric:first-child:hover .dash-metric__pop,
+.dash-metric:first-child:focus-within .dash-metric__pop {
+  transform: translate(0, 0);
+}
+.dash-metric:last-child .dash-metric__pop {
+  left: auto;
+  right: 0;
+  transform: translate(0, -4px);
+}
+.dash-metric:last-child:hover .dash-metric__pop,
+.dash-metric:last-child:focus-within .dash-metric__pop {
+  transform: translate(0, 0);
+}
+.dash-metric__pop-head {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+}
+.dash-metric__pop-val {
+  font-size: 26px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--glass-text, #0f172a);
+  font-variant-numeric: tabular-nums;
+}
+.dash-metric__pop-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--glass-text, #0f172a);
+  margin-top: 12px;
+}
+.dash-metric__pop-desc {
+  font-size: 12.5px;
+  color: var(--glass-text-muted, #64748b);
+  line-height: 1.5;
+  margin-top: 2px;
+}
+.dash-metric__pop-chart {
+  margin-top: 16px;
+}
+.dash-metric__pop-chart svg {
+  width: 100%;
+  height: auto;
+}
+.dash-metric__pop-empty {
+  display: block;
+  padding: 28px 0;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--glass-text-muted, #64748b);
+}
+
+/* The navbar strip is desktop-only — too dense for a phone navbar. */
+@media (max-width: 1023px) {
+  .tb__center { display: none; }
 }

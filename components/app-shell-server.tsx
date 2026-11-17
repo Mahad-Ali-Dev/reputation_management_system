@@ -24,6 +24,7 @@ export async function AppShellServer({
   topBar,
   crumbs,
   variant,
+  centerBar,
 }: {
   children: React.ReactNode;
   topBar?: React.ReactNode;
@@ -31,6 +32,8 @@ export async function AppShellServer({
   /** Visual skin passed through to <AppShell>. Glass is the default app-wide;
    *  pass "plain" to opt a page back out to the legacy chrome (see app-shell.tsx). */
   variant?: "glass" | "plain";
+  /** Page-specific navbar-center content, forwarded to <AppShell>. */
+  centerBar?: React.ReactNode;
 }) {
   const { org, orgId, userId, allowedTabs } = await getOrgContext();
 
@@ -57,6 +60,7 @@ export async function AppShellServer({
       workspaces={workspaces}
       allowedTabs={allowedTabs}
       variant={variant}
+      centerBar={centerBar}
     >
       {children}
     </AppShell>

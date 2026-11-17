@@ -1,4 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
+import "./establishment-detail-glass.css";
 import { PageHeader } from "@/components/page-header";
 import { Avatar } from "@/components/shell/avatar";
 import { Icon } from "@/components/shell/icon";
@@ -108,6 +109,7 @@ export default async function EstablishmentDetailPage({
       topBar={<TopBar />}
       crumbs={["Business Setup", "My Businesses", establishment.name]}
     >
+      <div className="estab-detail">
       <PageHeader
         kicker={
           isVerified ? `Verified · ${stats.total.toLocaleString()} reviews` : "Pending verification"
@@ -530,6 +532,7 @@ export default async function EstablishmentDetailPage({
             </div>
           </div>
         </div>
+      </div>
       </div>
     </AppShellServer>
   );

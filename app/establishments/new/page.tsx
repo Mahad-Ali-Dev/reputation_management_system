@@ -5,6 +5,7 @@ import { AppShellServer } from "@/components/app-shell-server";
 import { TopBar } from "@/components/topbar";
 import { Icon, type IconName } from "@/components/shell/icon";
 import "../establishments.css";
+import "../establishments-glass.css";
 
 /**
  * Add New Business — wizard Step 1 "Details" (module 14). Left: the business
@@ -48,27 +49,6 @@ const STEPS = [
   },
 ] as const;
 
-const FEATURES = [
-  {
-    title: "Collect reviews",
-    desc: "Gather more happy customer reviews",
-    tint: "blue",
-    icon: "/assets/repulabs/establishments/feat-collect.svg",
-  },
-  {
-    title: "Connect devices",
-    desc: "Link your devices and manage from one place",
-    tint: "green",
-    icon: "/assets/repulabs/establishments/feat-connect.svg",
-  },
-  {
-    title: "Get insights",
-    desc: "Track performance and improve your reputation",
-    tint: "pink",
-    icon: "/assets/repulabs/establishments/feat-insight.svg",
-  },
-] as const;
-
 export const dynamic = "force-dynamic";
 
 export const metadata = {
@@ -86,10 +66,6 @@ export default async function NewEstablishmentPage() {
             <Icon name="lock" size={12} style={{ marginRight: -2 }} />
             New Business
           </span>
-          <Link href="/establishments" className="est-backlink">
-            <Icon name="chevL" size={16} />
-            Back to establishments
-          </Link>
         </div>
 
         <div style={{ marginBottom: 24 }}>
@@ -131,66 +107,67 @@ export default async function NewEstablishmentPage() {
             <h2 className="est-form__title">Business details</h2>
             <p className="est-form__sub">Tell us about the place you manage.</p>
 
-            <Field
-              label="Name"
-              name="name"
-              required
-              icon="building"
-              placeholder="Acme Coffee Downtown"
-            />
+            <div className="est-formgrid">
+              <div className="est-formgrid__full">
+                <Field
+                  label="Name"
+                  name="name"
+                  required
+                  icon="building"
+                  placeholder="Acme Coffee Downtown"
+                />
+              </div>
 
-            <SelectField
-              label="Category"
-              name="category"
-              icon="tag"
-              placeholder="cafe / dental / salon / ..."
-              options={[
-                "Cafe",
-                "Restaurant",
-                "Retail",
-                "Dental",
-                "Salon",
-                "Fitness",
-                "Automotive",
-                "IT Services",
-                "Professional Services",
-                "Other",
-              ]}
-            />
+              <SelectField
+                label="Category"
+                name="category"
+                icon="tag"
+                placeholder="cafe / dental / salon / ..."
+                options={[
+                  "Cafe",
+                  "Restaurant",
+                  "Retail",
+                  "Dental",
+                  "Salon",
+                  "Fitness",
+                  "Automotive",
+                  "IT Services",
+                  "Professional Services",
+                  "Other",
+                ]}
+              />
 
-            <SelectField
-              label="Timezone"
-              name="timezone"
-              icon="clock"
-              defaultValue="UTC"
-              options={[
-                "UTC",
-                "America/New_York",
-                "America/Chicago",
-                "America/Denver",
-                "America/Los_Angeles",
-                "Europe/London",
-                "Europe/Paris",
-                "Asia/Karachi",
-                "Asia/Dubai",
-                "Asia/Singapore",
-                "Australia/Sydney",
-              ]}
-            />
+              <SelectField
+                label="Timezone"
+                name="timezone"
+                icon="clock"
+                defaultValue="UTC"
+                options={[
+                  "UTC",
+                  "America/New_York",
+                  "America/Chicago",
+                  "America/Denver",
+                  "America/Los_Angeles",
+                  "Europe/London",
+                  "Europe/Paris",
+                  "Asia/Karachi",
+                  "Asia/Dubai",
+                  "Asia/Singapore",
+                  "Australia/Sydney",
+                ]}
+              />
 
-            <div className="est-field">
-              <span className="est-field__lbl">
-                Address <span style={{ color: "var(--est-muted-2)", fontWeight: 400 }}>· Street</span>
-              </span>
-              <InputBase name="address_line1" icon="pin" placeholder="123 Main St" />
-            </div>
+              <div className="est-field est-formgrid__full">
+                <span className="est-field__lbl">
+                  Address{" "}
+                  <span style={{ color: "var(--est-muted-2)", fontWeight: 400 }}>· Street</span>
+                </span>
+                <InputBase name="address_line1" icon="pin" placeholder="123 Main St" />
+              </div>
 
-            <div className="est-grid2">
               <Field label="City" name="address_city" icon="building" />
               <Field label="Region / State" name="address_region" icon="globe" />
-            </div>
 
-            <div className="est-grid2">
               <Field label="Postal code" name="address_postal" icon="mail" />
               <SelectField
                 label="Country"
@@ -222,41 +199,6 @@ export default async function NewEstablishmentPage() {
               </Link>
             </div>
           </form>
-
-          {/* Right — promo panel. */}
-          <aside className="est-promo">
-            {/* biome-ignore lint/performance/noImgElement: static decorative kit SVG */}
-            <img
-              src="/assets/repulabs/establishments/wizard-hero.svg"
-              alt=""
-              aria-hidden="true"
-              className="est-promo__art"
-              width={480}
-              height={252}
-            />
-            <h2 className="est-promo__title">Let&apos;s grow your business</h2>
-            <p className="est-promo__sub">
-              Add your business to start collecting reviews, connect devices, and unlock powerful
-              insights.
-            </p>
-            <ul
-              className="est-features"
-              style={{ listStyle: "none", margin: 0, padding: 0 }}
-            >
-              {FEATURES.map((f) => (
-                <li key={f.title} className="est-feature">
-                  <span className={`est-feature__icon est-feature__icon--${f.tint}`} aria-hidden="true">
-                    {/* biome-ignore lint/performance/noImgElement: static kit SVG glyph */}
-                    <img src={f.icon} alt="" width={40} height={40} />
-                  </span>
-                  <div>
-                    <div className="est-feature__title">{f.title}</div>
-                    <div className="est-feature__desc">{f.desc}</div>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </aside>
         </div>
       </div>
     </AppShellServer>

@@ -66,3 +66,93 @@
     background: var(--glass-fill-solid);
   }
 }
+
+/* Hero row is now single-column (the stat cluster moved to the navbar strip). */
+.app--glass .dk-top {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Welcome hero: no card background/border (the `dk-card` class was dropped) and
+   no illustration — just the greeting text, centered. */
+.app--glass .dk-hero {
+  justify-content: center;
+  text-align: center;
+  flex: 0 0 auto;
+  padding: 60px 28px 64px;
+  margin: 16px 0 24px;
+}
+
+/* Train-your-agent block (70%) beside the Setup Progress card (30%). */
+.app--glass .dk-trainrow {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+  gap: 16px;
+  align-items: start;
+}
+.app--glass .dk-trainrow__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+/* 5 quick chips wrap within the narrower 50% column. */
+.app--glass .dk-trainrow__main .dk-quick {
+  flex-wrap: wrap;
+}
+.app--glass .dk-trainrow__main .dk-quick__chip {
+  flex: 1 1 30%;
+}
+/* Google Overview + Setup Progress moved out → the reviews row is now a single
+   full-width Recent Reviews card. */
+.app--glass .dk-cols {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (max-width: 860px) {
+  .app--glass .dk-trainrow {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Larger welcome hero text. */
+.app--glass .dk-hero__greet {
+  font-size: 16px;
+}
+.app--glass .dk-hero__title {
+  font-size: 40px;
+  line-height: 1.08;
+}
+.app--glass .dk-hero__sub {
+  font-size: 16px;
+}
+
+/* Key Insights as a 2×2 grid when placed in the left column. */
+.app--glass .dk-insights__grid--2col {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+/* Right 30% column: Setup Progress with the Train-your-agent banner below it. */
+.app--glass .dk-trainrow__side {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+/* The train banner is narrow here, so stack its parts vertically. */
+.app--glass .dk-trainrow__side .dk-train {
+  flex-direction: column;
+  align-items: flex-start;
+}
+.app--glass .dk-trainrow__side .dk-train__cta {
+  width: 100%;
+  justify-content: center;
+}
+
+/* Shorter Key Insights cards (the 2×2 grid in the left column). */
+.app--glass .dk-insights__grid--2col .dk-insight {
+  padding: 11px 16px;
+}
+.app--glass .dk-insights__grid--2col .dk-insight__icon {
+  width: 40px;
+  height: 40px;
+}

@@ -30,10 +30,6 @@ export async function TopBar({ title }: { title?: string } = {}) {
         </div>
       )}
 
-      <Link href="/docs" className="tb__iconbtn" aria-label="Documentation">
-        <Icon name="book" size={16} />
-      </Link>
-
       <div className="tb__iconbtn" aria-label="Notifications">
         <NotificationsBell />
       </div>

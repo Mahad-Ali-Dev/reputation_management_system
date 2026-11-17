@@ -1,7 +1,6 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { Icon } from "@/components/shell/icon";
 import { ScoreRing } from "@/components/shell/score-ring";
-import { Sparkline } from "@/components/shell/sparkline";
 import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
@@ -19,6 +18,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopilotChips, CopilotPrompt } from "./_components/copilot-panel";
 import { KbCrawlStrip } from "./_components/kb-crawl-strip";
+import { MetricStrip, type DashMetric } from "./_components/metric-strip";
 import "./dashboard-kit.css";
 import "./dashboard-glass.css";
 
@@ -155,13 +155,74 @@ export default async function DashboardPage({
     userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
   const isEmpty = total === 0 && !hasGoogle;
 
-  // Sparklines render only from REAL non-flat series (kit rule: a chip with no
-  // real series simply has no sparkline).
-  const series = (arr: number[]): number[] | undefined =>
-    arr.length >= 2 && arr.some((v) => v > 0) ? arr : undefined;
+  // Top-strip metrics (label · value · delta + hover trend popover). Values and
+  // series come straight from the dashboard query — see _components/metric-strip.
+  const ratingValue = d.avgRatingInRange ?? (d.avgRating || null);
+  const fiveStarPct =
+    total > 0 ? Math.round((fiveStarCount / total) * 100) : null;
+  const pctDelta = (
+    pct: number | null,
+  ): { text: string; dir: "up" | "down" | "flat" } =>
+    pct === null || pct === 0
+      ? { text: "0%", dir: "flat" }
+      : { text: `${pct > 0 ? "+" : ""}${pct}%`, dir: pct > 0 ? "up" : "down" };
+  const metrics: DashMetric[] = [
+    {
+      key: "rating",
+      label: "Average rating",
+      value:
+        ratingValue !== null && ratingValue > 0 ? ratingValue.toFixed(1) : "—",
+      delta:
+        d.deltas.ratingAbs !== null && d.deltas.ratingAbs !== 0
+          ? {
+              text: `${d.deltas.ratingAbs > 0 ? "+" : ""}${d.deltas.ratingAbs.toFixed(1)}`,
+              dir: d.deltas.ratingAbs > 0 ? "up" : "down",
+            }
+          : { text: "0", dir: "flat" },
+      series: d.ratingTrendPoints,
+      title: "Average rating over time",
+      desc: "Your star rating across every review, as it moved over the period.",
+      color: "#2563eb",
+    },
+    {
+      key: "total",
+      label: "Total reviews",
+      value: total.toLocaleString(),
+      delta: pctDelta(d.deltas.reviewsPct),
+      series: d.weeklyReviews,
+      title: "Total reviews over time",
+      desc: "How your review volume has moved over the last 12 weeks.",
+      color: "#16a34a",
+    },
+    {
+      key: "fivestar",
+      label: "5-star reviews",
+      value: fiveStarPct !== null ? `${fiveStarPct}%` : "—",
+      delta: pctDelta(d.deltas.fiveStarPct),
+      series: d.weeklyFiveStar,
+      title: "5-star reviews over time",
+      desc: "The share of your reviews rated five stars.",
+      color: "#f59e0b",
+    },
+    {
+      key: "recent",
+      label: "Recent reviews",
+      value: d.reviews7d.toLocaleString(),
+      delta: pctDelta(d.reviews7dDeltaPct),
+      series: d.weeklyReviews,
+      title: "Recent reviews over time",
+      desc: "New reviews received in the last 7 days.",
+      color: "#7c3aed",
+    },
+  ];
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Dashboard"]} variant="glass">
+    <AppShellServer
+      topBar={<TopBar />}
+      crumbs={["Dashboard"]}
+      variant="glass"
+      centerBar={<MetricStrip metrics={metrics} />}
+    >
       {/* Website crawls run as background jobs, so the owner can start one and
           close the modal. This is the only place they'd otherwise see it's
           still working. Renders nothing when there's nothing in flight. */}
@@ -179,11 +240,11 @@ export default async function DashboardPage({
 
       <div className="dk">
         {/* ============================================================
-            1 — Greeting hero + train-agent banner + quick chips | stat chips
+            1 — Greeting hero + train-agent banner + quick chips
             ============================================================ */}
         <div className="dk-top">
           <div className="dk-top__left">
-            <div className="dk-card dk-hero">
+            <div className="dk-hero">
               <div style={{ minWidth: 0 }}>
                 <p className="dk-hero__greet">
                   Good {dayPart()}, {firstName}! 👋
@@ -193,159 +254,104 @@ export default async function DashboardPage({
                   Track reviews, engage customers and grow your brand trust.
                 </p>
               </div>
-              {/* Kit hero illustration ("dashboard/dashboard.svg" — the colorful
-                  growth board). Same asset in BOTH states (the kit reuses it),
-                  extracted from the delivered kit SVG at full resolution and
-                  shown large per the brief. */}
-              <img
-                className="dk-hero__art"
-                src={`${ASSETS}/kit-hero-board.png`}
-                alt=""
-              />
             </div>
 
-            <div className="dk-card dk-train">
-              <img
-                className="dk-train__icon"
-                src={`${ASSETS}/kit-train-stack.png`}
-                alt=""
-              />
-              <div className="dk-train__body">
-                <h2 className="dk-train__title">Train your agent</h2>
-                <p className="dk-train__sub">
-                  Teach your AI agent about your business so it can give
-                  smarter, on-brand answers.
-                </p>
+            {/* Train-your-agent block (50%) beside the Setup Progress card (50%). */}
+            <div className="dk-trainrow">
+              <div className="dk-trainrow__main">
+                {/* Key Insights — 2×2 grid, in the left column */}
+                <div className="dk-insights">
+                  <div className="dk-insights__head">
+                    <h2 className="dk-insights__title">Key Insights</h2>
+                    <span className="dk-insights__range">All time · 7d trend</span>
+                  </div>
+                  <div className="dk-insights__grid dk-insights__grid--2col">
+                    <InsightCard
+                      label="Response Rate"
+                      art="kit-insight-response-rate.png"
+                      value={total > 0 ? `${responseRate}%` : null}
+                    />
+                    <InsightCard
+                      label="Avg. Response Time"
+                      art="kit-insight-response-time.png"
+                      value={
+                        d.avgResponseHours !== null
+                          ? fmtHours(d.avgResponseHours)
+                          : null
+                      }
+                    />
+                    <InsightCard
+                      label="Sentiment"
+                      art="kit-insight-sentiment.png"
+                      value={
+                        total > 0 ? sentimentLabel(d.sentiment).label : null
+                      }
+                      chip={
+                        total > 0
+                          ? {
+                              text: `${sentimentLabel(d.sentiment).pct}%`,
+                              dir: sentimentLabel(d.sentiment).dir,
+                              arrow: false,
+                            }
+                          : undefined
+                      }
+                    />
+                    <InsightCard
+                      label="Trend"
+                      art="kit-insight-trend.png"
+                      value={
+                        total > 0
+                          ? d.reviews7dDeltaPct !== null &&
+                            d.reviews7dDeltaPct > 0
+                            ? "Improving"
+                            : "Steady"
+                          : null
+                      }
+                      chip={
+                        total > 0 &&
+                        d.reviews7dDeltaPct !== null &&
+                        d.reviews7dDeltaPct !== 0
+                          ? {
+                              text: `${Math.abs(d.reviews7dDeltaPct)}%`,
+                              dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
+                            }
+                          : undefined
+                      }
+                    />
+                  </div>
+                </div>
+
+                <GoogleOverviewCard
+                  avg={avgRating}
+                  total={total}
+                  byRating={byRating}
+                  googlePlaceUrl={d.googlePlaceUrl}
+                />
               </div>
-              <Link href="/ai" className="dk-train__cta">
-                <Icon name="sparkle" size={14} /> Train your agent{" "}
-                <Icon name="arrowR" size={13} />
-              </Link>
-            </div>
 
-            <div className="dk-quick">
-              <QuickChip
-                icon="kit-chip-upload-faq.png"
-                title="Upload FAQs"
-                sub="Add common Q&A"
-                href="/ai?tab=info"
-              />
-              <QuickChip
-                icon="kit-chip-add-business.png"
-                title="Add business info"
-                sub="Services, hours, etc."
-                href="/ai"
-              />
-              <QuickChip
-                icon="kit-chip-train-reviews.png"
-                title="Train from reviews"
-                sub="Learn from feedback"
-                href="/ai?tab=test"
-              />
-              <QuickChip
-                icon="kit-chip-brand-voice.png"
-                title="Brand voices"
-                sub="Tone and style"
-                href="/ai?tab=behaviour"
-              />
-              <QuickChip
-                icon="kit-chip-knowledge.png"
-                title="Knowledge sources"
-                sub="Docs, URLs & more"
-                href="/ai?tab=knowledge"
-              />
-            </div>
-          </div>
+              <div className="dk-trainrow__side">
+                <SetupProgressCard setup={setup} isEmpty={isEmpty} />
 
-          <div className="dk-stats">
-            <StatChip
-              label="Average Rating"
-              icon="kit-stat-rating.png"
-              value={
-                d.avgRatingInRange !== null
-                  ? d.avgRatingInRange.toFixed(1)
-                  : null
-              }
-              star={d.avgRatingInRange !== null}
-              delta={
-                d.deltas.ratingAbs !== null && d.deltas.ratingAbs !== 0
-                  ? {
-                      text: Math.abs(d.deltas.ratingAbs).toFixed(1),
-                      dir: d.deltas.ratingAbs > 0 ? "up" : "down",
-                    }
-                  : null
-              }
-              spark={series(d.ratingTrendPoints) ?? null}
-              rangeDays={rangeDays}
-              sparkColor="#2563eb"
-              noneTitle="No ratings yet"
-              noneHint="Ratings will appear here"
-            />
-            <StatChip
-              label="Reviews"
-              icon="kit-stat-reviews.png"
-              value={
-                d.reviewsInRange > 0 ? d.reviewsInRange.toLocaleString() : null
-              }
-              delta={
-                d.deltas.reviewsPct !== null && d.deltas.reviewsPct !== 0
-                  ? {
-                      text: `${Math.abs(d.deltas.reviewsPct)}%`,
-                      dir: d.deltas.reviewsPct > 0 ? "up" : "down",
-                    }
-                  : null
-              }
-              spark={series(d.weeklyReviews) ?? null}
-              rangeDays={rangeDays}
-              sparkColor="#16a34a"
-              noneTitle="No reviews yet"
-              noneHint="Reviews will appear here"
-            />
-            <StatChip
-              label="AI Replies Sent"
-              icon="kit-stat-ai-replies.png"
-              value={
-                d.aiRepliesSent > 0 ? d.aiRepliesSent.toLocaleString() : null
-              }
-              delta={
-                d.deltas.aiRepliesPct !== null && d.deltas.aiRepliesPct !== 0
-                  ? {
-                      text: `${Math.abs(d.deltas.aiRepliesPct)}%`,
-                      dir: d.deltas.aiRepliesPct > 0 ? "up" : "down",
-                    }
-                  : null
-              }
-              spark={series(d.weeklyAiReplies) ?? null}
-              rangeDays={rangeDays}
-              sparkColor="#7c3aed"
-              noneTitle="No replies yet"
-              noneHint="Replies will appear here"
-              pending={
-                d.pendingReplyCount > 0 ? d.pendingReplyCount : undefined
-              }
-            />
-            <StatChip
-              label="5-star Reviews"
-              icon="kit-stat-five-star.png"
-              value={
-                d.fiveStarInRange > 0
-                  ? d.fiveStarInRange.toLocaleString()
-                  : null
-              }
-              delta={
-                d.deltas.fiveStarPct !== null && d.deltas.fiveStarPct !== 0
-                  ? {
-                      text: `${Math.abs(d.deltas.fiveStarPct)}%`,
-                      dir: d.deltas.fiveStarPct > 0 ? "up" : "down",
-                    }
-                  : null
-              }
-              spark={series(d.weeklyFiveStar) ?? null}
-              rangeDays={rangeDays}
-              sparkColor="#f59e0b"
-              noneTitle="No 5-star reviews yet"
-              noneHint="5-star reviews will appear here"
-            />
+                <div className="dk-card dk-train">
+                  <img
+                    className="dk-train__icon"
+                    src={`${ASSETS}/kit-train-stack.png`}
+                    alt=""
+                  />
+                  <div className="dk-train__body">
+                    <h2 className="dk-train__title">Train your agent</h2>
+                    <p className="dk-train__sub">
+                      Teach your AI agent about your business so it can give
+                      smarter, on-brand answers.
+                    </p>
+                  </div>
+                  <Link href="/ai" className="dk-train__cta">
+                    <Icon name="sparkle" size={14} /> Train your agent{" "}
+                    <Icon name="arrowR" size={13} />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -353,73 +359,43 @@ export default async function DashboardPage({
             2 — Google Reviews Overview · Recent Reviews · Setup Progress
             ============================================================ */}
 
-        <section aria-label="Key insights">
-          <div className="dk-insights__head">
-            <h2 className="dk-insights__title">Key Insights</h2>
-            <span className="dk-insights__range">All time · 7d trend</span>
-          </div>
-          <div className="dk-insights__grid">
-            <InsightCard
-              label="Response Rate"
-              art="kit-insight-response-rate.png"
-              value={total > 0 ? `${responseRate}%` : null}
+        <section aria-label="Quick training">
+          <div className="dk-quick">
+            <QuickChip
+              icon="kit-chip-upload-faq.png"
+              title="Upload FAQs"
+              sub="Add common Q&A"
+              href="/ai?tab=info"
             />
-            <InsightCard
-              label="Avg. Response Time"
-              art="kit-insight-response-time.png"
-              value={
-                d.avgResponseHours !== null
-                  ? fmtHours(d.avgResponseHours)
-                  : null
-              }
+            <QuickChip
+              icon="kit-chip-add-business.png"
+              title="Add business info"
+              sub="Services, hours, etc."
+              href="/ai"
             />
-            <InsightCard
-              label="Sentiment"
-              art="kit-insight-sentiment.png"
-              value={total > 0 ? sentimentLabel(d.sentiment).label : null}
-              chip={
-                total > 0
-                  ? {
-                      text: `${sentimentLabel(d.sentiment).pct}%`,
-                      dir: sentimentLabel(d.sentiment).dir,
-                      arrow: false,
-                    }
-                  : undefined
-              }
+            <QuickChip
+              icon="kit-chip-train-reviews.png"
+              title="Train from reviews"
+              sub="Learn from feedback"
+              href="/ai?tab=test"
             />
-            <InsightCard
-              label="Trend"
-              art="kit-insight-trend.png"
-              value={
-                total > 0
-                  ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
-                    ? "Improving"
-                    : "Steady"
-                  : null
-              }
-              chip={
-                total > 0 &&
-                d.reviews7dDeltaPct !== null &&
-                d.reviews7dDeltaPct !== 0
-                  ? {
-                      text: `${Math.abs(d.reviews7dDeltaPct)}%`,
-                      dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
-                    }
-                  : undefined
-              }
+            <QuickChip
+              icon="kit-chip-brand-voice.png"
+              title="Brand voices"
+              sub="Tone and style"
+              href="/ai?tab=behaviour"
+            />
+            <QuickChip
+              icon="kit-chip-knowledge.png"
+              title="Knowledge sources"
+              sub="Docs, URLs & more"
+              href="/ai?tab=knowledge"
             />
           </div>
         </section>
 
         <div className="dk-cols">
-          <GoogleOverviewCard
-            avg={avgRating}
-            total={total}
-            byRating={byRating}
-            googlePlaceUrl={d.googlePlaceUrl}
-          />
           <RecentReviewsCard reviews={d.liveReviews} />
-          <SetupProgressCard setup={setup} isEmpty={isEmpty} />
         </div>
 
         {/* ============================================================
@@ -548,102 +524,6 @@ function QuickChip({
         </span>
       </span>
     </Link>
-  );
-}
-
-// ============================================================
-// Stat chips (hero right cluster)
-// ============================================================
-
-function StatChip({
-  label,
-  icon,
-  value,
-  star = false,
-  delta,
-  spark,
-  sparkColor,
-  noneTitle,
-  noneHint,
-  pending,
-  rangeDays,
-}: {
-  label: string;
-  icon: string;
-  /** null → the kit's designed empty chip ("--", no fake values). */
-  value: string | null;
-  star?: boolean;
-  delta: { text: string; dir: "up" | "down" } | null;
-  /** Selected window, so the delta caption names the real comparison. */
-  rangeDays: number;
-  spark: number[] | null;
-  sparkColor: string;
-  noneTitle: string;
-  noneHint: string;
-  /** AI-drafted replies awaiting approval (preserved deep link → /reviews). */
-  pending?: number;
-}) {
-  if (value === null) {
-    return (
-      <div className="dk-card dk-stat dk-stat--empty">
-        <div className="dk-stat__head">
-          <img className="dk-stat__icon" src={`${ASSETS}/${icon}`} alt="" />
-          <span className="dk-stat__label">{label}</span>
-        </div>
-        <div className="dk-stat__value">--</div>
-        <div className="dk-stat__none">{noneTitle}</div>
-        <div className="dk-stat__hint">{noneHint}</div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="dk-card dk-stat">
-      {/* Kit anatomy: icon tile left, label stacked over value to its right. */}
-      <div className="dk-stat__head">
-        <img className="dk-stat__icon" src={`${ASSETS}/${icon}`} alt="" />
-        <span className="dk-stat__hcol">
-          <span className="dk-stat__label">{label}</span>
-          <span className="dk-stat__value">
-            {value}
-            {star && (
-              <span className="dk-star" aria-hidden>
-                <Icon name="star" size={15} style={{ fill: "currentColor" }} />
-              </span>
-            )}
-          </span>
-          {pending !== undefined && (
-            <Link
-              href="/reviews"
-              className="dk-stat__pending"
-              title={`${pending} AI replies awaiting approval`}
-            >
-              {pending} awaiting →
-            </Link>
-          )}
-        </span>
-      </div>
-      <div className="dk-stat__foot">
-        {delta ? (
-          <span className={`dk-delta dk-delta--${delta.dir}`}>
-            <Icon name={delta.dir === "up" ? "arrowU" : "arrowD"} size={11} />
-            {delta.text}{" "}
-            <span className="dk-delta__vs">vs prior {rangeDays} days</span>
-          </span>
-        ) : (
-          <span />
-        )}
-        {spark && (
-          <Sparkline
-            points={spark}
-            color={sparkColor}
-            width={112}
-            height={38}
-            area={false}
-          />
-        )}
-      </div>
-    </div>
   );
 }
 

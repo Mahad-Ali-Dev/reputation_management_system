@@ -116,32 +116,19 @@ export default async function EstablishmentsPage({
     the primary "Add New Business" action top-right. */
 function Hero() {
   return (
-    <>
-      <div className="est-toprow">
+    <header className="est-head">
+      <div className="est-head__text">
         <span className="est-hero__eyebrow">Businesses · Connected</span>
-        <Link href="/establishments/new" className="est-btn est-btn--pri">
-          <Icon name="plus" size={16} />
-          Add New Business
-        </Link>
+        <h1 className="est-hero__title">My Establishments</h1>
+        <p className="est-hero__sub">
+          Every business you manage, its live review metrics, and the devices linked to it.
+        </p>
       </div>
-      <div className="est-hero">
-        <div>
-          <h1 className="est-hero__title">My Establishments</h1>
-          <p className="est-hero__sub">
-            Every business you manage, its live review metrics, and the devices linked to it.
-          </p>
-        </div>
-        {/* biome-ignore lint/performance/noImgElement: static decorative kit SVG */}
-        <img
-          src="/assets/repulabs/establishments/hero.svg"
-          alt=""
-          aria-hidden="true"
-          className="est-hero__art"
-          width={640}
-          height={254}
-        />
-      </div>
-    </>
+      <Link href="/establishments/new" className="est-btn est-btn--pri">
+        <Icon name="plus" size={16} />
+        Add New Business
+      </Link>
+    </header>
   );
 }
 
