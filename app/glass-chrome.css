@@ -227,6 +227,41 @@
   margin-left: 0;
   justify-content: flex-end;
 }
+/* The workspace chip has to be allowed to SHRINK.
+   `.tb__left` is `flex: 1 1 0` and already sets min-width:0, but a flex item
+   only shrinks if its own descendants can: `.tb__wswrap` was `flex: 0 0 auto`
+   with no min-width, so at 1440px the chip stayed 192px wide inside a parent
+   squeezed to 48px and spilled 144px to the right — painting the business name
+   straight over the metric strip. `.tb__ws-name` already had overflow:hidden,
+   so truncation was the intent all along; it just could never happen.
+   Overflow here is VISIBLE, so the symptom is overlap rather than clipping. */
+.app--glass .tb__wswrap {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.app--glass .tb__ws {
+  min-width: 0;
+}
+.app--glass .tb__ws-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Below ~1140px the three sections stop fitting: workspace (192) + metrics
+   (443) + actions (190) = 824px in a topbar that has less than that, so the
+   workspace chip overlapped the metric strip rather than anything adapting.
+   The metric strip is the one part that's redundant — the same numbers are in
+   the Key Insights cards right below — so it's what gives way. The workspace
+   name and the actions both stay reachable. */
+@media (max-width: 1140px) {
+  .app--glass .tb__center {
+    display: none;
+  }
+  .app--glass .tb__left {
+    flex: 0 1 auto;
+  }
+}
 .dash-metrics {
   display: flex;
   align-items: center;
