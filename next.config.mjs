@@ -86,8 +86,11 @@ const nextConfig = {
             value: "max-age=63072000; includeSubDomains; preload",
           },
           {
+            // Kept identical to the middleware value (see middleware.ts) so the
+            // two can't disagree about what's allowed. Middleware overrides this
+            // on every route it matches; this covers the rest.
             key: "Permissions-Policy",
-            value: "geolocation=(), camera=(), microphone=(self), payment=(self)",
+            value: 'camera=(self), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")',
           },
           { key: "Cross-Origin-Opener-Policy", value: "same-origin" },
           { key: "Content-Security-Policy", value: csp },

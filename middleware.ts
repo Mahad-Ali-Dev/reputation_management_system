@@ -39,9 +39,19 @@ function applySecurityHeaders(res: NextResponse, pathname: string): NextResponse
   res.headers.set("X-Content-Type-Options", "nosniff");
   res.headers.set("X-Frame-Options", "DENY");
   res.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
+  // Permissions-Policy is a STRUCTURED header: origins are double-quoted
+  // ("https://x"), not CSP-style single-quoted ('https://x'). The single quotes
+  // here were a CSP habit, and they made the whole header fail to parse — so
+  // every restriction in it, camera and microphone included, was silently
+  // dropped by the browser.
+  //
+  // camera=(self) is deliberate, not a loosening: components/qr-scanner.tsx
+  // calls getUserMedia, and this matcher covers that route. The old value said
+  // camera=(), which would have blocked the scanner the moment the syntax was
+  // corrected — it only ever worked because the header was broken.
   res.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), payment=(self 'https://js.stripe.com')",
+    'camera=(self), microphone=(), geolocation=(), payment=(self "https://js.stripe.com")',
   );
 
   // Content-Security-Policy. We allow Stripe + Google avatars and explicitly
