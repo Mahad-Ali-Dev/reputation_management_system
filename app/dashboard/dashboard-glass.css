@@ -17,6 +17,8 @@
 .app--glass {
   position: relative;
   isolation: isolate;
+  /* Gap used to detach the floating sidebar + navbar from the screen edges. */
+  --glass-gap: 16px;
 }
 /* Beat the base `.app--canvas` warm wash AND the `.app--canvas:has(.dk)`
    near-white override with an equal-or-higher-specificity selector. */
@@ -170,5 +172,49 @@
   .app--glass .dk-card,
   .app--glass .dk-copilot {
     background: var(--glass-fill-solid);
+  }
+}
+
+/* ============================================================
+   Floating chrome — detached, rounded sidebar + navbar.
+   The base shell pins `.sb`/`.tb` edge-to-edge; here they become
+   free-floating glass panels with an equal gap on all sides. The
+   sticky `top` is bumped to the gap so the gap survives scrolling.
+   ============================================================ */
+
+/* Desktop: sidebar floats with an equal gap on all four sides. */
+@media (min-width: 1024px) {
+  .app--glass .app__sb-desktop .sb {
+    box-sizing: border-box;
+    margin: var(--glass-gap);
+    height: calc(100vh - (2 * var(--glass-gap)));
+    top: var(--glass-gap);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Navbar floats centered at 80% width, gap on all sides, rounded. */
+  .app--glass .tb {
+    width: 80%;
+    margin: var(--glass-gap) auto;
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    top: var(--glass-gap);
+    box-shadow: var(--glass-shadow);
+  }
+}
+
+/* Mobile: the desktop sidebar is a drawer here, so only the navbar
+   floats — kept near-full-width (80% is too cramped on a phone) but
+   still detached + rounded, consistent with the desktop look. */
+@media (max-width: 1023px) {
+  .app--glass .tb {
+    width: auto;
+    margin: var(--glass-gap);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    top: var(--glass-gap);
+    box-shadow: var(--glass-shadow);
   }
 }
