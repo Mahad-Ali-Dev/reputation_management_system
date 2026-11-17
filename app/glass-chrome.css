@@ -1,0 +1,165 @@
+/* ============================================================
+   glass-chrome.css — GLOBAL glassmorphism skin for the app shell
+   (sidebar + top bar + canvas). Loaded app-wide from app/layout.tsx so
+   the frosted floating sidebar + navbar are consistent across EVERY tab.
+
+   Scoped under `.app--glass`, which <AppShell> now sets on every page
+   (see components/app-shell.tsx). Page CONTENT is NOT restyled here — only
+   the chrome. The dashboard's own content skin lives in
+   app/dashboard/dashboard-glass.css.
+
+   Reuses the --glass-* tokens from globals.css (.glass-theme). Light mode:
+   production illustrations assume a light canvas (see dashboard notes).
+   ============================================================ */
+
+/* ---- aurora canvas ------------------------------------------------ */
+.app--glass {
+  position: relative;
+  isolation: isolate;
+  /* Gap used to detach the floating sidebar + navbar from the screen edges. */
+  --glass-gap: 16px;
+}
+/* Beat the base `.app--canvas` warm wash AND the dashboard's
+   `.app--canvas:has(.dk)` near-white override with equal-or-higher specificity. */
+.app--glass.app--canvas,
+.app--glass.app--canvas:has(.dk) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+  background-attachment: fixed;
+}
+/* Two soft aurora blobs on a fixed backdrop layer (below the frosted chrome,
+   which refracts them). Fixed → they never add a scrollbar. */
+.app--glass::before,
+.app--glass::after {
+  content: "";
+  position: fixed;
+  z-index: -1;
+  pointer-events: none;
+  border-radius: 999px;
+  filter: blur(80px);
+  opacity: var(--aurora-opacity);
+}
+.app--glass::before {
+  top: -14%;
+  left: -6%;
+  width: 46vw;
+  height: 46vw;
+  max-width: 680px;
+  max-height: 680px;
+  background: radial-gradient(circle at 30% 30%, var(--aurora-1), transparent 62%);
+}
+.app--glass::after {
+  right: -10%;
+  bottom: -16%;
+  width: 52vw;
+  height: 52vw;
+  max-width: 760px;
+  max-height: 760px;
+  background: radial-gradient(circle at 65% 65%, var(--aurora-2), transparent 60%),
+    radial-gradient(circle at 20% 80%, var(--aurora-3), transparent 55%);
+}
+
+/* ---- sidebar ----------------------------------------------------- */
+.app--glass .sb {
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  border-right: 1px solid var(--glass-border);
+}
+.app--glass .sb__search {
+  background: var(--glass-fill-subtle);
+  border-color: var(--glass-border);
+}
+.app--glass .sb__search:hover {
+  background: var(--glass-fill);
+  border-color: var(--glass-border);
+}
+.app--glass .sb__item:hover {
+  background: var(--glass-fill-subtle);
+}
+.app--glass .sb__item.is-active {
+  background: var(--glass-accent-soft);
+  color: var(--glass-accent);
+}
+.app--glass .sb__item.is-active svg {
+  color: var(--glass-accent);
+}
+.app--glass .sb__plan,
+.app--glass .sb__upsell {
+  background: var(--glass-fill-subtle);
+  border-color: var(--glass-border);
+}
+
+/* ---- top bar ----------------------------------------------------- */
+.app--glass .tb {
+  background: var(--glass-fill-strong);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur-strong)) saturate(var(--glass-saturate));
+  border-bottom: 1px solid var(--glass-border);
+}
+.app--glass .tb__search,
+.app--glass .tb__ws,
+.app--glass .tb__datebtn {
+  background: var(--glass-fill-subtle);
+  border-color: var(--glass-border);
+}
+.app--glass .tb__iconbtn:hover {
+  background: var(--glass-fill-subtle);
+}
+
+/* ---- reduced transparency / no backdrop-filter fallback ---------- */
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .app--glass .sb,
+  .app--glass .tb {
+    background: var(--glass-fill-solid);
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  .app--glass .sb,
+  .app--glass .tb {
+    background: var(--glass-fill-solid);
+  }
+}
+
+/* ============================================================
+   Floating chrome — detached, rounded sidebar + navbar.
+   The base shell pins `.sb`/`.tb` edge-to-edge; here they become
+   free-floating glass panels with a gap on all sides. The sticky `top`
+   is bumped to the gap so the gap survives scrolling.
+   ============================================================ */
+
+/* Desktop: sidebar floats with an equal gap on all four sides. */
+@media (min-width: 1024px) {
+  .app--glass .app__sb-desktop .sb {
+    box-sizing: border-box;
+    margin: var(--glass-gap);
+    height: calc(100vh - (2 * var(--glass-gap)));
+    top: var(--glass-gap);
+    border: 1px solid var(--glass-border);
+    border-radius: 22px;
+    box-shadow: var(--glass-shadow);
+  }
+
+  /* Navbar floats centered at 80% width, gap on all sides, rounded. */
+  .app--glass .tb {
+    width: 80%;
+    margin: var(--glass-gap) auto;
+    border: 1px solid var(--glass-border);
+    border-radius: 18px;
+    top: var(--glass-gap);
+    box-shadow: var(--glass-shadow);
+  }
+}
+
+/* Mobile: the desktop sidebar is a drawer here, so only the navbar floats —
+   near-full-width (80% is cramped on a phone) but still detached + rounded. */
+@media (max-width: 1023px) {
+  .app--glass .tb {
+    width: auto;
+    margin: var(--glass-gap);
+    border: 1px solid var(--glass-border);
+    border-radius: 16px;
+    top: var(--glass-gap);
+    box-shadow: var(--glass-shadow);
+  }
+}

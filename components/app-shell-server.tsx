@@ -28,9 +28,9 @@ export async function AppShellServer({
   children: React.ReactNode;
   topBar?: React.ReactNode;
   crumbs?: string[];
-  /** Opt-in visual skin passed through to <AppShell>. "glass" scopes the
-   *  glassmorphism look to this page only (see app-shell.tsx). */
-  variant?: "glass";
+  /** Visual skin passed through to <AppShell>. Glass is the default app-wide;
+   *  pass "plain" to opt a page back out to the legacy chrome (see app-shell.tsx). */
+  variant?: "glass" | "plain";
 }) {
   const { org, orgId, userId, allowedTabs } = await getOrgContext();
 

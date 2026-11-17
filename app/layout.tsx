@@ -3,6 +3,7 @@ import { Geist_Mono, Inter } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 import "./design-system.css";
+import "./glass-chrome.css";
 
 /**
  * Viewport meta — critical for mobile. Without this, mobile browsers render

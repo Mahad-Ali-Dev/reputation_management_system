@@ -47,12 +47,12 @@ export function AppShell({
   workspaces?: Workspace[];
   allowedTabs?: string[];
   /**
-   * Opt-in visual skin. "glass" adds the `app--glass glass-theme` scope +
-   * `data-glass-mode`, so a page (currently just /dashboard) can render the
-   * glassmorphism look WITHOUT changing this shell for every other page. The
-   * actual glass styling lives in the page's own CSS, scoped under `.app--glass`.
+   * Visual skin for the shell. Glass is the DEFAULT across the whole app — the
+   * root gets `app--glass glass-theme` + `data-glass-mode`, and the global
+   * chrome skin in app/glass-chrome.css renders the frosted floating sidebar +
+   * navbar on every tab. Pass "plain" to opt a page back out to the legacy chrome.
    */
-  variant?: "glass";
+  variant?: "glass" | "plain";
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -71,7 +71,7 @@ export function AppShell({
     return () => window.removeEventListener("keydown", handler);
   }, [drawerOpen]);
 
-  const isGlass = variant === "glass";
+  const isGlass = variant !== "plain";
 
   return (
     <div
