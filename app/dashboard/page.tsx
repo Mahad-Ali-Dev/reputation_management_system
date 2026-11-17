@@ -486,8 +486,8 @@ export default async function DashboardPage({
               it into the lavender panel on every edge (no crop/feather hacks). */}
           <div className="dk-copilot__bot" aria-hidden>
             <img
-              className="dk-copilot__art dk-copilot__art--3d"
-              src={`${ASSETS}/kit-copilot-robot.png`}
+              className="dk-copilot__art"
+              src={`${ASSETS}/copilot-bot.png`}
               alt=""
             />
           </div>

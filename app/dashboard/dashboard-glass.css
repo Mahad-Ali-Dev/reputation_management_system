@@ -156,3 +156,12 @@
   width: 40px;
   height: 40px;
 }
+
+/* New copilot bot (transparent PNG) — a little smaller, normal blend (no multiply). */
+.app--glass .dk-copilot__art {
+  mix-blend-mode: normal;
+}
+.app--glass .dk-copilot__bot {
+  width: 268px;
+  height: 179px;
+}
