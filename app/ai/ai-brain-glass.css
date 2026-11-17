@@ -36,3 +36,60 @@
   background: transparent;
   box-shadow: none;
 }
+
+/* Clean Knowledge hero — eyebrow + title + copy on the left, "How it works"
+   CTA on the right (the big brain illustration was removed). */
+.app--glass .akb-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+}
+
+/* Widget tab + KB forms: transparent key-row divs, frosted inputs/selects/textareas. */
+.app--glass .aikb-key {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+.app--glass .aikb-input,
+.app--glass .aikb-select,
+.app--glass .aikb-textarea {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .aikb-input:focus,
+.app--glass .aikb-input:focus-visible,
+.app--glass .aikb-select:focus,
+.app--glass .aikb-textarea:focus {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--pri));
+}
+
+/* Behaviour + Test tabs: frosted select/chips, transparent suggested-question box.
+   (The purple callout/insights panels are intentional accents, left as-is.) */
+.app--glass .akb-select {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .akb-select:focus,
+.app--glass .akb-select:focus-visible {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--pri));
+}
+.app--glass .akb-sq {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+.app--glass .akb-day,
+.app--glass .akb-time,
+.app--glass .akb-topic {
+  background: var(--glass-fill-subtle);
+  border-color: var(--glass-border);
+}

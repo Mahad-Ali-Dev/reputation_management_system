@@ -8,10 +8,11 @@ import { NotificationsBell } from "./notifications-bell";
 /**
  * Right side of the AppShell topbar — repulabs v3.
  *
- * Docs · notifications · user identity (avatar + name + role) · sign-out.
- * `title` kept optional for backward-compat with older callers.
+ * Notifications · user identity (avatar + name + role) · sign-out.
+ * `title` is accepted for backward-compat with older callers but no longer
+ * rendered (the breadcrumb looked out of place in the redesigned navbar).
  */
-export async function TopBar({ title }: { title?: string } = {}) {
+export async function TopBar(_props: { title?: string } = {}) {
   const sessionOrg = await resolveSessionOrg();
   const name = sessionOrg?.name ?? sessionOrg?.email?.split("@")[0] ?? "Account";
   // Role for the user's ACTIVE org (see lib/auth/active-org.ts) — not
@@ -21,15 +22,6 @@ export async function TopBar({ title }: { title?: string } = {}) {
 
   return (
     <>
-      {title && (
-        <div className="row" style={{ gap: 6, fontSize: 13, fontWeight: 500 }}>
-          <span className="dim" style={{ fontSize: 11 }}>
-            ›
-          </span>
-          {title}
-        </div>
-      )}
-
       <div className="tb__iconbtn" aria-label="Notifications">
         <NotificationsBell />
       </div>

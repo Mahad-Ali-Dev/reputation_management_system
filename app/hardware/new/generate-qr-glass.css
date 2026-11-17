@@ -1,0 +1,29 @@
+/* ============================================================
+   generate-qr-glass.css — glass skin for /hardware/new (Generate QR).
+   Chrome is global (app/glass-chrome.css). Scoped to `.app--glass .gq`
+   (the page wrapper) so shared `.ds-card` on other pages stay untouched.
+   Imported by this page's page.tsx after generate-qr.css.
+   ============================================================ */
+
+/* Transparent cards — aurora shows through; hairline border, no shadow. */
+.app--glass .gq .gq-card,
+.app--glass .gq .ds-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+
+/* Inputs + selects → frosted glass instead of solid white. */
+.app--glass .gq .gq-input,
+.app--glass .gq .gq-select {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .gq .gq-input:focus,
+.app--glass .gq .gq-input:focus-visible,
+.app--glass .gq .gq-select:focus {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--gq-purple));
+}

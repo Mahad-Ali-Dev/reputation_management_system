@@ -222,27 +222,25 @@ export default async function QrCodesPage({
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager"]}>
       <div className="md">
-        {/* Hero + top-right actions */}
-        <div
-          className="row"
-          style={{ justifyContent: "flex-end", gap: 8, marginBottom: 4, flexWrap: "wrap" }}
-        >
-          <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
-            <Icon name="ext" size={12} />
-            Buy stands
-          </a>
-          <Link href="/hardware/new" className="btn">
-            <Icon name="qr" size={12} />
-            Generate QR
-          </Link>
-          <ConnectDeviceModal
-            establishments={businessOptions}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
+        {/* Header — hero title on the left, primary actions on the right. */}
+        <div className="md-head">
+          <MdHero />
+          <div className="md-head__actions">
+            <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
+              <Icon name="ext" size={12} />
+              Buy stands
+            </a>
+            <Link href="/hardware/new" className="btn">
+              <Icon name="qr" size={12} />
+              Generate QR
+            </Link>
+            <ConnectDeviceModal
+              establishments={businessOptions}
+              detectedQrUrl={detectedQrUrl}
+              detectedSerial={detectedSerial}
+            />
+          </div>
         </div>
-
-        <MdHero />
 
         {/* searchParams banners (preserved) */}
         {sp.activated && (

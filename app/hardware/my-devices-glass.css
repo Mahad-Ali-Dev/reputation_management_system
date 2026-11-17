@@ -25,3 +25,22 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Clean header — hero title left, primary actions right (big illustration removed). */
+.app--glass .md-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 24px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+.app--glass .md-head__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.app--glass .md-head .md-hero,
+.app--glass .md-hero {
+  display: block;
+}

@@ -251,7 +251,7 @@ export default async function AiSettingsPage({
 
   return (
     <AppShellServer
-      topBar={<TopBar title="AI Brain" />}
+      topBar={<TopBar />}
       crumbs={["AI Tools", "AI Brain"]}
     >
       <div className="akb">
@@ -270,9 +270,6 @@ export default async function AiSettingsPage({
                 reviews, DMs, surveys and phone calls and learns from every question it can&apos;t
                 answer.
               </p>
-            </div>
-            <div className="akb-hero__art" aria-hidden="true">
-              <img src="/assets/repulabs/ai-kb/hero-brain.svg" alt="" />
             </div>
             <Link href="/docs/ai-training" className="akb-btn-outline akb-hero__cta">
               <Icon name="play" size={15} />

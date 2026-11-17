@@ -10,6 +10,7 @@ import { upgradeHref } from "@/lib/billing/upgrade-href";
 import Link from "next/link";
 import { LabelField } from "./_components/label-field";
 import "./generate-qr.css";
+import "./generate-qr-glass.css";
 
 /**
  * Self-service QR creation — free-tier core flow, restyled to the "Generate QR"
