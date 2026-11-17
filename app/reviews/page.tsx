@@ -25,6 +25,7 @@ import { ConnectGoogleEmpty } from "./_components/connect-google-empty";
 import { PlatformDeepLink } from "./_components/platform-deep-link";
 import { ReplyDraftBox } from "./_components/reply-draft-box";
 import "./review-feed.css";
+import "./review-feed-glass.css";
 
 /**
  * Review Inbox — repulabs v3, two-pane relayout (Module 06).

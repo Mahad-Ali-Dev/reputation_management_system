@@ -1,0 +1,22 @@
+/* ============================================================
+   disputes-glass.css — LIGHT glass skin for /reviews/dispute (Dispute Manager).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after disputes.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (disputes.css pins a flat wash). */
+.app--glass.app--canvas:has(.dc) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+
+/* Every dispute content surface (cards, KPIs, pipeline rows, stepper, benefit
+   + method cards) fills from `--dc-surface`; redefining it transparent + killing
+   the card shadows turns them all to glass in one place, while each keeps its own
+   `--dc-line` hairline border. Inputs use literal `#fff`, so they stay solid. */
+.app--glass .dc {
+  background: transparent;
+  --dc-surface: transparent;
+  --dc-shadow-card: none;
+  --dc-shadow-soft: none;
+}

@@ -26,6 +26,7 @@ import { ResponsesCharts } from "./responses-charts";
 import { ResponsesTable } from "./responses-table";
 import { StatCards } from "./stat-cards";
 import "../surveys-kit.css";
+import "../surveys-glass.css";
 
 const KIT = "/assets/repulabs/customer-surveys";
 

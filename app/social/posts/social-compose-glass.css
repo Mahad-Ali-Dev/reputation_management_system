@@ -1,0 +1,25 @@
+/* ============================================================
+   social-compose-glass.css — LIGHT glass skin for /social/posts (Social Studio).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after social-compose.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (social-compose.css pins a flat wash). */
+.app--glass.app--canvas:has(.sk-page) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .sk-page {
+  background: transparent;
+}
+
+/* Transparent cards — main surfaces. Targeted by class (not the `--sk-surface`
+   token, which textareas/chips/buttons also use) so controls stay filled. */
+.app--glass .sk-card,
+.app--glass .sk-kpi,
+.app--glass .sk-cal-card,
+.app--glass .sk-weekcard {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

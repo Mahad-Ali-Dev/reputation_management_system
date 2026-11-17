@@ -19,6 +19,7 @@ import {
 import { markDisputeFiled } from "@/lib/reviews/dispute-actions";
 import { ReviewSnippet } from "./_components/review-snippet";
 import "./disputes.css";
+import "./disputes-glass.css";
 
 export const dynamic = "force-dynamic";
 

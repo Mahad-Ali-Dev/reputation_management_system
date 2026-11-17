@@ -1,0 +1,22 @@
+/* ============================================================
+   contacts-glass.css — LIGHT glass skin for /contacts (Customer Directory).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after contacts.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (contacts.css pins a flat wash). */
+.app--glass.app--canvas:has(.cd-page) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .cd-page {
+  background: transparent;
+}
+
+/* Transparent cards — aurora shows through; hairline border, no shadow. */
+.app--glass .cd-card,
+.app--glass .cd-seg-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

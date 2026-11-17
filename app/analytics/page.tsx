@@ -11,6 +11,7 @@ import {
 import { parseReportRange } from "@/lib/reports/range";
 
 import "./business-report.css";
+import "./business-report-glass.css";
 import { AreaTrend, DayBars, Donut, Sparkline, StackedBar } from "./_components/charts";
 import { ExportPdfButton } from "./_components/export-pdf-button";
 import { ReportRangePicker } from "./_components/report-range-picker";

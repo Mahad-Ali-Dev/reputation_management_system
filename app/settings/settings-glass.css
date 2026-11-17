@@ -1,0 +1,24 @@
+/* ============================================================
+   settings-glass.css — LIGHT glass skin for /settings (General Settings) and
+   its sub-routes. Chrome is global (app/glass-chrome.css). Scoped under
+   `.app--glass`, imported from app/settings/layout.tsx (wraps all settings tabs).
+   ============================================================ */
+
+/* Aurora canvas through the content area (settings-kit.css pins a flat wash on
+   the `.set-shell` layout wrapper). */
+.app--glass.app--canvas:has(.set-shell) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .set-shell,
+.app--glass .set-hub {
+  background: transparent;
+}
+
+/* Transparent cards — only the PLAIN cards. The semantic colored variants
+   (accent / green / danger) keep their tints so warnings etc. stay meaningful. */
+.app--glass .set-card:not(.set-card--accent):not(.set-card--green):not(.set-card--danger) {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

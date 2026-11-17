@@ -1,0 +1,25 @@
+/* ============================================================
+   establishments-glass.css — LIGHT glass skin for /establishments CONTENT.
+
+   Shell chrome (sidebar/navbar/aurora) is global (app/glass-chrome.css); this
+   only restyles the My Businesses page surfaces to the transparent-card glass
+   look, scoped under `.app--glass`. Imported after establishments.css.
+   ============================================================ */
+
+/* Let the global aurora show through — establishments.css pins a flat #f7f8fc
+   wash via `:has(.est)`; override it (higher specificity) + clear the wrapper. */
+.app--glass.app--canvas:has(.est) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .est {
+  background: transparent;
+}
+
+/* Transparent cards — aurora shows through; hairline border, no shadow. */
+.app--glass .est-card,
+.app--glass .est-scard {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

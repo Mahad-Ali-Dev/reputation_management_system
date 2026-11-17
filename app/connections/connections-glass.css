@@ -1,0 +1,22 @@
+/* ============================================================
+   connections-glass.css — LIGHT glass skin for /connections (App Connections).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after connections-kit.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (connections-kit.css pins a flat wash). */
+.app--glass.app--canvas:has(.conn-page) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .conn-page {
+  background: transparent;
+}
+
+/* Transparent cards — aurora shows through; hairline border, no shadow. Buttons,
+   search, logos and tiles keep their own fills. */
+.app--glass .conn-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

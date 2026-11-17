@@ -1,0 +1,17 @@
+/* ============================================================
+   business-report-glass.css — LIGHT glass skin for /analytics (Analytics).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after business-report.css. (This page does not pin a flat canvas,
+   so the global aurora already shows; we just transparent-ize the cards.)
+   ============================================================ */
+
+.app--glass .brp {
+  background: transparent;
+}
+
+/* Transparent report cards — aurora shows through; hairline border, no shadow. */
+.app--glass .brp-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

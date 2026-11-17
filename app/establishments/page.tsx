@@ -15,6 +15,7 @@ import { DevicesStrip } from "./_components/devices-strip";
 import { SummaryCards, type SummaryCard } from "./_components/summary-cards";
 import { SummaryCounters } from "./_components/summary-counters";
 import "./establishments.css";
+import "./establishments-glass.css";
 
 /**
  * My Establishments — rebuilt to the delivered design kit (modules 12 & 13).

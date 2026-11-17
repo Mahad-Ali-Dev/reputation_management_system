@@ -1,0 +1,21 @@
+/* ============================================================
+   subscription-bill-glass.css — LIGHT glass skin for /subscription (Plan & Billing).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after subscription-bill.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (subscription-bill.css pins a flat wash). */
+.app--glass.app--canvas:has(.bill) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .bill {
+  background: transparent;
+}
+
+/* Transparent plan cards — clear the fill + shadow but KEEP each card's own
+   border so the per-tier accents (Pro highlight etc.) stay visible. */
+.app--glass .bill-card {
+  background: transparent;
+  box-shadow: none;
+}

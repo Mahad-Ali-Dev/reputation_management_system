@@ -1,0 +1,22 @@
+/* ============================================================
+   outreach-glass.css — LIGHT glass skin for /outreach (Review Outreach) CONTENT.
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after outreach.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (outreach.css pins a flat white wash). */
+.app--glass.app--canvas:has(.rr) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .rr {
+  background: transparent;
+}
+
+/* Transparent cards — `.rr-card` is the main surface. Targeted by class (not the
+   `--rr-surface` token, which pills/buttons also use) so controls stay filled. */
+.app--glass .rr-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

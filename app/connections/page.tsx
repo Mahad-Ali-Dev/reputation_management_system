@@ -20,6 +20,7 @@ import { ConnectionsBrowser } from "./_components/connections-browser";
 import { CsvImportPanel } from "./_components/csv-import-panel";
 import { SuggestedBand, type SuggestedCard } from "./_components/suggested-band";
 import "./connections-kit.css";
+import "./connections-glass.css";
 import {
   type SerializedConnection,
   type SerializedProviderRow,

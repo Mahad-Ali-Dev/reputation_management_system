@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import "../support-kit.css";
+import "../support-glass.css";
 import { withTenant } from "@/lib/db/with-tenant";
 import { isOrgEntitled } from "@/lib/billing/entitlements";
 import { ProGate } from "@/components/pro-gate";

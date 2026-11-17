@@ -1,0 +1,25 @@
+/* ============================================================
+   review-feed-glass.css — LIGHT glass skin for /reviews (Review Inbox) CONTENT.
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported after review-feed.css.
+   ============================================================ */
+
+/* Aurora canvas through the content area (review-feed.css pins a flat wash). */
+.app--glass.app--canvas:has(.rf) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .rf,
+.app--glass .rev-inbox {
+  background: transparent;
+}
+
+/* Transparent cards. `.rf-card` is the empty/marketing state; the live inbox
+   uses the shared `.ds-card` — scope that to `.rev-inbox` ONLY so every other
+   page's `.ds-card` is left alone. Hairline border, no shadow. */
+.app--glass .rf-card,
+.app--glass .rev-inbox .ds-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

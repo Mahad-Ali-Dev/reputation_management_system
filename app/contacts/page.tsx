@@ -15,6 +15,7 @@ import { ImportExportPanel } from "./_components/import-export-panel";
 import { ProfileDrawer, ProfileDrawerPlaceholder } from "./_components/profile-drawer";
 import { StatCards } from "./_components/stat-cards";
 import "./contacts.css";
+import "./contacts-glass.css";
 
 /**
  * Contact Directory — the CRM workspace (Module 12), re-skinned to the delivered

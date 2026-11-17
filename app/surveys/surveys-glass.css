@@ -1,0 +1,24 @@
+/* ============================================================
+   surveys-glass.css — LIGHT glass skin for /surveys (Customer Feedback).
+   Chrome is global (app/glass-chrome.css). Scoped under `.app--glass`,
+   imported from app/surveys/page.tsx.
+   ============================================================ */
+
+/* Aurora canvas through the content area (surveys-kit.css pins a flat wash). */
+.app--glass.app--canvas:has(.surv) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .surv {
+  background: transparent;
+}
+
+/* Transparent cards — the survey UI uses `.ds-card` (scoped to `.surv`) plus
+   `.surv-chart-card`. Targeted by class, not the `--surv-surface` token which
+   inputs/chips/tabs also use. */
+.app--glass .surv .ds-card,
+.app--glass .surv-chart-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

@@ -1,0 +1,27 @@
+/* ============================================================
+   my-devices-glass.css — LIGHT glass skin for /hardware (Device Manager).
+
+   Shell chrome (sidebar/navbar/aurora) is global (app/glass-chrome.css); this
+   only restyles the Device Manager page surfaces to the transparent-card glass
+   look, scoped under `.app--glass`. Imported after my-devices.css.
+   ============================================================ */
+
+/* Let the global aurora show through — my-devices.css pins a flat #f7fafc wash
+   via `:has(.md)`; override it (higher specificity) + clear the wrapper. */
+.app--glass.app--canvas:has(.md) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .md {
+  background: transparent;
+}
+
+/* Transparent cards — aurora shows through; hairline border, no shadow. The
+   device table is a `.md-card`, so it is covered too. Inner surfaces that must
+   stay opaque (e.g. `.md-qr__frame`, which needs white for QR contrast) keep
+   their own backgrounds. */
+.app--glass .md-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

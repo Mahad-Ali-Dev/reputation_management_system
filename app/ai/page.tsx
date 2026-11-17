@@ -22,6 +22,7 @@ import { TestConsole } from "./_components/test-console";
 import { readiness, relativeTime } from "./training/_components/shared-utils";
 import "./aikb.css";
 import "./ai-kb.css";
+import "./ai-brain-glass.css";
 
 export const dynamic = "force-dynamic";
 

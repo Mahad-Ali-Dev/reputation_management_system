@@ -74,7 +74,8 @@ const NAV: NavItem[] = [
 
   { group: "AI Tools" },
   { href: "/ai", label: "AI Brain", icon: "brain", tab: "ai" },
-  { href: "/phone", label: "AI Receptionist", icon: "phone", badge: "Soon", tab: "phone" },
+  // Hidden per request — AI Receptionist. Restore this line to show it again.
+  // { href: "/phone", label: "AI Receptionist", icon: "phone", badge: "Soon", tab: "phone" },
 
   { group: "Reputation" },
   { href: "/reviews", label: "Review Inbox", icon: "star", tab: "reviews" },
@@ -82,7 +83,8 @@ const NAV: NavItem[] = [
   { href: "/reviews/dispute", label: "Dispute Manager", icon: "flag", tab: "dispute" },
 
   { group: "Inbox & Social" },
-  { href: "/support", label: "Message Center", icon: "chat", badge: "Soon", tab: "support" },
+  // Hidden per request — Message Center. Restore this line to show it again.
+  // { href: "/support", label: "Message Center", icon: "chat", badge: "Soon", tab: "support" },
   {
     href: "/support?tab=meetings",
     label: "Booking Requests",

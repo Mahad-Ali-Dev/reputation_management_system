@@ -11,6 +11,7 @@ import { withTenant } from "@/lib/db/with-tenant";
 import { logger } from "@/lib/logger";
 import { redirect } from "next/navigation";
 import "./subscription-bill.css";
+import "./subscription-bill-glass.css";
 
 /**
  * Account & Billing → "Plans & billing" — repulabs design-kit surface.

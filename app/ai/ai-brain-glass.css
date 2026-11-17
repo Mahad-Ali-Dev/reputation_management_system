@@ -1,0 +1,38 @@
+/* ============================================================
+   ai-brain-glass.css — LIGHT glass skin for /ai (AI Brain) CONTENT.
+
+   The shell chrome (sidebar + top bar + aurora canvas) is GLOBAL
+   (app/glass-chrome.css). This file only restyles the AI Brain page's own
+   content surfaces to the transparent-card glass look, scoped under
+   `.app--glass`, imported by app/ai/page.tsx after ai-kb.css.
+
+   Deliberately left solid for legibility: modals (`.akb-rules-modal`,
+   `.akb-teach-modal`), inputs/selects/textareas, toggles, and KB doc rows.
+   ============================================================ */
+
+/* Let the global aurora show through — ai-kb.css pins a flat #fbfcff wash via
+   `:has(.akb)`; override it (higher specificity) + clear the wrapper. */
+.app--glass.app--canvas:has(.akb) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .akb {
+  background: transparent;
+}
+
+/* Transparent content cards — aurora shows through; hairline border, no shadow. */
+.app--glass .akb-card,
+.app--glass .akb-beh-card,
+.app--glass .akb-source,
+.app--glass .akb-source--grid {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+
+/* Summary strip + empty states: clear the white fill (keep their own borders). */
+.app--glass .akb-summary-strip,
+.app--glass .akb-empty {
+  background: transparent;
+  box-shadow: none;
+}

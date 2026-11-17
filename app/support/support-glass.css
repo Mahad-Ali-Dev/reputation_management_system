@@ -1,0 +1,25 @@
+/* ============================================================
+   support-glass.css — LIGHT glass skin for /support (Unified Inbox +
+   Booking Requests ops view) CONTENT. Chrome is global (app/glass-chrome.css).
+   Scoped under `.app--glass`, loaded via _components/inbox-shell.tsx.
+   ============================================================ */
+
+/* Aurora canvas through the content area (support-kit.css pins a flat wash). */
+.app--glass.app--canvas:has(.uinbox) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .uinbox {
+  background: transparent;
+}
+
+/* Transparent cards — inbox (`.uik-*`) + ops/meetings panels (`.sops-*`). */
+.app--glass .uik-card,
+.app--glass .uik-ai__card,
+.app--glass .uik-steps-card,
+.app--glass .sops-card,
+.app--glass .sops-mcard {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

@@ -1,6 +1,7 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { TopBar } from "@/components/topbar";
 import "./settings-kit.css";
+import "./settings-glass.css";
 
 /**
  * Settings shell — repulabs design-kit surface (designs/settings/**).

@@ -1,0 +1,33 @@
+/* ============================================================
+   autopilot-glass.css — LIGHT glass skin for the /autopilot CONTENT.
+
+   The shell chrome (sidebar + top bar + aurora canvas) is GLOBAL
+   (app/glass-chrome.css). This file only restyles the autopilot page's own
+   surfaces to match the dashboard's transparent-card glass look, scoped under
+   `.app--glass`, and is imported by app/autopilot/page.tsx after autopilot.css.
+   ============================================================ */
+
+/* Let the global aurora canvas show through the content area. autopilot.css
+   neutralizes the app canvas to a flat #f8faff wash via `:has(.ap2-page)`;
+   override it (higher specificity) back to the glass aurora, and clear the
+   page's own solid wash so the canvas is visible behind the cards. */
+.app--glass.app--canvas:has(.ap2-page) {
+  background-color: var(--glass-canvas-base);
+  background-image: var(--glass-canvas-gradient);
+}
+.app--glass .ap2-page {
+  background: transparent;
+}
+
+/* Transparent cards — the aurora shows straight through (matches the
+   dashboard). No fill, no shadow; a hairline border keeps each surface
+   readable as its own container. Covers the shared `.ap2-card` plus the three
+   tab-panel cards (activity / controls / ROI). */
+.app--glass .ap2-card,
+.app--glass .apa-card,
+.app--glass .apc-card,
+.app--glass .apr-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

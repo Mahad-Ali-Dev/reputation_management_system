@@ -11,6 +11,7 @@ import { OverviewTab } from "./_components/overview-tab";
 import { SendTab } from "./_components/send-tab";
 import { TemplatesTab } from "./_components/templates-tab";
 import "./outreach.css";
+import "./outreach-glass.css";
 
 /**
  * Review Requests hub — one route, 5 tabs (verifier fix #3: TabBar primitive),

@@ -13,6 +13,7 @@ import {
 import { orgHasFeature } from "@/lib/billing/feature-access";
 import { withTenant } from "@/lib/db/with-tenant";
 import "./autopilot.css";
+import "./autopilot-glass.css";
 import { buildRoiFunnel } from "@/lib/roi/attribution";
 import { estimateRevenue } from "@/lib/roi/estimate";
 import { getRoiHeadline, loadRoiSettings } from "@/lib/roi/summary";

@@ -38,6 +38,7 @@ import { QrActions } from "./_components/qr-actions";
 import { TrashDeviceCard } from "./_components/trash-device-card";
 import "./devices.css";
 import "./my-devices.css";
+import "./my-devices-glass.css";
 
 /** Product kinds that are programmed as NFC chips rather than printed QR. */
 const NFC_KINDS = new Set(["nfc", "wifi", "multi_platform"]);
