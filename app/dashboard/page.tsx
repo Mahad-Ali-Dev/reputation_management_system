@@ -1,5 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { Icon } from "@/components/shell/icon";
+import { Icon, type IconName } from "@/components/shell/icon";
 import { ScoreRing } from "@/components/shell/score-ring";
 import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
@@ -14,6 +14,7 @@ import { normalizeRangeDays } from "@/lib/date-range";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { getOnboardingFacts } from "@/lib/onboarding/facts";
+import { Smile } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CopilotChips, CopilotPrompt } from "./_components/copilot-panel";
@@ -151,8 +152,14 @@ export default async function DashboardPage({
     total > 0 ? Math.min(100, Math.round((d.repliedCount / total) * 100)) : 0;
   const hasGoogle = d.hasGoogle;
 
+  // Skip honorifics: "Dr. Sarah Chen" was greeted as "Dr.!".
   const firstName =
-    userName?.split(" ")[0] ?? userEmail?.split("@")[0] ?? "there";
+    (userName ?? "")
+      .trim()
+      .split(/\s+/)
+      .find((p) => p && !/^(dr|mr|mrs|ms|mx|miss|prof|sir|dame)\.?$/i.test(p)) ??
+    userEmail?.split("@")[0] ??
+    "there";
   const isEmpty = total === 0 && !hasGoogle;
 
   // Top-strip metrics (label · value · delta + hover trend popover). Values and
@@ -182,7 +189,7 @@ export default async function DashboardPage({
       series: d.ratingTrendPoints,
       title: "Average rating over time",
       desc: "Your star rating across every review, as it moved over the period.",
-      color: "#2563eb",
+      color: "var(--glass-accent)",
     },
     {
       key: "total",
@@ -192,7 +199,7 @@ export default async function DashboardPage({
       series: d.weeklyReviews,
       title: "Total reviews over time",
       desc: "How your review volume has moved over the last 12 weeks.",
-      color: "#16a34a",
+      color: "var(--glass-accent)",
     },
     {
       key: "fivestar",
@@ -202,7 +209,7 @@ export default async function DashboardPage({
       series: d.weeklyFiveStar,
       title: "5-star reviews over time",
       desc: "The share of your reviews rated five stars.",
-      color: "#f59e0b",
+      color: "var(--glass-accent)",
     },
     {
       key: "recent",
@@ -212,7 +219,7 @@ export default async function DashboardPage({
       series: d.weeklyReviews,
       title: "Recent reviews over time",
       desc: "New reviews received in the last 7 days.",
-      color: "#7c3aed",
+      color: "var(--glass-accent)",
     },
   ];
 
@@ -268,12 +275,12 @@ export default async function DashboardPage({
                   <div className="dk-insights__grid dk-insights__grid--2col">
                     <InsightCard
                       label="Response Rate"
-                      art="kit-insight-response-rate.png"
+                      icon={<Icon name="reply" size={20} />}
                       value={total > 0 ? `${responseRate}%` : null}
                     />
                     <InsightCard
                       label="Avg. Response Time"
-                      art="kit-insight-response-time.png"
+                      icon={<Icon name="clock" size={20} />}
                       value={
                         d.avgResponseHours !== null
                           ? fmtHours(d.avgResponseHours)
@@ -282,7 +289,7 @@ export default async function DashboardPage({
                     />
                     <InsightCard
                       label="Sentiment"
-                      art="kit-insight-sentiment.png"
+                      icon={<Smile size={20} strokeWidth={1.75} aria-hidden="true" />}
                       value={
                         total > 0 ? sentimentLabel(d.sentiment).label : null
                       }
@@ -298,7 +305,7 @@ export default async function DashboardPage({
                     />
                     <InsightCard
                       label="Trend"
-                      art="kit-insight-trend.png"
+                      icon={<Icon name="trend" size={20} />}
                       value={
                         total > 0
                           ? d.reviews7dDeltaPct !== null &&
@@ -333,11 +340,9 @@ export default async function DashboardPage({
                 <SetupProgressCard setup={setup} isEmpty={isEmpty} />
 
                 <div className="dk-card dk-train">
-                  <img
-                    className="dk-train__icon"
-                    src={`${ASSETS}/kit-train-stack.png`}
-                    alt=""
-                  />
+                  <span className="dk-train__icon dk-glyph" aria-hidden="true">
+                    <Icon name="brain" size={24} />
+                  </span>
                   <div className="dk-train__body">
                     <h2 className="dk-train__title">Train your agent</h2>
                     <p className="dk-train__sub">
@@ -362,31 +367,31 @@ export default async function DashboardPage({
         <section aria-label="Quick training">
           <div className="dk-quick">
             <QuickChip
-              icon="kit-chip-upload-faq.png"
+              icon="upload"
               title="Upload FAQs"
               sub="Add common Q&A"
               href="/ai?tab=info"
             />
             <QuickChip
-              icon="kit-chip-add-business.png"
+              icon="building"
               title="Add business info"
               sub="Services, hours, etc."
               href="/ai"
             />
             <QuickChip
-              icon="kit-chip-train-reviews.png"
+              icon="star"
               title="Train from reviews"
               sub="Learn from feedback"
               href="/ai?tab=test"
             />
             <QuickChip
-              icon="kit-chip-brand-voice.png"
+              icon="chat"
               title="Brand voices"
               sub="Tone and style"
               href="/ai?tab=behaviour"
             />
             <QuickChip
-              icon="kit-chip-knowledge.png"
+              icon="book"
               title="Knowledge sources"
               sub="Docs, URLs & more"
               href="/ai?tab=knowledge"
@@ -409,12 +414,12 @@ export default async function DashboardPage({
           <div className="dk-insights__grid">
             <InsightCard
               label="Response Rate"
-              art="kit-insight-response-rate.png"
+              icon={<Icon name="reply" size={20} />}
               value={total > 0 ? `${responseRate}%` : null}
             />
             <InsightCard
               label="Avg. Response Time"
-              art="kit-insight-response-time.png"
+              icon={<Icon name="clock" size={20} />}
               value={
                 d.avgResponseHours !== null
                   ? fmtHours(d.avgResponseHours)
@@ -423,7 +428,7 @@ export default async function DashboardPage({
             />
             <InsightCard
               label="Sentiment"
-              art="kit-insight-sentiment.png"
+              icon={<Smile size={20} strokeWidth={1.75} aria-hidden="true" />}
               value={total > 0 ? sentimentLabel(d.sentiment).label : null}
               chip={
                 total > 0
@@ -437,7 +442,7 @@ export default async function DashboardPage({
             />
             <InsightCard
               label="Trend"
-              art="kit-insight-trend.png"
+              icon={<Icon name="trend" size={20} />}
               value={
                 total > 0
                   ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
@@ -507,14 +512,16 @@ function QuickChip({
   sub,
   href,
 }: {
-  icon: string;
+  icon: IconName;
   title: string;
   sub: string;
   href: string;
 }) {
   return (
     <Link href={href} className="dk-card dk-quick__chip">
-      <img className="dk-quick__icon" src={`${ASSETS}/${icon}`} alt="" />
+      <span className="dk-quick__icon dk-glyph" aria-hidden="true">
+        <Icon name={icon} size={17} />
+      </span>
       <span style={{ minWidth: 0 }}>
         <span className="dk-quick__title" style={{ display: "block" }}>
           {title}
@@ -536,11 +543,15 @@ function QuickChip({
  *  as a fake decorative circle next to the bars (founder feedback 2026-06-12).
  *  Same star = same color everywhere, so the two visuals visibly agree. */
 const RATING_COLORS: Record<number, string> = {
-  5: "#2563eb",
-  4: "#2563eb", // mockup paints 4★ the same vivid primary blue as 5★ (not a lighter tint)
-  3: "#ca8a04",
-  2: "#facc15",
-  1: "#ef4444",
+  // One hue, stepped by strength — the founder rule above still holds: bars and
+  // donut read from this one map, so the same star is the same colour in both.
+  // Was blue / blue / dark-gold / yellow / red: four hues against the spec's
+  // "one loud colour". 5★ and 4★ stay identical, as the mockup painted them.
+  5: "#2457ff",
+  4: "#2457ff",
+  3: "rgba(36, 87, 255, 0.55)",
+  2: "rgba(36, 87, 255, 0.35)",
+  1: "rgba(36, 87, 255, 0.2)",
 };
 
 const BAR_COLORS = RATING_COLORS;
@@ -716,7 +727,7 @@ function RatingDonut({
           cy={size / 2}
           r={r}
           fill="none"
-          stroke="#f3f4f6"
+          stroke="var(--glass-border-soft)"
           strokeWidth={stroke}
         />
         {segs.map((s) => (
@@ -901,13 +912,15 @@ function SetupProgressCard({
 
 function InsightCard({
   label,
-  art,
+  icon,
   value,
   chip,
 }: {
   label: string;
-  /** Kit insight illustration ("Key insight/*.svg"), extracted to a crisp PNG. */
-  art?: string;
+  /** Glyph in a brand-tinted badge. Was a PNG with its own colour baked in
+   *  (blue / purple / green / red across the four cards), which no stylesheet
+   *  could bring into line with the rest of the app. */
+  icon?: React.ReactNode;
   /** null → the kit's designed "-- / No data yet" empty insight. */
   value: string | null;
   /** arrow:false → kit's plain percentage chip (Sentiment card). */
@@ -915,8 +928,10 @@ function InsightCard({
 }) {
   return (
     <div className="dk-card dk-insight">
-      {art && (
-        <img className="dk-insight__icon" src={`${ASSETS}/${art}`} alt="" />
+      {icon && (
+        <span className="dk-insight__icon dk-glyph" aria-hidden="true">
+          {icon}
+        </span>
       )}
       <div style={{ minWidth: 0 }}>
         <div className="dk-insight__label">{label}</div>

@@ -1310,6 +1310,17 @@
     --glass-accent-soft: rgba(36, 87, 255, 0.12);
     --glass-ring: rgba(36, 87, 255, 0.55);
 
+    /* status — the spec's exact values, defined ONCE.
+       Components used to pick their own: Tailwind emerald/rose (#10b981 /
+       #f43f5e) in some places, the spec's #16a34a / #dc2626 in others, so the
+       same "good" and "bad" rendered in two shades on one screen. */
+    --glass-success: #16a34a;
+    --glass-danger: #dc2626;
+    --glass-warning: #d97706;
+    /* Ratings. Was --gold #d6a63a; the spec's star is #f5a623. */
+    --glass-star: #f5a623;
+    --gold: var(--glass-star);
+
     /* aurora canvas — ONE hue.
        Was blue + teal + violet, which broke the spec's "never two accent hues
        on one screen" and is what made the glass read muddy: three colours
@@ -1356,6 +1367,13 @@
     --glass-accent-contrast: #081023;
     --glass-accent-soft: rgba(111, 147, 255, 0.18);
     --glass-ring: rgba(132, 162, 255, 0.65);
+
+    /* status — lifted for contrast on the dark canvas */
+    --glass-success: #4ade80;
+    --glass-danger: #f87171;
+    --glass-warning: #fbbf24;
+    --glass-star: #f5a623;
+    --gold: var(--glass-star);
 
     --glass-canvas-base: #070b18;
     --glass-canvas-gradient: linear-gradient(140deg, #0a1022 0%, #070b18 50%, #0b0f1e 100%);

@@ -165,3 +165,43 @@
   width: 268px;
   height: 179px;
 }
+
+/* ── Palette → shared tokens ────────────────────────────────────
+   The dashboard carried its OWN palette (dashboard-kit.css): primary #2563eb
+   next to the brand's actual #2457ff, plus yellow stars, red, orange, purple,
+   lilac avatars and indigo reviewer names — a second colour system running
+   beside the app's. Remapped here so the layout is untouched but every colour
+   comes from the one set of glass tokens:
+     · one loud colour — purple, lilac and indigo fold into the brand blue;
+     · status colours (green / red / orange) are the spec's exact values;
+     · star yellow #facc15 → the spec's #f5a623.
+   Scoped to the glass app; the kit file itself is left as the source record. */
+.app--glass .dk {
+  --dk-pri: var(--glass-accent);
+  --dk-pri-dark: var(--glass-accent-hover);
+  --dk-pri-soft: var(--glass-accent-soft);
+  --dk-green: var(--glass-success);
+  --dk-green-soft: color-mix(in srgb, var(--glass-success) 10%, transparent);
+  --dk-star: var(--glass-star);
+  --dk-red: var(--glass-danger);
+  --dk-orange: var(--glass-warning);
+  --dk-purple: var(--glass-accent);
+  --dk-purple-soft: var(--glass-accent-soft);
+  --dk-ink: var(--glass-text);
+  --dk-mut: var(--glass-text-muted);
+  --dk-name: var(--glass-text);
+  --dk-lilac: var(--glass-accent-soft);
+  --dk-ph: var(--glass-text-subtle);
+  --dk-line: var(--glass-border-soft);
+}
+
+/* Icon badge — replaces the kit's coloured PNG icons. Size comes from the slot
+   class it sits beside (.dk-insight__icon / .dk-quick__icon / .dk-train__icon),
+   so each icon keeps the exact footprint its image had. */
+.app--glass .dk-glyph {
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: var(--glass-accent-soft);
+  color: var(--glass-accent);
+}

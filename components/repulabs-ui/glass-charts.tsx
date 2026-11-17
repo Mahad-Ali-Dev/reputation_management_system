@@ -16,12 +16,26 @@ export function AreaTrend({
   data,
   labels,
   height = 220,
+  domain,
+  yTicks,
+  formatTick = (v) => v.toFixed(1),
   className,
   ariaLabel,
 }: {
   data: number[];
   labels?: string[];
   height?: number;
+  /**
+   * Fixed value range for the Y axis. Without it the line is scaled to its own
+   * min/max, so ANY movement fills the full height — a rating drifting from 4.0
+   * to 4.6 drew as a plunge to the floor and a spike to the ceiling. Pass a
+   * domain whenever the scale itself carries meaning (ratings, percentages).
+   * The data is always kept inside it, so nothing can be clipped off.
+   */
+  domain?: [number, number];
+  /** Values to label in a left gutter (and draw gridlines at). */
+  yTicks?: number[];
+  formatTick?: (v: number) => string;
   className?: string;
   ariaLabel?: string;
 }) {
@@ -30,15 +44,18 @@ export function AreaTrend({
   const h = height;
   const padX = 8;
   const padY = 16;
-  const min = Math.min(...data);
-  const max = Math.max(...data);
-  const span = Math.max(max - min, 0.0001);
+  const dataMin = Math.min(...data);
+  const dataMax = Math.max(...data);
+  const lo = domain ? Math.min(domain[0], dataMin) : dataMin;
+  const hi = domain ? Math.max(domain[1], dataMax) : dataMax;
+  const span = Math.max(hi - lo, 0.0001);
+  const yOf = (v: number) => padY + (1 - (v - lo) / span) * (h - padY * 2);
 
   const pts = data.map((v, i) => {
     const x = padX + (i / Math.max(data.length - 1, 1)) * (w - padX * 2);
-    const y = padY + (1 - (v - min) / span) * (h - padY * 2);
-    return [x, y] as const;
+    return [x, yOf(v)] as const;
   });
+  const gridYs = yTicks ? yTicks.map(yOf) : [0.25, 0.5, 0.75].map((t) => padY + t * (h - padY * 2));
 
   const line = pts
     .map(([x, y], i) => `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`)
@@ -47,55 +64,72 @@ export function AreaTrend({
 
   return (
     <figure className={cn("w-full", className)} role="img" aria-label={ariaLabel}>
-      <svg
-        viewBox={`0 0 ${w} ${h}`}
-        preserveAspectRatio="none"
-        className="h-[220px] w-full"
-        style={{ height }}
-        aria-hidden="true"
-      >
-        <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="var(--glass-accent)" stopOpacity="0.35" />
-            <stop offset="100%" stopColor="var(--glass-accent)" stopOpacity="0" />
-          </linearGradient>
-        </defs>
-        {/* gridlines */}
-        {[0.25, 0.5, 0.75].map((t) => (
-          <line
-            key={t}
-            x1={padX}
-            x2={w - padX}
-            y1={padY + t * (h - padY * 2)}
-            y2={padY + t * (h - padY * 2)}
-            stroke="var(--glass-border-soft)"
-            strokeWidth="1"
+      {/* Tick labels live in an HTML gutter, not inside the SVG: the SVG uses
+          preserveAspectRatio="none", which would stretch any text drawn in it. */}
+      <div className={cn("relative", yTicks && "pl-9")}>
+        {yTicks
+          ? yTicks.map((t) => (
+              <span
+                key={`y-${t}`}
+                aria-hidden="true"
+                className="absolute left-0 -translate-y-1/2 text-[11px] glass-subtle [font-variant-numeric:tabular-nums]"
+                style={{ top: `${(yOf(t) / h) * 100}%` }}
+              >
+                {formatTick(t)}
+              </span>
+            ))
+          : null}
+        <svg
+          viewBox={`0 0 ${w} ${h}`}
+          preserveAspectRatio="none"
+          className="h-[220px] w-full"
+          style={{ height }}
+          aria-hidden="true"
+        >
+          <defs>
+            <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="var(--glass-accent)" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="var(--glass-accent)" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+          {/* gridlines — at the labelled ticks when given, so a label always
+            sits on its own line */}
+          {gridYs.map((gy) => (
+            <line
+              key={gy.toFixed(2)}
+              x1={padX}
+              x2={w - padX}
+              y1={gy}
+              y2={gy}
+              stroke="var(--glass-border-soft)"
+              strokeWidth="1"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+          <path d={area} fill={`url(#${gradientId})`} />
+          <path
+            d={line}
+            fill="none"
+            stroke="var(--glass-accent)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
             vectorEffect="non-scaling-stroke"
           />
-        ))}
-        <path d={area} fill={`url(#${gradientId})`} />
-        <path
-          d={line}
-          fill="none"
-          stroke="var(--glass-accent)"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          vectorEffect="non-scaling-stroke"
-        />
-        {pts.map(([x, y]) => (
-          <circle
-            key={`${x.toFixed(2)}-${y.toFixed(2)}`}
-            cx={x}
-            cy={y}
-            r="3"
-            fill="var(--glass-accent)"
-            stroke="var(--glass-fill-strong)"
-            strokeWidth="1.5"
-            vectorEffect="non-scaling-stroke"
-          />
-        ))}
-      </svg>
+          {pts.map(([x, y]) => (
+            <circle
+              key={`${x.toFixed(2)}-${y.toFixed(2)}`}
+              cx={x}
+              cy={y}
+              r="3"
+              fill="var(--glass-accent)"
+              stroke="var(--glass-fill-strong)"
+              strokeWidth="1.5"
+              vectorEffect="non-scaling-stroke"
+            />
+          ))}
+        </svg>
+      </div>
       {labels ? (
         <div className="mt-2 flex justify-between text-[11px] glass-subtle">
           {labels
@@ -189,9 +223,9 @@ export function SentimentSplit({
 }) {
   const total = positive + neutral + negative || 1;
   const parts = [
-    { label: "Positive", value: positive, color: "#10b981" },
+    { label: "Positive", value: positive, color: "var(--glass-success)" },
     { label: "Neutral", value: neutral, color: "var(--glass-text-subtle)" },
-    { label: "Negative", value: negative, color: "#f43f5e" },
+    { label: "Negative", value: negative, color: "var(--glass-danger)" },
   ];
 
   return (

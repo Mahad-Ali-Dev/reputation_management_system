@@ -16,7 +16,7 @@
  */
 
 import { cn } from "@/lib/utils";
-import { type LucideIcon, Moon, Sun } from "lucide-react";
+import { ArrowDownRight, ArrowUpRight, type LucideIcon, Moon, Sun } from "lucide-react";
 import * as React from "react";
 
 export type GlassMode = "light" | "dark";
@@ -220,18 +220,43 @@ export function GlassStat({
   value,
   delta,
   deltaTone = "up",
+  hint,
+  icon,
   className,
 }: {
   label: string;
   value: string;
   delta?: string;
   deltaTone?: "up" | "down";
+  /**
+   * Caption under the value — use it to say WHICH window a figure covers.
+   * Two unlabelled averages on one screen (one for the selected range, one all
+   * time) read as the product contradicting itself.
+   */
+  hint?: string;
+  /**
+   * A rendered icon ELEMENT, not a component. This primitive is a client
+   * component and is rendered from server pages, and a component function
+   * can't be serialised across that boundary — an element can.
+   */
+  icon?: React.ReactNode;
   className?: string;
 }) {
   return (
     <GlassCard className={cn("flex flex-col gap-2", className)}>
-      <span className="text-[12px] font-semibold uppercase tracking-[0.06em] glass-muted">
-        {label}
+      <span className="flex items-center gap-2">
+        {icon ? (
+          <span
+            aria-hidden="true"
+            className="grid h-7 w-7 shrink-0 place-items-center rounded-[9px]"
+            style={{ background: "var(--glass-accent-soft)", color: "var(--glass-accent)" }}
+          >
+            {icon}
+          </span>
+        ) : null}
+        <span className="text-[12px] font-semibold uppercase tracking-[0.06em] glass-muted">
+          {label}
+        </span>
       </span>
       <div className="flex items-end justify-between gap-3">
         <span className="text-[30px] font-semibold leading-none [font-variant-numeric:tabular-nums] text-[var(--glass-text)]">
@@ -239,16 +264,23 @@ export function GlassStat({
         </span>
         {delta ? (
           <span
-            className={cn(
-              "rounded-full px-2 py-0.5 text-[12px] font-semibold [font-variant-numeric:tabular-nums]",
-              deltaTone === "up" ? "text-emerald-500" : "text-rose-500",
-            )}
-            style={{ background: "var(--glass-fill-subtle)" }}
+            className="inline-flex items-center gap-0.5 rounded-full px-2 py-0.5 text-[12px] font-semibold [font-variant-numeric:tabular-nums]"
+            style={{
+              background: "var(--glass-fill-subtle)",
+              color: deltaTone === "up" ? "var(--glass-success)" : "var(--glass-danger)",
+            }}
           >
-            {deltaTone === "up" ? "▲" : "▼"} {delta}
+            {deltaTone === "up" ? (
+              <ArrowUpRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            ) : (
+              <ArrowDownRight className="h-3.5 w-3.5" strokeWidth={2} aria-hidden="true" />
+            )}
+            <span className="sr-only">{deltaTone === "up" ? "up" : "down"}</span>
+            {delta}
           </span>
         ) : null}
       </div>
+      {hint ? <span className="text-[12px] glass-subtle">{hint}</span> : null}
     </GlassCard>
   );
 }
