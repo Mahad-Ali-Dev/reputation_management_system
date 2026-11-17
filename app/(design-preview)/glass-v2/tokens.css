@@ -1,0 +1,198 @@
+/*
+ * Glass v2 — colour + typography foundation.
+ *
+ * Two rules drive everything here, and they come from the same place:
+ *
+ * 1. The glass is ACHROMATIC. Apple's material adds no colour of its own; it
+ *    borrows colour from whatever sits behind it, which is what `saturate()`
+ *    in the backdrop-filter is for. Tinting the glass itself is the single
+ *    most common way "glassmorphism" turns muddy.
+ * 2. ONE saturated hue, which the design spec already fixes as --pri #2457ff
+ *    ("never two accent hues on one screen"). The current branch runs three
+ *    auroras — blue, teal, violet — which is where the muddiness comes from.
+ *
+ * Everything else is neutral, and depth comes from the EDGE: a bright 1px
+ * inner top highlight, a hairline border, and a wide soft shadow.
+ */
+
+.gv2 {
+  /* ── canvas (spec §3) ───────────────────────────────────── */
+  --gv2-bg: #fbfaf6;
+  --gv2-bg-2: #f4f8f5;
+
+  /* ── the one accent (spec --pri) ────────────────────────── */
+  --gv2-pri: #2457ff;
+  --gv2-pri-50: #eff6ff;
+  --gv2-pri-700: #1b3fd1;
+
+  /* ── text (spec §3) ─────────────────────────────────────── */
+  --gv2-text: #1a1f2e;
+  --gv2-text-muted: #5b6472;
+  --gv2-text-subtle: #8a929e;
+
+  /* ── lines (spec §3) ────────────────────────────────────── */
+  --gv2-border: rgba(16, 24, 40, 0.08);
+  --gv2-border-strong: rgba(16, 24, 40, 0.14);
+
+  /*
+   * ── materials ──────────────────────────────────────────────
+   * Named by thickness, after Apple's ultraThin → thick scale. The fill is
+   * plain white at varying alpha — NO hue — so the colour you perceive is
+   * whatever is behind it. `saturate(180%)` is what makes that borrowed
+   * colour read as vivid rather than washed out.
+   */
+  --gv2-mat-ultrathin: rgba(255, 255, 255, 0.4);
+  --gv2-mat-thin: rgba(255, 255, 255, 0.55);
+  --gv2-mat-regular: rgba(255, 255, 255, 0.68);
+  --gv2-mat-thick: rgba(255, 255, 255, 0.82);
+
+  --gv2-blur-sm: blur(16px) saturate(180%);
+  --gv2-blur-md: blur(28px) saturate(180%);
+  --gv2-blur-lg: blur(44px) saturate(180%);
+
+  /* The light catch along the top edge — this is most of the "glass" read. */
+  --gv2-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  --gv2-shadow: 0 8px 32px rgba(16, 24, 40, 0.08), 0 2px 8px rgba(16, 24, 40, 0.04);
+
+  --gv2-r-sm: 10px;
+  --gv2-r-md: 14px;
+  --gv2-r-lg: 20px;
+
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-feature-settings: "cv11", "ss01";
+  -webkit-font-smoothing: antialiased;
+  color: var(--gv2-text);
+  background: var(--gv2-bg);
+}
+
+/* ── the backdrop the glass refracts ────────────────────────
+   A SINGLE hue at low alpha. Two blooms of the same blue, not three
+   different colours — so panels pick up a tint without the page turning
+   into a rainbow. */
+.gv2__canvas {
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+  overflow: hidden;
+}
+.gv2__canvas::before,
+.gv2__canvas::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+.gv2__canvas::before {
+  background:
+    radial-gradient(60vw 60vw at 18% 12%, rgba(36, 87, 255, 0.16), transparent 62%),
+    radial-gradient(50vw 50vw at 88% 78%, rgba(36, 87, 255, 0.1), transparent 60%);
+}
+/* A faint warm wash keeps the canvas from going cold-blue — the spec's
+   off-white is warm, and that warmth is what stops it looking clinical. */
+.gv2__canvas::after {
+  background: radial-gradient(70vw 50vw at 50% 100%, rgba(245, 166, 35, 0.05), transparent 70%);
+}
+
+/* ── material surfaces ──────────────────────────────────── */
+.gv2-mat {
+  border: 1px solid var(--gv2-border);
+  border-radius: var(--gv2-r-md);
+  box-shadow: var(--gv2-highlight), var(--gv2-shadow);
+}
+.gv2-mat--ultrathin {
+  background: var(--gv2-mat-ultrathin);
+  backdrop-filter: var(--gv2-blur-sm);
+  -webkit-backdrop-filter: var(--gv2-blur-sm);
+}
+.gv2-mat--thin {
+  background: var(--gv2-mat-thin);
+  backdrop-filter: var(--gv2-blur-md);
+  -webkit-backdrop-filter: var(--gv2-blur-md);
+}
+.gv2-mat--regular {
+  background: var(--gv2-mat-regular);
+  backdrop-filter: var(--gv2-blur-md);
+  -webkit-backdrop-filter: var(--gv2-blur-md);
+}
+.gv2-mat--thick {
+  background: var(--gv2-mat-thick);
+  backdrop-filter: var(--gv2-blur-lg);
+  -webkit-backdrop-filter: var(--gv2-blur-lg);
+}
+
+/* ── type ramp (spec §4, verbatim) ──────────────────────── */
+.gv2-display { font-size: 44px; line-height: 48px; font-weight: 700; letter-spacing: -0.03em; }
+.gv2-h1      { font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -0.02em; }
+.gv2-h2      { font-size: 24px; line-height: 30px; font-weight: 600; letter-spacing: -0.02em; }
+.gv2-h3      { font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: -0.015em; }
+.gv2-body-lg { font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: -0.01em; }
+.gv2-body    { font-size: 14px; line-height: 21px; font-weight: 400; }
+.gv2-strong  { font-size: 14px; line-height: 21px; font-weight: 500; }
+.gv2-label   { font-size: 13px; line-height: 16px; font-weight: 500; }
+.gv2-overline{ font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; }
+.gv2-caption { font-size: 12px; line-height: 16px; font-weight: 400; }
+/* Every metric, count and money figure. Non-negotiable: without it, digits
+   change width as they animate and the whole row jitters. */
+.gv2-num     { font-variant-numeric: tabular-nums; }
+
+@media (max-width: 760px) {
+  .gv2-display { font-size: 32px; line-height: 36px; }
+  .gv2-h1      { font-size: 24px; line-height: 30px; }
+  .gv2-h2      { font-size: 20px; line-height: 26px; }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  /* Translucency is decoration. If the OS asks for less of it, fall back to
+     an opaque surface rather than a half-legible one. */
+  .gv2-mat--ultrathin,
+  .gv2-mat--thin,
+  .gv2-mat--regular,
+  .gv2-mat--thick {
+    background: #fff;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* ── material stage ─────────────────────────────────────────
+   Content for the swatches to refract. Uses only the brand blue plus the
+   spec's star amber — the one other hue the spec permits, and only because
+   ratings are in literally every review surface. */
+.gv2-stage {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--gv2-r-lg);
+  overflow: hidden;
+  padding: 28px;
+  background: linear-gradient(135deg, #eaf0ff 0%, #f6f4ee 100%);
+  border: 1px solid var(--gv2-border);
+}
+.gv2-stage__content {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-around;
+  padding: 0 6%;
+}
+.gv2-stage__bar {
+  width: 9%;
+  border-radius: 10px 10px 0 0;
+  background: linear-gradient(180deg, #2457ff 0%, #6b8cff 100%);
+}
+.gv2-stage__orb {
+  position: absolute;
+  top: 14%;
+  right: 12%;
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  background: #f5a623;
+}
+.gv2-stage__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+}
