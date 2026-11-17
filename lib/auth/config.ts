@@ -54,6 +54,21 @@ if (process.env.RESEND_API_KEY) {
       apiKey: process.env.RESEND_API_KEY,
       from: senderFor("auth"),
       async sendVerificationRequest({ identifier: email, url, provider }) {
+        // DEV ONLY: print the sign-in link to the server console instead of
+        // relying on email. Seeded demo accounts use addresses that don't exist
+        // (@summitdental.demo), so there is otherwise NO way to log in locally
+        // short of hand-planting a session cookie in the browser.
+        //
+        // Hard-gated on NODE_ENV: a magic link in a production log is a
+        // ready-made account takeover for anyone who can read logs.
+        if (process.env.NODE_ENV !== "production") {
+          console.log(`
+  ▸ SIGN-IN LINK for ${email}
+    ${url}
+`);
+          return;
+        }
+
         const fromAddress = provider.from ?? senderFor("auth");
         // Magic link was the ONE sender that skipped this guard, so a
         // *.resend.dev sandbox `from` failed silently here: Resend accepts the
