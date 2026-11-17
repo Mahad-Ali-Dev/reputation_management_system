@@ -42,13 +42,6 @@ export interface SegmentDef {
   requiresConnection?: SegmentRequiresConnection;
 }
 
-const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-
-/** `>= now - 30d`, computed at call time so counts are always fresh. */
-function thirtyDaysAgo(): Date {
-  return new Date(Date.now() - THIRTY_DAYS_MS);
-}
-
 /** Start of the current calendar month (UTC). */
 function startOfThisMonth(): Date {
   const now = new Date();
@@ -61,14 +54,6 @@ function startOfThisMonth(): Date {
  * cleanly into the directory's AND-filter.
  */
 export const SEGMENTS: readonly SegmentDef[] = [
-  {
-    key: "recent",
-    label: "Recent Customers",
-    description: "Contacts active in the last 30 days.",
-    where: () => ({
-      OR: [{ lastActivityAt: { gte: thirtyDaysAgo() } }, { lastContactedAt: { gte: thirtyDaysAgo() } }],
-    }),
-  },
   {
     key: "vip",
     label: "VIP",

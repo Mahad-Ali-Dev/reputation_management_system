@@ -20,3 +20,68 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Remaining white panel (import sources) → transparent. */
+.app--glass .cd-source {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+/* Inputs across the directory + segments + detail forms → frosted glass. */
+.app--glass .cd-page .ds-input,
+.app--glass .cd-page input[type="search"],
+.app--glass .cd-page input[type="text"],
+.app--glass .cd-page input[type="email"] {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .cd-page .ds-input:focus,
+.app--glass .cd-page input[type="search"]:focus,
+.app--glass .cd-page input[type="text"]:focus,
+.app--glass .cd-page input[type="email"]:focus {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--pri));
+}
+
+/* Directory columns (Segments rail · Contacts table · Profile drawer) are shared
+   `.ds-card`s — transparent-ize them, scoped to `.cd-page` so other pages' ds-cards stay. */
+.app--glass .cd-page .ds-card {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+
+/* Segments tab: 2 rows × 3 columns (was a single 7-wide row). */
+.app--glass .cd-seg-cards {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+@media (max-width: 860px) {
+  .app--glass .cd-seg-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .app--glass .cd-seg-cards {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Import & Export tab: light info + format panels → transparent; frosted selects. */
+.app--glass .cd-info,
+.app--glass .cd-fmt {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+.app--glass .cd-page .ds-select {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .cd-page .ds-select:focus {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--pri));
+}

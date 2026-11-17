@@ -20,3 +20,38 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Sub-tabs: transparent empty-state panel; frosted inputs / selects / search.
+   Buttons + pills stay filled (they're controls). */
+.app--glass .rr .rr-autoempty {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+.app--glass .rr .rr-input,
+.app--glass .rr .rr-textarea,
+.app--glass .rr .rr-select,
+.app--glass .rr .rr-searchbox,
+.app--glass .rr .rr-filterctrl {
+  background: var(--glass-fill-subtle);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border-color: var(--glass-border);
+}
+.app--glass .rr .rr-input:focus,
+.app--glass .rr .rr-input:focus-visible,
+.app--glass .rr .rr-textarea:focus,
+.app--glass .rr .rr-select:focus,
+.app--glass .rr .rr-searchbox:focus-within {
+  background: var(--glass-fill);
+  border-color: var(--glass-accent, var(--rr-blue, var(--pri)));
+}
+
+/* Soft near-white panels → transparent. */
+.app--glass .rr .rr-program,
+.app--glass .rr .rr-consent,
+.app--glass .rr .rr-callout {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}

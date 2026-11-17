@@ -172,7 +172,7 @@ export function CsvImporter() {
                 gap: 20,
                 justifyContent: "center",
                 border: `1.6px dashed ${dragOver ? "var(--cd-vio)" : "var(--cd-lav-border)"}`,
-                background: dragOver ? "#f5f2ff" : "#fdfdff",
+                background: dragOver ? "var(--glass-fill-subtle, #efeafe)" : "transparent",
                 borderRadius: 12,
                 padding: "26px 20px",
                 cursor: "pointer",

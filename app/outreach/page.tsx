@@ -96,17 +96,6 @@ export default async function OutreachPage({
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Outreach"]}>
       <div className="rr">
         <div className="rr-hero">
-          {meta.hero && (
-            // biome-ignore lint/performance/noImgElement: static brand SVG (decorative hero)
-            <img
-              src={meta.hero.src}
-              alt=""
-              aria-hidden="true"
-              width={meta.hero.w}
-              className="rr-hero__art"
-              style={{ width: meta.hero.w }}
-            />
-          )}
           <PageHeader
             kicker="Outreach"
             title={meta.title}

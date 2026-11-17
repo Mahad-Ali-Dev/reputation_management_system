@@ -532,13 +532,6 @@ export function SendComposer({
             {"\n\n"}
             {filled(body)}
           </div>
-          {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-          <img
-            src="/assets/repulabs/review-request/send-email-preview.svg"
-            alt=""
-            aria-hidden="true"
-            className="rr-preview__art"
-          />
         </div>
 
         {/* SMS preview — commented out, see the file header note.
