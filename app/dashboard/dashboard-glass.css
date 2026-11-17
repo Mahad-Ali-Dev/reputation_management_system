@@ -111,13 +111,16 @@
 /* ---- mobile drawer reuses .sb, so it inherits the frost above ----- */
 
 /* ---- content cards ----------------------------------------------- */
+/* Fully transparent cards — the aurora canvas shows straight through.
+   No fill, no frost blur, no shadow; a hairline border keeps each card
+   readable as its own container. */
 .app--glass .dk-card {
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  background: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
   border: 1px solid var(--glass-border);
   border-radius: 18px;
-  box-shadow: var(--glass-shadow);
+  box-shadow: none;
 }
 /* Quick-training chips lift to the strong frost on hover (kept subtle). */
 .app--glass .dk-quick__chip:hover {
@@ -161,7 +164,6 @@
 @supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
   .app--glass .sb,
   .app--glass .tb,
-  .app--glass .dk-card,
   .app--glass .dk-copilot {
     background: var(--glass-fill-solid);
   }
@@ -169,7 +171,6 @@
 @media (prefers-reduced-transparency: reduce) {
   .app--glass .sb,
   .app--glass .tb,
-  .app--glass .dk-card,
   .app--glass .dk-copilot {
     background: var(--glass-fill-solid);
   }
