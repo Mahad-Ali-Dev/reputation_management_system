@@ -167,8 +167,6 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(21, 19, 43, 0.15) transparent;
 }
 
 /* empty state */

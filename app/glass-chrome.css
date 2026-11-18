@@ -90,30 +90,18 @@
   border-color: var(--glass-border);
 }
 
-/* Sidebar nav scrollbar — the default OS scrollbar (chunky thumb + arrow
-   buttons) clashes with the transparent glass chrome. Make it a thin,
-   buttonless, subtle overlay scrollbar. */
-.app--glass .sb nav {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(100, 116, 139, 0.32) transparent;
-}
+/* Sidebar nav scrollbar: a slimmer, quieter version of the global one
+   (globals.css SCROLLBARS); no `scrollbar-width` here, as it would make
+   Chromium ignore the ::-webkit-scrollbar styling. */
 .app--glass .sb nav::-webkit-scrollbar {
-  width: 6px;
-}
-.app--glass .sb nav::-webkit-scrollbar-track {
-  background: transparent;
+  width: 8px;
 }
 .app--glass .sb nav::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.3);
-  border-radius: 999px;
+  border-width: 2px;
+  background-color: rgba(21, 19, 43, 0.14);
 }
 .app--glass .sb nav::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.5);
-}
-.app--glass .sb nav::-webkit-scrollbar-button {
-  display: none;
-  width: 0;
-  height: 0;
+  background-color: color-mix(in srgb, var(--glass-accent, #4b3bff) 40%, transparent);
 }
 
 /* ---- top bar ----------------------------------------------------- */

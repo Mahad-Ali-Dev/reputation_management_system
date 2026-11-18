@@ -1744,3 +1744,45 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* ============================================================
+   SCROLLBARS — one slim, floating, brand-tinted scrollbar app-wide
+   ============================================================
+   Chromium/Safari get the full design via ::-webkit-scrollbar: no arrow
+   buttons, clear track, a rounded ultramarine pill that floats 3px off the
+   edge and thickens on hover. (Chromium ignores these pseudo-elements once
+   `scrollbar-width`/`scrollbar-color` are set, so those standard properties
+   are applied to Firefox only, which has no ::-webkit-scrollbar.) */
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+::-webkit-scrollbar-track,
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+::-webkit-scrollbar-thumb {
+  min-height: 40px;
+  border-radius: 999px;
+  border: 3px solid transparent;
+  background-clip: padding-box;
+  background-color: color-mix(in srgb, var(--glass-accent, #4b3bff) 26%, transparent);
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+  background-color: color-mix(in srgb, var(--glass-accent, #4b3bff) 48%, transparent);
+}
+::-webkit-scrollbar-thumb:active {
+  background-color: color-mix(in srgb, var(--glass-accent, #4b3bff) 70%, transparent);
+}
+@supports (-moz-appearance: none) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in srgb, var(--glass-accent, #4b3bff) 32%, transparent) transparent;
+  }
+}

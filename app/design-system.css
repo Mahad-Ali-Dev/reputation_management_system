@@ -591,18 +591,7 @@
     padding: 16px 14px 28px;
   }
 }
-.scroll::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-.scroll::-webkit-scrollbar-thumb {
-  background: var(--line-2);
-  border-radius: 999px;
-  border: 2px solid var(--bg);
-}
-.scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
+/* .scroll scrollbars: styled globally in globals.css (SCROLLBARS). */
 
 /* ---------- page head ---------- */
 .ph {
