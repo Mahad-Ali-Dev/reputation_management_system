@@ -66,28 +66,200 @@
   backdrop-filter: none;
   border-right: 1px solid var(--glass-border);
 }
-.app--glass .sb__search {
-  background: var(--glass-fill-subtle);
-  border-color: var(--glass-border);
+/* ============================================================
+   Hostinger-structure sidebar (components/sidebar-nav.tsx, .sb--hs)
+   Sits inside the framed shell's sheet. Icon + label rows, quiet section
+   headers with a chevron toggle, a pinned profile/offer footer. Neutral,
+   colourless rows; the brand accent only marks the active icon.
+   ============================================================ */
+.sb--hs {
+  padding: 14px 10px 10px;
 }
-.app--glass .sb__search:hover {
-  background: var(--glass-fill);
-  border-color: var(--glass-border);
+.sb--hs .sb__nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-right: -6px;
+  padding-right: 6px;
 }
-.app--glass .sb__item:hover {
-  background: var(--glass-fill-subtle);
+.sb--hs .sb__section {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
-.app--glass .sb__item.is-active {
-  background: var(--glass-accent-soft);
-  color: var(--glass-accent);
+.sb--hs .sb__section + .sb__section {
+  margin-top: 10px;
 }
-.app--glass .sb__item.is-active svg {
-  color: var(--glass-accent);
+
+/* rows */
+.sb--hs .sb__item {
+  width: 100%;
+  gap: 12px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--glass-text, #15132b);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  text-align: left;
+  cursor: pointer;
 }
-.app--glass .sb__plan,
-.app--glass .sb__upsell {
-  background: var(--glass-fill-subtle);
-  border-color: var(--glass-border);
+.sb--hs .sb__item .sb__ico {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: var(--glass-text-muted, #4a4763);
+}
+.sb--hs .sb__label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb--hs .sb__item:hover {
+  background: rgba(21, 19, 43, 0.05);
+  color: var(--glass-text, #15132b);
+}
+.sb--hs .sb__item.is-active {
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--glass-text, #15132b);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(21, 19, 43, 0.06), 0 0 0 1px rgba(21, 19, 43, 0.04);
+}
+.sb--hs .sb__item.is-active .sb__ico {
+  color: var(--glass-accent, #4b3bff);
+}
+.sb--hs .sb__item:focus-visible,
+.sb--hs .sb__group:focus-visible,
+.sb--hs .sb__profile:focus-visible,
+.sb--hs .sb__offer:focus-visible {
+  outline: 2px solid var(--glass-accent, #4b3bff);
+  outline-offset: 1px;
+}
+.sb--hs .sb__kbd {
+  margin-left: auto;
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(21, 19, 43, 0.05);
+  color: var(--glass-text-subtle, #6b6880);
+}
+
+/* section header: quiet title + chevron toggle */
+.sb--hs .sb__group {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  cursor: pointer;
+  font-family: inherit;
+  text-transform: none;
+  letter-spacing: -0.005em;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--glass-text-subtle, #6b6880);
+  padding: 8px 12px 6px;
+}
+.sb--hs .sb__group:hover {
+  color: var(--glass-text, #15132b);
+}
+.sb--hs .sb__chev {
+  transition: transform 0.18s ease;
+}
+.sb--hs .sb__chev.is-closed {
+  transform: rotate(-90deg);
+}
+.sb--hs .sb__badge {
+  font-family: inherit;
+  font-size: 10.5px;
+  font-weight: 600;
+  padding: 1px 8px;
+  background: rgba(21, 19, 43, 0.06);
+  color: var(--glass-text-muted, #4a4763);
+}
+.sb--hs .sb__item.is-active .sb__badge {
+  background: var(--glass-accent, #4b3bff);
+  color: #fff;
+}
+
+/* footer: profile row + offer pill */
+.sb--hs .sb__bottom {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(21, 19, 43, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.sb--hs .sb__profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.sb--hs .sb__profile:hover {
+  background: rgba(21, 19, 43, 0.05);
+}
+.sb--hs .sb__av {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 32px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(140deg, #7466ff, var(--glass-accent, #4b3bff));
+}
+.sb--hs .sb__who {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+.sb--hs .sb__who-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--glass-text, #15132b);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sb--hs .sb__who-plan {
+  font-size: 11.5px;
+  color: var(--glass-text-subtle, #6b6880);
+}
+.sb--hs .sb__offer {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 38px;
+  border-radius: 999px;
+  border: 1px solid rgba(21, 19, 43, 0.12);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--glass-text, #15132b);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.sb--hs .sb__offer:hover {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(21, 19, 43, 0.2);
 }
 
 /* Sidebar nav scrollbar: a slimmer, quieter version of the global one
@@ -145,45 +317,109 @@
 }
 
 /* ============================================================
-   Floating chrome — detached, rounded sidebar + navbar.
-   The base shell pins `.sb`/`.tb` edge-to-edge; here they become
-   free-floating glass panels with a gap on all sides. The sticky `top`
-   is bumped to the gap so the gap survives scrolling.
+   Framed shell (Hostinger-style) — .app--frame
+   A full-width top bar (logo far left), and under it ONE rounded frosted
+   sheet that holds the sidebar + the page. The window never scrolls; the
+   page scrolls inside the sheet, so the sheet's four rounded corners stay
+   on screen. The frost is painted by a ::before layer (not on the sheet
+   itself) so `position: fixed` modals inside pages still anchor to the
+   viewport — a backdrop-filter on an ancestor would trap them.
    ============================================================ */
-
-/* Desktop: sidebar floats with an equal gap on all four sides. */
-@media (min-width: 1024px) {
-  .app--glass .app__sb-desktop .sb {
-    box-sizing: border-box;
-    margin: var(--glass-gap);
-    height: calc(100vh - (2 * var(--glass-gap)));
-    top: var(--glass-gap);
-    border: 1px solid var(--glass-border);
-    border-radius: 22px;
-    box-shadow: var(--glass-shadow);
+.app--frame {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+.app--frame > .tb {
+  position: relative;
+  z-index: 50; /* dropdowns (user menu, bell, switcher) open over the sheet */
+  flex: 0 0 var(--h-tb);
+  width: 100%;
+  margin: 0;
+  padding: 0 20px 0 18px;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.app--frame .tb__brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-right: 10px;
+  text-decoration: none;
+  color: inherit;
+}
+.app--frame .tb__brandname {
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--glass-text, #15132b);
+}
+.app--frame .tb__brandname span {
+  color: var(--glass-accent, #4b3bff);
+}
+.app--frame .app__body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: var(--w-sb) minmax(0, 1fr);
+  margin: 0 12px 12px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(21, 19, 43, 0.08);
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03), 0 20px 50px -30px rgba(16, 24, 40, 0.22), inset 0
+    1px 0 rgba(255, 255, 255, 0.7);
+}
+.app--frame .app__body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+/* Children are positioned (z auto) so they paint above the frost layer. */
+.app--frame .app__body .sb {
+  position: relative;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  border: 0;
+  border-right: 1px solid rgba(21, 19, 43, 0.06);
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+}
+.app--frame .main {
+  position: relative;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+@media (max-width: 1023px) {
+  .app--frame .app__body {
+    grid-template-columns: minmax(0, 1fr);
+    margin: 0 8px 8px;
+    border-radius: 18px;
   }
-
-  /* Navbar floats centered at 80% width, gap on all sides, rounded. */
-  .app--glass .tb {
-    width: 100%;
-    margin: var(--glass-gap) 0;
-    border: none;
-    border-radius: 0;
-    top: var(--glass-gap);
-    box-shadow: none;
+  .app--frame > .tb {
+    padding: 0 12px;
   }
 }
-
-/* Mobile: the desktop sidebar is a drawer here, so only the navbar floats —
-   near-full-width (80% is cramped on a phone) but still detached + rounded. */
-@media (max-width: 1023px) {
-  .app--glass .tb {
-    width: auto;
-    margin: var(--glass-gap);
-    border: none;
-    border-radius: 0;
-    top: var(--glass-gap);
-    box-shadow: none;
+/* The phone drawer floats over the page, so it needs a solid sheet. */
+.app--glass .app__sb-drawer .sb {
+  background: var(--glass-fill-solid, #f8f7fb);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .app--frame .app__body::before {
+    background: var(--glass-fill-solid);
   }
 }
 
@@ -294,9 +530,15 @@
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
 }
-.dash-metric__delta--up { color: #16a34a; }
-.dash-metric__delta--down { color: #ef4444; }
-.dash-metric__delta--flat { color: var(--glass-text-muted, #64748b); }
+.dash-metric__delta--up {
+  color: #16a34a;
+}
+.dash-metric__delta--down {
+  color: #ef4444;
+}
+.dash-metric__delta--flat {
+  color: var(--glass-text-muted, #64748b);
+}
 
 /* ---- hover / focus trend popover (drops below the navbar) ---- */
 .dash-metric__pop {
@@ -385,5 +627,7 @@
 
 /* The navbar strip is desktop-only — too dense for a phone navbar. */
 @media (max-width: 1023px) {
-  .tb__center { display: none; }
+  .tb__center {
+    display: none;
+  }
 }

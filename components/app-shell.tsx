@@ -3,6 +3,8 @@
 import { Icon } from "@/components/shell/icon";
 import { WorkspaceSwitcher } from "@/components/workspace-switcher";
 import type { Workspace } from "@/lib/auth/active-org";
+import Image from "next/image";
+import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandPalette } from "./command-palette";
@@ -58,7 +60,6 @@ export function AppShell({
 }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-
   // biome-ignore lint/correctness/useExhaustiveDependencies: intentional — close drawer when route changes
   useEffect(() => {
     setDrawerOpen(false);
@@ -77,12 +78,53 @@ export function AppShell({
 
   return (
     <div
-      className={`app app--responsive app--canvas${isGlass ? " app--glass glass-theme" : ""}`}
+      className={`app app--responsive app--canvas${isGlass ? " app--glass app--frame glass-theme" : ""}`}
       data-glass-mode={isGlass ? "light" : undefined}
     >
-      {/* Desktop sidebar */}
-      <div className="app__sb-desktop">
-        <SidebarNav orgName={orgName} planLabel={planLabel} allowedTabs={allowedTabs} />
+      {/* Full-width top bar: logo far left, page actions far right. */}
+      <header className="tb">
+        <div className="tb__left">
+          <button
+            type="button"
+            className="tb__iconbtn app__menu"
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Open menu"
+          >
+            <Icon name="menu" size={18} />
+          </button>
+
+          <Link href="/dashboard" className="tb__brand" aria-label="repulabs home">
+            <Image
+              src="/favicon.png"
+              alt=""
+              width={30}
+              height={30}
+              priority
+              style={{ borderRadius: 8, objectFit: "contain", flex: "0 0 30px" }}
+            />
+            <span className="tb__brandname">
+              repu<span>labs</span>
+            </span>
+          </Link>
+
+          {workspaces && workspaces.length > 0 && <WorkspaceSwitcher workspaces={workspaces} />}
+        </div>
+
+        {centerBar && <div className="tb__center">{centerBar}</div>}
+
+        <div className="tb__right">{topBar}</div>
+      </header>
+
+      {/* One rounded frosted sheet under the top bar holds the sidebar and the
+          page; the page scrolls inside it (Hostinger-style frame). */}
+      <div className="app__body">
+        <div className="app__sb-desktop">
+          <SidebarNav orgName={orgName} planLabel={planLabel} allowedTabs={allowedTabs} />
+        </div>
+
+        <main className="main">
+          <div className="scroll">{children}</div>
+        </main>
       </div>
 
       {/* Mobile drawer */}
@@ -104,31 +146,6 @@ export function AppShell({
           </div>
         </>
       )}
-
-      <main className="main">
-        <header className="tb">
-          <div className="tb__left">
-            <button
-              type="button"
-              className="tb__iconbtn app__menu"
-              onClick={() => setDrawerOpen(true)}
-              aria-label="Open menu"
-            >
-              <Icon name="menu" size={18} />
-            </button>
-
-            {workspaces && workspaces.length > 0 && (
-              <WorkspaceSwitcher workspaces={workspaces} />
-            )}
-          </div>
-
-          {centerBar && <div className="tb__center">{centerBar}</div>}
-
-          <div className="tb__right">{topBar}</div>
-        </header>
-
-        <div className="scroll">{children}</div>
-      </main>
 
       <CommandPalette />
     </div>

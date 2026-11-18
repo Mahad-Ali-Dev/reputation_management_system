@@ -1,23 +1,26 @@
 "use client";
 
+import { openAskAi } from "@/components/ask-ai";
 import { openCommandPalette } from "@/components/command-palette";
 import { LockIcon, upgradeHref } from "@/components/pro-gate";
 import { Icon, type IconName } from "@/components/shell/icon";
 import { type AccessTabKey, accessTabLabel } from "@/lib/access/tabs";
 import type { FeatureKey } from "@/lib/billing/feature-access";
-import Image from "next/image";
+import { ChevronDown, Gift, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 /**
- * Persistent sidebar nav — repulabs v3 (clean redesign), unified IA.
+ * Persistent sidebar nav — Hostinger-style structure (2026-11), unified IA.
  *
- * Grouped, ALL-CAPS sections matching the master-plan information architecture
- * (tasks/master/01-architecture.md): DASHBOARD / DEVICE SETUP / AI ENGINE /
- * REVIEWS / SOCIAL & MESSAGING / ENGAGEMENT & CRM / INTELLIGENCE / SETTINGS.
- * Each item links straight to its section's main page; sub-navigation lives as
- * in-page tabs (`<TabBar>`). Active state = blue-tint pill. A "Unlock more
- * growth" upgrade card sits at the bottom for non-Pro plans.
+ * Lives inside the framed shell's rounded sheet (logo is in the full-width
+ * top bar). A pinned top block (Dashboard, AI Autopilot, Ask Repulabs AI,
+ * Search ⌘K), then titled sections with chevron toggles (collapsed state is
+ * remembered; a section holding the current page always stays open). Every
+ * row has an icon. Footer: workspace avatar + name + plan, plus an "Upgrade
+ * to Pro" pill for non-Pro plans. Each item links straight to its section's
+ * main page; sub-navigation lives as in-page tabs (`<TabBar>`).
  *
  * Per-item Pro padlock (A3): items flagged `pro` show a gold padlock + faded
  * text for Free plans and route to `/subscription?feature=<key>` instead of the
@@ -138,6 +141,32 @@ function pathMatches(pathname: string, href: string, activeTab: string | null): 
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/** "PRO" → "Pro", "FREE" → "Free". */
+const planName = (p: string) => (p ? p.charAt(0).toUpperCase() + p.slice(1).toLowerCase() : "");
+
+/** Up to two initials for the workspace avatar ("Summit Dental Studio" → "SD"). */
+const initials = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]?.toUpperCase())
+    .join("") || "R";
+
+type Section = { title: string | null; items: NavLink[] };
+
+/** NAV → [pinned top block, …titled sections]. */
+const SECTIONS: Section[] = NAV.reduce<Section[]>(
+  (acc, n) => {
+    if (isGroup(n)) acc.push({ title: n.group, items: [] });
+    else acc[acc.length - 1]?.items.push(n);
+    return acc;
+  },
+  [{ title: null, items: [] }],
+);
+
+const COLLAPSED_KEY = "rl-sb-closed-groups";
+
 export function SidebarNav({
   onNavigate,
   orgName,
@@ -158,127 +187,162 @@ export function SidebarNav({
   const isRestricted = (tab: AccessTabKey | undefined) =>
     Boolean(tab) && Boolean(allowedTabs?.length) && !allowedTabs?.includes(tab as string);
 
-  return (
-    <aside className="sb">
+  // Collapsible section headers (Hostinger-style chevrons), remembered per browser.
+  const [closed, setClosed] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(COLLAPSED_KEY);
+      if (raw) setClosed(JSON.parse(raw));
+    } catch {}
+  }, []);
+  const toggleGroup = (title: string) =>
+    setClosed((prev) => {
+      const next = prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title];
+      try {
+        localStorage.setItem(COLLAPSED_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+
+  const renderItem = (n: NavLink) => {
+    // Two independent locks: a Pro item is locked when the org isn't on
+    // a paid plan; an access-restricted item is locked regardless of
+    // plan (a workspace admin narrowed this specific member's tabs).
+    // Access restriction takes the more specific copy/href when both
+    // could apply — upgrading the plan would never fix it anyway.
+    const proLocked = Boolean(n.pro) && !isPro;
+    const restricted = isRestricted(n.tab);
+    const locked = proLocked || restricted;
+    const href = restricted
+      ? `/restricted?feature=${encodeURIComponent(accessTabLabel(n.tab as string))}`
+      : proLocked
+        ? upgradeHref(n.pro)
+        : n.href;
+    const active = pathMatches(pathname, n.href, activeTab);
+
+    return (
       <Link
-        href="/dashboard"
+        key={n.href}
+        href={href}
         onClick={onNavigate}
-        className="sb__brand"
-        style={{ textDecoration: "none", color: "inherit" }}
+        className={`sb__item${active ? " is-active" : ""}`}
+        aria-current={active ? "page" : undefined}
+        aria-label={
+          restricted ? `${n.label} (Restricted)` : locked ? `${n.label} (Pro)` : undefined
+        }
+        title={
+          restricted
+            ? `${n.label} restricted by your workspace admin`
+            : locked
+              ? `${n.label} upgrade to Pro`
+              : undefined
+        }
+        style={locked ? { color: "var(--rl-muted-2)" } : undefined}
       >
-        <Image
-          src="/favicon.png"
-          alt=""
-          width={30}
-          height={30}
-          priority
-          style={{ borderRadius: 8, objectFit: "contain", flex: "0 0 30px" }}
-        />
-        <div className="sb__brandname">
-          repu<span>labs</span>
-        </div>
+        <Icon name={n.icon} className="sb__ico" style={locked ? { opacity: 0.6 } : undefined} />
+        <span className="sb__label" style={{ flex: 1, opacity: locked ? 0.7 : undefined }}>
+          {n.label}
+        </span>
+        {restricted ? (
+          <Icon
+            name="lock"
+            size={13}
+            style={{ color: "var(--rl-muted-2)", marginLeft: "auto" }}
+            title="Restricted by your workspace admin"
+          />
+        ) : proLocked ? (
+          <span style={{ marginLeft: "auto", display: "inline-flex" }}>
+            <LockIcon size={13} />
+          </span>
+        ) : (
+          n.badge && <span className="sb__badge">{n.badge}</span>
+        )}
       </Link>
+    );
+  };
 
-      <button
-        type="button"
-        className="sb__search"
-        aria-label="Search and navigate (Command or Control + K)"
-        onClick={openCommandPalette}
-      >
-        <Icon name="search" size={14} />
-        <span>Search…</span>
-        <kbd>⌘K</kbd>
-      </button>
-
-      <nav
-        style={{
-          flex: 1,
-          overflowY: "auto",
-          overflowX: "hidden",
-          marginRight: -6,
-          paddingRight: 6,
-        }}
-      >
-        {NAV.map((n) => {
-          if (isGroup(n)) {
+  return (
+    <aside className="sb sb--hs">
+      <nav className="sb__nav" aria-label="Main">
+        {SECTIONS.map((sec, i) => {
+          if (!sec.title) {
             return (
-              <div key={`g-${n.group}`} className="sb__group">
-                {n.group}
+              <div key="top" className="sb__section">
+                {sec.items.map(renderItem)}
+                {/* Start a conversation with Repulabs AI (Hostinger's "Agent" slot). */}
+                <button
+                  type="button"
+                  className="sb__item"
+                  onClick={() => {
+                    onNavigate?.();
+                    openAskAi();
+                  }}
+                >
+                  <Sparkles size={18} strokeWidth={1.75} aria-hidden="true" className="sb__ico" />
+                  <span className="sb__label">Ask Repulabs AI</span>
+                </button>
+                <button
+                  type="button"
+                  className="sb__item"
+                  aria-label="Search and navigate (Command or Control + K)"
+                  onClick={() => {
+                    onNavigate?.();
+                    openCommandPalette();
+                  }}
+                >
+                  <Search size={18} strokeWidth={1.75} aria-hidden="true" className="sb__ico" />
+                  <span className="sb__label" style={{ flex: 1 }}>
+                    Search
+                  </span>
+                  <kbd className="sb__kbd">⌘K</kbd>
+                </button>
               </div>
             );
           }
-
-          // Two independent locks: a Pro item is locked when the org isn't on
-          // a paid plan; an access-restricted item is locked regardless of
-          // plan (a workspace admin narrowed this specific member's tabs).
-          // Access restriction takes the more specific copy/href when both
-          // could apply — upgrading the plan would never fix it anyway.
-          const proLocked = Boolean(n.pro) && !isPro;
-          const restricted = isRestricted(n.tab);
-          const locked = proLocked || restricted;
-          const href = restricted
-            ? `/restricted?feature=${encodeURIComponent(accessTabLabel(n.tab as string))}`
-            : proLocked
-              ? upgradeHref(n.pro)
-              : n.href;
-
+          const title = sec.title;
+          // A section holding the current page never hides it.
+          const hasActive = sec.items.some((n) => pathMatches(pathname, n.href, activeTab));
+          const open = hasActive || !closed.includes(title);
+          const id = `sb-sec-${i}`;
           return (
-            <Link
-              key={n.href}
-              href={href}
-              onClick={onNavigate}
-              className={`sb__item${pathMatches(pathname, n.href, activeTab) ? " is-active" : ""}`}
-              aria-label={
-                restricted ? `${n.label} (Restricted)` : locked ? `${n.label} (Pro)` : undefined
-              }
-              title={
-                restricted
-                  ? `${n.label} restricted by your workspace admin`
-                  : locked
-                    ? `${n.label} upgrade to Pro`
-                    : undefined
-              }
-              style={locked ? { color: "var(--rl-muted-2)" } : undefined}
-            >
-              <Icon name={n.icon} style={locked ? { opacity: 0.6 } : undefined} />
-              <span style={{ flex: 1, opacity: locked ? 0.7 : undefined }}>{n.label}</span>
-              {restricted ? (
-                <Icon
-                  name="lock"
-                  size={13}
-                  style={{ color: "var(--rl-muted-2)", marginLeft: "auto" }}
-                  title="Restricted by your workspace admin"
+            <div key={title} className="sb__section">
+              <button
+                type="button"
+                className="sb__group"
+                aria-expanded={open}
+                aria-controls={id}
+                onClick={() => toggleGroup(title)}
+              >
+                <span>{title}</span>
+                <ChevronDown
+                  size={15}
+                  strokeWidth={2}
+                  aria-hidden="true"
+                  className={`sb__chev${open ? "" : " is-closed"}`}
                 />
-              ) : proLocked ? (
-                <LockIcon size={13} style={{ marginLeft: "auto" }} />
-              ) : (
-                n.badge && <span className="sb__badge">{n.badge}</span>
-              )}
-            </Link>
+              </button>
+              {open && <div id={id}>{sec.items.map(renderItem)}</div>}
+            </div>
           );
         })}
       </nav>
 
+      {/* Pinned footer: who you are + one offer pill for non-Pro plans. */}
       <div className="sb__bottom">
-        {isPro ? (
-          <div className="sb__plan">
-            <span className="sb__planbadge">{planLabel}</span>
-            <span style={{ fontSize: 11.5, color: "var(--rl-muted)" }}>{orgName}</span>
-          </div>
-        ) : (
-          <div className="sb__upsell">
-            <div className="sb__upsell-title">
-              <Icon name="bolt" size={13} />
-              Unlock more growth
-            </div>
-            <p className="sb__upsell-sub">
-              Upgrade to Pro for advanced AI, competitor insights, and more.
-            </p>
-            <Link href="/subscription" onClick={onNavigate} className="sb__upsell-btn">
-              <Icon name="sparkle" size={12} />
-              Upgrade to Pro
-            </Link>
-          </div>
+        <Link href="/settings" onClick={onNavigate} className="sb__profile">
+          <span className="sb__av" aria-hidden="true">
+            {initials(orgName)}
+          </span>
+          <span className="sb__who">
+            <span className="sb__who-name">{orgName}</span>
+            <span className="sb__who-plan">{planName(planLabel)}</span>
+          </span>
+        </Link>
+        {!isPro && (
+          <Link href="/subscription" onClick={onNavigate} className="sb__offer">
+            <Gift size={15} strokeWidth={1.9} aria-hidden="true" />
+            Upgrade to Pro
+          </Link>
         )}
       </div>
     </aside>
