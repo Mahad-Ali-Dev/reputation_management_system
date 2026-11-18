@@ -9,7 +9,7 @@
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-    --primary: 244 75% 59%;
+    --primary: 245 100% 62%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -21,24 +21,24 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 244 75% 59%;
+    --ring: 245 100% 62%;
     --radius: 0.5rem;
 
     /* repulabs premium design system — warm paper canvas + royal-blue/teal (artboard-locked) */
     /* surfaces — warm paper neutrals (artboard: --paper #fbfaf6, white panels) */
-    --bg: #fbfaf6;
+    --bg: #f3f2ee;
     --bg-2: #f4f8f5;
     --surface: #ffffff;
     --surface-2: #faf9f4;
     --surface-3: #f3f5f0;
 
     /* ink — softened to slate for a cleaner, less harsh feel */
-    --ink: #0f172a;
-    --ink-2: #1e293b;
-    --ink-3: #475569;
+    --ink: #15132b;
+    --ink-2: #231f3d;
+    --ink-3: #4a4763;
 
     /* muted — prefixed (rl-) to avoid colliding with shadcn's HSL --muted */
-    --rl-muted: #64748b;
+    --rl-muted: #6b6880;
     --rl-muted-2: #94a3b8;
     --rl-muted-3: #cbd5e1;
 
@@ -47,16 +47,16 @@
     --line-2: #e3eae6;
     --line-3: #cfd9d4;
 
-    /* signature royal blue + violet accent (artboard: Signal #2457ff) */
-    --pri: #2457ff;
-    --pri-50: #eff6ff;
-    --pri-100: #dbeafe;
-    --pri-300: #93c5fd;
-    --pri-700: #1b3fd1;
-    --pri-900: #1a347f;
-    --indigo: #6f5cff;
-    --indigo-50: #eef2ff;
-    --indigo-soft: #e0e7ff;
+    /* signature royal blue + violet accent (artboard: Signal #4b3bff) */
+    --pri: #4b3bff;
+    --pri-50: #f3f2ff;
+    --pri-100: #e6e3ff;
+    --pri-300: #aaa2ff;
+    --pri-700: #3a2be0;
+    --pri-900: #24188f;
+    --indigo: #7a63ff;
+    --indigo-50: #efedff;
+    --indigo-soft: #e2deff;
 
     /* teal "Trust" accent (artboard: Trust #12b998) — pairs with royal blue */
     --trust: #12b998;
@@ -69,10 +69,10 @@
        NOT replace --pri / --trust — they sit alongside the existing palette
        so brand recognition is preserved; the SYSTEM just reads M3. */
     /* primary = brand royal blue */
-    --m3-primary: #2457ff;
+    --m3-primary: #4b3bff;
     --m3-on-primary: #ffffff;
-    --m3-primary-container: #dde6ff;
-    --m3-on-primary-container: #0a1f6e;
+    --m3-primary-container: #e4e0ff;
+    --m3-on-primary-container: #1d1270;
     /* secondary = a calmer, desaturated blue-slate companion */
     --m3-secondary: #4a5578;
     --m3-on-secondary: #ffffff;
@@ -94,31 +94,33 @@
        primary hue. --surface-tint is the hue; --surface-tint-1..5 are
        ready-to-layer translucent washes for elevation levels 1→5. Applied
        via .ds-surface-tint / Tailwind shadow-rl-* tints below. */
-    --surface-tint: #2457ff;
-    --surface-tint-1: rgba(36, 87, 255, 0.04);
-    --surface-tint-2: rgba(36, 87, 255, 0.06);
-    --surface-tint-3: rgba(36, 87, 255, 0.08);
-    --surface-tint-4: rgba(36, 87, 255, 0.1);
-    --surface-tint-5: rgba(36, 87, 255, 0.12);
+    --surface-tint: #4b3bff;
+    --surface-tint-1: rgba(75, 59, 255, 0.04);
+    --surface-tint-2: rgba(75, 59, 255, 0.06);
+    --surface-tint-3: rgba(75, 59, 255, 0.08);
+    --surface-tint-4: rgba(75, 59, 255, 0.1);
+    --surface-tint-5: rgba(75, 59, 255, 0.12);
     /* tinted container surfaces — white panels with a primary-hued lift, so
        cards read as Material tonal surfaces rather than flat white. */
-    --surface-container-tint: #f4f6ff;
-    --surface-container-tint-high: #eef2ff;
+    --surface-container-tint: #f6f5ff;
+    --surface-container-tint-high: #efedff;
 
     /* state — warmed to artboard swatches */
-    --ok: #0b8f6d;
+    --ok: #12a26e;
     --ok-soft: #dff8ed;
-    --warn: #d6a63a;
+    --warn: #d9822b;
     --warn-soft: #fff1cc;
-    --bad: #e14d62;
+    --bad: #e5484d;
     --bad-soft: #ffe4e8;
-    --info: #2457ff;
-    --info-soft: #e8eeff;
-    --gold: #d6a63a;
+    --info: #4b3bff;
+    --info-soft: #edebff;
+    --gold: #f2a93b;
 
     /* type */
-    --f-ui: var(--font-geist), "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
+    --f-ui: var(--font-text), "DM Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui,
       sans-serif;
+    --f-head: var(--font-head), "Onest", var(--f-ui);
+    --f-num: var(--font-num), "Manrope", var(--f-ui);
     --f-mono: var(--font-geist-mono), "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
     /* radii — M3 shape scale: larger Material radii throughout. Cards land at
@@ -172,7 +174,7 @@
     --state-dragged: 0.16;
     /* Pre-mixed neutral + primary state layers (ready to drop into bg) */
     --state-on-surface: 15, 23, 42; /* rgb of --ink for rgba() overlays */
-    --state-pri: 36, 87, 255; /* rgb of --pri */
+    --state-pri: 75, 59, 255; /* rgb of --pri */
 
     /* ── M3 MOTION system (additive) ───────────────────────────────────
        Standard easing for most transitions; emphasized for entrances/exits.
@@ -206,7 +208,7 @@
        low opacity for airy, premium depth. Existing names preserved. */
     --sh: 0 1px 2px rgba(15, 23, 42, 0.03), 0 0 0 1px rgba(15, 23, 42, 0.04);
     --sh-1: 0 1px 2px rgba(15, 23, 42, 0.04), 0 10px 30px -18px rgba(15, 23, 42, 0.09);
-    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.035), 0 12px 32px -16px rgba(36, 87, 255, 0.1);
+    --sh-card: 0 1px 2px rgba(15, 23, 42, 0.035), 0 12px 32px -16px rgba(75, 59, 255, 0.1);
     --sh-2: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 44px -18px rgba(15, 23, 42, 0.12), 0 6px 16px
       -8px rgba(15, 23, 42, 0.06);
     --sh-pop: 0 30px 66px -22px rgba(15, 23, 42, 0.22), 0 10px 22px -10px rgba(15, 23, 42, 0.1);
@@ -214,9 +216,9 @@
        Raised levels carry the Material surface-tint (primary-hued ambient)
        so cards/menus pick up the M3 elevation tint as they rise. */
     --sh-sm: 0 1px 2px rgba(15, 23, 42, 0.05), 0 1px 3px rgba(15, 23, 42, 0.04);
-    --sh-md: 0 1px 2px rgba(36, 87, 255, 0.05), 0 6px 16px -6px rgba(36, 87, 255, 0.12);
-    --sh-lg: 0 2px 4px -1px rgba(36, 87, 255, 0.06), 0 12px 28px -8px rgba(36, 87, 255, 0.16);
-    --sh-xl: 0 4px 8px -2px rgba(36, 87, 255, 0.07), 0 24px 48px -12px rgba(36, 87, 255, 0.2);
+    --sh-md: 0 1px 2px rgba(75, 59, 255, 0.05), 0 6px 16px -6px rgba(75, 59, 255, 0.12);
+    --sh-lg: 0 2px 4px -1px rgba(75, 59, 255, 0.06), 0 12px 28px -8px rgba(75, 59, 255, 0.16);
+    --sh-xl: 0 4px 8px -2px rgba(75, 59, 255, 0.07), 0 24px 48px -12px rgba(75, 59, 255, 0.2);
 
     /* Tailwind shadow-rl-* tokens — also declared at :root so PORTALED
        content (Dialog/Dropdown/Tooltip mounted outside .rl-theme) resolves
@@ -227,19 +229,19 @@
     --shadow-xl: 0 4px 8px -2px rgba(16, 24, 40, 0.06), 0 28px 56px -14px rgba(16, 24, 40, 0.2);
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
     --sh-inset: inset 0 0 0 1px var(--line);
-    --sh-glow: 0 0 0 4px rgba(36, 87, 255, 0.14);
+    --sh-glow: 0 0 0 4px rgba(75, 59, 255, 0.14);
     /* premium primary-button shadow: soft royal-blue glow + crisp seat */
-    --sh-pri: 0 1px 2px rgba(15, 23, 42, 0.12), 0 8px 18px -6px rgba(36, 87, 255, 0.42), inset 0 1px
+    --sh-pri: 0 1px 2px rgba(15, 23, 42, 0.12), 0 8px 18px -6px rgba(75, 59, 255, 0.42), inset 0 1px
       0 rgba(255, 255, 255, 0.16);
-    --sh-pri-hover: 0 1px 2px rgba(15, 23, 42, 0.14), 0 12px 24px -6px rgba(36, 87, 255, 0.5), inset
+    --sh-pri-hover: 0 1px 2px rgba(15, 23, 42, 0.14), 0 12px 24px -6px rgba(75, 59, 255, 0.5), inset
       0 1px 0 rgba(255, 255, 255, 0.2);
     --sh-ink: 0 1px 2px rgba(15, 23, 42, 0.2), 0 8px 18px -6px rgba(15, 23, 42, 0.38), inset 0 1px 0
       rgba(255, 255, 255, 0.08);
 
     /* premium gradients — reusable accents (artboard-locked: royal blue + teal) */
-    --grad-pri: linear-gradient(180deg, #2457ff 0%, #1b3fd1 100%);
-    --grad-pri-hover: linear-gradient(180deg, #1b3fd1 0%, #1a347f 100%);
-    --grad-viz: linear-gradient(135deg, #2457ff 0%, #6f5cff 52%, #1b3fd1 100%);
+    --grad-pri: linear-gradient(180deg, #4b3bff 0%, #3a2be0 100%);
+    --grad-pri-hover: linear-gradient(180deg, #3a2be0 0%, #24188f 100%);
+    --grad-viz: linear-gradient(135deg, #4b3bff 0%, #7a63ff 52%, #3a2be0 100%);
     --grad-ink: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
     /* warm paper → teal-mist wash with a soft radial teal glow top-right
        (artboard .artboard recipe) */
@@ -262,7 +264,7 @@
     --foreground: 210 40% 98%;
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-    --primary: 244 75% 59%;
+    --primary: 245 100% 62%;
     --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -274,7 +276,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 244 75% 59%;
+    --ring: 245 100% 62%;
   }
 }
 
@@ -295,11 +297,11 @@
     --surface: #ffffff;
     --surface-2: #faf9f4;
     --surface-3: #f3f5f0;
-    --pri: #2457ff;
-    --pri-50: #eff6ff;
-    --pri-100: #dbeafe;
-    --pri-700: #1b3fd1;
-    --pri-900: #1a347f;
+    --pri: #4b3bff;
+    --pri-50: #f3f2ff;
+    --pri-100: #e6e3ff;
+    --pri-700: #3a2be0;
+    --pri-900: #24188f;
     --text: #1a1f2e;
     --text-muted: #5b6472;
     --text-subtle: #8a929e;
@@ -321,29 +323,29 @@
     --rating-empty: #e6e8eb;
     /* M3 tonal roles + surface tint, re-declared in-scope so the React
        component library (.rl-theme) resolves the Material You palette. */
-    --m3-primary: #2457ff;
+    --m3-primary: #4b3bff;
     --m3-on-primary: #ffffff;
-    --m3-primary-container: #dde6ff;
-    --m3-on-primary-container: #0a1f6e;
+    --m3-primary-container: #e4e0ff;
+    --m3-on-primary-container: #1d1270;
     --m3-secondary: #4a5578;
     --m3-secondary-container: #e3e7f4;
     --m3-on-secondary-container: #1a2240;
     --m3-tertiary: #0e9c80;
     --m3-tertiary-container: #c6f2e6;
     --m3-on-tertiary-container: #00382c;
-    --surface-tint: #2457ff;
-    --surface-tint-1: rgba(36, 87, 255, 0.04);
-    --surface-tint-2: rgba(36, 87, 255, 0.06);
-    --surface-tint-3: rgba(36, 87, 255, 0.08);
-    --surface-container-tint: #f4f6ff;
-    --surface-container-tint-high: #eef2ff;
+    --surface-tint: #4b3bff;
+    --surface-tint-1: rgba(75, 59, 255, 0.04);
+    --surface-tint-2: rgba(75, 59, 255, 0.06);
+    --surface-tint-3: rgba(75, 59, 255, 0.08);
+    --surface-container-tint: #f6f5ff;
+    --surface-container-tint-high: #efedff;
     /* M3 tonal elevation — soft contact + diffuse ambient with the Material
        surface-tint overlay baked into raised levels (the primary-hued lift
        that defines M3 elevation). Drives Tailwind shadow-rl-* across the lib. */
     --shadow-sm: 0 1px 2px rgba(16, 24, 40, 0.05), 0 1px 3px rgba(16, 24, 40, 0.04);
-    --shadow-md: 0 1px 2px rgba(36, 87, 255, 0.05), 0 8px 20px -6px rgba(36, 87, 255, 0.12);
-    --shadow-lg: 0 2px 4px -1px rgba(36, 87, 255, 0.06), 0 16px 36px -10px rgba(36, 87, 255, 0.16);
-    --shadow-xl: 0 4px 8px -2px rgba(36, 87, 255, 0.07), 0 28px 56px -14px rgba(36, 87, 255, 0.22);
+    --shadow-md: 0 1px 2px rgba(75, 59, 255, 0.05), 0 8px 20px -6px rgba(75, 59, 255, 0.12);
+    --shadow-lg: 0 2px 4px -1px rgba(75, 59, 255, 0.06), 0 16px 36px -10px rgba(75, 59, 255, 0.16);
+    --shadow-xl: 0 4px 8px -2px rgba(75, 59, 255, 0.07), 0 28px 56px -14px rgba(75, 59, 255, 0.22);
     --backdrop: rgba(16, 24, 40, 0.32);
     /* M3 standard easing — drives Tailwind ease-rl across components */
     --ease-out: cubic-bezier(0.2, 0, 0, 1);
@@ -567,8 +569,8 @@
      Subtle fade + rise on mount with emphasized-decelerate easing.
      Respect prefers-reduced-motion below. */
   .ds-mount {
-    animation: ds-rise var(--dur-3) var(--ease-emphasized-decelerate, cubic-bezier(0.05, 0.7, 0.1, 1))
-      both;
+    animation: ds-rise var(--dur-3)
+      var(--ease-emphasized-decelerate, cubic-bezier(0.05, 0.7, 0.1, 1)) both;
   }
   .ds-mount-fade {
     animation: ds-fade var(--dur-2) var(--ease-standard) both;
@@ -685,7 +687,7 @@
   opacity: 0.5;
 }
 .lp-spot--teal {
-  background: radial-gradient(circle, rgba(36, 87, 255, 0.55) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(75, 59, 255, 0.55) 0%, transparent 70%);
 }
 .lp-spot--mint {
   background: radial-gradient(circle, rgba(18, 185, 152, 0.45) 0%, transparent 70%);
@@ -719,7 +721,7 @@
   }
 }
 .lp-shine {
-  background: linear-gradient(110deg, transparent 30%, rgba(36, 87, 255, 0.55) 50%, transparent 70%);
+  background: linear-gradient(110deg, transparent 30%, rgba(75, 59, 255, 0.55) 50%, transparent 70%);
   background-size: 200% 100%;
   animation: lp-shine 3s linear infinite;
 }
@@ -739,7 +741,7 @@
   padding: 1px;
   background: linear-gradient(
     140deg,
-    rgba(36, 87, 255, 0.6),
+    rgba(75, 59, 255, 0.6),
     rgba(18, 185, 152, 0.25) 40%,
     rgba(11, 13, 14, 0.08) 70%
   );
@@ -823,7 +825,7 @@
 
 /* Text gradient — for headline accents. */
 .lp-text-gradient {
-  background: linear-gradient(135deg, #2457ff 0%, #6f5cff 45%, #12b998 100%);
+  background: linear-gradient(135deg, #4b3bff 0%, #7a63ff 45%, #12b998 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -870,7 +872,7 @@
   color: #fff;
   border-radius: var(--r-md);
   background: var(--grad-viz);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1), 0 16px 36px -16px rgba(36, 87, 255, 0.45);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.1), 0 16px 36px -16px rgba(75, 59, 255, 0.45);
 }
 .viz-banner::before {
   content: "";
@@ -1046,8 +1048,8 @@
   color: var(--m3-on-primary-container);
   box-shadow: var(--sh-lg);
   cursor: pointer;
-  transition: box-shadow var(--dur-2) var(--ease-standard),
-    transform var(--dur-2) var(--ease-standard);
+  transition: box-shadow var(--dur-2) var(--ease-standard), transform var(--dur-2)
+    var(--ease-standard);
 }
 .ds-fab::after {
   content: "";
@@ -1132,8 +1134,8 @@
   white-space: nowrap;
   cursor: pointer;
   text-decoration: none;
-  transition: background var(--dur-1) var(--ease-standard),
-    border-color var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard);
+  transition: background var(--dur-1) var(--ease-standard), border-color var(--dur-1)
+    var(--ease-standard), color var(--dur-1) var(--ease-standard);
 }
 .ds-chip::after {
   content: "";
@@ -1199,8 +1201,8 @@
   background: var(--surface-container-highest);
   border: 2px solid var(--outline);
   cursor: pointer;
-  transition: background var(--dur-2) var(--ease-standard),
-    border-color var(--dur-2) var(--ease-standard);
+  transition: background var(--dur-2) var(--ease-standard), border-color var(--dur-2)
+    var(--ease-standard);
 }
 .ds-switch::before {
   content: "";
@@ -1212,9 +1214,8 @@
   border-radius: 50%;
   background: var(--outline);
   transform: translateY(-50%);
-  transition: left var(--dur-2) var(--ease-emphasized),
-    width var(--dur-2) var(--ease-emphasized), height var(--dur-2) var(--ease-emphasized),
-    background var(--dur-2) var(--ease-standard);
+  transition: left var(--dur-2) var(--ease-emphasized), width var(--dur-2) var(--ease-emphasized),
+    height var(--dur-2) var(--ease-emphasized), background var(--dur-2) var(--ease-standard);
 }
 .ds-switch:checked {
   background: var(--m3-primary);
@@ -1271,17 +1272,17 @@
     color-scheme: light;
 
     /* translucent surface fills, by elevation */
-    --glass-fill: rgba(255, 255, 255, 0.55);
-    --glass-fill-strong: rgba(255, 255, 255, 0.72);
-    --glass-fill-subtle: rgba(255, 255, 255, 0.4);
+    --glass-fill: rgba(255, 255, 255, 0.7);
+    --glass-fill-strong: rgba(255, 255, 255, 0.82);
+    --glass-fill-subtle: rgba(255, 255, 255, 0.52);
     --glass-fill-solid: rgba(255, 255, 255, 0.92); /* reduced-transparency fallback */
 
     /* hairlines + highlights.
        Dark hairline, not white: on the warm off-white canvas a white border
        has nothing to contrast against and the panel edge disappears. The
        white light-catch lives in --glass-highlight (the inset top line). */
-    --glass-border: rgba(16, 24, 40, 0.08);
-    --glass-border-soft: rgba(16, 24, 40, 0.06);
+    --glass-border: rgba(21, 19, 43, 0.08);
+    --glass-border-soft: rgba(21, 19, 43, 0.06);
     --glass-highlight: rgba(255, 255, 255, 0.85);
     --glass-sheen: rgba(255, 255, 255, 0.5);
 
@@ -1293,32 +1294,32 @@
     --glass-saturate: 180%;
 
     /* layered depth: contact + ambient + inner top highlight */
-    --glass-shadow: 0 1px 1px rgba(16, 24, 40, 0.04), 0 12px 32px -14px rgba(16, 24, 40, 0.2),
-      inset 0 1px 0 var(--glass-highlight);
+    --glass-shadow: 0 1px 1px rgba(16, 24, 40, 0.04), 0 12px 32px -14px rgba(16, 24, 40, 0.2), inset
+      0 1px 0 var(--glass-highlight);
     --glass-shadow-lg: 0 2px 2px rgba(16, 24, 40, 0.05), 0 28px 60px -20px rgba(16, 24, 40, 0.3),
       inset 0 1px 0 var(--glass-highlight);
 
     /* ink on glass */
-    --glass-text: #101a33;
-    --glass-text-muted: #45506b;
-    --glass-text-subtle: #697490;
+    --glass-text: #15132b;
+    --glass-text-muted: #4a4763;
+    --glass-text-subtle: #6b6880;
 
     /* accent — brand royal blue reads well on light frost */
-    --glass-accent: #2457ff;
-    --glass-accent-hover: #1b3fd1;
+    --glass-accent: #4b3bff;
+    --glass-accent-hover: #3a2be0;
     --glass-accent-contrast: #ffffff;
-    --glass-accent-soft: rgba(36, 87, 255, 0.12);
-    --glass-ring: rgba(36, 87, 255, 0.55);
+    --glass-accent-soft: rgba(75, 59, 255, 0.12);
+    --glass-ring: rgba(75, 59, 255, 0.55);
 
     /* status — the spec's exact values, defined ONCE.
        Components used to pick their own: Tailwind emerald/rose (#10b981 /
        #f43f5e) in some places, the spec's #16a34a / #dc2626 in others, so the
        same "good" and "bad" rendered in two shades on one screen. */
-    --glass-success: #16a34a;
-    --glass-danger: #dc2626;
-    --glass-warning: #d97706;
+    --glass-success: #12a26e;
+    --glass-danger: #e5484d;
+    --glass-warning: #d9822b;
     /* Ratings. Was --gold #d6a63a; the spec's star is #f5a623. */
-    --glass-star: #f5a623;
+    --glass-star: #f2a93b;
     --gold: var(--glass-star);
 
     /* aurora canvas — ONE hue.
@@ -1327,11 +1328,24 @@
        blurred together through frost average out to grey-lavender. Now the
        spec's warm off-white with blooms of the single brand blue, and a faint
        warm wash so the page doesn't go cold. */
-    --glass-canvas-base: #fbfaf6;
-    --glass-canvas-gradient: linear-gradient(135deg, #fbfaf6 0%, #f6f7f4 55%, #fbfaf6 100%);
-    --aurora-1: rgba(36, 87, 255, 0.2); /* brand blue */
-    --aurora-2: rgba(36, 87, 255, 0.12); /* brand blue, second bloom */
-    --aurora-3: rgba(245, 166, 35, 0.07); /* warm wash — the spec's star amber, barely there */
+    --glass-canvas-base: #f3f2ee;
+    /* Brand sunrise — saffron glowing up from the bottom edge through peach
+       and lilac into a pale ultramarine sky. Kept soft ("decent"): enough
+       colour for the frosted chrome and cards to refract, never enough to
+       compete with content. Fixed to the viewport by .app--canvas. */
+    --glass-canvas-gradient: radial-gradient(
+        125% 125% at 50% 101%,
+        rgba(242, 169, 59, 0.26) 6%,
+        rgba(250, 186, 132, 0.22) 15%,
+        rgba(240, 186, 214, 0.2) 30%,
+        rgba(196, 186, 255, 0.2) 52%,
+        rgba(222, 226, 255, 0.18) 75%,
+        rgba(244, 244, 252, 0) 100%
+      ),
+      linear-gradient(180deg, #f1f1fb 0%, #f4f2f4 100%);
+    --aurora-1: rgba(75, 59, 255, 0.1); /* ultramarine */
+    --aurora-2: rgba(167, 140, 255, 0.08); /* lilac */
+    --aurora-3: transparent;
     --aurora-opacity: 1;
   }
 
@@ -1353,20 +1367,20 @@
     --glass-blur-strong: 32px;
     --glass-saturate: 165%;
 
-    --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 20px 50px -18px rgba(0, 0, 0, 0.65),
-      inset 0 1px 0 var(--glass-highlight);
-    --glass-shadow-lg: 0 2px 2px rgba(0, 0, 0, 0.4), 0 36px 80px -24px rgba(0, 0, 0, 0.75),
-      inset 0 1px 0 var(--glass-highlight);
+    --glass-shadow: 0 1px 1px rgba(0, 0, 0, 0.35), 0 20px 50px -18px rgba(0, 0, 0, 0.65), inset 0
+      1px 0 var(--glass-highlight);
+    --glass-shadow-lg: 0 2px 2px rgba(0, 0, 0, 0.4), 0 36px 80px -24px rgba(0, 0, 0, 0.75), inset 0
+      1px 0 var(--glass-highlight);
 
     --glass-text: #f3f6fe;
     --glass-text-muted: #afb9d1;
     --glass-text-subtle: #808cab;
 
-    --glass-accent: #6f93ff;
-    --glass-accent-hover: #8aa7ff;
+    --glass-accent: #8f84ff;
+    --glass-accent-hover: #a79fff;
     --glass-accent-contrast: #081023;
-    --glass-accent-soft: rgba(111, 147, 255, 0.18);
-    --glass-ring: rgba(132, 162, 255, 0.65);
+    --glass-accent-soft: rgba(143, 132, 255, 0.18);
+    --glass-ring: rgba(160, 150, 255, 0.65);
 
     /* status — lifted for contrast on the dark canvas */
     --glass-success: #4ade80;
@@ -1377,7 +1391,7 @@
 
     --glass-canvas-base: #070b18;
     --glass-canvas-gradient: linear-gradient(140deg, #0a1022 0%, #070b18 50%, #0b0f1e 100%);
-    --aurora-1: rgba(36, 87, 255, 0.5);
+    --aurora-1: rgba(75, 59, 255, 0.5);
     --aurora-2: rgba(18, 185, 152, 0.4);
     --aurora-3: rgba(139, 92, 246, 0.48);
     --aurora-opacity: 1;
@@ -1528,8 +1542,8 @@
     border-color: var(--glass-border);
     box-shadow: var(--glass-shadow);
     transition: transform var(--dur-1, 150ms) var(--ease-standard, cubic-bezier(0.2, 0, 0, 1)),
-      background var(--dur-1, 150ms), border-color var(--dur-1, 150ms),
-      box-shadow var(--dur-1, 150ms);
+      background var(--dur-1, 150ms), border-color var(--dur-1, 150ms), box-shadow
+      var(--dur-1, 150ms);
   }
   .glass-btn:hover {
     background: var(--glass-fill-strong);
@@ -1553,8 +1567,8 @@
     color: var(--glass-accent-contrast);
     background: var(--glass-accent);
     border-color: transparent;
-    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.2), 0 10px 24px -8px var(--glass-accent),
-      inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.2), 0 10px 24px -8px var(--glass-accent), inset 0 1px 0
+      rgba(255, 255, 255, 0.25);
   }
   .glass-btn--primary:hover {
     background: var(--glass-accent-hover);
@@ -1585,8 +1599,8 @@
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
     color: var(--glass-text);
     font: 400 14px / 1.4 var(--f-ui);
-    transition: border-color var(--dur-1, 150ms), box-shadow var(--dur-1, 150ms),
-      background var(--dur-1, 150ms);
+    transition: border-color var(--dur-1, 150ms), box-shadow var(--dur-1, 150ms), background
+      var(--dur-1, 150ms);
   }
   .glass-input::placeholder {
     color: var(--glass-text-subtle);
@@ -1688,5 +1702,45 @@
   .glass-surface--hover,
   .glass-btn {
     transition: none !important;
+  }
+}
+
+/* ============================================================
+   TYPE ROLES — headings in Onest, numbers in Manrope, the rest
+   inherits DM Sans from --f-ui. In @layer base so any component
+   that sets its own font-family still wins (direct rule beats this
+   only where nothing more specific exists).
+   Numbers are matched by the naming conventions already used across
+   the app's CSS (…__value, …__num, …__count, …__total, …-num) and by
+   anything marked tabular-nums, so metrics pick it up everywhere
+   without touching every page.
+   ============================================================ */
+@layer base {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6,
+  [class*="__title"],
+  [class*="__heading"],
+  [class*="__headline"] {
+    font-family: var(--f-head);
+    letter-spacing: -0.015em;
+  }
+
+  [class*="__value"],
+  [class*="__val "],
+  [class$="__val"],
+  [class*="__num"],
+  [class*="-num "],
+  [class$="-num"],
+  [class*="__count"],
+  [class*="__total"],
+  [class*="tabular-nums"],
+  .brp-num {
+    font-family: var(--f-num);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
   }
 }

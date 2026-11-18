@@ -254,7 +254,7 @@ export function CommandPalette() {
                       height: 28,
                       borderRadius: 7,
                       background: isActive ? "#e0e7ff" : "#f3f5f0",
-                      color: isActive ? "#2457ff" : "#475569",
+                      color: isActive ? "#4b3bff" : "#475569",
                       flex: "0 0 28px",
                     }}
                   >

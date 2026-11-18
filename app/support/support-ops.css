@@ -36,7 +36,7 @@
   --sops-pri-2: #6f43ff;
   --sops-pri-soft: #efedff;
   --sops-pri-border: #a994ff;
-  --sops-blue: #2457ff;
+  --sops-blue: #4b3bff;
 
   --sops-danger: #ff2845;
   --sops-danger-soft: #ffe9ed;
@@ -602,7 +602,7 @@
 }
 .sops-kpi__tile img { width: 32px; height: 32px; }
 .sops-kpi__tile--pri    { background: linear-gradient(135deg, #8f6cff, #5b3dff); }
-.sops-kpi__tile--blue   { background: linear-gradient(135deg, #4f8bff, #2457ff); }
+.sops-kpi__tile--blue   { background: linear-gradient(135deg, #4f8bff, #4b3bff); }
 .sops-kpi__tile--green  { background: linear-gradient(135deg, #34d399, #13ae62); }
 .sops-kpi__tile--orange { background: linear-gradient(135deg, #ffb454, #ff9518); }
 .sops-kpi__lab { font-size: 12px; font-weight: 700; color: var(--sops-muted); }

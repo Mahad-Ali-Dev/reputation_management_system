@@ -1080,7 +1080,7 @@ a.sk-minical__day:hover {
   color: #1c54d4;
 }
 .sk-status--scheduled .sk-status__dot {
-  background: #2457ff;
+  background: #4b3bff;
 }
 .sk-status--queued,
 .sk-status--publishing {

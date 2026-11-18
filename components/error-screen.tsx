@@ -7,7 +7,7 @@ import Link from "next/link";
  * (app/not-found.tsx, app/error.tsx, app/global-error.tsx).
  *
  * Fully self-contained inline styling (brand hexes mirror the design tokens in
- * app/globals.css: --pri #2457ff, --ink #0f172a, --bg #fbfaf6) so it renders
+ * app/globals.css: --pri #4b3bff, --ink #0f172a, --bg #fbfaf6) so it renders
  * identically even from app/global-error.tsx, which replaces the root layout and
  * therefore has NO access to the global stylesheets.
  */
@@ -16,7 +16,7 @@ type Action = { label: string; href: string };
 
 const INK = "#0f172a";
 const INK_3 = "#475569";
-const PRI = "#2457ff";
+const PRI = "#4b3bff";
 const LINE = "#e3eae6";
 
 export function ErrorScreen({
@@ -52,7 +52,7 @@ export function ErrorScreen({
         placeItems: "center",
         padding: "32px 20px",
         fontFamily:
-          "var(--font-geist), system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
+          "var(--f-ui), system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
         color: INK,
       }}
     >

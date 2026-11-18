@@ -2,7 +2,15 @@
 
 import { openAskAi } from "@/components/ask-ai";
 import { Icon, type IconName } from "@/components/shell/icon";
+import dynamic from "next/dynamic";
 import { useState } from "react";
+
+// three.js loads only on the dashboard (and only in the browser) — never in
+// the server render or the shared bundle.
+const FrogMascot = dynamic(
+  () => import("@/components/ui/ai-agent-mascot").then((m) => m.FrogMascot),
+  { ssr: false, loading: () => <div className="dk-copilot__frog-ph" aria-hidden="true" /> },
+);
 
 /**
  * Dashboard "Your AI copilot" prompt panel (design kit, bottom section).
@@ -62,11 +70,31 @@ export function CopilotChips() {
   return (
     <div className="dk-copilot__chips">
       {CHIPS.map((c) => (
-        <button key={c.label} type="button" className="dk-copilot__chip" onClick={() => openAskAi(c.label)}>
+        <button
+          key={c.label}
+          type="button"
+          className="dk-copilot__chip"
+          onClick={() => openAskAi(c.label)}
+        >
           <Icon name={c.icon} size={13} />
           {c.label}
         </button>
       ))}
     </div>
+  );
+}
+
+/** The Repulabs AI frog (brand-coloured 3D mascot) in place of the old robot
+ *  image. Clicking him opens the assistant. */
+export function CopilotMascot() {
+  return (
+    <button
+      type="button"
+      className="dk-copilot__frog"
+      onClick={() => openAskAi()}
+      aria-label="Open the Repulabs AI assistant"
+    >
+      <FrogMascot size={148} name="Repulabs AI" followPointer />
+    </button>
   );
 }

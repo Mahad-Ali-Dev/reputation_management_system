@@ -100,7 +100,7 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
     data.totalComments > 0 ? Math.round((repliedTotal / data.totalComments) * 100) : 0;
 
   const platformPalette: Record<string, string> = {
-    facebook: "#2457ff",
+    facebook: "#4b3bff",
     instagram: "#f0139a",
     twitter: "#1DA1F2",
     linkedin: "#0A66C2",
@@ -156,7 +156,7 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
           pill="Last 24 hours"
           pillTone="blue"
           spark={[2, 3, 4, 5, 4, 6, data.repliedLast24h || 5]}
-          sparkColor="#2457ff"
+          sparkColor="#4b3bff"
         />
         {/* Avg first response — source illustration is a baked raster, keep inline icon. */}
         <AnKpi
@@ -188,7 +188,7 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
               <p className="sops-card__sub">By channel · last 12 weeks</p>
             </div>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <Legend c="#2457ff" label="Facebook" />
+              <Legend c="#4b3bff" label="Facebook" />
               <Legend c="#f0139a" label="Instagram" />
               <Legend c="#94a0b8" label="Other" />
             </div>
@@ -206,7 +206,7 @@ export async function AnalyticsPanel({ orgId }: { orgId: string }) {
               <MultiLineChart
                 series={stackedChart.data}
                 labels={stackedChart.labels}
-                colors={["#2457ff", "#f0139a", "#94a0b8"]}
+                colors={["#4b3bff", "#f0139a", "#94a0b8"]}
               />
             )}
           </div>
@@ -490,7 +490,7 @@ function MultiLineChart({
         );
       })}
       {channelSeries.map((cs, ci) => {
-        const color = colors[ci] ?? "#2457ff";
+        const color = colors[ci] ?? "#4b3bff";
         const line = cs.map((v, i) => `${i ? "L" : "M"} ${xOf(i).toFixed(1)} ${yOf(v).toFixed(1)}`).join(" ");
         const area = `${line} L ${xOf(n - 1).toFixed(1)} ${height - padB} L ${padL} ${height - padB} Z`;
         return (

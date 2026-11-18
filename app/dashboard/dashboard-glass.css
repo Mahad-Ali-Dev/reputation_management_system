@@ -166,9 +166,45 @@
   height: 179px;
 }
 
+/* Frog mascot in the copilot card: centred in the art column, the pill
+   under him; the button only adds a pointer + focus ring. */
+.app--glass .dk-copilot__bot--frog {
+  /* Pinned to the top of the art column (not vertically centred like the old
+     robot) so the frog + his name pill stay clear of the chip row below. */
+  top: 10px;
+  transform: none;
+  width: 200px;
+  height: auto;
+  display: grid;
+  place-items: center;
+}
+.dk-copilot__frog {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 24px;
+}
+.dk-copilot__frog:focus-visible {
+  outline: 2px solid var(--glass-accent);
+  outline-offset: 4px;
+}
+.dk-copilot__frog-ph {
+  width: 148px;
+  aspect-ratio: 1 / 1;
+}
+@media (max-width: 860px) {
+  .app--glass .dk-copilot__bot--frog {
+    width: 200px;
+    margin: 8px auto 0;
+  }
+}
+
 /* ── Palette → shared tokens ────────────────────────────────────
    The dashboard carried its OWN palette (dashboard-kit.css): primary #2563eb
-   next to the brand's actual #2457ff, plus yellow stars, red, orange, purple,
+   next to the brand's actual #4b3bff, plus yellow stars, red, orange, purple,
    lilac avatars and indigo reviewer names — a second colour system running
    beside the app's. Remapped here so the layout is untouched but every colour
    comes from the one set of glass tokens:

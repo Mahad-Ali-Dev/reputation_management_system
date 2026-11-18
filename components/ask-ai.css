@@ -1,0 +1,472 @@
+/* ============================================================
+   Ask Repulabs — floating frosted-glass assistant sheet.
+   Apple-style material: a translucent white fill that blurs and
+   saturates whatever is behind it, a bright inner top edge, a
+   hairline outer edge, and a soft long shadow. Falls back to a
+   solid sheet when backdrop-filter is unsupported or the user
+   asks for reduced transparency.
+   ============================================================ */
+
+.askai {
+  --askai-accent: var(--pri, #4b3bff);
+  --askai-accent-2: var(--indigo, #7a63ff);
+  --askai-ink: var(--ink, #15132b);
+  --askai-muted: var(--rl-muted, #6b6880);
+  --askai-hair: rgba(21, 19, 43, 0.08);
+  --askai-fill: rgba(255, 255, 255, 0.62);
+  --askai-fill-2: rgba(255, 255, 255, 0.72);
+  font-family: var(--f-ui, system-ui, sans-serif);
+  color: var(--askai-ink);
+}
+
+/* ---- launcher ---------------------------------------------------- */
+.askai-launcher {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 60;
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 0;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  cursor: pointer;
+  background: linear-gradient(145deg, var(--askai-accent-2) 0%, var(--askai-accent) 60%);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.55), 0 14px 30px -10px rgba(75, 59, 255, 0.6), inset 0
+    1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.askai-launcher:hover {
+  transform: translateY(-2px) scale(1.03);
+}
+.askai-launcher:focus-visible {
+  outline: 2px solid var(--askai-accent);
+  outline-offset: 4px;
+}
+
+/* ---- scrim ------------------------------------------------------- */
+.askai-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  border: 0;
+  cursor: default;
+  background: rgba(21, 19, 43, 0.1);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  animation: askai-fade 0.2s ease-out;
+}
+
+/* ---- sheet ------------------------------------------------------- */
+.askai-sheet {
+  position: fixed;
+  top: 12px;
+  right: 12px;
+  bottom: 12px;
+  z-index: 61;
+  width: min(420px, calc(100vw - 24px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 26px;
+  background: var(--askai-fill);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 0 0 0.5px var(--askai-hair), 0 30px 80px -24px rgba(21, 19, 43, 0.35),
+    0 8px 24px -12px rgba(21, 19, 43, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  animation: askai-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+}
+/* faint ultramarine glow at the top of the glass so it isn't flat white */
+.askai-sheet::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 180px;
+  pointer-events: none;
+  background: radial-gradient(120% 100% at 0% 0%, rgba(75, 59, 255, 0.1), transparent 70%),
+    radial-gradient(90% 100% at 100% 0%, rgba(242, 169, 59, 0.07), transparent 70%);
+}
+
+/* header */
+.askai-head {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 14px 18px;
+}
+.askai-mark {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, var(--askai-accent-2) 0%, var(--askai-accent) 65%);
+  box-shadow: 0 6px 16px -6px rgba(75, 59, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.askai-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.askai-sub {
+  margin: 1px 0 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--askai-muted);
+}
+.askai-live {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--ok, #12a26e);
+  box-shadow: 0 0 0 3px rgba(18, 162, 110, 0.16);
+}
+.askai-iconbtn {
+  margin-left: auto;
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  border: 0;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  color: var(--askai-muted);
+  background: rgba(21, 19, 43, 0.05);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.askai-iconbtn:hover {
+  background: rgba(21, 19, 43, 0.09);
+  color: var(--askai-ink);
+}
+
+/* body */
+.askai-body {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.askai-scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 6px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(21, 19, 43, 0.15) transparent;
+}
+
+/* empty state */
+.askai-hello {
+  padding: 18px 4px 4px;
+}
+.askai-hello h3 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.askai-hello p {
+  margin: 6px 0 18px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--askai-muted);
+}
+.askai-suggest {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.askai-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 12px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: var(--askai-fill-2);
+  box-shadow: 0 0 0 0.5px var(--askai-hair), 0 1px 2px rgba(21, 19, 43, 0.04);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--askai-ink);
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease;
+}
+.askai-chip:hover {
+  background: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 0 0 0.5px var(--askai-hair), 0 8px 18px -10px rgba(21, 19, 43, 0.25);
+}
+.askai-chip__icon {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  color: var(--askai-accent);
+  background: rgba(75, 59, 255, 0.09);
+}
+.askai-chip__arrow {
+  margin-left: auto;
+  color: var(--askai-muted);
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+.askai-chip:hover .askai-chip__arrow {
+  opacity: 1;
+}
+
+/* messages */
+.askai-row {
+  display: flex;
+  gap: 8px;
+  align-items: flex-end;
+  animation: askai-pop 0.22s ease-out;
+}
+.askai-row--user {
+  justify-content: flex-end;
+}
+.askai-avatar {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(145deg, var(--askai-accent-2), var(--askai-accent));
+}
+.askai-bubble {
+  max-width: 82%;
+  padding: 10px 14px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.askai-bubble--user {
+  color: #fff;
+  border-radius: 18px 18px 6px 18px;
+  background: linear-gradient(145deg, var(--askai-accent-2) -20%, var(--askai-accent) 70%);
+  box-shadow: 0 8px 18px -10px rgba(75, 59, 255, 0.6);
+}
+.askai-bubble--bot {
+  border-radius: 18px 18px 18px 6px;
+  background: var(--askai-fill-2);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 0 0 0.5px var(--askai-hair);
+}
+.askai-typing {
+  display: inline-flex;
+  gap: 4px;
+  padding: 4px 2px;
+  color: var(--askai-muted);
+}
+.askai-typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: ask-ai-blink 1.2s infinite;
+}
+.askai-typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+.askai-typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.askai-error {
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: #a3262a;
+  background: rgba(229, 72, 77, 0.1);
+  border: 1px solid rgba(229, 72, 77, 0.18);
+}
+
+/* composer */
+.askai-composer {
+  padding: 10px 12px 12px;
+}
+
+/* ---- mascot stage ------------------------------------------------ */
+/* A small brand "sunrise" behind the frog: saffron glowing up from the
+   bottom through peach and lilac into a pale ultramarine sky. */
+.askai-stage {
+  position: relative;
+  margin: 0 14px;
+  padding: 10px 0 14px;
+  display: flex;
+  justify-content: center;
+  border-radius: 22px;
+  overflow: hidden;
+  background: radial-gradient(
+    125% 125% at 50% 101%,
+    rgba(242, 169, 59, 0.55) 8%,
+    rgba(250, 186, 132, 0.5) 18%,
+    rgba(240, 186, 214, 0.45) 32%,
+    rgba(200, 188, 255, 0.45) 55%,
+    rgba(222, 226, 255, 0.5) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+  transition: padding 0.3s ease;
+}
+.askai-stage--compact {
+  padding: 4px 0 8px;
+}
+.askai-stage__placeholder {
+  width: 168px;
+  aspect-ratio: 1 / 1;
+}
+.askai-stage--compact .askai-stage__placeholder {
+  width: 104px;
+}
+
+/* ---- PromptInput, glass finish ------------------------------------ */
+.askai-input-card.aci-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 0 0.5px var(--askai-hair), 0 8px 22px -14px rgba(21, 19, 43, 0.35);
+}
+.askai-input-card.aci-card:focus-within {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 0.5px var(--askai-hair), 0 0 0 4px rgba(75, 59, 255, 0.14);
+}
+.askai-input-card .aci-fade {
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+}
+.askai-input-card .aci-fade--bottom {
+  background: linear-gradient(to top, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+}
+.askai-input-card .aci-send {
+  background: var(--askai-accent);
+  color: #fff;
+}
+.askai-foot {
+  margin: 8px 0 0;
+  text-align: center;
+  font-size: 11px;
+  color: var(--askai-muted);
+}
+
+/* plan gate */
+.askai-gate {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.35);
+}
+.askai-gate__pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--askai-accent);
+  background: rgba(75, 59, 255, 0.1);
+}
+.askai-gate h4 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.askai-gate p {
+  margin: 0;
+  max-width: 260px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--askai-muted);
+}
+.askai-gate a {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  height: 36px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-decoration: none;
+  background: var(--askai-accent);
+}
+
+/* ---- motion ------------------------------------------------------ */
+@keyframes askai-in {
+  from {
+    opacity: 0;
+    transform: translateX(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes askai-fade {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes askai-pop {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+/* ---- phones: full-screen sheet ----------------------------------- */
+@media (max-width: 640px) {
+  .askai-sheet {
+    inset: 0;
+    width: 100vw;
+    border-radius: 0;
+    border: 0;
+  }
+}
+
+/* ---- fallbacks --------------------------------------------------- */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .askai-sheet {
+    background: #f8f7fb;
+  }
+}
+/* biome-ignore lint/correctness/noUnknownMediaFeatureName: real Media Queries 5 feature (Safari/Chrome) */
+@media (prefers-reduced-transparency: reduce) {
+  .askai-sheet {
+    background: #f8f7fb;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .askai-sheet,
+  .askai-scrim,
+  .askai-row {
+    animation: none;
+  }
+}

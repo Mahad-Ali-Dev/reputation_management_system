@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist_Mono, Inter } from "next/font/google";
+import { DM_Sans, Geist_Mono, Manrope, Onest } from "next/font/google";
 import { Providers } from "./providers";
 import "./globals.css";
 import "./design-system.css";
@@ -21,15 +21,15 @@ export const viewport: Viewport = {
   ],
 };
 
-// Kit design font. Inter (variable) matches the delivered mockups and exposes the
-// full 100–900 weight range, so heading weights render as REAL weights instead of
-// the browser's synthetic faux-bold (which looked muddy/over-bold). Variable name
-// kept as --font-geist so globals.css (--f-ui) needs no change.
-const sans = Inter({
-  subsets: ["latin"],
-  variable: "--font-geist",
-  display: "swap",
-});
+// Type system (founder pick "C", 2026-11): three faces, one job each.
+//   DM Sans  — body/UI text   → --font-text  (feeds --f-ui in globals.css)
+//   Onest    — headings       → --font-head  (feeds --f-head)
+//   Manrope  — numbers/metrics→ --font-num   (feeds --f-num)
+// All variable fonts, so real weights render (no faux-bold). UI weights are
+// capped at 700 in CSS per the typography rule.
+const text = DM_Sans({ subsets: ["latin"], variable: "--font-text", display: "swap" });
+const head = Onest({ subsets: ["latin"], variable: "--font-head", display: "swap" });
+const num = Manrope({ subsets: ["latin"], variable: "--font-num", display: "swap" });
 
 const geistMono = Geist_Mono({
   subsets: ["latin"],
@@ -117,7 +117,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${sans.variable} ${geistMono.variable}`}>
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${text.variable} ${head.variable} ${num.variable} ${geistMono.variable}`}
+    >
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

@@ -5,11 +5,7 @@ import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { syncSubscriptionOnReturn } from "@/lib/billing/sync";
-import {
-  type SetupState,
-  getDashboardData,
-  getSetupState,
-} from "@/lib/dashboard/queries";
+import { type SetupState, getDashboardData, getSetupState } from "@/lib/dashboard/queries";
 import { normalizeRangeDays } from "@/lib/date-range";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
@@ -17,9 +13,9 @@ import { getOnboardingFacts } from "@/lib/onboarding/facts";
 import { Smile } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CopilotChips, CopilotPrompt } from "./_components/copilot-panel";
+import { CopilotChips, CopilotMascot, CopilotPrompt } from "./_components/copilot-panel";
 import { KbCrawlStrip } from "./_components/kb-crawl-strip";
-import { MetricStrip, type DashMetric } from "./_components/metric-strip";
+import { type DashMetric, MetricStrip } from "./_components/metric-strip";
 import "./dashboard-kit.css";
 import "./dashboard-glass.css";
 
@@ -70,19 +66,14 @@ export default async function DashboardPage({
   // shows when the org actually reflects pro/active.
   let checkoutPlan = org.plan;
   if (params.checkout === "success") {
-    await syncSubscriptionOnReturn(
-      orgId,
-      org.stripeCustomerId,
-      params.session_id ?? null,
-    );
+    await syncSubscriptionOnReturn(orgId, org.stripeCustomerId, params.session_id ?? null);
     const refreshed = await prisma.organization.findUnique({
       where: { id: orgId },
       select: { plan: true },
     });
     checkoutPlan = refreshed?.plan ?? checkoutPlan;
   }
-  const checkoutActive =
-    params.checkout === "success" && checkoutPlan === "pro";
+  const checkoutActive = params.checkout === "success" && checkoutPlan === "pro";
 
   const [d, setup, facts] = await Promise.all([
     getDashboardData(orgId, rangeDays),
@@ -120,8 +111,7 @@ export default async function DashboardPage({
             ? "done"
             : r.content && r.content.length > 40
               ? "indexing"
-              : "crawling") as
-          "queued" | "crawling" | "indexing" | "done" | "failed",
+              : "crawling") as "queued" | "crawling" | "indexing" | "done" | "failed",
         chunks: r._count.embeddings,
         message: r.status === "failed" ? r.content : null,
       })),
@@ -145,11 +135,9 @@ export default async function DashboardPage({
 
   const total = d.total;
   const avgRating = d.avgRating;
-  const byRating = (r: number) =>
-    d.ratingGroups.find((g) => g.rating === r)?.count ?? 0;
+  const byRating = (r: number) => d.ratingGroups.find((g) => g.rating === r)?.count ?? 0;
   const fiveStarCount = byRating(5);
-  const responseRate =
-    total > 0 ? Math.min(100, Math.round((d.repliedCount / total) * 100)) : 0;
+  const responseRate = total > 0 ? Math.min(100, Math.round((d.repliedCount / total) * 100)) : 0;
   const hasGoogle = d.hasGoogle;
 
   // Skip honorifics: "Dr. Sarah Chen" was greeted as "Dr.!".
@@ -165,11 +153,8 @@ export default async function DashboardPage({
   // Top-strip metrics (label · value · delta + hover trend popover). Values and
   // series come straight from the dashboard query — see _components/metric-strip.
   const ratingValue = d.avgRatingInRange ?? (d.avgRating || null);
-  const fiveStarPct =
-    total > 0 ? Math.round((fiveStarCount / total) * 100) : null;
-  const pctDelta = (
-    pct: number | null,
-  ): { text: string; dir: "up" | "down" | "flat" } =>
+  const fiveStarPct = total > 0 ? Math.round((fiveStarCount / total) * 100) : null;
+  const pctDelta = (pct: number | null): { text: string; dir: "up" | "down" | "flat" } =>
     pct === null || pct === 0
       ? { text: "0%", dir: "flat" }
       : { text: `${pct > 0 ? "+" : ""}${pct}%`, dir: pct > 0 ? "up" : "down" };
@@ -177,8 +162,7 @@ export default async function DashboardPage({
     {
       key: "rating",
       label: "Average rating",
-      value:
-        ratingValue !== null && ratingValue > 0 ? ratingValue.toFixed(1) : "—",
+      value: ratingValue !== null && ratingValue > 0 ? ratingValue.toFixed(1) : "—",
       delta:
         d.deltas.ratingAbs !== null && d.deltas.ratingAbs !== 0
           ? {
@@ -281,18 +265,12 @@ export default async function DashboardPage({
                     <InsightCard
                       label="Avg. Response Time"
                       icon={<Icon name="clock" size={20} />}
-                      value={
-                        d.avgResponseHours !== null
-                          ? fmtHours(d.avgResponseHours)
-                          : null
-                      }
+                      value={d.avgResponseHours !== null ? fmtHours(d.avgResponseHours) : null}
                     />
                     <InsightCard
                       label="Sentiment"
                       icon={<Smile size={20} strokeWidth={1.75} aria-hidden="true" />}
-                      value={
-                        total > 0 ? sentimentLabel(d.sentiment).label : null
-                      }
+                      value={total > 0 ? sentimentLabel(d.sentiment).label : null}
                       chip={
                         total > 0
                           ? {
@@ -308,16 +286,13 @@ export default async function DashboardPage({
                       icon={<Icon name="trend" size={20} />}
                       value={
                         total > 0
-                          ? d.reviews7dDeltaPct !== null &&
-                            d.reviews7dDeltaPct > 0
+                          ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
                             ? "Improving"
                             : "Steady"
                           : null
                       }
                       chip={
-                        total > 0 &&
-                        d.reviews7dDeltaPct !== null &&
-                        d.reviews7dDeltaPct !== 0
+                        total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
                           ? {
                               text: `${Math.abs(d.reviews7dDeltaPct)}%`,
                               dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
@@ -346,8 +321,8 @@ export default async function DashboardPage({
                   <div className="dk-train__body">
                     <h2 className="dk-train__title">Train your agent</h2>
                     <p className="dk-train__sub">
-                      Teach your AI agent about your business so it can give
-                      smarter, on-brand answers.
+                      Teach your AI agent about your business so it can give smarter, on-brand
+                      answers.
                     </p>
                   </div>
                   <Link href="/ai" className="dk-train__cta">
@@ -366,12 +341,7 @@ export default async function DashboardPage({
 
         <section aria-label="Quick training">
           <div className="dk-quick">
-            <QuickChip
-              icon="upload"
-              title="Upload FAQs"
-              sub="Add common Q&A"
-              href="/ai?tab=info"
-            />
+            <QuickChip icon="upload" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
             <QuickChip
               icon="building"
               title="Add business info"
@@ -473,9 +443,7 @@ export default async function DashboardPage({
               <Icon name="sparkle" size={14} /> AI Assistant{" "}
               <span className="dk-copilot__beta">Beta</span>
             </div>
-            <h2 className="dk-copilot__title">
-              Your AI copilot for reputation growth.
-            </h2>
+            <h2 className="dk-copilot__title">Your AI copilot for reputation growth.</h2>
             <p className="dk-copilot__sub">
               Ask anything. Get insights, summaries, and recommendations.
             </p>
@@ -484,17 +452,10 @@ export default async function DashboardPage({
           {/* Kit: the 4 suggestion chips sit on a full-width row BELOW the
               input, clear of the illustration column. */}
           <CopilotChips />
-          {/* Kit "Ai assistant/robot_exact.svg" — the complete 3D copilot mascot
-              (robot + chat bubble + sparkles all baked into ONE asset, exactly as
-              the mockup). Extracted from the delivered kit SVG at full resolution.
-              The asset ships with a baked near-white background, so multiply melts
-              it into the lavender panel on every edge (no crop/feather hacks). */}
-          <div className="dk-copilot__bot" aria-hidden>
-            <img
-              className="dk-copilot__art"
-              src={`${ASSETS}/copilot-bot.png`}
-              alt=""
-            />
+          {/* The Repulabs AI frog (3D, brand ultramarine) replaces the kit's
+              robot PNG (public assets copilot-bot.png kept, now unused). */}
+          <div className="dk-copilot__bot dk-copilot__bot--frog">
+            <CopilotMascot />
           </div>
         </section>
       </div>
@@ -547,11 +508,13 @@ const RATING_COLORS: Record<number, string> = {
   // donut read from this one map, so the same star is the same colour in both.
   // Was blue / blue / dark-gold / yellow / red: four hues against the spec's
   // "one loud colour". 5★ and 4★ stay identical, as the mockup painted them.
-  5: "#2457ff",
-  4: "#2457ff",
-  3: "rgba(36, 87, 255, 0.55)",
-  2: "rgba(36, 87, 255, 0.35)",
-  1: "rgba(36, 87, 255, 0.2)",
+  // Read from the accent token (same #4b3bff today) so a palette change
+  // recolours the bars and donut with everything else.
+  5: "var(--glass-accent, #4b3bff)",
+  4: "var(--glass-accent, #4b3bff)",
+  3: "color-mix(in srgb, var(--glass-accent, #4b3bff) 55%, transparent)",
+  2: "color-mix(in srgb, var(--glass-accent, #4b3bff) 35%, transparent)",
+  1: "color-mix(in srgb, var(--glass-accent, #4b3bff) 20%, transparent)",
 };
 
 const BAR_COLORS = RATING_COLORS;
@@ -559,13 +522,7 @@ const BAR_COLORS = RATING_COLORS;
 /** Brand-colored Google "G" (the kit shows the multicolor mark, not a tinted glyph). */
 function GoogleG({ size = 14 }: { size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 48 48"
-      aria-hidden
-      focusable="false"
-    >
+    <svg width={size} height={size} viewBox="0 0 48 48" aria-hidden focusable="false">
       <path
         fill="#EA4335"
         d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
@@ -605,12 +562,7 @@ function GoogleOverviewCard({
           <GoogleG size={15} /> Google Reviews Overview
         </h3>
         {googlePlaceUrl && (
-          <a
-            className="dk-colcard__link"
-            href={googlePlaceUrl}
-            target="_blank"
-            rel="noreferrer"
-          >
+          <a className="dk-colcard__link" href={googlePlaceUrl} target="_blank" rel="noreferrer">
             View on Google <Icon name="ext" size={11} />
           </a>
         )}
@@ -624,8 +576,7 @@ function GoogleOverviewCard({
           />
           <h4 className="dk-cardempty__title">No review data yet</h4>
           <p className="dk-cardempty__sub">
-            Reviews and ratings will appear here once you start receiving
-            reviews.
+            Reviews and ratings will appear here once you start receiving reviews.
           </p>
           <Link href="/connections" className="dk-btn-outline">
             Connect your business <Icon name="arrowR" size={12} />
@@ -638,16 +589,10 @@ function GoogleOverviewCard({
               <div className="dk-google__num">
                 {avg.toFixed(1)}
                 <span className="dk-star" aria-hidden>
-                  <Icon
-                    name="star"
-                    size={20}
-                    style={{ fill: "currentColor" }}
-                  />
+                  <Icon name="star" size={20} style={{ fill: "currentColor" }} />
                 </span>
               </div>
-              <div className="dk-google__based">
-                Based on {total.toLocaleString()} reviews
-              </div>
+              <div className="dk-google__based">Based on {total.toLocaleString()} reviews</div>
             </div>
             <div className="dk-google__row2">
               <div className="dk-google__dist">
@@ -655,11 +600,7 @@ function GoogleOverviewCard({
                   <div key={r} className="dk-dist-row">
                     <span className="dk-dist-row__label">
                       {r}
-                      <span
-                        className="dk-star"
-                        style={{ color: "var(--dk-star)" }}
-                        aria-hidden
-                      >
+                      <span className="dk-star" style={{ color: "var(--dk-star)" }} aria-hidden>
                         ★
                       </span>
                     </span>
@@ -680,8 +621,7 @@ function GoogleOverviewCard({
             </div>
           </div>
           <Link href="/reviews" className="dk-btn-outline dk-btn-outline--end">
-            <Icon name="chat" size={13} /> Manage Reviews{" "}
-            <Icon name="arrowR" size={12} />
+            <Icon name="chat" size={13} /> Manage Reviews <Icon name="arrowR" size={12} />
           </Link>
         </>
       )}
@@ -737,7 +677,7 @@ function RatingDonut({
             cy={size / 2}
             r={r}
             fill="none"
-            stroke={RATING_COLORS[s.rating]}
+            style={{ stroke: RATING_COLORS[s.rating] }}
             strokeWidth={stroke}
             strokeDasharray={`${s.dash} ${c - s.dash}`}
             strokeDashoffset={-s.off}
@@ -787,9 +727,7 @@ function RecentReviewsCard({
             alt=""
           />
           <h4 className="dk-cardempty__title">No reviews yet</h4>
-          <p className="dk-cardempty__sub">
-            Reviews from your customers will appear here.
-          </p>
+          <p className="dk-cardempty__sub">Reviews from your customers will appear here.</p>
         </div>
       ) : (
         <div>
@@ -801,14 +739,10 @@ function RecentReviewsCard({
                 {initials(rv.reviewerName)}
               </span>
               <span style={{ flex: 1, minWidth: 0 }}>
-                <span className="dk-review-row__name">
-                  {rv.reviewerName ?? "Anonymous"}
-                </span>
+                <span className="dk-review-row__name">{rv.reviewerName ?? "Anonymous"}</span>
                 <span className="dk-review-row__meta">
                   <Stars value={rv.rating} size={12} />
-                  <span className="dk-review-row__time">
-                    {rv.postedAt ? rel(rv.postedAt) : ""}
-                  </span>
+                  <span className="dk-review-row__time">{rv.postedAt ? rel(rv.postedAt) : ""}</span>
                 </span>
                 {rv.body && <p className="dk-review-row__body">{rv.body}</p>}
               </span>
@@ -859,13 +793,12 @@ function SetupProgressCard({
             </>
           ) : isEmpty || setup.completed === 0 ? (
             <>
-              <strong>Let's get you all set up!</strong> Complete these steps to
-              get the most out of Repulabs.
+              <strong>Let's get you all set up!</strong> Complete these steps to get the most out of
+              Repulabs.
             </>
           ) : (
             <>
-              <strong>Almost there!</strong> {left} step{left === 1 ? "" : "s"}{" "}
-              left to go live.
+              <strong>Almost there!</strong> {left} step{left === 1 ? "" : "s"} left to go live.
             </>
           )}
         </p>
@@ -885,10 +818,7 @@ function SetupProgressCard({
                 name="round"
                 size={18}
                 style={{
-                  color:
-                    setup.completed > 0
-                      ? "var(--dk-green, #16a34a)"
-                      : "var(--dk-ph, #9ca3af)",
+                  color: setup.completed > 0 ? "var(--dk-green, #16a34a)" : "var(--dk-ph, #9ca3af)",
                   flexShrink: 0,
                 }}
               />
@@ -944,12 +874,8 @@ function InsightCard({
           <div className="dk-insight__value">
             {value}
             {chip && (
-              <span
-                className={`dk-insight__chip dk-insight__chip--${chip.dir}`}
-              >
-                {chip.arrow === false
-                  ? chip.text
-                  : `${chip.dir === "up" ? "↑" : "↓"} ${chip.text}`}
+              <span className={`dk-insight__chip dk-insight__chip--${chip.dir}`}>
+                {chip.arrow === false ? chip.text : `${chip.dir === "up" ? "↑" : "↓"} ${chip.text}`}
               </span>
             )}
           </div>
