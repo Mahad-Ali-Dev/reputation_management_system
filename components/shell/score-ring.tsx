@@ -11,6 +11,7 @@ export function ScoreRing({
   suffix = "/100",
   hideMax = false,
   color = "var(--pri)",
+  weight = 700,
 }: {
   value: number;
   max?: number;
@@ -19,6 +20,8 @@ export function ScoreRing({
   suffix?: string;
   hideMax?: boolean;
   color?: string;
+  /** Centre-number weight (default 700). */
+  weight?: number;
 }) {
   const r = (size - stroke) / 2;
   const c = 2 * Math.PI * r;
@@ -28,8 +31,20 @@ export function ScoreRing({
 
   return (
     <div style={{ position: "relative", width: size, height: size, flexShrink: 0 }}>
-      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
-        <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surface-3)" strokeWidth={stroke} />
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ transform: "rotate(-90deg)" }}
+      >
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="var(--surface-3)"
+          strokeWidth={stroke}
+        />
         <circle
           cx={size / 2}
           cy={size / 2}
@@ -52,12 +67,31 @@ export function ScoreRing({
           lineHeight: 1,
         }}
       >
-        <span style={{ fontSize: numFs, fontWeight: 700, letterSpacing: "-0.03em", color: "var(--ink)" }}>
+        <span
+          className="score-ring__num"
+          style={{
+            fontSize: numFs,
+            fontWeight: weight,
+            letterSpacing: "-0.03em",
+            color: "var(--ink)",
+          }}
+        >
           {value}
-          {suffix === "%" && <span style={{ fontSize: numFs * 0.5, fontWeight: 600 }}>%</span>}
+          {suffix === "%" && (
+            <span style={{ fontSize: numFs * 0.5, fontWeight: Math.min(weight, 600) }}>%</span>
+          )}
         </span>
         {!hideMax && suffix !== "%" && (
-          <span style={{ fontSize: numFs * 0.34, color: "var(--rl-muted)", fontWeight: 500, marginTop: 2 }}>{suffix}</span>
+          <span
+            style={{
+              fontSize: numFs * 0.34,
+              color: "var(--rl-muted)",
+              fontWeight: 500,
+              marginTop: 2,
+            }}
+          >
+            {suffix}
+          </span>
         )}
       </div>
     </div>

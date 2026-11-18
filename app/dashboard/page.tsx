@@ -13,7 +13,7 @@ import { getOnboardingFacts } from "@/lib/onboarding/facts";
 import { Smile } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CopilotChips, CopilotMascot, CopilotPrompt } from "./_components/copilot-panel";
+import { CopilotChips, CopilotMascot, CopilotPrompt, HeroAsk } from "./_components/copilot-panel";
 import { KbCrawlStrip } from "./_components/kb-crawl-strip";
 import { type DashMetric, MetricStrip } from "./_components/metric-strip";
 import "./dashboard-kit.css";
@@ -235,17 +235,14 @@ export default async function DashboardPage({
             ============================================================ */}
         <div className="dk-top">
           <div className="dk-top__left">
-            <div className="dk-hero">
-              <div style={{ minWidth: 0 }}>
-                <p className="dk-hero__greet">
-                  Good {dayPart()}, {firstName}! 👋
-                </p>
-                <h1 className="dk-hero__title">Your reputation, your edge.</h1>
-                <p className="dk-hero__sub">
-                  Track reviews, engage customers and grow your brand trust.
-                </p>
-              </div>
-            </div>
+            {/* ChatGPT-style hero: a calm greeting over one big ask box that
+                opens the global assistant with the question already sent. */}
+            <section className="dk-ask" aria-label="Ask Repulabs AI">
+              <h1 className="dk-ask__title">
+                Good {dayPart()}, {firstName}. What can I help with?
+              </h1>
+              <HeroAsk />
+            </section>
 
             {/* Train-your-agent block (50%) beside the Setup Progress card (50%). */}
             <div className="dk-trainrow">
@@ -781,8 +778,9 @@ function SetupProgressCard({
         <ScoreRing
           value={setup.pct}
           suffix="%"
-          size={72}
-          stroke={9}
+          size={64}
+          stroke={8}
+          weight={600}
           hideMax
           color="var(--dk-pri, #2563eb)"
         />
