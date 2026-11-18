@@ -317,19 +317,15 @@
 }
 
 /* ============================================================
-   Framed shell (Hostinger-style layout, LIGHT colours) — .app--frame
-   A light-grey frame; a slightly deeper light top band; the sidebar sits
-   straight on the grey frame with dark text; the page is ONE rounded light
-   card (the brand sunrise canvas) that scrolls on its own, so its four
-   rounded corners stay on screen. Founder: keep it light, just a touch
-   darker than before for contrast (not a dark theme). No backdrop-filter on
-   any ancestor of the page, so `position: fixed` modals still anchor to the
-   viewport.
+   Framed shell (Hostinger-style) — .app--frame
+   A full-width top bar (logo far left), and under it ONE rounded frosted
+   sheet that holds the sidebar + the page. The window never scrolls; the
+   page scrolls inside the sheet, so the sheet's four rounded corners stay
+   on screen. The frost is painted by a ::before layer (not on the sheet
+   itself) so `position: fixed` modals inside pages still anchor to the
+   viewport — a backdrop-filter on an ancestor would trap them.
    ============================================================ */
 .app--frame {
-  --frame-bg: #e7e6ee;
-  --frame-band: #dcdae8;
-  --frame-line: rgba(21, 19, 43, 0.08);
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -337,28 +333,16 @@
   min-height: 0;
   overflow: hidden;
 }
-.app--glass.app--canvas.app--frame,
-.app--glass.app--canvas.app--frame:has(.dk) {
-  background: var(--frame-bg);
-}
-.app--frame::before,
-.app--frame::after {
-  display: none;
-}
-
-/* ---- top band ---- */
 .app--frame > .tb {
   position: relative;
-  z-index: 50; /* dropdowns (user menu, bell, switcher) open over the page */
+  z-index: 50; /* dropdowns (user menu, bell, switcher) open over the sheet */
   flex: 0 0 var(--h-tb);
   width: 100%;
   margin: 0;
   padding: 0 20px 0 18px;
   border: 0;
-  border-bottom: 1px solid var(--frame-line);
   border-radius: 0;
   box-shadow: none;
-  background: var(--frame-band);
 }
 .app--frame .tb__brand {
   display: flex;
@@ -377,35 +361,36 @@
 .app--frame .tb__brandname span {
   color: var(--glass-accent, #4b3bff);
 }
-.app--frame > .tb .tb__ws,
-.app--frame > .tb .tb__user {
-  background: rgba(255, 255, 255, 0.6);
-  border: 1px solid rgba(21, 19, 43, 0.06);
-  box-shadow: none;
-}
-.app--frame > .tb .tb__ws:hover,
-.app--frame > .tb .tb__user:hover {
-  background: rgba(255, 255, 255, 0.9);
-}
-.app--frame > .tb .tb__iconbtn:hover {
-  background: rgba(255, 255, 255, 0.6);
-}
-
-/* ---- body: grey frame holds the sidebar + a rounded light page card ---- */
 .app--frame .app__body {
   position: relative;
   flex: 1;
   min-height: 0;
   display: grid;
   grid-template-columns: var(--w-sb) minmax(0, 1fr);
-  padding: 10px 12px 12px 0;
+  margin: 0 12px 12px;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 1px solid rgba(21, 19, 43, 0.08);
+  box-shadow: 0 1px 1px rgba(16, 24, 40, 0.03), 0 20px 50px -30px rgba(16, 24, 40, 0.22), inset 0
+    1px 0 rgba(255, 255, 255, 0.7);
 }
+.app--frame .app__body::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.5);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  backdrop-filter: blur(24px) saturate(140%);
+}
+/* Children are positioned (z auto) so they paint above the frost layer. */
 .app--frame .app__body .sb {
   position: relative;
   height: 100%;
   min-height: 0;
   margin: 0;
   border: 0;
+  border-right: 1px solid rgba(21, 19, 43, 0.06);
   border-radius: 0;
   box-shadow: none;
   background: transparent;
@@ -415,46 +400,27 @@
   min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
-  border-radius: 20px;
-  background-color: var(--glass-canvas-base, #f3f2f8);
-  background-image: var(--glass-canvas-gradient);
-  background-attachment: local;
-  border: 1px solid rgba(21, 19, 43, 0.07);
-  box-shadow: 0 1px 2px rgba(21, 19, 43, 0.04);
 }
 @media (max-width: 1023px) {
   .app--frame .app__body {
     grid-template-columns: minmax(0, 1fr);
-    padding: 8px;
-  }
-  .app--frame .main {
-    border-radius: 16px;
+    margin: 0 8px 8px;
+    border-radius: 18px;
   }
   .app--frame > .tb {
     padding: 0 12px;
   }
 }
-/* The phone drawer floats over the page on the same grey surface. */
+/* The phone drawer floats over the page, so it needs a solid sheet. */
 .app--glass .app__sb-drawer .sb {
-  background: var(--frame-bg, #e7e6ee);
+  background: var(--glass-fill-solid, #f8f7fb);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
 }
-
-/* ---- sidebar on the grey frame: dark text, white active pill ---- */
-.app--frame .sb--hs .sb__item:hover {
-  background: rgba(255, 255, 255, 0.55);
-}
-.app--frame .sb--hs .sb__item.is-active {
-  background: #fff;
-  box-shadow: 0 1px 2px rgba(21, 19, 43, 0.07), 0 0 0 1px rgba(21, 19, 43, 0.04);
-}
-.app--frame .sb--hs .sb__bottom {
-  border-top-color: var(--frame-line);
-}
-.app--frame .sb--hs .sb__profile:hover {
-  background: rgba(255, 255, 255, 0.55);
-}
-.app--frame .sb--hs .sb__offer {
-  background: rgba(255, 255, 255, 0.7);
+@supports not ((-webkit-backdrop-filter: blur(1px)) or (backdrop-filter: blur(1px))) {
+  .app--frame .app__body::before {
+    background: var(--glass-fill-solid);
+  }
 }
 
 /* ============================================================
