@@ -60,25 +60,28 @@
 }
 
 /* ---- sheet ------------------------------------------------------- */
+/* Full-screen frosted sheet: covers the whole window, the conversation sits
+   in a centred reading column (ChatGPT-style), the dashboard blurs behind. */
 .askai-sheet {
   position: fixed;
-  top: 12px;
-  right: 12px;
-  bottom: 12px;
+  inset: 0;
   z-index: 61;
-  width: min(420px, calc(100vw - 24px));
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border-radius: 26px;
   background: var(--askai-fill);
   -webkit-backdrop-filter: blur(40px) saturate(180%);
   backdrop-filter: blur(40px) saturate(180%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow:
-    0 0 0 0.5px var(--askai-hair), 0 30px 80px -24px rgba(21, 19, 43, 0.35),
-    0 8px 24px -12px rgba(21, 19, 43, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.9);
-  animation: askai-in 0.28s cubic-bezier(0.2, 0.9, 0.3, 1);
+  animation: askai-in 0.26s cubic-bezier(0.2, 0.9, 0.3, 1);
+  --askai-col: 760px;
+}
+.askai-sheet .askai-stage {
+  width: min(var(--askai-col), calc(100% - 28px));
+  margin-inline: auto;
+}
+.askai-sheet .askai-scroll,
+.askai-sheet .askai-composer {
+  padding-inline: max(16px, calc((100% - var(--askai-col)) / 2));
 }
 /* faint ultramarine glow at the top of the glass so it isn't flat white */
 .askai-sheet::before {
@@ -420,7 +423,7 @@
 @keyframes askai-in {
   from {
     opacity: 0;
-    transform: translateX(24px) scale(0.98);
+    transform: scale(0.985);
   }
   to {
     opacity: 1;
@@ -439,15 +442,6 @@
   }
 }
 
-/* ---- phones: full-screen sheet ----------------------------------- */
-@media (max-width: 640px) {
-  .askai-sheet {
-    inset: 0;
-    width: 100vw;
-    border-radius: 0;
-    border: 0;
-  }
-}
 
 /* ---- fallbacks --------------------------------------------------- */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {

@@ -13,7 +13,7 @@ import { getOnboardingFacts } from "@/lib/onboarding/facts";
 import { Smile } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { CopilotChips, CopilotMascot, CopilotPrompt, HeroAsk } from "./_components/copilot-panel";
+import { CopilotMascot, HeroAsk } from "./_components/copilot-panel";
 import { KbCrawlStrip } from "./_components/kb-crawl-strip";
 import { type DashMetric, MetricStrip } from "./_components/metric-strip";
 import "./dashboard-kit.css";
@@ -238,6 +238,10 @@ export default async function DashboardPage({
             {/* ChatGPT-style hero: a calm greeting over one big ask box that
                 opens the global assistant with the question already sent. */}
             <section className="dk-ask" aria-label="Ask Repulabs AI">
+              {/* The Repulabs AI frog greets above the question; click opens Ask AI. */}
+              <div className="dk-ask__frog">
+                <CopilotMascot size={124} />
+              </div>
               <h1 className="dk-ask__title">
                 Good {dayPart()}, {firstName}. What can I help with?
               </h1>
@@ -249,6 +253,35 @@ export default async function DashboardPage({
         {/* One frosted glass panel holds the whole overview: insights, Google
             overview, setup progress, train-your-agent and the quick chips. */}
         <section className="dk-panel" aria-label="Overview">
+          {/* Quick-training bar on top: no fill, wrapped in a Google four-colour ring. */}
+          <div className="dk-quick" role="group" aria-label="Quick training">
+            <QuickChip icon="upload" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
+            <QuickChip
+              icon="building"
+              title="Add business info"
+              sub="Services, hours, etc."
+              href="/ai"
+            />
+            <QuickChip
+              icon="star"
+              title="Train from reviews"
+              sub="Learn from feedback"
+              href="/ai?tab=test"
+            />
+            <QuickChip
+              icon="chat"
+              title="Brand voices"
+              sub="Tone and style"
+              href="/ai?tab=behaviour"
+            />
+            <QuickChip
+              icon="book"
+              title="Knowledge sources"
+              sub="Docs, URLs & more"
+              href="/ai?tab=knowledge"
+            />
+          </div>
+
           {/* Insights + Google overview beside Setup Progress + Train your agent. */}
           <div className="dk-trainrow">
             <div className="dk-trainrow__main">
@@ -334,34 +367,6 @@ export default async function DashboardPage({
               </div>
             </div>
           </div>
-
-          <div className="dk-quick" role="group" aria-label="Quick training">
-            <QuickChip icon="upload" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
-            <QuickChip
-              icon="building"
-              title="Add business info"
-              sub="Services, hours, etc."
-              href="/ai"
-            />
-            <QuickChip
-              icon="star"
-              title="Train from reviews"
-              sub="Learn from feedback"
-              href="/ai?tab=test"
-            />
-            <QuickChip
-              icon="chat"
-              title="Brand voices"
-              sub="Tone and style"
-              href="/ai?tab=behaviour"
-            />
-            <QuickChip
-              icon="book"
-              title="Knowledge sources"
-              sub="Docs, URLs & more"
-              href="/ai?tab=knowledge"
-            />
-          </div>
         </section>
 
         <div className="dk-cols">
@@ -429,30 +434,8 @@ export default async function DashboardPage({
           </div>
         </section> */}
 
-        {/* ============================================================
-            4 — Your AI copilot (wired to the global Ask-AI assistant)
-            ============================================================ */}
-        <section className="dk-copilot" aria-label="AI copilot">
-          <div className="dk-copilot__main">
-            <div className="dk-copilot__kicker">
-              <Icon name="sparkle" size={14} /> AI Assistant{" "}
-              <span className="dk-copilot__beta">Beta</span>
-            </div>
-            <h2 className="dk-copilot__title">Your AI copilot for reputation growth.</h2>
-            <p className="dk-copilot__sub">
-              Ask anything. Get insights, summaries, and recommendations.
-            </p>
-            <CopilotPrompt />
-          </div>
-          {/* Kit: the 4 suggestion chips sit on a full-width row BELOW the
-              input, clear of the illustration column. */}
-          <CopilotChips />
-          {/* The Repulabs AI frog (3D, brand ultramarine) replaces the kit's
-              robot PNG (public assets copilot-bot.png kept, now unused). */}
-          <div className="dk-copilot__bot dk-copilot__bot--frog">
-            <CopilotMascot />
-          </div>
-        </section>
+        {/* The old bottom "AI copilot" card is gone: its frog now greets above
+            the hero ask box, and the ask box replaces its input + chips. */}
       </div>
     </AppShellServer>
   );
