@@ -243,101 +243,99 @@ export default async function DashboardPage({
               </h1>
               <HeroAsk />
             </section>
-
-            {/* Train-your-agent block (50%) beside the Setup Progress card (50%). */}
-            <div className="dk-trainrow">
-              <div className="dk-trainrow__main">
-                {/* Key Insights — 2×2 grid, in the left column */}
-                <div className="dk-insights">
-                  <div className="dk-insights__head">
-                    <h2 className="dk-insights__title">Key Insights</h2>
-                    <span className="dk-insights__range">All time · 7d trend</span>
-                  </div>
-                  <div className="dk-insights__grid dk-insights__grid--2col">
-                    <InsightCard
-                      label="Response Rate"
-                      icon={<Icon name="reply" size={20} />}
-                      value={total > 0 ? `${responseRate}%` : null}
-                    />
-                    <InsightCard
-                      label="Avg. Response Time"
-                      icon={<Icon name="clock" size={20} />}
-                      value={d.avgResponseHours !== null ? fmtHours(d.avgResponseHours) : null}
-                    />
-                    <InsightCard
-                      label="Sentiment"
-                      icon={<Smile size={20} strokeWidth={1.75} aria-hidden="true" />}
-                      value={total > 0 ? sentimentLabel(d.sentiment).label : null}
-                      chip={
-                        total > 0
-                          ? {
-                              text: `${sentimentLabel(d.sentiment).pct}%`,
-                              dir: sentimentLabel(d.sentiment).dir,
-                              arrow: false,
-                            }
-                          : undefined
-                      }
-                    />
-                    <InsightCard
-                      label="Trend"
-                      icon={<Icon name="trend" size={20} />}
-                      value={
-                        total > 0
-                          ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
-                            ? "Improving"
-                            : "Steady"
-                          : null
-                      }
-                      chip={
-                        total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
-                          ? {
-                              text: `${Math.abs(d.reviews7dDeltaPct)}%`,
-                              dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
-                            }
-                          : undefined
-                      }
-                    />
-                  </div>
-                </div>
-
-                <GoogleOverviewCard
-                  avg={avgRating}
-                  total={total}
-                  byRating={byRating}
-                  googlePlaceUrl={d.googlePlaceUrl}
-                />
-              </div>
-
-              <div className="dk-trainrow__side">
-                <SetupProgressCard setup={setup} isEmpty={isEmpty} />
-
-                <div className="dk-card dk-train">
-                  <span className="dk-train__icon dk-glyph" aria-hidden="true">
-                    <Icon name="brain" size={24} />
-                  </span>
-                  <div className="dk-train__body">
-                    <h2 className="dk-train__title">Train your agent</h2>
-                    <p className="dk-train__sub">
-                      Teach your AI agent about your business so it can give smarter, on-brand
-                      answers.
-                    </p>
-                  </div>
-                  <Link href="/ai" className="dk-train__cta">
-                    <Icon name="sparkle" size={14} /> Train your agent{" "}
-                    <Icon name="arrowR" size={13} />
-                  </Link>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* ============================================================
-            2 — Google Reviews Overview · Recent Reviews · Setup Progress
-            ============================================================ */}
+        {/* One frosted glass panel holds the whole overview: insights, Google
+            overview, setup progress, train-your-agent and the quick chips. */}
+        <section className="dk-panel" aria-label="Overview">
+          {/* Insights + Google overview beside Setup Progress + Train your agent. */}
+          <div className="dk-trainrow">
+            <div className="dk-trainrow__main">
+              {/* Key Insights — 2×2 grid, in the left column */}
+              <div className="dk-insights">
+                <div className="dk-insights__head">
+                  <h2 className="dk-insights__title">Key Insights</h2>
+                  <span className="dk-insights__range">All time · 7d trend</span>
+                </div>
+                <div className="dk-insights__grid dk-insights__grid--2col">
+                  <InsightCard
+                    label="Response Rate"
+                    icon={<Icon name="reply" size={20} />}
+                    value={total > 0 ? `${responseRate}%` : null}
+                  />
+                  <InsightCard
+                    label="Avg. Response Time"
+                    icon={<Icon name="clock" size={20} />}
+                    value={d.avgResponseHours !== null ? fmtHours(d.avgResponseHours) : null}
+                  />
+                  <InsightCard
+                    label="Sentiment"
+                    icon={<Smile size={20} strokeWidth={1.75} aria-hidden="true" />}
+                    value={total > 0 ? sentimentLabel(d.sentiment).label : null}
+                    chip={
+                      total > 0
+                        ? {
+                            text: `${sentimentLabel(d.sentiment).pct}%`,
+                            dir: sentimentLabel(d.sentiment).dir,
+                            arrow: false,
+                          }
+                        : undefined
+                    }
+                  />
+                  <InsightCard
+                    label="Trend"
+                    icon={<Icon name="trend" size={20} />}
+                    value={
+                      total > 0
+                        ? d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct > 0
+                          ? "Improving"
+                          : "Steady"
+                        : null
+                    }
+                    chip={
+                      total > 0 && d.reviews7dDeltaPct !== null && d.reviews7dDeltaPct !== 0
+                        ? {
+                            text: `${Math.abs(d.reviews7dDeltaPct)}%`,
+                            dir: d.reviews7dDeltaPct > 0 ? "up" : "down",
+                          }
+                        : undefined
+                    }
+                  />
+                </div>
+              </div>
 
-        <section aria-label="Quick training">
-          <div className="dk-quick">
+              <GoogleOverviewCard
+                avg={avgRating}
+                total={total}
+                byRating={byRating}
+                googlePlaceUrl={d.googlePlaceUrl}
+              />
+            </div>
+
+            <div className="dk-trainrow__side">
+              <SetupProgressCard setup={setup} isEmpty={isEmpty} />
+
+              <div className="dk-card dk-train">
+                <span className="dk-train__icon dk-glyph" aria-hidden="true">
+                  <Icon name="brain" size={24} />
+                </span>
+                <div className="dk-train__body">
+                  <h2 className="dk-train__title">Train your agent</h2>
+                  <p className="dk-train__sub">
+                    Teach your AI agent about your business so it can give smarter, on-brand
+                    answers.
+                  </p>
+                </div>
+                <Link href="/ai" className="dk-train__cta">
+                  <Icon name="sparkle" size={14} /> Train your agent{" "}
+                  <Icon name="arrowR" size={13} />
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="dk-quick" role="group" aria-label="Quick training">
             <QuickChip icon="upload" title="Upload FAQs" sub="Add common Q&A" href="/ai?tab=info" />
             <QuickChip
               icon="building"
