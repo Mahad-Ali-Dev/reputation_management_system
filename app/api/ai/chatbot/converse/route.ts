@@ -207,7 +207,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Find or create the conversation
-  let conversationId = parsed.data.conversationId;
+  let conversationId = parsed.data.conversationId ?? undefined;
   if (!conversationId) {
     const conv = await withTenant(claims.orgId, async (tx) =>
       tx.aiConversation.create({
