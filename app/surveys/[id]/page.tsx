@@ -15,6 +15,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ResponsesCharts } from "../_components/responses-charts";
 import { ResponsesTable } from "../_components/responses-table";
+import "../surveys-kit.css";
+import "../surveys-glass.css";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +46,7 @@ export default async function SurveyDetailPage({
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["CRM", "Customer Feedback", campaign.name]}>
+      <div className="surv">
       <PageHeader
         kicker={`${campaign.type.toUpperCase()} · ${campaign._count.tokens} sent · ${campaign._count.responses} responses`}
         title={campaign.name}
@@ -118,6 +121,7 @@ export default async function SurveyDetailPage({
       </div>
 
       <ResponsesTable responses={responses} campaignId={campaign.id} />
+      </div>
     </AppShellServer>
   );
 }

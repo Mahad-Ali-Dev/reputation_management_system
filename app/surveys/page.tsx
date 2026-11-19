@@ -1,6 +1,5 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
-import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { orgHasFeature } from "@/lib/billing/feature-access";
@@ -17,6 +16,8 @@ import {
   surveysOverview,
 } from "@/lib/surveys/queries";
 import { Suspense } from "react";
+import type { WizardContact, WizardTemplate } from "./_components/create-wizard";
+import { NewSurveyModal } from "./_components/new-survey-modal";
 import {
   SurveysTabs,
   type SurveyCampaignCard,
@@ -100,6 +101,14 @@ export default async function SurveysPage({
     smartRouteCounts(orgId),
   ]);
 
+  // Wizard data for the New Survey modal — fetched in its own small batch so it
+  // can't be starved by the large parallel read above (same loaders as
+  // /surveys/new, so the modal's recipient step shows the exact same contacts).
+  const [wizardContacts, firstEstId] = await Promise.all([
+    loadWizardContacts(orgId),
+    firstEstablishmentId(orgId),
+  ]);
+
   const campaigns: SurveyCampaignCard[] = campaignsRaw.map((c) => ({
     id: c.id,
     name: c.name,
@@ -111,6 +120,13 @@ export default async function SurveysPage({
   }));
 
   const responseCount = overview.completed;
+
+  // Wizard templates (existing campaigns), reused by the New Survey modal.
+  const wizardTemplates: WizardTemplate[] = campaigns.map((c) => ({
+    id: c.id,
+    name: c.name,
+    questionCount: 0,
+  }));
 
   // Smart-routing snapshot for the landing branch tiles. `smartRouteEnabled` is
   // per-campaign; surface the first ACTIVE campaign's config (fall back to the
@@ -151,6 +167,11 @@ export default async function SurveysPage({
     coupons,
     csat,
     routing,
+    newSurvey: {
+      contacts: wizardContacts,
+      templates: wizardTemplates,
+      defaultEstablishmentId: firstEstId,
+    },
   };
 
   return (
@@ -168,10 +189,11 @@ export default async function SurveysPage({
             title="Surveys"
             description="Run the full survey lifecycle in one place. Build a campaign, send it, read the results, and reward promoters all from these tabs. Promoters get a Google review CTA; detractors land in your private inbox so you can fix it before they post."
             actions={
-              <a href="/surveys/new" className="btn btn--pri">
-                <Icon name="plus" size={12} />
-                New survey
-              </a>
+              <NewSurveyModal
+                contacts={wizardContacts}
+                templates={wizardTemplates}
+                defaultEstablishmentId={firstEstId}
+              />
             }
           />
         </div>
@@ -221,6 +243,43 @@ async function surveysCsat(orgId: string): Promise<SurveyCsat | null> {
     });
   } catch {
     return null;
+  }
+}
+
+/** Contacts with a valid email, for the New Survey wizard's recipient step.
+ *  Fail-soft (un-migrated/RLS → []). Mirrors /surveys/new's loader. */
+async function loadWizardContacts(orgId: string): Promise<WizardContact[]> {
+  try {
+    return await withTenant(orgId, async (tx) => {
+      const rows = await tx.contact.findMany({
+        where: { email: { not: null } },
+        select: { id: true, name: true, email: true },
+        orderBy: { createdAt: "desc" },
+        take: 500,
+      });
+      return rows
+        .filter((c): c is { id: string; name: string | null; email: string } => !!c.email)
+        .map((c) => ({ id: c.id, name: c.name, email: c.email }));
+    });
+  } catch {
+    return [];
+  }
+}
+
+/** The org's first establishment id — the wizard's default routing target. */
+async function firstEstablishmentId(orgId: string): Promise<string | undefined> {
+  try {
+    const rows = await withTenant(orgId, async (tx) =>
+      tx.establishment.findMany({
+        where: { deletedAt: null },
+        select: { id: true },
+        orderBy: { createdAt: "asc" },
+        take: 1,
+      }),
+    );
+    return rows[0]?.id;
+  } catch {
+    return undefined;
   }
 }
 

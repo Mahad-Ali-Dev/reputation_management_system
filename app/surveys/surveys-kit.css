@@ -207,6 +207,8 @@
   font-weight: 600;
   text-decoration: none;
   cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
   transition: background 0.15s ease;
 }
 .surv-tab-action:hover {
@@ -600,7 +602,7 @@
 }
 .surv-camp__art {
   align-self: center;
-  width: 120px;
+  width: 78px;
   flex: none;
 }
 .surv-camp__art img {

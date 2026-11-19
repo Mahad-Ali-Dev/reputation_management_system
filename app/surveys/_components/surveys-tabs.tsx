@@ -18,6 +18,8 @@ import type {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
+import type { WizardContact, WizardTemplate } from "./create-wizard";
+import { NewSurveyModal } from "./new-survey-modal";
 import { AiInsightsPanel } from "./ai-insights-panel";
 import { AutomationsPanel } from "./automations-panel";
 // Incentives tab is hidden for now (not removed — see TAB_KEYS/tabs[] below).
@@ -92,6 +94,12 @@ export type SurveysTabsData = {
   coupons: IncentiveCoupon[];
   csat: SurveyCsat | null;
   routing: SurveyRoutingSnapshot | null;
+  /** Data for the New Survey modal (same loaders as /surveys/new). */
+  newSurvey: {
+    contacts: WizardContact[];
+    templates: WizardTemplate[];
+    defaultEstablishmentId?: string;
+  };
 };
 
 const TAB_KEYS = [
@@ -227,10 +235,15 @@ function SurveysPanel({
             land in your private inbox.
           </p>
           <div className="surv-empty__cta">
-            <Link href="/surveys/new" className="btn btn--pri btn--lg">
+            <NewSurveyModal
+              triggerClassName="btn btn--pri btn--lg"
+              contacts={data.newSurvey.contacts}
+              templates={data.newSurvey.templates}
+              defaultEstablishmentId={data.newSurvey.defaultEstablishmentId}
+            >
               <Icon name="plus" size={14} />
               Create your first survey
-            </Link>
+            </NewSurveyModal>
           </div>
         </div>
       ) : (
@@ -302,7 +315,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
             Based on “{routing.sourceName}” happy customers go public, unhappy ones stay private.
           </p>
         </div>
-        <Link href={routing.editHref} className="surv-tab-action" style={{ marginLeft: "auto", height: 34 }}>
+        <Link href={routing.editHref} className="surv-tab-action" style={{ marginLeft: "auto" }}>
           <Icon name="edit" size={12} />
           Edit routing
         </Link>

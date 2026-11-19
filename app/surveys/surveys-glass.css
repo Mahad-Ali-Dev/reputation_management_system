@@ -133,3 +133,84 @@
     border-top: 1px solid var(--glass-border);
   }
 }
+
+/* ── New Survey modal — hosts the 3-step wizard (mirrors the Add Business modal) ── */
+.svm-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 18px;
+  overflow-y: auto;
+}
+.svm-scrim {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: rgba(10, 12, 24, 0.5);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+}
+.svm-modal {
+  position: relative;
+  z-index: 1;
+  width: min(780px, 100%);
+  margin: auto;
+  border-radius: 20px;
+  border: 1px solid var(--glass-border, #e2e4ed);
+  background: var(--glass-fill-solid, #ffffff);
+  -webkit-backdrop-filter: blur(var(--glass-blur-strong, 28px)) saturate(var(--glass-saturate, 180%));
+  backdrop-filter: blur(var(--glass-blur-strong, 28px)) saturate(var(--glass-saturate, 180%));
+  box-shadow: var(--glass-shadow-lg, 0 30px 80px -20px rgba(16, 24, 40, 0.45));
+}
+.svm-modal__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 22px 6px;
+}
+.svm-modal__eyebrow {
+  display: block;
+  font-family: var(--f-mono, ui-monospace, monospace);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 600;
+  color: var(--glass-accent, #4b3bff);
+}
+.svm-modal__title {
+  margin: 3px 0 0;
+  font-family: var(--f-head);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--glass-text, #15132b);
+}
+.svm-modal__close {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--glass-border, #e2e4ed);
+  background: var(--glass-fill-subtle, #f4f5fb);
+  color: var(--glass-text-muted, #6b6880);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.svm-modal__close:hover {
+  background: var(--glass-fill, #ffffff);
+  color: var(--glass-text, #15132b);
+}
+.svm-modal__body {
+  padding: 8px 22px 24px;
+}
+/* The wizard root caps itself at 720px inline — let it fill the modal width. */
+.svm-modal__body > div {
+  max-width: 100% !important;
+}
