@@ -8,10 +8,9 @@ import { roleAtLeast } from "@/lib/auth/rbac";
 import { orgHasFeature } from "@/lib/billing/feature-access";
 import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
-import { listEstablishments } from "@/lib/establishments/queries";
 import { withTenant } from "@/lib/db/with-tenant";
+import { listEstablishments } from "@/lib/establishments/queries";
 import { restoreDevice } from "@/lib/hardware/actions";
-import { parseSlug } from "@/lib/hardware/slug";
 import {
   formatConversionPct,
   getDeviceDashboardExtras,
@@ -20,7 +19,17 @@ import {
   type listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
-import { ChevronLeft, CircleCheck, Info, Trash2 } from "lucide-react";
+import { parseSlug } from "@/lib/hardware/slug";
+import {
+  ArrowUpRight,
+  ChevronLeft,
+  CircleCheck,
+  Info,
+  QrCode as QrCodeIcon,
+  ScanLine,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import { ActivateSheet, type DeviceState } from "./_components/activate-sheet";
@@ -532,23 +541,22 @@ function EmptyState({
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager"]}>
       <div className="md">
-        <div
-          className="row"
-          style={{ justifyContent: "flex-end", gap: 8, marginBottom: 4, flexWrap: "wrap" }}
-        >
-          <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
-            <Icon name="ext" size={12} />
-            Buy stands
-          </a>
-          <GenerateQrModal {...qrSheet} />
-          <ConnectDeviceModal
-            establishments={establishments}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
+        {/* Same header as the active layout: hero left, actions right. */}
+        <div className="md-head">
+          <MdHero />
+          <div className="md-head__actions">
+            <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
+              <Icon name="ext" size={12} />
+              Buy stands
+            </a>
+            <GenerateQrModal {...qrSheet} />
+            <ConnectDeviceModal
+              establishments={establishments}
+              detectedQrUrl={detectedQrUrl}
+              detectedSerial={detectedSerial}
+            />
+          </div>
         </div>
-
-        <MdHero />
 
         {recentActivation && (
           <Banner tone="ok">
@@ -556,8 +564,10 @@ function EmptyState({
           </Banner>
         )}
 
-        {/* AI-training banner stays on the empty state (kit). */}
-        <MdTrainingBanner href={upgradeHref("ai_autopilot")} />
+        <MdTrainingBanner
+          href={upgradeHref("ai_autopilot")}
+          title="Get your AI ready before the first scan"
+        />
 
         {/* Scan-analytics summary row — genuine zeros (no fabricated data). */}
         <MdSummaryRow
@@ -568,103 +578,78 @@ function EmptyState({
           activeDevices={0}
         />
 
-        {/* Devices section header — matches the active layout (tabs + Add device). */}
-        <div className="md-devhead">
-          <span className="md-devhead__title">Devices</span>
-          <div className="seg">
-            <span className="seg__t is-active">Active (0)</span>
-            <Link href="/hardware?view=trash" className="seg__t" style={{ textDecoration: "none" }}>
-              Trash ({retiredCount})
-            </Link>
+        {/* Apple product-page style "ways to start": one headline, three
+            choices, each with exactly one action. */}
+        <section className="mde" aria-labelledby="mde-title">
+          <div className="mde__intro">
+            <h2 id="mde-title" className="mde__title">
+              {retiredCount > 0 ? "No active devices." : "Set up your first device."}{" "}
+              <span>Every scan, one step from a Google review.</span>
+            </h2>
+            {retiredCount > 0 && (
+              <p className="mde__note">
+                {retiredCount} deleted device{retiredCount === 1 ? " is" : "s are"} in{" "}
+                <Link href="/hardware?view=trash">Recently Deleted</Link>. Restoring one brings back
+                the same QR, so a plaque you&rsquo;ve already printed keeps working.
+              </p>
+            )}
           </div>
-          <div style={{ flex: 1 }} />
-          <span className="md-devhead__count">0 active devices</span>
-          <ConnectDeviceModal
-            establishments={establishments}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
-        </div>
 
-        {/* Empty devices panel — kit illustration + connect CTA. */}
-        <section className="md-card" aria-label="Devices">
-          <div className="md-blank">
-            {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
-            <img
-              src="/assets/repulabs/my-devices/devices-empty.svg"
-              alt=""
-              aria-hidden
-              className="md-blank__art"
-            />
-            <h3 className="md-blank__title">
-              {retiredCount > 0 ? "No active devices" : "No devices added yet"}
-            </h3>
-            <p className="md-blank__body">
-              {retiredCount > 0 ? (
-                <>
-                  You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
-                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the same
-                  QR, code and redirect, so a plaque you&rsquo;ve already printed keeps working. Or
-                  add a new device below.
-                </>
-              ) : (
-                <>
-                  Got a repulabs card, plaque, or stand? Add your first device to start collecting
-                  scans and engage more customers enter the code from your package and we&rsquo;ll
-                  route every scan to your Google review page.
-                </>
-              )}
-            </p>
-            <div className="md-blank__cta">
+          <div className="mde__grid">
+            <article className="mde-tile mde-tile--hero">
+              <span className="mde-tile__badge" aria-hidden="true">
+                <ScanLine size={26} strokeWidth={1.7} />
+              </span>
+              <h3 className="mde-tile__title">Add a device</h3>
+              <p className="mde-tile__body">
+                Have a repulabs stand, plaque or card? Scan its QR and enter the code from the box.
+              </p>
               <ConnectDeviceModal
                 establishments={establishments}
                 detectedQrUrl={detectedQrUrl}
                 detectedSerial={detectedSerial}
-                triggerClassName="btn btn--pri btn--lg"
+                triggerClassName="mde-btn mde-btn--pri"
                 triggerLabel="Add device"
               />
+            </article>
+
+            <article className="mde-tile">
+              <span className="mde-tile__badge mde-tile__badge--soft" aria-hidden="true">
+                <QrCodeIcon size={26} strokeWidth={1.7} />
+              </span>
+              <h3 className="mde-tile__title">Generate a free QR</h3>
+              <p className="mde-tile__body">
+                No hardware needed. Print it on receipts, signs and cards, or put it on your site.
+              </p>
               <GenerateQrModal
                 {...qrSheet}
                 defaultOpen={false}
-                triggerClassName="btn btn--lg"
-                triggerLabel="Generate a QR instead"
+                triggerClassName="mde-btn"
+                triggerLabel="Generate QR"
               />
-            </div>
-            <div className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
-              Don&rsquo;t have a device yet?{" "}
-              <a
-                href={SHOPIFY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "var(--md-blue)", textDecoration: "none" }}
-              >
-                Shop cards &amp; stands →
+            </article>
+
+            <article className="mde-tile">
+              <span className="mde-tile__badge mde-tile__badge--soft" aria-hidden="true">
+                <ShoppingBag size={26} strokeWidth={1.7} />
+              </span>
+              <h3 className="mde-tile__title">Get a stand</h3>
+              <p className="mde-tile__body">
+                Tap-and-scan NFC stands, plaques and cards made for your counter.
+              </p>
+              <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="mde-btn">
+                Shop stands
+                <ArrowUpRight size={15} strokeWidth={2} aria-hidden="true" />
               </a>
-            </div>
+            </article>
           </div>
         </section>
-
-        {/* Zero-state scan chart (reviews + AI assistant live elsewhere now). */}
-        <div style={{ marginTop: 14, marginBottom: 14 }}>
-          <MdDevicesImpact impact={buildEmptyImpactForView()} />
-        </div>
 
         <MdFooterTip />
       </div>
       {sheet}
     </AppShellServer>
   );
-}
-
-/** A zeroed 7-day series for the empty-state impact card (display only). */
-function buildEmptyImpactForView() {
-  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const today = new Date();
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    return { label: labels[d.getDay()] ?? "?", scans: 0, reviews: 0 };
-  });
 }
 
 /* ============================================================
