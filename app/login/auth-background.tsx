@@ -13,7 +13,7 @@ import { WavyBackground } from "@/components/ui/wavy-background";
  */
 export type AuthBg = "waves" | "infinity" | "gradient" | "earth";
 export const AUTH_BGS: AuthBg[] = ["waves", "infinity", "gradient", "earth"];
-export const DEFAULT_AUTH_BG: AuthBg = "waves";
+export const DEFAULT_AUTH_BG: AuthBg = "earth";
 
 export function parseAuthBg(raw: string | null | undefined): AuthBg {
   return AUTH_BGS.includes(raw as AuthBg) ? (raw as AuthBg) : DEFAULT_AUTH_BG;
@@ -62,8 +62,13 @@ export function AuthBackground({ variant }: { variant: AuthBg }) {
           // The NASA texture host is blocked by our CSP; the rim-lit planet,
           // nebula and stars render without it.
           textureUrl=""
-          interactive={false}
-          auroraEnabled={false}
+          // Pointer moves the sunlight along the horizon; press-and-hold, then
+          // release, sends an aurora along the limb. Mouse/touch only: the
+          // canvas stays out of the Tab order so keyboard users go straight to
+          // the form.
+          interactive
+          auroraEnabled
+          keyboard={false}
           style={{ position: "absolute", inset: 0, height: "100%", aspectRatio: "auto" }}
         />
       )}

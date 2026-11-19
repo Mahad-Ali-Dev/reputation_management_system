@@ -66,7 +66,7 @@ function LoginInner() {
   }
 
   return (
-    <main className="auth-shell auth-shell--login auth-shell--vortex">
+    <main className={`auth-shell auth-shell--login auth-shell--vortex auth-shell--bg-${bg}`}>
       {/* Full-page animated wavy background. */}
       <AuthBackground variant={bg} />
 

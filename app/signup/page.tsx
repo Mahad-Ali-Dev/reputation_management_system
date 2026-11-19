@@ -70,7 +70,7 @@ function SignupInner() {
   }
 
   return (
-    <main className="auth-shell auth-shell--signup auth-shell--vortex">
+    <main className={`auth-shell auth-shell--signup auth-shell--vortex auth-shell--bg-${bg}`}>
       {/* Full-page animated wavy background. */}
       <AuthBackground variant={bg} />
 

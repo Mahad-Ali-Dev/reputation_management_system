@@ -32,6 +32,9 @@ export interface EarthBlazeProps {
   textureUrl?: string;
   /** Omit to follow the operating system preference. */
   reducedMotion?: boolean;
+  /** Put the canvas in the Tab order for arrow-key control. Default true.
+   *  Turn off when it sits behind a form, so Tab goes straight to the fields. */
+  keyboard?: boolean;
 }
 
 type Options = Required<
@@ -95,6 +98,7 @@ export function EarthBlaze({
   interactive = true,
   textureUrl = EARTH_TEXTURE,
   reducedMotion,
+  keyboard = true,
 }: EarthBlazeProps) {
   const canvas = React.useRef<HTMLCanvasElement>(null);
   const fallback = React.useRef<HTMLDivElement>(null);
@@ -155,7 +159,11 @@ export function EarthBlaze({
         ...style,
       }}
     >
-      <style>{`[data-earth-blaze] > canvas:focus-visible { outline: 2px solid var(--color-ring, var(--ring, #a5c8ff)); outline-offset: -4px; }`}</style>
+      <style>
+        {
+          "[data-earth-blaze] > canvas:focus-visible { outline: 2px solid var(--color-ring, var(--ring, #a5c8ff)); outline-offset: -4px; }"
+        }
+      </style>
       <div
         ref={fallback}
         aria-hidden="true"
@@ -183,7 +191,7 @@ export function EarthBlaze({
       </div>
       <canvas
         ref={canvas}
-        tabIndex={interactive ? 0 : -1}
+        tabIndex={interactive && keyboard ? 0 : -1}
         role="img"
         aria-label="Earth Blaze: sunlight over Europe beneath a field of stars"
         aria-describedby={interactive ? instructions : undefined}
