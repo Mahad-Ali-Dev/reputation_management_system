@@ -163,3 +163,8 @@
   font-size: 13.5px;
   color: #86868b;
 }
+.gsel-opt.is-disabled {
+  color: #86868b;
+  cursor: default;
+  opacity: 0.6;
+}

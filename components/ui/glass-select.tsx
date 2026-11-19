@@ -31,6 +31,8 @@ export type GlassOption = {
   label: string;
   /** Small grey text on the right of the row (e.g. "GMT+5"). */
   hint?: string;
+  /** Shown but not selectable (e.g. an integration that isn't connected). */
+  disabled?: boolean;
 };
 
 export function GlassSelect({
@@ -103,6 +105,7 @@ export function GlassSelect({
   }, []);
 
   const pick = (o: GlassOption) => {
+    if (o.disabled) return;
     if (controlled === undefined) setInner(o.value);
     onChange?.(o.value);
     close();
@@ -255,7 +258,8 @@ export function GlassSelect({
                     data-i={i}
                     tabIndex={-1}
                     aria-selected={isSel}
-                    className={`gsel-opt${i === active ? " is-active" : ""}${isSel ? " is-sel" : ""}`}
+                    aria-disabled={o.disabled || undefined}
+                    className={`gsel-opt${i === active && !o.disabled ? " is-active" : ""}${isSel ? " is-sel" : ""}${o.disabled ? " is-disabled" : ""}`}
                     onMouseEnter={() => setActive(i)}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => pick(o)}

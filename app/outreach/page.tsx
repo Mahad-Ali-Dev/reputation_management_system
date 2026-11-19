@@ -12,6 +12,7 @@ import { SendTab } from "./_components/send-tab";
 import { TemplatesTab } from "./_components/templates-tab";
 import "./outreach.css";
 import "./outreach-glass.css";
+import "./outreach-apple.css";
 
 /**
  * Review Requests hub — one route, 5 tabs (verifier fix #3: TabBar primitive),
