@@ -87,34 +87,30 @@ export default async function DisputeCenterPage({
         />
 
         <div className="space-y-6">
-          {/* KPI row — whole-pipeline counts (live). */}
-          <div className="dc-kpis">
-            <Kpi
-              tone="pri"
+          {/* Summary bar — whole-pipeline counts (live) in one strip. */}
+          <div className="dc-statbar">
+            <Stat
               art={`${A}/kpi-total.svg`}
               label="Total Filed"
               value={statsView.total}
               sub={hasDisputes ? "↑ 12% vs last 30 days" : "All time"}
               deltaTone={hasDisputes ? "up" : "muted"}
             />
-            <Kpi
-              tone="amber"
+            <Stat
               art={`${A}/kpi-under-review.svg`}
               label="Under Review"
               value={statsView.underReview}
               sub={hasDisputes ? "↑ 5% vs last 30 days" : "Needs attention"}
               deltaTone={hasDisputes ? "up" : "muted"}
             />
-            <Kpi
-              tone="green"
+            <Stat
               art={`${A}/kpi-removed.svg`}
               label="Removed"
               value={statsView.removed}
               sub={hasDisputes ? "↑ 20% vs last 30 days" : "Successfully removed"}
               deltaTone={hasDisputes ? "up" : "muted"}
             />
-            <Kpi
-              tone="pink"
+            <Stat
               art={`${A}/kpi-rejected.svg`}
               label="Rejected"
               value={statsView.rejected}
@@ -131,7 +127,6 @@ export default async function DisputeCenterPage({
             </div>
             <div>
               <PipelinePanel pipeline={pipeline} />
-              <SuccessCallout hasDisputes={hasDisputes} />
             </div>
           </div>
         </div>
@@ -140,17 +135,15 @@ export default async function DisputeCenterPage({
   );
 }
 
-/* --- KPI cards ------------------------------------------------------------- */
+/* --- Summary bar segment --------------------------------------------------- */
 
-function Kpi({
-  tone,
+function Stat({
   art,
   label,
   value,
   sub,
   deltaTone,
 }: {
-  tone: "pri" | "amber" | "green" | "pink";
   art: string;
   label: string;
   value: number;
@@ -158,15 +151,15 @@ function Kpi({
   deltaTone: "up" | "down" | "muted";
 }) {
   return (
-    <div className="dc-kpi">
-      <div className={`dc-kpi__tile dc-kpi__tile--${tone}`}>
+    <div className="dc-stat">
+      <span className="dc-stat__icon" aria-hidden="true">
         {/* biome-ignore lint/performance/noImgElement: static kit SVG */}
-        <img src={art} alt="" aria-hidden="true" />
-      </div>
+        <img src={art} alt="" />
+      </span>
       <div style={{ minWidth: 0 }}>
-        <div className="dc-kpi__label">{label}</div>
-        <div className="dc-kpi__value">{value}</div>
-        <div className={`dc-kpi__delta dc-kpi__delta--${deltaTone}`}>{sub}</div>
+        <div className="dc-stat__label">{label}</div>
+        <div className="dc-stat__value">{value}</div>
+        <div className={`dc-stat__delta dc-stat__delta--${deltaTone}`}>{sub}</div>
       </div>
     </div>
   );
@@ -510,19 +503,6 @@ function PipelinePanel({
         </div>
       </div>
     </section>
-  );
-}
-
-function SuccessCallout({ hasDisputes }: { hasDisputes: boolean }) {
-  return (
-    <div className="dc-success">
-      {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-      <img className="dc-success__art" src={`${A}/${hasDisputes ? "success-active" : "success-trophy"}.svg`} alt="" aria-hidden="true" />
-      <div>
-        <p className="dc-success__title">Success comes with persistence!</p>
-        <p className="dc-success__text">Keep filing strong disputes. We&apos;re here to help you win.</p>
-      </div>
-    </div>
   );
 }
 

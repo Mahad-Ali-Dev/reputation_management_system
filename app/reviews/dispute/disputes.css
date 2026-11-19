@@ -233,84 +233,97 @@
 
 /* ══════════════════════════ MAIN — KPI ROW ══════════════════════════ */
 
-.dc-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 16px;
-}
-@media (max-width: 1000px) {
-  .dc-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-@media (max-width: 560px) {
-  .dc-kpis {
-    grid-template-columns: 1fr;
-  }
-}
-.dc-kpi {
+/* Summary bar — the four pipeline counts in ONE horizontal strip (was 4 cards),
+   split by hairline dividers instead of separate boxes. */
+.dc-statbar {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 20px 22px;
+  align-items: stretch;
   background: var(--dc-surface);
   border: 1px solid var(--dc-line);
   border-radius: 14px;
   box-shadow: var(--dc-shadow-card);
-}
-.dc-kpi__tile {
-  flex-shrink: 0;
-  width: 66px;
-  height: 66px;
-  border-radius: 16px;
-  display: grid;
-  place-items: center;
   overflow: hidden;
 }
-.dc-kpi__tile img {
+.dc-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 22px;
+}
+.dc-stat + .dc-stat {
+  border-left: 1px solid var(--dc-line);
+}
+.dc-stat__icon {
+  flex-shrink: 0;
   width: 40px;
   height: 40px;
+  display: grid;
+  place-items: center;
+}
+.dc-stat__icon img {
+  width: 36px;
+  height: 36px;
   object-fit: contain;
   mix-blend-mode: multiply;
 }
-.dc-kpi__tile--pri {
-  background: var(--dc-pri-soft);
-}
-.dc-kpi__tile--amber {
-  background: var(--dc-amber-soft);
-}
-.dc-kpi__tile--green {
-  background: var(--dc-green-soft);
-}
-.dc-kpi__tile--pink {
-  background: var(--dc-pink-soft);
-}
-.dc-kpi__label {
+.dc-stat__label {
   font-size: 12.5px;
   font-weight: 600;
   color: var(--dc-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.dc-kpi__value {
-  font-size: 27px;
+.dc-stat__value {
+  font-size: 26px;
   font-weight: 700;
   color: var(--dc-ink);
-  line-height: 1.15;
+  line-height: 1.12;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
 }
-.dc-kpi__delta {
+.dc-stat__delta {
   font-size: 11px;
   font-weight: 600;
   margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-.dc-kpi__delta--up {
+.dc-stat__delta--up {
   color: var(--dc-green);
 }
-.dc-kpi__delta--down {
+.dc-stat__delta--down {
   color: var(--dc-pink);
 }
-.dc-kpi__delta--muted {
+.dc-stat__delta--muted {
   color: var(--dc-muted);
+}
+/* Narrow: wrap to 2×2, re-draw dividers along the new edges. */
+@media (max-width: 900px) {
+  .dc-statbar {
+    flex-wrap: wrap;
+  }
+  .dc-stat {
+    flex: 1 1 50%;
+  }
+  .dc-stat:nth-child(2n + 1) {
+    border-left: none;
+  }
+  .dc-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--dc-line);
+  }
+}
+@media (max-width: 520px) {
+  .dc-stat {
+    flex-basis: 100%;
+    border-left: none;
+  }
+  .dc-stat + .dc-stat {
+    border-top: 1px solid var(--dc-line);
+  }
 }
 
 /* ══════════════════════════ MAIN — 2-COLUMN GRID ══════════════════════════ */

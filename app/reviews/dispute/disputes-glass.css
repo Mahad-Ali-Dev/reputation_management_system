@@ -13,10 +13,65 @@
 /* Every dispute content surface (cards, KPIs, pipeline rows, stepper, benefit
    + method cards) fills from `--dc-surface`; redefining it transparent + killing
    the card shadows turns them all to glass in one place, while each keeps its own
-   `--dc-line` hairline border. Inputs use literal `#fff`, so they stay solid. */
+   `--dc-line` hairline border. Inputs use literal `#fff`, so they stay solid.
+
+   This block also adopts the design-system glass palette — the kit's purple
+   (#4a24f5) + its own slate ink/borders are remapped to the shared glass tokens,
+   so the whole page matches the rest of the app and adapts to dark mode. */
 .app--glass .dc {
   background: transparent;
   --dc-surface: transparent;
   --dc-shadow-card: none;
   --dc-shadow-soft: none;
+
+  /* Primary accent + ink + borders → design-system glass tokens. */
+  --dc-pri: var(--glass-accent);
+  --dc-pri-strong: var(--glass-accent-hover);
+  --dc-pri-mid: var(--glass-accent);
+  --dc-pri-soft: var(--glass-accent-soft);
+  --dc-pri-soft-2: var(--glass-accent-soft);
+  --dc-grad-pri: linear-gradient(135deg, var(--glass-accent), var(--glass-accent-hover));
+
+  --dc-ink: var(--glass-text);
+  --dc-text: var(--glass-text);
+  --dc-body: var(--glass-text-muted);
+  --dc-muted: var(--glass-text-muted);
+  --dc-soft: var(--glass-text-subtle);
+
+  --dc-line: var(--glass-border);
+  --dc-line-soft: var(--glass-border);
+  --dc-line-violet: var(--glass-border);
+
+  --dc-green: var(--glass-success);
+  --dc-amber: var(--glass-warning);
+  --dc-blue: var(--glass-accent);
+  --dc-pink: var(--glass-danger);
+}
+
+/* Summary bar reads as glass (transparent, hairline border, no shadow). */
+.app--glass .dc .dc-statbar {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+
+/* Remove the coloured background boxes behind EVERY icon on the page — the
+   summary-bar glyphs and the pipeline-row tiles sit on bare glass now. */
+.app--glass .dc .dc-stat__icon,
+.app--glass .dc .dc-piperow__tile,
+.app--glass .dc .dc-piperow__tile--pri,
+.app--glass .dc .dc-piperow__tile--amber,
+.app--glass .dc .dc-piperow__tile--blue,
+.app--glass .dc .dc-piperow__tile--green {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* New heading font — Onest display face on titles + the big numbers. */
+.app--glass .dc .dc-card__title,
+.app--glass .dc .dc-stat__value,
+.app--glass .dc .dc-piperow__title {
+  font-family: var(--f-head);
+  letter-spacing: -0.01em;
 }
