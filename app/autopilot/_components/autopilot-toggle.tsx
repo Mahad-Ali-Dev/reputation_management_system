@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { LazyFrog } from "@/components/ui/lazy-frog";
 import { toggleAutopilot } from "@/lib/autopilot/config-actions";
 import type { RiskTolerance } from "@/lib/autopilot/policy";
 import Link from "next/link";
@@ -116,7 +117,17 @@ export function AutopilotToggle({
           </button>
         </div>
 
-        <img className="ap2-control__orbit" src="/assets/repulabs/autopilot/bot-orbit-v2.png" alt="" />
+        {/* The Repulabs AI frog (replaces the kit's orbit-robot PNG): awake and
+            "On duty" while Autopilot runs, resting while it's off. */}
+        <div className="ap2-control__frog">
+          <LazyFrog
+            size={136}
+            name="Repulabs AI"
+            state={pending ? "thinking" : enabled ? "working" : "idle"}
+            statusLabels={{ working: "On duty", thinking: "Updating…", idle: null }}
+            followPointer
+          />
+        </div>
       </div>
 
       {/* Risk segmented control */}
@@ -172,8 +183,8 @@ export function AutopilotToggle({
           <div className="ap2-control__confirmtitle">Turn on Autopilot?</div>
           <p className="ap2-control__confirmbody">
             Autopilot will reply to 5★ reviews and send review requests on your behalf, following
-            your risk tolerance. It never auto-replies to negative reviews those are always
-            drafted or escalated to you, and you get a weekly digest of everything it did.
+            your risk tolerance. It never auto-replies to negative reviews those are always drafted
+            or escalated to you, and you get a weekly digest of everything it did.
           </p>
           <div className="ap2-control__confirmrow">
             <button

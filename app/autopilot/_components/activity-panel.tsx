@@ -1,42 +1,56 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import type { ActivityFeedItem } from "@/lib/autopilot/queries";
+import {
+  CheckCheck,
+  Flag,
+  Inbox,
+  type LucideIcon,
+  MapPin,
+  MessageSquareReply,
+  Mic,
+  PenLine,
+  Send,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { type JSX, useState } from "react";
-import type { ActivityFeedItem } from "@/lib/autopilot/queries";
 import "./autopilot-activity.css";
 
 /**
  * Activity tab (Module 15) — presentational. Built to the design kit in
  * designs/autopilot/Activity section/ (active + empty state): a two-column
- * "Activity" + "Needs you" card grid where each row carries a REAL kit
- * illustration (designs/autopilot/Activity section/active state/illustrations/*),
- * extracted to /assets/repulabs/autopilot/{act,needs}-*.png — not line icons.
+ * "Activity" + "Needs you" card grid where each row carries a bare Lucide
+ * line icon in its tone colour (2026-11: the kit's PNG illustrations were
+ * swapped out because they carried their own backgrounds).
  * Pure props; rows come from getAutopilotActivityFeed / getNeedsHumanQueue.
  */
-
-const ASSETS = "/assets/repulabs/autopilot";
 
 type Tone = "primary" | "purple" | "success" | "warning" | "danger";
 
 /**
- * Per-loop label + REAL kit illustration. `art` points at the extracted kit
- * asset (see designs/autopilot/Activity section/.../illustrations). The mockup
- * pairs: AI reply→chat, review request→paper plane, voice→mic, digest→envelope,
- * rating→trend; loops without a dedicated kit illo reuse the nearest one.
+ * Per-loop label + bare Lucide line icon (replaced the kit's PNG
+ * illustrations, which carried their own backgrounds). The icon takes the
+ * row's tone colour; there is no tile behind it.
  */
-const LOOP_META: Record<string, { label: string; art: string; tone: Tone }> = {
-  auto_reply: { label: "AI reply published", art: `${ASSETS}/act-ai-reply.png`, tone: "success" },
-  low_star_draft: { label: "Low-star reply drafted", art: `${ASSETS}/act-ai-reply.png`, tone: "warning" },
-  review_request: { label: "Review request sent", art: `${ASSETS}/act-review-req.png`, tone: "purple" },
-  voice_review: { label: "Voice → Review request", art: `${ASSETS}/act-voice.svg`, tone: "primary" },
-  dispute: { label: "Review dispute drafted", art: `${ASSETS}/needs-reviews.png`, tone: "warning" },
-  geo_post: { label: "Geo post published", art: `${ASSETS}/act-rating.svg`, tone: "primary" },
-  inbox_reply: { label: "Inbox reply sent", art: `${ASSETS}/needs-approve.png`, tone: "success" },
-  escalation: { label: "Escalated to you", art: `${ASSETS}/needs-reviews.png`, tone: "warning" },
+const LOOP_META: Record<string, { label: string; icon: LucideIcon; tone: Tone }> = {
+  auto_reply: { label: "AI reply published", icon: MessageSquareReply, tone: "success" },
+  low_star_draft: { label: "Low-star reply drafted", icon: PenLine, tone: "warning" },
+  review_request: { label: "Review request sent", icon: Send, tone: "purple" },
+  voice_review: { label: "Voice → Review request", icon: Mic, tone: "primary" },
+  dispute: { label: "Review dispute drafted", icon: Flag, tone: "warning" },
+  geo_post: { label: "Geo post published", icon: MapPin, tone: "primary" },
+  inbox_reply: { label: "Inbox reply sent", icon: Inbox, tone: "success" },
+  escalation: { label: "Escalated to you", icon: TriangleAlert, tone: "warning" },
 };
 
-const FALLBACK_META = { label: "Autopilot action", art: `${ASSETS}/act-ai-reply.png`, tone: "primary" as Tone };
+const FALLBACK_META = {
+  label: "Autopilot action",
+  icon: Sparkles as LucideIcon,
+  tone: "primary" as Tone,
+};
 
 /** How many rows each card shows before "View all" expands it. */
 const VISIBLE_ROWS = 7;
@@ -145,14 +159,14 @@ export function ActivityPanel({
 
         {feed.length === 0 ? (
           <div className="apa-empty">
-            {/* Real kit empty-state illustration (Activity section/empty state). */}
+            {/* unDraw illustration (free, no attribution), brand-recoloured. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={`${ASSETS}/empty-activity.png`}
+              src="/assets/repulabs/illustrations/undraw-reviews.svg"
               alt=""
-              className="apa-empty__img"
-              width={300}
-              height={183}
+              className="apa-empty__img apa-empty__img--undraw"
+              width={220}
+              height={160}
             />
             <p className="apa-empty__text">
               Nothing yet. When Autopilot is on, everything it does shows up here.
@@ -187,16 +201,12 @@ export function ActivityPanel({
 
         {needsYou.length === 0 ? (
           <div className="apa-empty">
-            {/* Real kit "all caught up" illustration (Needs you, empty state). */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={`${ASSETS}/empty-needs.png`}
-              alt=""
-              className="apa-empty__img apa-empty__img--check"
-              width={150}
-              height={150}
-            />
-            <p className="apa-empty__text">All caught up nothing needs your attention right now.</p>
+            <span className="apa-empty__done" aria-hidden="true">
+              <CheckCheck size={30} strokeWidth={1.9} />
+            </span>
+            <p className="apa-empty__text">
+              All caught up. Nothing needs your attention right now.
+            </p>
           </div>
         ) : (
           <div className="apa-list">
@@ -221,12 +231,13 @@ function ActivityRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const body = (
     <>
       <span className={`apa-icon apa-icon--${tone}`} aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="apa-icon__art" src={meta.art} alt="" loading="lazy" />
+        <meta.icon size={18} strokeWidth={1.8} />
       </span>
       <div style={{ minWidth: 0 }}>
         <div className="apa-row__title">{meta.label}</div>
-        <div className={`apa-row__desc${failed ? " apa-row__desc--danger" : ""}`}>{subLine(item)}</div>
+        <div className={`apa-row__desc${failed ? " apa-row__desc--danger" : ""}`}>
+          {subLine(item)}
+        </div>
       </div>
       <div className="apa-row__side">
         <span className="apa-time" suppressHydrationWarning>
@@ -261,8 +272,7 @@ function NeedsRow({ item }: { item: ActivityFeedItem }): JSX.Element {
   const body = (
     <>
       <span className={`apa-icon apa-icon--${failed ? "danger" : meta.tone}`} aria-hidden="true">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img className="apa-icon__art" src={meta.art} alt="" loading="lazy" />
+        <meta.icon size={18} strokeWidth={1.8} />
       </span>
       <div style={{ minWidth: 0 }}>
         <div className="apa-row__title">{meta.label}</div>

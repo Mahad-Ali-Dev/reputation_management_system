@@ -17,7 +17,17 @@ import "./autopilot-glass.css";
 import { buildRoiFunnel } from "@/lib/roi/attribution";
 import { estimateRevenue } from "@/lib/roi/estimate";
 import { getRoiHeadline, loadRoiSettings } from "@/lib/roi/summary";
+import {
+  DollarSign,
+  MessageSquareText,
+  Sparkles,
+  Star,
+  TrendingDown,
+  TrendingUp,
+  Zap,
+} from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { AutopilotShell } from "./_components/autopilot-shell";
 import { AutopilotToggle } from "./_components/autopilot-toggle";
 import type { RoiPanelData } from "./_components/roi-panel";
@@ -34,8 +44,6 @@ import type { RoiPanelData } from "./_components/roi-panel";
  */
 
 export const dynamic = "force-dynamic";
-
-const ASSETS = "/assets/repulabs/autopilot";
 
 const VALID_TABS = ["activity", "controls", "roi"] as const;
 type TabKey = (typeof VALID_TABS)[number];
@@ -112,7 +120,7 @@ export default async function AutopilotPage({
       key: "enable",
       title: "Turn on Autopilot",
       body: "Flip the switch and pick a risk tolerance.",
-      icon: `${ASSETS}/setup-zap.png`,
+      icon: <Zap size={19} strokeWidth={1.9} aria-hidden="true" />,
       done: config.enabled,
     },
     // Voice→Review step REMOVED (2026-08). It pointed at /phone, which is now
@@ -122,7 +130,7 @@ export default async function AutopilotPage({
       key: "roi",
       title: "Set your average job value",
       body: "We'll use this to prioritize opportunities and measure ROI.",
-      icon: `${ASSETS}/setup-dollar.png`,
+      icon: <DollarSign size={19} strokeWidth={1.9} aria-hidden="true" />,
       done: settings.averageJobValue != null,
       comingSoon: true,
     },
@@ -134,7 +142,9 @@ export default async function AutopilotPage({
         {/* ---- Hero: intro + at-a-glance metrics ---- */}
         <header className="ap2-hero">
           <div className="ap2-hero__intro">
-            <img className="ap2-hero__avatar" src={`${ASSETS}/bot-avatar-v2.png`} alt="" />
+            <div className="ap2-hero__frog" aria-hidden="true">
+              <Sparkles size={34} strokeWidth={1.7} />
+            </div>
             <div className="ap2-hero__text">
               <div className="ap2-hero__titlerow">
                 <h1 className="ap2-hero__title">Reputation Autopilot</h1>
@@ -143,9 +153,9 @@ export default async function AutopilotPage({
                 </span>
               </div>
               <p className="ap2-hero__desc">
-                One switch runs your whole reputation loop AI replies published for 5-star
-                reviews, everything else drafted for you to approve then sends a weekly digest of
-                what it did and the few things that need you.
+                One switch runs your whole reputation loop AI replies published for 5-star reviews,
+                everything else drafted for you to approve then sends a weekly digest of what it did
+                and the few things that need you.
               </p>
             </div>
           </div>
@@ -154,17 +164,26 @@ export default async function AutopilotPage({
             <div className="ap2-glance__title">At a glance</div>
             <div className="ap2-glance__row">
               <GlanceMetric
-                icon={`${ASSETS}/glance-star.png`}
+                icon={<Star size={18} strokeWidth={1.9} aria-hidden="true" />}
+                tint="gold"
                 value={glance.reviews30d > 0 ? glance.avgRating.toFixed(1) : "—"}
                 label="Average Rating"
               />
               <GlanceMetric
-                icon={`${ASSETS}/glance-reviews.png`}
+                icon={<MessageSquareText size={18} strokeWidth={1.9} aria-hidden="true" />}
+                tint="violet"
                 value={glance.reviews30d.toLocaleString()}
                 label="New Reviews"
               />
               <GlanceMetric
-                icon={`${ASSETS}/glance-growth.png`}
+                icon={
+                  glance.growthPct != null && glance.growthPct < 0 ? (
+                    <TrendingDown size={18} strokeWidth={1.9} aria-hidden="true" />
+                  ) : (
+                    <TrendingUp size={18} strokeWidth={1.9} aria-hidden="true" />
+                  )
+                }
+                tint={glance.growthPct != null && glance.growthPct < 0 ? "red" : "green"}
                 value={
                   glance.growthPct == null
                     ? "—"
@@ -177,20 +196,22 @@ export default async function AutopilotPage({
           </div>
         </header>
 
-        {/* ---- Main 3-column grid: setup / master control / status rail ---- */}
-        <div className="ap2-grid">
-          <SetupCard steps={steps} />
+        {/* ---- Main 3-column grid in one frosted panel (like the dashboard) ---- */}
+        <div className="ap2-panel">
+          <div className="ap2-grid">
+            <SetupCard steps={steps} />
 
-          <AutopilotToggle
-            enabled={config.enabled}
-            riskTolerance={config.riskTolerance}
-            hasAccess={hasAccess}
-          />
+            <AutopilotToggle
+              enabled={config.enabled}
+              riskTolerance={config.riskTolerance}
+              hasAccess={hasAccess}
+            />
 
-          <aside className="ap2-rail">
-            <QuickStatusCard config={config} />
-            <AboutCard />
-          </aside>
+            <aside className="ap2-rail">
+              <QuickStatusCard config={config} />
+              <AboutCard />
+            </aside>
+          </div>
         </div>
 
         {/* ---- Tabs: Activity / Controls / ROI ---- */}
@@ -216,18 +237,20 @@ export default async function AutopilotPage({
 
 function GlanceMetric({
   icon,
+  tint,
   value,
   label,
   tone,
 }: {
-  icon: string;
+  icon: ReactNode;
+  tint: "gold" | "violet" | "green" | "red";
   value: string;
   label: string;
   tone?: "up" | "down";
 }) {
   return (
     <div className="ap2-glance__metric">
-      <img className="ap2-glance__icon" src={icon} alt="" />
+      <span className={`ap2-tile ap2-tile--${tint}`}>{icon}</span>
       <div>
         <div
           className={`ap2-glance__value${tone === "up" ? " is-up" : ""}${tone === "down" ? " is-down" : ""}`}
@@ -280,7 +303,7 @@ type SetupStep = {
   key: string;
   title: string;
   body: string;
-  icon: string;
+  icon: ReactNode;
   done: boolean;
   href?: string;
   /** Held back a release (see ComingSoonOverlay on the ROI tab this step
@@ -340,12 +363,12 @@ function SetupRow({ step }: { step: SetupStep }) {
   if (step.comingSoon) {
     return (
       <>
-        <img
-          className={`ap2-setup__icon ap2-setup__icon--${step.key} ap2-setup__icon--soon`}
-          src={step.icon}
-          alt=""
+        <span
+          className={`ap2-tile ap2-setup__tile ap2-setup__tile--${step.key} ap2-setup__icon--soon`}
           aria-hidden="true"
-        />
+        >
+          {step.icon}
+        </span>
         <span className="ap2-setup__copy ap2-setup__copy--soon" aria-hidden="true">
           <span className="ap2-setup__steptitle">{step.title}</span>
           <span className="ap2-setup__stepbody">{step.body}</span>
@@ -356,7 +379,9 @@ function SetupRow({ step }: { step: SetupStep }) {
   }
   return (
     <>
-      <img className={`ap2-setup__icon ap2-setup__icon--${step.key}`} src={step.icon} alt="" />
+      <span className={`ap2-tile ap2-setup__tile ap2-setup__tile--${step.key}`} aria-hidden="true">
+        {step.icon}
+      </span>
       <span className="ap2-setup__copy">
         <span className="ap2-setup__steptitle">{step.title}</span>
         <span className="ap2-setup__stepbody">{step.body}</span>
@@ -414,7 +439,11 @@ function AboutCard() {
         <p className="ap2-about__copy">
           Autopilot handles the busywork so you can focus on what matters.
         </p>
-        <img className="ap2-about__art" src={`${ASSETS}/about-clipboard-v2.png`} alt="" />
+        <img
+          className="ap2-about__art ap2-about__art--undraw"
+          src="/assets/repulabs/illustrations/undraw-key-insights.svg"
+          alt=""
+        />
       </div>
       <Link href="/tour" className="ap2-btn-secondary ap2-about__cta">
         <Icon name="play" size={12} />
