@@ -1,5 +1,6 @@
 "use client";
 
+import { BodyPortal } from "@/components/ui/body-portal";
 import { GlassSelect } from "@/components/ui/glass-select";
 import { generateRequestBody } from "@/lib/outreach/ai-generate";
 import { resolveMergeTags, sampleContext } from "@/lib/outreach/merge-tags";
@@ -140,204 +141,214 @@ export function TemplateModal({
   }
 
   return (
-    // biome-ignore lint/a11y/useSemanticElements: overlay dialog; a native dialog top layer would sit above the portalled dropdown menus
-    <div role="dialog" className="gs-overlay" aria-modal="true" aria-labelledby="tm-title">
-      <button type="button" className="gs-scrim" aria-label="Close" onClick={close} />
-      <div className="gs tm">
-        <button type="button" className="gs__close" aria-label="Close" onClick={close}>
-          <X size={16} strokeWidth={2.2} />
-        </button>
+    <BodyPortal>
+      // biome-ignore lint/a11y/useSemanticElements: overlay dialog; a native dialog top layer would
+      sit above the portalled dropdown menus
+      <div role="dialog" className="gs-overlay" aria-modal="true" aria-labelledby="tm-title">
+        <button type="button" className="gs-scrim" aria-label="Close" onClick={close} />
+        <div className="gs tm">
+          <button type="button" className="gs__close" aria-label="Close" onClick={close}>
+            <X size={16} strokeWidth={2.2} />
+          </button>
 
-        <form onSubmit={submit} className="tm__grid">
-          {/* ---- left: fields ---- */}
-          <div className="tm__fields">
-            <header className="tm__head">
-              <span className="gs__badge tm__badge" aria-hidden="true">
-                {channel === "email" ? (
-                  <Mail size={22} strokeWidth={1.8} />
-                ) : (
-                  <Smartphone size={22} strokeWidth={1.8} />
-                )}
-              </span>
-              <div>
-                <h2 id="tm-title" className="tm__title">
-                  {isNew ? "New template" : "Edit template"}
-                </h2>
-                <p className="tm__sub">Write once, reuse for every review request.</p>
-              </div>
-            </header>
+          <form onSubmit={submit} className="tm__grid">
+            {/* ---- left: fields ---- */}
+            <div className="tm__fields">
+              <header className="tm__head">
+                <span className="gs__badge tm__badge" aria-hidden="true">
+                  {channel === "email" ? (
+                    <Mail size={22} strokeWidth={1.8} />
+                  ) : (
+                    <Smartphone size={22} strokeWidth={1.8} />
+                  )}
+                </span>
+                <div>
+                  <h2 id="tm-title" className="tm__title">
+                    {isNew ? "New template" : "Edit template"}
+                  </h2>
+                  <p className="tm__sub">Write once, reuse for every review request.</p>
+                </div>
+              </header>
 
-            <div className="tm__scroll">
-              {error && (
-                <p className="gs-error" role="alert">
-                  <TriangleAlert size={15} strokeWidth={1.8} />
-                  {error}
-                </p>
-              )}
-
-              <div className="gs-group">
-                <label className="gs-field">
-                  <span className="gs-field__lbl">Template name</span>
-                  <input
-                    className="gs-input"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    maxLength={120}
-                    placeholder="e.g. After-visit thank you"
-                  />
-                </label>
-
-                {SMS_ENABLED && (
-                  <div className="gs-field">
-                    <span className="gs-field__lbl">Channel</span>
-                    <div className="tm-seg" aria-label="Channel">
-                      {(["email", "sms"] as const).map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          aria-pressed={channel === c}
-                          className={`tm-seg__t${channel === c ? " is-active" : ""}`}
-                          onClick={() => setChannel(c)}
-                        >
-                          {c === "email" ? "Email" : "SMS"}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
+              <div className="tm__scroll">
+                {error && (
+                  <p className="gs-error" role="alert">
+                    <TriangleAlert size={15} strokeWidth={1.8} />
+                    {error}
+                  </p>
                 )}
 
-                {channel === "email" && (
+                <div className="gs-group">
                   <label className="gs-field">
-                    <span className="gs-field__lbl">Subject line</span>
+                    <span className="gs-field__lbl">Template name</span>
                     <input
                       className="gs-input"
-                      value={subject}
-                      maxLength={SUBJECT_MAX}
-                      onChange={(e) => setSubject(e.target.value)}
-                      placeholder="How was your visit to {{business_name}}?"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      maxLength={120}
+                      placeholder="e.g. After-visit thank you"
                     />
                   </label>
-                )}
 
-                {channel === "email" && (
-                  <div className="gs-field">
-                    <span className="gs-field__lbl">Email logo</span>
-                    <div className="tm-logo">
+                  {SMS_ENABLED && (
+                    <div className="gs-field">
+                      <span className="gs-field__lbl">Channel</span>
+                      <div className="tm-seg" aria-label="Channel">
+                        {(["email", "sms"] as const).map((c) => (
+                          <button
+                            key={c}
+                            type="button"
+                            aria-pressed={channel === c}
+                            className={`tm-seg__t${channel === c ? " is-active" : ""}`}
+                            onClick={() => setChannel(c)}
+                          >
+                            {c === "email" ? "Email" : "SMS"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {channel === "email" && (
+                    <label className="gs-field">
+                      <span className="gs-field__lbl">Subject line</span>
+                      <input
+                        className="gs-input"
+                        value={subject}
+                        maxLength={SUBJECT_MAX}
+                        onChange={(e) => setSubject(e.target.value)}
+                        placeholder="How was your visit to {{business_name}}?"
+                      />
+                    </label>
+                  )}
+
+                  {channel === "email" && (
+                    <div className="gs-field">
+                      <span className="gs-field__lbl">Email logo</span>
+                      <div className="tm-logo">
+                        {initial.logoUrl ? (
+                          // org logo from blob storage
+                          <img src={initial.logoUrl} alt="" className="tm-logo__img" />
+                        ) : (
+                          <span className="gs-hint">
+                            No logo yet, so your business name is used.
+                          </span>
+                        )}
+                        <Link href={changeLogoHref} className="gs-btn tm-btn-sm">
+                          <ImageIcon size={14} strokeWidth={1.8} />
+                          Change logo
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <div className="gs-group tm-body">
+                  <MergeTagBody
+                    value={body}
+                    onChange={(v) => setBody(v.slice(0, BODY_MAX))}
+                    channel={channel}
+                    businessName={businessName}
+                    sampleAddress={sampleAddress}
+                    maxLength={BODY_MAX}
+                  />
+                  <div className="tm-ai">
+                    <div className="tm-ai__tone">
+                      <GlassSelect
+                        value={tone}
+                        onChange={setTone}
+                        options={TONES}
+                        ariaLabel="Tone"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      className="gs-btn tm-btn-sm"
+                      onClick={handleAi}
+                      disabled={aiPending}
+                    >
+                      <Sparkles size={14} strokeWidth={1.8} />
+                      {aiPending ? "Writing…" : "Write with AI"}
+                    </button>
+                  </div>
+                </div>
+
+                <label className="tm-default">
+                  <span>
+                    <span className="tm-default__t">Default {channel} template</span>
+                    <span className="gs-hint">Used automatically when you send a request.</span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    className="tm-switch"
+                    checked={isDefault}
+                    onChange={(e) => setIsDefault(e.target.checked)}
+                  />
+                </label>
+              </div>
+
+              <div className="tm__foot">
+                <button type="button" className="gs-btn" onClick={close}>
+                  Cancel
+                </button>
+                <button type="submit" className="gs-btn gs-btn--pri" disabled={saving}>
+                  {saving ? "Saving…" : isNew ? "Create template" : "Save changes"}
+                </button>
+              </div>
+            </div>
+
+            {/* ---- right: live preview ---- */}
+            <aside className="tm__preview" aria-label="Preview">
+              <span className="tm__plabel">Preview</span>
+              {channel === "email" ? (
+                <div className="tm-mail">
+                  <div className="tm-mail__bar">
+                    <span className="tm-mail__dot" />
+                    <span className="tm-mail__dot" />
+                    <span className="tm-mail__dot" />
+                  </div>
+                  <div className="tm-mail__meta">
+                    <div>
+                      <b>From</b> {businessName}
+                    </div>
+                    <div>
+                      <b>Subject</b> {previewSubject || `How was your visit to ${businessName}?`}
+                    </div>
+                  </div>
+                  <div className="tm-mail__canvas">
+                    <div className="tm-mail__card">
                       {initial.logoUrl ? (
                         // org logo from blob storage
-                        <img src={initial.logoUrl} alt="" className="tm-logo__img" />
+                        <img src={initial.logoUrl} alt="" className="tm-mail__logo" />
                       ) : (
-                        <span className="gs-hint">No logo yet, so your business name is used.</span>
+                        <div className="tm-mail__brand">{businessName}</div>
                       )}
-                      <Link href={changeLogoHref} className="gs-btn tm-btn-sm">
-                        <ImageIcon size={14} strokeWidth={1.8} />
-                        Change logo
-                      </Link>
+                      <div className="tm-mail__body">
+                        {previewBody || "Your message appears here."}
+                      </div>
+                      <span className="tm-mail__cta">Leave a review</span>
+                      <p className="tm-mail__foot">
+                        Don&apos;t want these emails? Unsubscribe anytime.
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
-
-              <div className="gs-group tm-body">
-                <MergeTagBody
-                  value={body}
-                  onChange={(v) => setBody(v.slice(0, BODY_MAX))}
-                  channel={channel}
-                  businessName={businessName}
-                  sampleAddress={sampleAddress}
-                  maxLength={BODY_MAX}
-                />
-                <div className="tm-ai">
-                  <div className="tm-ai__tone">
-                    <GlassSelect value={tone} onChange={setTone} options={TONES} ariaLabel="Tone" />
+                </div>
+              ) : (
+                <div className="tm-phone">
+                  <div className="tm-phone__notch" />
+                  <div className="tm-phone__to">{businessName}</div>
+                  <div className="tm-phone__bubble">
+                    {previewBody || "Your message appears here."}
                   </div>
-                  <button
-                    type="button"
-                    className="gs-btn tm-btn-sm"
-                    onClick={handleAi}
-                    disabled={aiPending}
-                  >
-                    <Sparkles size={14} strokeWidth={1.8} />
-                    {aiPending ? "Writing…" : "Write with AI"}
-                  </button>
+                  <p className="tm-phone__foot">Reply STOP to opt out.</p>
                 </div>
-              </div>
-
-              <label className="tm-default">
-                <span>
-                  <span className="tm-default__t">Default {channel} template</span>
-                  <span className="gs-hint">Used automatically when you send a request.</span>
-                </span>
-                <input
-                  type="checkbox"
-                  className="tm-switch"
-                  checked={isDefault}
-                  onChange={(e) => setIsDefault(e.target.checked)}
-                />
-              </label>
-            </div>
-
-            <div className="tm__foot">
-              <button type="button" className="gs-btn" onClick={close}>
-                Cancel
-              </button>
-              <button type="submit" className="gs-btn gs-btn--pri" disabled={saving}>
-                {saving ? "Saving…" : isNew ? "Create template" : "Save changes"}
-              </button>
-            </div>
-          </div>
-
-          {/* ---- right: live preview ---- */}
-          <aside className="tm__preview" aria-label="Preview">
-            <span className="tm__plabel">Preview</span>
-            {channel === "email" ? (
-              <div className="tm-mail">
-                <div className="tm-mail__bar">
-                  <span className="tm-mail__dot" />
-                  <span className="tm-mail__dot" />
-                  <span className="tm-mail__dot" />
-                </div>
-                <div className="tm-mail__meta">
-                  <div>
-                    <b>From</b> {businessName}
-                  </div>
-                  <div>
-                    <b>Subject</b> {previewSubject || `How was your visit to ${businessName}?`}
-                  </div>
-                </div>
-                <div className="tm-mail__canvas">
-                  <div className="tm-mail__card">
-                    {initial.logoUrl ? (
-                      // org logo from blob storage
-                      <img src={initial.logoUrl} alt="" className="tm-mail__logo" />
-                    ) : (
-                      <div className="tm-mail__brand">{businessName}</div>
-                    )}
-                    <div className="tm-mail__body">
-                      {previewBody || "Your message appears here."}
-                    </div>
-                    <span className="tm-mail__cta">Leave a review</span>
-                    <p className="tm-mail__foot">
-                      Don&apos;t want these emails? Unsubscribe anytime.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="tm-phone">
-                <div className="tm-phone__notch" />
-                <div className="tm-phone__to">{businessName}</div>
-                <div className="tm-phone__bubble">
-                  {previewBody || "Your message appears here."}
-                </div>
-                <p className="tm-phone__foot">Reply STOP to opt out.</p>
-              </div>
-            )}
-            <p className="tm__pnote">Merge tags are filled with sample data.</p>
-          </aside>
-        </form>
+              )}
+              <p className="tm__pnote">Merge tags are filled with sample data.</p>
+            </aside>
+          </form>
+        </div>
       </div>
-    </div>
+    </BodyPortal>
   );
 }

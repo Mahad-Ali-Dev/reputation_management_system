@@ -2,6 +2,7 @@
 
 import { QrCameraScanner } from "@/components/qr-scanner";
 import { Icon } from "@/components/shell/icon";
+import { BodyPortal } from "@/components/ui/body-portal";
 import {
   type CreateEstablishmentQuickState,
   createEstablishmentQuick,
@@ -198,315 +199,317 @@ export function ConnectDeviceModal({
       </button>
 
       {open && (
-        <div className="cdm-backdrop">
-          <button
-            type="button"
-            aria-label="Close add device dialog"
-            className="cdm-scrim"
-            onClick={() => setOpen(false)}
-          />
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cdm-title"
-            className={`cdm-modal cdm-modal--step${step}`}
-          >
+        <BodyPortal>
+          <div className="cdm-backdrop">
             <button
               type="button"
               aria-label="Close add device dialog"
-              className="cdm-close"
+              className="cdm-scrim"
               onClick={() => setOpen(false)}
+            />
+            <section
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="cdm-title"
+              className={`cdm-modal cdm-modal--step${step}`}
             >
-              <Icon name="x" size={18} stroke={2.2} />
-            </button>
+              <button
+                type="button"
+                aria-label="Close add device dialog"
+                className="cdm-close"
+                onClick={() => setOpen(false)}
+              >
+                <Icon name="x" size={18} stroke={2.2} />
+              </button>
 
-            {noBusinesses ? (
-              <div className="cdm-pad">
-                <Header step={step} />
-                {showAddForm ? (
-                  <InlineAddBusinessForm
-                    action={createAction}
-                    error={createState.error}
-                    fieldErrors={createState.fieldErrors}
-                    onCancel={() => setShowAddForm(false)}
-                  />
-                ) : (
-                  <NoBusinessNotice onAdd={() => setShowAddForm(true)} />
-                )}
-              </div>
-            ) : (
-              <form action={formAction} className="cdm-form">
-                <div className="cdm-form__body">
-                  <div className="cdm-left">
-                    <Header step={step} />
-
-                    {state.error && (
-                      <div className="cdm-error" role="alert">
-                        {state.error}
-                      </div>
-                    )}
-
-                    {/* Step 1 — Business */}
-                    <div className="cdm-panel" hidden={step !== 1}>
-                      <SectionHead n={1} icon="building" title="Select Your Business" />
-                      <BusinessSelect
-                        establishments={businesses}
-                        value={establishmentId}
-                        onChange={setEstablishmentId}
-                      />
-                      <input type="hidden" name="establishmentId" value={establishmentId} />
-                      <Callout icon="info">
-                        Scans from this device will route to this business&rsquo;s review page.
-                      </Callout>
-                    </div>
-
-                    {/* Step 2 — QR link (identifies the exact device) + code */}
-                    <div className="cdm-panel" hidden={step !== 2}>
-                      <SectionHead n={2} icon="qr" title="Enter Your Device" />
-
-                      <p className="cdm-helper">
-                        {autoDetected
-                          ? "We recognised the stand you scanned, so it's already identified below. Just enter the code from the card."
-                          : "Scanning your stand's QR is what tells us which unit you're holding the code on the card is the same on every stand in this batch, so it can't identify yours on its own."}
-                      </p>
-
-                      {/* Same disclosure pattern as /activate: never open with a
-                          URL box. Scanning works for everyone; typing the link
-                          is the fallback for "scanned on my phone, setting up on
-                          my laptop". The slug is not printed as readable text on
-                          the product (see lib/hardware/batch.ts), so it only
-                          ever reaches us via a scan or a pasted link. */}
-                      {autoDetected && !manualOpen ? (
-                        <>
-                          <input type="hidden" name="slug" value={link} />
-                          <div className="cdm-pid">
-                            <span className="cdm-pid__chip">
-                              <Icon name="check" size={12} />
-                              Detected
-                            </span>
-                            <span className="cdm-pid__label">Product ID</span>
-                            <code className="cdm-pid__val">{slug}</code>
-                            {detectedSerial && (
-                              <>
-                                <span className="cdm-pid__label">Serial</span>
-                                <code className="cdm-pid__val">{detectedSerial}</code>
-                              </>
-                            )}
-                          </div>
-                          <button type="button" className="cdm-swap" onClick={openManual}>
-                            <Icon name="qr" size={12} />
-                            Setting up a different stand?
-                          </button>
-                        </>
-                      ) : manualOpen ? (
-                        <>
-                          <div className="cdm-field">
-                            <span className="cdm-field__icon" aria-hidden>
-                              <Icon name="qr" size={20} />
-                            </span>
-                            <input
-                              type="text"
-                              name="slug"
-                              value={link}
-                              onChange={(e) => setLink(e.target.value)}
-                              placeholder="repulabs.com/r/XXXXXXXXXX"
-                              aria-label="Your device QR link"
-                              autoComplete="off"
-                              spellCheck={false}
-                              className="cdm-select"
-                              style={{ textTransform: "none" }}
-                            />
-                          </div>
-                          {slug && (
-                            <div className="cdm-pid">
-                              <span className="cdm-pid__label">Product ID</span>
-                              <code className="cdm-pid__val">{slug}</code>
-                            </div>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            type="button"
-                            className="cdm-scan"
-                            onClick={() => setScannerOpen(true)}
-                          >
-                            <span className="cdm-scan__tile" aria-hidden>
-                              <Icon name="qr" size={22} />
-                            </span>
-                            <div>
-                              <div className="cdm-scan__t">
-                                Scan your stand&rsquo;s QR with your phone
-                              </div>
-                              <div className="cdm-scan__d">
-                                Tap to open your camera we&rsquo;ll fill in the link the moment we
-                                recognize it.
-                              </div>
-                            </div>
-                          </button>
-                          <button type="button" className="cdm-swap" onClick={openManual}>
-                            <Icon name="qr" size={12} />
-                            Can&rsquo;t scan right now? Enter the link manually
-                          </button>
-                        </>
-                      )}
-
-                      <p className="cdm-helper" style={{ marginTop: 16 }}>
-                        Now enter the 5-character code from the card inside your package.
-                      </p>
-                      {/* biome-ignore lint/a11y/useKeyWithClickEvents: focus-proxy wrapper; the real input handles keyboard */}
-                      <div className="cdm-code" onClick={() => codeInputRef.current?.focus()}>
-                        <input
-                          ref={codeInputRef}
-                          name="activationCode"
-                          value={code}
-                          onChange={(e) => setCode(normalizeCode(e.target.value))}
-                          inputMode="text"
-                          autoComplete="off"
-                          autoCapitalize="characters"
-                          maxLength={CODE_LEN}
-                          required
-                          aria-label="Device code"
-                          className="cdm-code__input"
-                        />
-                        <div className="cdm-code__slots" aria-hidden>
-                          {Array.from({ length: CODE_LEN }).map((_, i) => (
-                            <span
-                              // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-slot display
-                              key={`slot-${i}`}
-                              className={code[i] ? "cdm-slot cdm-slot--has" : "cdm-slot"}
-                            >
-                              {code[i] ?? ""}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                      <Callout icon="info" title="Can't find the code?">
-                        Check the card inside your package.
-                      </Callout>
-
-                      {/* No physical device? The Continue button intentionally
-                          stays disabled until a real QR link + code are entered,
-                          which left customers without a card stuck here with no
-                          way forward. Point them at the free digital-QR path. */}
-                      <p className="cdm-helper" style={{ marginTop: 14 }}>
-                        Don&rsquo;t have a physical device yet?{" "}
-                        <Link
-                          href="/hardware?generate=1"
-                          scroll={false}
-                          onClick={() => setOpen(false)}
-                          style={{ color: "var(--rl-primary, #4f46e5)", fontWeight: 600 }}
-                        >
-                          Create a free digital QR
-                        </Link>{" "}
-                        no card needed.
-                      </p>
-                    </div>
-
-                    {/* Step 3 — Platform */}
-                    <div className="cdm-panel" hidden={step !== 3}>
-                      <SectionHead n={3} icon="grid" title="Choose Review Platform" />
-                      <div className="cdm-grid" role="radiogroup" aria-label="Review platform">
-                        {PLATFORMS.map((p) => {
-                          const selected = platform === p.id;
-                          return (
-                            <button
-                              key={p.id}
-                              type="button"
-                              role="radio"
-                              aria-checked={selected}
-                              aria-disabled={!p.live}
-                              disabled={!p.live}
-                              title={p.live ? p.label : "Coming soon"}
-                              onClick={() => p.live && setPlatform(p.id)}
-                              className={`cdm-plat${selected ? " cdm-plat--sel" : ""}${p.live ? "" : " cdm-plat--soon"}`}
-                            >
-                              <span className="cdm-plat__main">
-                                {/* biome-ignore lint/performance/noImgElement: static brand icon */}
-                                <img
-                                  src={`${ASSET}/${p.icon}`}
-                                  alt=""
-                                  aria-hidden
-                                  className="cdm-plat__icon"
-                                />
-                                <span className="cdm-plat__label">{p.label}</span>
-                              </span>
-                              <span className="cdm-plat__radio" aria-hidden>
-                                {selected ? <Icon name="check" size={15} /> : null}
-                              </span>
-                              {!p.live && <span className="cdm-plat__soon">soon</span>}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      <Callout icon="info" title="Google is live today.">
-                        We&rsquo;ll add more platforms here as they come online.
-                      </Callout>
-                    </div>
-                  </div>
-
-                  {/* Decorative right-side illustration (steps 1 & 2 only) — the
-                      real kit art: step 1 = device-on-pedestal + review card,
-                      step 2 = device-code card on pedestal with plant. Both stay
-                      mounted (only the active one shown) so the large SVGs
-                      preload together and never flash blank when advancing. */}
-                  {step < 3 && (
-                    <div className="cdm-art" aria-hidden>
-                      {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
-                      <img
-                        src={`${ASSET}/add-step1-review.svg`}
-                        alt=""
-                        aria-hidden
-                        className="cdm-art__img"
-                        hidden={step !== 1}
-                      />
-                      {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
-                      <img
-                        src={`${ASSET}/add-step2-code.svg`}
-                        alt=""
-                        aria-hidden
-                        className="cdm-art__img"
-                        hidden={step !== 2}
-                      />
-                    </div>
+              {noBusinesses ? (
+                <div className="cdm-pad">
+                  <Header step={step} />
+                  {showAddForm ? (
+                    <InlineAddBusinessForm
+                      action={createAction}
+                      error={createState.error}
+                      fieldErrors={createState.fieldErrors}
+                      onCancel={() => setShowAddForm(false)}
+                    />
+                  ) : (
+                    <NoBusinessNotice onAdd={() => setShowAddForm(true)} />
                   )}
                 </div>
+              ) : (
+                <form action={formAction} className="cdm-form">
+                  <div className="cdm-form__body">
+                    <div className="cdm-left">
+                      <Header step={step} />
 
-                {/* Footer */}
-                <footer className="cdm-footer">
-                  {step > 1 ? (
-                    <button
-                      type="button"
-                      className="cdm-back"
-                      onClick={() => setStep((s) => s - 1)}
-                    >
-                      <Icon name="chevL" size={16} />
-                      Back
-                    </button>
-                  ) : (
-                    <span />
-                  )}
+                      {state.error && (
+                        <div className="cdm-error" role="alert">
+                          {state.error}
+                        </div>
+                      )}
 
-                  {step === 3 && <WatchVideoLink />}
+                      {/* Step 1 — Business */}
+                      <div className="cdm-panel" hidden={step !== 1}>
+                        <SectionHead n={1} icon="building" title="Select Your Business" />
+                        <BusinessSelect
+                          establishments={businesses}
+                          value={establishmentId}
+                          onChange={setEstablishmentId}
+                        />
+                        <input type="hidden" name="establishmentId" value={establishmentId} />
+                        <Callout icon="info">
+                          Scans from this device will route to this business&rsquo;s review page.
+                        </Callout>
+                      </div>
 
-                  {step < 3 ? (
-                    <button
-                      type="button"
-                      className="cdm-cta"
-                      disabled={step === 2 && (!slugComplete || !codeComplete)}
-                      onClick={() => setStep((s) => s + 1)}
-                    >
-                      Continue
-                      <Icon name="arrowR" size={17} />
-                    </button>
-                  ) : (
-                    <ConnectButton platform={platform} />
-                  )}
-                </footer>
-              </form>
-            )}
-          </section>
-        </div>
+                      {/* Step 2 — QR link (identifies the exact device) + code */}
+                      <div className="cdm-panel" hidden={step !== 2}>
+                        <SectionHead n={2} icon="qr" title="Enter Your Device" />
+
+                        <p className="cdm-helper">
+                          {autoDetected
+                            ? "We recognised the stand you scanned, so it's already identified below. Just enter the code from the card."
+                            : "Scanning your stand's QR is what tells us which unit you're holding the code on the card is the same on every stand in this batch, so it can't identify yours on its own."}
+                        </p>
+
+                        {/* Same disclosure pattern as /activate: never open with a
+                            URL box. Scanning works for everyone; typing the link
+                            is the fallback for "scanned on my phone, setting up on
+                            my laptop". The slug is not printed as readable text on
+                            the product (see lib/hardware/batch.ts), so it only
+                            ever reaches us via a scan or a pasted link. */}
+                        {autoDetected && !manualOpen ? (
+                          <>
+                            <input type="hidden" name="slug" value={link} />
+                            <div className="cdm-pid">
+                              <span className="cdm-pid__chip">
+                                <Icon name="check" size={12} />
+                                Detected
+                              </span>
+                              <span className="cdm-pid__label">Product ID</span>
+                              <code className="cdm-pid__val">{slug}</code>
+                              {detectedSerial && (
+                                <>
+                                  <span className="cdm-pid__label">Serial</span>
+                                  <code className="cdm-pid__val">{detectedSerial}</code>
+                                </>
+                              )}
+                            </div>
+                            <button type="button" className="cdm-swap" onClick={openManual}>
+                              <Icon name="qr" size={12} />
+                              Setting up a different stand?
+                            </button>
+                          </>
+                        ) : manualOpen ? (
+                          <>
+                            <div className="cdm-field">
+                              <span className="cdm-field__icon" aria-hidden>
+                                <Icon name="qr" size={20} />
+                              </span>
+                              <input
+                                type="text"
+                                name="slug"
+                                value={link}
+                                onChange={(e) => setLink(e.target.value)}
+                                placeholder="repulabs.com/r/XXXXXXXXXX"
+                                aria-label="Your device QR link"
+                                autoComplete="off"
+                                spellCheck={false}
+                                className="cdm-select"
+                                style={{ textTransform: "none" }}
+                              />
+                            </div>
+                            {slug && (
+                              <div className="cdm-pid">
+                                <span className="cdm-pid__label">Product ID</span>
+                                <code className="cdm-pid__val">{slug}</code>
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <button
+                              type="button"
+                              className="cdm-scan"
+                              onClick={() => setScannerOpen(true)}
+                            >
+                              <span className="cdm-scan__tile" aria-hidden>
+                                <Icon name="qr" size={22} />
+                              </span>
+                              <div>
+                                <div className="cdm-scan__t">
+                                  Scan your stand&rsquo;s QR with your phone
+                                </div>
+                                <div className="cdm-scan__d">
+                                  Tap to open your camera we&rsquo;ll fill in the link the moment we
+                                  recognize it.
+                                </div>
+                              </div>
+                            </button>
+                            <button type="button" className="cdm-swap" onClick={openManual}>
+                              <Icon name="qr" size={12} />
+                              Can&rsquo;t scan right now? Enter the link manually
+                            </button>
+                          </>
+                        )}
+
+                        <p className="cdm-helper" style={{ marginTop: 16 }}>
+                          Now enter the 5-character code from the card inside your package.
+                        </p>
+                        {/* biome-ignore lint/a11y/useKeyWithClickEvents: focus-proxy wrapper; the real input handles keyboard */}
+                        <div className="cdm-code" onClick={() => codeInputRef.current?.focus()}>
+                          <input
+                            ref={codeInputRef}
+                            name="activationCode"
+                            value={code}
+                            onChange={(e) => setCode(normalizeCode(e.target.value))}
+                            inputMode="text"
+                            autoComplete="off"
+                            autoCapitalize="characters"
+                            maxLength={CODE_LEN}
+                            required
+                            aria-label="Device code"
+                            className="cdm-code__input"
+                          />
+                          <div className="cdm-code__slots" aria-hidden>
+                            {Array.from({ length: CODE_LEN }).map((_, i) => (
+                              <span
+                                // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-slot display
+                                key={`slot-${i}`}
+                                className={code[i] ? "cdm-slot cdm-slot--has" : "cdm-slot"}
+                              >
+                                {code[i] ?? ""}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        <Callout icon="info" title="Can't find the code?">
+                          Check the card inside your package.
+                        </Callout>
+
+                        {/* No physical device? The Continue button intentionally
+                            stays disabled until a real QR link + code are entered,
+                            which left customers without a card stuck here with no
+                            way forward. Point them at the free digital-QR path. */}
+                        <p className="cdm-helper" style={{ marginTop: 14 }}>
+                          Don&rsquo;t have a physical device yet?{" "}
+                          <Link
+                            href="/hardware?generate=1"
+                            scroll={false}
+                            onClick={() => setOpen(false)}
+                            style={{ color: "var(--rl-primary, #4f46e5)", fontWeight: 600 }}
+                          >
+                            Create a free digital QR
+                          </Link>{" "}
+                          no card needed.
+                        </p>
+                      </div>
+
+                      {/* Step 3 — Platform */}
+                      <div className="cdm-panel" hidden={step !== 3}>
+                        <SectionHead n={3} icon="grid" title="Choose Review Platform" />
+                        <div className="cdm-grid" role="radiogroup" aria-label="Review platform">
+                          {PLATFORMS.map((p) => {
+                            const selected = platform === p.id;
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                role="radio"
+                                aria-checked={selected}
+                                aria-disabled={!p.live}
+                                disabled={!p.live}
+                                title={p.live ? p.label : "Coming soon"}
+                                onClick={() => p.live && setPlatform(p.id)}
+                                className={`cdm-plat${selected ? " cdm-plat--sel" : ""}${p.live ? "" : " cdm-plat--soon"}`}
+                              >
+                                <span className="cdm-plat__main">
+                                  {/* biome-ignore lint/performance/noImgElement: static brand icon */}
+                                  <img
+                                    src={`${ASSET}/${p.icon}`}
+                                    alt=""
+                                    aria-hidden
+                                    className="cdm-plat__icon"
+                                  />
+                                  <span className="cdm-plat__label">{p.label}</span>
+                                </span>
+                                <span className="cdm-plat__radio" aria-hidden>
+                                  {selected ? <Icon name="check" size={15} /> : null}
+                                </span>
+                                {!p.live && <span className="cdm-plat__soon">soon</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <Callout icon="info" title="Google is live today.">
+                          We&rsquo;ll add more platforms here as they come online.
+                        </Callout>
+                      </div>
+                    </div>
+
+                    {/* Decorative right-side illustration (steps 1 & 2 only) — the
+                        real kit art: step 1 = device-on-pedestal + review card,
+                        step 2 = device-code card on pedestal with plant. Both stay
+                        mounted (only the active one shown) so the large SVGs
+                        preload together and never flash blank when advancing. */}
+                    {step < 3 && (
+                      <div className="cdm-art" aria-hidden>
+                        {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
+                        <img
+                          src={`${ASSET}/add-step1-review.svg`}
+                          alt=""
+                          aria-hidden
+                          className="cdm-art__img"
+                          hidden={step !== 1}
+                        />
+                        {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
+                        <img
+                          src={`${ASSET}/add-step2-code.svg`}
+                          alt=""
+                          aria-hidden
+                          className="cdm-art__img"
+                          hidden={step !== 2}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Footer */}
+                  <footer className="cdm-footer">
+                    {step > 1 ? (
+                      <button
+                        type="button"
+                        className="cdm-back"
+                        onClick={() => setStep((s) => s - 1)}
+                      >
+                        <Icon name="chevL" size={16} />
+                        Back
+                      </button>
+                    ) : (
+                      <span />
+                    )}
+
+                    {step === 3 && <WatchVideoLink />}
+
+                    {step < 3 ? (
+                      <button
+                        type="button"
+                        className="cdm-cta"
+                        disabled={step === 2 && (!slugComplete || !codeComplete)}
+                        onClick={() => setStep((s) => s + 1)}
+                      >
+                        Continue
+                        <Icon name="arrowR" size={17} />
+                      </button>
+                    ) : (
+                      <ConnectButton platform={platform} />
+                    )}
+                  </footer>
+                </form>
+              )}
+            </section>
+          </div>
+        </BodyPortal>
       )}
 
       <QrCameraScanner

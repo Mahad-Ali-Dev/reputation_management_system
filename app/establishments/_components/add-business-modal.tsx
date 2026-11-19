@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { BodyPortal } from "@/components/ui/body-portal";
 import {
   type GlassOption,
   GlassSelect,
@@ -99,136 +100,139 @@ export function AddBusinessModal({
       </button>
 
       {open && (
-        // biome-ignore lint/a11y/useSemanticElements: overlay dialog; a native dialog top layer would sit above the portalled dropdown menus
-        <div className="abm-overlay" role="dialog" aria-modal="true" aria-labelledby="abm-title">
-          <button
-            type="button"
-            className="abm-scrim"
-            aria-label="Close"
-            onClick={() => setOpen(false)}
-          />
-          <div className="abm">
+        <BodyPortal>
+          // biome-ignore lint/a11y/useSemanticElements: overlay dialog; a native dialog top layer
+          would sit above the portalled dropdown menus
+          <div className="abm-overlay" role="dialog" aria-modal="true" aria-labelledby="abm-title">
             <button
               type="button"
-              className="abm__close"
+              className="abm-scrim"
               aria-label="Close"
               onClick={() => setOpen(false)}
-            >
-              <X size={16} strokeWidth={2.2} />
-            </button>
+            />
+            <div className="abm">
+              <button
+                type="button"
+                className="abm__close"
+                aria-label="Close"
+                onClick={() => setOpen(false)}
+              >
+                <X size={16} strokeWidth={2.2} />
+              </button>
 
-            <div className="abm__hero">
-              <span className="abm__badge" aria-hidden>
-                <Building2 size={26} strokeWidth={1.7} />
-              </span>
-              <h2 id="abm-title" className="abm__title">
-                Add a business
-              </h2>
-              <p className="abm__sub">
-                A place you want to collect and manage reviews for. You&apos;ll connect its Google
-                profile next.
-              </p>
-            </div>
+              <div className="abm__hero">
+                <span className="abm__badge" aria-hidden>
+                  <Building2 size={26} strokeWidth={1.7} />
+                </span>
+                <h2 id="abm-title" className="abm__title">
+                  Add a business
+                </h2>
+                <p className="abm__sub">
+                  A place you want to collect and manage reviews for. You&apos;ll connect its Google
+                  profile next.
+                </p>
+              </div>
 
-            <form action={createEstablishment} className="abm__form">
-              <div className="abm__body">
-                <section className="abm-section" aria-labelledby="abm-sec-business">
-                  <h3 id="abm-sec-business" className="abm-section__title">
-                    Business
-                  </h3>
-                  <div className="abm-group abm-grid">
-                    <label className="abm-field abm-field--full">
-                      <span className="abm-field__lbl">
-                        Name <span className="abm-field__req">*</span>
-                      </span>
-                      <input
-                        name="name"
-                        required
-                        maxLength={120}
-                        // biome-ignore lint/a11y/noAutofocus: first field of a just-opened dialog
-                        autoFocus
-                        placeholder="Acme Coffee Downtown"
-                        className="abm-input"
-                      />
-                    </label>
-                    <div className="abm-field">
-                      <span className="abm-field__lbl">Category</span>
-                      <GlassSelect
-                        name="category"
-                        options={CATEGORY_OPTIONS}
-                        placeholder="Choose a category"
-                        icon={<Tag size={16} strokeWidth={1.8} />}
-                        ariaLabel="Category"
-                      />
-                    </div>
-                    <div className="abm-field">
-                      <span className="abm-field__lbl">Timezone</span>
-                      <GlassSelect
-                        name="timezone"
-                        options={zones}
-                        defaultValue={defaultZone}
-                        searchable
-                        searchPlaceholder="Search cities"
-                        icon={<Clock size={16} strokeWidth={1.8} />}
-                        ariaLabel="Timezone"
-                      />
-                    </div>
-                  </div>
-                </section>
-
-                <section className="abm-section" aria-labelledby="abm-sec-address">
-                  <h3 id="abm-sec-address" className="abm-section__title">
-                    Address
-                  </h3>
-                  <div className="abm-group abm-grid">
-                    <label className="abm-field abm-field--full">
-                      <span className="abm-field__lbl">Street</span>
-                      <span className="abm-inputwrap">
-                        <MapPin size={16} strokeWidth={1.8} aria-hidden />
+              <form action={createEstablishment} className="abm__form">
+                <div className="abm__body">
+                  <section className="abm-section" aria-labelledby="abm-sec-business">
+                    <h3 id="abm-sec-business" className="abm-section__title">
+                      Business
+                    </h3>
+                    <div className="abm-group abm-grid">
+                      <label className="abm-field abm-field--full">
+                        <span className="abm-field__lbl">
+                          Name <span className="abm-field__req">*</span>
+                        </span>
                         <input
-                          name="address_line1"
-                          placeholder="123 Main St"
+                          name="name"
+                          required
+                          maxLength={120}
+                          // biome-ignore lint/a11y/noAutofocus: first field of a just-opened dialog
+                          autoFocus
+                          placeholder="Acme Coffee Downtown"
                           className="abm-input"
                         />
-                      </span>
-                    </label>
-                    <label className="abm-field">
-                      <span className="abm-field__lbl">City</span>
-                      <input name="address_city" className="abm-input" />
-                    </label>
-                    <label className="abm-field">
-                      <span className="abm-field__lbl">State / Region</span>
-                      <input name="address_region" className="abm-input" />
-                    </label>
-                    <label className="abm-field">
-                      <span className="abm-field__lbl">Postal code</span>
-                      <input name="address_postal" className="abm-input" />
-                    </label>
-                    <div className="abm-field">
-                      <span className="abm-field__lbl">Country</span>
-                      <GlassSelect
-                        name="address_country"
-                        options={COUNTRY_OPTIONS}
-                        placeholder="Choose a country"
-                        searchable
-                        searchPlaceholder="Search countries"
-                        icon={<Globe size={16} strokeWidth={1.8} />}
-                        ariaLabel="Country"
-                      />
+                      </label>
+                      <div className="abm-field">
+                        <span className="abm-field__lbl">Category</span>
+                        <GlassSelect
+                          name="category"
+                          options={CATEGORY_OPTIONS}
+                          placeholder="Choose a category"
+                          icon={<Tag size={16} strokeWidth={1.8} />}
+                          ariaLabel="Category"
+                        />
+                      </div>
+                      <div className="abm-field">
+                        <span className="abm-field__lbl">Timezone</span>
+                        <GlassSelect
+                          name="timezone"
+                          options={zones}
+                          defaultValue={defaultZone}
+                          searchable
+                          searchPlaceholder="Search cities"
+                          icon={<Clock size={16} strokeWidth={1.8} />}
+                          ariaLabel="Timezone"
+                        />
+                      </div>
                     </div>
-                  </div>
-                </section>
-              </div>
+                  </section>
 
-              <div className="abm__foot">
-                <button type="button" className="abm-btn" onClick={() => setOpen(false)}>
-                  Cancel
-                </button>
-                <SubmitButton />
-              </div>
-            </form>
+                  <section className="abm-section" aria-labelledby="abm-sec-address">
+                    <h3 id="abm-sec-address" className="abm-section__title">
+                      Address
+                    </h3>
+                    <div className="abm-group abm-grid">
+                      <label className="abm-field abm-field--full">
+                        <span className="abm-field__lbl">Street</span>
+                        <span className="abm-inputwrap">
+                          <MapPin size={16} strokeWidth={1.8} aria-hidden />
+                          <input
+                            name="address_line1"
+                            placeholder="123 Main St"
+                            className="abm-input"
+                          />
+                        </span>
+                      </label>
+                      <label className="abm-field">
+                        <span className="abm-field__lbl">City</span>
+                        <input name="address_city" className="abm-input" />
+                      </label>
+                      <label className="abm-field">
+                        <span className="abm-field__lbl">State / Region</span>
+                        <input name="address_region" className="abm-input" />
+                      </label>
+                      <label className="abm-field">
+                        <span className="abm-field__lbl">Postal code</span>
+                        <input name="address_postal" className="abm-input" />
+                      </label>
+                      <div className="abm-field">
+                        <span className="abm-field__lbl">Country</span>
+                        <GlassSelect
+                          name="address_country"
+                          options={COUNTRY_OPTIONS}
+                          placeholder="Choose a country"
+                          searchable
+                          searchPlaceholder="Search countries"
+                          icon={<Globe size={16} strokeWidth={1.8} />}
+                          ariaLabel="Country"
+                        />
+                      </div>
+                    </div>
+                  </section>
+                </div>
+
+                <div className="abm__foot">
+                  <button type="button" className="abm-btn" onClick={() => setOpen(false)}>
+                    Cancel
+                  </button>
+                  <SubmitButton />
+                </div>
+              </form>
+            </div>
           </div>
-        </div>
+        </BodyPortal>
       )}
     </>
   );
