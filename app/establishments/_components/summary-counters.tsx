@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { Icon } from "@/components/shell/icon";
+import { AddBusinessModal } from "./add-business-modal";
 
 /**
  * Row A (empty state) — three zero-value counters + a dashed "Add New Business"
@@ -47,12 +47,12 @@ export function SummaryCounters() {
         </div>
       ))}
 
-      <Link href="/establishments/new" className="est-scard est-scard--add">
+      <AddBusinessModal triggerClassName="est-scard est-scard--add">
         <span className="est-addcircle" aria-hidden="true">
           <Icon name="plus" size={22} />
         </span>
         <span>Add New Business</span>
-      </Link>
+      </AddBusinessModal>
     </div>
   );
 }
