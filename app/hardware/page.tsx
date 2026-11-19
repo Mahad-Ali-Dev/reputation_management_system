@@ -1,5 +1,4 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { QrCode } from "@/components/shell/qr-code";
 import { TopBar } from "@/components/topbar";
@@ -19,6 +18,7 @@ import {
   type listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
+import { ChevronLeft, CircleCheck, Info, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import {
@@ -699,149 +699,85 @@ function TrashView({
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager", "Trash"]}>
-      <PageHeader
-        kicker="Device manager · trash"
-        title="Restore a deleted device"
-        description="Soft-deleted devices live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL no need to re-enter anything."
-        actions={
-          <Link href="/hardware" className="btn">
-            <Icon name="chevL" size={12} />
-            Back to my devices
-          </Link>
-        }
-      />
+      {/* Apple "Recently Deleted" look — same skin as the Device Manager. */}
+      <div className="md mdt">
+        <Link href="/hardware" className="mdt__back">
+          <ChevronLeft size={16} strokeWidth={2} />
+          Device Manager
+        </Link>
+        <h1 className="mdt__title">Recently Deleted</h1>
+        <p className="mdt__sub">
+          Deleted devices stay here for 30 days. Restore one and it comes back exactly as it was,
+          with the same QR, link and destination.
+        </p>
 
-      {justRestored && (
-        <div
-          className="ds-card ds-card--pri"
-          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
-        >
-          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
-          QR restored. Visit <Link href="/hardware">Active QRs</Link> to confirm.
-        </div>
-      )}
+        {justRestored && (
+          <output className="mdt__toast">
+            <CircleCheck size={16} strokeWidth={2} />
+            Device restored. <Link href="/hardware">See it in Device Manager</Link>
+          </output>
+        )}
+        {justReleased && (
+          <output className="mdt__toast mdt__toast--neutral">
+            <Info size={16} strokeWidth={2} />
+            Device removed from this workspace. The unit itself is untouched: scan it and enter its
+            code whenever you want to set it up again.
+          </output>
+        )}
 
-      {justReleased && (
-        <div
-          className="ds-card"
-          style={{
-            padding: "10px 14px",
-            marginBottom: 16,
-            fontSize: 12.5,
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            color: "#7f1d1d",
-          }}
-        >
-          Device removed from this workspace. The unit itself is untouched scan it and enter its
-          code whenever you want to set it up again. Recorded in your audit log.
-        </div>
-      )}
-
-      <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
-        <div className="seg">
-          <Link href="/hardware" className="seg__t" style={{ textDecoration: "none" }}>
-            Active
-          </Link>
-          <Link
-            href="/hardware?view=trash"
-            className="seg__t is-active"
-            style={{
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            Trash
-            <span
-              style={{
-                display: "inline-grid",
-                placeItems: "center",
-                minWidth: 18,
-                height: 18,
-                padding: "0 6px",
-                borderRadius: 999,
-                background: "var(--ink, #0b0d0e)",
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 600,
-                fontFamily: "var(--f-mono)",
-              }}
+        <div className="md-devhead mdt__bar">
+          <div className="seg">
+            <Link href="/hardware" className="seg__t" style={{ textDecoration: "none" }}>
+              Active
+            </Link>
+            <Link
+              href="/hardware?view=trash"
+              className="seg__t is-active"
+              style={{ textDecoration: "none" }}
             >
-              {devices.length}
-            </span>
-          </Link>
-        </div>
-      </div>
-
-      {devices.length === 0 ? (
-        <div
-          className="ds-card"
-          style={{
-            padding: "40px 24px",
-            textAlign: "center",
-            background: "var(--surface)",
-          }}
-        >
-          <div style={{ fontSize: 32, marginBottom: 12 }} aria-hidden>
-            🗑
+              Recently Deleted
+            </Link>
           </div>
-          <h3
-            style={{
-              fontSize: 18,
-              fontWeight: 600,
-              letterSpacing: "-0.015em",
-              marginBottom: 6,
-            }}
-          >
-            Trash is empty
-          </h3>
-          <p style={{ fontSize: 13.5, color: "var(--rl-muted)", lineHeight: 1.55 }}>
-            You haven&rsquo;t deleted any QR codes recently. Deleted QRs land here for 30 days
-            before they&rsquo;re hard-deleted.
-          </p>
-          <Link href="/hardware" className="btn" style={{ marginTop: 16, display: "inline-flex" }}>
-            <Icon name="chevL" size={12} />
-            Back to active QRs
-          </Link>
+          <span className="md-devhead__count">
+            {devices.length} {devices.length === 1 ? "device" : "devices"}
+          </span>
         </div>
-      ) : (
-        <div className="tdc-grid">
-          {devices.map((d) => (
-            <TrashDeviceCard
-              key={d.id}
-              canRelease={canRelease}
-              device={{
-                id: d.id,
-                shortSlug: d.shortSlug,
-                productSku: d.productSku,
-                redirectUrl: d.redirectUrl,
-                createdAt: new Date(d.createdAt).toISOString(),
-                establishmentName: d.establishment?.name ?? null,
-                scanCount: d.scanCount,
-              }}
-            />
-          ))}
-        </div>
-      )}
 
-      <div
-        className="ds-card"
-        style={{
-          marginTop: 24,
-          padding: "12px 16px",
-          background: "var(--surface-2, #fafbf8)",
-          border: "1px dashed var(--line)",
-          color: "var(--rl-muted)",
-          fontSize: 12,
-          lineHeight: 1.6,
-        }}
-      >
-        <strong style={{ color: "var(--ink-2)" }}>Heads up.</strong> Restoring a QR brings back the
-        original slug, redirect URL, and HMAC signature. If you&rsquo;ve printed new plaques with
-        the same code in the meantime, scanners of the old plaque will route to the restored URL
-        make sure that&rsquo;s what you want.
+        {devices.length === 0 ? (
+          <div className="mdt__empty">
+            <Trash2 size={44} strokeWidth={1.3} className="mdt__empty-icon" />
+            <h2 className="mdt__empty-title">No Recently Deleted Devices</h2>
+            <p className="mdt__empty-sub">
+              Devices you delete appear here for 30 days before they&rsquo;re removed for good.
+            </p>
+            <Link href="/hardware" className="mdt__pill">
+              Back to Device Manager
+            </Link>
+          </div>
+        ) : (
+          <div className="tdc-grid">
+            {devices.map((d) => (
+              <TrashDeviceCard
+                key={d.id}
+                canRelease={canRelease}
+                device={{
+                  id: d.id,
+                  shortSlug: d.shortSlug,
+                  productSku: d.productSku,
+                  redirectUrl: d.redirectUrl,
+                  createdAt: new Date(d.createdAt).toISOString(),
+                  establishmentName: d.establishment?.name ?? null,
+                  scanCount: d.scanCount,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        <p className="mdt__foot">
+          Restoring brings back the original QR link and destination. If you&rsquo;ve since printed
+          new plaques with the same code, scans of the old one will go to the restored destination.
+        </p>
       </div>
     </AppShellServer>
   );
