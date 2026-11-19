@@ -7,6 +7,7 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { getAutoReply5StarState } from "@/lib/auto-reply/managed-rule";
 import { normalizeRangeDays } from "@/lib/date-range";
 import { getReviewDispute } from "@/lib/reviews/dispute-queries";
+import { listEstablishments } from "@/lib/establishments/queries";
 import { hasActiveGoogleConnection } from "@/lib/reviews/connection-status";
 import {
   REVIEW_SOURCES,
@@ -71,13 +72,16 @@ export default async function ReviewsPage({
     source?: string;
     selected?: string;
     range?: string;
+    establishment?: string;
   }>;
 }) {
   const { orgId } = await getOrgContext();
 
   const sp = await searchParams;
-  // Window from the topbar date pill (7 | 30 | 90, default 30).
-  const rangeDays = normalizeRangeDays(sp.range);
+  // The topbar date-range filter was removed, so default to ALL-TIME (0 = no
+  // window). The old 30-day default hid any business whose reviews are older
+  // than 30 days, making the inbox look empty. A `?range` param still works.
+  const rangeDays = sp.range ? normalizeRangeDays(sp.range) : 0;
   const rating = sp.rating ? Number.parseInt(sp.rating, 10) : undefined;
   // Validate source against the known enum so a tampered URL can't poke
   // at unknown values and turn into a SQL filter we didn't intend.
@@ -88,18 +92,21 @@ export default async function ReviewsPage({
     ? (sp.status as ReplyStatusFilter)
     : undefined;
   const selectedId = sp.selected && UUID_RE.test(sp.selected) ? sp.selected : undefined;
+  const establishmentId =
+    sp.establishment && UUID_RE.test(sp.establishment) ? sp.establishment : undefined;
 
   // The base filter (no reply-status) drives the pill counts so they reflect
   // "within what you're currently looking at".
-  const baseFilter = { rating, search: sp.q, source, sinceDays: rangeDays };
+  const baseFilter = { rating, search: sp.q, source, sinceDays: rangeDays, establishmentId };
 
-  const [reviews, stats, sourceCounts, statusCounts, autoReply, hasGoogle] = await Promise.all([
+  const [reviews, stats, sourceCounts, statusCounts, autoReply, hasGoogle, businesses] = await Promise.all([
     listReviews(orgId, { ...baseFilter, replyStatus, limit: 50 }),
     reviewStats(orgId, undefined, rangeDays),
     reviewCountsBySource(orgId, rangeDays),
     replyStatusCounts(orgId, baseFilter),
     getAutoReply5StarState(orgId),
     hasActiveGoogleConnection(orgId),
+    listEstablishments(orgId),
   ]);
 
   // Resolve the selected review. Default to the first row in the current list
@@ -147,6 +154,7 @@ export default async function ReviewsPage({
     if (nextSelected) params.set("selected", nextSelected);
     // Carry the topbar window through, or clicking a pill silently resets it.
     if (sp.range) params.set("range", sp.range);
+    if (establishmentId) params.set("establishment", establishmentId);
     const qs = params.toString();
     return qs ? `/reviews?${qs}` : "/reviews";
   };
@@ -154,6 +162,14 @@ export default async function ReviewsPage({
   // When the inbox is empty (no Google connection or no reviews) show the
   // existing connection-aware empty state full-width instead of the panes.
   const isEmpty = reviews.length === 0;
+  // Distinguish a genuinely empty inbox from one that's empty only because of
+  // the active filters (business, rating, platform, search, status, range).
+  const hasActiveFilter = Boolean(
+    establishmentId || rating || source || sp.q || replyStatus || rangeDays,
+  );
+  const selectedBusiness = establishmentId
+    ? businesses.find((b) => b.id === establishmentId)
+    : undefined;
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Inbox"]}>
@@ -175,7 +191,7 @@ export default async function ReviewsPage({
         </Link>
       </div>
 
-      {isEmpty ? (
+      {isEmpty && !hasActiveFilter ? (
         <ConnectGoogleEmpty hasGoogle={hasGoogle} />
       ) : (
         <div className="rev-inbox">
@@ -187,6 +203,7 @@ export default async function ReviewsPage({
               status={replyStatus}
               statusCounts={statusCounts}
               buildHref={buildHref}
+              businesses={businesses}
             />
 
             <div className="ds-card">
@@ -260,21 +277,65 @@ export default async function ReviewsPage({
                   {reviews.length === 50 ? "+" : ""}
                 </span>
               </div>
-              <ul
-                className="rev-list__items"
-                style={{ listStyle: "none", margin: 0, padding: 0 }}
-              >
-                {reviews.map((r, i) => (
-                  <li key={r.id}>
-                    <ReviewListItem
-                      review={r}
-                      active={r.id === effectiveSelectedId}
-                      href={buildHref({ selected: r.id })}
-                      tone={((i % 7) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7}
-                    />
-                  </li>
-                ))}
-              </ul>
+              {reviews.length === 0 ? (
+                <div
+                  className="col"
+                  style={{
+                    alignItems: "center",
+                    textAlign: "center",
+                    gap: 8,
+                    padding: "44px 20px",
+                  }}
+                >
+                  <span
+                    aria-hidden
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: 48,
+                      height: 48,
+                      borderRadius: 14,
+                      background: "var(--glass-fill-subtle, rgba(99,102,241,0.08))",
+                      color: "var(--glass-accent, #6366f1)",
+                    }}
+                  >
+                    <Icon name="building" size={22} />
+                  </span>
+                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>No reviews yet</div>
+                  <p
+                    style={{
+                      margin: 0,
+                      fontSize: 12,
+                      color: "var(--rl-muted)",
+                      maxWidth: 240,
+                    }}
+                  >
+                    {selectedBusiness?.name
+                      ? `${selectedBusiness.name} has no reviews that match these filters.`
+                      : "No reviews match the current filters."}
+                  </p>
+                  <Link href="/reviews" className="btn btn--ghost" style={{ marginTop: 2 }}>
+                    Clear filters
+                  </Link>
+                </div>
+              ) : (
+                <ul
+                  className="rev-list__items"
+                  style={{ listStyle: "none", margin: 0, padding: 0 }}
+                >
+                  {reviews.map((r, i) => (
+                    <li key={r.id}>
+                      <ReviewListItem
+                        review={r}
+                        active={r.id === effectiveSelectedId}
+                        href={buildHref({ selected: r.id })}
+                        tone={((i % 7) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </div>
 
@@ -378,9 +439,11 @@ function FilterRail({
   status,
   statusCounts,
   buildHref,
+  businesses,
 }: {
-  sp: { rating?: string; q?: string; source?: string; selected?: string };
+  sp: { rating?: string; q?: string; source?: string; selected?: string; establishment?: string };
   sourceCounts: Record<string, number>;
+  businesses: Array<{ id: string; name: string }>;
   status?: ReplyStatusFilter;
   statusCounts: { all: number; needsReply: number; replied: number; draftReady: number };
   buildHref: (o: Partial<{ status: ReplyStatusFilter | undefined; rating: number | undefined; selected: string | undefined }>) => string;
@@ -474,6 +537,21 @@ function FilterRail({
             },
           )}
         </select>
+        {businesses.length > 1 && (
+          <select
+            name="establishment"
+            defaultValue={sp.establishment ?? ""}
+            aria-label="Filter by business"
+            style={{ ...inputStyle, padding: "0 32px 0 12px" }}
+          >
+            <option value="">All businesses</option>
+            {businesses.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </select>
+        )}
         <div className="row" style={{ gap: 8 }}>
           <button type="submit" className="btn" style={{ flex: 1 }}>
             <Icon name="filter" size={12} />
@@ -614,6 +692,30 @@ function ReviewListItem({
               <ReplyStatusBadge status={replyStatus} rating={r.rating} compact />
             </span>
           </div>
+          {r.establishment?.name && (
+            <div
+              className="dim"
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 4,
+                margin: "0 0 4px",
+                fontSize: 10.5,
+                minWidth: 0,
+              }}
+            >
+              <Icon name="building" size={10} />
+              <span
+                style={{
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {r.establishment.name}
+              </span>
+            </div>
+          )}
           {r.body && (
             <p
               style={{

@@ -1,0 +1,384 @@
+/* ============================================================
+   Configure this QR code (/hardware/edit/[deviceId]) — 2026-11 redesign.
+   Same look as the restyled Device Manager: brand tokens, frosted cards,
+   bare line icons, pill buttons, lighter headings.
+   ============================================================ */
+
+.qcfg {
+  max-width: 1180px;
+  margin: 0 auto;
+  color: var(--glass-text, #15132b);
+}
+
+/* ---- header ---- */
+.qcfg__back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--glass-text-muted, #4a4763);
+  text-decoration: none;
+}
+.qcfg__back:hover {
+  color: var(--glass-accent, #4b3bff);
+}
+.qcfg__head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.qcfg__title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+.qcfg__sub {
+  margin: 6px 0 0;
+  font-size: 13.5px;
+  color: var(--glass-text-muted, #4a4763);
+}
+.qcfg__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(21, 19, 43, 0.1);
+  background: rgba(255, 255, 255, 0.6);
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--glass-text-muted, #4a4763);
+  white-space: nowrap;
+}
+.qcfg__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--glass-warning, #d9822b);
+}
+.qcfg__status.is-live {
+  color: #0f8a5d;
+  border-color: rgba(18, 162, 110, 0.3);
+}
+.qcfg__status.is-live .qcfg__dot {
+  background: var(--glass-success, #12a26e);
+  box-shadow: 0 0 0 3px rgba(18, 162, 110, 0.16);
+}
+.qcfg__toast {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(18, 162, 110, 0.25);
+  background: rgba(18, 162, 110, 0.07);
+  color: #0f6b49;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* ---- layout ---- */
+.qcfg__grid {
+  display: grid;
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+.qcfg__main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+.qcfg__card {
+  padding: 22px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(18px) saturate(150%);
+  backdrop-filter: blur(18px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 1px 2px rgba(21, 19, 43, 0.04), 0 14px 36px -24px rgba(21, 19, 43, 0.2);
+}
+.qcfg__h2 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+.qcfg__lead,
+.qcfg__muted {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--glass-text-muted, #4a4763);
+}
+
+/* ---- preview ---- */
+.qcfg__preview {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.qcfg__qr {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid rgba(21, 19, 43, 0.06);
+}
+.qcfg__code {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 14px;
+  font-size: 12.5px;
+  color: var(--glass-text-subtle, #6b6880);
+}
+.qcfg__code b {
+  font-weight: 600;
+  color: var(--glass-text, #15132b);
+}
+.qcfg__dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px;
+  width: 100%;
+  margin-top: 12px;
+}
+.qcfg__scanurl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(21, 19, 43, 0.07);
+  font-size: 11px;
+  color: var(--glass-text-subtle, #6b6880);
+}
+.qcfg__scanurl span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- buttons ---- */
+.qcfg__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  height: 40px;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(21, 19, 43, 0.12);
+  background: rgba(255, 255, 255, 0.8);
+  color: var(--glass-text, #15132b);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.qcfg__btn:hover {
+  background: #fff;
+  border-color: rgba(21, 19, 43, 0.2);
+}
+.qcfg__btn--pri {
+  border-color: transparent;
+  background: var(--glass-accent, #4b3bff);
+  color: #fff;
+  box-shadow: 0 8px 20px -10px rgba(75, 59, 255, 0.65);
+}
+.qcfg__btn--pri:hover {
+  background: var(--glass-accent-hover, #3a2be0);
+  border-color: transparent;
+}
+.qcfg__btn--danger {
+  border-color: rgba(229, 72, 77, 0.35);
+  background: transparent;
+  color: #c9343a;
+}
+.qcfg__btn--danger:hover {
+  background: rgba(229, 72, 77, 0.07);
+  border-color: rgba(229, 72, 77, 0.5);
+}
+.qcfg__btn:focus-visible,
+.qcfg__input:focus-visible,
+.qcfg__back:focus-visible {
+  outline: 2px solid var(--glass-accent, #4b3bff);
+  outline-offset: 2px;
+}
+
+/* ---- destination ---- */
+.qcfg__now {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 16px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(18, 162, 110, 0.07);
+  border: 1px solid rgba(18, 162, 110, 0.2);
+  color: #0f8a5d;
+  font-size: 12.5px;
+}
+.qcfg__now span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--glass-text, #15132b);
+}
+.qcfg__now.is-empty {
+  background: rgba(217, 130, 43, 0.08);
+  border-color: rgba(217, 130, 43, 0.25);
+  color: #b26a1d;
+}
+.qcfg__form {
+  margin-top: 18px;
+}
+.qcfg__label {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.qcfg__field {
+  display: flex;
+  gap: 8px;
+}
+.qcfg__input {
+  flex: 1;
+  min-width: 0;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(21, 19, 43, 0.12);
+  background: #fff;
+  font-size: 13px;
+  color: var(--glass-text, #15132b);
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.qcfg__input:focus {
+  border-color: rgba(75, 59, 255, 0.45);
+  box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.1);
+}
+.qcfg__field .qcfg__btn {
+  height: 44px;
+  padding: 0 20px;
+}
+.qcfg__hint {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: var(--glass-text-subtle, #6b6880);
+}
+.qcfg__hint--link {
+  color: var(--glass-accent, #4b3bff);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+/* ---- how-to steps: plain numbers, no circles ---- */
+.qcfg__steps {
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: qstep;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.qcfg__steps li {
+  counter-increment: qstep;
+  position: relative;
+  padding-left: 24px;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.qcfg__steps li::before {
+  content: counter(qstep);
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-family: var(--f-num);
+  font-weight: 600;
+  color: var(--glass-accent, #4b3bff);
+}
+.qcfg__steps a {
+  color: var(--glass-accent, #4b3bff);
+  font-weight: 500;
+}
+.qcfg__steps b {
+  font-weight: 600;
+}
+.qcfg__muted code {
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(21, 19, 43, 0.05);
+  font-family: var(--f-mono, ui-monospace, monospace);
+  font-size: 11px;
+}
+
+/* ---- trash ---- */
+.qcfg__danger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-color: rgba(229, 72, 77, 0.18);
+}
+
+.qcfg__foot {
+  margin: 24px 0 8px;
+  text-align: center;
+  font-size: 12.5px;
+  color: var(--glass-text-subtle, #6b6880);
+}
+.qcfg__foot a {
+  color: var(--glass-accent, #4b3bff);
+  font-weight: 500;
+  text-decoration: none;
+}
+
+@media (max-width: 900px) {
+  .qcfg__grid {
+    grid-template-columns: 1fr;
+  }
+  .qcfg__preview {
+    position: static;
+  }
+  .qcfg__danger {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+@media (max-width: 560px) {
+  .qcfg__head {
+    flex-direction: column;
+  }
+  .qcfg__field {
+    flex-direction: column;
+  }
+}
+.qcfg__toast {
+  width: 100%;
+  box-sizing: border-box;
+}

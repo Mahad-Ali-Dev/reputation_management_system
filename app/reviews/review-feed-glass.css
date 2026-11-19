@@ -23,3 +23,30 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Cleaner Review Inbox empty state — a less dominant illustration, tighter
+   spacing, and an evenly padded benefit strip. */
+.app--glass .rf-syncing,
+.app--glass .rf-hero {
+  padding: 34px 24px 8px;
+}
+.app--glass .rf-syncing__art,
+.app--glass .rf-hero__art {
+  width: min(210px, 40%);
+}
+.app--glass .rf-syncing__title,
+.app--glass .rf-body__title {
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+.app--glass .rf-benefits {
+  gap: 4px;
+  padding: 8px;
+}
+.app--glass .rf-benefit {
+  padding: 16px;
+  border-radius: 14px;
+}
+.app--glass .rf-benefit:hover {
+  background: var(--glass-fill-subtle);
+}

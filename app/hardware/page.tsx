@@ -16,18 +16,15 @@ import {
   getDeviceDashboardExtras,
   getDeviceMetrics,
   getScannedDevice,
-  listOrgDevices,
+  type listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
 import Link from "next/link";
-import { AiChatbotCard } from "./_components/ai-chatbot-card";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import {
   MdDevicesImpact,
   MdFooterTip,
   MdHero,
-  MdLiveFeed,
-  MdReviewsByRating,
   MdSummaryRow,
   MdTrainingBanner,
 } from "./_components/dashboard-cards";
@@ -283,7 +280,7 @@ export default async function QrCodesPage({
           activeDevices={extras.activeDeviceCount || activeDevices.length}
         />
 
-        {/* Devices section header — Active / Trash tabs + Add device. */}
+        {/* Devices section header — Active / Trash tabs + device count. */}
         <div className="md-devhead">
           <span className="md-devhead__title">Devices</span>
           <div className="seg">
@@ -304,14 +301,10 @@ export default async function QrCodesPage({
             </Link>
           </div>
           <div style={{ flex: 1 }} />
+          {/* One "Add device" lives in the page header; no duplicate here. */}
           <span className="md-devhead__count">
             {activeDevices.length} active device{activeDevices.length === 1 ? "" : "s"}
           </span>
-          <ConnectDeviceModal
-            establishments={businessOptions}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
         </div>
 
         <DeviceTable
@@ -327,15 +320,10 @@ export default async function QrCodesPage({
           selectedId={selectedDevice.id}
         />
 
-        {/* Lower section — Live feed · Reviews-by-rating · Devices-impact. */}
-        <div className="md-lower" style={{ marginTop: 14 }}>
-          <MdLiveFeed reviews={extras.recentReviews} />
-          <MdReviewsByRating dist={extras.reviewsByRating} />
-          <MdDevicesImpact impact={extras.impact} />
-        </div>
-
-        {/* Bottom row — QR product card + AI chatbot card. */}
-        <div id="qr-panel" className="md-bottom" style={{ scrollMarginTop: 80 }}>
+        {/* QR card + Devices impact side by side. Reviews (live feed, rating
+            split) and the AI assistant moved out: they belong to Review Inbox
+            and Ask AI, keeping this page about devices and scans only. */}
+        <div id="qr-panel" className="md-bottom md-bottom--scans" style={{ scrollMarginTop: 80 }}>
           <QrProductCard
             deviceId={selectedDevice.id}
             code={selectedDevice.shortSlug}
@@ -346,7 +334,7 @@ export default async function QrCodesPage({
             scans={selectedDevice.scanCount}
             reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
           />
-          <AiChatbotCard orbSrc="/assets/repulabs/my-devices/ai-chatbot-orb.svg" />
+          <MdDevicesImpact impact={extras.impact} />
         </div>
 
         {/* NFC tap-destination config (preserved — only for NFC kinds). */}
@@ -558,15 +546,15 @@ function EmptyState({
               {retiredCount > 0 ? (
                 <>
                   You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
-                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the
-                  same QR, code and redirect, so a plaque you&rsquo;ve already printed keeps
-                  working. Or add a new device below.
+                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the same
+                  QR, code and redirect, so a plaque you&rsquo;ve already printed keeps working. Or
+                  add a new device below.
                 </>
               ) : (
                 <>
-                  Got a repulabs card, plaque, or stand? Add your first device to start
-                  collecting scans and engage more customers enter the code from your package and
-                  we&rsquo;ll route every scan to your Google review page.
+                  Got a repulabs card, plaque, or stand? Add your first device to start collecting
+                  scans and engage more customers enter the code from your package and we&rsquo;ll
+                  route every scan to your Google review page.
                 </>
               )}
             </p>
@@ -597,16 +585,9 @@ function EmptyState({
           </div>
         </section>
 
-        {/* Lower zero-state cards mirror the empty mockup. */}
-        <div className="md-lower" style={{ marginTop: 14 }}>
-          <MdLiveFeed reviews={[]} />
-          <MdReviewsByRating dist={{ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }} />
+        {/* Zero-state scan chart (reviews + AI assistant live elsewhere now). */}
+        <div style={{ marginTop: 14, marginBottom: 14 }}>
           <MdDevicesImpact impact={buildEmptyImpactForView()} />
-        </div>
-
-        {/* AI Chatbot card (kit) — no data dependency, useful even before any device. */}
-        <div className="md-bottom" style={{ gridTemplateColumns: "1fr" }}>
-          <AiChatbotCard orbSrc="/assets/repulabs/my-devices/ai-chatbot-orb.svg" />
         </div>
 
         <MdFooterTip />

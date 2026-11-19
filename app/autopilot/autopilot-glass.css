@@ -31,3 +31,266 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* ============================================================
+   Restyle 2026-11 (same layout, dashboard look): brand palette, one frosted
+   panel around the 3-column grid, lucide icon tiles instead of the kit PNGs,
+   lighter numbers, the Repulabs AI frog in the control card.
+   ============================================================ */
+
+/* The kit's own blue/ink palette → the shared Ultramarine tokens. */
+.app--glass .ap2-page {
+  --ap-ink: var(--glass-text, #15132b);
+  --ap-body: var(--glass-text-muted, #4a4763);
+  --ap-mut: var(--glass-text-subtle, #6b6880);
+  --ap-blue: var(--glass-accent, #4b3bff);
+  --ap-accent: var(--glass-accent, #4b3bff);
+  --ap-purple: #7466ff;
+  --ap-indigo: var(--glass-accent, #4b3bff);
+  --ap-indigo-soft: var(--glass-accent-soft, rgba(75, 59, 255, 0.1));
+  --ap-green: var(--glass-success, #12a26e);
+  --ap-warn: var(--glass-warning, #d9822b);
+  --ap-line: var(--glass-border, rgba(21, 19, 43, 0.08));
+  --ap-line-soft: var(--glass-border-soft, rgba(21, 19, 43, 0.06));
+}
+
+/* ---- hero ---- */
+.app--glass .ap2-hero__frog {
+  width: 72px;
+  height: 72px;
+  flex: 0 0 72px;
+  display: grid;
+  place-items: center;
+  border-radius: 22px;
+  color: #fff;
+  background: linear-gradient(140deg, #8a7dff 0%, var(--glass-accent, #4b3bff) 60%, #3a2be0 100%);
+  box-shadow: 0 12px 28px -12px rgba(75, 59, 255, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+.app--glass .ap2-hero__title {
+  font-size: 28px;
+  line-height: 1.25;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.app--glass .ap2-glance {
+  background: rgba(255, 255, 255, 0.55);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+  backdrop-filter: blur(20px) saturate(150%);
+  border-color: rgba(255, 255, 255, 0.7);
+  border-radius: 20px;
+}
+.app--glass .ap2-glance__title {
+  font-weight: 600;
+}
+.app--glass .ap2-glance__value {
+  font-size: 18px;
+  font-weight: 600;
+}
+.app--glass .ap2-glance__value.is-up {
+  color: var(--glass-success, #12a26e);
+}
+.app--glass .ap2-glance__value.is-down {
+  color: var(--glass-danger, #e5484d);
+}
+
+/* Lucide icon tiles (replace the kit's coloured PNG glyphs). */
+.ap2-tile {
+  width: 40px;
+  height: 40px;
+  flex: 0 0 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(75, 59, 255, 0.1);
+  color: var(--glass-accent, #4b3bff);
+}
+.ap2-tile--gold {
+  background: rgba(242, 169, 59, 0.15);
+  color: #c47d12;
+}
+.ap2-tile--violet {
+  background: rgba(75, 59, 255, 0.1);
+  color: var(--glass-accent, #4b3bff);
+}
+.ap2-tile--green {
+  background: rgba(18, 162, 110, 0.12);
+  color: #0f8a5d;
+}
+.ap2-tile--red {
+  background: rgba(229, 72, 77, 0.1);
+  color: #d93a40;
+}
+.ap2-setup__tile {
+  width: 42px;
+  height: 42px;
+  flex-basis: 42px;
+  border-radius: 13px;
+}
+.ap2-setup__tile--roi {
+  background: rgba(18, 162, 110, 0.12);
+  color: #0f8a5d;
+}
+
+/* ---- one frosted panel around the 3-column grid ---- */
+.app--glass .ap2-panel {
+  padding: 18px;
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.16);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 18px 48px -30px rgba(16, 24, 40, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+/* Cards inside the panel: light frosted tiles so it reads as one surface. */
+.app--glass .ap2-panel .ap2-card {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: rgba(21, 19, 43, 0.06);
+  border-radius: 18px;
+}
+.app--glass .ap2-setup__title,
+.app--glass .ap2-rail__title {
+  font-weight: 600;
+}
+
+/* ---- control card: lighter status, frog instead of the orbit robot ---- */
+.app--glass .ap2-control__status {
+  font-size: 34px;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+.app--glass .ap2-control.is-on .ap2-control__status {
+  color: var(--glass-success, #12a26e);
+}
+.ap2-control__frog {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  display: grid;
+  place-items: center;
+  width: 196px;
+  padding: 10px 0 14px;
+  border-radius: 22px;
+  /* small brand sunrise behind him, same as the Ask AI stage */
+  background: radial-gradient(
+    125% 125% at 50% 101%,
+    rgba(242, 169, 59, 0.38) 8%,
+    rgba(250, 186, 132, 0.32) 20%,
+    rgba(240, 186, 214, 0.3) 36%,
+    rgba(200, 188, 255, 0.32) 60%,
+    rgba(222, 226, 255, 0.35) 100%
+  );
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+.app--glass .ap2-seg__btn.is-active {
+  background: var(--glass-accent, #4b3bff);
+  box-shadow: 0 6px 16px -8px rgba(75, 59, 255, 0.6);
+}
+
+/* ---- about card: unDraw illustration in place of the kit clipboard ---- */
+.ap2-about__art--undraw {
+  width: 112px;
+  height: auto;
+  margin: 0 0 0 auto;
+  object-fit: contain;
+}
+
+@media (max-width: 1100px) {
+  .ap2-control__frog {
+    position: static;
+    margin: 16px auto 0;
+  }
+}
+@media (max-width: 640px) {
+  .app--glass .ap2-panel {
+    padding: 10px;
+    border-radius: 20px;
+  }
+}
+
+/* Frog stage sits beside the status text, never over it. */
+.app--glass .ap2-control__main {
+  padding-right: 176px;
+}
+.ap2-control__frog {
+  width: 164px;
+}
+@media (max-width: 1100px) {
+  .app--glass .ap2-control__main {
+    padding-right: 0;
+  }
+}
+
+/* Tab cards: calmer headings + new empty states. */
+.app--glass .apa-card__title {
+  font-size: 17px;
+  font-weight: 600;
+}
+.app--glass .apa-empty {
+  gap: 14px;
+  border-color: rgba(21, 19, 43, 0.1);
+  background: rgba(255, 255, 255, 0.35);
+}
+.apa-empty__img--undraw {
+  width: 210px;
+  height: auto;
+}
+.apa-empty__done {
+  width: 68px;
+  height: 68px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: rgba(18, 162, 110, 0.12);
+  color: #0f8a5d;
+  box-shadow: 0 0 0 8px rgba(18, 162, 110, 0.06);
+}
+
+/* Founder: no backgrounds behind the images — they sit straight on the card. */
+.ap2-control__frog {
+  background: none;
+  box-shadow: none;
+  padding: 0;
+}
+.app--glass .apa-empty {
+  background: none;
+  border: 0;
+}
+.apa-empty__done {
+  background: none;
+  box-shadow: none;
+}
+
+/* Founder: clean icons — bare line icons, no tile/circle behind any of them. */
+.ap2-tile,
+.ap2-setup__tile,
+.ap2-setup__tile--roi,
+.ap2-tile--gold,
+.ap2-tile--violet,
+.ap2-tile--green,
+.ap2-tile--red {
+  background: none;
+  box-shadow: none;
+  width: 26px;
+  height: 26px;
+  flex-basis: 26px;
+  border-radius: 0;
+}
+.ap2-glance__metric {
+  gap: 9px;
+}
+.app--glass .ap2-hero__frog {
+  width: 48px;
+  height: 48px;
+  flex-basis: 48px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  color: var(--glass-accent, #4b3bff);
+}
+.app--glass .apa-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 0;
+  background: none;
+}

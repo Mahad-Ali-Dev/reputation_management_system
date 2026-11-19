@@ -1,6 +1,15 @@
 import { Icon } from "@/components/shell/icon";
-import { getReviewSourceMeta } from "@/lib/reviews/source-meta";
-import type { DeviceDashboardExtras, ImpactDay, RecentReviewRow } from "@/lib/hardware/queries";
+import type { ImpactDay } from "@/lib/hardware/queries";
+import {
+  ArrowRight,
+  CalendarDays,
+  type LucideIcon,
+  QrCode,
+  ScanLine,
+  Sparkles,
+  Star,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -10,7 +19,6 @@ import Link from "next/link";
  * with the kit illustration. No fabricated numbers.
  */
 
-const ASSET = "/assets/repulabs/my-devices";
 
 /* ── Hero ───────────────────────────────────────────────────────────── */
 export function MdHero() {
@@ -31,10 +39,8 @@ export function MdHero() {
 /* ── AI-training banner ─────────────────────────────────────────────── */
 export function MdTrainingBanner({ href }: { href: string }) {
   return (
-    <div className="md-train">
-      <span className="md-train__icon" aria-hidden>
-        <Icon name="sparkle" size={20} />
-      </span>
+    <div className="md-train md-train--clean">
+      <Sparkles size={20} strokeWidth={1.8} aria-hidden="true" className="md-train__glyph" />
       <div style={{ minWidth: 200, flex: 1 }}>
         <div className="md-train__title">Your scans are flowing</div>
         <div className="md-train__body">
@@ -42,9 +48,9 @@ export function MdTrainingBanner({ href }: { href: string }) {
           collect.
         </div>
       </div>
-      <Link href={href} className="md-train__cta">
+      <Link href={href} className="md-train__cta md-train__cta--clean">
         Train your AI
-        <Icon name="arrowR" size={13} />
+        <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
       </Link>
     </div>
   );
@@ -79,7 +85,7 @@ export function MdSummaryRow({
       </div>
       <div className="md-summary__grid">
         <Metric
-          icon="stat-total-scans.svg"
+          icon={ScanLine}
           tint="lav"
           label="Total scans"
           value={fmt(totalScans)}
@@ -87,32 +93,27 @@ export function MdSummaryRow({
           sub="all devices"
         />
         <Metric
-          icon="stat-today.svg"
+          icon={CalendarDays}
           tint="blue"
-          label="Today scan"
+          label="Today's scans"
           value={fmt(todayScans)}
           badge={todayScans > 0 ? { kind: "up", text: "today" } : null}
         />
         <Metric
-          icon="stat-reviews.svg"
+          icon={Star}
           tint="yellow"
           label="Reviews from scans"
           value={fmt(reviewsFromScans)}
           badge={reviewsFromScans > 0 ? { kind: "up", text: "attributed" } : null}
         />
         <Metric
-          icon="stat-conversion.svg"
+          icon={TrendingUp}
           tint="green"
           label="Conversion rate"
           value={conversionLabel}
           badge={conversionLabel === "—" ? null : { kind: "steady", text: "scans→reviews" }}
         />
-        <Metric
-          icon="stat-active-devices.svg"
-          tint="lav"
-          label="Active devices"
-          value={fmt(activeDevices)}
-        />
+        <Metric icon={QrCode} tint="lav" label="Active devices" value={fmt(activeDevices)} />
       </div>
     </section>
   );
@@ -126,19 +127,19 @@ function Metric({
   badge,
   sub,
 }: {
-  icon: string;
+  icon: LucideIcon;
   tint: "lav" | "blue" | "yellow" | "green";
   label: string;
   value: string;
   badge?: { kind: "up" | "steady"; text: string } | null;
   sub?: string;
 }) {
+  const MetricIcon = icon;
   return (
     <div className="md-metric">
       <div className="md-metric__top">
         <span className={`md-metric__tile md-metric__tile--${tint}`} aria-hidden>
-          {/* biome-ignore lint/performance/noImgElement: static kit icon */}
-          <img src={`${ASSET}/${icon}`} alt="" aria-hidden className="md-metric__icon" />
+          <MetricIcon size={18} strokeWidth={1.8} className="md-metric__icon" />
         </span>
         <span className="md-metric__label">{label}</span>
       </div>
@@ -152,122 +153,6 @@ function Metric({
         <div className="md-metric__sub">{sub}</div>
       ) : null}
     </div>
-  );
-}
-
-/* ── Live feed ──────────────────────────────────────────────────────── */
-const AVATAR_TINTS = ["#245bff", "#6c4dff", "#18be78", "#ffb020", "#ff5969"];
-
-export function MdLiveFeed({ reviews }: { reviews: RecentReviewRow[] }) {
-  return (
-    <section className="md-card" aria-label="Live feed">
-      <div className="md-card__head">
-        <h3 className="md-card__title">Live feed</h3>
-        <Link href="/reviews" className="md-card__link">
-          View all
-        </Link>
-      </div>
-      {reviews.length === 0 ? (
-        <div className="md-empty">
-          {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-          <img src={`${ASSET}/live-feed-empty.svg`} alt="" aria-hidden className="md-empty__art" />
-          <div className="md-empty__title">No activity yet</div>
-          <p className="md-empty__body">
-            Once customers scan and review, their activity will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="md-feed">
-          {reviews.map((r, i) => (
-            <FeedRow
-              key={r.id}
-              review={r}
-              tint={AVATAR_TINTS[i % AVATAR_TINTS.length] ?? "#245bff"}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function FeedRow({ review: r, tint }: { review: RecentReviewRow; tint: string }) {
-  const meta = getReviewSourceMeta(r.source);
-  const name = r.reviewerName?.trim() || "Anonymous";
-  return (
-    <div className="md-feed__row">
-      <span className="md-feed__avatar" aria-hidden style={{ background: tint }}>
-        {name.charAt(0).toUpperCase()}
-      </span>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div className="md-feed__name">{name}</div>
-        <div className="md-feed__stars" aria-label={`${r.rating} out of 5 stars`}>
-          {"★".repeat(Math.max(0, Math.min(5, r.rating)))}
-          <span style={{ color: "var(--md-line-strong)" }}>
-            {"★".repeat(5 - Math.max(0, Math.min(5, r.rating)))}
-          </span>
-        </div>
-        {r.body ? <div className="md-feed__snippet">{r.body}</div> : null}
-      </div>
-      <div className="col" style={{ alignItems: "flex-end", gap: 4 }}>
-        <span className="md-feed__time">{timeAgo(r.postedAt)}</span>
-        <span
-          className="md-feed__src"
-          title={meta.label}
-          style={{ background: meta.bgTint, color: meta.fg }}
-        >
-          {meta.glyph}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* ── Reviews by rating ──────────────────────────────────────────────── */
-export function MdReviewsByRating({
-  dist,
-}: {
-  dist: DeviceDashboardExtras["reviewsByRating"];
-}) {
-  const values = [dist[1], dist[2], dist[3], dist[4], dist[5]];
-  const max = Math.max(...values, 1);
-  const total = values.reduce((a, b) => a + b, 0);
-  const BAR_TINTS = ["#ff5969", "#ffb020", "#8a94a6", "#245bff", "#18be78"];
-
-  return (
-    <section className="md-card" aria-label="Reviews by rating">
-      <div className="md-card__head">
-        <h3 className="md-card__title">Reviews by rating</h3>
-      </div>
-      <div className="md-rbr">
-        <p className="md-card__sub" style={{ margin: 0 }}>
-          See how customers rate your business
-        </p>
-        {total === 0 ? (
-          <div className="md-empty" style={{ padding: "10px 0 4px" }}>
-            {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-            <img src={`${ASSET}/reviews-empty.svg`} alt="" aria-hidden className="md-empty__art" />
-            <div className="md-empty__title">No reviews yet</div>
-            <p className="md-empty__body">Reviews collected from scans will appear here.</p>
-          </div>
-        ) : (
-          <div className="md-rbr__bars">
-            {values.map((v, i) => (
-              <div className="md-rbr__col" key={`r${i + 1}`}>
-                <span className="md-rbr__count">{v}</span>
-                <div className="md-rbr__track">
-                  <div
-                    className="md-rbr__bar"
-                    style={{ height: `${(v / max) * 100}%`, background: BAR_TINTS[i] }}
-                  />
-                </div>
-                <span className="md-rbr__axis">{i + 1}</span>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </section>
   );
 }
 
@@ -300,11 +185,11 @@ export function MdDevicesImpact({ impact }: { impact: ImpactDay[] }) {
         </p>
         <div className="md-impact__legend">
           <span>
-            <span className="md-impact__dot" style={{ background: "#245bff" }} />
+            <span className="md-impact__dot" style={{ background: "#4b3bff" }} />
             Total scans
           </span>
           <span>
-            <span className="md-impact__dot" style={{ background: "#6c4dff" }} />
+            <span className="md-impact__dot" style={{ background: "#a99fff" }} />
             Total reviews
           </span>
         </div>
@@ -322,15 +207,15 @@ export function MdDevicesImpact({ impact }: { impact: ImpactDay[] }) {
           >
             <defs>
               <linearGradient id="md-impact-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#245bff" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="#245bff" stopOpacity="0" />
+                <stop offset="0%" stopColor="#4b3bff" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#4b3bff" stopOpacity="0" />
               </linearGradient>
             </defs>
             <path d={area(scans)} fill="url(#md-impact-fill)" />
             <path
               d={line(scans)}
               fill="none"
-              stroke="#245bff"
+              stroke="#4b3bff"
               strokeWidth="2.5"
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -338,7 +223,7 @@ export function MdDevicesImpact({ impact }: { impact: ImpactDay[] }) {
             <path
               d={line(reviews)}
               fill="none"
-              stroke="#6c4dff"
+              stroke="#a99fff"
               strokeWidth="2"
               strokeDasharray="4 4"
               strokeLinejoin="round"
