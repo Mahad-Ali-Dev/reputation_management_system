@@ -9,7 +9,9 @@ import { orgHasFeature } from "@/lib/billing/feature-access";
 import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
 import { listEstablishments } from "@/lib/establishments/queries";
+import { withTenant } from "@/lib/db/with-tenant";
 import { restoreDevice } from "@/lib/hardware/actions";
+import { parseSlug } from "@/lib/hardware/slug";
 import {
   formatConversionPct,
   getDeviceDashboardExtras,
@@ -20,6 +22,8 @@ import {
 } from "@/lib/hardware/queries";
 import { ChevronLeft, CircleCheck, Info, Trash2 } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { ActivateSheet, type DeviceState } from "./_components/activate-sheet";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import {
   MdDevicesImpact,
@@ -134,6 +138,8 @@ export default async function QrCodesPage({
     nfc?: string;
     /** "1" after a device is released back to unactivated inventory. */
     released?: string;
+    /** Opens the Activate sheet: a stand slug, or "1" for none (/activate redirects here). */
+    activate?: string;
     /** "1" opens the Generate-QR sheet (old /hardware/new links land here). */
     generate?: string;
     /** Set by generateSelfServiceQr on invalid input; shown inside the sheet. */
@@ -157,6 +163,42 @@ export default async function QrCodesPage({
     hasGoogle: !!e.googlePlaceId,
   }));
   const qrSheet = { businesses: qrBusinesses, defaultOpen: sp.generate === "1", error: !!sp.error };
+
+  // Activate sheet (/activate redirects here with ?activate=<slug|1>). The
+  // stand is resolved INSIDE tenant RLS: unclaimed rows and our own are
+  // visible, so "not found" means unknown OR owned by another business, and we
+  // never reason about anyone else's hardware.
+  let activateSheet: ReactNode = null;
+  if (sp.activate !== undefined) {
+    const slug = parseSlug(sp.activate);
+    const dev = slug
+      ? await withTenant(orgId, (tx) =>
+          tx.device.findFirst({
+            where: { shortSlug: slug },
+            select: { status: true, organizationId: true, serial: true },
+          }),
+        )
+      : null;
+    const deviceState: DeviceState = !slug
+      ? "none"
+      : !dev
+        ? "unavailable"
+        : dev.status === "unactivated"
+          ? "claimable"
+          : dev.organizationId === orgId
+            ? "yours"
+            : "unavailable";
+    activateSheet = (
+      <ActivateSheet
+        key={slug ?? "none"}
+        establishments={businessOptions}
+        detectedQrUrl={slug ? publicQrUrl(slug) : null}
+        detectedSlug={slug}
+        detectedSerial={dev?.serial ?? null}
+        deviceState={deviceState}
+      />
+    );
+  }
 
   // Only offer a device that's actually still claimable; a stale cookie
   // pointing at an already-activated stand would pre-fill a dead end.
@@ -187,6 +229,7 @@ export default async function QrCodesPage({
       <EmptyState
         establishments={businessOptions}
         qrSheet={qrSheet}
+        sheet={activateSheet}
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
@@ -204,6 +247,7 @@ export default async function QrCodesPage({
       <EmptyState
         establishments={businessOptions}
         qrSheet={qrSheet}
+        sheet={activateSheet}
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
@@ -367,6 +411,7 @@ export default async function QrCodesPage({
 
         <BatchGeneratorSection />
       </div>
+      {activateSheet}
     </AppShellServer>
   );
 }
@@ -467,6 +512,7 @@ function QrProductCard({
 function EmptyState({
   establishments,
   qrSheet,
+  sheet = null,
   recentActivation,
   detectedQrUrl = null,
   detectedSerial = null,
@@ -474,6 +520,8 @@ function EmptyState({
 }: {
   establishments: Array<{ id: string; name: string }>;
   qrSheet: { businesses: QrBusiness[]; defaultOpen: boolean; error: boolean };
+  /** The Activate sheet, when ?activate is set. */
+  sheet?: ReactNode;
   recentActivation?: string;
   detectedQrUrl?: string | null;
   detectedSerial?: string | null;
@@ -603,6 +651,7 @@ function EmptyState({
 
         <MdFooterTip />
       </div>
+      {sheet}
     </AppShellServer>
   );
 }
