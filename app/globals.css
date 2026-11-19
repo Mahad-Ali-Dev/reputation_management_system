@@ -1328,21 +1328,22 @@
        blurred together through frost average out to grey-lavender. Now the
        spec's warm off-white with blooms of the single brand blue, and a faint
        warm wash so the page doesn't go cold. */
-    --glass-canvas-base: #f3f2ee;
-    /* Brand sunrise — saffron glowing up from the bottom edge through peach
-       and lilac into a pale ultramarine sky. Kept soft ("decent"): enough
-       colour for the frosted chrome and cards to refract, never enough to
-       compete with content. Fixed to the viewport by .app--canvas. */
+    --glass-canvas-base: #eaeef6;
+    /* Cool brand wash — a soft ultramarine bloom at the top-left and a teal
+       bloom at the top-right (the same tint the navbar sits on), over an EVEN
+       cool-light base so the whole shell reads one colour (like the navbar)
+       instead of fading to warm beige. Fixed to the viewport by .app--canvas. */
     --glass-canvas-gradient: radial-gradient(
-        125% 125% at 50% 101%,
-        rgba(242, 169, 59, 0.26) 6%,
-        rgba(250, 186, 132, 0.22) 15%,
-        rgba(240, 186, 214, 0.2) 30%,
-        rgba(196, 186, 255, 0.2) 52%,
-        rgba(222, 226, 255, 0.18) 75%,
-        rgba(244, 244, 252, 0) 100%
+        90% 80% at 8% -12%,
+        rgba(75, 59, 255, 0.14) 0%,
+        transparent 55%
       ),
-      linear-gradient(180deg, #f1f1fb 0%, #f4f2f4 100%);
+      radial-gradient(
+        90% 80% at 100% -12%,
+        rgba(18, 185, 152, 0.14) 0%,
+        transparent 55%
+      ),
+      linear-gradient(180deg, #ecf0f8 0%, #eef3f4 55%, #eef2f3 100%);
     --aurora-1: rgba(75, 59, 255, 0.1); /* ultramarine */
     --aurora-2: rgba(167, 140, 255, 0.08); /* lilac */
     --aurora-3: transparent;

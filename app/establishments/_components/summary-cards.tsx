@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Icon } from "@/components/shell/icon";
+import { AddBusinessModal } from "./add-business-modal";
 import type { EstTint } from "./card-state";
 
 /**
@@ -86,12 +87,12 @@ export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
         </Link>
       ))}
 
-      <Link href="/establishments/new" className="est-scard est-scard--add">
+      <AddBusinessModal triggerClassName="est-scard est-scard--add">
         <span className="est-addcircle" aria-hidden="true">
           <Icon name="plus" size={22} />
         </span>
         <span>Add New Business</span>
-      </Link>
+      </AddBusinessModal>
     </div>
   );
 }

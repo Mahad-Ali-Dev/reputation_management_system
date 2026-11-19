@@ -3,13 +3,13 @@ import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { listEstablishmentsForCards } from "@/lib/establishments/queries";
-import Link from "next/link";
 import {
   type DeviceSummary,
   deriveCardState,
   reviewTrendPct,
   tintForIndex,
 } from "./_components/card-state";
+import { AddBusinessModal } from "./_components/add-business-modal";
 import { BusinessList } from "./_components/business-list";
 import { DevicesStrip } from "./_components/devices-strip";
 import { SummaryCards, type SummaryCard } from "./_components/summary-cards";
@@ -124,10 +124,6 @@ function Hero() {
           Every business you manage, its live review metrics, and the devices linked to it.
         </p>
       </div>
-      <Link href="/establishments/new" className="est-btn est-btn--pri">
-        <Icon name="plus" size={16} />
-        Add New Business
-      </Link>
     </header>
   );
 }
@@ -161,10 +157,7 @@ function EmptyEstablishments() {
             Add your first business to start collecting reviews, connect devices, and{" "}
             <strong>unlock powerful insights</strong>.
           </p>
-          <Link href="/establishments/new" className="est-btn est-btn--pri est-empty__cta">
-            <Icon name="plus" size={16} />
-            Add New Business
-          </Link>
+          <AddBusinessModal triggerClassName="est-btn est-btn--pri est-empty__cta" />
         </div>
 
         <DevicesStrip devices={[]} />
