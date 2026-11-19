@@ -1,18 +1,33 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { Icon, type IconName } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
-import { Button } from "@/components/ui/button";
+import { GlassSelect } from "@/components/ui/glass-select";
 import { createWidgetKey, deleteAiDocument, revokeWidgetKey } from "@/lib/ai/actions";
 import { learningStats, listKnowledgeGaps } from "@/lib/ai/knowledge-gaps";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
+import {
+  Bot,
+  Database,
+  FileText,
+  Globe,
+  KeyRound,
+  LayoutGrid,
+  type LucideIcon,
+  MessageSquareText,
+  PlayCircle,
+  Plug,
+  Plus,
+  Sparkles,
+  TriangleAlert,
+} from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { type BehaviourFields, BehaviourSettings } from "./_components/behaviour-settings";
 import { KbSourceActions } from "./_components/kb-source-actions";
 import {
   type BusinessDetailRow,
+  KbEmpty,
   KnowledgeBody,
   KnowledgeSummary,
   type LocationData,
@@ -23,6 +38,7 @@ import { readiness, relativeTime } from "./training/_components/shared-utils";
 import "./aikb.css";
 import "./ai-kb.css";
 import "./ai-brain-glass.css";
+import "./ai-kb-apple.css";
 
 export const dynamic = "force-dynamic";
 
@@ -63,26 +79,21 @@ function computeReadiness(profileScore: number, indexedDocs: number, hasWidget: 
   return Math.min(100, Math.round(profileScore * 0.6) + docs + (hasWidget ? 15 : 0));
 }
 
-function statusChip(status: string): { cls: string; label: string } {
-  if (status === "indexed") return { cls: "chip chip--ok", label: "Indexed" };
-  if (status === "indexing") return { cls: "chip chip--info", label: "Indexing" };
-  if (status === "failed") return { cls: "chip chip--bad", label: "Failed" };
-  return { cls: "chip chip--out", label: status };
-}
+const SOURCE_LABELS: Record<string, string> = {
+  url: "Website",
+  manual: "Note",
+  gbp_listing: "Google profile",
+  pdf: "PDF",
+  docx: "Word document",
+  txt: "Text file",
+  file: "Document",
+};
 
-function EstablishmentSelect({
-  establishments,
-}: { establishments: { id: string; name: string }[] }) {
-  return (
-    <select name="establishmentId" className="aikb-select">
-      <option value="">All locations</option>
-      {establishments.map((e) => (
-        <option key={e.id} value={e.id}>
-          {e.name}
-        </option>
-      ))}
-    </select>
-  );
+function statusChip(status: string): { tone: "ok" | "info" | "bad" | "dim"; label: string } {
+  if (status === "indexed") return { tone: "ok", label: "Indexed" };
+  if (status === "indexing") return { tone: "info", label: "Indexing" };
+  if (status === "failed") return { tone: "bad", label: "Failed" };
+  return { tone: "dim", label: status };
 }
 
 /** Build a one-line address string from the establishment's JSON address. */
@@ -235,51 +246,43 @@ export default async function AiSettingsPage({
 
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 
-  const TABS: { key: TabKey; href: string; label: string; icon: IconName; badge?: number }[] = [
-    { key: "knowledge", href: "/ai?tab=knowledge", label: "Knowledge", icon: "box" },
-    { key: "sources", href: "/ai?tab=sources", label: "Sources", icon: "box" },
-    { key: "widget", href: "/ai?tab=widget", label: "Chat widget", icon: "plug" },
-    { key: "behaviour", href: "/ai?tab=behaviour", label: "Behaviour", icon: "sparkle" },
+  const TABS: { key: TabKey; href: string; label: string; icon: LucideIcon; badge?: number }[] = [
+    { key: "knowledge", href: "/ai?tab=knowledge", label: "Knowledge", icon: LayoutGrid },
+    { key: "sources", href: "/ai?tab=sources", label: "Sources", icon: Database },
+    { key: "widget", href: "/ai?tab=widget", label: "Chat widget", icon: Plug },
+    { key: "behaviour", href: "/ai?tab=behaviour", label: "Behaviour", icon: Sparkles },
     {
       key: "test",
       href: "/ai?tab=test",
       label: "Test",
-      icon: "bot",
+      icon: Bot,
       badge: stats.open || openGaps.length || undefined,
     },
   ];
 
   return (
-    <AppShellServer
-      topBar={<TopBar />}
-      crumbs={["AI Tools", "AI Brain"]}
-    >
-      <div className="akb">
-        {/* ---------- hero banner (Knowledge tab only — the Behaviour/Test
-             kit mockups start directly at the tabs header, no hero) ---------- */}
+    <AppShellServer topBar={<TopBar />} crumbs={["AI Tools", "AI Brain"]}>
+      <div className="akb kb">
+        {/* ---------- hero (Knowledge tab): Apple product headline + the frog ---------- */}
         {tab === "knowledge" && (
-          <section
-            className={`akb-hero ${readinessPct === 0 ? "akb-hero--empty" : ""}`}
-            aria-label="AI Knowledge Base"
-          >
-            <div style={{ minWidth: 0 }}>
-              <div className="akb-hero__eyebrow">AI Engine</div>
-              <h1 className="akb-hero__title">AI Knowledge Base</h1>
-              <p className="akb-hero__copy">
-                Teach your AI about your business, voice and policies. It uses this to answer
-                reviews, DMs, surveys and phone calls and learns from every question it can&apos;t
-                answer.
+          <header className="kb-hero">
+            <div className="kb-hero__text">
+              <span className="kb-eyebrow">AI Brain</span>
+              <h1 className="kb-hero__title">
+                Your AI, trained on <em>your business.</em>
+              </h1>
+              <p className="kb-hero__sub">
+                Teach it your services, voice and policies. It answers reviews, DMs and surveys the
+                way you would, and learns from every question it can&apos;t answer yet.
               </p>
+              <Link href="/docs/ai-training" className="kb-pill kb-pill--ghost">
+                <PlayCircle size={16} strokeWidth={1.8} />
+                How it works
+              </Link>
             </div>
-            <Link href="/docs/ai-training" className="akb-btn-outline akb-hero__cta">
-              <Icon name="play" size={15} />
-              How it works
-            </Link>
-          </section>
+          </header>
         )}
 
-        {/* ---------- readiness + stats (Knowledge tab only — sits above the
-             tabs strip in the kit) ---------- */}
         {tab === "knowledge" && (
           <KnowledgeSummary
             readinessPct={readinessPct}
@@ -289,11 +292,12 @@ export default async function AiSettingsPage({
           />
         )}
 
-        {/* ---------- tabs / action bar ---------- */}
-        <nav className="akb-card akb-tabs" aria-label="AI Knowledge Base sections">
-          <div className="akb-tabs__list" role="tablist">
+        {/* ---------- tabs: iOS segmented control + one action ---------- */}
+        <nav className="kb-tabbar" aria-label="AI Brain sections">
+          <div className="kb-seg" role="tablist">
             {TABS.map((t) => {
               const isActive = t.key === tab;
+              const TIcon = t.icon;
               return (
                 <Link
                   key={t.key}
@@ -301,12 +305,12 @@ export default async function AiSettingsPage({
                   role="tab"
                   aria-selected={isActive}
                   aria-current={isActive ? "page" : undefined}
-                  className={isActive ? "akb-tab is-active" : "akb-tab"}
+                  className={isActive ? "kb-seg__t is-active" : "kb-seg__t"}
                 >
-                  <Icon name={t.icon} size={15} />
+                  <TIcon size={15} strokeWidth={1.8} />
                   <span>{t.label}</span>
                   {t.badge ? (
-                    <span className="akb-tab__badge" aria-label={`${t.badge} to review`}>
+                    <span className="kb-seg__badge" aria-label={`${t.badge} to review`}>
                       {t.badge}
                     </span>
                   ) : null}
@@ -314,42 +318,25 @@ export default async function AiSettingsPage({
               );
             })}
           </div>
-          {/* "Add source" was `href="#add-source"`, pointing at the disclosure
-              that no longer exists — a dead button. It now triggers the same
-              file picker as the Upload card, via KbSourceActions' delegation. */}
           {tab === "knowledge" ? (
-            <button
-              type="button"
-              data-kb-action="upload"
-              className="akb-btn-primary"
-              style={{ height: 33 }}
-            >
-              <Icon name="plus" size={14} />
+            <button type="button" data-kb-action="upload" className="kb-pill kb-pill--pri">
+              <Plus size={16} strokeWidth={2} />
               Add source
             </button>
-          ) : (
-            <Link href="/ai?tab=test" className="akb-btn-primary" style={{ height: 33 }}>
-              <Icon name="sparkle" size={14} />
-              {tab === "behaviour" ? "Test AI behaviour" : "Test AI knowledge"}
+          ) : tab !== "test" ? (
+            <Link href="/ai?tab=test" className="kb-pill kb-pill--pri">
+              <Sparkles size={15} strokeWidth={1.8} />
+              {tab === "behaviour" ? "Preview in Test" : "Test your AI"}
             </Link>
-          )}
+          ) : null}
         </nav>
 
-        {/* shared action-failed banner */}
         {actionFailed && (
-          <div
-            className="akb-card"
-            role="alert"
-            style={{
-              padding: "10px 14px",
-              borderColor: "#e14d62",
-              background: "rgba(225,77,98,0.06)",
-              fontSize: 13,
-            }}
-          >
-            That action couldn&apos;t be completed. You may not have permission (manager role
-            required), or the item was already removed refresh and try again.
-          </div>
+          <p className="kb-alert" role="alert">
+            <TriangleAlert size={16} strokeWidth={1.8} />
+            That action couldn&apos;t be completed. You may need manager access, or the item was
+            already removed. Refresh and try again.
+          </p>
         )}
 
         {/* ---------- Knowledge tab ---------- */}
@@ -362,211 +349,222 @@ export default async function AiSettingsPage({
               location={location}
               recentLearning={recentLearning}
             />
-
-            {/* Card interactions: "Upload documents" opens the OS file picker,
-                "Connect website" opens the 2-field modal and runs the crawl as a
-                background job. Replaces the old stack of inline forms that used
-                to live in a disclosure below the fold. */}
+            {/* Upload opens the OS file picker; Connect website opens the
+                2-field sheet and runs the crawl as a background job. */}
             <KbSourceActions />
           </>
         )}
 
         {/* ---------- Sources tab ---------- */}
         {tab === "sources" && (
-          <section className="akb-card akb-card__pad">
-            <h4 className="aikb-subhead">
-              <Icon name="box" size={14} /> Indexed documents
-              <span className="chip chip--pri">{documents.length}</span>
-            </h4>
-            {documents.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
-                No documents yet paste your FAQ above or crawl your website to start.
-              </p>
-            ) : (
+          <section className="kb-card" aria-labelledby="kb-docs-title">
+            <header className="kb-card__head">
               <div>
+                <h2 id="kb-docs-title" className="kb-card__title">
+                  Sources <span className="kb-count">{documents.length}</span>
+                </h2>
+                <p className="kb-card__sub">Everything your AI has read and learned from.</p>
+              </div>
+              <Link href="/ai?tab=knowledge" className="kb-pill">
+                <Plus size={15} strokeWidth={2} />
+                Add source
+              </Link>
+            </header>
+            {documents.length === 0 ? (
+              <KbEmpty
+                icon={FileText}
+                title="No sources yet"
+                text="Connect your website or upload a document to give your AI something to learn from."
+                href="/ai?tab=knowledge"
+                cta="Add a source"
+              />
+            ) : (
+              <ul className="kb-list kb-list--inset">
                 {documents.map((d) => {
-                  const chip = statusChip(d.status);
+                  const st = statusChip(d.status);
+                  const DIcon = d.sourceType === "url" ? Globe : FileText;
                   return (
-                    <div key={d.id} className="aikb-doc">
-                      <div style={{ minWidth: 0 }}>
-                        <div className="aikb-doc__title">
-                          {d.title}
-                          <span className="chip chip--out" style={{ textTransform: "uppercase" }}>
-                            {d.sourceType}
+                    <li key={d.id}>
+                      <div className="kb-list__row kb-doc">
+                        <span className="kb-list__icon" aria-hidden="true">
+                          <DIcon size={16} strokeWidth={1.8} />
+                        </span>
+                        <span className="kb-list__text">
+                          <span className="kb-list__t">
+                            {d.title}
+                            <span className={`kb-status kb-status--${st.tone}`}>{st.label}</span>
                           </span>
-                          <span className={chip.cls}>
-                            <span className="dot" />
-                            {chip.label}
+                          <span className="kb-list__d">
+                            {SOURCE_LABELS[d.sourceType] ?? d.sourceType.replace(/_/g, " ")} ·{" "}
+                            {d.content.length.toLocaleString()} characters ·{" "}
+                            {d.lastIndexedAt
+                              ? `updated ${relativeTime(d.lastIndexedAt)}`
+                              : "not indexed yet"}
+                            {d.sourceUri && (
+                              <>
+                                {" · "}
+                                <a href={d.sourceUri} target="_blank" rel="noopener noreferrer">
+                                  Open
+                                </a>
+                              </>
+                            )}
                           </span>
-                        </div>
-                        <div className="aikb-doc__meta">
-                          {d.content.length.toLocaleString()} chars ·{" "}
-                          {d.lastIndexedAt ? new Date(d.lastIndexedAt).toLocaleString() : "—"}
-                          {d.sourceUri && (
-                            <>
-                              {" · "}
-                              <a
-                                href={d.sourceUri}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-primary hover:underline"
-                              >
-                                source ↗
-                              </a>
-                            </>
-                          )}
-                        </div>
+                        </span>
+                        <form
+                          action={async () => {
+                            "use server";
+                            try {
+                              await deleteAiDocument(d.id);
+                            } catch (err) {
+                              if (isNextControlFlow(err)) throw err;
+                              redirect("/ai?tab=sources&saved=error");
+                            }
+                          }}
+                        >
+                          <button type="submit" className="kb-pill kb-pill--danger kb-pill--sm">
+                            Delete
+                          </button>
+                        </form>
                       </div>
-                      <form
-                        action={async () => {
-                          "use server";
-                          try {
-                            await deleteAiDocument(d.id);
-                          } catch (err) {
-                            if (isNextControlFlow(err)) throw err;
-                            redirect("/ai?tab=knowledge&saved=error");
-                          }
-                        }}
-                      >
-                        <Button type="submit" variant="ghost" size="sm">
-                          Delete
-                        </Button>
-                      </form>
-                    </div>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
             )}
-
-            <hr className="aikb-divider" />
           </section>
         )}
 
         {/* ---------- Chat widget tab ---------- */}
         {tab === "widget" && (
-          <section className="akb-card akb-card__pad">
-            <h4 className="aikb-subhead">
-              <Icon name="plug" size={14} /> Embed snippet
-            </h4>
-            <p style={{ fontSize: 12.5, color: "var(--rl-muted)", margin: "0 0 12px" }}>
-              Generate a widget key, then paste the snippet on any page where you want the chatbot.
-            </p>
-            <form
-              action={async (form: FormData) => {
-                "use server";
-                try {
-                  await createWidgetKey(form);
-                } catch (err) {
-                  if (isNextControlFlow(err)) throw err;
-                  redirect("/ai?tab=knowledge&saved=error");
-                }
-              }}
-              className="space-y-3"
-            >
-              <div className="aikb-formgrid">
-                {/* biome-ignore lint/a11y/noLabelWithoutControl: the select is nested inside this label (implicit association) */}
-                <label className="aikb-label">
-                  Establishment (optional)
-                  <EstablishmentSelect
-                    establishments={establishments.map((e) => ({ id: e.id, name: e.name }))}
+          <div className="kb-stack">
+            <section className="kb-card" aria-labelledby="kb-wkey-title">
+              <header className="kb-card__head">
+                <div>
+                  <h2 id="kb-wkey-title" className="kb-card__title">
+                    Add the chat widget to your site
+                  </h2>
+                  <p className="kb-card__sub">
+                    Create a key, then paste one line of code on any page where you want the
+                    chatbot.
+                  </p>
+                </div>
+              </header>
+              <form
+                action={async (form: FormData) => {
+                  "use server";
+                  try {
+                    await createWidgetKey(form);
+                  } catch (err) {
+                    if (isNextControlFlow(err)) throw err;
+                    redirect("/ai?tab=widget&saved=error");
+                  }
+                }}
+                className="kb-form"
+              >
+                <div className="kb-field">
+                  <span className="kb-field__lbl">
+                    Location <span className="kb-opt">Optional</span>
+                  </span>
+                  <GlassSelect
+                    name="establishmentId"
+                    defaultValue=""
+                    options={[
+                      { value: "", label: "All locations" },
+                      ...establishments.map((e) => ({ value: e.id, label: e.name })),
+                    ]}
+                    ariaLabel="Location"
                   />
-                </label>
-                <label className="aikb-label">
-                  Origin allowlist (optional)
+                </div>
+                <label className="kb-field">
+                  <span className="kb-field__lbl">
+                    Allowed websites <span className="kb-opt">Optional</span>
+                  </span>
                   <input
                     name="originAllowlist"
                     placeholder="https://example.com, https://shop.example.com"
-                    className="aikb-input"
+                    className="kb-input"
                   />
-                  <span className="aikb-hint">
-                    Comma-separated. Leave empty to allow any origin (testing only).
+                  <span className="kb-hint">
+                    Comma-separated. Leave empty to allow any site (for testing only).
                   </span>
                 </label>
-              </div>
-              <Button type="submit">Generate key</Button>
-            </form>
+                <div className="kb-form__actions">
+                  <button type="submit" className="kb-pill kb-pill--pri">
+                    <KeyRound size={15} strokeWidth={1.8} />
+                    Create key
+                  </button>
+                </div>
+              </form>
+            </section>
 
-            <hr className="aikb-divider" />
-
-            <h4 className="aikb-subhead">
-              <Icon name="lock" size={14} /> Active keys
-              <span className="chip chip--pri">{widgets.length}</span>
-            </h4>
-            {widgets.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>No active keys.</p>
-            ) : (
-              <div>
-                {widgets.map((w) => (
-                  <div key={w.id} className="aikb-key">
-                    <div className="row" style={{ justifyContent: "space-between", gap: 10 }}>
-                      <code
-                        style={{
-                          fontSize: 11.5,
-                          fontFamily: "var(--f-mono)",
-                          wordBreak: "break-all",
-                        }}
-                      >
-                        {w.publicKey}
-                      </code>
-                      <form
-                        action={async () => {
-                          "use server";
-                          try {
-                            await revokeWidgetKey(w.id);
-                          } catch (err) {
-                            if (isNextControlFlow(err)) throw err;
-                            redirect("/ai?tab=knowledge&saved=error");
-                          }
-                        }}
-                      >
-                        <Button type="submit" variant="ghost" size="sm">
-                          Revoke
-                        </Button>
-                      </form>
-                    </div>
-                    {w.originAllowlist.length > 0 && (
-                      <div className="aikb-doc__meta">Origins: {w.originAllowlist.join(", ")}</div>
-                    )}
-                    <details style={{ fontSize: 12 }}>
-                      <summary className="cursor-pointer text-primary">Show embed snippet</summary>
-                      <pre className="aikb-snippet">{`<script src="${appUrl}/widget?key=${w.publicKey}" async></script>`}</pre>
-                    </details>
-                  </div>
-                ))}
-              </div>
-            )}
-
-            <hr className="aikb-divider" />
-
-            <h4 className="aikb-subhead">
-              <Icon name="bot" size={14} /> Test the chatbot
-            </h4>
-            {widgets.length === 0 ? (
-              <p style={{ fontSize: 13, color: "var(--rl-muted)" }}>
-                Generate a key above first the test page renders the live widget.
-              </p>
-            ) : (
-              <Button asChild variant="outline">
-                <Link
-                  href={`/ai/test?key=${widgets[0]?.publicKey ?? ""}`}
-                  target="_blank"
-                  rel="noopener"
-                >
-                  Open test page →
-                </Link>
-              </Button>
-            )}
-          </section>
+            <section className="kb-card" aria-labelledby="kb-wlist-title">
+              <header className="kb-card__head">
+                <div>
+                  <h2 id="kb-wlist-title" className="kb-card__title">
+                    Your keys <span className="kb-count">{widgets.length}</span>
+                  </h2>
+                  <p className="kb-card__sub">Copy the snippet into your website&apos;s HTML.</p>
+                </div>
+                {widgets.length > 0 && (
+                  <Link
+                    href={`/ai/test?key=${widgets[0]?.publicKey ?? ""}`}
+                    target="_blank"
+                    rel="noopener"
+                    className="kb-pill"
+                  >
+                    <MessageSquareText size={15} strokeWidth={1.8} />
+                    Try the chatbot
+                  </Link>
+                )}
+              </header>
+              {widgets.length === 0 ? (
+                <KbEmpty
+                  icon={KeyRound}
+                  title="No keys yet"
+                  text="Create a key above and your snippet appears here, ready to copy."
+                />
+              ) : (
+                <ul className="kb-keys">
+                  {widgets.map((w) => (
+                    <li key={w.id} className="kb-key">
+                      <div className="kb-key__top">
+                        <code className="kb-key__id">{w.publicKey}</code>
+                        <span className="kb-key__origins">
+                          {w.originAllowlist.length > 0
+                            ? w.originAllowlist.join(", ")
+                            : "Any website"}
+                        </span>
+                        <form
+                          action={async () => {
+                            "use server";
+                            try {
+                              await revokeWidgetKey(w.id);
+                            } catch (err) {
+                              if (isNextControlFlow(err)) throw err;
+                              redirect("/ai?tab=widget&saved=error");
+                            }
+                          }}
+                        >
+                          <button type="submit" className="kb-pill kb-pill--danger kb-pill--sm">
+                            Revoke
+                          </button>
+                        </form>
+                      </div>
+                      <pre className="kb-snippet">{`<script src="${appUrl}/widget?key=${w.publicKey}" async></script>`}</pre>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
         )}
 
         {/* ---------- Behaviour tab ---------- */}
         {tab === "behaviour" && <BehaviourSettings initial={behaviourInitial} />}
 
         {/* ---------- Test tab ---------- */}
-        {/* Teach/Add-question now open an in-page dialog (test-console.tsx) instead
-            of linking out — they used to point at "/ai/training#test", but that
-            route is a permanent redirect back to plain "/ai" (see
-            app/ai/training/page.tsx), so the link went nowhere useful. */}
+        {/* Teach/Add-question open an in-page dialog (test-console.tsx); the old
+            "/ai/training#test" link redirected back to plain "/ai". */}
         {tab === "test" && (
           <TestConsole suggestions={suggestions} openGaps={openGaps} answeredGaps={answeredGaps} />
         )}
