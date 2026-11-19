@@ -1,7 +1,8 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import { ShieldCheck, User, Users, Zap } from "lucide-react";
+import AnimatedGradient from "@/components/ui/animated-gradient";
+import { ShieldCheck, User } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -54,24 +55,6 @@ function Brand({ light = false }: { light?: boolean }) {
   );
 }
 
-const FEATURES = [
-  {
-    icon: ShieldCheck,
-    title: "Secure & Reliable",
-    desc: "Enterprise-grade security to keep your data safe.",
-  },
-  {
-    icon: Zap,
-    title: "Built for Productivity",
-    desc: "Powerful tools to streamline your workflow.",
-  },
-  {
-    icon: Users,
-    title: "Team Collaboration",
-    desc: "Work together seamlessly across your organization.",
-  },
-] as const;
-
 function LoginInner() {
   const sp = useSearchParams();
   // Honor a post-login return path (e.g. the /accept-invite flow sends invitees
@@ -101,65 +84,32 @@ function LoginInner() {
   }
 
   return (
-    <main className="auth-shell auth-shell--login">
-      {/* Mobile-only slim dark brand header (replaces the panel <900px) */}
-      <header className="auth-mobile-brand">
-        <Brand light />
-      </header>
+    <main className="auth-shell auth-shell--login auth-shell--vortex">
+      {/* Full-page animated gradient background. */}
+      <AnimatedGradient
+        config={{
+          preset: "custom",
+          color1: "#7c3aed",
+          color2: "#4338ca",
+          color3: "#a855f7",
+          rotation: 25,
+          proportion: 50,
+          scale: 0.6,
+          speed: 18,
+          distortion: 6,
+          swirl: 90,
+          swirlIterations: 8,
+          softness: 70,
+          offset: 0,
+          shape: "Checks",
+          shapeSize: 28,
+        }}
+      />
 
-      {/* LEFT — dark navy brand panel */}
-      <aside className="auth-side">
-        <div className="auth-side-glow auth-side-glow--a" aria-hidden="true" />
-        <div className="auth-side-glow auth-side-glow--b" aria-hidden="true" />
-        <div className="auth-side-dots" aria-hidden="true" />
-
-        <div className="auth-logo">
-          <Brand light />
-        </div>
-
-        <div className="auth-side-body">
-          <h1 className="auth-side-title">
-            Welcome back to
-            <br />
-            <span className="auth-grad">repulabs</span>
-          </h1>
-          <p className="auth-side-sub">
-            Your command center for feedback, insights and better products.
-          </p>
-
-          <div className="auth-side-illo">
-            <Image
-              src="/assets/repulabs/illustrations/login-hero.svg"
-              alt=""
-              width={500}
-              height={340}
-              priority
-              style={{ width: "100%", height: "auto" }}
-            />
-          </div>
-
-          <div className="auth-feats">
-            {FEATURES.map((f) => (
-              <div key={f.title}>
-                <span className="auth-feat-ic">
-                  <f.icon size={17} />
-                </span>
-                <div className="auth-feat-tt">{f.title}</div>
-                <div className="auth-feat-dd">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="auth-side-foot">
-          <span>© repulabs {new Date().getFullYear()}</span>
-          <a href="/legal/privacy">Privacy</a>
-          <a href="/legal/terms">Terms</a>
-        </div>
-      </aside>
-
-      {/* RIGHT — white form card */}
       <section className="auth-main">
+        <div className="auth-vortex__brand">
+          <Brand />
+        </div>
         <div className="auth-card">
           <span className="auth-badge">
             <User size={24} />

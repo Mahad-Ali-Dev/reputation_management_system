@@ -2,7 +2,7 @@
 
 import { googleSignIn } from "@/app/login/actions";
 import { Icon } from "@/components/shell/icon";
-import { ShieldCheck, Users, Zap } from "lucide-react";
+import AnimatedGradient from "@/components/ui/animated-gradient";
 import { signIn } from "next-auth/react";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -53,24 +53,6 @@ function Brand({ light = false }: { light?: boolean }) {
   );
 }
 
-const FEATURES = [
-  {
-    icon: ShieldCheck,
-    title: "Secure & Reliable",
-    desc: "Enterprise-grade security to keep your data safe.",
-  },
-  {
-    icon: Zap,
-    title: "Built for Productivity",
-    desc: "Powerful tools to streamline your workflow.",
-  },
-  {
-    icon: Users,
-    title: "Team Collaboration",
-    desc: "Work together seamlessly across your organization.",
-  },
-] as const;
-
 function SignupInner() {
   const sp = useSearchParams();
   const next = sp.get("next") || "/dashboard";
@@ -105,13 +87,28 @@ function SignupInner() {
   }
 
   return (
-    <main className="auth-shell auth-shell--signup">
-      {/* Mobile-only slim dark brand header (replaces the panel <900px) */}
-      <header className="auth-mobile-brand">
-        <Brand light />
-      </header>
+    <main className="auth-shell auth-shell--signup auth-shell--vortex">
+      {/* Full-page animated gradient background. */}
+      <AnimatedGradient
+        config={{
+          preset: "custom",
+          color1: "#7c3aed",
+          color2: "#4338ca",
+          color3: "#a855f7",
+          rotation: 25,
+          proportion: 50,
+          scale: 0.6,
+          speed: 18,
+          distortion: 6,
+          swirl: 90,
+          swirlIterations: 8,
+          softness: 70,
+          offset: 0,
+          shape: "Checks",
+          shapeSize: 28,
+        }}
+      />
 
-      {/* LEFT — white form panel */}
       <section className="auth-main">
         <div className="auth-card">
           <div className="auth-logo" style={{ marginBottom: 34 }}>
@@ -243,43 +240,6 @@ function SignupInner() {
           </div>
         </div>
       </section>
-
-      {/* RIGHT — light-grey illustration panel */}
-      <aside className="auth-side">
-        <div className="auth-side-dots" aria-hidden="true" />
-
-        <div className="auth-side-body" style={{ marginTop: "auto", marginBottom: "auto" }}>
-          <h1 className="auth-side-title">
-            Start a reputation workspace with <span className="auth-grad">less friction.</span>
-          </h1>
-          <p className="auth-side-sub">
-            All the tools you need to collect feedback, analyze insights and build better products.
-          </p>
-
-          <div className="auth-side-illo">
-            <Image
-              src="/assets/repulabs/illustrations/home-hero.png"
-              alt=""
-              width={520}
-              height={360}
-              priority
-              style={{ width: "100%", height: "auto" }}
-            />
-          </div>
-
-          <div className="auth-feats">
-            {FEATURES.map((f) => (
-              <div key={f.title}>
-                <span className="auth-feat-ic">
-                  <f.icon size={17} />
-                </span>
-                <div className="auth-feat-tt">{f.title}</div>
-                <div className="auth-feat-dd">{f.desc}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </aside>
     </main>
   );
 }

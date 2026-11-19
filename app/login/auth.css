@@ -628,3 +628,48 @@
     padding: 28px 20px;
   }
 }
+
+/* ── Neural-vortex variant — full-page animated WebGL background on a white base,
+   with the form centred in a single frosted card (overrides the split-screen).
+   Used by /login and /signup via the `auth-shell--vortex` modifier. ── */
+.auth-shell--vortex {
+  display: block;
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  background: #ffffff;
+  overflow: hidden;
+}
+.auth-shell--vortex .auth-main {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 28px 20px;
+  background: transparent;
+}
+.auth-vortex__brand {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+/* The card floats over the vortex — frosted so the animation reads softly behind.
+   Self-contained sizing so both /login and /signup look right in this variant. */
+.auth-shell--vortex .auth-card {
+  max-width: 440px;
+  padding: 38px 38px 30px;
+  border-radius: 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.82);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(124, 58, 237, 0.14);
+  box-shadow: 0 40px 90px -36px rgba(60, 40, 140, 0.4);
+}
