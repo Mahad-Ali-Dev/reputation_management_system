@@ -2,9 +2,7 @@
 
 import { Icon } from "@/components/shell/icon";
 import AnimatedGradient from "@/components/ui/animated-gradient";
-import { ShieldCheck, User } from "lucide-react";
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { googleSignIn } from "./actions";
@@ -34,24 +32,6 @@ export default function LoginPage() {
     <Suspense fallback={null}>
       <LoginInner />
     </Suspense>
-  );
-}
-
-function Brand({ light = false }: { light?: boolean }) {
-  return (
-    <>
-      <Image
-        src="/favicon.png?v=2"
-        alt=""
-        width={32}
-        height={32}
-        priority
-        className="auth-logo-mark"
-      />
-      <span className="auth-logo-text" style={{ color: light ? "#fff" : "var(--ink)" }}>
-        repu<span className="auth-grad">labs</span>
-      </span>
-    </>
   );
 }
 
@@ -107,13 +87,7 @@ function LoginInner() {
       />
 
       <section className="auth-main">
-        <div className="auth-vortex__brand">
-          <Brand />
-        </div>
         <div className="auth-card">
-          <span className="auth-badge">
-            <User size={24} />
-          </span>
           <h2 className="auth-title">{sent ? "Check your inbox" : "Log in to your account"}</h2>
           <p className="auth-sub">
             {sent ? (
@@ -196,15 +170,6 @@ function LoginInner() {
                   Continue with Google
                 </button>
               </form>
-
-              <div className="auth-info">
-                <span className="auth-info-ic">
-                  <ShieldCheck size={16} />
-                </span>
-                <span className="auth-info-tx">
-                  We never use your password. It’s just one-click, magic link access.
-                </span>
-              </div>
 
               <div className="auth-switch">
                 New here?{" "}

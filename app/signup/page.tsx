@@ -4,7 +4,6 @@ import { googleSignIn } from "@/app/login/actions";
 import { Icon } from "@/components/shell/icon";
 import AnimatedGradient from "@/components/ui/animated-gradient";
 import { signIn } from "next-auth/react";
-import Image from "next/image";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import "@/app/login/auth.css";
@@ -32,24 +31,6 @@ export default function SignupPage() {
     <Suspense fallback={null}>
       <SignupInner />
     </Suspense>
-  );
-}
-
-function Brand({ light = false }: { light?: boolean }) {
-  return (
-    <>
-      <Image
-        src="/favicon.png?v=2"
-        alt=""
-        width={32}
-        height={32}
-        priority
-        className="auth-logo-mark"
-      />
-      <span className="auth-logo-text" style={{ color: light ? "#fff" : "var(--ink)" }}>
-        repu<span className="auth-grad">labs</span>
-      </span>
-    </>
   );
 }
 
@@ -111,10 +92,6 @@ function SignupInner() {
 
       <section className="auth-main">
         <div className="auth-card">
-          <div className="auth-logo" style={{ marginBottom: 34 }}>
-            <Brand />
-          </div>
-
           {slugFromNext && !sent && (
             <div className="auth-note" style={{ marginBottom: 18 }}>
               <div className="auth-note-head">
