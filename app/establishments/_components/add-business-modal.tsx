@@ -99,6 +99,7 @@ export function AddBusinessModal({
       </button>
 
       {open && (
+        // biome-ignore lint/a11y/useSemanticElements: overlay dialog; a native dialog top layer would sit above the portalled dropdown menus
         <div className="abm-overlay" role="dialog" aria-modal="true" aria-labelledby="abm-title">
           <button
             type="button"

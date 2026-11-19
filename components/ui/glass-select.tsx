@@ -67,7 +67,7 @@ export function GlassSelect({
   const [active, setActive] = useState(0);
   const [rect, setRect] = useState<{ top: number; left: number; width: number; up: boolean }>();
   const triggerRef = useRef<HTMLButtonElement>(null);
-  const listRef = useRef<HTMLUListElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
   const listId = useId();
@@ -234,23 +234,26 @@ export function GlassSelect({
                 />
               </label>
             )}
-            <ul
+            {/* biome-ignore lint/a11y/useSemanticElements: custom ARIA listbox, a native select cannot be styled */}
+            <div
+              role="listbox"
               ref={listRef}
               id={listId}
-              role="listbox"
               tabIndex={-1}
               className="gsel-pop__list"
               aria-label={ariaLabel}
               onKeyDown={onListKey}
             >
-              {shown.length === 0 && <li className="gsel-pop__none">No matches</li>}
+              {shown.length === 0 && <div className="gsel-pop__none">No matches</div>}
               {shown.map((o, i) => {
                 const isSel = o.value === value;
                 return (
-                  <li
+                  // biome-ignore lint/a11y/useSemanticElements: option of the custom ARIA listbox above
+                  <div
+                    role="option"
                     key={o.value}
                     data-i={i}
-                    role="option"
+                    tabIndex={-1}
                     aria-selected={isSel}
                     className={`gsel-opt${i === active ? " is-active" : ""}${isSel ? " is-sel" : ""}`}
                     onMouseEnter={() => setActive(i)}
@@ -263,10 +266,10 @@ export function GlassSelect({
                     </span>
                     <span className="gsel-opt__label">{o.label}</span>
                     {o.hint && <span className="gsel-opt__hint">{o.hint}</span>}
-                  </li>
+                  </div>
                 );
               })}
-            </ul>
+            </div>
           </div>,
           document.body,
         )}
