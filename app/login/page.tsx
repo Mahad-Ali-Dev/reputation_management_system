@@ -1,11 +1,12 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import AnimatedGradient from "@/components/ui/animated-gradient";
+
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { googleSignIn } from "./actions";
+import { AuthBackground, parseAuthBg } from "./auth-background";
 import "./auth.css";
 
 /**
@@ -37,6 +38,7 @@ export default function LoginPage() {
 
 function LoginInner() {
   const sp = useSearchParams();
+  const bg = parseAuthBg(sp.get("bg"));
   // Honor a post-login return path (e.g. the /accept-invite flow sends invitees
   // here as /login?callbackUrl=/accept-invite?token=...). Only allow same-site
   // relative paths to avoid an open-redirect.
@@ -65,26 +67,8 @@ function LoginInner() {
 
   return (
     <main className="auth-shell auth-shell--login auth-shell--vortex">
-      {/* Full-page animated gradient background. */}
-      <AnimatedGradient
-        config={{
-          preset: "custom",
-          color1: "#7c3aed",
-          color2: "#4338ca",
-          color3: "#a855f7",
-          rotation: 25,
-          proportion: 50,
-          scale: 0.6,
-          speed: 18,
-          distortion: 6,
-          swirl: 90,
-          swirlIterations: 8,
-          softness: 70,
-          offset: 0,
-          shape: "Checks",
-          shapeSize: 28,
-        }}
-      />
+      {/* Full-page animated wavy background. */}
+      <AuthBackground variant={bg} />
 
       <section className="auth-main">
         <div className="auth-card">

@@ -2,7 +2,8 @@
 
 import { googleSignIn } from "@/app/login/actions";
 import { Icon } from "@/components/shell/icon";
-import AnimatedGradient from "@/components/ui/animated-gradient";
+
+import { AuthBackground, parseAuthBg } from "@/app/login/auth-background";
 import { signIn } from "next-auth/react";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
@@ -36,6 +37,7 @@ export default function SignupPage() {
 
 function SignupInner() {
   const sp = useSearchParams();
+  const bg = parseAuthBg(sp.get("bg"));
   const next = sp.get("next") || "/dashboard";
   // Best-effort: if `?next=/activate?slug=XYZ` was passed, show a contextual
   // banner explaining what's about to happen after signup.
@@ -69,26 +71,8 @@ function SignupInner() {
 
   return (
     <main className="auth-shell auth-shell--signup auth-shell--vortex">
-      {/* Full-page animated gradient background. */}
-      <AnimatedGradient
-        config={{
-          preset: "custom",
-          color1: "#7c3aed",
-          color2: "#4338ca",
-          color3: "#a855f7",
-          rotation: 25,
-          proportion: 50,
-          scale: 0.6,
-          speed: 18,
-          distortion: 6,
-          swirl: 90,
-          swirlIterations: 8,
-          softness: 70,
-          offset: 0,
-          shape: "Checks",
-          shapeSize: 28,
-        }}
-      />
+      {/* Full-page animated wavy background. */}
+      <AuthBackground variant={bg} />
 
       <section className="auth-main">
         <div className="auth-card">
