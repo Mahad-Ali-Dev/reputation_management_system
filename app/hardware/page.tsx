@@ -29,6 +29,7 @@ import {
   MdTrainingBanner,
 } from "./_components/dashboard-cards";
 import { DeviceTable } from "./_components/device-table";
+import { GenerateQrModal, type QrBusiness } from "./_components/generate-qr-modal";
 import { recordNfcUid } from "./_components/nfc-actions";
 import { NfcConfigCard } from "./_components/nfc-config-card";
 import { QrActions } from "./_components/qr-actions";
@@ -133,6 +134,10 @@ export default async function QrCodesPage({
     nfc?: string;
     /** "1" after a device is released back to unactivated inventory. */
     released?: string;
+    /** "1" opens the Generate-QR sheet (old /hardware/new links land here). */
+    generate?: string;
+    /** Set by generateSelfServiceQr on invalid input; shown inside the sheet. */
+    error?: string;
   }>;
 }) {
   const { orgId, role } = await getOrgContext();
@@ -146,6 +151,12 @@ export default async function QrCodesPage({
   ]);
   const businessOptions = establishments.map((e) => ({ id: e.id, name: e.name }));
   const sp = await searchParams;
+  const qrBusinesses: QrBusiness[] = establishments.map((e) => ({
+    id: e.id,
+    name: e.name,
+    hasGoogle: !!e.googlePlaceId,
+  }));
+  const qrSheet = { businesses: qrBusinesses, defaultOpen: sp.generate === "1", error: !!sp.error };
 
   // Only offer a device that's actually still claimable; a stale cookie
   // pointing at an already-activated stand would pre-fill a dead end.
@@ -175,6 +186,7 @@ export default async function QrCodesPage({
     return (
       <EmptyState
         establishments={businessOptions}
+        qrSheet={qrSheet}
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
@@ -191,6 +203,7 @@ export default async function QrCodesPage({
     return (
       <EmptyState
         establishments={businessOptions}
+        qrSheet={qrSheet}
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
@@ -227,10 +240,7 @@ export default async function QrCodesPage({
               <Icon name="ext" size={12} />
               Buy stands
             </a>
-            <Link href="/hardware/new" className="btn">
-              <Icon name="qr" size={12} />
-              Generate QR
-            </Link>
+            <GenerateQrModal {...qrSheet} />
             <ConnectDeviceModal
               establishments={businessOptions}
               detectedQrUrl={detectedQrUrl}
@@ -456,12 +466,14 @@ function QrProductCard({
 
 function EmptyState({
   establishments,
+  qrSheet,
   recentActivation,
   detectedQrUrl = null,
   detectedSerial = null,
   retiredCount = 0,
 }: {
   establishments: Array<{ id: string; name: string }>;
+  qrSheet: { businesses: QrBusiness[]; defaultOpen: boolean; error: boolean };
   recentActivation?: string;
   detectedQrUrl?: string | null;
   detectedSerial?: string | null;
@@ -480,10 +492,7 @@ function EmptyState({
             <Icon name="ext" size={12} />
             Buy stands
           </a>
-          <Link href="/hardware/new" className="btn">
-            <Icon name="qr" size={12} />
-            Generate QR
-          </Link>
+          <GenerateQrModal {...qrSheet} />
           <ConnectDeviceModal
             establishments={establishments}
             detectedQrUrl={detectedQrUrl}
@@ -566,10 +575,12 @@ function EmptyState({
                 triggerClassName="btn btn--pri btn--lg"
                 triggerLabel="Add device"
               />
-              <Link href="/hardware/new" className="btn btn--lg">
-                <Icon name="qr" size={14} />
-                Generate a QR instead
-              </Link>
+              <GenerateQrModal
+                {...qrSheet}
+                defaultOpen={false}
+                triggerClassName="btn btn--lg"
+                triggerLabel="Generate a QR instead"
+              />
             </div>
             <div className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
               Don&rsquo;t have a device yet?{" "}
