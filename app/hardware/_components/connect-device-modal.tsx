@@ -1,7 +1,7 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
 import { QrCameraScanner } from "@/components/qr-scanner";
+import { Icon } from "@/components/shell/icon";
 import {
   type CreateEstablishmentQuickState,
   createEstablishmentQuick,
@@ -339,8 +339,8 @@ export function ConnectDeviceModal({
                                 Scan your stand&rsquo;s QR with your phone
                               </div>
                               <div className="cdm-scan__d">
-                                Tap to open your camera we&rsquo;ll fill in the link the moment
-                                we recognize it.
+                                Tap to open your camera we&rsquo;ll fill in the link the moment we
+                                recognize it.
                               </div>
                             </div>
                           </button>
@@ -392,7 +392,9 @@ export function ConnectDeviceModal({
                       <p className="cdm-helper" style={{ marginTop: 14 }}>
                         Don&rsquo;t have a physical device yet?{" "}
                         <Link
-                          href="/hardware/new"
+                          href="/hardware?generate=1"
+                          scroll={false}
+                          onClick={() => setOpen(false)}
                           style={{ color: "var(--rl-primary, #4f46e5)", fontWeight: 600 }}
                         >
                           Create a free digital QR
@@ -603,7 +605,13 @@ function BusinessSelect({
           role="listbox"
           aria-label="Businesses"
           tabIndex={-1}
-          style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width, right: "auto" }}
+          style={{
+            position: "fixed",
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            right: "auto",
+          }}
         >
           {establishments.map((e) => {
             const isSel = e.id === selected?.id;
@@ -707,7 +715,13 @@ function CategorySelect({
           role="listbox"
           aria-label="Category"
           tabIndex={-1}
-          style={{ position: "fixed", top: rect.top, left: rect.left, width: rect.width, right: "auto" }}
+          style={{
+            position: "fixed",
+            top: rect.top,
+            left: rect.left,
+            width: rect.width,
+            right: "auto",
+          }}
         >
           <button
             type="button"
@@ -825,12 +839,7 @@ function NoBusinessNotice({ onAdd }: { onAdd: () => void }) {
       <p style={{ margin: 0, fontSize: 14, color: "var(--rl-muted)", lineHeight: 1.55 }}>
         Add a business first a device has to point its scans at one of your listings.
       </p>
-      <button
-        type="button"
-        onClick={onAdd}
-        className="cdm-cta"
-        style={{ alignSelf: "flex-start" }}
-      >
+      <button type="button" onClick={onAdd} className="cdm-cta" style={{ alignSelf: "flex-start" }}>
         <Icon name="plus" size={15} />
         Add a business
       </button>

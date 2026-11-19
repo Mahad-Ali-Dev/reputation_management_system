@@ -1,47 +1,30 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { listEstablishmentsForCards } from "@/lib/establishments/queries";
-import {
-  type DeviceSummary,
-  deriveCardState,
-  reviewTrendPct,
-  tintForIndex,
-} from "./_components/card-state";
+import { Info, Plus } from "lucide-react";
 import { AddBusinessModal } from "./_components/add-business-modal";
-import { BusinessList } from "./_components/business-list";
-import { DevicesStrip } from "./_components/devices-strip";
-import { SummaryCards, type SummaryCard } from "./_components/summary-cards";
-import { SummaryCounters } from "./_components/summary-counters";
-import "./establishments.css";
-import "./establishments-glass.css";
+import { BusinessGrid, BusinessesEmpty, DeviceList } from "./_components/business-grid";
+import { type DeviceSummary, deriveCardState, reviewTrendPct } from "./_components/card-state";
+import "./my-businesses-apple.css";
 
 /**
- * My Establishments — rebuilt to the delivered design kit (modules 12 & 13).
+ * My Businesses (Apple look, 2026-11 redesign).
  *
- * ACTIVE  (≥1 establishment): hero + 3 business summary cards + dashed add card,
- *          a business list with per-row connect banner / status / Reviews /
- *          Connect / chevron, and an aggregated "Linked devices" strip.
- * EMPTY   (0 establishments): 3 zero counters + dashed add card, a centered
- *          empty block with the magnifier illustration + CTA, and an empty
- *          devices row.
+ * Hero with live totals + "Add a business", one frosted card per business
+ * (logo, Google status, rating / reviews / 30-day trend, linked devices,
+ * Reviews + Connect/Details actions), an "Add a business" card, and an iOS
+ * grouped list of every linked device. Empty orgs get a centred empty state.
  *
- * All data is live (real establishment rows, their active Google connection,
- * review ratings/timestamps, and linked devices). Add/edit/delete + the
- * /establishments/new flow are preserved; the destructive Disconnect lives on
- * the establishment detail page.
+ * All data is live (establishment rows, their active Google connection, review
+ * ratings/timestamps, linked devices). Add / Connect / detail flows unchanged;
+ * the destructive Disconnect still lives on the establishment detail page.
  */
 
 export const dynamic = "force-dynamic";
 
-/** Kit glyph for a business summary tile, tinted by list position. */
-const TILE_ICONS = [
-  "/assets/repulabs/establishments/tile-store.svg",
-  "/assets/repulabs/establishments/tile-restaurant.svg",
-  "/assets/repulabs/establishments/tile-it.svg",
-  "/assets/repulabs/establishments/tile-add.svg",
-];
+/** Stable per-business hue for the initials logo (brand-adjacent range). */
+const HUES = [248, 268, 222, 290, 200, 330];
 
 export default async function EstablishmentsPage({
   searchParams,
@@ -51,117 +34,66 @@ export default async function EstablishmentsPage({
   const { orgId } = await getOrgContext();
   const sp = (await searchParams) ?? {};
   const rows = await listEstablishmentsForCards(orgId);
-
-  if (rows.length === 0) return <EmptyEstablishments />;
-
   const cards = rows.map(deriveCardState);
 
-  // Row A — up to 3 business summary cards (mockup shows 3 + the add card).
-  const summaryCards: SummaryCard[] = cards.slice(0, 3).map((c, i) => ({
-    id: c.id,
-    name: c.name,
-    type: c.category ?? "Business",
-    tint: tintForIndex(i),
-    tileIcon: TILE_ICONS[i] ?? TILE_ICONS[0]!,
-    imageUrl: c.imageUrl,
-    avgRating: c.avgRating,
-    totalReviews: c.totalReviews,
-    trendPct: reviewTrendPct(rows[i]?.reviews ?? []),
-  }));
-
-  // Row B — every establishment as a list row.
-  const listRows = cards.map((card, i) => ({ card, tint: tintForIndex(i) }));
-
-  // Row C — all linked devices across establishments, in one strip.
   const allDevices: DeviceSummary[] = cards.flatMap((c) => c.devices);
+  const rated = cards.filter((c) => c.avgRating !== null);
+  const totalReviews = cards.reduce((n, c) => n + c.totalReviews, 0);
+  const avg =
+    rated.length > 0
+      ? cards.reduce((s, c) => s + (c.avgRating ?? 0) * c.totalReviews, 0) /
+        Math.max(
+          1,
+          rated.reduce((n, c) => n + c.totalReviews, 0),
+        )
+      : null;
+
+  const items = cards.map((card, i) => ({
+    card,
+    trendPct: reviewTrendPct(rows[i]?.reviews ?? []),
+    hue: HUES[i % HUES.length] ?? 248,
+  }));
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "My Businesses"]}>
-      <div className="est">
-        <Hero />
+      <div className="mb">
+        <header className="mb-head">
+          <div>
+            <span className="mb-eyebrow">Business Setup</span>
+            <h1 className="mb-title">My Businesses</h1>
+            <p className="mb-sub">
+              {cards.length === 0
+                ? "Every place you manage reviews for, in one spot."
+                : `${cards.length} business${cards.length === 1 ? "" : "es"} · ${totalReviews.toLocaleString()} reviews${avg !== null ? ` · ${avg.toFixed(1)} average` : ""} · ${allDevices.length} device${allDevices.length === 1 ? "" : "s"}`}
+            </p>
+          </div>
+          {cards.length > 0 && (
+            <AddBusinessModal triggerClassName="mb-pill mb-pill--pri mb-pill--lg">
+              <Plus size={16} strokeWidth={2} />
+              Add a business
+            </AddBusinessModal>
+          )}
+        </header>
 
         {/* The Google authorize route lands here when it can't resolve which
             location to connect (multi-location org, or a stale link). */}
         {sp.connect === "google" && (
-          <div
-            className="est-card"
-            role="status"
-            style={{
-              padding: "12px 16px",
-              marginBottom: 22,
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-              background: "var(--est-indigo-50)",
-              borderColor: "#c7d2fe",
-            }}
-          >
-            <Icon name="google" size={14} style={{ color: "var(--est-indigo)", flexShrink: 0 }} />
-            <span style={{ fontSize: 13, color: "var(--est-body)" }}>
-              {sp.connect_error === "no_location"
-                ? "Create your business first, then connect it to Google from its row."
-                : "Choose which business to connect use the Connect button on its row below."}
-            </span>
-          </div>
+          <output className="mb-note">
+            <Info size={16} strokeWidth={1.8} />
+            {sp.connect_error === "no_location"
+              ? "Create your business first, then connect it to Google from its card."
+              : "Choose which business to connect: use Connect Google on its card below."}
+          </output>
         )}
 
-        <SummaryCards cards={summaryCards} />
-        <BusinessList rows={listRows} />
-        <DevicesStrip devices={allDevices} />
-      </div>
-    </AppShellServer>
-  );
-}
-
-/** Shared hero: eyebrow + title + subtitle + laptop/phone illustration, with
-    the primary "Add New Business" action top-right. */
-function Hero() {
-  return (
-    <header className="est-head">
-      <div className="est-head__text">
-        <span className="est-hero__eyebrow">Businesses · Connected</span>
-        <h1 className="est-hero__title">My Establishments</h1>
-        <p className="est-hero__sub">
-          Every business you manage, its live review metrics, and the devices linked to it.
-        </p>
-      </div>
-    </header>
-  );
-}
-
-/**
- * Empty / zero state (module 13): 3 zero counters + dashed add card, a centered
- * empty block with the magnifier illustration + "No businesses added yet" +
- * CTA, and an empty devices row. Rendered only on a genuine 0-establishment
- * org (a failed fetch would throw before reaching here, so this never masks an
- * error).
- */
-function EmptyEstablishments() {
-  return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "My Businesses"]}>
-      <div className="est">
-        <Hero />
-        <SummaryCounters />
-
-        <div className="est-empty">
-          {/* biome-ignore lint/performance/noImgElement: static decorative kit SVG */}
-          <img
-            src="/assets/repulabs/establishments/empty-no-business.svg"
-            alt=""
-            aria-hidden="true"
-            className="est-empty__art"
-            width={280}
-            height={160}
-          />
-          <h2 className="est-empty__title">No businesses added yet</h2>
-          <p className="est-empty__body">
-            Add your first business to start collecting reviews, connect devices, and{" "}
-            <strong>unlock powerful insights</strong>.
-          </p>
-          <AddBusinessModal triggerClassName="est-btn est-btn--pri est-empty__cta" />
-        </div>
-
-        <DevicesStrip devices={[]} />
+        {cards.length === 0 ? (
+          <BusinessesEmpty />
+        ) : (
+          <>
+            <BusinessGrid items={items} />
+            <DeviceList devices={allDevices} />
+          </>
+        )}
       </div>
     </AppShellServer>
   );

@@ -179,7 +179,7 @@ export async function startHardwareCheckout(form: FormData): Promise<void> {
 
 /**
  * State returned by the `activateDevice` server action. Designed for the
- * `useActionState` hook in `app/activate/activate-form.tsx` — `error` is
+ * `useActionState` hook in `app/hardware/_components/activate-sheet.tsx` — `error` is
  * non-null when the action failed, `null` on success (and on success the
  * action also `redirect()`s so the page rerenders).
  */

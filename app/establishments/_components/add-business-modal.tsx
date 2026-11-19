@@ -1,54 +1,63 @@
 "use client";
 
-import { Icon, type IconName } from "@/components/shell/icon";
+import { Icon } from "@/components/shell/icon";
+import {
+  type GlassOption,
+  GlassSelect,
+  localTimezone,
+  timezoneOptions,
+} from "@/components/ui/glass-select";
 import { createEstablishment } from "@/lib/establishments/actions";
-import { type ReactNode, useEffect, useState } from "react";
+import { Building2, Clock, Globe, MapPin, Tag, X } from "lucide-react";
+import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { useFormStatus } from "react-dom";
+import "./add-business-modal.css";
 
 /**
- * Add New Business — opens the create form in a glass modal (instead of
- * navigating to /establishments/new). Posts the same `createEstablishment`
- * server action, which redirects to the new establishment on success.
+ * Add New Business — opens the create form in a frosted Apple-style sheet
+ * (instead of navigating to /establishments/new). Posts the same
+ * `createEstablishment` server action, which redirects to the new
+ * establishment on success. Dropdowns are GlassSelect (searchable for the
+ * long timezone + country lists); the timezone defaults to the browser's own.
  */
 
-const CATEGORY_OPTIONS = [
+const CATEGORY_OPTIONS: GlassOption[] = [
   "Cafe",
   "Restaurant",
   "Retail",
   "Dental",
+  "Medical",
   "Salon",
+  "Spa & Beauty",
   "Fitness",
+  "Hotel",
   "Automotive",
+  "Home Services",
   "IT Services",
   "Professional Services",
   "Other",
-] as const;
+].map((c) => ({ value: c, label: c }));
 
-const TIMEZONE_OPTIONS = [
-  "UTC",
-  "America/New_York",
-  "America/Chicago",
-  "America/Denver",
-  "America/Los_Angeles",
-  "Europe/London",
-  "Europe/Paris",
-  "Asia/Karachi",
-  "Asia/Dubai",
-  "Asia/Singapore",
-  "Australia/Sydney",
-] as const;
-
-const COUNTRY_OPTIONS = [
-  "United States",
-  "Canada",
-  "United Kingdom",
+const COUNTRY_OPTIONS: GlassOption[] = [
   "Australia",
-  "Pakistan",
-  "United Arab Emirates",
-  "Singapore",
-  "Germany",
+  "Canada",
   "France",
+  "Germany",
+  "India",
+  "Ireland",
+  "Italy",
+  "Netherlands",
+  "New Zealand",
+  "Pakistan",
+  "Saudi Arabia",
+  "Singapore",
+  "South Africa",
+  "Spain",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
   "Other",
-] as const;
+].map((c) => ({ value: c, label: c }));
 
 export function AddBusinessModal({
   triggerClassName = "est-btn est-btn--pri",
@@ -60,6 +69,8 @@ export function AddBusinessModal({
   children?: ReactNode;
 } = {}) {
   const [open, setOpen] = useState(false);
+  const zones = useMemo(() => (open ? timezoneOptions() : []), [open]);
+  const defaultZone = useMemo(() => (open ? localTimezone() : "UTC"), [open]);
 
   // Esc to close + lock background scroll while open.
   useEffect(() => {
@@ -88,93 +99,132 @@ export function AddBusinessModal({
       </button>
 
       {open && (
-        <div className="estm-overlay" role="dialog" aria-modal="true" aria-label="Add new business">
+        // biome-ignore lint/a11y/useSemanticElements: overlay dialog; a native dialog top layer would sit above the portalled dropdown menus
+        <div className="abm-overlay" role="dialog" aria-modal="true" aria-labelledby="abm-title">
           <button
             type="button"
-            className="estm-scrim"
+            className="abm-scrim"
             aria-label="Close"
             onClick={() => setOpen(false)}
           />
-          <div className="estm">
-            <div className="estm__head">
-              <div>
-                <span className="estm__eyebrow">New Business</span>
-                <h2 className="estm__title">Add New Business</h2>
-              </div>
-              <button
-                type="button"
-                className="estm__close"
-                aria-label="Close"
-                onClick={() => setOpen(false)}
-              >
-                ×
-              </button>
+          <div className="abm">
+            <button
+              type="button"
+              className="abm__close"
+              aria-label="Close"
+              onClick={() => setOpen(false)}
+            >
+              <X size={16} strokeWidth={2.2} />
+            </button>
+
+            <div className="abm__hero">
+              <span className="abm__badge" aria-hidden>
+                <Building2 size={26} strokeWidth={1.7} />
+              </span>
+              <h2 id="abm-title" className="abm__title">
+                Add a business
+              </h2>
+              <p className="abm__sub">
+                A place you want to collect and manage reviews for. You&apos;ll connect its Google
+                profile next.
+              </p>
             </div>
-            <p className="estm__sub">
-              A business you want to manage reviews for. You&apos;ll connect its Google Business
-              Profile in the next step.
-            </p>
 
-            <form action={createEstablishment} className="estm__form">
-              <div className="est-formgrid">
-                <div className="est-formgrid__full">
-                  <Field
-                    label="Name"
-                    name="name"
-                    required
-                    icon="building"
-                    placeholder="Acme Coffee Downtown"
-                  />
-                </div>
+            <form action={createEstablishment} className="abm__form">
+              <div className="abm__body">
+                <section className="abm-section" aria-labelledby="abm-sec-business">
+                  <h3 id="abm-sec-business" className="abm-section__title">
+                    Business
+                  </h3>
+                  <div className="abm-group abm-grid">
+                    <label className="abm-field abm-field--full">
+                      <span className="abm-field__lbl">
+                        Name <span className="abm-field__req">*</span>
+                      </span>
+                      <input
+                        name="name"
+                        required
+                        maxLength={120}
+                        // biome-ignore lint/a11y/noAutofocus: first field of a just-opened dialog
+                        autoFocus
+                        placeholder="Acme Coffee Downtown"
+                        className="abm-input"
+                      />
+                    </label>
+                    <div className="abm-field">
+                      <span className="abm-field__lbl">Category</span>
+                      <GlassSelect
+                        name="category"
+                        options={CATEGORY_OPTIONS}
+                        placeholder="Choose a category"
+                        icon={<Tag size={16} strokeWidth={1.8} />}
+                        ariaLabel="Category"
+                      />
+                    </div>
+                    <div className="abm-field">
+                      <span className="abm-field__lbl">Timezone</span>
+                      <GlassSelect
+                        name="timezone"
+                        options={zones}
+                        defaultValue={defaultZone}
+                        searchable
+                        searchPlaceholder="Search cities"
+                        icon={<Clock size={16} strokeWidth={1.8} />}
+                        ariaLabel="Timezone"
+                      />
+                    </div>
+                  </div>
+                </section>
 
-                <SelectField
-                  label="Category"
-                  name="category"
-                  icon="tag"
-                  placeholder="cafe / dental / salon / ..."
-                  options={CATEGORY_OPTIONS}
-                />
-                <SelectField
-                  label="Timezone"
-                  name="timezone"
-                  icon="clock"
-                  defaultValue="UTC"
-                  options={TIMEZONE_OPTIONS}
-                />
-
-                <div className="est-field est-formgrid__full">
-                  <span className="est-field__lbl">
-                    Address{" "}
-                    <span style={{ color: "var(--est-muted-2)", fontWeight: 400 }}>· Street</span>
-                  </span>
-                  <InputBase name="address_line1" icon="pin" placeholder="123 Main St" />
-                </div>
-
-                <Field label="City" name="address_city" icon="building" />
-                <Field label="Region / State" name="address_region" icon="globe" />
-
-                <Field label="Postal code" name="address_postal" icon="mail" />
-                <SelectField
-                  label="Country"
-                  name="address_country"
-                  icon="globe"
-                  placeholder="US or United States"
-                  options={COUNTRY_OPTIONS}
-                />
+                <section className="abm-section" aria-labelledby="abm-sec-address">
+                  <h3 id="abm-sec-address" className="abm-section__title">
+                    Address
+                  </h3>
+                  <div className="abm-group abm-grid">
+                    <label className="abm-field abm-field--full">
+                      <span className="abm-field__lbl">Street</span>
+                      <span className="abm-inputwrap">
+                        <MapPin size={16} strokeWidth={1.8} aria-hidden />
+                        <input
+                          name="address_line1"
+                          placeholder="123 Main St"
+                          className="abm-input"
+                        />
+                      </span>
+                    </label>
+                    <label className="abm-field">
+                      <span className="abm-field__lbl">City</span>
+                      <input name="address_city" className="abm-input" />
+                    </label>
+                    <label className="abm-field">
+                      <span className="abm-field__lbl">State / Region</span>
+                      <input name="address_region" className="abm-input" />
+                    </label>
+                    <label className="abm-field">
+                      <span className="abm-field__lbl">Postal code</span>
+                      <input name="address_postal" className="abm-input" />
+                    </label>
+                    <div className="abm-field">
+                      <span className="abm-field__lbl">Country</span>
+                      <GlassSelect
+                        name="address_country"
+                        options={COUNTRY_OPTIONS}
+                        placeholder="Choose a country"
+                        searchable
+                        searchPlaceholder="Search countries"
+                        icon={<Globe size={16} strokeWidth={1.8} />}
+                        ariaLabel="Country"
+                      />
+                    </div>
+                  </div>
+                </section>
               </div>
 
-              <div className="estm__foot">
-                <button
-                  type="button"
-                  className="est-btn est-btn--ghost"
-                  onClick={() => setOpen(false)}
-                >
+              <div className="abm__foot">
+                <button type="button" className="abm-btn" onClick={() => setOpen(false)}>
                   Cancel
                 </button>
-                <button type="submit" className="est-btn est-btn--pri">
-                  <Icon name="plus" size={16} />
-                  Create business
-                </button>
+                <SubmitButton />
               </div>
             </form>
           </div>
@@ -184,105 +234,11 @@ export function AddBusinessModal({
   );
 }
 
-// ── Fields (mirror /establishments/new) ──────────────────────────────
-
-function InputBase({
-  name,
-  icon,
-  placeholder,
-  required,
-  defaultValue,
-}: {
-  name: string;
-  icon: IconName;
-  placeholder?: string;
-  required?: boolean;
-  defaultValue?: string;
-}) {
+function SubmitButton() {
+  const { pending } = useFormStatus();
   return (
-    <span className="est-inputwrap">
-      <span className="est-inputwrap__icon" aria-hidden="true">
-        <Icon name={icon} size={16} />
-      </span>
-      <input
-        type="text"
-        name={name}
-        required={required}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        className="est-input"
-      />
-    </span>
-  );
-}
-
-function Field({
-  label,
-  name,
-  icon,
-  required,
-  placeholder,
-  defaultValue,
-}: {
-  label: string;
-  name: string;
-  icon: IconName;
-  required?: boolean;
-  placeholder?: string;
-  defaultValue?: string;
-}) {
-  return (
-    <label className="est-field">
-      <span className="est-field__lbl">
-        {label}
-        {required && <span className="est-field__req"> *</span>}
-      </span>
-      <InputBase
-        name={name}
-        icon={icon}
-        placeholder={placeholder}
-        required={required}
-        defaultValue={defaultValue}
-      />
-    </label>
-  );
-}
-
-function SelectField({
-  label,
-  name,
-  icon,
-  placeholder,
-  defaultValue,
-  options,
-}: {
-  label: string;
-  name: string;
-  icon: IconName;
-  placeholder?: string;
-  defaultValue?: string;
-  options: readonly string[];
-}) {
-  return (
-    <label className="est-field">
-      <span className="est-field__lbl">{label}</span>
-      <span className="est-inputwrap">
-        <span className="est-inputwrap__icon" aria-hidden="true">
-          <Icon name={icon} size={16} />
-        </span>
-        <select name={name} className="est-input" defaultValue={defaultValue ?? ""}>
-          {placeholder && (
-            <option value="" disabled>
-              {placeholder}
-            </option>
-          )}
-          {options.map((o) => (
-            <option key={o} value={o}>
-              {o}
-            </option>
-          ))}
-        </select>
-      </span>
-    </label>
+    <button type="submit" className="abm-btn abm-btn--pri" disabled={pending}>
+      {pending ? "Creating…" : "Create business"}
+    </button>
   );
 }

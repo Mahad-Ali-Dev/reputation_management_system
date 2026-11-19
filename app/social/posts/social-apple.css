@@ -1,0 +1,530 @@
+/* ============================================================
+   social-apple.css: Apple look for Social Studio (composer, calendar, post
+   history, content library, bulk). Same language as the Device Manager:
+   system greys (#1d1d1f / #6e6e73 / #86868b), borderless white cards with big
+   radii and whisper shadows, big light numbers, an iOS segmented control for
+   the section tabs, grey-fill fields, pill buttons, dot+text status, one
+   accent colour (brand ultramarine) for actions only. Layout unchanged.
+   Imported LAST, after social-compose.css + social-compose-glass.css.
+   ============================================================ */
+
+.app--glass .sk-page {
+  --ap-ink: #1d1d1f;
+  --ap-2: #6e6e73;
+  --ap-3: #86868b;
+  --ap-fill: rgba(120, 120, 128, 0.12);
+  --ap-fill-2: rgba(120, 120, 128, 0.08);
+  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-card: rgba(255, 255, 255, 0.82);
+  --ap-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05);
+
+  /* re-map the kit tokens onto Apple greys + brand accent */
+  --pri: var(--glass-accent, #4b3bff);
+  --pri-50: rgba(75, 59, 255, 0.08);
+  --pri-100: rgba(75, 59, 255, 0.14);
+  --pri-700: var(--glass-accent-hover, #3a2be0);
+  --sk-surface: #fff;
+  --sk-soft: #f5f5f7;
+  --sk-line: var(--ap-sep);
+  --sk-divider: rgba(60, 60, 67, 0.08);
+  --sk-ink: var(--ap-ink);
+  --sk-ink-2: #3a3a3c;
+  --sk-muted: var(--ap-2);
+  --sk-pri: var(--glass-accent, #4b3bff);
+  --sk-pri-soft: rgba(75, 59, 255, 0.08);
+  --sk-grad: linear-gradient(var(--glass-accent, #4b3bff), var(--glass-accent, #4b3bff));
+  --sk-shadow: var(--ap-shadow);
+  --sk-shadow-btn: none;
+  --sk-published: #34c759;
+  --sk-published-soft: rgba(52, 199, 89, 0.12);
+  --sk-scheduled: var(--glass-accent, #4b3bff);
+  --sk-scheduled-soft: rgba(75, 59, 255, 0.1);
+  --sk-draft: #ff9500;
+  --sk-draft-soft: rgba(255, 149, 0, 0.12);
+  color: var(--ap-ink);
+}
+
+/* ---- page header: gradient eyebrow, big light title ---- */
+.app--glass .sk-page .ph {
+  align-items: flex-end;
+}
+.app--glass .sk-page .ph__kicker {
+  padding: 0;
+  margin-bottom: 8px;
+  background: none;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0.01em;
+  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.app--glass .sk-page .ph__kicker::before {
+  display: none;
+}
+.app--glass .sk-page .ph__title {
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--ap-ink);
+}
+.app--glass .sk-page .ph__sub {
+  margin-top: 12px;
+  max-width: 560px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ap-2);
+}
+
+/* ---- buttons: Apple pills ---- */
+.app--glass .sk-page .btn,
+.app--glass .sk-page .ph .sk-hbtn {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 13.5px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.app--glass .sk-page .btn:not(.btn--pri) {
+  border: 0;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+}
+.app--glass .sk-page .btn:not(.btn--pri):hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .sk-page .btn--pri {
+  border: 0;
+  background: var(--glass-accent, #4b3bff);
+  box-shadow: none;
+}
+.app--glass .sk-page .btn--pri:hover {
+  filter: none;
+  background: var(--glass-accent-hover, #3a2be0);
+  box-shadow: none;
+}
+.app--glass .sk-page .sk-btn-out {
+  height: 34px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--glass-accent, #4b3bff);
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-btn-out:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+
+/* ---- KPI cards: big light numbers, no decorative art ---- */
+.app--glass .sk-page .sk-kpi {
+  min-height: 0;
+  padding: 22px 24px;
+  border: 0;
+  border-radius: 22px;
+  background: var(--ap-card);
+  box-shadow: var(--ap-shadow);
+  flex-direction: column;
+  gap: 14px;
+}
+.app--glass .sk-page .sk-kpi__art {
+  display: none;
+}
+.app--glass .sk-page .sk-kpi__tile {
+  width: auto;
+  height: auto;
+  margin: 0;
+  border-radius: 0;
+  background: none;
+}
+.app--glass .sk-page .sk-kpi__tile svg {
+  width: 20px;
+  height: 20px;
+}
+.app--glass .sk-page .sk-kpi__label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .sk-page .sk-kpi__value {
+  margin-top: 6px;
+  font-size: 34px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+}
+.app--glass .sk-page .sk-kpi__delta,
+.app--glass .sk-page .sk-kpi__helper {
+  height: auto;
+  margin-top: 8px;
+  padding: 0;
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-kpi__delta--green {
+  color: #248a3d;
+}
+.app--glass .sk-page .sk-kpi__delta--orange,
+.app--glass .sk-page .sk-kpi__delta--down {
+  color: #c93400;
+}
+.app--glass .sk-page .sk-kpi__helper {
+  color: var(--ap-3);
+}
+
+/* ---- section tabs: iOS segmented control ---- */
+.app--glass .sk-page .sk-tabs {
+  display: inline-flex;
+  gap: 0;
+  margin-bottom: 22px;
+  padding: 2px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.app--glass .sk-page .sk-tabs__t {
+  gap: 7px;
+  margin: 0;
+  padding: 7px 16px;
+  border: 0;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ap-ink);
+}
+.app--glass .sk-page .sk-tabs__t svg {
+  color: var(--ap-2);
+}
+.app--glass .sk-page .sk-tabs__t.is-active {
+  background: #fff;
+  color: var(--ap-ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+.app--glass .sk-page .sk-tabs__t.is-active svg {
+  color: var(--glass-accent, #4b3bff);
+}
+
+/* ---- cards: borderless white, big radius ---- */
+.app--glass .sk-page .sk-card,
+.app--glass .sk-page .sk-cal-card,
+.app--glass .sk-page .sk-week {
+  border: 0;
+  border-radius: 22px;
+  background: var(--ap-card);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .sk-page .sk-card__head {
+  padding: 20px 24px 14px;
+  border-bottom: 0;
+}
+.app--glass .sk-page .sk-card__title {
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.app--glass .sk-page .sk-card__sub {
+  font-size: 13.5px;
+  color: var(--ap-2);
+}
+
+/* ---- fields: grey fill, white on focus ---- */
+.app--glass .sk-page .sk-input,
+.app--glass .sk-page .sk-select,
+.app--glass .sk-page .sk-textarea {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--ap-fill-2);
+  font-weight: 400;
+  font-size: 14px;
+}
+.app--glass .sk-page .sk-input:focus,
+.app--glass .sk-page .sk-select:focus,
+.app--glass .sk-page .sk-textarea:focus {
+  border-color: rgba(75, 59, 255, 0.45);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
+}
+
+/* ---- segmented controls inside cards ---- */
+.app--glass .sk-page .sk-seg {
+  padding: 2px;
+  border: 0;
+  border-radius: 9px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.app--glass .sk-page .sk-seg__b {
+  border-radius: 7px;
+  font-weight: 500;
+  color: var(--ap-ink);
+}
+.app--glass .sk-page .sk-seg__b.is-active {
+  background: #fff;
+  color: var(--ap-ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ---- chips: grey, ink when active ---- */
+.app--glass .sk-page .sk-chip {
+  border: 0;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-chip:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .sk-page .sk-chip.is-active {
+  background: var(--ap-ink);
+  color: #fff;
+}
+
+/* ---- platform picker + channels: inset rows ---- */
+.app--glass .sk-page .sk-platform,
+.app--glass .sk-page .sk-channel {
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: var(--ap-fill-2);
+}
+.app--glass .sk-page .sk-platform:hover,
+.app--glass .sk-page .sk-channel:hover:not(:disabled) {
+  border-color: transparent;
+  background: rgba(120, 120, 128, 0.14);
+}
+.app--glass .sk-page .sk-platform.is-on,
+.app--glass .sk-page .sk-channel.is-on {
+  border-color: rgba(75, 59, 255, 0.4);
+  background: rgba(75, 59, 255, 0.06);
+}
+
+/* ---- post history: inset list ---- */
+.app--glass .sk-page .sk-table__head {
+  height: 44px;
+  border-bottom: 1px solid var(--ap-sep);
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-2);
+}
+.app--glass .sk-page .sk-table__row {
+  border-bottom: 1px solid var(--ap-sep);
+}
+.app--glass .sk-page .sk-table__row:hover {
+  background: rgba(120, 120, 128, 0.05);
+}
+.app--glass .sk-page .sk-post-cell__thumb,
+.app--glass .sk-page .sk-post-cell__thumb--ph {
+  border: 0;
+  border-radius: 12px;
+  background: var(--ap-fill-2);
+}
+.app--glass .sk-page .sk-post-cell__title {
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-status {
+  height: auto;
+  padding: 0;
+  background: none !important;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-ink) !important;
+}
+.app--glass .sk-page .sk-status__dot {
+  width: 8px;
+  height: 8px;
+}
+
+/* ---- calendar ---- */
+.app--glass .sk-page .sk-cal-navbtn,
+.app--glass .sk-page .sk-cal-today {
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+}
+.app--glass .sk-page .sk-cal-today {
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-cal-navbtn:hover,
+.app--glass .sk-page .sk-cal-today:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .sk-page .sk-cal-month {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.app--glass .sk-page .sk-cal-weekhead {
+  background: none;
+  border-bottom: 1px solid var(--ap-sep);
+}
+.app--glass .sk-page .sk-cal-weekhead span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-3);
+}
+.app--glass .sk-page .sk-cal-cell {
+  background: transparent;
+  border-color: rgba(60, 60, 67, 0.08);
+}
+.app--glass .sk-page .sk-cal-cell--out {
+  background: rgba(120, 120, 128, 0.04);
+}
+.app--glass .sk-page .sk-cal-daynum {
+  font-weight: 500;
+  color: var(--ap-ink);
+}
+.app--glass .sk-page .sk-cal-daynum--today {
+  background: var(--glass-accent, #4b3bff);
+  color: #fff;
+  font-weight: 600;
+}
+.app--glass .sk-page .sk-chip-event {
+  border: 0;
+  border-radius: 7px;
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-weekcol {
+  border-color: rgba(60, 60, 67, 0.08);
+}
+.app--glass .sk-page .sk-weekcard {
+  border: 0;
+  border-radius: 14px;
+  background: var(--ap-fill-2);
+}
+.app--glass .sk-page .sk-weekcard:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(120, 120, 128, 0.14);
+}
+
+/* ---- creative ideas + library ---- */
+.app--glass .sk-page .sk-idea {
+  padding: 10px 10px 14px;
+  border: 0;
+  border-radius: 18px;
+  background: var(--ap-fill-2);
+}
+.app--glass .sk-page .sk-idea:hover {
+  transform: none;
+  box-shadow: none;
+  background: rgba(120, 120, 128, 0.14);
+}
+.app--glass .sk-page .sk-idea__art {
+  border-radius: 12px;
+  background: #fff;
+}
+.app--glass .sk-page .sk-idea__name {
+  font-weight: 600;
+}
+.app--glass .sk-page .sk-idea__sub {
+  color: var(--ap-2);
+}
+.app--glass .sk-page .sk-dropzone {
+  border: 1.5px dashed rgba(60, 60, 67, 0.2);
+  border-radius: 18px;
+  background: rgba(120, 120, 128, 0.04);
+}
+.app--glass .sk-page .sk-asset {
+  border: 0;
+  border-radius: 18px;
+  background: var(--ap-card);
+  box-shadow: var(--ap-shadow);
+}
+
+/* ---- hashtag box: same grey field as the inputs ---- */
+.app--glass .sk-page .sk-tagbox {
+  border-color: transparent !important;
+  border-radius: 12px !important;
+  background: var(--ap-fill-2) !important;
+}
+.app--glass .sk-page .sk-tagbox:focus-within {
+  border-color: rgba(75, 59, 255, 0.45) !important;
+  background: #fff !important;
+  box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
+}
+.app--glass .sk-page .sk-tagbox .sk-chip.is-active {
+  background: rgba(75, 59, 255, 0.1);
+  color: var(--glass-accent, #4b3bff);
+}
+
+/* ---- composer mini calendar: Apple month view (number + dot) ---- */
+.app--glass .sk-page .sk-minical {
+  border-top: 1px solid var(--ap-sep);
+}
+.app--glass .sk-page .sk-minical__title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.app--glass .sk-page .sk-minical__link {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.app--glass .sk-page .sk-minical__grid {
+  max-width: 340px;
+  margin: 0 auto;
+  gap: 2px 4px;
+}
+.app--glass .sk-page .sk-minical__dow {
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: none;
+  color: var(--ap-3);
+  padding-bottom: 6px;
+}
+.app--glass .sk-page .sk-minical__day,
+.app--glass .sk-page .sk-minical__day--scheduled,
+.app--glass .sk-page .sk-minical__day--published {
+  position: relative;
+  aspect-ratio: auto;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: none;
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--ap-ink);
+}
+.app--glass .sk-page a.sk-minical__day:hover {
+  background: var(--ap-fill-2);
+}
+.app--glass .sk-page .sk-minical__day--scheduled::after,
+.app--glass .sk-page .sk-minical__day--published::after {
+  content: "";
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  margin-left: -2.5px;
+  border-radius: 999px;
+  background: var(--sk-scheduled);
+}
+.app--glass .sk-page .sk-minical__day--published::after {
+  background: var(--sk-published);
+}
+.app--glass .sk-page .sk-minical__day--today,
+.app--glass .sk-page .sk-minical__day--scheduled.sk-minical__day--today,
+.app--glass .sk-page .sk-minical__day--published.sk-minical__day--today {
+  width: 36px;
+  justify-self: center;
+  background: var(--glass-accent, #4b3bff);
+  color: #fff;
+  font-weight: 600;
+  box-shadow: none;
+}
+.app--glass .sk-page .sk-minical__day--today::after {
+  background: #fff;
+}
+.app--glass .sk-page .sk-minical__legend {
+  justify-content: center;
+  font-size: 11.5px;
+}

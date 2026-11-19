@@ -1,16 +1,38 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
+import { LazyFrog } from "@/components/ui/lazy-frog";
 import {
   addKnowledgeAnswer,
   dismissKnowledgeGap,
   teachKnowledgeGap,
 } from "@/lib/ai/knowledge-gap-actions";
 import type { KnowledgeGapRow } from "@/lib/ai/knowledge-gaps";
-import Image from "next/image";
+import {
+  ArrowUp,
+  Building2,
+  CalendarCheck,
+  Check,
+  ChevronDown,
+  ChevronRight,
+  CircleHelp,
+  GraduationCap,
+  Lightbulb,
+  type LucideIcon,
+  MessageCircleQuestion,
+  Plus,
+  RotateCcw,
+  ScrollText,
+  Sparkles,
+  Tag,
+  ThumbsDown,
+  ThumbsUp,
+  TriangleAlert,
+  X,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import "@/components/ui/glass-sheet.css";
 
 /**
  * Test tab — kit "Train your AI agent" console.
@@ -28,8 +50,6 @@ import { useRef, useState } from "react";
  * "Questions to teach" + "Insights" are bound to the real open knowledge gaps.
  */
 
-const ASSET = "/assets/repulabs/ai-kb";
-
 type Turn = {
   id: string;
   role: "user" | "assistant";
@@ -41,51 +61,21 @@ type Turn = {
   rated?: "up" | "down";
 };
 
-const PROMPT_CHIPS = [
-  "What are your business hours?",
-  "Do you offer any discounts?",
-  "What is your refund policy?",
-  "How can I contact support?",
-  "Can I book an appointment?",
-];
-
-/**
- * "Or try asking about" topic chips — each uses a real kit AI-agent
- * illustration and seeds the composer with a representative question.
- * `blend` flags the one piece of art that ships a baked white background.
- */
-const TOPIC_CHIPS: Array<{
-  icon: string;
-  label: string;
-  question: string;
-  blend?: boolean;
-}> = [
+/** "Try a topic" chips: each seeds the tester with a representative question. */
+const TOPIC_CHIPS: Array<{ icon: LucideIcon; label: string; question: string }> = [
+  { icon: Building2, label: "About you", question: "Tell me about your business." },
   {
-    icon: "test-topic-business.svg",
-    label: "Business information",
-    question: "Tell me about your business.",
-  },
-  {
-    icon: "test-topic-policies.svg",
-    label: "Policies & procedures",
+    icon: ScrollText,
+    label: "Policies",
     question: "What is your refund and cancellation policy?",
   },
   {
-    icon: "test-topic-pricing.svg",
+    icon: Tag,
     label: "Services & pricing",
     question: "What services do you offer and how much do they cost?",
   },
-  {
-    icon: "test-topic-appointments.svg",
-    label: "Appointments & support",
-    question: "How do I book an appointment?",
-  },
-  {
-    icon: "test-topic-inquiries.svg",
-    label: "General inquiries",
-    question: "What are your business hours?",
-    blend: true,
-  },
+  { icon: CalendarCheck, label: "Appointments", question: "How do I book an appointment?" },
+  { icon: MessageCircleQuestion, label: "Hours", question: "What are your business hours?" },
 ];
 
 export function TestConsole({
@@ -199,583 +189,289 @@ export function TestConsole({
   const empty = turns.length === 0;
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <div className="akb-test-top">
-        {/* Train your AI agent */}
-        <section
-          className="akb-card akb-card__pad"
-          style={{ display: "flex", flexDirection: "column", minHeight: 420 }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "flex-start",
-              justifyContent: "space-between",
-              gap: 12,
-              flexWrap: "wrap",
-            }}
-          >
-            <div style={{ display: "flex", gap: 10, minWidth: 0 }}>
-              <span
-                style={{
-                  width: 30,
-                  height: 30,
-                  borderRadius: 8,
-                  background: "var(--akb-soft)",
-                  color: "var(--akb-primary)",
-                  display: "grid",
-                  placeItems: "center",
-                  flexShrink: 0,
-                }}
-                aria-hidden="true"
-              >
-                <Icon name="sparkle" size={16} />
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <h3 className="akb-card__title">Train your AI agent</h3>
-                <p className="akb-card__sub">
-                  Ask questions to see how your AI agent responds based on your knowledge base.
-                </p>
-              </div>
+    <div className="kb-stack">
+      <div className="kb-test">
+        {/* Chat: iMessage-style tester */}
+        <section className="kb-card kb-chat" aria-labelledby="kb-chat-title">
+          <header className="kb-card__head">
+            <div>
+              <h2 id="kb-chat-title" className="kb-card__title">
+                Ask your AI
+              </h2>
+              <p className="kb-card__sub">
+                Ask what your customers ask. Rate each answer to teach it.
+              </p>
             </div>
-            <button
-              type="button"
-              className="akb-btn-outline"
-              onClick={clear}
-              disabled={empty}
-              style={{ height: 32 }}
-            >
-              <Icon name="refresh" size={13} />
+            <button type="button" className="kb-pill kb-pill--sm" onClick={clear} disabled={empty}>
+              <RotateCcw size={14} strokeWidth={1.8} />
               Clear
             </button>
-          </div>
+          </header>
 
-          {/* conversation / empty state */}
-          <div
-            ref={scrollRef}
-            style={{
-              flex: 1,
-              overflowY: "auto",
-              margin: "14px 0",
-              display: "flex",
-              flexDirection: "column",
-              gap: 12,
-              maxHeight: 360,
-            }}
-          >
+          <div ref={scrollRef} className="kb-chat__scroll">
             {empty ? (
-              <div style={{ margin: "auto", textAlign: "center", maxWidth: 320, padding: "8px 0" }}>
-                <Image
-                  src={`${ASSET}/test-robot.svg`}
-                  alt=""
-                  width={150}
-                  height={100}
-                  unoptimized
-                  aria-hidden="true"
-                  style={{ width: 150, height: "auto", margin: "0 auto" }}
-                />
-                <div
-                  style={{ fontSize: 15, fontWeight: 700, color: "var(--akb-ink)", marginTop: 8 }}
-                >
-                  No questions asked yet
-                </div>
-                <div
-                  style={{
-                    fontSize: 12.5,
-                    color: "var(--akb-muted)",
-                    marginTop: 4,
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Start asking questions to test how your AI agent responds using your knowledge
-                  base.
-                </div>
+              <div className="kb-chat__empty">
+                <LazyFrog size={120} name="Repulabs AI" state="idle" followPointer />
+                <div className="kb-empty__t">Ask it anything</div>
+                <p className="kb-empty__d">
+                  Pick a topic below or type your own question to see how your AI answers.
+                </p>
               </div>
             ) : (
               turns.map((t) => (
-                <div
-                  key={t.id}
-                  style={{
-                    display: "flex",
-                    justifyContent: t.role === "user" ? "flex-end" : "flex-start",
-                  }}
-                >
-                  <div style={{ maxWidth: "82%" }}>
-                    <div
-                      style={{
-                        padding: "10px 14px",
-                        borderRadius: 14,
-                        fontSize: 13,
-                        lineHeight: 1.55,
-                        whiteSpace: "pre-wrap",
-                        background: t.role === "user" ? "var(--akb-primary)" : "#f5f6fb",
-                        color: t.role === "user" ? "#fff" : "var(--akb-ink)",
-                        border: t.role === "user" ? "none" : "1px solid var(--akb-line)",
-                      }}
-                    >
-                      {t.text}
-                    </div>
-                    {t.role === "assistant" && (
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          marginTop: 6,
-                          alignItems: "center",
-                          flexWrap: "wrap",
-                        }}
+                <div key={t.id} className={`kb-msg kb-msg--${t.role}`}>
+                  <div className="kb-msg__bubble">{t.text}</div>
+                  {t.role === "assistant" && (
+                    <div className="kb-msg__meta">
+                      {typeof t.confidence === "number" && (
+                        <span
+                          className={`kb-conf ${t.confidence >= 0.7 ? "is-ok" : t.confidence >= 0.4 ? "is-mid" : "is-low"}`}
+                        >
+                          {Math.round(t.confidence * 100)}% confident
+                        </span>
+                      )}
+                      <button
+                        type="button"
+                        aria-label="Good answer"
+                        onClick={() => rate(t, "up")}
+                        className={`kb-rate${t.rated === "up" ? " is-up" : ""}`}
                       >
-                        {typeof t.confidence === "number" && (
-                          <span
-                            className={`akb-pill ${t.confidence >= 0.7 ? "akb-pill--success" : t.confidence >= 0.4 ? "akb-pill--warning" : ""}`}
-                            style={{
-                              fontSize: 10,
-                              minHeight: 20,
-                              color: t.confidence < 0.4 ? "#e14d62" : undefined,
-                              background: t.confidence < 0.4 ? "#fdeaec" : undefined,
-                            }}
-                          >
-                            {Math.round(t.confidence * 100)}% confident
-                          </span>
-                        )}
-                        <button
-                          type="button"
-                          aria-label="Good answer"
-                          onClick={() => rate(t, "up")}
-                          className="akb-icon-btn"
-                          style={{ color: t.rated === "up" ? "var(--akb-success)" : undefined }}
-                        >
-                          <Icon name="checkCircle" size={13} />
-                        </button>
-                        <button
-                          type="button"
-                          aria-label="Bad answer teach the AI"
-                          onClick={() => rate(t, "down")}
-                          className="akb-icon-btn"
-                          style={{ color: t.rated === "down" ? "#e14d62" : undefined }}
-                        >
-                          <Icon name="xCircle" size={13} />
-                        </button>
-                        {t.rated === "down" && (
-                          <span style={{ fontSize: 11, color: "var(--akb-muted)" }}>
-                            Added to Questions to teach →
-                          </span>
-                        )}
-                      </div>
-                    )}
-                  </div>
+                        <ThumbsUp size={14} strokeWidth={1.8} />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Bad answer, teach the AI"
+                        onClick={() => rate(t, "down")}
+                        className={`kb-rate${t.rated === "down" ? " is-down" : ""}`}
+                      >
+                        <ThumbsDown size={14} strokeWidth={1.8} />
+                      </button>
+                      {t.rated === "down" && (
+                        <span className="kb-msg__note">Added to Questions to teach</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))
             )}
             {pending && (
-              <div style={{ display: "flex", justifyContent: "flex-start" }}>
-                <span className="akb-pill akb-pill--lav" style={{ fontSize: 12 }}>
-                  <Icon name="refresh" size={12} /> thinking…
-                </span>
+              <div className="kb-msg kb-msg--assistant">
+                <div className="kb-msg__bubble kb-typing" aria-label="Thinking">
+                  <span />
+                  <span />
+                  <span />
+                </div>
               </div>
             )}
           </div>
 
           {error && (
-            <div
-              role="alert"
-              className="akb-pill"
-              style={{
-                background: "#fdeaec",
-                color: "#e14d62",
-                whiteSpace: "normal",
-                height: "auto",
-                padding: "8px 12px",
-                marginBottom: 8,
-              }}
-            >
-              <Icon name="alert" size={12} />
+            <p className="kb-alert" role="alert">
+              <TriangleAlert size={15} strokeWidth={1.8} />
               {error}
-            </div>
+            </p>
           )}
 
-          {/* "Or try asking about" — colorful kit topic chips */}
-          <div className="akb-try-label">Or try asking about</div>
-          <div className="akb-topics">
-            {TOPIC_CHIPS.map((t) => (
-              <button
-                key={t.label}
-                type="button"
-                className="akb-topic"
-                onClick={() => void send(t.question)}
-                disabled={pending}
-                title={t.question}
-              >
-                <span
-                  className={`akb-topic__icon ${t.blend ? "akb-topic__icon--blend" : ""}`}
-                  aria-hidden="true"
+          <div className="kb-topics">
+            {TOPIC_CHIPS.map((t) => {
+              const TIcon = t.icon;
+              return (
+                <button
+                  key={t.label}
+                  type="button"
+                  className="kb-topic"
+                  onClick={() => void send(t.question)}
+                  disabled={pending}
+                  title={t.question}
                 >
-                  <Image src={`${ASSET}/${t.icon}`} alt="" width={30} height={30} unoptimized />
-                </span>
-                <span className="akb-topic__t">{t.label}</span>
-              </button>
-            ))}
+                  <TIcon size={15} strokeWidth={1.8} aria-hidden="true" />
+                  {t.label}
+                </button>
+              );
+            })}
           </div>
 
-          {/* prompt chips */}
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: 10 }}>
-            {PROMPT_CHIPS.map((c) => (
-              <button
-                key={c}
-                type="button"
-                className="akb-sq"
-                style={{ width: "auto", borderRadius: 999, padding: "7px 12px" }}
-                onClick={() => setInput(c)}
-                disabled={pending}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-
-          {/* composer */}
           <form
+            className="kb-composer"
             onSubmit={(e) => {
               e.preventDefault();
               void send(input);
             }}
-            style={{ display: "flex", gap: 8 }}
           >
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your question here…"
+              placeholder="Ask a question…"
               disabled={pending}
               aria-label="Ask the AI a test question"
-              style={{
-                flex: 1,
-                height: 40,
-                padding: "0 14px",
-                borderRadius: 8,
-                border: "1px solid var(--akb-line)",
-                fontSize: 13,
-                color: "var(--akb-ink)",
-                background: "#fff",
-                outline: "none",
-              }}
+              className="kb-composer__input"
             />
-            <button type="submit" className="akb-btn-primary" disabled={pending || !input.trim()}>
-              <Image
-                src={`${ASSET}/test-send.svg`}
-                alt=""
-                width={16}
-                height={16}
-                unoptimized
-                aria-hidden="true"
-                className="akb-send-illo"
-              />
-              Send
+            <button
+              type="submit"
+              className="kb-composer__send"
+              disabled={pending || !input.trim()}
+              aria-label="Send"
+            >
+              <ArrowUp size={18} strokeWidth={2.4} />
             </button>
           </form>
-
-          <div className="akb-callout" style={{ marginTop: 12 }}>
-            <Image
-              src={`${ASSET}/test-tips.svg`}
-              alt=""
-              width={18}
-              height={18}
-              unoptimized
-              aria-hidden="true"
-            />
-            <span>Tip: Be specific for more accurate and relevant responses.</span>
-          </div>
         </section>
 
         {/* Suggested questions */}
-        <aside className="akb-card akb-card__pad">
-          <h3 className="akb-card__title">Suggested questions</h3>
-          <div className="akb-sq__list">
+        <aside className="kb-card kb-card--flush" aria-labelledby="kb-sugg-title">
+          <h2 id="kb-sugg-title" className="kb-group-title">
+            <Lightbulb size={16} strokeWidth={1.8} /> Try these
+          </h2>
+          <ul className="kb-list kb-list--inset kb-list--tight">
             {suggestions.map((s) => (
-              <button
-                key={s}
-                type="button"
-                className="akb-sq"
-                onClick={() => void send(s)}
-                disabled={pending}
-              >
-                <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {s}
-                </span>
-                <Icon name="chevR" size={13} className="akb-sq__chev" />
-              </button>
+              <li key={s}>
+                <button
+                  type="button"
+                  className="kb-list__row"
+                  onClick={() => void send(s)}
+                  disabled={pending}
+                >
+                  <span className="kb-list__text">
+                    <span className="kb-list__t kb-list__t--reg">{s}</span>
+                  </span>
+                  <ChevronRight size={16} strokeWidth={2} className="kb-list__chev" />
+                </button>
+              </li>
             ))}
-          </div>
-          <div className="akb-callout">
-            <Image
-              src={`${ASSET}/test-info.svg`}
-              alt=""
-              width={18}
-              height={18}
-              unoptimized
-              aria-hidden="true"
-            />
-            <span>
-              Try a question or rephrase above to test how well your AI agent understands and
-              responds based on your knowledge base.
-            </span>
-          </div>
+          </ul>
         </aside>
       </div>
 
-      {/* Recent test performance (this session) */}
-      <section className="akb-card akb-card__pad">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
+      {/* This session's results */}
+      <section className="kb-card" aria-labelledby="kb-perf-title">
+        <header className="kb-card__head">
           <div>
-            <h3 className="akb-card__title">Recent test performance</h3>
-            <p className="akb-card__sub">
-              Overview of your AI agent performance in this testing session.
-            </p>
+            <h2 id="kb-perf-title" className="kb-card__title">
+              This session
+            </h2>
+            <p className="kb-card__sub">How your AI did on the questions you just asked.</p>
           </div>
-          <span className="akb-pill akb-pill--lav">This session</span>
-        </div>
-        <div className="akb-perf">
-          <PerfCell icon="test-total.svg" tone="success" value={totalTests} label="Total tests" />
-          <PerfCell
-            icon="test-answered.svg"
-            tone="primary"
-            value={answered}
-            label="Answered correctly"
-            sub={`${pct(answered)} accuracy`}
-          />
-          <PerfCell
-            icon="test-partial.svg"
-            tone="warning"
-            value={partial}
-            label="Partially correct"
-            sub={pct(partial)}
-          />
-          <PerfCell
-            icon="test-notanswered.svg"
-            tone="danger"
-            value={couldnt}
-            label="Couldn't answer"
-            sub={pct(couldnt)}
-          />
+        </header>
+        <div className="kb-perf">
+          <PerfCell tone="ink" value={totalTests} label="Questions asked" />
+          <PerfCell tone="ok" value={answered} label="Answered well" sub={pct(answered)} />
+          <PerfCell tone="mid" value={partial} label="Partly right" sub={pct(partial)} />
+          <PerfCell tone="bad" value={couldnt} label="Couldn't answer" sub={pct(couldnt)} />
         </div>
       </section>
 
       {/* Questions to teach (real open gaps) */}
-      <section id="akb-teach-section" className="akb-card akb-card__pad">
-        <div
-          style={{
-            display: "flex",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
-            gap: 12,
-            flexWrap: "wrap",
-          }}
-        >
+      <section id="akb-teach-section" className="kb-card" aria-labelledby="kb-teach-title">
+        <header className="kb-card__head">
           <div>
-            <h3 className="akb-card__title">Questions to teach ({openGaps.length})</h3>
-            <p className="akb-card__sub">
-              Add questions and answers to improve your AI agent&apos;s knowledge and response
-              accuracy.
+            <h2 id="kb-teach-title" className="kb-card__title">
+              Questions to teach <span className="kb-count">{openGaps.length}</span>
+            </h2>
+            <p className="kb-card__sub">
+              Questions your AI couldn&apos;t answer well. Give it the right answer once and it
+              remembers.
             </p>
           </div>
-          <button
-            type="button"
-            className="akb-btn-outline"
-            style={{ height: 34 }}
-            onClick={() => setTeachModal("add")}
-          >
-            <Icon name="plus" size={14} />
+          <button type="button" className="kb-pill" onClick={() => setTeachModal("add")}>
+            <Plus size={15} strokeWidth={2} />
             Add question
           </button>
-        </div>
+        </header>
 
         {openGaps.length === 0 ? (
-          <div className="akb-teach-empty">
-            <Image
-              src={`${ASSET}/test-robot.svg`}
-              alt=""
-              width={90}
-              height={60}
-              unoptimized
-              aria-hidden="true"
-              style={{ width: 90, height: "auto" }}
-            />
-            <div style={{ fontSize: 13, fontWeight: 700, color: "var(--akb-ink)" }}>
-              No questions added yet
-            </div>
-            <div
-              style={{ fontSize: 12, color: "var(--akb-muted)", maxWidth: 360, lineHeight: 1.5 }}
-            >
-              Rate a tester answer thumbs-down, or add real questions and accurate answers your AI
-              agent can learn from.
-            </div>
-            <button
-              type="button"
-              className="akb-btn-outline"
-              style={{
-                marginTop: 6,
-                color: "var(--akb-primary)",
-                borderColor: "var(--akb-hero-border)",
-              }}
-              onClick={() => setTeachModal("add")}
-            >
-              <Icon name="plus" size={14} />
+          <div className="kb-empty">
+            <span className="kb-empty__icon" aria-hidden="true">
+              <GraduationCap size={24} strokeWidth={1.6} />
+            </span>
+            <div className="kb-empty__t">Nothing to teach right now</div>
+            <p className="kb-empty__d">
+              Thumbs-down an answer above, or add a question and its answer yourself.
+            </p>
+            <button type="button" className="kb-pill" onClick={() => setTeachModal("add")}>
               Add your first question
             </button>
           </div>
         ) : (
-          <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+          <ul className="kb-list kb-list--inset">
             {openGaps.slice(0, 5).map((g) => (
-              <button
-                key={g.id}
-                type="button"
-                onClick={() => setTeachModal(g)}
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: 12,
-                  padding: "10px 14px",
-                  border: "1px solid var(--akb-line)",
-                  borderRadius: 10,
-                  textDecoration: "none",
-                  color: "inherit",
-                  background: "#fff",
-                  width: "100%",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  font: "inherit",
-                }}
-              >
-                <div style={{ minWidth: 0 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--akb-ink)" }}>
-                    {g.question}
-                  </div>
-                  <div style={{ fontSize: 11.5, color: "var(--akb-muted)", marginTop: 2 }}>
-                    Asked {g.hitCount}× · via {g.source.replace(/_/g, " ")}
-                  </div>
-                </div>
-                <span className="akb-pill akb-pill--warning" style={{ alignSelf: "center" }}>
-                  Teach
-                </span>
-              </button>
+              <li key={g.id}>
+                <button type="button" className="kb-list__row" onClick={() => setTeachModal(g)}>
+                  <span className="kb-list__icon kb-list__icon--warn" aria-hidden="true">
+                    <CircleHelp size={16} strokeWidth={1.8} />
+                  </span>
+                  <span className="kb-list__text">
+                    <span className="kb-list__t kb-clamp-2">{g.question}</span>
+                    <span className="kb-list__d">
+                      Asked {g.hitCount}× · {g.source.replace(/_/g, " ")}
+                    </span>
+                  </span>
+                  <span className="kb-pill kb-pill--sm kb-pill--tint">Teach</span>
+                </button>
+              </li>
             ))}
-          </div>
+          </ul>
         )}
       </section>
 
-      {/* Taught answers (real, already-answered gaps — this is where an added
-          or taught question actually shows up: it's saved as "answered" right
-          away, so it never appears in "Questions to teach" above). */}
+      {/* Taught answers: an added/taught question lands here as "answered". */}
       {answeredGaps.length > 0 && (
-        <section className="akb-card akb-card__pad">
+        <section className="kb-card" aria-labelledby="kb-taught-title">
           <button
             type="button"
+            className="kb-collapse"
+            aria-expanded={showTaught}
             onClick={() => setShowTaught((s) => !s)}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              width: "100%",
-              background: "none",
-              border: 0,
-              padding: 0,
-              cursor: "pointer",
-              textAlign: "left",
-            }}
           >
-            <div>
-              <h3 className="akb-card__title">Taught answers ({answeredGaps.length})</h3>
-              <p className="akb-card__sub">Questions your AI agent already knows how to answer.</p>
-            </div>
-            <Icon name={showTaught ? "chevU" : "chevD"} size={14} />
+            <span>
+              <span id="kb-taught-title" className="kb-card__title">
+                Taught answers <span className="kb-count">{answeredGaps.length}</span>
+              </span>
+              <span className="kb-card__sub">What your AI now knows how to answer.</span>
+            </span>
+            <ChevronDown
+              size={18}
+              strokeWidth={2}
+              className={`kb-collapse__chev${showTaught ? " is-open" : ""}`}
+            />
           </button>
 
           {showTaught && (
-            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+            <ul className="kb-list kb-list--inset">
               {answeredGaps.map((g) => (
-                <div
-                  key={g.id}
-                  style={{
-                    padding: "10px 14px",
-                    border: "1px solid var(--akb-line)",
-                    borderRadius: 10,
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "flex-start",
-                      justifyContent: "space-between",
-                      gap: 12,
-                    }}
-                  >
-                    <div style={{ fontSize: 13, fontWeight: 600, color: "var(--akb-ink)" }}>
-                      {g.question}
-                    </div>
-                    <span
-                      className="akb-pill akb-pill--success"
-                      style={{ flexShrink: 0, alignSelf: "center" }}
-                    >
-                      <Icon name="checkCircle" size={11} />
-                      Taught
+                <li key={g.id}>
+                  <div className="kb-list__row kb-list__row--top">
+                    <span className="kb-list__icon kb-list__icon--ok" aria-hidden="true">
+                      <Check size={15} strokeWidth={2.4} />
+                    </span>
+                    <span className="kb-list__text">
+                      <span className="kb-list__t">{g.question}</span>
+                      {g.answerText && <span className="kb-list__d">{g.answerText}</span>}
                     </span>
                   </div>
-                  {g.answerText && (
-                    <div
-                      style={{
-                        fontSize: 12.5,
-                        color: "var(--akb-muted)",
-                        marginTop: 4,
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {g.answerText}
-                    </div>
-                  )}
-                  <div style={{ fontSize: 11, color: "var(--akb-soft-text)", marginTop: 4 }}>
-                    via {g.source.replace(/_/g, " ")}
-                  </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </section>
       )}
 
-      {/* Insights & tips */}
-      <section className="akb-card akb-card__pad">
-        <h3 className="akb-card__title">Insights &amp; tips</h3>
-        <p className="akb-card__sub">
-          Identify areas of improvement to make your AI agent more accurate and helpful.
-        </p>
-        <div className="akb-insights">
-          <span className="akb-insights__icon" aria-hidden="true">
-            <Icon name="info" size={18} />
+      {openGaps.length > 0 && (
+        <Link href="#akb-teach-section" className="kb-banner">
+          <span className="kb-badge kb-badge--sm" aria-hidden="true">
+            <Sparkles size={18} strokeWidth={1.8} />
           </span>
-          <div className="akb-insights__body">
-            <div className="akb-insights__t">
-              {openGaps.length === 0
-                ? "No insights yet"
-                : `${openGaps.length} ${openGaps.length === 1 ? "question is" : "questions are"} waiting to be taught`}
-            </div>
-            <div className="akb-insights__d">
-              {openGaps.length === 0
-                ? "Once you start testing your AI agent, insights and suggestions will appear here."
-                : "Teaching these answers is the fastest way to raise your AI's accuracy."}
-            </div>
-          </div>
-          <Link href="#akb-teach-section" className="akb-link" style={{ flexShrink: 0 }}>
-            View suggestions <Icon name="arrowR" size={13} />
-          </Link>
-        </div>
-      </section>
+          <span className="kb-list__text">
+            <span className="kb-list__t">
+              {openGaps.length} {openGaps.length === 1 ? "question is" : "questions are"} waiting to
+              be taught
+            </span>
+            <span className="kb-list__d">
+              Teaching these is the fastest way to raise your AI&apos;s accuracy.
+            </span>
+          </span>
+          <ChevronRight size={18} strokeWidth={2} className="kb-list__chev" />
+        </Link>
+      )}
 
       {teachModal !== null && (
         <TeachDialog
@@ -790,7 +486,7 @@ export function TestConsole({
 
 /**
  * "Teach AI" (answer an existing gap) and "Add question" (a brand-new Q&A
- * pair, no prior gap) share this dialog — `gap` null means the question field
+ * pair, no prior gap) share this sheet. `gap` null means the question field
  * is editable; otherwise it's the gap's real question, read-only.
  */
 function TeachDialog({
@@ -829,117 +525,104 @@ function TeachDialog({
   }
 
   return (
-    <div className="akb-teach-backdrop">
+    // biome-ignore lint/a11y/useSemanticElements: overlay dialog; matches the other glass sheets
+    <div className="gs-overlay" role="dialog" aria-modal="true" aria-labelledby="kb-teach-title">
       <button
         type="button"
         aria-label="Close"
-        className="akb-teach-scrim"
+        className="gs-scrim"
         onClick={onClose}
         disabled={pending}
       />
-      <section
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="akb-teach-title"
-        className="akb-teach-modal"
-      >
-        <div className="akb-teach-modal__head">
-          <h3 id="akb-teach-title" className="akb-teach-modal__title">
+      <div className="gs">
+        <button type="button" aria-label="Close" className="gs__close" onClick={onClose}>
+          <X size={16} strokeWidth={2.2} />
+        </button>
+        <div className="gs__hero">
+          <span className="gs__badge" aria-hidden="true">
+            <GraduationCap size={28} strokeWidth={1.7} />
+          </span>
+          <h2 id="kb-teach-title" className="gs__title">
             {gap ? "Teach your AI" : "Add a question"}
-          </h3>
-          <button
-            type="button"
-            aria-label="Close"
-            className="akb-teach-modal__close"
-            onClick={onClose}
-          >
-            <Icon name="x" size={16} stroke={2.2} />
-          </button>
+          </h2>
+          <p className="gs__sub">
+            {gap
+              ? "Your answer becomes part of its knowledge, so it gets this and similar questions right from now on."
+              : "Add a question with the right answer. It's saved straight into your AI's knowledge."}
+          </p>
         </div>
-        <p className="akb-teach-modal__sub">
-          {gap
-            ? "Your answer is added to the AI's instructions so it can answer this and similar questions correctly from now on."
-            : "Add a question your AI should know, with the correct answer. It's saved straight into the AI's knowledge, no need to wait for a customer to ask it first."}
-        </p>
 
-        <form onSubmit={submit} className="akb-teach-modal__form">
-          {gap ? (
-            <div className="akb-teach-modal__qbox">
-              <span className="akb-teach-modal__label">Question</span>
-              <div className="akb-teach-modal__qtext">{gap.question}</div>
+        <form onSubmit={submit} className="gs__form">
+          <div className="gs__body">
+            {error && (
+              <p className="gs-error" role="alert">
+                <TriangleAlert size={15} strokeWidth={1.8} />
+                {error}
+              </p>
+            )}
+            <div className="gs-group">
+              {gap ? (
+                <div className="gs-field">
+                  <span className="gs-field__lbl">Question</span>
+                  <div className="kb-quote">{gap.question}</div>
+                </div>
+              ) : (
+                <label className="gs-field">
+                  <span className="gs-field__lbl">Question</span>
+                  <input
+                    value={question}
+                    onChange={(e) => setQuestion(e.target.value)}
+                    maxLength={500}
+                    required
+                    placeholder="e.g. Do you offer gift cards?"
+                    className="gs-input"
+                  />
+                </label>
+              )}
+              <label className="gs-field">
+                <span className="gs-field__lbl">Answer</span>
+                <textarea
+                  value={answer}
+                  onChange={(e) => setAnswer(e.target.value)}
+                  maxLength={1000}
+                  rows={5}
+                  required
+                  placeholder="The correct answer your AI should give…"
+                  className="gs-input kb-textarea-in"
+                />
+              </label>
             </div>
-          ) : (
-            <label className="akb-teach-modal__field">
-              <span className="akb-teach-modal__label">Question</span>
-              <input
-                value={question}
-                onChange={(e) => setQuestion(e.target.value)}
-                maxLength={500}
-                required
-                placeholder="e.g. Do you offer gift cards?"
-                className="akb-teach-modal__input"
-              />
-            </label>
-          )}
-
-          <label className="akb-teach-modal__field">
-            <span className="akb-teach-modal__label">Answer</span>
-            <textarea
-              value={answer}
-              onChange={(e) => setAnswer(e.target.value)}
-              maxLength={1000}
-              rows={5}
-              required
-              placeholder="Type the correct answer the AI should give…"
-              className="akb-teach-modal__textarea"
-            />
-          </label>
-
-          {error && (
-            <div role="alert" className="akb-teach-modal__error">
-              <Icon name="alert" size={12} />
-              {error}
-            </div>
-          )}
-
-          <div className="akb-teach-modal__foot">
-            <button type="button" className="akb-btn-outline" onClick={onClose} disabled={pending}>
+          </div>
+          <div className="gs__foot">
+            <button type="button" className="gs-btn" onClick={onClose} disabled={pending}>
               Cancel
             </button>
-            <button type="submit" className="akb-btn-primary" disabled={pending}>
-              <Icon name="check" size={13} />
+            <button type="submit" className="gs-btn gs-btn--pri" disabled={pending}>
               {pending ? "Saving…" : gap ? "Teach AI" : "Add question"}
             </button>
           </div>
         </form>
-      </section>
+      </div>
     </div>
   );
 }
 
 function PerfCell({
-  icon,
   tone,
   value,
   label,
   sub,
 }: {
-  icon: string;
-  tone: "success" | "primary" | "warning" | "danger";
+  tone: "ink" | "ok" | "mid" | "bad";
   value: number;
   label: string;
   sub?: string;
 }) {
   return (
-    <div className="akb-perf__cell">
-      <span className={`akb-perf__icon akb-perf__icon--${tone}`} aria-hidden="true">
-        <Image src={`${ASSET}/${icon}`} alt="" width={26} height={26} unoptimized />
-      </span>
-      <div style={{ minWidth: 0 }}>
-        <div className="akb-perf__value">{value}</div>
-        <div className="akb-perf__label">{label}</div>
-        {sub && <div className="akb-perf__pct">{sub}</div>}
-      </div>
+    <div className={`kb-perf__cell is-${tone}`}>
+      <div className="kb-perf__value">{value}</div>
+      <div className="kb-perf__label">{label}</div>
+      {sub && sub !== "—" && <div className="kb-perf__pct">{sub}</div>}
     </div>
   );
 }

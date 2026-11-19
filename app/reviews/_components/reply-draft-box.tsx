@@ -1,7 +1,7 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
 import { generateReplyForReview, publishReply } from "@/lib/reviews/actions";
+import { Check, CircleCheck, PenLine, RefreshCw, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -95,19 +95,8 @@ export function ReplyDraftBox({
 
   if (published) {
     return (
-      <div
-        style={{
-          marginTop: 10,
-          paddingTop: 10,
-          borderTop: "1px solid var(--line)",
-          fontSize: 11.5,
-          color: "var(--ok, #16a34a)",
-          display: "flex",
-          alignItems: "center",
-          gap: 6,
-        }}
-      >
-        <Icon name="check" size={12} />
+      <div className="ri-reply__done">
+        <CircleCheck size={16} strokeWidth={2} />
         Reply published
       </div>
     );
@@ -115,46 +104,36 @@ export function ReplyDraftBox({
 
   if (!open) {
     return (
-      <div style={{ marginTop: 10 }}>
+      <div className="ri-reply__start">
         <button
           type="button"
-          className="btn btn--pri"
+          className="ri-pill ri-pill--pri ri-pill--lg"
           onClick={handleGenerate}
           disabled={pending}
-          style={{ fontSize: 11.5 }}
         >
-          <Icon name="sparkle" size={12} />
-          {pending ? "Generating…" : "Generate Reply with AI"}
+          <Sparkles size={16} strokeWidth={1.8} />
+          {pending ? "Writing a reply…" : "Write a reply with AI"}
         </button>
         {error && <InlineError message={error} />}
       </div>
     );
   }
 
-  // Expanded draft box — light-blue surface, editable textarea + actions.
+  // Expanded draft box — frosted card, editable textarea + actions.
   const infoLine = is5Star
-    ? "AI used your Knowledge Base to personalize this reply. It will post to Google after a 2–4 hour delay to appear natural."
-    : "AI used your Knowledge Base to personalize this reply. Review and approve before it posts.";
+    ? "Written with your Knowledge Base. It posts to Google after a 2–4 hour delay so it reads naturally."
+    : "Written with your Knowledge Base. Check it, then approve to post.";
 
   return (
     <div
+      className="ri-reply"
       onClick={stop}
       onKeyDown={(e) => {
         if (e.key === "Enter" || e.key === " ") e.stopPropagation();
       }}
-      style={{
-        marginTop: 12,
-        padding: 14,
-        borderRadius: "var(--r, 10px)",
-        background: "var(--pri-50, #eff6ff)",
-        border: "1px solid var(--pri-100, #dbeafe)",
-      }}
     >
-      <div
-        className="row"
-        style={{ gap: 6, marginBottom: 8, fontSize: 11, color: "var(--pri, #2563eb)", fontWeight: 600 }}
-      >
-        <Icon name="sparkle" size={12} />
+      <div className="ri-reply__label">
+        <Sparkles size={14} strokeWidth={1.8} />
         AI draft
       </div>
 
@@ -164,55 +143,26 @@ export function ReplyDraftBox({
         onClick={stop}
         readOnly={!editing}
         placeholder="Write your reply…"
-        rows={4}
+        rows={5}
         aria-label="Reply draft"
-        style={{
-          width: "100%",
-          resize: "vertical",
-          padding: "10px 12px",
-          borderRadius: 8,
-          border: "1px solid var(--pri-100, #dbeafe)",
-          background: editing ? "#fff" : "rgba(255,255,255,0.6)",
-          fontFamily: "var(--f-ui)",
-          fontSize: 12.5,
-          lineHeight: 1.55,
-          color: "var(--ink, #0f172a)",
-          outline: "none",
-        }}
+        className={`ri-reply__text${editing ? " is-editing" : ""}`}
       />
 
-      <p
-        className="dim"
-        style={{ fontSize: 11, margin: "8px 0 10px", lineHeight: 1.5, color: "var(--ink-2, #475569)" }}
-      >
-        {infoLine}
-      </p>
+      <p className="ri-reply__info">{infoLine}</p>
 
-      <div className="row" style={{ gap: 8, flexWrap: "wrap" }}>
+      <div className="ri-reply__actions">
         <button
           type="button"
           onClick={handleApprove}
           disabled={pending}
-          className="btn"
-          style={{
-            fontSize: 11.5,
-            background: "var(--ok, #16a34a)",
-            borderColor: "var(--ok, #16a34a)",
-            color: "#fff",
-          }}
+          className="ri-pill ri-pill--ok"
           title={canReplyDeepLink ? "Approve and post to Google" : "Approve this reply"}
         >
-          <Icon name="check" size={12} />
-          {pending ? "Working…" : "Approve & Post"}
+          <Check size={15} strokeWidth={2.2} />
+          {pending ? "Working…" : "Approve & post"}
         </button>
-        <button
-          type="button"
-          onClick={handleGenerate}
-          disabled={pending}
-          className="btn"
-          style={{ fontSize: 11.5, color: "var(--pri, #2563eb)" }}
-        >
-          <Icon name="refresh" size={12} />
+        <button type="button" onClick={handleGenerate} disabled={pending} className="ri-pill">
+          <RefreshCw size={14} strokeWidth={1.8} />
           Regenerate
         </button>
         <button
@@ -223,10 +173,9 @@ export function ReplyDraftBox({
             setEditing((v) => !v);
           }}
           disabled={pending}
-          className="btn btn--ghost"
-          style={{ fontSize: 11.5 }}
+          className="ri-pill"
         >
-          <Icon name="edit" size={12} />
+          <PenLine size={14} strokeWidth={1.8} />
           {editing ? "Done" : "Edit"}
         </button>
       </div>
@@ -237,7 +186,7 @@ export function ReplyDraftBox({
 
 function InlineError({ message }: { message: string }) {
   return (
-    <p style={{ fontSize: 11, color: "var(--bad, #dc2626)", margin: "8px 0 0" }} role="alert">
+    <p className="ri-reply__error" role="alert">
       {message}
     </p>
   );

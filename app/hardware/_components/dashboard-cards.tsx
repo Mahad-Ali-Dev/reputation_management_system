@@ -19,7 +19,6 @@ import Link from "next/link";
  * with the kit illustration. No fabricated numbers.
  */
 
-
 /* ── Hero ───────────────────────────────────────────────────────────── */
 export function MdHero() {
   return (
@@ -37,12 +36,18 @@ export function MdHero() {
 }
 
 /* ── AI-training banner ─────────────────────────────────────────────── */
-export function MdTrainingBanner({ href }: { href: string }) {
+export function MdTrainingBanner({
+  href,
+  title = "Your scans are flowing",
+}: {
+  href: string;
+  title?: string;
+}) {
   return (
     <div className="md-train md-train--clean">
       <Sparkles size={20} strokeWidth={1.8} aria-hidden="true" className="md-train__glyph" />
       <div style={{ minWidth: 200, flex: 1 }}>
-        <div className="md-train__title">Your scans are flowing</div>
+        <div className="md-train__title">{title}</div>
         <div className="md-train__body">
           Train your AI on your business so it can draft on-brand responses to every review you
           collect.

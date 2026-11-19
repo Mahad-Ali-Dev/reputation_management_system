@@ -1,7 +1,9 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
+import { LazyFrog } from "@/components/ui/lazy-frog";
+import { Check } from "lucide-react";
 import Link from "next/link";
+import "./coming-soon.css";
 
 /**
  * Full-page "Coming soon" lock for modules that are built but deliberately not
@@ -36,135 +38,66 @@ export const LOCKED_MODULES = {
     title: "Unified Inbox",
     crumbs: ["Engage", "Unified Inbox"],
     blurb:
-      "Every customer conversation reviews, DMs, comments, live chat and meeting requests in one place, with AI-drafted replies.",
+      "Every customer conversation in one place: reviews, DMs, comments, live chat and meeting requests, with AI-drafted replies.",
     bullets: [
       "One thread per customer across every channel",
       "AI reply suggestions you approve before sending",
       "Moderation rules that hide spam automatically",
     ],
   },
+  bookings: {
+    title: "Booking Requests",
+    crumbs: ["Inbox & Social", "Booking Requests"],
+    blurb:
+      "Every meeting request your customers send, in one simple list with the time they asked for.",
+    bullets: [
+      "All requests in one place, with each customer's preferred time",
+      "Accept, reschedule or decline in a tap",
+      "Follow each request from new to scheduled",
+    ],
+  },
 } as const;
 
 export type LockedModuleKey = keyof typeof LOCKED_MODULES;
 
+/** Apple-style announcement page: frog at work, big title, a short list. */
 export function ComingSoonPage({ module: key }: { module: LockedModuleKey }) {
   const m = LOCKED_MODULES[key];
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={[...m.crumbs]}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-          padding: "48px 20px",
-        }}
-      >
-        <div className="ds-card" style={{ maxWidth: 560, width: "100%", padding: "36px 32px" }}>
-          <span
-            aria-hidden="true"
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 52,
-              height: 52,
-              borderRadius: 14,
-              background: "rgba(37,99,235,0.08)",
-              color: "var(--rl-primary, #2563eb)",
-              marginBottom: 18,
-            }}
-          >
-            <Icon name="sparkle" size={24} />
-          </span>
-
-          <div
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-              padding: "3px 10px",
-              borderRadius: 999,
-              background: "rgba(37,99,235,0.08)",
-              color: "var(--rl-primary, #2563eb)",
-              fontSize: 11,
-              fontWeight: 700,
-              letterSpacing: "0.04em",
-              textTransform: "uppercase",
-              marginLeft: 10,
-              verticalAlign: "top",
-            }}
-          >
-            Coming soon
-          </div>
-
-          <h1
-            style={{
-              margin: "14px 0 8px",
-              fontSize: 24,
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
-              color: "var(--ink)",
-            }}
-          >
-            {m.title}
-          </h1>
-
-          <p
-            style={{
-              margin: "0 0 20px",
-              fontSize: 14.5,
-              lineHeight: 1.6,
-              color: "var(--rl-muted)",
-            }}
-          >
-            {m.blurb}
-          </p>
-
-          <ul
-            style={{ margin: "0 0 24px", padding: 0, listStyle: "none", display: "grid", gap: 10 }}
-          >
-            {m.bullets.map((b) => (
-              <li key={b} style={{ display: "flex", gap: 10, alignItems: "flex-start" }}>
-                <span
-                  aria-hidden="true"
-                  style={{ color: "var(--rl-primary, #2563eb)", flexShrink: 0, marginTop: 1 }}
-                >
-                  <Icon name="checkCircle" size={15} />
-                </span>
-                <span
-                  style={{ fontSize: 13.5, lineHeight: 1.5, color: "var(--rl-ink-2, #334155)" }}
-                >
-                  {b}
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <div
-            style={{
-              borderTop: "1px solid var(--rl-border, #eceeea)",
-              paddingTop: 18,
-              display: "flex",
-              gap: 10,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            {/* Deliberately NO upgrade CTA — this is locked on every plan. */}
-            <Link
-              href="/dashboard"
-              className="btn btn--pri btn--sm"
-              style={{ display: "inline-flex" }}
-            >
-              <Icon name="arrowR" size={13} />
-              Back to dashboard
-            </Link>
-            <span style={{ fontSize: 12.5, color: "var(--rl-muted)" }}>
-              We&rsquo;ll email you the moment it goes live.
-            </span>
-          </div>
+      <div className="cs">
+        <div className="cs__frog">
+          <LazyFrog
+            size={132}
+            name="Repulabs AI"
+            state="working"
+            statusLabels={{ working: "Building it" }}
+            followPointer
+          />
         </div>
+        <span className="cs__eyebrow">Coming soon</span>
+        <h1 className="cs__title">{m.title}</h1>
+        <p className="cs__blurb">{m.blurb}</p>
+
+        <ul className="cs__list">
+          {m.bullets.map((b) => (
+            <li key={b} className="cs__item">
+              <span className="cs__tick" aria-hidden="true">
+                <Check size={14} strokeWidth={2.4} />
+              </span>
+              {b}
+            </li>
+          ))}
+        </ul>
+
+        {/* Deliberately NO upgrade CTA — this is locked on every plan. */}
+        <div className="cs__actions">
+          <Link href="/dashboard" className="cs__btn">
+            Back to Dashboard
+          </Link>
+        </div>
+        <p className="cs__note">We&rsquo;ll email you the moment it goes live.</p>
       </div>
     </AppShellServer>
   );

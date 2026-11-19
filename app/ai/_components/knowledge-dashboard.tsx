@@ -1,40 +1,43 @@
-import { Icon, type IconName } from "@/components/shell/icon";
-import Image from "next/image";
+import { LazyFrog } from "@/components/ui/lazy-frog";
+import {
+  BadgeDollarSign,
+  Building2,
+  ChevronRight,
+  CircleCheck,
+  FileUp,
+  Globe,
+  GraduationCap,
+  type LucideIcon,
+  MapPin,
+  MessageSquareText,
+  Package,
+  PenLine,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import Link from "next/link";
 import { relativeTime } from "../training/_components/shared-utils";
 import { LocationHoursEditor } from "./location-hours-editor";
 
 /**
- * Knowledge tab — the kit dashboard (active AND empty states), server-rendered.
+ * Knowledge tab (Apple look), server-rendered.
  *
  * Every figure is a LIVE tenant value passed down from the /ai page:
  *   - readiness %      → computeReadiness(profile, indexedDocs, hasWidget)
  *   - total / active   → real ai_documents counts
  *   - last updated     → newest doc lastIndexedAt (or "—")
- *   - status           → derived from counts
  *   - business overview → AiTrainingProfile.businessOverview / servicesProducts / pricingDetails
  *   - business location → establishment.address + operatingHours
  *   - recent learning   → answered knowledge gaps (real learning events)
- * Sections with no real data render a tasteful empty/zero state — never a
- * fabricated value. Interactive source management lives in <SourcePanel>
- * (rendered by the page) which wraps the existing KbAddForms + doc list.
+ * Sections with no real data render an Apple-style empty state, never a
+ * fabricated value. Source buttons carry `data-kb-action` so <KbSourceActions>
+ * (rendered by the page) can open the file picker / connect-website sheet.
  */
-
-const ASSET = "/assets/repulabs/ai-kb";
-
-const DAY_LABELS: Array<[string, string]> = [
-  ["monday", "Mo"],
-  ["tuesday", "Tu"],
-  ["wednesday", "We"],
-  ["thursday", "Th"],
-  ["friday", "Fr"],
-  ["saturday", "Sa"],
-  ["sunday", "Su"],
-];
 
 export type BusinessDetailRow = {
   id: string;
-  icon: IconName;
+  /** Kept for API compatibility; the Apple look maps icons by `id`. */
+  icon?: string;
   title: string;
   body: string | null;
 };
@@ -49,11 +52,13 @@ export type LocationData = {
   hours: Record<string, { open?: string; close?: string }>;
 };
 
-/**
- * Readiness + stats summary row. In the kit this sits ABOVE the tabs strip on
- * the Knowledge surface, so the page renders it between the hero and the tabs
- * (and only on the Knowledge tab).
- */
+const DETAIL_ICONS: Record<string, LucideIcon> = {
+  overview: Building2,
+  services: Package,
+  pricing: BadgeDollarSign,
+};
+
+/** Readiness ring + live stats, one frosted card above the tabs. */
 export function KnowledgeSummary({
   readinessPct,
   totalSources,
@@ -65,175 +70,91 @@ export function KnowledgeSummary({
   activeSources: number;
   lastUpdated: Date | null;
 }) {
-  const hasSources = totalSources > 0;
-  const statusLabel = hasSources ? "Active" : "Getting started";
-
-  // readiness ring geometry
-  const R = 60;
+  const pct = Math.max(0, Math.min(100, readinessPct));
+  const R = 52;
   const C = 2 * Math.PI * R;
-  const offset = C * (1 - Math.max(0, Math.min(100, readinessPct)) / 100);
-  const readinessCopy =
-    readinessPct >= 90
-      ? "Excellent! Your AI has a deep understanding of your business."
-      : readinessPct >= 40
-        ? "Solid foundation keep adding sources to raise answer confidence."
-        : "Let's get started! Build your knowledge base to make your AI smarter.";
+  const offset = C * (1 - pct / 100);
+  const headline =
+    pct >= 90
+      ? "Ready for anything."
+      : pct >= 40
+        ? "Off to a strong start."
+        : "Let's teach it more.";
+  const copy =
+    pct >= 90
+      ? "Your AI knows your business deeply and answers with confidence."
+      : pct >= 40
+        ? "A solid foundation. Add a few more sources to raise answer confidence."
+        : "Add your website or a document and your AI starts learning straight away.";
 
   return (
-    <div className="akb-summary">
-      {/* knowledge strength */}
-      <section
-        className="akb-card akb-readiness"
-        aria-label="Knowledge strength"
-      >
-        <span className="akb-readiness__tile" aria-hidden="true">
-          <Image
-            src={`${ASSET}/knowledge-strength.svg`}
-            alt=""
-            width={76}
-            height={76}
-            unoptimized
+    <section className="kb-ready" aria-label="Brain readiness">
+      <div className="kb-ring" aria-hidden="true">
+        <svg viewBox="0 0 128 128" width="128" height="128" aria-hidden="true" focusable="false">
+          <defs>
+            <linearGradient id="kb-ring-grad" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="#8a5cff" />
+              <stop offset="100%" stopColor="#4b3bff" />
+            </linearGradient>
+          </defs>
+          <circle
+            cx="64"
+            cy="64"
+            r={R}
+            fill="none"
+            stroke="rgba(120,120,128,0.14)"
+            strokeWidth="12"
           />
+          <circle
+            cx="64"
+            cy="64"
+            r={R}
+            fill="none"
+            stroke="url(#kb-ring-grad)"
+            strokeWidth="12"
+            strokeLinecap="round"
+            strokeDasharray={C}
+            strokeDashoffset={offset}
+            transform="rotate(-90 64 64)"
+          />
+        </svg>
+        <span className="kb-ring__pct">
+          {pct}
+          <small>%</small>
         </span>
-        <div className="akb-readiness__body">
-          <span className="akb-eyebrow">
-            Knowledge strength
-            <Icon name="info" size={12} />
-          </span>
-          <h3 className="akb-readiness__metric">
-            Brain readiness:{" "}
-            <span style={{ color: "var(--akb-success)" }}>{readinessPct}%</span>
-          </h3>
-          <p className="akb-readiness__copy">{readinessCopy}</p>
-          {/* biome-ignore lint/a11y/useFocusableInteractive: progressbar is a display-only ARIA value, not a focusable control */}
-          <div
-            className="akb-progress"
-            role="progressbar"
-            aria-label={`Brain readiness ${readinessPct} percent`}
-            aria-valuenow={readinessPct}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <div
-              className="akb-progress__fill"
-              style={{ width: `${readinessPct}%` }}
-            />
-          </div>
-        </div>
-        <div className="akb-ring" aria-hidden="true">
-          <svg
-            width="134"
-            height="134"
-            viewBox="0 0 134 134"
-            aria-hidden="true"
-          >
-            <circle
-              cx="67"
-              cy="67"
-              r={R}
-              fill="none"
-              stroke="var(--akb-track)"
-              strokeWidth="8"
-            />
-            <circle
-              cx="67"
-              cy="67"
-              r={R}
-              fill="none"
-              stroke="var(--akb-success)"
-              strokeWidth="8"
-              strokeLinecap="round"
-              strokeDasharray={C}
-              strokeDashoffset={offset}
-            />
-          </svg>
-          <span className="akb-ring__label">{readinessPct}%</span>
-        </div>
-      </section>
+      </div>
 
-      {/* stats 2x2 */}
-      <section className="akb-card akb-stats" aria-label="Knowledge base stats">
-        <div className="akb-stat">
-          <div className="akb-stat__head">
-            <span className="akb-stat__tile" aria-hidden="true">
-              <Image
-                src={`${ASSET}/stat-total-sources.svg`}
-                alt=""
-                width={30}
-                height={30}
-                unoptimized
-              />
-            </span>
-            <span className="akb-stat__label">Total sources</span>
-          </div>
-          <div className="akb-stat__value">{totalSources}</div>
+      <div className="kb-ready__text">
+        <span className="kb-ready__eyebrow">Brain readiness</span>
+        <h2 className="kb-ready__title">{headline}</h2>
+        <p className="kb-ready__copy">{copy}</p>
+      </div>
+
+      <dl className="kb-ready__stats">
+        <div>
+          <dt>Sources</dt>
+          <dd>{totalSources}</dd>
         </div>
-        <div className="akb-stat">
-          <div className="akb-stat__head">
-            <span className="akb-stat__tile" aria-hidden="true">
-              <Image
-                src={`${ASSET}/stat-active-sources.svg`}
-                alt=""
-                width={30}
-                height={30}
-                unoptimized
-              />
-            </span>
-            <span className="akb-stat__label">Active sources</span>
-            {activeSources > 0 && (
-              <span className="akb-stat__dot" aria-hidden="true" />
-            )}
-          </div>
-          <div className="akb-stat__value">{activeSources}</div>
+        <div>
+          <dt>Active</dt>
+          <dd>{activeSources}</dd>
         </div>
-        <div className="akb-stat">
-          <div className="akb-stat__head">
-            <span className="akb-stat__tile" aria-hidden="true">
-              <Image
-                src={`${ASSET}/stat-last-updated.svg`}
-                alt=""
-                width={30}
-                height={30}
-                unoptimized
-              />
-            </span>
-            <span className="akb-stat__label">Last updated</span>
-          </div>
-          <div className="akb-stat__value akb-stat__value--sm">
-            {lastUpdated ? relativeTime(lastUpdated) : "—"}
-          </div>
+        <div>
+          <dt>Updated</dt>
+          <dd className="kb-ready__small">{lastUpdated ? relativeTime(lastUpdated) : "—"}</dd>
         </div>
-        <div className="akb-stat">
-          <div className="akb-stat__head">
-            <span className="akb-stat__tile" aria-hidden="true">
-              <Image
-                src={`${ASSET}/stat-status.svg`}
-                alt=""
-                width={30}
-                height={30}
-                unoptimized
-              />
-            </span>
-            <span className="akb-stat__label">Status</span>
-          </div>
-          <div style={{ marginTop: 12 }}>
-            <span
-              className={`akb-pill ${hasSources ? "akb-pill--success" : "akb-pill--warning"}`}
-            >
-              {statusLabel}
-            </span>
-          </div>
+        <div>
+          <dt>Status</dt>
+          <dd className={`kb-ready__status${totalSources > 0 ? " is-on" : ""}`}>
+            {totalSources > 0 ? "Learning" : "Getting started"}
+          </dd>
         </div>
-      </section>
-    </div>
+      </dl>
+    </section>
   );
 }
 
-/**
- * Knowledge body — sources + quick actions row, then the business
- * overview / location / recent-learning bottom row. Rendered AFTER the tabs
- * strip (the readiness/stats summary renders before the tabs).
- */
+/** Sources + next steps, then business overview / location / recent learning. */
 export function KnowledgeBody({
   hasSources,
   websiteActive,
@@ -247,407 +168,248 @@ export function KnowledgeBody({
   location: LocationData;
   recentLearning: RecentLearningRow[];
 }) {
-  const filledDetails = businessDetails.filter(
-    (d) => d.body && d.body.trim().length > 0,
-  );
-  const hasOverview = filledDetails.length > 0;
-  const hasLocation = Boolean(
-    location.address && location.address.trim().length > 0,
-  );
-  const hasLearning = recentLearning.length > 0;
+  const filledDetails = businessDetails.filter((d) => d.body && d.body.trim().length > 0);
+  const hasLocation = Boolean(location.address && location.address.trim().length > 0);
 
   return (
-    <div style={{ display: "grid", gap: 10 }}>
-      {/* sources + quick actions */}
-      <div className="akb-main-row">
-        {/* knowledge sources */}
-        <section
-          className="akb-card akb-card__pad"
-          aria-label="Knowledge sources"
-        >
-          <h3 className="akb-card__title">Knowledge sources</h3>
-          <p className="akb-card__sub">
-            Upload documents or connect sources for your AI to learn from.
-          </p>
-          {hasSources ? (
-            <div className="akb-sources__grid">
-              <button
-                type="button"
-                className="akb-source akb-source--upload"
-                data-kb-action="upload"
-              >
-                <span className="akb-source__icon" aria-hidden="true">
-                  <Image
-                    src={`${ASSET}/upload-doc.svg`}
-                    alt=""
-                    width={40}
-                    height={40}
-                    unoptimized
-                  />
-                </span>
-                <span className="akb-source__title">Upload documents</span>
-                <span className="akb-source__desc">PDF, DOCX, TXT</span>
-                <span className="akb-source__desc">
-                  Drag &amp; drop or click to browse
-                </span>
-              </button>
-              <button
-                type="button"
-                className="akb-source akb-source--full"
-                data-kb-action="connect"
-              >
-                <span className="akb-source__icon" aria-hidden="true">
-                  <Image
-                    src={`${ASSET}/connect-website.svg`}
-                    alt=""
-                    width={40}
-                    height={40}
-                    unoptimized
-                  />
-                </span>
-                <span className="akb-source__body">
-                  <span className="akb-source__title">Connect website</span>
-                  <span className="akb-source__desc">
-                    Auto-scrape your website
-                  </span>
-                </span>
-                {websiteActive && (
-                  <span className="akb-pill akb-pill--success">Active</span>
-                )}
-              </button>
+    <div className="kb-body">
+      <div className="kb-row kb-row--top">
+        {/* sources */}
+        <section className="kb-card" aria-labelledby="kb-sources-title">
+          <header className="kb-card__head">
+            <div>
+              <h3 id="kb-sources-title" className="kb-card__title">
+                Teach your AI
+              </h3>
+              <p className="kb-card__sub">
+                {hasSources
+                  ? "Add more sources any time. Your AI re-learns automatically."
+                  : "Start with your website or a document. It takes a minute."}
+              </p>
             </div>
-          ) : (
-            <div className="akb-sources__empty">
-              {/* large "Business grid" dashed dropzone (kit empty layout) */}
-              <button
-                type="button"
-                className="akb-source akb-source--grid"
-                data-kb-action="upload"
-              >
-                <span className="akb-source__icon" aria-hidden="true">
-                  <Image
-                    src={`${ASSET}/upload-doc.svg`}
-                    alt=""
-                    width={40}
-                    height={40}
-                    unoptimized
-                  />
-                </span>
-                <span className="akb-source__title">Business grid</span>
-                <span className="akb-source__desc">
-                  Upload documents or connect a website to be searchable for AI
-                  knowledge.
-                </span>
-              </button>
-              {/* right column: two stacked dashed action boxes */}
-              <div className="akb-sources__empty-col">
-                <button
-                  type="button"
-                  className="akb-source akb-source--box"
-                  data-kb-action="upload"
-                >
-                  <span className="akb-source__icon" aria-hidden="true">
-                    <Image
-                      src={`${ASSET}/upload-doc.svg`}
-                      alt=""
-                      width={34}
-                      height={34}
-                      unoptimized
-                    />
-                  </span>
-                  <span className="akb-source__body">
-                    <span className="akb-source__title">Upload documents</span>
-                    <span className="akb-source__desc">PDF, DOCX, TXT</span>
-                  </span>
-                </button>
-                <button
-                  type="button"
-                  className="akb-source akb-source--box"
-                  data-kb-action="connect"
-                >
-                  <span className="akb-source__icon" aria-hidden="true">
-                    <Image
-                      src={`${ASSET}/connect-website.svg`}
-                      alt=""
-                      width={34}
-                      height={34}
-                      unoptimized
-                    />
-                  </span>
-                  <span className="akb-source__body">
-                    <span className="akb-source__title">Connect website</span>
-                    <span className="akb-source__desc">
-                      Auto-scrape your website
-                    </span>
-                  </span>
-                </button>
-              </div>
-            </div>
-          )}
-          <div className="akb-card__foot">
-            <a className="akb-link" href="/ai?tab=sources">
-              View all sources <Icon name="arrowR" size={13} />
-            </a>
+            <Link className="kb-link" href="/ai?tab=sources">
+              All sources <ChevronRight size={15} strokeWidth={2} />
+            </Link>
+          </header>
+          <div className="kb-sources">
+            <button type="button" className="kb-source" data-kb-action="upload">
+              <span className="kb-badge" aria-hidden="true">
+                <FileUp size={22} strokeWidth={1.8} />
+              </span>
+              <span className="kb-source__title">Upload documents</span>
+              <span className="kb-source__desc">PDF, DOCX or TXT. Drop them here or browse.</span>
+            </button>
+            <button type="button" className="kb-source" data-kb-action="connect">
+              <span className="kb-badge kb-badge--blue" aria-hidden="true">
+                <Globe size={22} strokeWidth={1.8} />
+              </span>
+              <span className="kb-source__title">
+                Connect website
+                {websiteActive && <span className="kb-dot-label">Active</span>}
+              </span>
+              <span className="kb-source__desc">We read your site and keep it in sync.</span>
+            </button>
           </div>
         </section>
 
-        {/* quick actions */}
-        <section className="akb-card akb-card__pad" aria-label="Quick actions">
-          <h3 className="akb-card__title">Quick actions</h3>
-          <div className="akb-qa" style={{ marginTop: 14 }}>
-            <div className="akb-qa__list">
-              <button
-                type="button"
-                className="akb-qa__row"
-                data-kb-action="upload"
-              >
-                <span className="akb-qa__icon" aria-hidden="true">
-                  <Image
-                    src={`${ASSET}/qa-add-source.svg`}
-                    alt=""
-                    width={42}
-                    height={42}
-                    unoptimized
-                  />
-                </span>
-                <span>
-                  <div className="akb-qa__title">Add new source</div>
-                  <div className="akb-qa__desc">
-                    Upload docs or connect a website
-                  </div>
-                </span>
-              </button>
-              <Link className="akb-qa__row" href="/ai?tab=test">
-                <span className="akb-qa__icon" aria-hidden="true">
-                  <Image
-                    src={`${ASSET}/qa-test-ai.svg`}
-                    alt=""
-                    width={42}
-                    height={42}
-                    unoptimized
-                  />
-                </span>
-                <span>
-                  <div className="akb-qa__title">Test AI knowledge</div>
-                  <div className="akb-qa__desc">See how your AI responds</div>
-                </span>
-              </Link>
-              <Link className="akb-qa__row" href="/ai?tab=test">
-                <span className="akb-qa__icon" aria-hidden="true">
-                  <Image
-                    src={`${ASSET}/qa-insights.svg`}
-                    alt=""
-                    width={42}
-                    height={42}
-                    unoptimized
-                  />
-                </span>
-                <span>
-                  <div className="akb-qa__title">View learning insights</div>
-                  <div className="akb-qa__desc">
-                    Track what AI knows and learns.
-                  </div>
-                </span>
-              </Link>
-            </div>
-            <div className="akb-qa__art" aria-hidden="true">
-              <Image
-                src={`${ASSET}/quick-actions-robot.svg`}
-                alt=""
-                width={200}
-                height={182}
-                unoptimized
-              />
-            </div>
+        {/* next steps with the AI frog */}
+        <section className="kb-card kb-next" aria-labelledby="kb-next-title">
+          <div className="kb-next__frog" aria-hidden="true">
+            <LazyFrog size={118} name="Repulabs AI" state="idle" followPointer />
           </div>
+          <h3 id="kb-next-title" className="kb-card__title">
+            Next steps
+          </h3>
+          <ul className="kb-list">
+            <li>
+              <button type="button" className="kb-list__row" data-kb-action="upload">
+                <span className="kb-list__icon" aria-hidden="true">
+                  <Plus size={16} strokeWidth={2} />
+                </span>
+                <span className="kb-list__text">
+                  <span className="kb-list__t">Add a source</span>
+                  <span className="kb-list__d">Upload docs or connect a website</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={2} className="kb-list__chev" />
+              </button>
+            </li>
+            <li>
+              <Link className="kb-list__row" href="/ai?tab=test">
+                <span className="kb-list__icon" aria-hidden="true">
+                  <MessageSquareText size={16} strokeWidth={1.8} />
+                </span>
+                <span className="kb-list__text">
+                  <span className="kb-list__t">Test your AI</span>
+                  <span className="kb-list__d">Ask it what customers ask</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={2} className="kb-list__chev" />
+              </Link>
+            </li>
+            <li>
+              <Link className="kb-list__row" href="/ai?tab=behaviour">
+                <span className="kb-list__icon" aria-hidden="true">
+                  <Sparkles size={16} strokeWidth={1.8} />
+                </span>
+                <span className="kb-list__text">
+                  <span className="kb-list__t">Tune its voice</span>
+                  <span className="kb-list__d">Tone, complaints and support style</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={2} className="kb-list__chev" />
+              </Link>
+            </li>
+          </ul>
         </section>
       </div>
 
-      {/* bottom row */}
-      <div className="akb-bottom-row">
+      <div className="kb-row kb-row--three">
         {/* business overview */}
-        <section
-          className="akb-card akb-card__pad"
-          aria-label="Business overview"
-        >
-          <h3 className="akb-card__title">Business overview</h3>
-          <p className="akb-card__sub">
-            Give AI context about who you are and what you do.
-          </p>
-          {hasOverview ? (
+        <section className="kb-card" aria-labelledby="kb-bo-title">
+          <header className="kb-card__head">
+            <div>
+              <h3 id="kb-bo-title" className="kb-card__title">
+                About your business
+              </h3>
+              <p className="kb-card__sub">What your AI knows about you.</p>
+            </div>
+          </header>
+          {filledDetails.length > 0 ? (
             <>
-              <div style={{ marginTop: 8 }}>
-                {filledDetails.map((d) => (
-                  <div className="akb-bo__row" key={d.id}>
-                    <span className="akb-bo__tile" aria-hidden="true">
-                      <Icon name={d.icon} size={16} />
-                    </span>
-                    <div className="akb-bo__body">
-                      <div className="akb-bo__t">
-                        <span
-                          style={{
-                            minWidth: 0,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {d.title}
+              <ul className="kb-list kb-list--inset">
+                {filledDetails.map((d) => {
+                  const DIcon = DETAIL_ICONS[d.id] ?? Building2;
+                  return (
+                    <li key={d.id}>
+                      <Link
+                        href="/ai/training#knowledge"
+                        className="kb-list__row kb-list__row--top"
+                        aria-label={`Edit ${d.title}`}
+                      >
+                        <span className="kb-list__icon" aria-hidden="true">
+                          <DIcon size={16} strokeWidth={1.8} />
                         </span>
-                        <span className="akb-saved">
-                          <Icon name="checkCircle" size={11} /> Saved
+                        <span className="kb-list__text">
+                          <span className="kb-list__t">
+                            {d.title}
+                            <CircleCheck size={13} strokeWidth={2} className="kb-saved" />
+                          </span>
+                          <span className="kb-list__d kb-clamp">{d.body}</span>
                         </span>
-                      </div>
-                      <div className="akb-bo__d">{d.body}</div>
-                    </div>
-                    <Link
-                      href="/ai/training#knowledge"
-                      className="akb-icon-btn"
-                      aria-label={`Edit ${d.title}`}
-                    >
-                      <Icon name="edit" size={12} />
-                    </Link>
-                  </div>
-                ))}
-              </div>
-              <div className="akb-card__foot">
-                <Link className="akb-link" href="/ai/training#knowledge">
-                  View all business details <Icon name="arrowR" size={13} />
-                </Link>
-              </div>
+                        <PenLine size={14} strokeWidth={1.8} className="kb-list__chev" />
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+              <Link className="kb-link kb-card__foot" href="/ai/training#knowledge">
+                Edit all details <ChevronRight size={15} strokeWidth={2} />
+              </Link>
             </>
           ) : (
-            <div className="akb-empty">
-              <span className="akb-empty__icon" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/business-overview.svg`}
-                  alt=""
-                  width={44}
-                  height={44}
-                  unoptimized
-                />
-              </span>
-              <div className="akb-empty__t">No business details yet</div>
-              <div className="akb-empty__d">
-                Add information about your business to help AI answer better.
-              </div>
-              <Link
-                href="/ai/training#knowledge"
-                className="akb-btn-outline"
-                style={{
-                  marginTop: 6,
-                  height: 34,
-                  color: "var(--akb-primary)",
-                  borderColor: "var(--akb-hero-border)",
-                }}
-              >
-                <Icon name="plus" size={14} /> Add business details
-              </Link>
-            </div>
+            <KbEmpty
+              icon={Building2}
+              title="Tell your AI about you"
+              text="What you do, what you sell and how you price it. The basics it needs to answer well."
+              href="/ai/training#knowledge"
+              cta="Add business details"
+            />
           )}
         </section>
 
-        {/* business location */}
-        <section
-          className="akb-card akb-card__pad"
-          aria-label="Business location"
-        >
-          <h3 className="akb-card__title">Business location</h3>
-          <p className="akb-card__sub">Where is your business based?</p>
-          {hasLocation ? (
-            /* Inline editor. These controls used to be static spans with
-               dropdown chevrons and a fake toggle — they looked interactive and
-               did nothing. Editing now happens here, saving through the same
-               autosaveAiTraining action the training workspace uses. */
-            <LocationHoursEditor
-              address={location.address}
-              hours={location.hours}
-            />
-          ) : (
-            <div className="akb-empty">
-              <span className="akb-empty__icon" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/location.svg`}
-                  alt=""
-                  width={44}
-                  height={44}
-                  unoptimized
-                />
-              </span>
-              <div className="akb-empty__t">No location added</div>
-              <div className="akb-empty__d">
-                Add your business location to get localized AI answers.
-              </div>
-              <Link
-                href="/establishments"
-                className="akb-btn-outline"
-                style={{
-                  marginTop: 6,
-                  height: 34,
-                  color: "var(--akb-primary)",
-                  borderColor: "var(--akb-hero-border)",
-                }}
-              >
-                <Icon name="plus" size={14} /> Add business location
-              </Link>
+        {/* location */}
+        <section className="kb-card" aria-labelledby="kb-loc-title">
+          <header className="kb-card__head">
+            <div>
+              <h3 id="kb-loc-title" className="kb-card__title">
+                Location &amp; hours
+              </h3>
+              <p className="kb-card__sub">
+                So it can answer &ldquo;where&rdquo; and &ldquo;when&rdquo;.
+              </p>
             </div>
+          </header>
+          {hasLocation ? (
+            <LocationHoursEditor address={location.address} hours={location.hours} />
+          ) : (
+            <KbEmpty
+              icon={MapPin}
+              title="Add your location"
+              text="Your address and opening hours make every answer local and accurate."
+              href="/establishments"
+              cta="Add location"
+            />
           )}
         </section>
 
         {/* recent learning */}
-        <section
-          className="akb-card akb-card__pad"
-          aria-label="Recent learning"
-        >
-          <h3 className="akb-card__title">Recent learning</h3>
-          <p className="akb-card__sub">Last learned or updated by AI.</p>
-          {hasLearning ? (
+        <section className="kb-card" aria-labelledby="kb-rl-title">
+          <header className="kb-card__head">
+            <div>
+              <h3 id="kb-rl-title" className="kb-card__title">
+                Recently learned
+              </h3>
+              <p className="kb-card__sub">Answers you&apos;ve taught it.</p>
+            </div>
+          </header>
+          {recentLearning.length > 0 ? (
             <>
-              <div style={{ marginTop: 6 }}>
+              <ul className="kb-timeline">
                 {recentLearning.map((r) => (
-                  <Link href="/ai?tab=test" className="akb-rl__row" key={r.id}>
-                    <span
-                      className={`akb-rl__dot akb-rl__dot--${r.tone}`}
-                      aria-hidden="true"
-                    />
-                    <span style={{ minWidth: 0 }}>
-                      <div className="akb-rl__t">{r.title}</div>
-                      <div className="akb-rl__meta">Learned {r.when}</div>
-                    </span>
-                  </Link>
+                  <li key={r.id}>
+                    <Link href="/ai?tab=test" className="kb-timeline__row">
+                      <span className={`kb-timeline__dot is-${r.tone}`} aria-hidden="true" />
+                      <span className="kb-list__text">
+                        <span className="kb-list__t kb-clamp-1">{r.title}</span>
+                        <span className="kb-list__d">Learned {r.when}</span>
+                      </span>
+                    </Link>
+                  </li>
                 ))}
-              </div>
-              <div className="akb-card__foot">
-                <Link className="akb-link" href="/ai?tab=test">
-                  View all insights <Icon name="arrowR" size={13} />
-                </Link>
-              </div>
+              </ul>
+              <Link className="kb-link kb-card__foot" href="/ai?tab=test">
+                All learning <ChevronRight size={15} strokeWidth={2} />
+              </Link>
             </>
           ) : (
-            <div className="akb-empty">
-              <span className="akb-empty__icon" aria-hidden="true">
-                <Image
-                  src={`${ASSET}/recent-learning.svg`}
-                  alt=""
-                  width={44}
-                  height={44}
-                  unoptimized
-                />
-              </span>
-              <div className="akb-empty__t">No learning activity yet</div>
-              <div className="akb-empty__d">
-                AI learning updates will appear here once you add sources.
-              </div>
-              <Link
-                href="/ai?tab=test"
-                className="akb-link"
-                style={{ marginTop: 6 }}
-              >
-                View all insights <Icon name="arrowR" size={13} />
-              </Link>
-            </div>
+            <KbEmpty
+              icon={GraduationCap}
+              title="Nothing learned yet"
+              text="When you teach your AI an answer in Test, it shows up here."
+              href="/ai?tab=test"
+              cta="Teach an answer"
+            />
           )}
         </section>
       </div>
+    </div>
+  );
+}
+
+/** Apple-style empty state: soft icon, short title, one line, one action. */
+export function KbEmpty({
+  icon: EIcon,
+  title,
+  text,
+  href,
+  cta,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+  href?: string;
+  cta?: string;
+}) {
+  return (
+    <div className="kb-empty">
+      <span className="kb-empty__icon" aria-hidden="true">
+        <EIcon size={24} strokeWidth={1.6} />
+      </span>
+      <div className="kb-empty__t">{title}</div>
+      <p className="kb-empty__d">{text}</p>
+      {href && cta && (
+        <Link href={href} className="kb-pill">
+          {cta}
+        </Link>
+      )}
     </div>
   );
 }

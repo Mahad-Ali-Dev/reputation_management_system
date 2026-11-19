@@ -1,14 +1,13 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { Avatar } from "@/components/shell/avatar";
-import { Icon } from "@/components/shell/icon";
 import { Stars } from "@/components/shell/stars";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { getAutoReply5StarState } from "@/lib/auto-reply/managed-rule";
 import { normalizeRangeDays } from "@/lib/date-range";
-import { getReviewDispute } from "@/lib/reviews/dispute-queries";
 import { listEstablishments } from "@/lib/establishments/queries";
 import { hasActiveGoogleConnection } from "@/lib/reviews/connection-status";
+import { getReviewDispute } from "@/lib/reviews/dispute-queries";
 import {
   REVIEW_SOURCES,
   type ReplyStatusFilter,
@@ -20,6 +19,19 @@ import {
   reviewStats,
 } from "@/lib/reviews/queries";
 import { buildReplyDeepLink, getReviewSourceMeta } from "@/lib/reviews/source-meta";
+import {
+  ChevronLeft,
+  CircleAlert,
+  CircleCheck,
+  ExternalLink,
+  Flag,
+  Inbox,
+  type LucideIcon,
+  MessageSquareReply,
+  Search,
+  Sparkles,
+  Star,
+} from "lucide-react";
 import Link from "next/link";
 import { AutoReplyToggle } from "./_components/auto-reply-toggle";
 import { ConnectGoogleEmpty } from "./_components/connect-google-empty";
@@ -27,6 +39,7 @@ import { PlatformDeepLink } from "./_components/platform-deep-link";
 import { ReplyDraftBox } from "./_components/reply-draft-box";
 import "./review-feed.css";
 import "./review-feed-glass.css";
+import "./review-inbox-apple.css";
 
 /**
  * Review Inbox — repulabs v3, two-pane relayout (Module 06).
@@ -99,15 +112,16 @@ export default async function ReviewsPage({
   // "within what you're currently looking at".
   const baseFilter = { rating, search: sp.q, source, sinceDays: rangeDays, establishmentId };
 
-  const [reviews, stats, sourceCounts, statusCounts, autoReply, hasGoogle, businesses] = await Promise.all([
-    listReviews(orgId, { ...baseFilter, replyStatus, limit: 50 }),
-    reviewStats(orgId, undefined, rangeDays),
-    reviewCountsBySource(orgId, rangeDays),
-    replyStatusCounts(orgId, baseFilter),
-    getAutoReply5StarState(orgId),
-    hasActiveGoogleConnection(orgId),
-    listEstablishments(orgId),
-  ]);
+  const [reviews, stats, sourceCounts, statusCounts, autoReply, hasGoogle, businesses] =
+    await Promise.all([
+      listReviews(orgId, { ...baseFilter, replyStatus, limit: 50 }),
+      reviewStats(orgId, undefined, rangeDays),
+      reviewCountsBySource(orgId, rangeDays),
+      replyStatusCounts(orgId, baseFilter),
+      getAutoReply5StarState(orgId),
+      hasActiveGoogleConnection(orgId),
+      listEstablishments(orgId),
+    ]);
 
   // Resolve the selected review. Default to the first row in the current list
   // so the detail pane is never empty on a desktop with results. If the
@@ -173,192 +187,136 @@ export default async function ReviewsPage({
 
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Reputation", "Review Inbox"]}>
-      {/* Inbox header — "Review Inbox" branding per the Review Feed design kit:
-          title + live total/avg subtitle + "View disputes" deep-link. The `rf`
-          scope supplies the kit's CSS vars; figures bind to the real reviewStats
-          query (avg shows "—" when there are no rated reviews yet). */}
-      <div className="rf rf-head">
-        <div className="rf-head__main">
-          <h1 className="rf-head__title">Review Inbox</h1>
-          <p className="rf-head__subtitle">
-            {stats.total.toLocaleString()} total · avg{" "}
-            {stats.avgRating ? stats.avgRating.toFixed(2) : "—"} · AI drafts replies you approve
-          </p>
-        </div>
-        <Link href="/reviews/dispute" className="rf-head__disputes">
-          <Icon name="flag" size={14} />
-          View disputes
-        </Link>
-      </div>
+      {/* Apple Mail-style inbox: frosted panes, system greys, one accent. The
+          `rf` scope is kept so the connect-Google empty state keeps its kit vars. */}
+      <div className="rf ri">
+        <header className="ri-head">
+          <div>
+            <span className="ri-eyebrow">Reputation</span>
+            <h1 className="ri-title">Review Inbox</h1>
+            <p className="ri-sub">
+              {stats.total.toLocaleString()} reviews
+              {stats.avgRating ? ` · ${stats.avgRating.toFixed(1)} average` : ""} · AI drafts
+              replies you approve
+            </p>
+          </div>
+          <Link href="/reviews/dispute" className="ri-pill">
+            <Flag size={15} strokeWidth={1.8} />
+            Disputes
+          </Link>
+        </header>
 
-      {isEmpty && !hasActiveFilter ? (
-        <ConnectGoogleEmpty hasGoogle={hasGoogle} />
-      ) : (
-        <div className="rev-inbox">
-          {/* ── PANE 1: persistent filter rail ── */}
-          <aside className="rev-rail col" style={{ gap: 14 }}>
-            <FilterRail
-              sp={sp}
-              sourceCounts={sourceCounts}
-              status={replyStatus}
-              statusCounts={statusCounts}
-              buildHref={buildHref}
-              businesses={businesses}
-            />
+        {isEmpty && !hasActiveFilter ? (
+          <ConnectGoogleEmpty hasGoogle={hasGoogle} />
+        ) : (
+          <div className="rev-inbox">
+            {/* ── PANE 1: filters, ratings, auto-reply ── */}
+            <aside className="rev-rail ri-rail">
+              <FilterRail
+                sp={sp}
+                sourceCounts={sourceCounts}
+                status={replyStatus}
+                statusCounts={statusCounts}
+                buildHref={buildHref}
+                businesses={businesses}
+              />
 
-            <div className="ds-card">
-              <div className="ds-card__head">
-                <h3 className="ds-card__title">Rating distribution</h3>
-                <span className="mono dim" style={{ fontSize: 10.5 }}>
-                  LAST 30 DAYS
-                </span>
-              </div>
-              <div className="ds-card__body">
+              <section className="ri-card ri-dist" aria-label="Rating distribution">
+                <div className="ri-card__head">
+                  <h2 className="ri-card__title">Ratings</h2>
+                  <span className="ri-muted">
+                    {rangeDays ? `Last ${rangeDays} days` : "All time"}
+                  </span>
+                </div>
                 {distribution.map((d) => {
                   const isActive = rating === d.rating;
                   return (
                     <Link
                       key={d.rating}
                       href={buildHref({ rating: isActive ? undefined : d.rating })}
-                      className="row"
-                      style={{
-                        marginBottom: 6,
-                        fontSize: 12,
-                        textDecoration: "none",
-                        color: "inherit",
-                        opacity: rating && !isActive ? 0.5 : 1,
-                      }}
+                      className={`ri-dist__row${isActive ? " is-active" : ""}${rating && !isActive ? " is-dim" : ""}`}
                     >
-                      <span className="row" style={{ gap: 2, width: 38 }}>
-                        <span className="mono">{d.rating}</span>
-                        <Icon name="star" size={11} style={{ color: "var(--gold)" }} />
+                      <span className="ri-dist__label">
+                        {d.rating}
+                        <Star size={11} strokeWidth={0} fill="currentColor" />
                       </span>
-                      <div className="gauge" style={{ flex: 1 }}>
+                      <span className="ri-dist__track">
                         <i
                           style={{
-                            width: `${maxBucket > 0 ? Math.round((d.count / maxBucket) * 100) : 0}%`,
+                            width: `${Math.round((d.count / maxBucket) * 100)}%`,
                             background: RATING_COLORS[d.rating],
                           }}
                         />
-                      </div>
-                      <span
-                        className="mono dim"
-                        style={{ width: 50, textAlign: "right", fontSize: 11.5 }}
-                      >
-                        {d.count.toLocaleString()}
                       </span>
+                      <span className="ri-dist__count">{d.count.toLocaleString()}</span>
                     </Link>
                   );
                 })}
-              </div>
+              </section>
+
+              <AutoReplyToggle enabled={autoReply.enabled} />
+            </aside>
+
+            {/* ── PANE 2: the review list ── */}
+            <div className="rev-list" data-detail-open={detail ? "1" : "0"}>
+              <section className="ri-card ri-list" aria-label="Reviews">
+                <div className="ri-list__head">
+                  <h2 className="ri-card__title">
+                    {replyStatus ? statusLabel(replyStatus) : "All reviews"}
+                  </h2>
+                  <span className="ri-muted">
+                    {reviews.length}
+                    {reviews.length === 50 ? "+" : ""}
+                  </span>
+                </div>
+                {reviews.length === 0 ? (
+                  <div className="ri-empty">
+                    <Inbox size={40} strokeWidth={1.3} className="ri-empty__icon" />
+                    <div className="ri-empty__title">No reviews</div>
+                    <p className="ri-empty__sub">
+                      {selectedBusiness?.name
+                        ? `${selectedBusiness.name} has no reviews that match these filters.`
+                        : "No reviews match the current filters."}
+                    </p>
+                    <Link href="/reviews" className="ri-pill ri-pill--sm">
+                      Clear filters
+                    </Link>
+                  </div>
+                ) : (
+                  <ul className="rev-list__items ri-list__items">
+                    {reviews.map((r, i) => (
+                      <li key={r.id}>
+                        <ReviewListItem
+                          review={r}
+                          active={r.id === effectiveSelectedId}
+                          href={buildHref({ selected: r.id })}
+                          tone={((i % 7) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
             </div>
 
-            <AutoReplyToggle enabled={autoReply.enabled} />
-          </aside>
-
-          {/* ── PANE 2: the review list ── */}
-          <div className="rev-list" data-detail-open={detail ? "1" : "0"}>
-            <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-              <div
-                className="rev-list__head"
-                style={{
-                  padding: "10px 14px",
-                  borderBottom: "1px solid var(--line)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                }}
-              >
-                <span style={{ fontSize: 12.5, fontWeight: 600 }}>
-                  {replyStatus ? statusLabel(replyStatus) : "All reviews"}
-                </span>
-                <span className="mono dim" style={{ fontSize: 11 }}>
-                  {reviews.length}
-                  {reviews.length === 50 ? "+" : ""}
-                </span>
-              </div>
-              {reviews.length === 0 ? (
-                <div
-                  className="col"
-                  style={{
-                    alignItems: "center",
-                    textAlign: "center",
-                    gap: 8,
-                    padding: "44px 20px",
-                  }}
-                >
-                  <span
-                    aria-hidden
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      width: 48,
-                      height: 48,
-                      borderRadius: 14,
-                      background: "var(--glass-fill-subtle, rgba(99,102,241,0.08))",
-                      color: "var(--glass-accent, #6366f1)",
-                    }}
-                  >
-                    <Icon name="building" size={22} />
-                  </span>
-                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>No reviews yet</div>
-                  <p
-                    style={{
-                      margin: 0,
-                      fontSize: 12,
-                      color: "var(--rl-muted)",
-                      maxWidth: 240,
-                    }}
-                  >
-                    {selectedBusiness?.name
-                      ? `${selectedBusiness.name} has no reviews that match these filters.`
-                      : "No reviews match the current filters."}
-                  </p>
-                  <Link href="/reviews" className="btn btn--ghost" style={{ marginTop: 2 }}>
-                    Clear filters
-                  </Link>
-                </div>
+            {/* ── PANE 3: detail + reply ── */}
+            <div className="rev-detail" data-detail-open={detail ? "1" : "0"}>
+              {detail ? (
+                <ReviewDetailPane
+                  review={detail}
+                  dispute={detailDispute}
+                  backHref={buildHref({ selected: undefined })}
+                />
               ) : (
-                <ul
-                  className="rev-list__items"
-                  style={{ listStyle: "none", margin: 0, padding: 0 }}
-                >
-                  {reviews.map((r, i) => (
-                    <li key={r.id}>
-                      <ReviewListItem
-                        review={r}
-                        active={r.id === effectiveSelectedId}
-                        href={buildHref({ selected: r.id })}
-                        tone={((i % 7) + 1) as 1 | 2 | 3 | 4 | 5 | 6 | 7}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <section className="ri-card ri-empty">
+                  <MessageSquareReply size={40} strokeWidth={1.3} className="ri-empty__icon" />
+                  <p className="ri-empty__sub">Select a review to read and reply.</p>
+                </section>
               )}
             </div>
           </div>
-
-          {/* ── PANE 3: detail + reply ── */}
-          <div className="rev-detail" data-detail-open={detail ? "1" : "0"}>
-            {detail ? (
-              <ReviewDetailPane
-                review={detail}
-                dispute={detailDispute}
-                backHref={buildHref({ selected: undefined })}
-              />
-            ) : (
-              <div
-                className="ds-card"
-                style={{ padding: 40, textAlign: "center", color: "var(--rl-muted)" }}
-              >
-                <Icon name="reply" size={20} />
-                <p style={{ fontSize: 13, marginTop: 8 }}>Select a review to read and reply.</p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* Three-pane on wide screens. On narrow screens the rail stacks on top,
           and the list/detail swap based on whether a review is selected
@@ -366,27 +324,19 @@ export default async function ReviewsPage({
       <style>{`
         .rev-inbox {
           display: grid;
-          grid-template-columns: 264px minmax(280px, 360px) 1fr;
-          gap: 14px;
-          /* stretch (not start): pane 1 (the filter rail) is never
-             scroll-clipped, so it's what sets the row's height — panes 2 & 3
-             are flex columns with min-height:0 + internal overflow-y:auto,
-             so they defer to that height and scroll their own content
-             instead of growing the whole page taller as reviews load in. */
+          grid-template-columns: 272px minmax(300px, 380px) 1fr;
+          gap: 16px;
+          /* stretch: pane 1 sets the row height; panes 2 & 3 scroll inside. */
           align-items: stretch;
         }
         .rev-list {
           display: flex;
           flex-direction: column;
           min-height: 0;
-          /* Hard ceiling, not just "match pane 1" — pane 1 can itself run
-             long (many status filters, wide rating distribution), and this
-             list must never grow past the viewport no matter what its
-             siblings do. 200px ≈ topbar + page header + padding above the
-             3-pane row. */
+          /* Hard ceiling so the list never grows past the viewport. */
           max-height: calc(100vh - 200px);
         }
-        .rev-list .ds-card {
+        .rev-list .ri-list {
           display: flex;
           flex-direction: column;
           flex: 1;
@@ -404,7 +354,7 @@ export default async function ReviewsPage({
         @media (max-width: 1100px) {
           .rev-inbox { grid-template-columns: 240px 1fr; align-items: start; }
           .rev-list { min-height: unset; max-height: unset; }
-          .rev-list .ds-card { flex: unset; min-height: unset; }
+          .rev-list .ri-list { flex: unset; min-height: unset; }
           .rev-list__items { flex: unset; min-height: unset; overflow-y: visible; }
           .rev-detail {
             grid-column: 1 / -1;
@@ -446,74 +396,81 @@ function FilterRail({
   businesses: Array<{ id: string; name: string }>;
   status?: ReplyStatusFilter;
   statusCounts: { all: number; needsReply: number; replied: number; draftReady: number };
-  buildHref: (o: Partial<{ status: ReplyStatusFilter | undefined; rating: number | undefined; selected: string | undefined }>) => string;
+  buildHref: (
+    o: Partial<{
+      status: ReplyStatusFilter | undefined;
+      rating: number | undefined;
+      selected: string | undefined;
+    }>,
+  ) => string;
 }) {
-  const inputStyle = {
-    width: "100%",
-    height: 36,
-    padding: "0 12px",
-    borderRadius: "var(--r)",
-    border: "1px solid var(--line)",
-    background: "var(--surface)",
-    fontFamily: "var(--f-ui)",
-    fontSize: 13,
-    outline: "none",
-  } as const;
-
-  const statusPills: Array<{
+  const statusRows: Array<{
     key: ReplyStatusFilter | undefined;
     label: string;
     count: number;
+    icon: LucideIcon;
     danger?: boolean;
   }> = [
-    { key: undefined, label: "All", count: statusCounts.all },
-    { key: "needs_reply", label: "Needs reply", count: statusCounts.needsReply, danger: true },
-    { key: "replied", label: "Replied", count: statusCounts.replied },
-    { key: "draft_ready", label: "AI draft", count: statusCounts.draftReady },
+    { key: undefined, label: "All reviews", count: statusCounts.all, icon: Inbox },
+    {
+      key: "needs_reply",
+      label: "Needs reply",
+      count: statusCounts.needsReply,
+      icon: CircleAlert,
+      danger: true,
+    },
+    { key: "replied", label: "Replied", count: statusCounts.replied, icon: CircleCheck },
+    { key: "draft_ready", label: "AI drafts", count: statusCounts.draftReady, icon: Sparkles },
   ];
 
   return (
-    <div className="ds-card" style={{ padding: 14 }}>
-      <h3 className="ds-card__title" style={{ marginBottom: 10 }}>
-        Filters
-      </h3>
+    <section className="ri-card ri-filters" aria-label="Filters">
+      {/* Mailbox-style status list — server-driven Links that keep the
+          search / rating / platform filters. */}
+      <nav className="ri-boxes" aria-label="Reply status">
+        {statusRows.map((p) => {
+          const isActive = p.key === status;
+          const RowIcon = p.icon;
+          return (
+            <Link
+              key={p.label}
+              href={buildHref({ status: p.key, selected: undefined })}
+              className={`ri-box${isActive ? " is-active" : ""}`}
+              aria-current={isActive ? "page" : undefined}
+            >
+              <RowIcon size={17} strokeWidth={1.8} className="ri-box__icon" />
+              <span className="ri-box__label">{p.label}</span>
+              {p.count > 0 && (
+                <span className={`ri-box__count${p.danger ? " is-danger" : ""}`}>{p.count}</span>
+              )}
+            </Link>
+          );
+        })}
+      </nav>
 
-      {/* Search + rating + source live in a GET form so they preserve the
-          active status pill (hidden input) on submit. */}
-      <form className="col" style={{ gap: 8, marginBottom: 12 }}>
+      {/* Search + rating + platform + business live in a GET form so they keep
+          the active status (hidden input) on submit. */}
+      <form className="ri-form">
         {status && <input type="hidden" name="status" value={status} />}
-        <div style={{ position: "relative" }}>
-          <span
-            aria-hidden
-            style={{
-              position: "absolute",
-              left: 10,
-              top: "50%",
-              transform: "translateY(-50%)",
-              color: "var(--rl-muted)",
-              pointerEvents: "none",
-            }}
-          >
-            <Icon name="search" size={14} />
-          </span>
+        <label className="ri-search">
+          <Search size={15} strokeWidth={1.8} aria-hidden />
           <input
             name="q"
             defaultValue={sp.q ?? ""}
-            placeholder="Search reviews…"
+            placeholder="Search"
             aria-label="Search reviews"
-            style={{ ...inputStyle, padding: "0 12px 0 32px" }}
           />
-        </div>
+        </label>
         <select
           name="rating"
           defaultValue={sp.rating ?? ""}
           aria-label="Filter by rating"
-          style={{ ...inputStyle, padding: "0 32px 0 12px" }}
+          className="ri-select"
         >
           <option value="">All ratings</option>
           {[5, 4, 3, 2, 1].map((r) => (
             <option key={r} value={r}>
-              {r}★
+              {r} star{r === 1 ? "" : "s"}
             </option>
           ))}
         </select>
@@ -521,7 +478,7 @@ function FilterRail({
           name="source"
           defaultValue={sp.source ?? ""}
           aria-label="Filter by platform"
-          style={{ ...inputStyle, padding: "0 32px 0 12px" }}
+          className="ri-select"
         >
           <option value="">All platforms</option>
           {(["google", "airbnb", "booking_com", "facebook", "yelp", "trustpilot"] as const).map(
@@ -542,7 +499,7 @@ function FilterRail({
             name="establishment"
             defaultValue={sp.establishment ?? ""}
             aria-label="Filter by business"
-            style={{ ...inputStyle, padding: "0 32px 0 12px" }}
+            className="ri-select"
           >
             <option value="">All businesses</option>
             {businesses.map((b) => (
@@ -552,69 +509,16 @@ function FilterRail({
             ))}
           </select>
         )}
-        <div className="row" style={{ gap: 8 }}>
-          <button type="submit" className="btn" style={{ flex: 1 }}>
-            <Icon name="filter" size={12} />
+        <div className="ri-form__actions">
+          <button type="submit" className="ri-pill ri-pill--pri">
             Apply
           </button>
-          <Link href="/reviews" className="btn btn--ghost">
+          <Link href="/reviews" className="ri-link">
             Reset
           </Link>
         </div>
       </form>
-
-      {/* Status filter chips — server-driven Links, preserve search/rating/source. */}
-      <div
-        className="mono dim"
-        style={{ fontSize: 10, letterSpacing: "0.06em", marginBottom: 6 }}
-      >
-        STATUS
-      </div>
-      <div className="col" style={{ gap: 6 }}>
-        {statusPills.map((p) => {
-          const isActive = p.key === status;
-          return (
-            <Link
-              key={p.label}
-              href={buildHref({ status: p.key, selected: undefined })}
-              className="row"
-              style={{
-                justifyContent: "space-between",
-                textDecoration: "none",
-                padding: "7px 10px",
-                borderRadius: "var(--r)",
-                fontSize: 12.5,
-                color: isActive ? "#fff" : "var(--ink)",
-                background: isActive ? "var(--pri, #2563eb)" : "transparent",
-                border: `1px solid ${isActive ? "var(--pri, #2563eb)" : "var(--line)"}`,
-              }}
-            >
-              <span>{p.label}</span>
-              {p.count > 0 && (
-                <span
-                  className="mono"
-                  style={{
-                    fontSize: 10,
-                    padding: "0 6px",
-                    borderRadius: 999,
-                    fontWeight: 700,
-                    background:
-                      p.danger && !isActive
-                        ? "var(--bad, #dc2626)"
-                        : isActive
-                          ? "rgba(255,255,255,0.22)"
-                          : "rgba(0,0,0,0.08)",
-                    color: p.danger && !isActive ? "#fff" : isActive ? "#fff" : "inherit",
-                  }}
-                >
-                  {p.count}
-                </span>
-              )}
-            </Link>
-          );
-        })}
-      </div>
-    </div>
+    </section>
   );
 }
 
@@ -639,100 +543,23 @@ function ReviewListItem({
     <Link
       href={href}
       aria-current={active ? "true" : undefined}
-      className="rev-row"
-      style={{
-        display: "block",
-        padding: "11px 14px",
-        textDecoration: "none",
-        color: "inherit",
-        borderBottom: "1px solid var(--line)",
-        borderLeft: `3px solid ${active ? "var(--pri, #2563eb)" : "transparent"}`,
-        background: active ? "var(--pri-50, #eff6ff)" : "transparent",
-      }}
+      className={`rev-row ri-row${active ? " is-active" : ""}`}
     >
-      <div className="row" style={{ gap: 10, alignItems: "flex-start" }}>
-        <Avatar name={r.reviewerName ?? "User"} size={30} tone={tone} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            className="row"
-            style={{ gap: 8, justifyContent: "space-between", alignItems: "baseline" }}
-          >
-            <span
-              style={{
-                fontSize: 12.5,
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-              }}
-            >
-              {r.reviewerName ?? "Anonymous"}
-            </span>
-            <span className="dim mono" style={{ fontSize: 10, flexShrink: 0 }}>
-              {r.postedAt ? relativeTime(r.postedAt) : "—"}
-            </span>
-          </div>
-          <div className="row" style={{ gap: 6, margin: "3px 0 4px" }}>
-            <Stars value={r.rating} size={11} />
-            <span
-              style={{
-                fontSize: 9,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                padding: "1px 5px",
-                borderRadius: 999,
-                background: sourceMeta.bgTint,
-                color: sourceMeta.fg,
-                fontFamily: "var(--f-mono)",
-              }}
-            >
-              {sourceMeta.label.toUpperCase()}
-            </span>
-            <span style={{ marginLeft: "auto" }}>
-              <ReplyStatusBadge status={replyStatus} rating={r.rating} compact />
-            </span>
-          </div>
-          {r.establishment?.name && (
-            <div
-              className="dim"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 4,
-                margin: "0 0 4px",
-                fontSize: 10.5,
-                minWidth: 0,
-              }}
-            >
-              <Icon name="building" size={10} />
-              <span
-                style={{
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {r.establishment.name}
-              </span>
-            </div>
-          )}
-          {r.body && (
-            <p
-              style={{
-                margin: 0,
-                fontSize: 12,
-                color: "var(--ink-2)",
-                lineHeight: 1.45,
-                display: "-webkit-box",
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-              }}
-            >
-              {r.body}
-            </p>
-          )}
+      <Avatar name={r.reviewerName ?? "User"} size={36} tone={tone} />
+      <div className="ri-row__main">
+        <div className="ri-row__top">
+          <span className="ri-row__name">{r.reviewerName ?? "Anonymous"}</span>
+          <span className="ri-row__time">{r.postedAt ? relativeTime(r.postedAt) : "—"}</span>
         </div>
+        <div className="ri-row__meta">
+          <Stars value={r.rating} size={11} />
+          <span className="ri-source" style={{ color: sourceMeta.fg }}>
+            {sourceMeta.label}
+          </span>
+          <ReplyStatusBadge status={replyStatus} rating={r.rating} />
+        </div>
+        {r.body && <p className="ri-row__body">{r.body}</p>}
+        {r.establishment?.name && <div className="ri-row__biz">{r.establishment.name}</div>}
       </div>
     </Link>
   );
@@ -769,67 +596,52 @@ function ReviewDetailPane({
     : null;
 
   const hasOpenDispute = !!dispute && dispute.status !== "withdrawn";
+  const posted = r.postedAt
+    ? new Date(r.postedAt).toLocaleString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+      })
+    : null;
 
   return (
-    <div className="ds-card" style={{ padding: 18 }}>
+    <article className="ri-card ri-detail">
       {/* Back to list — only matters on narrow screens where the list folds. */}
-      <div className="rev-detail__back" style={{ marginBottom: 12 }}>
-        <Link href={backHref} className="btn btn--ghost" style={{ fontSize: 11.5 }}>
-          <Icon name="chevL" size={12} />
-          Back to list
+      <div className="rev-detail__back">
+        <Link href={backHref} className="ri-link ri-back">
+          <ChevronLeft size={16} strokeWidth={2} />
+          Reviews
         </Link>
       </div>
 
-      {/* Reviewer header */}
-      <div className="row" style={{ gap: 12, marginBottom: 12, alignItems: "flex-start" }}>
-        <Avatar name={r.reviewerName ?? "User"} size={40} tone={4} />
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div className="row" style={{ gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <span style={{ fontSize: 15, fontWeight: 600 }}>{r.reviewerName ?? "Anonymous"}</span>
+      <header className="ri-detail__head">
+        <Avatar name={r.reviewerName ?? "User"} size={48} tone={4} />
+        <div className="ri-detail__who">
+          <h2 className="ri-detail__name">{r.reviewerName ?? "Anonymous"}</h2>
+          <div className="ri-detail__meta">
+            <Stars value={r.rating} size={14} />
             <span
+              className="ri-source"
+              style={{ color: sourceMeta.fg }}
               title={sourceMeta.description}
-              style={{
-                fontSize: 10,
-                fontWeight: 700,
-                letterSpacing: "0.04em",
-                padding: "2px 6px",
-                borderRadius: 999,
-                background: sourceMeta.bgTint,
-                color: sourceMeta.fg,
-                fontFamily: "var(--f-mono)",
-              }}
             >
-              {sourceMeta.label.toUpperCase()}
+              {sourceMeta.label}
             </span>
             <ReplyStatusBadge status={reply?.status ?? null} rating={r.rating} />
           </div>
-          <div className="row" style={{ gap: 8, marginTop: 4 }}>
-            <Stars value={r.rating} size={14} />
-            <span className="dim mono" style={{ fontSize: 11 }}>
-              {r.postedAt ? new Date(r.postedAt).toLocaleString() : "—"}
-              {r.establishment?.name ? ` · ${r.establishment.name}` : ""}
-            </span>
+          <div className="ri-muted">
+            {posted ?? "—"}
+            {r.establishment?.name ? ` · ${r.establishment.name}` : ""}
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Full review body */}
       {r.body ? (
-        <p
-          style={{
-            margin: "0 0 14px",
-            fontSize: 13.5,
-            color: "var(--ink)",
-            lineHeight: 1.6,
-            whiteSpace: "pre-wrap",
-          }}
-        >
-          {r.body}
-        </p>
+        <p className="ri-detail__body">{r.body}</p>
       ) : (
-        <p className="dim" style={{ fontSize: 13, margin: "0 0 14px" }}>
-          (no review text)
-        </p>
+        <p className="ri-detail__body ri-muted">(no review text)</p>
       )}
 
       {/* AI-draft reply flow — reuses the existing ReplyDraftBox island and the
@@ -852,106 +664,52 @@ function ReviewDetailPane({
         }
       />
 
-      {/* Footer actions: open-on-platform (client island) + dispute deep-link +
-          full-page view. */}
-      <div
-        style={{
-          marginTop: 14,
-          paddingTop: 12,
-          borderTop: "1px solid var(--line)",
-          display: "flex",
-          alignItems: "center",
-          gap: 14,
-          flexWrap: "wrap",
-          fontSize: 11.5,
-        }}
-      >
+      {/* Footer: open-on-platform (client island) + dispute + full page. */}
+      <footer className="ri-detail__foot">
         {replyDeepLink && (
-          <span className="row" style={{ gap: 6 }}>
-            <span style={{ color: "var(--rl-muted)" }}>Reply on platform:</span>
+          <span className="ri-foot__item">
+            <span className="ri-muted">Reply on</span>
             <PlatformDeepLink href={replyDeepLink} label={sourceMeta.label} color={sourceMeta.fg} />
           </span>
         )}
 
         {hasOpenDispute ? (
-          <Link
-            href={`/reviews/dispute/${dispute.id}`}
-            className="row"
-            style={{ gap: 5, color: "var(--warn, #b45309)", textDecoration: "none", fontWeight: 500 }}
-          >
-            <Icon name="flag" size={12} />
+          <Link href={`/reviews/dispute/${dispute.id}`} className="ri-foot__item ri-foot__warn">
+            <Flag size={14} strokeWidth={1.8} />
             Dispute {dispute.status.replace(/_/g, " ")}
           </Link>
         ) : (
-          <Link
-            href={`/reviews/dispute/new?reviewId=${r.id}`}
-            className="row"
-            style={{ gap: 5, color: "var(--rl-muted)", textDecoration: "none", fontWeight: 500 }}
-          >
-            <Icon name="flag" size={12} />
+          <Link href={`/reviews/dispute/new?reviewId=${r.id}`} className="ri-foot__item">
+            <Flag size={14} strokeWidth={1.8} />
             Dispute this review
           </Link>
         )}
 
-        <Link
-          href={`/reviews/${r.id}`}
-          className="row"
-          style={{ gap: 5, color: "var(--rl-muted)", textDecoration: "none", marginLeft: "auto" }}
-        >
-          Full view
-          <Icon name="ext" size={11} />
+        <Link href={`/reviews/${r.id}`} className="ri-foot__item ri-foot__end">
+          Open full page
+          <ExternalLink size={13} strokeWidth={1.8} />
         </Link>
-      </div>
-    </div>
+      </footer>
+    </article>
   );
 }
 
 /**
- * Reply-status-driven badge:
+ * Reply-status-driven label (dot + text, Apple style):
  *   - published          → green "Replied"
- *   - draft/pending      → blue "AI Draft Ready"
- *   - none + rating ≤ 4  → red "Needs Reply"
+ *   - draft/pending      → accent "AI draft"
+ *   - none + rating ≤ 4  → red "Needs reply"
  *   - none + 5★          → nothing (a 5★ with no reply isn't urgent)
  */
-function ReplyStatusBadge({
-  status,
-  rating,
-  compact = false,
-}: {
-  status: string | null;
-  rating: number;
-  compact?: boolean;
-}) {
+function ReplyStatusBadge({ status, rating }: { status: string | null; rating: number }) {
   if (status === "published") {
-    return (
-      <span className="chip chip--ok" style={{ gap: 4, ...(compact ? { fontSize: 10, padding: "1px 7px" } : {}) }}>
-        <Icon name="check" size={compact ? 10 : 11} />
-        Replied
-      </span>
-    );
+    return <span className="ri-status ri-status--ok">Replied</span>;
   }
   if (status === "draft" || status === "pending_review") {
-    return (
-      <span
-        className="chip"
-        style={{
-          gap: 4,
-          background: "var(--pri-50, #eff6ff)",
-          color: "var(--pri, #2563eb)",
-          ...(compact ? { fontSize: 10, padding: "1px 7px" } : {}),
-        }}
-      >
-        <Icon name="sparkle" size={compact ? 10 : 11} />
-        {compact ? "Draft" : "AI Draft Ready"}
-      </span>
-    );
+    return <span className="ri-status ri-status--draft">AI draft</span>;
   }
   if (!status && rating <= 4) {
-    return (
-      <span className="chip chip--bad" style={compact ? { fontSize: 10, padding: "1px 7px" } : undefined}>
-        Needs Reply
-      </span>
-    );
+    return <span className="ri-status ri-status--bad">Needs reply</span>;
   }
   return null;
 }
@@ -964,6 +722,6 @@ function relativeTime(d: Date): string {
   if (h < 24) return `${h}h ago`;
   const days = Math.floor(h / 24);
   if (days < 7) return `${days}d ago`;
-  if (days < 30) return `${Math.floor(days / 7)} wk ago`;
-  return d.toLocaleDateString();
+  if (days < 30) return `${Math.floor(days / 7)}w ago`;
+  return d.toLocaleDateString(undefined, { day: "numeric", month: "short" });
 }

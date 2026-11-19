@@ -6,9 +6,11 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { isMissingRelation } from "@/lib/contacts/fail-soft";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
-import { CalendarClient, type CalendarPost } from "./_components/calendar-client";
 import { StudioKpis, StudioTabs } from "../posts/_components/studio-kit";
+import { CalendarClient, type CalendarPost } from "./_components/calendar-client";
 import "../posts/social-compose.css";
+import "../posts/social-compose-glass.css";
+import "../posts/social-apple.css";
 
 /**
  * Content calendar (Module 10) — monthly/weekly grid of scheduled + published
@@ -104,7 +106,9 @@ export default async function ContentCalendarPage({
     })
     .filter((p): p is CalendarPost => p !== null);
 
-  const totalThisMonth = posts.filter((p) => (p.postedAt ?? p.scheduledFor)?.getMonth() === month).length;
+  const totalThisMonth = posts.filter(
+    (p) => (p.postedAt ?? p.scheduledFor)?.getMonth() === month,
+  ).length;
   const scheduledCount = posts.filter((p) => p.status === "scheduled").length;
   const publishedCount = posts.filter(
     (p) => p.status === "published" || p.status === "posted",

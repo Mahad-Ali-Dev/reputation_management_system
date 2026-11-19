@@ -1,5 +1,4 @@
 import { AppShellServer } from "@/components/app-shell-server";
-import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { QrCode } from "@/components/shell/qr-code";
 import { TopBar } from "@/components/topbar";
@@ -9,6 +8,7 @@ import { roleAtLeast } from "@/lib/auth/rbac";
 import { orgHasFeature } from "@/lib/billing/feature-access";
 import { upgradeHref } from "@/lib/billing/upgrade-href";
 import { prisma } from "@/lib/db/client";
+import { withTenant } from "@/lib/db/with-tenant";
 import { listEstablishments } from "@/lib/establishments/queries";
 import { restoreDevice } from "@/lib/hardware/actions";
 import {
@@ -19,7 +19,20 @@ import {
   type listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
+import { parseSlug } from "@/lib/hardware/slug";
+import {
+  ArrowUpRight,
+  ChevronLeft,
+  CircleCheck,
+  Info,
+  QrCode as QrCodeIcon,
+  ScanLine,
+  ShoppingBag,
+  Trash2,
+} from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
+import { ActivateSheet, type DeviceState } from "./_components/activate-sheet";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import {
   MdDevicesImpact,
@@ -29,6 +42,7 @@ import {
   MdTrainingBanner,
 } from "./_components/dashboard-cards";
 import { DeviceTable } from "./_components/device-table";
+import { GenerateQrModal, type QrBusiness } from "./_components/generate-qr-modal";
 import { recordNfcUid } from "./_components/nfc-actions";
 import { NfcConfigCard } from "./_components/nfc-config-card";
 import { QrActions } from "./_components/qr-actions";
@@ -133,6 +147,12 @@ export default async function QrCodesPage({
     nfc?: string;
     /** "1" after a device is released back to unactivated inventory. */
     released?: string;
+    /** Opens the Activate sheet: a stand slug, or "1" for none (/activate redirects here). */
+    activate?: string;
+    /** "1" opens the Generate-QR sheet (old /hardware/new links land here). */
+    generate?: string;
+    /** Set by generateSelfServiceQr on invalid input; shown inside the sheet. */
+    error?: string;
   }>;
 }) {
   const { orgId, role } = await getOrgContext();
@@ -146,6 +166,48 @@ export default async function QrCodesPage({
   ]);
   const businessOptions = establishments.map((e) => ({ id: e.id, name: e.name }));
   const sp = await searchParams;
+  const qrBusinesses: QrBusiness[] = establishments.map((e) => ({
+    id: e.id,
+    name: e.name,
+    hasGoogle: !!e.googlePlaceId,
+  }));
+  const qrSheet = { businesses: qrBusinesses, defaultOpen: sp.generate === "1", error: !!sp.error };
+
+  // Activate sheet (/activate redirects here with ?activate=<slug|1>). The
+  // stand is resolved INSIDE tenant RLS: unclaimed rows and our own are
+  // visible, so "not found" means unknown OR owned by another business, and we
+  // never reason about anyone else's hardware.
+  let activateSheet: ReactNode = null;
+  if (sp.activate !== undefined) {
+    const slug = parseSlug(sp.activate);
+    const dev = slug
+      ? await withTenant(orgId, (tx) =>
+          tx.device.findFirst({
+            where: { shortSlug: slug },
+            select: { status: true, organizationId: true, serial: true },
+          }),
+        )
+      : null;
+    const deviceState: DeviceState = !slug
+      ? "none"
+      : !dev
+        ? "unavailable"
+        : dev.status === "unactivated"
+          ? "claimable"
+          : dev.organizationId === orgId
+            ? "yours"
+            : "unavailable";
+    activateSheet = (
+      <ActivateSheet
+        key={slug ?? "none"}
+        establishments={businessOptions}
+        detectedQrUrl={slug ? publicQrUrl(slug) : null}
+        detectedSlug={slug}
+        detectedSerial={dev?.serial ?? null}
+        deviceState={deviceState}
+      />
+    );
+  }
 
   // Only offer a device that's actually still claimable; a stale cookie
   // pointing at an already-activated stand would pre-fill a dead end.
@@ -175,6 +237,8 @@ export default async function QrCodesPage({
     return (
       <EmptyState
         establishments={businessOptions}
+        qrSheet={qrSheet}
+        sheet={activateSheet}
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
@@ -191,6 +255,8 @@ export default async function QrCodesPage({
     return (
       <EmptyState
         establishments={businessOptions}
+        qrSheet={qrSheet}
+        sheet={activateSheet}
         recentActivation={sp.activated}
         detectedQrUrl={detectedQrUrl}
         detectedSerial={detectedSerial}
@@ -227,10 +293,7 @@ export default async function QrCodesPage({
               <Icon name="ext" size={12} />
               Buy stands
             </a>
-            <Link href="/hardware/new" className="btn">
-              <Icon name="qr" size={12} />
-              Generate QR
-            </Link>
+            <GenerateQrModal {...qrSheet} />
             <ConnectDeviceModal
               establishments={businessOptions}
               detectedQrUrl={detectedQrUrl}
@@ -357,6 +420,7 @@ export default async function QrCodesPage({
 
         <BatchGeneratorSection />
       </div>
+      {activateSheet}
     </AppShellServer>
   );
 }
@@ -456,12 +520,17 @@ function QrProductCard({
 
 function EmptyState({
   establishments,
+  qrSheet,
+  sheet = null,
   recentActivation,
   detectedQrUrl = null,
   detectedSerial = null,
   retiredCount = 0,
 }: {
   establishments: Array<{ id: string; name: string }>;
+  qrSheet: { businesses: QrBusiness[]; defaultOpen: boolean; error: boolean };
+  /** The Activate sheet, when ?activate is set. */
+  sheet?: ReactNode;
   recentActivation?: string;
   detectedQrUrl?: string | null;
   detectedSerial?: string | null;
@@ -472,26 +541,22 @@ function EmptyState({
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager"]}>
       <div className="md">
-        <div
-          className="row"
-          style={{ justifyContent: "flex-end", gap: 8, marginBottom: 4, flexWrap: "wrap" }}
-        >
-          <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
-            <Icon name="ext" size={12} />
-            Buy stands
-          </a>
-          <Link href="/hardware/new" className="btn">
-            <Icon name="qr" size={12} />
-            Generate QR
-          </Link>
-          <ConnectDeviceModal
-            establishments={establishments}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
+        {/* Same header as the active layout: hero left, actions right. */}
+        <div className="md-head">
+          <MdHero />
+          <div className="md-head__actions">
+            <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="btn">
+              <Icon name="ext" size={12} />
+              Buy stands
+            </a>
+            <GenerateQrModal {...qrSheet} />
+            <ConnectDeviceModal
+              establishments={establishments}
+              detectedQrUrl={detectedQrUrl}
+              detectedSerial={detectedSerial}
+            />
+          </div>
         </div>
-
-        <MdHero />
 
         {recentActivation && (
           <Banner tone="ok">
@@ -499,8 +564,10 @@ function EmptyState({
           </Banner>
         )}
 
-        {/* AI-training banner stays on the empty state (kit). */}
-        <MdTrainingBanner href={upgradeHref("ai_autopilot")} />
+        <MdTrainingBanner
+          href={upgradeHref("ai_autopilot")}
+          title="Get your AI ready before the first scan"
+        />
 
         {/* Scan-analytics summary row — genuine zeros (no fabricated data). */}
         <MdSummaryRow
@@ -511,100 +578,78 @@ function EmptyState({
           activeDevices={0}
         />
 
-        {/* Devices section header — matches the active layout (tabs + Add device). */}
-        <div className="md-devhead">
-          <span className="md-devhead__title">Devices</span>
-          <div className="seg">
-            <span className="seg__t is-active">Active (0)</span>
-            <Link href="/hardware?view=trash" className="seg__t" style={{ textDecoration: "none" }}>
-              Trash ({retiredCount})
-            </Link>
+        {/* Apple product-page style "ways to start": one headline, three
+            choices, each with exactly one action. */}
+        <section className="mde" aria-labelledby="mde-title">
+          <div className="mde__intro">
+            <h2 id="mde-title" className="mde__title">
+              {retiredCount > 0 ? "No active devices." : "Set up your first device."}{" "}
+              <span>Every scan, one step from a Google review.</span>
+            </h2>
+            {retiredCount > 0 && (
+              <p className="mde__note">
+                {retiredCount} deleted device{retiredCount === 1 ? " is" : "s are"} in{" "}
+                <Link href="/hardware?view=trash">Recently Deleted</Link>. Restoring one brings back
+                the same QR, so a plaque you&rsquo;ve already printed keeps working.
+              </p>
+            )}
           </div>
-          <div style={{ flex: 1 }} />
-          <span className="md-devhead__count">0 active devices</span>
-          <ConnectDeviceModal
-            establishments={establishments}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
-        </div>
 
-        {/* Empty devices panel — kit illustration + connect CTA. */}
-        <section className="md-card" aria-label="Devices">
-          <div className="md-blank">
-            {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG) */}
-            <img
-              src="/assets/repulabs/my-devices/devices-empty.svg"
-              alt=""
-              aria-hidden
-              className="md-blank__art"
-            />
-            <h3 className="md-blank__title">
-              {retiredCount > 0 ? "No active devices" : "No devices added yet"}
-            </h3>
-            <p className="md-blank__body">
-              {retiredCount > 0 ? (
-                <>
-                  You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
-                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the same
-                  QR, code and redirect, so a plaque you&rsquo;ve already printed keeps working. Or
-                  add a new device below.
-                </>
-              ) : (
-                <>
-                  Got a repulabs card, plaque, or stand? Add your first device to start collecting
-                  scans and engage more customers enter the code from your package and we&rsquo;ll
-                  route every scan to your Google review page.
-                </>
-              )}
-            </p>
-            <div className="md-blank__cta">
+          <div className="mde__grid">
+            <article className="mde-tile mde-tile--hero">
+              <span className="mde-tile__badge" aria-hidden="true">
+                <ScanLine size={26} strokeWidth={1.7} />
+              </span>
+              <h3 className="mde-tile__title">Add a device</h3>
+              <p className="mde-tile__body">
+                Have a repulabs stand, plaque or card? Scan its QR and enter the code from the box.
+              </p>
               <ConnectDeviceModal
                 establishments={establishments}
                 detectedQrUrl={detectedQrUrl}
                 detectedSerial={detectedSerial}
-                triggerClassName="btn btn--pri btn--lg"
+                triggerClassName="mde-btn mde-btn--pri"
                 triggerLabel="Add device"
               />
-              <Link href="/hardware/new" className="btn btn--lg">
-                <Icon name="qr" size={14} />
-                Generate a QR instead
-              </Link>
-            </div>
-            <div className="dim" style={{ fontSize: 11.5, marginTop: 14 }}>
-              Don&rsquo;t have a device yet?{" "}
-              <a
-                href={SHOPIFY_URL}
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: "var(--md-blue)", textDecoration: "none" }}
-              >
-                Shop cards &amp; stands →
+            </article>
+
+            <article className="mde-tile">
+              <span className="mde-tile__badge mde-tile__badge--soft" aria-hidden="true">
+                <QrCodeIcon size={26} strokeWidth={1.7} />
+              </span>
+              <h3 className="mde-tile__title">Generate a free QR</h3>
+              <p className="mde-tile__body">
+                No hardware needed. Print it on receipts, signs and cards, or put it on your site.
+              </p>
+              <GenerateQrModal
+                {...qrSheet}
+                defaultOpen={false}
+                triggerClassName="mde-btn"
+                triggerLabel="Generate QR"
+              />
+            </article>
+
+            <article className="mde-tile">
+              <span className="mde-tile__badge mde-tile__badge--soft" aria-hidden="true">
+                <ShoppingBag size={26} strokeWidth={1.7} />
+              </span>
+              <h3 className="mde-tile__title">Get a stand</h3>
+              <p className="mde-tile__body">
+                Tap-and-scan NFC stands, plaques and cards made for your counter.
+              </p>
+              <a href={SHOPIFY_URL} target="_blank" rel="noopener noreferrer" className="mde-btn">
+                Shop stands
+                <ArrowUpRight size={15} strokeWidth={2} aria-hidden="true" />
               </a>
-            </div>
+            </article>
           </div>
         </section>
 
-        {/* Zero-state scan chart (reviews + AI assistant live elsewhere now). */}
-        <div style={{ marginTop: 14, marginBottom: 14 }}>
-          <MdDevicesImpact impact={buildEmptyImpactForView()} />
-        </div>
-
         <MdFooterTip />
       </div>
+      {sheet}
     </AppShellServer>
   );
-}
-
-/** A zeroed 7-day series for the empty-state impact card (display only). */
-function buildEmptyImpactForView() {
-  const labels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-  const today = new Date();
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(today);
-    d.setDate(today.getDate() - (6 - i));
-    return { label: labels[d.getDay()] ?? "?", scans: 0, reviews: 0 };
-  });
 }
 
 /* ============================================================
@@ -699,149 +744,85 @@ function TrashView({
 }) {
   return (
     <AppShellServer topBar={<TopBar />} crumbs={["Business Setup", "Device Manager", "Trash"]}>
-      <PageHeader
-        kicker="Device manager · trash"
-        title="Restore a deleted device"
-        description="Soft-deleted devices live here for 30 days before they're hard-deleted. Restore one to reactivate the same code, slug, and redirect URL no need to re-enter anything."
-        actions={
-          <Link href="/hardware" className="btn">
-            <Icon name="chevL" size={12} />
-            Back to my devices
-          </Link>
-        }
-      />
+      {/* Apple "Recently Deleted" look — same skin as the Device Manager. */}
+      <div className="md mdt">
+        <Link href="/hardware" className="mdt__back">
+          <ChevronLeft size={16} strokeWidth={2} />
+          Device Manager
+        </Link>
+        <h1 className="mdt__title">Recently Deleted</h1>
+        <p className="mdt__sub">
+          Deleted devices stay here for 30 days. Restore one and it comes back exactly as it was,
+          with the same QR, link and destination.
+        </p>
 
-      {justRestored && (
-        <div
-          className="ds-card ds-card--pri"
-          style={{ padding: "10px 14px", marginBottom: 16, fontSize: 12.5 }}
-        >
-          <span style={{ color: "var(--ok)", marginRight: 8 }}>✓</span>
-          QR restored. Visit <Link href="/hardware">Active QRs</Link> to confirm.
-        </div>
-      )}
+        {justRestored && (
+          <output className="mdt__toast">
+            <CircleCheck size={16} strokeWidth={2} />
+            Device restored. <Link href="/hardware">See it in Device Manager</Link>
+          </output>
+        )}
+        {justReleased && (
+          <output className="mdt__toast mdt__toast--neutral">
+            <Info size={16} strokeWidth={2} />
+            Device removed from this workspace. The unit itself is untouched: scan it and enter its
+            code whenever you want to set it up again.
+          </output>
+        )}
 
-      {justReleased && (
-        <div
-          className="ds-card"
-          style={{
-            padding: "10px 14px",
-            marginBottom: 16,
-            fontSize: 12.5,
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            color: "#7f1d1d",
-          }}
-        >
-          Device removed from this workspace. The unit itself is untouched scan it and enter its
-          code whenever you want to set it up again. Recorded in your audit log.
-        </div>
-      )}
-
-      <div className="row" style={{ marginBottom: 14, gap: 8, flexWrap: "wrap" }}>
-        <div className="seg">
-          <Link href="/hardware" className="seg__t" style={{ textDecoration: "none" }}>
-            Active
-          </Link>
-          <Link
-            href="/hardware?view=trash"
-            className="seg__t is-active"
-            style={{
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: 6,
-            }}
-          >
-            Trash
-            <span
-              style={{
-                display: "inline-grid",
-                placeItems: "center",
-                minWidth: 18,
-                height: 18,
-                padding: "0 6px",
-                borderRadius: 999,
-                background: "var(--ink, #0b0d0e)",
-                color: "#fff",
-                fontSize: 10,
-                fontWeight: 600,
-                fontFamily: "var(--f-mono)",
-              }}
+        <div className="md-devhead mdt__bar">
+          <div className="seg">
+            <Link href="/hardware" className="seg__t" style={{ textDecoration: "none" }}>
+              Active
+            </Link>
+            <Link
+              href="/hardware?view=trash"
+              className="seg__t is-active"
+              style={{ textDecoration: "none" }}
             >
-              {devices.length}
-            </span>
-          </Link>
-        </div>
-      </div>
-
-      {devices.length === 0 ? (
-        <div
-          className="ds-card"
-          style={{
-            padding: "40px 24px",
-            textAlign: "center",
-            background: "var(--surface)",
-          }}
-        >
-          <div style={{ fontSize: 32, marginBottom: 12 }} aria-hidden>
-            🗑
+              Recently Deleted
+            </Link>
           </div>
-          <h3
-            style={{
-              fontSize: 18,
-              fontWeight: 600,
-              letterSpacing: "-0.015em",
-              marginBottom: 6,
-            }}
-          >
-            Trash is empty
-          </h3>
-          <p style={{ fontSize: 13.5, color: "var(--rl-muted)", lineHeight: 1.55 }}>
-            You haven&rsquo;t deleted any QR codes recently. Deleted QRs land here for 30 days
-            before they&rsquo;re hard-deleted.
-          </p>
-          <Link href="/hardware" className="btn" style={{ marginTop: 16, display: "inline-flex" }}>
-            <Icon name="chevL" size={12} />
-            Back to active QRs
-          </Link>
+          <span className="md-devhead__count">
+            {devices.length} {devices.length === 1 ? "device" : "devices"}
+          </span>
         </div>
-      ) : (
-        <div className="tdc-grid">
-          {devices.map((d) => (
-            <TrashDeviceCard
-              key={d.id}
-              canRelease={canRelease}
-              device={{
-                id: d.id,
-                shortSlug: d.shortSlug,
-                productSku: d.productSku,
-                redirectUrl: d.redirectUrl,
-                createdAt: new Date(d.createdAt).toISOString(),
-                establishmentName: d.establishment?.name ?? null,
-                scanCount: d.scanCount,
-              }}
-            />
-          ))}
-        </div>
-      )}
 
-      <div
-        className="ds-card"
-        style={{
-          marginTop: 24,
-          padding: "12px 16px",
-          background: "var(--surface-2, #fafbf8)",
-          border: "1px dashed var(--line)",
-          color: "var(--rl-muted)",
-          fontSize: 12,
-          lineHeight: 1.6,
-        }}
-      >
-        <strong style={{ color: "var(--ink-2)" }}>Heads up.</strong> Restoring a QR brings back the
-        original slug, redirect URL, and HMAC signature. If you&rsquo;ve printed new plaques with
-        the same code in the meantime, scanners of the old plaque will route to the restored URL
-        make sure that&rsquo;s what you want.
+        {devices.length === 0 ? (
+          <div className="mdt__empty">
+            <Trash2 size={44} strokeWidth={1.3} className="mdt__empty-icon" />
+            <h2 className="mdt__empty-title">No Recently Deleted Devices</h2>
+            <p className="mdt__empty-sub">
+              Devices you delete appear here for 30 days before they&rsquo;re removed for good.
+            </p>
+            <Link href="/hardware" className="mdt__pill">
+              Back to Device Manager
+            </Link>
+          </div>
+        ) : (
+          <div className="tdc-grid">
+            {devices.map((d) => (
+              <TrashDeviceCard
+                key={d.id}
+                canRelease={canRelease}
+                device={{
+                  id: d.id,
+                  shortSlug: d.shortSlug,
+                  productSku: d.productSku,
+                  redirectUrl: d.redirectUrl,
+                  createdAt: new Date(d.createdAt).toISOString(),
+                  establishmentName: d.establishment?.name ?? null,
+                  scanCount: d.scanCount,
+                }}
+              />
+            ))}
+          </div>
+        )}
+
+        <p className="mdt__foot">
+          Restoring brings back the original QR link and destination. If you&rsquo;ve since printed
+          new plaques with the same code, scans of the old one will go to the restored destination.
+        </p>
       </div>
     </AppShellServer>
   );
