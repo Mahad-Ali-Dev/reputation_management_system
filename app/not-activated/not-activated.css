@@ -18,9 +18,16 @@
       #ece7fe 0%,
       rgba(243, 240, 255, 0.55) 42%,
       transparent 72%
-    ),
-    linear-gradient(180deg, #ffffff 0%, #f7f5ff 55%, #f3f0ff 100%);
-  font-family: var(--f-ui, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
+    ), linear-gradient(180deg, #ffffff 0%, #f7f5ff 55%, #f3f0ff 100%);
+  font-family: var(
+    --f-ui,
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif
+  );
   color: #0b1220;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -209,27 +216,32 @@
   margin: 3px 0 0;
 }
 
-/* curved connector arrow — follows the zig-zag: after a left circle it sits on
-   the left and sweeps right; after a right circle it sits on the right and is
-   mirrored to sweep left. */
-.na-arrow {
-  display: flex;
+/* curved connector arrow — runs circle-to-circle along the zig-zag. It spans
+   from the centre of this step's circle (43px = half of the 86px circle) to the
+   centre of the next one, leaving the bottom of one circle and landing on the
+   top of the next. `--l` mirrors it for the right→left leg. */
+.na-link {
+  position: relative;
+  align-self: stretch;
+  height: 46px;
+  margin: 6px 43px 4px;
   color: #7c3aed;
-  margin: 8px 0 2px;
+  filter: drop-shadow(0 4px 6px rgba(124, 58, 237, 0.22));
 }
-/* Step 1: arrow at the right end of its description, sweeping down toward step 2. */
-.na-arrow--r {
-  align-self: flex-end;
-}
-/* Step 2: arrow at the left end of its description, mirrored toward step 3. */
-.na-arrow--l {
-  align-self: flex-start;
-}
-.na-arrow--l svg {
+.na-link--l {
   transform: scaleX(-1);
 }
-.na-arrow svg {
-  filter: drop-shadow(0 4px 6px rgba(124, 58, 237, 0.22));
+.na-link__curve {
+  position: absolute;
+  inset: 0 0 8px;
+  width: 100%;
+  height: calc(100% - 8px);
+  overflow: visible;
+}
+.na-link__head {
+  position: absolute;
+  right: -10px;
+  bottom: -2px;
 }
 
 /* ---- CTA · Activate (primary, brand gradient) ---- */
