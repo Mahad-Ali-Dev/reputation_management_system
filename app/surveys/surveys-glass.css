@@ -35,27 +35,16 @@
   background: transparent;
 }
 
-/* Remove the decorative illustrations (hero clipboard, campaign artwork, the
-   incentive / automation / responses empty-state art, and the AI-unlock
-   graphic). */
-.app--glass .surv-hero__art,
-.app--glass .surv .surv-camp__art,
-.app--glass .surv .surv-redeem__art,
-.app--glass .surv .surv-auto-empty__art,
-.app--glass .surv .surv-dashed__art,
-.app--glass .surv .surv-ai-unlock__right img {
+/* Hide only the hero clipboard illustration (the other illustrations stay),
+   and reclaim the 380px the header reserved for it so the heading spans full
+   width. */
+.app--glass .surv-hero__art {
   display: none;
 }
-/* The hero reserved 380px of right-hand room for the (now removed) artwork —
-   reclaim it so the heading spans the full width. */
 @media (min-width: 901px) {
   .app--glass .surv .ph {
     padding-right: 0;
   }
-}
-/* Empty state ("No surveys yet") — drop its clipboard illustration too. */
-.app--glass .surv .surv-empty img {
-  display: none;
 }
 
 /* ── Tabs: remove the boxed container; use a clean underline bar ──
