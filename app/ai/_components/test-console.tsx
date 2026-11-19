@@ -526,7 +526,7 @@ function TeachDialog({
 
   return (
     // biome-ignore lint/a11y/useSemanticElements: overlay dialog; matches the other glass sheets
-    <div className="gs-overlay" role="dialog" aria-modal="true" aria-labelledby="kb-teach-title">
+    <div role="dialog" className="gs-overlay" aria-modal="true" aria-labelledby="kb-teach-title">
       <button
         type="button"
         aria-label="Close"

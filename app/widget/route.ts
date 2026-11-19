@@ -60,34 +60,61 @@ export function GET(req: NextRequest) {
     if (existing) existing.remove();
     var side = THEME.position === 'bottom-left' ? 'left' : 'right';
     var css = ''
-      + '.rl-bubble{position:fixed;bottom:24px;' + side + ':24px;width:56px;height:56px;border-radius:50%;'
-      + 'background:' + THEME.brand + ';color:#fff;border:none;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.16);'
-      + 'font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;z-index:2147483647}'
-      + '.rl-bubble:hover{background:' + THEME.brandDark + '}'
-      + '.rl-panel{position:fixed;bottom:96px;' + side + ':24px;width:360px;max-width:calc(100vw - 32px);'
-      + 'height:480px;max-height:calc(100vh - 120px);background:#fff;border-radius:12px;'
-      + 'box-shadow:0 12px 40px rgba(0,0,0,0.2);display:flex;flex-direction:column;overflow:hidden;'
-      + "font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;z-index:2147483647}"
-      + '.rl-head{background:' + THEME.brand + ';color:#fff;padding:14px 16px;display:flex;justify-content:space-between;'
-      + 'align-items:center;font-weight:600}'
-      + '.rl-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;line-height:1}'
-      + '.rl-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;background:#f8fafc}'
-      + '.rl-msg{padding:8px 12px;border-radius:12px;max-width:80%;font-size:14px;line-height:1.4;'
+      + '.rl-bubble{position:fixed;bottom:24px;' + side + ':24px;width:60px;height:60px;border-radius:50%;'
+      + 'background:' + THEME.brand + ';color:#fff;border:none;cursor:pointer;'
+      + 'box-shadow:inset 0 1px 0 rgba(255,255,255,0.35),0 12px 28px -8px rgba(0,0,0,0.35);'
+      + 'display:flex;align-items:center;justify-content:center;z-index:2147483647;'
+      + 'transition:transform .2s ease,box-shadow .2s ease}'
+      + '.rl-bubble:hover{transform:scale(1.06)}'
+      + '.rl-bubble svg{width:26px;height:26px}'
+      + '.rl-panel{position:fixed;bottom:100px;' + side + ':24px;width:380px;max-width:calc(100vw - 32px);'
+      + 'height:560px;max-height:calc(100vh - 130px);background:rgba(255,255,255,0.86);'
+      + '-webkit-backdrop-filter:blur(30px) saturate(180%);backdrop-filter:blur(30px) saturate(180%);'
+      + 'border:1px solid rgba(255,255,255,0.9);border-radius:26px;'
+      + 'box-shadow:0 0 0 .5px rgba(0,0,0,0.08),0 30px 70px -20px rgba(0,0,0,0.35);display:flex;flex-direction:column;overflow:hidden;'
+      + "font-family:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,sans-serif;z-index:2147483647;"
+      + 'color:#1d1d1f;transform-origin:bottom ' + side + ';animation:rl-in .22s cubic-bezier(.2,.8,.2,1)}'
+      + '@keyframes rl-in{from{opacity:0;transform:translateY(10px) scale(.96)}}'
+      + '.rl-head{display:flex;align-items:center;gap:10px;padding:16px 16px 14px;border-bottom:1px solid rgba(60,60,67,0.1)}'
+      + '.rl-avatar{width:36px;height:36px;border-radius:50%;background:' + THEME.brand + ';color:#fff;flex-shrink:0;'
+      + 'display:flex;align-items:center;justify-content:center}'
+      + '.rl-avatar svg{width:18px;height:18px}'
+      + '.rl-title{flex:1;min-width:0}'
+      + '.rl-title b{display:block;font-size:15px;font-weight:600;letter-spacing:-0.01em}'
+      + '.rl-title span{display:flex;align-items:center;gap:5px;font-size:12px;color:#6e6e73}'
+      + '.rl-title span:before{content:"";width:7px;height:7px;border-radius:50%;background:#34c759}'
+      + '.rl-close{width:30px;height:30px;border-radius:50%;background:rgba(120,120,128,0.12);border:none;color:#6e6e73;'
+      + 'cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}'
+      + '.rl-close:hover{background:rgba(120,120,128,0.2);color:#1d1d1f}'
+      + '.rl-close svg{width:14px;height:14px}'
+      + '.rl-body{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:6px}'
+      + '.rl-msg{padding:9px 14px;border-radius:20px;max-width:80%;font-size:15px;line-height:1.4;'
       + 'white-space:pre-wrap;word-wrap:break-word}'
-      + '.rl-msg-bot{background:#fff;color:#0f172a;align-self:flex-start;border:1px solid #e2e8f0}'
-      + '.rl-msg-user{background:' + THEME.brand + ';color:#fff;align-self:flex-end}'
-      + '.rl-foot{padding:10px;display:flex;gap:6px;border-top:1px solid #e2e8f0;background:#fff}'
-      + '.rl-input{flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none}'
-      + '.rl-input:focus{border-color:' + THEME.brand + '}'
-      + '.rl-send{background:' + THEME.brand + ';color:#fff;border:none;padding:8px 14px;border-radius:8px;cursor:pointer;font-weight:600}'
-      + '.rl-send:disabled{opacity:.5;cursor:not-allowed}'
-      + '.rl-loading{align-self:flex-start;color:#94a3b8;font-size:13px;padding:8px 12px;font-style:italic}'
-      + '.rl-capture{margin:6px 12px 12px;padding:12px;border:1px solid #e2e8f0;border-radius:10px;background:#fff}'
-      + '.rl-capture p{margin:0 0 8px;font-size:13px;color:#0f172a;line-height:1.4}'
+      + '.rl-msg-bot{background:rgba(120,120,128,0.12);color:#1d1d1f;align-self:flex-start;border-bottom-left-radius:6px}'
+      + '.rl-msg-user{background:' + THEME.brand + ';color:#fff;align-self:flex-end;border-bottom-right-radius:6px}'
+      + '.rl-msg-note{align-self:center;max-width:90%;background:none;color:#86868b;font-size:12.5px;text-align:center}'
+      + '.rl-foot{padding:10px 12px 14px}'
+      + '.rl-compose{display:flex;align-items:center;gap:6px;padding:4px 4px 4px 14px;border:1px solid rgba(60,60,67,0.16);'
+      + 'border-radius:999px;background:#fff}'
+      + '.rl-compose:focus-within{border-color:' + THEME.brand + '}'
+      + '.rl-input{flex:1;min-width:0;border:none;background:transparent;padding:8px 0;font-size:15px;outline:none;color:#1d1d1f;font-family:inherit}'
+      + '.rl-send{width:34px;height:34px;border-radius:50%;background:' + THEME.brand + ';color:#fff;border:none;cursor:pointer;'
+      + 'display:flex;align-items:center;justify-content:center;flex-shrink:0}'
+      + '.rl-send svg{width:16px;height:16px}'
+      + '.rl-send:disabled{opacity:.35;cursor:default}'
+      + '.rl-brand{margin-top:8px;text-align:center;font-size:11px;color:#86868b}'
+      + '.rl-loading{align-self:flex-start;display:flex;gap:4px;padding:12px 14px;border-radius:20px;border-bottom-left-radius:6px;background:rgba(120,120,128,0.12)}'
+      + '.rl-loading i{width:7px;height:7px;border-radius:50%;background:#86868b;animation:rl-dot 1.2s infinite ease-in-out}'
+      + '.rl-loading i:nth-child(2){animation-delay:.15s}.rl-loading i:nth-child(3){animation-delay:.3s}'
+      + '@keyframes rl-dot{0%,80%,100%{opacity:.3}40%{opacity:1}}'
+      + '.rl-capture{margin:6px 0 4px;padding:14px;border-radius:18px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.06)}'
+      + '.rl-capture p{margin:0 0 10px;font-size:14px;color:#1d1d1f;line-height:1.4}'
       + '.rl-capture-row{display:flex;gap:6px}'
-      + '.rl-capture input{flex:1;border:1px solid #e2e8f0;border-radius:8px;padding:8px 10px;font-size:14px;outline:none}'
-      + '.rl-capture button{background:' + THEME.brand + ';color:#fff;border:none;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:600;font-size:13px}'
-      + '.rl-capture small{display:block;margin-top:6px;color:#94a3b8;font-size:11px;line-height:1.3}';
+      + '.rl-capture input{flex:1;min-width:0;border:1px solid transparent;border-radius:12px;padding:9px 12px;font-size:15px;outline:none;'
+      + 'background:rgba(120,120,128,0.08);font-family:inherit}'
+      + '.rl-capture input:focus{border-color:' + THEME.brand + ';background:#fff}'
+      + '.rl-capture button{background:' + THEME.brand + ';color:#fff;border:none;padding:9px 14px;border-radius:999px;cursor:pointer;font-weight:600;font-size:14px;font-family:inherit}'
+      + '.rl-capture small{display:block;margin-top:8px;color:#86868b;font-size:11px;line-height:1.35}';
     var style = document.createElement('style');
     style.id = 'rl-style';
     style.textContent = css;
@@ -110,19 +137,33 @@ export function GET(req: NextRequest) {
           STATE.messages.push({ role: 'bot', text: greeting });
         } else {
           console.warn('[Repulabs] bootstrap failed:', data.error);
+          STATE.messages.push({ role: 'note', text: data.error === 'origin_not_allowed'
+            ? 'This chat isn\\u2019t enabled for this website yet.'
+            : 'Chat is unavailable right now. Please try again later.' });
         }
       })
-      .catch(function(e){ console.warn('[Repulabs] bootstrap error', e); });
+      .catch(function(e){
+        console.warn('[Repulabs] bootstrap error', e);
+        STATE.messages.push({ role: 'note', text: 'Chat is unavailable right now. Please try again later.' });
+      });
+  }
+
+  // Bootstrap can finish after the visitor already opened the panel (slow
+  // network / cold server): redraw so the greeting appears instead of an
+  // empty chat.
+  function afterBootstrap() {
+    if (STATE.open) renderMessages();
   }
 
   // ---- UI ----
   var bubble, panel, body, input, sendBtn;
+  var READY = null;
 
   function buildUi() {
     injectStyles();
     bubble = document.createElement('button');
     bubble.className = 'rl-bubble';
-    bubble.innerHTML = '\\uD83D\\uDCAC';
+    bubble.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>';
     bubble.setAttribute('aria-label', 'Open chat');
     bubble.onclick = togglePanel;
     document.body.appendChild(bubble);
@@ -140,11 +181,13 @@ export function GET(req: NextRequest) {
     panel = document.createElement('div');
     panel.className = 'rl-panel';
     panel.innerHTML =
-      '<div class="rl-head"><span>' + escapeHtml(THEME.header) + '</span>'
-      + '<button class="rl-close" aria-label="Close">\\u00D7</button></div>'
+      '<div class="rl-head"><span class="rl-avatar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.94 14.06 4 20M12 3l1.9 5.1L19 10l-5.1 1.9L12 17l-1.9-5.1L5 10l5.1-1.9z"/></svg></span>'
+      + '<div class="rl-title"><b>' + escapeHtml(THEME.header) + '</b><span>Usually replies instantly</span></div>'
+      + '<button class="rl-close" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>'
       + '<div class="rl-body"></div>'
-      + '<div class="rl-foot"><input class="rl-input" placeholder="Type a message\\u2026" />'
-      + '<button class="rl-send">Send</button></div>';
+      + '<div class="rl-foot"><div class="rl-compose"><input class="rl-input" placeholder="Message\\u2026" aria-label="Message" />'
+      + '<button class="rl-send" aria-label="Send"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>'
+      + '<div class="rl-brand">Powered by Repulabs</div></div>';
     document.body.appendChild(panel);
     body = panel.querySelector('.rl-body');
     input = panel.querySelector('.rl-input');
@@ -210,7 +253,13 @@ export function GET(req: NextRequest) {
 
   function sendMessage() {
     var text = (input.value || '').trim();
-    if (!text || !STATE.token) return;
+    if (!text) return;
+    // Still connecting (slow network / cold server): send as soon as ready
+    // instead of silently dropping the visitor's message.
+    if (!STATE.token) {
+      if (READY) READY.then(function(){ if (STATE.token) sendMessage(); });
+      return;
+    }
     STATE.messages.push({ role: 'user', text: text });
     renderMessages();
     input.value = '';
@@ -218,7 +267,8 @@ export function GET(req: NextRequest) {
 
     var loading = document.createElement('div');
     loading.className = 'rl-loading';
-    loading.textContent = 'Thinking\\u2026';
+    loading.setAttribute('aria-label', 'Thinking');
+    loading.innerHTML = '<i></i><i></i><i></i>';
     body.appendChild(loading);
     body.scrollTop = body.scrollHeight;
 
@@ -261,10 +311,10 @@ export function GET(req: NextRequest) {
 
   // Init
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function(){ buildUi(); bootstrap(); });
+    document.addEventListener('DOMContentLoaded', function(){ buildUi(); READY = bootstrap().then(afterBootstrap); });
   } else {
     buildUi();
-    bootstrap();
+    READY = bootstrap().then(afterBootstrap);
   }
 })();`;
 

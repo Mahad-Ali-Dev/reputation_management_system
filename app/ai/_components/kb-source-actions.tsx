@@ -1,9 +1,10 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
 import { connectWebsite, uploadAiDocument } from "@/lib/ai/actions";
+import { Check, CircleCheck, Globe, Loader2, TriangleAlert, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+import "@/components/ui/glass-sheet.css";
 
 /**
  * Interaction layer for the Knowledge dashboard's source cards.
@@ -146,6 +147,32 @@ export function KbSourceActions({ establishmentId }: { establishmentId?: string 
     });
   }
 
+  // Esc closes the sheet; lock the page behind it.
+  useEffect(() => {
+    if (!showConnect) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") closeConnect();
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [showConnect]);
+
+  // Upload toast fades out on its own after a few seconds.
+  useEffect(() => {
+    if (!notice && !error) return;
+    if (showConnect) return;
+    const t = setTimeout(() => {
+      setNotice(null);
+      setError(null);
+    }, 5000);
+    return () => clearTimeout(t);
+  }, [notice, error, showConnect]);
+
   function closeConnect() {
     setShowConnect(false);
     setDocId(null);
@@ -158,6 +185,7 @@ export function KbSourceActions({ establishmentId }: { establishmentId?: string 
 
   const running = docId !== null;
   const stageIdx = stage ? ORDER.indexOf(stage) : -1;
+  const finished = stage === "done" || stage === "failed";
 
   return (
     <>
@@ -170,158 +198,151 @@ export function KbSourceActions({ establishmentId }: { establishmentId?: string 
         onChange={onFilePicked}
       />
 
-      {pending && !showConnect && (
-        <output
-          style={{ display: "block", marginTop: 10, fontSize: 12.5, color: "var(--rl-muted)" }}
-        >
-          Uploading…
+      {/* Upload status: a floating Apple-style toast. */}
+      {!showConnect && (pending || notice || error) && (
+        <output className={`kb-toast${error ? " is-bad" : notice ? " is-ok" : ""}`}>
+          {error ? (
+            <TriangleAlert size={16} strokeWidth={1.8} />
+          ) : notice ? (
+            <CircleCheck size={16} strokeWidth={2} />
+          ) : (
+            <Loader2 size={16} strokeWidth={2} className="kb-spin" />
+          )}
+          {error ?? notice ?? "Uploading…"}
         </output>
-      )}
-      {notice && !showConnect && (
-        <output style={{ display: "block", marginTop: 10, fontSize: 12.5, color: "#10b981" }}>
-          {notice}
-        </output>
-      )}
-      {error && !showConnect && (
-        <p role="alert" style={{ marginTop: 10, fontSize: 12.5, color: "#e14d62" }}>
-          {error}
-        </p>
       )}
 
       {showConnect && (
+        // biome-ignore lint/a11y/useSemanticElements: overlay dialog; matches the other glass sheets
         <div
           role="dialog"
+          className="gs-overlay"
           aria-modal="true"
-          aria-label="Connect your website"
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(15,23,42,0.45)",
-            display: "grid",
-            placeItems: "center",
-            padding: 20,
-            zIndex: 60,
-          }}
-          onClick={(e) => {
-            if (e.target === e.currentTarget && !running) closeConnect();
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape" && !running) closeConnect();
-          }}
+          aria-labelledby="kb-connect-title"
         >
-          <div
-            className="akb-card akb-card__pad"
-            style={{ width: "100%", maxWidth: 460, background: "#fff" }}
-          >
-            <h3 className="akb-card__title">Connect your website</h3>
-            <p className="akb-card__sub">
-              We&rsquo;ll read your public pages and teach your AI what your business does.
-            </p>
+          <button
+            type="button"
+            className="gs-scrim"
+            aria-label="Close"
+            onClick={() => {
+              if (!running || finished) closeConnect();
+            }}
+          />
+          <div className="gs">
+            <button type="button" className="gs__close" aria-label="Close" onClick={closeConnect}>
+              <X size={16} strokeWidth={2.2} />
+            </button>
+            <div className="gs__hero">
+              <span className="gs__badge kb-badge--blue" aria-hidden="true">
+                <Globe size={28} strokeWidth={1.7} />
+              </span>
+              <h2 id="kb-connect-title" className="gs__title">
+                {stage === "done" ? "Your AI is up to date" : "Connect your website"}
+              </h2>
+              <p className="gs__sub">
+                {stage === "done"
+                  ? "We read your site and taught your AI what your business does."
+                  : "We'll read your public pages and teach your AI what your business does."}
+              </p>
+            </div>
 
             {!running ? (
-              <form onSubmit={submitConnect} style={{ marginTop: 16, display: "grid", gap: 12 }}>
-                <label className="aikb-label">
-                  Business name
-                  <input
-                    className="aikb-input"
-                    value={businessName}
-                    onChange={(e) => setBusinessName(e.target.value)}
-                    placeholder="e.g. Summit Dental Studio"
-                    required
-                  />
-                </label>
-                <label className="aikb-label">
-                  Website URL
-                  <input
-                    className="aikb-input"
-                    type="url"
-                    value={url}
-                    onChange={(e) => setUrl(e.target.value)}
-                    placeholder="https://yourbusiness.com"
-                    required
-                  />
-                </label>
-
-                {error && (
-                  <p role="alert" style={{ fontSize: 12.5, color: "#e14d62", margin: 0 }}>
-                    {error}
-                  </p>
-                )}
-
-                <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
-                  <button type="submit" className="akb-btn-primary" disabled={pending}>
-                    {pending ? "Starting…" : "Connect & train"}
-                  </button>
-                  <button type="button" className="akb-btn-outline" onClick={closeConnect}>
+              <form onSubmit={submitConnect} className="gs__form">
+                <div className="gs__body">
+                  {error && (
+                    <p className="gs-error" role="alert">
+                      <TriangleAlert size={15} strokeWidth={1.8} />
+                      {error}
+                    </p>
+                  )}
+                  <div className="gs-group">
+                    <label className="gs-field">
+                      <span className="gs-field__lbl">Business name</span>
+                      <input
+                        className="gs-input"
+                        value={businessName}
+                        onChange={(e) => setBusinessName(e.target.value)}
+                        placeholder="e.g. Summit Dental Studio"
+                        required
+                      />
+                    </label>
+                    <label className="gs-field">
+                      <span className="gs-field__lbl">Website</span>
+                      <input
+                        className="gs-input"
+                        type="url"
+                        value={url}
+                        onChange={(e) => setUrl(e.target.value)}
+                        placeholder="https://yourbusiness.com"
+                        required
+                      />
+                      <span className="gs-hint">
+                        Your home page is enough. We follow the links from there.
+                      </span>
+                    </label>
+                  </div>
+                </div>
+                <div className="gs__foot">
+                  <button type="button" className="gs-btn" onClick={closeConnect}>
                     Cancel
+                  </button>
+                  <button type="submit" className="gs-btn gs-btn--pri" disabled={pending}>
+                    {pending ? "Starting…" : "Connect & train"}
                   </button>
                 </div>
               </form>
             ) : (
-              <div style={{ marginTop: 16 }}>
-                <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gap: 10 }}>
-                  {STEPS.map((s, i) => {
-                    const done = stageIdx > i || stage === "done";
-                    const active = stageIdx === i && stage !== "done";
-                    const failed = stage === "failed" && i === Math.max(stageIdx, 0);
-                    return (
-                      <li
-                        key={s.stage}
-                        style={{ display: "flex", gap: 10, alignItems: "center", fontSize: 13.5 }}
-                      >
-                        <span
-                          aria-hidden="true"
-                          style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: 999,
-                            display: "grid",
-                            placeItems: "center",
-                            flexShrink: 0,
-                            background: failed
-                              ? "#fee2e2"
-                              : done
-                                ? "#dcfce7"
-                                : active
-                                  ? "rgba(37,99,235,0.12)"
-                                  : "var(--rl-surface-2, #f1f5f9)",
-                            color: failed ? "#e14d62" : done ? "#10b981" : "var(--rl-muted)",
-                          }}
-                        >
-                          <Icon
-                            name={failed ? "x" : done ? "check" : active ? "refresh" : "clock"}
-                            size={12}
-                          />
-                        </span>
-                        <span style={{ color: done || active ? "var(--ink)" : "var(--rl-muted)" }}>
-                          {s.label}
-                          {s.stage === "indexing" && chunks > 0 && (
-                            <span style={{ color: "var(--rl-muted)" }}> · {chunks} sections</span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-
-                {error && (
-                  <p role="alert" style={{ marginTop: 14, fontSize: 12.5, color: "#e14d62" }}>
-                    {error}
-                  </p>
-                )}
-
-                <div style={{ display: "flex", gap: 8, marginTop: 18 }}>
-                  {stage === "done" || stage === "failed" ? (
-                    <button type="button" className="akb-btn-primary" onClick={closeConnect}>
-                      {stage === "done" ? "Done" : "Close"}
-                    </button>
-                  ) : (
-                    <p style={{ fontSize: 12.5, color: "var(--rl-muted)", margin: 0 }}>
-                      This runs in the background you can close this and come back.
+              <>
+                <div className="gs__body">
+                  {error && (
+                    <p className="gs-error" role="alert">
+                      <TriangleAlert size={15} strokeWidth={1.8} />
+                      {error}
+                    </p>
+                  )}
+                  <ol className="gs-group kb-steps">
+                    {STEPS.map((s, i) => {
+                      const done = stageIdx > i || stage === "done";
+                      const active = stageIdx === i && stage !== "done";
+                      const failed = stage === "failed" && i === Math.max(stageIdx, 0);
+                      const state = failed ? "bad" : done ? "ok" : active ? "on" : "off";
+                      return (
+                        <li key={s.stage} className={`kb-step is-${state}`}>
+                          <span className="kb-step__dot" aria-hidden="true">
+                            {failed ? (
+                              <X size={13} strokeWidth={2.6} />
+                            ) : done ? (
+                              <Check size={13} strokeWidth={2.6} />
+                            ) : active ? (
+                              <Loader2 size={13} strokeWidth={2.6} className="kb-spin" />
+                            ) : null}
+                          </span>
+                          <span className="kb-step__label">
+                            {s.label}
+                            {s.stage === "indexing" && chunks > 0 && (
+                              <span className="kb-step__meta"> · {chunks} sections</span>
+                            )}
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  {!finished && (
+                    <p className="gs-hint kb-center">
+                      This runs in the background, so you can close this and come back.
                     </p>
                   )}
                 </div>
-              </div>
+                <div className="gs__foot">
+                  <button
+                    type="button"
+                    className={`gs-btn${finished ? " gs-btn--pri" : ""}`}
+                    onClick={closeConnect}
+                  >
+                    {stage === "done" ? "Done" : finished ? "Close" : "Close for now"}
+                  </button>
+                </div>
+              </>
             )}
           </div>
         </div>

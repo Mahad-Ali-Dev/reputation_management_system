@@ -1,15 +1,16 @@
-import { type NextRequest, NextResponse } from "next/server";
-import { z } from "zod";
 import { checkBudget } from "@/lib/ai/budget";
 import { chatbotTurn } from "@/lib/ai/chatbot";
 import { verifyVisitorJwt } from "@/lib/ai/widget-jwt";
+import { isWidgetOriginAllowed } from "@/lib/ai/widget-origin";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { mirrorWebchatTurn } from "@/lib/inbox/livechat";
+import { type WidgetAiMode, getWidgetConfig, resolveWidgetMode } from "@/lib/inbox/widget";
 import { logger } from "@/lib/logger";
 import { checkRateLimit } from "@/lib/ratelimit";
-import { getWidgetConfig, resolveWidgetMode, type WidgetAiMode } from "@/lib/inbox/widget";
-import { mirrorWebchatTurn } from "@/lib/inbox/livechat";
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 
 // Lightweight detectors for a contact identifier the visitor typed into chat
 // (e.g. on the "leave your email and we'll follow up" handoff). Best-effort —
@@ -18,7 +19,10 @@ import { mirrorWebchatTurn } from "@/lib/inbox/livechat";
 const CHAT_EMAIL_RE = /[^\s@<>()[\]]+@[^\s@<>()[\]]+\.[^\s@<>()[\]]+/;
 const CHAT_PHONE_RE = /\+?[0-9][0-9\s\-().]{7,17}[0-9]/;
 
-function extractContactFromMessage(message: string): { email: string | null; phone: string | null } {
+function extractContactFromMessage(message: string): {
+  email: string | null;
+  phone: string | null;
+} {
   const email = message.match(CHAT_EMAIL_RE)?.[0] ?? null;
   // Avoid matching the digits inside an email's domain/local-part as a phone.
   const phone = email ? null : (message.match(CHAT_PHONE_RE)?.[0] ?? null);
@@ -30,7 +34,8 @@ export const dynamic = "force-dynamic";
 
 const Body = z.object({
   message: z.string().min(1).max(4000),
-  conversationId: z.string().uuid().optional(),
+  // The widget sends `null` before its first reply creates a conversation.
+  conversationId: z.string().uuid().nullish(),
 });
 
 export async function POST(req: NextRequest) {
@@ -59,18 +64,16 @@ export async function POST(req: NextRequest) {
 
   // `aiMode` ships via the Wave-0 delta; select it fail-soft so a not-yet-migrated
   // column can never break the deployed converse path (falls back to always_on).
-  let widget:
-    | {
-        organizationId: string;
-        establishmentId: string | null;
-        hmacSecret: string;
-        originAllowlist: string[];
-        rateLimitWindowSec: number;
-        rateLimitMaxMsgs: number;
-        status: string;
-        aiMode?: string;
-      }
-    | null = null;
+  let widget: {
+    organizationId: string;
+    establishmentId: string | null;
+    hmacSecret: string;
+    originAllowlist: string[];
+    rateLimitWindowSec: number;
+    rateLimitMaxMsgs: number;
+    status: string;
+    aiMode?: string;
+  } | null = null;
   try {
     widget = await prisma.widgetKey.findUnique({
       where: { publicKey },
@@ -113,7 +116,7 @@ export async function POST(req: NextRequest) {
 
   // Origin check
   const origin = req.headers.get("origin");
-  if (widget.originAllowlist.length > 0 && (!origin || !widget.originAllowlist.includes(origin))) {
+  if (!isWidgetOriginAllowed(widget.originAllowlist, origin, req.headers.get("sec-fetch-site"))) {
     return cors({ error: "origin_not_allowed" }, 403, req);
   }
   // After this point we know the origin is in the widget's allowlist (or the
@@ -130,7 +133,11 @@ export async function POST(req: NextRequest) {
   const rl = await checkRateLimit("chatbot_turn", `${claims.orgId}:${claims.visitorId}`);
   if (!rl.success) {
     return cors(
-      { error: "rate_limited", retryAfterSeconds: rl.retryAfterSeconds, message: "Slow down — try again in a moment." },
+      {
+        error: "rate_limited",
+        retryAfterSeconds: rl.retryAfterSeconds,
+        message: "Slow down — try again in a moment.",
+      },
       429,
       req,
       allowOrigin,
@@ -141,7 +148,12 @@ export async function POST(req: NextRequest) {
   const budget = await checkBudget(claims.orgId);
   if (!budget.ok) {
     logger.warn(
-      { orgId: claims.orgId, spent: budget.spentMicros, cap: budget.capMicros, event: "chatbot.cap_exceeded" },
+      {
+        orgId: claims.orgId,
+        spent: budget.spentMicros,
+        cap: budget.capMicros,
+        event: "chatbot.cap_exceeded",
+      },
       "AI budget cap exceeded",
     );
     return cors(
@@ -183,7 +195,15 @@ export async function POST(req: NextRequest) {
     return { visitorMsgCount: count };
   });
   if (visitorMsgCount >= widget.rateLimitMaxMsgs) {
-    return cors({ error: "rate_limited", message: "You're sending messages too quickly. Please wait a moment." }, 429, req, allowOrigin);
+    return cors(
+      {
+        error: "rate_limited",
+        message: "You're sending messages too quickly. Please wait a moment.",
+      },
+      429,
+      req,
+      allowOrigin,
+    );
   }
 
   // Find or create the conversation
@@ -262,8 +282,7 @@ export async function POST(req: NextRequest) {
           where: { organizationId: claims.orgId, conversationId, purpose: "chatbot", role: "user" },
         }),
       ).catch(() => 0);
-      const turnEscalate =
-        cfg.escalateAfterTurns > 0 && userTurns >= cfg.escalateAfterTurns;
+      const turnEscalate = cfg.escalateAfterTurns > 0 && userTurns >= cfg.escalateAfterTurns;
 
       const needsHuman = mode.decision === "capture" || turnEscalate;
       handoff = {
@@ -318,7 +337,12 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     const error = err instanceof Error ? err.message : String(err);
     logger.error({ orgId: claims.orgId, error, event: "chatbot.turn_failed" });
-    return cors({ error: "internal", message: "Something went wrong. Please try again." }, 500, req, allowOrigin);
+    return cors(
+      { error: "internal", message: "Something went wrong. Please try again." },
+      500,
+      req,
+      allowOrigin,
+    );
   }
 }
 

@@ -1,7 +1,8 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
+import { GlassSelect } from "@/components/ui/glass-select";
 import { autosaveAiTraining } from "@/lib/ai/training-actions";
+import { MapPin, PenLine } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
@@ -106,83 +107,76 @@ export function LocationHoursEditor({
     });
   }
 
+  const timeOptions = TIMES.map((t) => ({ value: t, label: to12h(t) }));
+  const dayCount = DAYS.filter(([k]) => hours[k]?.open).length;
+
   if (!editing) {
     return (
-      <>
-        <div className="akb-loc__addr">
-          <span className="akb-loc__pin" aria-hidden="true">
-            <Icon name="pin" size={15} />
-          </span>
-          <span className="akb-loc__addr-text">{address ?? "No location added"}</span>
+      <div className="kb-loc">
+        <div className="kb-loc__addr">
+          <MapPin size={17} strokeWidth={1.8} className="kb-loc__pin" aria-hidden="true" />
+          <span className="kb-loc__text">{address ?? "No location added"}</span>
           {saved && (
-            <span className="akb-saved">
-              <Icon name="checkCircle" size={11} /> Saved
+            <span className="kb-dot-label" aria-live="polite">
+              Saved
             </span>
           )}
           <button
             type="button"
-            className="akb-icon-btn"
+            className="kb-loc__edit"
             aria-label="Edit location and hours"
             onClick={() => setEditing(true)}
           >
-            <Icon name="edit" size={12} />
+            <PenLine size={14} strokeWidth={1.8} />
           </button>
         </div>
 
-        <div className="akb-loc__hours-head">
-          <div className="akb-bo__t" style={{ justifyContent: "flex-start" }}>
-            Operating hours
-          </div>
-          <div className="akb-card__sub" style={{ marginTop: 2 }}>
-            Set your business operating hours.
-          </div>
-        </div>
-        <div className="akb-loc__days">
-          {DAYS.map(([k, l]) => (
-            <span key={k} className={`akb-day ${hours[k]?.open ? "is-on" : ""}`}>
-              {l}
-            </span>
-          ))}
-        </div>
         <button
           type="button"
-          className="akb-loc__times"
+          className="kb-loc__hours"
           onClick={() => setEditing(true)}
-          style={{ background: "none", border: 0, cursor: "pointer", textAlign: "left" }}
+          aria-label="Edit opening hours"
         >
-          <span className="akb-time">{to12h(openTime)}</span>
-          <span className="akb-time__to">to</span>
-          <span className="akb-time">{to12h(closeTime)}</span>
+          <span className="kb-loc__row">
+            <span className="kb-loc__label">Opening hours</span>
+            <span className="kb-loc__times">
+              {dayCount === 0 ? "Not set" : `${to12h(openTime)} – ${to12h(closeTime)}`}
+            </span>
+          </span>
+          <span className="kb-days">
+            {DAYS.map(([k, l]) => (
+              <span key={k} className={`kb-day${hours[k]?.open ? " is-on" : ""}`}>
+                {l}
+              </span>
+            ))}
+          </span>
         </button>
-      </>
+      </div>
     );
   }
 
   return (
-    <div style={{ display: "grid", gap: 12 }}>
-      <label className="aikb-label">
-        Address
+    <div className="kb-loc kb-loc--edit">
+      <label className="kb-field">
+        <span className="kb-field__lbl">Address</span>
         <input
-          className="aikb-input"
+          className="kb-input"
           value={addr}
           onChange={(e) => setAddr(e.target.value)}
           placeholder="123 Main St, Springfield"
         />
       </label>
 
-      <div>
-        <div className="akb-card__sub" style={{ marginBottom: 6 }}>
-          Open on
-        </div>
-        <div className="akb-loc__days">
+      <div className="kb-field">
+        <span className="kb-field__lbl">Open on</span>
+        <div className="kb-days">
           {DAYS.map(([k, l]) => (
             <button
               key={k}
               type="button"
               onClick={() => toggleDay(k)}
               aria-pressed={openDays.has(k)}
-              className={`akb-day ${openDays.has(k) ? "is-on" : ""}`}
-              style={{ cursor: "pointer", border: 0 }}
+              className={`kb-day kb-day--btn${openDays.has(k) ? " is-on" : ""}`}
             >
               {l}
             </button>
@@ -190,46 +184,43 @@ export function LocationHoursEditor({
         </div>
       </div>
 
-      <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-        <select
-          className="aikb-select"
-          value={openTime}
-          onChange={(e) => setOpenTime(e.target.value)}
-          aria-label="Opening time"
-        >
-          {TIMES.map((t) => (
-            <option key={t} value={t}>
-              {to12h(t)}
-            </option>
-          ))}
-        </select>
-        <span className="akb-time__to">to</span>
-        <select
-          className="aikb-select"
-          value={closeTime}
-          onChange={(e) => setCloseTime(e.target.value)}
-          aria-label="Closing time"
-        >
-          {TIMES.map((t) => (
-            <option key={t} value={t}>
-              {to12h(t)}
-            </option>
-          ))}
-        </select>
+      <div className="kb-loc__timepick">
+        <div className="kb-field">
+          <span className="kb-field__lbl">Opens</span>
+          <GlassSelect
+            options={timeOptions}
+            value={openTime}
+            onChange={setOpenTime}
+            searchable
+            searchPlaceholder="Search times"
+            ariaLabel="Opening time"
+          />
+        </div>
+        <div className="kb-field">
+          <span className="kb-field__lbl">Closes</span>
+          <GlassSelect
+            options={timeOptions}
+            value={closeTime}
+            onChange={setCloseTime}
+            searchable
+            searchPlaceholder="Search times"
+            ariaLabel="Closing time"
+          />
+        </div>
       </div>
 
       {error && (
-        <p role="alert" style={{ fontSize: 12.5, color: "#e14d62", margin: 0 }}>
+        <p role="alert" className="kb-alert">
           {error}
         </p>
       )}
 
-      <div style={{ display: "flex", gap: 8 }}>
-        <button type="button" className="akb-btn-primary" onClick={save} disabled={pending}>
-          {pending ? "Saving…" : "Save"}
-        </button>
-        <button type="button" className="akb-btn-outline" onClick={() => setEditing(false)}>
+      <div className="kb-loc__actions">
+        <button type="button" className="kb-pill" onClick={() => setEditing(false)}>
           Cancel
+        </button>
+        <button type="button" className="kb-pill kb-pill--pri" onClick={save} disabled={pending}>
+          {pending ? "Saving…" : "Save"}
         </button>
       </div>
     </div>

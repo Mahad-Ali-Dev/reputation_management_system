@@ -111,6 +111,14 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
   const savedRef = useRef<BehaviourFields>(initial);
   const [status, setStatus] = useState<"saved" | "dirty" | "saving" | "error">("saved");
   const [rulesOpen, setRulesOpen] = useState(false);
+  // Brief "Changes saved" confirmation after a successful save.
+  const [celebrate, setCelebrate] = useState(false);
+
+  useEffect(() => {
+    if (!celebrate) return;
+    const t = setTimeout(() => setCelebrate(false), 2200);
+    return () => clearTimeout(t);
+  }, [celebrate]);
 
   const dirty = status === "dirty" || status === "error";
 
@@ -141,6 +149,7 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
       if (res.ok) {
         savedRef.current = fields;
         setStatus("saved");
+        setCelebrate(true);
       } else {
         setStatus("error");
       }
@@ -319,11 +328,34 @@ export function BehaviourSettings({ initial }: { initial: BehaviourFields }) {
         </button>
       </div>
 
+      {celebrate && (
+        <button
+          type="button"
+          className="kb-done"
+          aria-label="Dismiss"
+          onClick={() => setCelebrate(false)}
+        >
+          <output className="kb-done__card" aria-live="polite">
+            <svg
+              className="kb-done__check"
+              viewBox="0 0 52 52"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <circle className="kb-done__ring" cx="26" cy="26" r="24" fill="none" />
+              <path className="kb-done__tick" fill="none" d="M15 27l7 7 15-15" />
+            </svg>
+            <span className="kb-done__t">Changes saved</span>
+            <span className="kb-done__d">Your AI uses the new settings from its next reply.</span>
+          </output>
+        </button>
+      )}
+
       {rulesOpen && (
         // biome-ignore lint/a11y/useSemanticElements: overlay dialog; matches the other glass sheets
         <div
-          className="gs-overlay"
           role="dialog"
+          className="gs-overlay"
           aria-modal="true"
           aria-labelledby="kb-rules-title"
         >
