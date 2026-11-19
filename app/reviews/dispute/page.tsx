@@ -15,19 +15,7 @@ import {
   listDisputableReviews,
   listDisputesByTab,
 } from "@/lib/reviews/dispute-queries";
-import {
-  ChevronRight,
-  CircleCheck,
-  CircleX,
-  Clock,
-  FileText,
-  Flag,
-  type LucideIcon,
-  Plus,
-  Send,
-  ShieldCheck,
-  Star,
-} from "lucide-react";
+import { ChevronRight, Flag, Plus, Send, ShieldCheck, Star } from "lucide-react";
 import Link from "next/link";
 import { ReviewSnippet } from "./_components/review-snippet";
 import "./disputes.css";
@@ -37,6 +25,8 @@ import "./disputes-apple.css";
 export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** Dispute kit illustrations, kept and shown on soft icon plates. */
+const A = "/assets/repulabs/dispute-center";
 
 /**
  * Dispute Manager (Apple look). Same live data + server actions as before:
@@ -95,23 +85,23 @@ export default async function DisputeCenterPage({
         </header>
 
         <section className="dm-stats" aria-label="Dispute summary">
-          <StatCell icon={FileText} label="Filed" value={stats.total} note="All time" />
+          <StatCell art={`${A}/kpi-total.svg`} label="Filed" value={stats.total} note="All time" />
           <StatCell
-            icon={Clock}
+            art={`${A}/kpi-under-review.svg`}
             label="Under review"
             value={stats.underReview}
             note="Waiting on Google"
             tone="amber"
           />
           <StatCell
-            icon={CircleCheck}
+            art={`${A}/kpi-removed.svg`}
             label="Removed"
             value={stats.removed}
             note="Taken down"
             tone="green"
           />
           <StatCell
-            icon={CircleX}
+            art={`${A}/kpi-rejected.svg`}
             label="Rejected"
             value={stats.rejected}
             note="Google kept the review"
@@ -139,13 +129,13 @@ export default async function DisputeCenterPage({
 /* --- summary cell ----------------------------------------------------------- */
 
 function StatCell({
-  icon: SIcon,
+  art,
   label,
   value,
   note,
   tone = "accent",
 }: {
-  icon: LucideIcon;
+  art: string;
   label: string;
   value: number;
   note: string;
@@ -153,8 +143,8 @@ function StatCell({
 }) {
   return (
     <div className="dm-stat">
-      <span className={`dm-stat__icon is-${tone}`} aria-hidden="true">
-        <SIcon size={17} strokeWidth={1.8} />
+      <span className={`dm-stat__icon dm-stat__icon--art is-${tone}`} aria-hidden="true">
+        <img src={art} alt="" />
       </span>
       <div className="dm-stat__value">{value}</div>
       <div className="dm-stat__label">{label}</div>
@@ -431,7 +421,7 @@ function PipelinePanel({
 }) {
   const rows: Array<{
     key: string;
-    icon: LucideIcon;
+    art: string;
     tone: string;
     title: string;
     sub: string;
@@ -439,7 +429,7 @@ function PipelinePanel({
   }> = [
     {
       key: "draft",
-      icon: FileText,
+      art: `${A}/pipe-draft.svg`,
       tone: "accent",
       title: "Ready to file",
       sub: "Prepared, not sent yet",
@@ -447,7 +437,7 @@ function PipelinePanel({
     },
     {
       key: "submitted",
-      icon: Clock,
+      art: `${A}/pipe-submitted.svg`,
       tone: "amber",
       title: "With Google",
       sub: "Waiting for a decision",
@@ -455,7 +445,7 @@ function PipelinePanel({
     },
     {
       key: "won",
-      icon: CircleCheck,
+      art: `${A}/pipe-won.svg`,
       tone: "green",
       title: "Removed",
       sub: "Review taken down",
@@ -463,7 +453,7 @@ function PipelinePanel({
     },
     {
       key: "lost",
-      icon: CircleX,
+      art: `${A}/pipe-lost.svg`,
       tone: "red",
       title: "Rejected",
       sub: "Review stays up",
@@ -478,11 +468,10 @@ function PipelinePanel({
       <p className="dm-card__sub">Where every dispute stands.</p>
       <ol className="dm-pipe__list">
         {rows.map((r) => {
-          const RIcon = r.icon;
           return (
             <li key={r.key} className="dm-pipe__row">
-              <span className={`dm-stat__icon is-${r.tone}`} aria-hidden="true">
-                <RIcon size={17} strokeWidth={1.8} />
+              <span className={`dm-stat__icon dm-stat__icon--art is-${r.tone}`} aria-hidden="true">
+                <img src={r.art} alt="" />
               </span>
               <span className="dm-pipe__text">
                 <span className="dm-pipe__t">{r.title}</span>
@@ -506,9 +495,7 @@ function PipelinePanel({
 function EmptyState() {
   return (
     <section className="dm-card dm-empty">
-      <span className="dm-empty__badge" aria-hidden="true">
-        <ShieldCheck size={30} strokeWidth={1.6} />
-      </span>
+      <img className="dm-empty__art" src={`${A}/main-empty.svg`} alt="" aria-hidden="true" />
       <h2 className="dm-empty__title">No disputes. No problem reviews.</h2>
       <p className="dm-empty__text">
         When a review is fake, off-topic or breaks Google&apos;s rules, file a dispute and

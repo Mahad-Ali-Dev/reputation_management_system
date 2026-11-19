@@ -619,19 +619,76 @@
   }
 }
 
-/* Apple restraint: drop the kit's large decorative illustrations; the
-   headline and the content carry the page. */
-.app--glass .dc .dc-readyhero,
+/* Illustrations: kept, drawn normally on glass (the kit's multiply blend
+   washes out on frosted surfaces) and sized to sit beside the content
+   instead of dominating it. */
+.app--glass .dc .dc-readyhero__art,
 .app--glass .dc .dc-detail-summary__art,
 .app--glass .dc .dc-wizhead__art,
 .app--glass .dc .dc-selcard__art,
 .app--glass .dc .dc-violhelper__art,
-.app--glass .dc .dc-aihelper__art {
+.app--glass .dc .dc-aihelper__art,
+.app--glass .dc .dc-readyben img,
+.app--glass .dc .dc-pkgitem img,
+.app--glass .dc .dc-benefit img,
+.app--glass .dc .dc-empty__art {
+  mix-blend-mode: normal;
+}
+.app--glass .dc .dc-wizhead {
+  grid-template-columns: minmax(0, 1fr) 300px;
+}
+.app--glass .dc .dc-wizhead__art {
+  width: 100%;
+  max-width: 300px;
+  max-height: 210px;
+  height: auto;
+  justify-self: end;
+  object-fit: contain;
+}
+.app--glass .dc .dc-readyhero {
+  grid-template-columns: 1fr;
+  justify-items: center;
+  margin: 4px 0 18px;
+}
+.app--glass .dc .dc-readyhero > div:empty {
   display: none;
 }
-.app--glass .dc .dc-wizhead,
+.app--glass .dc .dc-readyhero__art {
+  width: 100%;
+  max-width: 230px;
+  height: auto;
+}
 .app--glass .dc .dc-selcard__grid {
-  grid-template-columns: 1fr;
+  grid-template-columns: minmax(0, 1fr) 210px;
+}
+.app--glass .dc .dc-selcard__art {
+  width: 100%;
+  max-width: 210px;
+  align-self: start;
+  margin-top: 24px;
+}
+.app--glass .dc .dc-detail-summary__art {
+  width: 110px;
+  height: auto;
+  flex-shrink: 0;
+}
+.app--glass .dc .dc-violhelper__art,
+.app--glass .dc .dc-aihelper__art {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin: 0 auto 10px;
+  display: block;
+}
+@media (max-width: 1080px) {
+  .app--glass .dc .dc-wizhead,
+  .app--glass .dc .dc-selcard__grid {
+    grid-template-columns: 1fr;
+  }
+  .app--glass .dc .dc-wizhead__art,
+  .app--glass .dc .dc-selcard__art {
+    display: none;
+  }
 }
 /* Breadcrumbs: same type as the rest of the UI (was typewriter caps). */
 .app--glass .dc .ph nav[aria-label="Breadcrumb"] {
@@ -738,4 +795,21 @@
   border-radius: 20px;
   background: var(--ap-glass);
   box-shadow: var(--ap-shadow);
+}
+
+/* list page: kit art inside the soft icon plates */
+.dm-stat__icon--art {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.dm-stat__icon--art img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+.dm-empty__art {
+  width: 100%;
+  max-width: 240px;
+  height: auto;
 }

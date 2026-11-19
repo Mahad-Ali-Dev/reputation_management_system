@@ -181,27 +181,66 @@
   color: var(--ap-2);
 }
 
-/* ---------- drop the kit's large illustrations ---------- */
+/* ---------- illustrations: kept, sized + framed for glass ----------
+   The kit art used mix-blend-mode:multiply to melt into the old opaque white
+   cards; on frosted glass that washes it out, so draw it normally on a soft
+   rounded plate and keep each piece at a calm, consistent size. */
 .app--glass .rr .rr-hero__art,
 .app--glass .rr .rr-banner__art,
 .app--glass .rr .rr-preview__art,
 .app--glass .rr .rr-metric__art,
-.app--glass .rr .rr-tplrow__ill,
+.app--glass .rr .rr-tplrow__ill img,
 .app--glass .rr .rr-emptybig img,
 .app--glass .rr .rr-miniempty img,
-.app--glass .rr .rr-autoempty img {
-  display: none;
+.app--glass .rr .rr-autoempty img,
+.app--glass .rr .rr-sumcard__tile img,
+.app--glass .rr .rr-statcard__tile img,
+.app--glass .rr .rr-rule__tile img {
+  mix-blend-mode: normal;
 }
+/* template rows: a square thumbnail on a soft plate */
 .app--glass .rr .rr-tplrow {
-  grid-template-columns: minmax(0, 1fr) 230px auto;
+  grid-template-columns: 116px minmax(0, 1fr) 230px auto;
+  gap: 20px;
 }
+.app--glass .rr .rr-tplrow__ill {
+  align-self: center;
+  width: 116px;
+  height: 116px;
+  min-height: 0;
+  padding: 12px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(75, 59, 255, 0.09), rgba(138, 92, 255, 0.04));
+}
+.app--glass .rr .rr-tplrow--sms .rr-tplrow__ill {
+  background: linear-gradient(160deg, rgba(52, 199, 89, 0.12), rgba(52, 199, 89, 0.04));
+}
+.app--glass .rr .rr-tplrow__ill img {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+}
+/* automation banner: art on the left, sized to the copy */
 .app--glass .rr .rr-banner {
-  grid-template-columns: minmax(0, 1.2fr) auto;
+  grid-template-columns: 112px minmax(0, 1.2fr) auto;
+  align-items: center;
   background: radial-gradient(circle at 0% 50%, rgba(75, 59, 255, 0.1), transparent 45%),
     var(--ap-glass);
 }
-
-/* Apple empty states (text-led, icon circle drawn in CSS) */
+.app--glass .rr .rr-banner__art {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  border-radius: 22px;
+  box-shadow: 0 6px 18px -10px rgba(21, 19, 43, 0.25);
+}
+/* email preview art in the corner: smaller, behind the content */
+.app--glass .rr .rr-preview__art {
+  width: 104px;
+  opacity: 0.9;
+}
+/* empty states: illustration first, modest size, then text */
 .app--glass .rr .rr-emptybig,
 .app--glass .rr .rr-miniempty,
 .app--glass .rr .rr-autoempty {
@@ -210,17 +249,18 @@
   align-items: center;
   gap: 6px;
 }
-.app--glass .rr .rr-emptybig::before,
-.app--glass .rr .rr-miniempty::before,
-.app--glass .rr .rr-autoempty::before {
-  content: "";
-  width: 56px;
-  height: 56px;
-  margin-bottom: 8px;
-  border-radius: 999px;
-  background: rgba(75, 59, 255, 0.09)
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%234b3bff' stroke-width='1.7' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m22 2-7 20-4-9-9-4Z'/%3E%3Cpath d='M22 2 11 13'/%3E%3C/svg%3E")
-    center / 24px no-repeat;
+.app--glass .rr .rr-emptybig img,
+.app--glass .rr .rr-autoempty img {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  margin: 0 auto 12px;
+}
+.app--glass .rr .rr-miniempty img {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin: 0 auto 6px;
 }
 .app--glass .rr .rr-emptybig__title,
 .app--glass .rr .rr-miniempty__title,
@@ -481,8 +521,9 @@
 }
 .app--glass .rr .rr-statcard__tile img,
 .app--glass .rr .rr-sumcard__tile img {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
 }
 .app--glass .rr .rr-statcard__value,
 .app--glass .rr .rr-sumcard__value {
