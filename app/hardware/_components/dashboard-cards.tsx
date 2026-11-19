@@ -1,6 +1,7 @@
 import { Icon } from "@/components/shell/icon";
-import { getReviewSourceMeta } from "@/lib/reviews/source-meta";
 import type { DeviceDashboardExtras, ImpactDay, RecentReviewRow } from "@/lib/hardware/queries";
+import { getReviewSourceMeta } from "@/lib/reviews/source-meta";
+import { CalendarDays, type LucideIcon, QrCode, ScanLine, Star, TrendingUp } from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -79,7 +80,7 @@ export function MdSummaryRow({
       </div>
       <div className="md-summary__grid">
         <Metric
-          icon="stat-total-scans.svg"
+          icon={ScanLine}
           tint="lav"
           label="Total scans"
           value={fmt(totalScans)}
@@ -87,32 +88,27 @@ export function MdSummaryRow({
           sub="all devices"
         />
         <Metric
-          icon="stat-today.svg"
+          icon={CalendarDays}
           tint="blue"
           label="Today scan"
           value={fmt(todayScans)}
           badge={todayScans > 0 ? { kind: "up", text: "today" } : null}
         />
         <Metric
-          icon="stat-reviews.svg"
+          icon={Star}
           tint="yellow"
           label="Reviews from scans"
           value={fmt(reviewsFromScans)}
           badge={reviewsFromScans > 0 ? { kind: "up", text: "attributed" } : null}
         />
         <Metric
-          icon="stat-conversion.svg"
+          icon={TrendingUp}
           tint="green"
           label="Conversion rate"
           value={conversionLabel}
           badge={conversionLabel === "—" ? null : { kind: "steady", text: "scans→reviews" }}
         />
-        <Metric
-          icon="stat-active-devices.svg"
-          tint="lav"
-          label="Active devices"
-          value={fmt(activeDevices)}
-        />
+        <Metric icon={QrCode} tint="lav" label="Active devices" value={fmt(activeDevices)} />
       </div>
     </section>
   );
@@ -126,19 +122,19 @@ function Metric({
   badge,
   sub,
 }: {
-  icon: string;
+  icon: LucideIcon;
   tint: "lav" | "blue" | "yellow" | "green";
   label: string;
   value: string;
   badge?: { kind: "up" | "steady"; text: string } | null;
   sub?: string;
 }) {
+  const MetricIcon = icon;
   return (
     <div className="md-metric">
       <div className="md-metric__top">
         <span className={`md-metric__tile md-metric__tile--${tint}`} aria-hidden>
-          {/* biome-ignore lint/performance/noImgElement: static kit icon */}
-          <img src={`${ASSET}/${icon}`} alt="" aria-hidden className="md-metric__icon" />
+          <MetricIcon size={18} strokeWidth={1.8} className="md-metric__icon" />
         </span>
         <span className="md-metric__label">{label}</span>
       </div>
@@ -156,7 +152,7 @@ function Metric({
 }
 
 /* ── Live feed ──────────────────────────────────────────────────────── */
-const AVATAR_TINTS = ["#245bff", "#6c4dff", "#18be78", "#ffb020", "#ff5969"];
+const AVATAR_TINTS = ["#4b3bff", "#7466ff", "#12a26e", "#d9822b", "#e5484d"];
 
 export function MdLiveFeed({ reviews }: { reviews: RecentReviewRow[] }) {
   return (
@@ -182,7 +178,7 @@ export function MdLiveFeed({ reviews }: { reviews: RecentReviewRow[] }) {
             <FeedRow
               key={r.id}
               review={r}
-              tint={AVATAR_TINTS[i % AVATAR_TINTS.length] ?? "#245bff"}
+              tint={AVATAR_TINTS[i % AVATAR_TINTS.length] ?? "#4b3bff"}
             />
           ))}
         </div>
@@ -232,7 +228,7 @@ export function MdReviewsByRating({
   const values = [dist[1], dist[2], dist[3], dist[4], dist[5]];
   const max = Math.max(...values, 1);
   const total = values.reduce((a, b) => a + b, 0);
-  const BAR_TINTS = ["#ff5969", "#ffb020", "#8a94a6", "#245bff", "#18be78"];
+  const BAR_TINTS = ["#d9d4ff", "#bdb5ff", "#9d92ff", "#7466ff", "#4b3bff"];
 
   return (
     <section className="md-card" aria-label="Reviews by rating">
@@ -300,11 +296,11 @@ export function MdDevicesImpact({ impact }: { impact: ImpactDay[] }) {
         </p>
         <div className="md-impact__legend">
           <span>
-            <span className="md-impact__dot" style={{ background: "#245bff" }} />
+            <span className="md-impact__dot" style={{ background: "#4b3bff" }} />
             Total scans
           </span>
           <span>
-            <span className="md-impact__dot" style={{ background: "#6c4dff" }} />
+            <span className="md-impact__dot" style={{ background: "#a99fff" }} />
             Total reviews
           </span>
         </div>
@@ -322,15 +318,15 @@ export function MdDevicesImpact({ impact }: { impact: ImpactDay[] }) {
           >
             <defs>
               <linearGradient id="md-impact-fill" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#245bff" stopOpacity="0.22" />
-                <stop offset="100%" stopColor="#245bff" stopOpacity="0" />
+                <stop offset="0%" stopColor="#4b3bff" stopOpacity="0.22" />
+                <stop offset="100%" stopColor="#4b3bff" stopOpacity="0" />
               </linearGradient>
             </defs>
             <path d={area(scans)} fill="url(#md-impact-fill)" />
             <path
               d={line(scans)}
               fill="none"
-              stroke="#245bff"
+              stroke="#4b3bff"
               strokeWidth="2.5"
               strokeLinejoin="round"
               strokeLinecap="round"
@@ -338,7 +334,7 @@ export function MdDevicesImpact({ impact }: { impact: ImpactDay[] }) {
             <path
               d={line(reviews)}
               fill="none"
-              stroke="#6c4dff"
+              stroke="#a99fff"
               strokeWidth="2"
               strokeDasharray="4 4"
               strokeLinejoin="round"

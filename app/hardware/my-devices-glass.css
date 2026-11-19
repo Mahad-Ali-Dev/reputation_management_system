@@ -44,3 +44,79 @@
 .app--glass .md-hero {
   display: block;
 }
+
+/* ============================================================
+   Restyle 2026-11 (same layout, dashboard look) — brand palette, bare
+   line icons (no tiles), lighter numbers/headings, the Repulabs AI frog in
+   the AI Chatbot card. Mirrors app/autopilot/autopilot-glass.css.
+   ============================================================ */
+
+/* The kit's own blue/ink palette → the shared Ultramarine tokens. */
+.app--glass .md {
+  --md-blue: var(--glass-accent, #4b3bff);
+  --md-purple: #7466ff;
+  --md-lav: var(--glass-accent-soft, rgba(75, 59, 255, 0.1));
+  --md-soft-blue: rgba(75, 59, 255, 0.08);
+  --md-ink: var(--glass-text, #15132b);
+  --md-muted: var(--glass-text-muted, #4a4763);
+  --md-muted-2: var(--glass-text-subtle, #6b6880);
+  --md-line: var(--glass-border, rgba(21, 19, 43, 0.08));
+  --md-line-strong: rgba(75, 59, 255, 0.22);
+  --md-ok: var(--glass-success, #12a26e);
+  --md-warn: var(--glass-warning, #d9822b);
+  --md-bad: var(--glass-danger, #e5484d);
+}
+
+/* headings + numbers: lighter (founder: "too big / heavy") */
+.app--glass .md-hero__title {
+  font-weight: 600;
+}
+.app--glass .md-card__title {
+  font-weight: 600;
+}
+.app--glass .md-metric__value {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+/* Clean icons: bare line icons in the metric strip, no tinted tiles. */
+.app--glass .md-metric__tile,
+.app--glass .md-metric__tile--lav,
+.app--glass .md-metric__tile--blue,
+.app--glass .md-metric__tile--yellow,
+.app--glass .md-metric__tile--green {
+  width: 22px;
+  height: 22px;
+  flex-basis: 22px;
+  border-radius: 0;
+  background: none;
+}
+.app--glass .md-metric__icon {
+  width: 18px;
+  height: 18px;
+  color: var(--glass-accent, #4b3bff);
+}
+.app--glass .md-metric__tile--yellow .md-metric__icon {
+  color: #c47d12;
+}
+.app--glass .md-metric__tile--green .md-metric__icon {
+  color: #0f8a5d;
+}
+
+/* AI Chatbot card: the frog replaces the robot orb, no backdrop. */
+.md-chat__frog {
+  top: 4px;
+  right: 8px;
+  width: 80px;
+  height: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  pointer-events: auto;
+  border-radius: 18px;
+}
+.md-chat__frog:focus-visible {
+  outline: 2px solid var(--glass-accent, #4b3bff);
+  outline-offset: 2px;
+}

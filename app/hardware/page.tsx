@@ -346,7 +346,7 @@ export default async function QrCodesPage({
             scans={selectedDevice.scanCount}
             reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
           />
-          <AiChatbotCard orbSrc="/assets/repulabs/my-devices/ai-chatbot-orb.svg" />
+          <AiChatbotCard />
         </div>
 
         {/* NFC tap-destination config (preserved — only for NFC kinds). */}
@@ -606,7 +606,7 @@ function EmptyState({
 
         {/* AI Chatbot card (kit) — no data dependency, useful even before any device. */}
         <div className="md-bottom" style={{ gridTemplateColumns: "1fr" }}>
-          <AiChatbotCard orbSrc="/assets/repulabs/my-devices/ai-chatbot-orb.svg" />
+          <AiChatbotCard />
         </div>
 
         <MdFooterTip />

@@ -1,7 +1,8 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
 import { openAskAi } from "@/components/ask-ai";
+import { Icon } from "@/components/shell/icon";
+import { LazyFrog } from "@/components/ui/lazy-frog";
 import { useState } from "react";
 
 /**
@@ -20,7 +21,7 @@ const PROMPTS = [
   "Improve conversion rate",
 ] as const;
 
-export function AiChatbotCard({ orbSrc }: { orbSrc: string }) {
+export function AiChatbotCard() {
   const [draft, setDraft] = useState("");
 
   function submit() {
@@ -32,8 +33,15 @@ export function AiChatbotCard({ orbSrc }: { orbSrc: string }) {
 
   return (
     <section className="md-card md-chat" aria-label="AI Chatbot">
-      {/* biome-ignore lint/performance/noImgElement: static kit illustration (large SVG, not inlined) */}
-      <img src={orbSrc} alt="" aria-hidden className="md-chat__orb" width={64} height={64} />
+      {/* The Repulabs AI frog (replaces the kit's robot orb); click opens Ask AI. */}
+      <button
+        type="button"
+        className="md-chat__orb md-chat__frog"
+        onClick={() => openAskAi()}
+        aria-label="Open the Repulabs AI assistant"
+      >
+        <LazyFrog size={76} showTag={false} followPointer />
+      </button>
       <div className="md-card__head" style={{ padding: 0 }}>
         <h3 className="md-card__title">AI Chatbot</h3>
         <span className="chip chip--pri" style={{ height: 18, fontSize: 10, marginLeft: 8 }}>
