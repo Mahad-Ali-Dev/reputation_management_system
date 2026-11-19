@@ -104,7 +104,9 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
   const win30 = new Date(now - 30 * 24 * 60 * 60 * 1000);
   const win60 = new Date(now - 60 * 24 * 60 * 60 * 1000);
   const [emailCount, smsCount, avgRespMins, avgPrevMins, queuedThisWeek] = await Promise.all([
-    withTenant(orgId, (tx) => tx.reviewRequest.count({ where: { channel: "email" } })).catch(() => 0),
+    withTenant(orgId, (tx) => tx.reviewRequest.count({ where: { channel: "email" } })).catch(
+      () => 0,
+    ),
     withTenant(orgId, (tx) => tx.reviewRequest.count({ where: { channel: "sms" } })).catch(() => 0),
     avgResponseMinutes(orgId, win30).catch(() => null),
     avgResponseMinutes(orgId, win60, win30).catch(() => null),
@@ -174,13 +176,12 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           sub: t.channel === "email" ? "Email template" : "SMS template",
           status: t.isDefault ? "Ready" : "Draft",
           icon: t.channel === "email" ? "mail" : "smartphone",
-          href: `/outreach/templates/${t.id}`,
+          href: `/outreach?tab=templates&template=${t.id}`,
         }),
       ),
   ].slice(0, 4);
 
-  const rate = (n: number) =>
-    liveStats.sent > 0 ? Math.round((n / liveStats.sent) * 100) : 0;
+  const rate = (n: number) => (liveStats.sent > 0 ? Math.round((n / liveStats.sent) * 100) : 0);
   const queueRows = data.queue.length > 0 ? data.queue : recent;
   const isQueue = data.queue.length > 0;
 
@@ -207,7 +208,11 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           {programs.length === 0 ? (
             <div className="rr-miniempty">
               {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-              <img src="/assets/repulabs/review-request/ov-empty-campaigns.svg" alt="" aria-hidden="true" />
+              <img
+                src="/assets/repulabs/review-request/ov-empty-campaigns.svg"
+                alt=""
+                aria-hidden="true"
+              />
               <div className="rr-miniempty__title">No campaigns yet</div>
               <p className="rr-miniempty__sub">Create your first campaign to get started</p>
               <Link href="/outreach?tab=send" className="btn btn--pri btn--sm">
@@ -254,7 +259,10 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
               <div className="rr-cardhead__sub">Merge tags and preview</div>
             </div>
           </div>
-          <TemplateStudio templates={data.templates} businessName={data.org?.name ?? "Your Business"} />
+          <TemplateStudio
+            templates={data.templates}
+            businessName={data.org?.name ?? "Your Business"}
+          />
         </section>
 
         {/* ── 3 · Deliverability ── */}
@@ -272,7 +280,11 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           {liveStats.sent === 0 ? (
             <div className="rr-miniempty">
               {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-              <img src="/assets/repulabs/review-request/deliverability.svg" alt="" aria-hidden="true" />
+              <img
+                src="/assets/repulabs/review-request/deliverability.svg"
+                alt=""
+                aria-hidden="true"
+              />
               <div className="rr-miniempty__title">No deliverability data</div>
               <p className="rr-miniempty__sub">We&apos;ll show your deliverability stats here</p>
             </div>
@@ -331,7 +343,9 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
           </div>
           <div>
             <div className="rr-cardhead__title">Recipients</div>
-            <div className="rr-cardhead__sub">{isQueue ? "Next send queue" : "Most recent requests"}</div>
+            <div className="rr-cardhead__sub">
+              {isQueue ? "Next send queue" : "Most recent requests"}
+            </div>
           </div>
           <div className="rr-cardhead__aside">
             <Link href="/outreach?tab=history" className="rr-pillbtn">
@@ -343,7 +357,11 @@ export async function OverviewTab({ orgId }: { orgId: string }) {
         {queueRows.length === 0 ? (
           <div className="rr-emptybig">
             {/* biome-ignore lint/performance/noImgElement: static brand SVG */}
-            <img src="/assets/repulabs/review-request/ov-empty-recipients.svg" alt="" aria-hidden="true" />
+            <img
+              src="/assets/repulabs/review-request/ov-empty-recipients.svg"
+              alt=""
+              aria-hidden="true"
+            />
             <div className="rr-emptybig__title">No recipients yet</div>
             <p className="rr-emptybig__sub">Your review request recipients will appear here</p>
             <Link href="/outreach?tab=send" className="btn btn--pri btn--sm">
@@ -534,7 +552,9 @@ function DeliverabilityDonut({
         <div className="rr-donut__center">
           <div>
             <div className="rr-donut__pct">{pct}%</div>
-            <div className="rr-donut__cap">{pct >= 95 ? "Excellent" : pct >= 80 ? "Good" : "Fair"}</div>
+            <div className="rr-donut__cap">
+              {pct >= 95 ? "Excellent" : pct >= 80 ? "Good" : "Fair"}
+            </div>
           </div>
         </div>
       </div>
@@ -618,11 +638,18 @@ function Sparkline({ color, seed }: { color: string; seed: number }) {
   const ys: number[] = [];
   for (let i = 0; i < pts; i++) ys.push(6 + rnd() * (h - 12));
   const step = w / (pts - 1);
-  const line = ys.map((y, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${y.toFixed(1)}`).join(" ");
+  const line = ys
+    .map((y, i) => `${i === 0 ? "M" : "L"}${(i * step).toFixed(1)},${y.toFixed(1)}`)
+    .join(" ");
   const area = `${line} L${w},${h} L0,${h} Z`;
   const id = `sp${seed}`;
   return (
-    <svg className="rr-spark" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" aria-hidden="true">
+    <svg
+      className="rr-spark"
+      viewBox={`0 0 ${w} ${h}`}
+      preserveAspectRatio="none"
+      aria-hidden="true"
+    >
       <defs>
         <linearGradient id={id} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={color} stopOpacity="0.18" />
@@ -630,7 +657,14 @@ function Sparkline({ color, seed }: { color: string; seed: number }) {
         </linearGradient>
       </defs>
       <path d={area} fill={`url(#${id})`} />
-      <path d={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      <path
+        d={line}
+        fill="none"
+        stroke={color}
+        strokeWidth="2"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -640,11 +674,7 @@ function Sparkline({ color, seed }: { color: string; seed: number }) {
  * window (on sentAt). The window lets the caller diff two periods for a real
  * trend delta on the metric card.
  */
-async function avgResponseMinutes(
-  orgId: string,
-  from?: Date,
-  to?: Date,
-): Promise<number | null> {
+async function avgResponseMinutes(orgId: string, from?: Date, to?: Date): Promise<number | null> {
   return withTenant(orgId, async (tx) => {
     const sentAt =
       from || to

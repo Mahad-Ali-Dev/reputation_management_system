@@ -38,6 +38,7 @@ export function MergeTagEditor({
   label,
   maxLength,
   showPreview = true,
+  extraAllowedKeys,
 }: {
   value: string;
   onChange: (next: string) => void;
@@ -51,11 +52,17 @@ export function MergeTagEditor({
   maxLength?: number;
   /** Render the side preview (default true). */
   showPreview?: boolean;
+  /** Extra keys that resolve but have no chip (e.g. legacy camelCase aliases),
+   *  so the unknown-tag warning doesn't flag them. */
+  extraAllowedKeys?: string[];
 }) {
   const taRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Allowed key set for unknown-tag validation.
-  const allowedKeys = useMemo(() => tags.map((t) => t.key), [tags]);
+  const allowedKeys = useMemo(
+    () => [...tags.map((t) => t.key), ...(extraAllowedKeys ?? [])],
+    [tags, extraAllowedKeys],
+  );
   const unknownTags = useMemo(() => {
     const allow = new Set(allowedKeys);
     return extractMergeTags(value).filter((k) => !allow.has(k));

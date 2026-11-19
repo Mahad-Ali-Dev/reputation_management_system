@@ -1,0 +1,531 @@
+/* ============================================================
+   outreach-apple.css: Review Outreach in the Apple language.
+   Loaded LAST on /outreach. Re-maps the kit tokens onto Apple greys + the
+   brand accent and restyles the shared surfaces: big light title, iOS
+   segmented tabs, frosted cards, quiet stat tiles, inset tables, grey-fill
+   fields, pill buttons. Large kit illustrations are dropped.
+   ============================================================ */
+
+.app--glass .rr {
+  --ap-ink: #1d1d1f;
+  --ap-2: #6e6e73;
+  --ap-3: #86868b;
+  --ap-fill: rgba(120, 120, 128, 0.12);
+  --ap-fill-2: rgba(120, 120, 128, 0.08);
+  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-accent: var(--glass-accent, #4b3bff);
+  --ap-glass: rgba(255, 255, 255, 0.72);
+  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14);
+
+  --rr-text: var(--ap-ink);
+  --rr-text-strong: var(--ap-ink);
+  --rr-head: var(--ap-ink);
+  --rr-muted: var(--ap-2);
+  --rr-soft: var(--ap-3);
+  --rr-border: var(--ap-sep);
+  --rr-border-soft: rgba(60, 60, 67, 0.08);
+  --rr-border-violet: rgba(75, 59, 255, 0.2);
+  --rr-pri: var(--ap-accent);
+  --rr-pri-strong: var(--glass-accent-hover, #3a2be0);
+  --rr-pri-soft: rgba(75, 59, 255, 0.09);
+  --rr-pri-soft-2: rgba(75, 59, 255, 0.05);
+  --rr-ok: #248a3d;
+  --rr-ok-soft: rgba(52, 199, 89, 0.12);
+  --rr-green: #34c759;
+  --rr-green-soft: rgba(52, 199, 89, 0.12);
+  --rr-blue: #0a84ff;
+  --rr-blue-soft: rgba(10, 132, 255, 0.1);
+  --rr-orange: #ff9500;
+  --rr-orange-soft: rgba(255, 149, 0, 0.12);
+  --rr-red: #ff3b30;
+  --rr-red-soft: rgba(255, 59, 48, 0.1);
+  --rr-shadow-card: none;
+  --rr-shadow-soft: none;
+  --rr-shadow-pri: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+}
+
+/* ---------- header ---------- */
+.app--glass .rr .ph__kicker {
+  padding: 0;
+  margin-bottom: 6px;
+  background: none;
+  font-family: var(--f-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.app--glass .rr .ph__kicker::before {
+  display: none;
+}
+.app--glass .rr .ph__title {
+  font-family: var(--f-head);
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--ap-ink);
+}
+.app--glass .rr .ph__sub {
+  margin-top: 10px;
+  font-size: 16px;
+  color: var(--ap-2);
+}
+
+/* ---------- tabs: iOS segmented control ---------- */
+.app--glass .rr .tabs {
+  display: inline-flex;
+  gap: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.app--glass .rr .tabs a,
+.app--glass .rr .tabs button,
+.app--glass .rr .tab {
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ap-ink);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none;
+}
+.app--glass .rr .tabs a::after,
+.app--glass .rr .tabs button::after,
+.app--glass .rr .tab::after {
+  display: none;
+}
+.app--glass .rr .tabs [aria-selected="true"],
+.app--glass .rr .tabs .is-active,
+.app--glass .rr .tab.is-active {
+  background: #fff;
+  color: var(--ap-ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ---------- surfaces ---------- */
+.app--glass .rr .rr-card,
+.app--glass .rr .rr-statcard,
+.app--glass .rr .rr-sumcard,
+.app--glass .rr .rr-metric,
+.app--glass .rr .rr-tplrow,
+.app--glass .rr .rr-rule,
+.app--glass .rr .rr-banner,
+.app--glass .rr .rr-formcard,
+.app--glass .rr .rr-feed,
+.app--glass .rr .rr-tablecard,
+.app--glass .rr .rr-autoempty {
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  background: var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .rr .rr-cardhead__title,
+.app--glass .rr .rr-listbar__title,
+.app--glass .rr .rr-feed__title,
+.app--glass .rr .rr-banner__title,
+.app--glass .rr .rr-tplrow__title,
+.app--glass .rr .rr-rule__title,
+.app--glass .rr .rr-step__title,
+.app--glass .rr .rr-preview__title {
+  font-family: var(--f-head);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink);
+}
+.app--glass .rr .rr-cardhead__sub {
+  color: var(--ap-2);
+}
+
+/* small icon tiles: soft, consistent */
+.app--glass .rr .rr-cardicon,
+.app--glass .rr .rr-metric__tile,
+.app--glass .rr .rr-statcard__tile,
+.app--glass .rr .rr-sumcard__tile,
+.app--glass .rr .rr-rule__tile,
+.app--glass .rr .rr-preview__tile,
+.app--glass .rr .rr-bval__icon {
+  border-radius: 12px;
+  box-shadow: none;
+}
+
+/* numbers */
+.app--glass .rr .rr-metric__value,
+.app--glass .rr .rr-statcard__value,
+.app--glass .rr .rr-sumcard__value,
+.app--glass .rr .rr-metcell__value,
+.app--glass .rr .rr-rule__metric-val,
+.app--glass .rr .rr-donut__pct {
+  font-family: var(--f-num);
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+.app--glass .rr .rr-metric__label,
+.app--glass .rr .rr-statcard__label,
+.app--glass .rr .rr-sumcard__label {
+  font-weight: 500;
+  color: var(--ap-2);
+}
+
+/* ---------- illustrations: kept, sized + framed for glass ----------
+   The kit art used mix-blend-mode:multiply to melt into the old opaque white
+   cards; on frosted glass that washes it out, so draw it normally on a soft
+   rounded plate and keep each piece at a calm, consistent size. */
+.app--glass .rr .rr-hero__art,
+.app--glass .rr .rr-banner__art,
+.app--glass .rr .rr-preview__art,
+.app--glass .rr .rr-metric__art,
+.app--glass .rr .rr-tplrow__ill img,
+.app--glass .rr .rr-emptybig img,
+.app--glass .rr .rr-miniempty img,
+.app--glass .rr .rr-autoempty img,
+.app--glass .rr .rr-sumcard__tile img,
+.app--glass .rr .rr-statcard__tile img,
+.app--glass .rr .rr-rule__tile img {
+  mix-blend-mode: normal;
+}
+/* template rows: a square thumbnail on a soft plate */
+.app--glass .rr .rr-tplrow {
+  grid-template-columns: 116px minmax(0, 1fr) 230px auto;
+  gap: 20px;
+}
+.app--glass .rr .rr-tplrow__ill {
+  align-self: center;
+  width: 116px;
+  height: 116px;
+  min-height: 0;
+  padding: 12px;
+  border-radius: 22px;
+  background: linear-gradient(160deg, rgba(75, 59, 255, 0.09), rgba(138, 92, 255, 0.04));
+}
+.app--glass .rr .rr-tplrow--sms .rr-tplrow__ill {
+  background: linear-gradient(160deg, rgba(52, 199, 89, 0.12), rgba(52, 199, 89, 0.04));
+}
+.app--glass .rr .rr-tplrow__ill img {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  object-fit: contain;
+}
+/* automation banner: art on the left, sized to the copy */
+.app--glass .rr .rr-banner {
+  grid-template-columns: 112px minmax(0, 1.2fr) auto;
+  align-items: center;
+  background: radial-gradient(circle at 0% 50%, rgba(75, 59, 255, 0.1), transparent 45%),
+    var(--ap-glass);
+}
+.app--glass .rr .rr-banner__art {
+  width: 112px;
+  height: 112px;
+  object-fit: contain;
+  border-radius: 22px;
+  box-shadow: 0 6px 18px -10px rgba(21, 19, 43, 0.25);
+}
+/* email preview art in the corner: smaller, behind the content */
+.app--glass .rr .rr-preview__art {
+  width: 104px;
+  opacity: 0.9;
+}
+/* empty states: illustration first, modest size, then text */
+.app--glass .rr .rr-emptybig,
+.app--glass .rr .rr-miniempty,
+.app--glass .rr .rr-autoempty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.app--glass .rr .rr-emptybig img,
+.app--glass .rr .rr-autoempty img {
+  width: 100%;
+  max-width: 220px;
+  height: auto;
+  margin: 0 auto 12px;
+}
+.app--glass .rr .rr-miniempty img {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+  margin: 0 auto 6px;
+}
+.app--glass .rr .rr-emptybig__title,
+.app--glass .rr .rr-miniempty__title,
+.app--glass .rr .rr-autoempty__title {
+  font-family: var(--f-head);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .rr .rr-emptybig__sub,
+.app--glass .rr .rr-miniempty__sub,
+.app--glass .rr .rr-autoempty__body {
+  max-width: 380px;
+  color: var(--ap-2);
+}
+
+/* ---------- buttons: pills ---------- */
+.app--glass .rr .btn,
+.app--glass .rr .rr-tplbtn,
+.app--glass .rr .rr-actbtn,
+.app--glass .rr .rr-toolbtn,
+.app--glass .rr .rr-pillbtn,
+.app--glass .rr .rr-feedbtn,
+.app--glass .rr .rr-linkbtn.rr-linkbtn--btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+  font-weight: 500;
+  box-shadow: none;
+}
+.app--glass .rr .btn:hover,
+.app--glass .rr .rr-tplbtn:hover,
+.app--glass .rr .rr-actbtn:hover,
+.app--glass .rr .rr-toolbtn:hover,
+.app--glass .rr .rr-pillbtn:hover,
+.app--glass .rr .rr-feedbtn:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .rr .btn--pri,
+.app--glass .rr .rr-tplbtn--pri,
+.app--glass .rr .rr-actbtn--pri {
+  background: var(--ap-accent);
+  color: #fff;
+  box-shadow: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+}
+.app--glass .rr .btn--pri:hover,
+.app--glass .rr .rr-tplbtn--pri:hover,
+.app--glass .rr .rr-actbtn--pri:hover {
+  background: var(--glass-accent-hover, #3a2be0);
+}
+.app--glass .rr .btn--pri::before {
+  display: none;
+}
+.app--glass .rr .rr-tplbtn--tonal {
+  background: rgba(75, 59, 255, 0.09);
+  color: var(--ap-accent);
+}
+.app--glass .rr .rr-iconbtn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-2);
+}
+.app--glass .rr .rr-iconbtn--danger {
+  color: #d70015;
+}
+
+/* ---------- chips: soft pills, no borders ---------- */
+.app--glass .rr .rr-chip,
+.app--glass .rr .rr-ratepill,
+.app--glass .rr .rr-pill {
+  border: 0;
+  border-radius: 999px;
+  font-weight: 500;
+}
+
+/* ---------- fields ---------- */
+.app--glass .rr .rr-input,
+.app--glass .rr .rr-textarea,
+.app--glass .rr .rr-select,
+.app--glass .rr .ds-input,
+.app--glass .rr .rr-searchbox {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--ap-fill-2);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  box-shadow: none;
+}
+.app--glass .rr .rr-searchbox {
+  border-radius: 999px;
+}
+.app--glass .rr .rr-textarea {
+  font-size: 15px;
+  line-height: 1.55;
+}
+.app--glass .rr .rr-input:focus,
+.app--glass .rr .rr-textarea:focus,
+.app--glass .rr .ds-input:focus,
+.app--glass .rr .rr-searchbox:focus-within {
+  border-color: rgba(75, 59, 255, 0.45);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
+}
+.app--glass .rr .rr-field__lbl {
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .rr .rr-mergechip {
+  border: 0;
+  border-radius: 999px;
+  background: rgba(75, 59, 255, 0.08);
+  color: var(--ap-accent);
+  font-weight: 500;
+}
+.app--glass .rr .rr-step__node {
+  background: var(--ap-accent);
+  box-shadow: 0 0 0 5px rgba(75, 59, 255, 0.12);
+}
+
+/* GlassSelect inside outreach toolbars + composer */
+.rr .rr-gsel {
+  display: inline-block;
+  min-width: 150px;
+}
+.rr .rr-gsel .gsel {
+  height: 38px;
+  border-radius: 999px;
+  font-size: 14px;
+}
+.rr .rr-gsel--tpl {
+  min-width: 220px;
+  margin-left: auto;
+}
+.rr .rr-gsel--tone {
+  min-width: 140px;
+}
+.rr .rr-field .gsel,
+.rr .lbl .gsel {
+  margin-top: 6px;
+}
+.rr .rr-step__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ---------- tables: inset list ---------- */
+.app--glass .rr .rr-table thead th,
+.app--glass .rr .rr-tablehead {
+  background: none;
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-2);
+}
+.app--glass .rr .rr-table td,
+.app--glass .rr .rr-table th {
+  border-color: var(--ap-sep);
+}
+.app--glass .rr .rr-table tbody tr:hover {
+  background: rgba(120, 120, 128, 0.05);
+}
+.app--glass .rr .rr-cust__name {
+  font-weight: 600;
+}
+.app--glass .rr .rr-cust__sub {
+  font-family: var(--f-ui);
+  font-size: 12.5px;
+  color: var(--ap-3);
+}
+
+/* switch: iOS green */
+.app--glass .rr .rr-switch input:checked + .rr-switch__track,
+.app--glass .rr .rr-switch .rr-switch__track.is-on {
+  background: #34c759;
+}
+
+/* TabBar sets flex:1 inline; let the segmented control hug its tabs. */
+.app--glass .rr .tabbar .tabs {
+  flex: 0 1 auto !important;
+  border-bottom: 0;
+}
+.app--glass .rr .tabs__t {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+.app--glass .rr .tabs__t svg {
+  color: var(--ap-2);
+}
+.app--glass .rr .tabs__t.is-active svg {
+  color: var(--ap-accent);
+}
+
+/* campaign rows → inset list rows */
+.app--glass .rr .rr-programs {
+  padding: 4px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.55);
+}
+.app--glass .rr .rr-program {
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+}
+.app--glass .rr .rr-program + .rr-program {
+  margin-top: 0;
+  border-top: 1px solid var(--ap-sep);
+  border-radius: 0;
+}
+.app--glass .rr .rr-program__name {
+  font-weight: 600;
+}
+/* live feed: no typewriter emails */
+.app--glass .rr .rr-tlitem__sub {
+  font-family: var(--f-ui);
+  font-size: 12.5px;
+  color: var(--ap-3);
+}
+.app--glass .rr .rr-tlitem__name {
+  font-weight: 600;
+}
+/* sort + view toggle as iOS controls */
+.app--glass .rr .rr-sort {
+  height: 38px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  font-weight: 500;
+}
+.app--glass .rr .rr-viewtoggle {
+  padding: 2px;
+  border: 0;
+  border-radius: 10px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.app--glass .rr .rr-viewtoggle button {
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+}
+.app--glass .rr .rr-viewtoggle button.is-active {
+  background: #fff;
+  color: var(--ap-accent);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+}
+/* calmer stat tiles */
+.app--glass .rr .rr-statcard__tile,
+.app--glass .rr .rr-sumcard__tile {
+  width: 40px;
+  height: 40px;
+}
+.app--glass .rr .rr-statcard__tile img,
+.app--glass .rr .rr-sumcard__tile img {
+  width: 26px;
+  height: 26px;
+  object-fit: contain;
+}
+.app--glass .rr .rr-statcard__value,
+.app--glass .rr .rr-sumcard__value {
+  font-size: 32px;
+}

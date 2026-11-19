@@ -1,15 +1,16 @@
 import { randomBytes } from "node:crypto";
-import { type NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db/client";
-import { logger } from "@/lib/logger";
 import { signVisitorJwt } from "@/lib/ai/widget-jwt";
-import { checkRateLimit } from "@/lib/ratelimit";
+import { isWidgetOriginAllowed } from "@/lib/ai/widget-origin";
+import { prisma } from "@/lib/db/client";
 import {
+  type WidgetAiMode,
   getWidgetConfig,
   resolveWidgetMode,
   toAppearance,
-  type WidgetAiMode,
 } from "@/lib/inbox/widget";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
+import { type NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -33,21 +34,23 @@ export async function GET(req: NextRequest) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
   const rl = await checkRateLimit("widget_bootstrap", `${publicKey}:${ip}`);
   if (!rl.success) {
-    return jsonWithCors({ error: "rate_limited", retryAfterSeconds: rl.retryAfterSeconds }, 429, null);
+    return jsonWithCors(
+      { error: "rate_limited", retryAfterSeconds: rl.retryAfterSeconds },
+      429,
+      null,
+    );
   }
 
   // `aiMode` ships via the Wave-0 delta but may not be migrated yet; select it
   // fail-soft so the deployed widget bootstrap can never 500 on a missing column.
-  let widget:
-    | {
-        organizationId: string;
-        establishmentId: string | null;
-        hmacSecret: string;
-        originAllowlist: string[];
-        status: string;
-        aiMode?: string;
-      }
-    | null = null;
+  let widget: {
+    organizationId: string;
+    establishmentId: string | null;
+    hmacSecret: string;
+    originAllowlist: string[];
+    status: string;
+    aiMode?: string;
+  } | null = null;
   try {
     widget = await prisma.widgetKey.findUnique({
       where: { publicKey },
@@ -78,7 +81,11 @@ export async function GET(req: NextRequest) {
   }
 
   const origin = req.headers.get("origin");
-  const allowed = !widget.originAllowlist.length || (origin !== null && widget.originAllowlist.includes(origin));
+  const allowed = isWidgetOriginAllowed(
+    widget.originAllowlist,
+    origin,
+    req.headers.get("sec-fetch-site"),
+  );
   if (!allowed) {
     logger.warn({ origin, publicKey, event: "widget.origin_rejected" });
     return jsonWithCors({ error: "origin_not_allowed" }, 403, origin);
@@ -132,9 +139,10 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 function jsonWithCors(body: unknown, status: number, origin: string | null): NextResponse {
-  const res = body && Object.keys(body).length > 0
-    ? NextResponse.json(body, { status })
-    : new NextResponse(null, { status });
+  const res =
+    body && Object.keys(body).length > 0
+      ? NextResponse.json(body, { status })
+      : new NextResponse(null, { status });
   if (origin) {
     res.headers.set("access-control-allow-origin", origin);
     res.headers.set("access-control-allow-methods", "GET, POST, OPTIONS");

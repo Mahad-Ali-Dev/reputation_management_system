@@ -3,15 +3,19 @@ import { PageHeader } from "@/components/page-header";
 import { Icon } from "@/components/shell/icon";
 import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
+import { withTenant } from "@/lib/db/with-tenant";
+import { formatAddress } from "@/lib/outreach/merge-tags";
 import Link from "next/link";
 import { AutomationTab } from "./_components/automation-tab";
 import { HistoryTab } from "./_components/history-tab";
+import { TemplateModal } from "./_components/template-modal";
 import { HubTabs } from "./_components/hub-tabs";
 import { OverviewTab } from "./_components/overview-tab";
 import { SendTab } from "./_components/send-tab";
 import { TemplatesTab } from "./_components/templates-tab";
 import "./outreach.css";
 import "./outreach-glass.css";
+import "./outreach-apple.css";
 
 /**
  * Review Requests hub — one route, 5 tabs (verifier fix #3: TabBar primitive),
@@ -64,9 +68,9 @@ const TAB_META: Record<
 export default async function OutreachPage({
   searchParams,
 }: {
-  searchParams: Promise<{ tab?: string }>;
+  searchParams: Promise<{ tab?: string; template?: string }>;
 }) {
-  const { orgId } = await getOrgContext();
+  const { orgId, org } = await getOrgContext();
   const sp = await searchParams;
   const tab = sp.tab && VALID.has(sp.tab) ? sp.tab : "overview";
   const meta = TAB_META[tab] ?? {
@@ -81,7 +85,7 @@ export default async function OutreachPage({
         Create campaign
       </Link>
     ) : tab === "templates" ? (
-      <Link href="/outreach/templates/new" className="btn btn--pri btn--pill">
+      <Link href="/outreach?tab=templates&template=new" scroll={false} className="btn btn--pri btn--pill">
         <Icon name="plus" size={13} />
         New template
       </Link>
@@ -112,6 +116,70 @@ export default async function OutreachPage({
         {tab === "automation" && <AutomationTab orgId={orgId} />}
         {tab === "history" && <HistoryTab orgId={orgId} />}
       </div>
+      {sp.template && (
+        <TemplateSheet
+          key={sp.template}
+          orgId={orgId}
+          templateId={sp.template}
+          businessName={org.name}
+          orgLogo={org.logoUrl ?? null}
+        />
+      )}
     </AppShellServer>
+  );
+}
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Loads the data for the create/edit template sheet (?template=new|<id>).
+ * Logo resolution: template.logoUrl ?? first establishment image ?? org logo.
+ */
+async function TemplateSheet({
+  orgId,
+  templateId,
+  businessName,
+  orgLogo,
+}: {
+  orgId: string;
+  templateId: string;
+  businessName: string;
+  orgLogo: string | null;
+}) {
+  const isNew = templateId === "new";
+  if (!isNew && !UUID_RE.test(templateId)) return null;
+
+  const { template, firstEstab } = await withTenant(orgId, async (tx) => {
+    const [template, firstEstab] = await Promise.all([
+      isNew
+        ? Promise.resolve(null)
+        : tx.outreachTemplate.findUnique({ where: { id: templateId } }).catch(() => null),
+      tx.establishment.findFirst({
+        where: { deletedAt: null },
+        select: { id: true, imageUrl: true, address: true },
+        orderBy: { createdAt: "asc" },
+      }),
+    ]);
+    return { template, firstEstab };
+  });
+  if (!isNew && !template) return null;
+
+  return (
+    <TemplateModal
+      initial={{
+        id: template?.id ?? null,
+        name: template?.name ?? "",
+        channel: template?.channel === "sms" ? "sms" : "email",
+        subject: template?.subject ?? "",
+        body:
+          template?.body ??
+          "Hi {{first_name}},\n\nThanks for choosing {{business_name}}! If you have a moment, we'd love your feedback:\n\n{{review_link}}",
+        logoUrl: template?.logoUrl ?? firstEstab?.imageUrl ?? orgLogo ?? "",
+        isDefault: template?.isDefault ?? false,
+      }}
+      businessName={businessName}
+      sampleAddress={formatAddress(firstEstab?.address)}
+      changeLogoHref={firstEstab ? `/establishments/${firstEstab.id}` : "/settings/brand"}
+    />
   );
 }

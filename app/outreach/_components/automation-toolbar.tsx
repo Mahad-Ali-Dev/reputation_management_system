@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { GlassSelect } from "@/components/ui/glass-select";
 import { useEffect, useRef, useState } from "react";
 
 /**
@@ -40,27 +41,18 @@ export function AutomationToolbar({ targetId }: { targetId: string }) {
 
   return (
     <div className="rr-listbar__ctrls">
-      <label className="rr-filterctrl" style={{ cursor: "pointer" }}>
-        <select
+      <div className="rr-gsel">
+        <GlassSelect
           value={status}
-          onChange={(e) => setStatus(e.target.value as "all" | "active" | "paused")}
-          aria-label="Filter rules by status"
-          style={{
-            border: 0,
-            background: "none",
-            font: "inherit",
-            color: "inherit",
-            cursor: "pointer",
-            appearance: "none",
-            outline: "none",
-          }}
-        >
-          <option value="all">All status</option>
-          <option value="active">Active</option>
-          <option value="paused">Paused</option>
-        </select>
-        <Icon name="chevD" size={13} />
-      </label>
+          onChange={(v) => setStatus(v as "all" | "active" | "paused")}
+          ariaLabel="Filter rules by status"
+          options={[
+            { value: "all", label: "All statuses" },
+            { value: "active", label: "Active" },
+            { value: "paused", label: "Paused" },
+          ]}
+        />
+      </div>
       <span className="rr-searchbox">
         <Icon name="search" size={14} />
         <input

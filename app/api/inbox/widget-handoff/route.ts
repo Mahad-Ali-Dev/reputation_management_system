@@ -1,10 +1,10 @@
+import { verifyVisitorJwt } from "@/lib/ai/widget-jwt";
+import { prisma } from "@/lib/db/client";
+import { startSmsHandoff } from "@/lib/inbox/sms-handoff";
+import { logger } from "@/lib/logger";
+import { checkRateLimit } from "@/lib/ratelimit";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { prisma } from "@/lib/db/client";
-import { logger } from "@/lib/logger";
-import { verifyVisitorJwt } from "@/lib/ai/widget-jwt";
-import { checkRateLimit } from "@/lib/ratelimit";
-import { startSmsHandoff } from "@/lib/inbox/sms-handoff";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -29,7 +29,7 @@ const Body = z.object({
   phone: z.string().min(5).max(32),
   name: z.string().max(120).optional(),
   email: z.string().email().max(200).optional(),
-  conversationId: z.string().uuid().optional(),
+  conversationId: z.string().uuid().nullish(),
   message: z.string().max(2000).optional(),
 });
 
@@ -81,7 +81,12 @@ export async function POST(req: NextRequest) {
   // per-visitor chatbot limiter (same widget surface) — no new limiter name.
   const rl = await checkRateLimit("chatbot_turn", `handoff:${claims.orgId}:${claims.visitorId}`);
   if (!rl.success) {
-    return cors({ error: "rate_limited", retryAfterSeconds: rl.retryAfterSeconds }, 429, req, allowOrigin);
+    return cors(
+      { error: "rate_limited", retryAfterSeconds: rl.retryAfterSeconds },
+      429,
+      req,
+      allowOrigin,
+    );
   }
 
   const parsed = Body.safeParse(await req.json().catch(() => null));

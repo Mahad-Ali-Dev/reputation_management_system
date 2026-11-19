@@ -1,44 +1,41 @@
-import Link from "next/link";
-import { getOrgContext } from "@/lib/auth/org-context";
 import { AppShellServer } from "@/components/app-shell-server";
 import { TopBar } from "@/components/topbar";
-import { PageHeader } from "@/components/page-header";
+import { getOrgContext } from "@/lib/auth/org-context";
+import { markDisputeFiled } from "@/lib/reviews/dispute-actions";
 import {
-  disputeStatCards,
-  listDisputesByTab,
-  listDisputableReviews,
-  type DisputeWithReview,
-} from "@/lib/reviews/dispute-queries";
-import {
+  isResubmittable,
+  isViolationType,
   statusView,
   violationLabel,
   violationMeta,
-  isViolationType,
-  isResubmittable,
 } from "@/lib/reviews/dispute-meta";
-import { markDisputeFiled } from "@/lib/reviews/dispute-actions";
+import {
+  type DisputeWithReview,
+  disputeStatCards,
+  listDisputableReviews,
+  listDisputesByTab,
+} from "@/lib/reviews/dispute-queries";
+import { ChevronRight, Flag, Plus, Send, ShieldCheck, Star } from "lucide-react";
+import Link from "next/link";
 import { ReviewSnippet } from "./_components/review-snippet";
 import "./disputes.css";
 import "./disputes-glass.css";
+import "./disputes-apple.css";
 
 export const dynamic = "force-dynamic";
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+/** Dispute kit illustrations, kept and shown on soft icon plates. */
 const A = "/assets/repulabs/dispute-center";
 
 /**
- * Dispute Center — rebuilt to the delivered design kit (designs/dispute center/
- * main section/**). Same live data + server actions as before, re-skinned:
- *
- *   • KPI row (Total Filed / Under Review / Removed / Rejected) with kit tiles.
- *   • Flagged Reviews card — every dispute (any status) + reviews eligible to
- *     flag (rating ≤ 3, no open dispute). Rows select via `?dispute=<id>`.
- *   • Status Pipeline card — Draft / Submitted / Won / Lost rows computed from
- *     stored statuses. Plus a success callout.
- *   • Empty state (no disputes) matches the empty-state mockup illustration.
- *
- * Selection is server-driven (no client state). All actions preserved: File
- * New Dispute → wizard, View details, Ready-to-send + Mark as Filed, Re-submit.
+ * Dispute Manager (Apple look). Same live data + server actions as before:
+ *   • one frosted summary card with the four real counts (no invented deltas),
+ *   • disputes + reviews eligible to flag as inset lists (?dispute=<id> selects),
+ *   • the selected dispute's evidence package with its actions,
+ *   • a status pipeline, and an Apple empty state.
+ * Actions preserved: File New Dispute → wizard, View details, Ready-to-send,
+ * Mark as Filed, Re-submit.
  */
 export default async function DisputeCenterPage({
   searchParams,
@@ -58,9 +55,6 @@ export default async function DisputeCenterPage({
   const all = [...active, ...resolved].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
   );
-  const statsView = stats;
-  const eligibleView = eligible;
-
   const requestedId = sp.dispute && UUID_RE.test(sp.dispute) ? sp.dispute : undefined;
   const selected = (requestedId && all.find((d) => d.id === requestedId)) || all[0] || null;
 
@@ -74,98 +68,92 @@ export default async function DisputeCenterPage({
 
   return (
     <AppShellServer topBar={<TopBar title="Dispute Manager" />}>
-      <div className="dc">
-        <PageHeader
-          title="Dispute Manager"
-          description="Resolve fake, off-topic, or policy-violating reviews with AI-powered insights and a human touch."
-          breadcrumb={[{ label: "Reviews", href: "/reviews" }, { label: "Dispute Manager" }]}
-          actions={
-            <Link href="/reviews/dispute/new" className="btn btn--pri">
-              <PlusIcon /> File New Dispute
-            </Link>
-          }
-        />
-
-        <div className="space-y-6">
-          {/* Summary bar — whole-pipeline counts (live) in one strip. */}
-          <div className="dc-statbar">
-            <Stat
-              art={`${A}/kpi-total.svg`}
-              label="Total Filed"
-              value={statsView.total}
-              sub={hasDisputes ? "↑ 12% vs last 30 days" : "All time"}
-              deltaTone={hasDisputes ? "up" : "muted"}
-            />
-            <Stat
-              art={`${A}/kpi-under-review.svg`}
-              label="Under Review"
-              value={statsView.underReview}
-              sub={hasDisputes ? "↑ 5% vs last 30 days" : "Needs attention"}
-              deltaTone={hasDisputes ? "up" : "muted"}
-            />
-            <Stat
-              art={`${A}/kpi-removed.svg`}
-              label="Removed"
-              value={statsView.removed}
-              sub={hasDisputes ? "↑ 20% vs last 30 days" : "Successfully removed"}
-              deltaTone={hasDisputes ? "up" : "muted"}
-            />
-            <Stat
-              art={`${A}/kpi-rejected.svg`}
-              label="Rejected"
-              value={statsView.rejected}
-              sub={hasDisputes ? "↓ 3% vs last 30 days" : "Not approved"}
-              deltaTone={hasDisputes ? "down" : "muted"}
-            />
+      <div className="dm">
+        <header className="dm-head">
+          <div>
+            <span className="dm-eyebrow">Reputation</span>
+            <h1 className="dm-title">Dispute Manager</h1>
+            <p className="dm-sub">
+              Fake, off-topic or policy-breaking reviews? We help you build a clear case and ask
+              Google to remove them.
+            </p>
           </div>
+          <Link href="/reviews/dispute/new" className="dm-pill dm-pill--pri dm-pill--lg">
+            <Plus size={16} strokeWidth={2} />
+            File a dispute
+          </Link>
+        </header>
 
-          {/* 2-column grid: flagged/draft (left) · pipeline (right). */}
-          <div className="dc-grid">
-            <div className="space-y-4">
-              <FlaggedPanel disputes={all} eligible={eligibleView} selectedId={selected?.id ?? null} />
-              {hasDisputes && <DraftPanel dispute={selected} />}
+        <section className="dm-stats" aria-label="Dispute summary">
+          <StatCell art={`${A}/kpi-total.svg`} label="Filed" value={stats.total} note="All time" />
+          <StatCell
+            art={`${A}/kpi-under-review.svg`}
+            label="Under review"
+            value={stats.underReview}
+            note="Waiting on Google"
+            tone="amber"
+          />
+          <StatCell
+            art={`${A}/kpi-removed.svg`}
+            label="Removed"
+            value={stats.removed}
+            note="Taken down"
+            tone="green"
+          />
+          <StatCell
+            art={`${A}/kpi-rejected.svg`}
+            label="Rejected"
+            value={stats.rejected}
+            note="Google kept the review"
+            tone="red"
+          />
+        </section>
+
+        {!hasDisputes && eligible.length === 0 ? (
+          <EmptyState />
+        ) : (
+          <div className="dm-grid">
+            <div className="dm-stack">
+              {hasDisputes && <DisputeList disputes={all} selectedId={selected?.id ?? null} />}
+              {selected && <EvidencePanel dispute={selected} />}
+              {eligible.length > 0 && <EligibleList eligible={eligible} />}
             </div>
-            <div>
-              <PipelinePanel pipeline={pipeline} />
-            </div>
+            <PipelinePanel pipeline={pipeline} />
           </div>
-        </div>
+        )}
       </div>
     </AppShellServer>
   );
 }
 
-/* --- Summary bar segment --------------------------------------------------- */
+/* --- summary cell ----------------------------------------------------------- */
 
-function Stat({
+function StatCell({
   art,
   label,
   value,
-  sub,
-  deltaTone,
+  note,
+  tone = "accent",
 }: {
   art: string;
   label: string;
   value: number;
-  sub: string;
-  deltaTone: "up" | "down" | "muted";
+  note: string;
+  tone?: "accent" | "amber" | "green" | "red";
 }) {
   return (
-    <div className="dc-stat">
-      <span className="dc-stat__icon" aria-hidden="true">
-        {/* biome-ignore lint/performance/noImgElement: static kit SVG */}
+    <div className="dm-stat">
+      <span className={`dm-stat__icon dm-stat__icon--art is-${tone}`} aria-hidden="true">
         <img src={art} alt="" />
       </span>
-      <div style={{ minWidth: 0 }}>
-        <div className="dc-stat__label">{label}</div>
-        <div className="dc-stat__value">{value}</div>
-        <div className={`dc-stat__delta dc-stat__delta--${deltaTone}`}>{sub}</div>
-      </div>
+      <div className="dm-stat__value">{value}</div>
+      <div className="dm-stat__label">{label}</div>
+      <div className="dm-stat__note">{note}</div>
     </div>
   );
 }
 
-/* --- Shared vocabulary ----------------------------------------------------- */
+/* --- shared vocabulary ------------------------------------------------------ */
 
 const LEGACY_REASON_LABEL: Record<string, string> = {
   fake: "Fake or spam",
@@ -180,283 +168,251 @@ function disputeReasonLabel(d: DisputeWithReview): string {
   return LEGACY_REASON_LABEL[d.reason] ?? "Unspecified";
 }
 
-/** Deterministic avatar tint from the reviewer name. */
-const AVA_COLORS = ["#8b74f6", "#f2a13a", "#3fb984", "#f2618a", "#3478f6", "#2bb8bf"];
-function avaColor(name: string): string {
+const AVA_HUES = [252, 32, 152, 340, 214, 186];
+function avaHue(name: string): number {
   let h = 0;
   for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) >>> 0;
-  return AVA_COLORS[h % AVA_COLORS.length] ?? "#8b74f6";
+  return AVA_HUES[h % AVA_HUES.length] ?? 252;
 }
 function initial(name: string): string {
   return (name.trim()[0] ?? "?").toUpperCase();
 }
-function stars(rating: number): string {
-  const n = Math.max(0, Math.min(5, rating));
-  return "★".repeat(n) + "☆".repeat(5 - n);
+
+function statusTone(status: string): "amber" | "green" | "red" | "accent" {
+  if (status === "submitted_to_google") return "amber";
+  if (status === "removed" || status === "accepted") return "green";
+  if (status === "rejected") return "red";
+  return "accent";
 }
 
-/* --- Panel: flagged reviews ------------------------------------------------ */
+function Stars({ rating }: { rating: number }) {
+  const n = Math.max(0, Math.min(5, rating));
+  return (
+    <span className="dm-stars" role="img" aria-label={`${n} of 5 stars`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <Star
+          // biome-ignore lint/suspicious/noArrayIndexKey: fixed 5-star display
+          key={i}
+          size={12}
+          strokeWidth={0}
+          fill={i < n ? "#ff9f0a" : "rgba(120,120,128,0.25)"}
+        />
+      ))}
+    </span>
+  );
+}
 
-type EligibleReview = Awaited<ReturnType<typeof listDisputableReviews>>[number];
+function Avatar({ name }: { name: string }) {
+  return (
+    <span
+      className="dm-ava"
+      style={{ "--dm-hue": avaHue(name) } as React.CSSProperties}
+      aria-hidden="true"
+    >
+      {initial(name)}
+    </span>
+  );
+}
 
-function FlaggedPanel({
+/* --- disputes list ------------------------------------------------------------ */
+
+function DisputeList({
   disputes,
-  eligible,
   selectedId,
 }: {
   disputes: DisputeWithReview[];
-  eligible: EligibleReview[];
   selectedId: string | null;
 }) {
-  const isEmpty = disputes.length === 0 && eligible.length === 0;
   return (
-    <section className="dc-card" aria-label="Flagged reviews">
-      <div className="dc-card__head">
+    <section className="dm-card" aria-labelledby="dm-disputes-title">
+      <header className="dm-card__head">
         <div>
-          <h2 className="dc-card__title">Flagged Reviews</h2>
-          <p className="dc-card__sub">Reviews that may violate policies or require attention.</p>
+          <h2 id="dm-disputes-title" className="dm-card__title">
+            Your disputes <span className="dm-count">{disputes.length}</span>
+          </h2>
+          <p className="dm-card__sub">Select one to see its evidence and next step.</p>
         </div>
-        <Link href="/reviews" className="dc-linkbtn">
-          View all flagged reviews <ArrowRight />
-        </Link>
-      </div>
-      <div className="dc-card__body">
-        {isEmpty ? (
-          <EmptyFlagged />
-        ) : (
-          <>
-            {disputes.length > 0 && (
-              <div className="dc-flaglist">
-                {disputes.map((d) => {
-                  const view = statusView(d.status);
-                  const name = d.review?.reviewerName ?? "Anonymous";
-                  const isSelected = d.id === selectedId;
-                  return (
-                    <Link
-                      key={d.id}
-                      href={`/reviews/dispute?dispute=${d.id}`}
-                      className={isSelected ? "dc-flagrow is-selected" : "dc-flagrow"}
-                      aria-current={isSelected ? "true" : undefined}
-                    >
-                      <div className="dc-flagrow__top">
-                        <span className="dc-flagrow__ava" style={{ background: avaColor(name) }} aria-hidden>
-                          {initial(name)}
-                        </span>
-                        <div className="dc-flagrow__body">
-                          <div className="dc-flagrow__namerow">
-                            <span className="dc-flagrow__name">{name}</span>
-                            <span className={chipClassFor(d.status)}>{view.label}</span>
-                          </div>
-                          <div
-                            className="dc-flagrow__stars"
-                            aria-label={`${Math.max(0, Math.min(5, d.review?.rating ?? 0))} of 5 stars`}
-                          >
-                            {stars(d.review?.rating ?? 0)}
-                          </div>
-                          <p className="dc-flagrow__text">{d.review?.body ?? "(no review text)"}</p>
-                          <div className="dc-flagrow__meta">
-                            <span className="dc-chip dc-chip--info">{disputeReasonLabel(d)}</span>
-                            <span className="dc-flagrow__date">
-                              {new Date(d.createdAt).toLocaleDateString()}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            )}
-
-            {eligible.length > 0 && (
-              <>
-                <h3 className="dc-eligible-label">Eligible to flag</h3>
-                <div className="dc-flaglist">
-                  {eligible.map((r) => {
-                    const name = r.reviewerName ?? "Anonymous";
-                    return (
-                      <Link
-                        key={r.id}
-                        href={`/reviews/dispute/new?step=violation&reviewId=${r.id}`}
-                        className="dc-flagrow"
-                      >
-                        <div className="dc-flagrow__top">
-                          <span className="dc-flagrow__ava" style={{ background: avaColor(name) }} aria-hidden>
-                            {initial(name)}
-                          </span>
-                          <div className="dc-flagrow__body">
-                            <div className="dc-flagrow__namerow">
-                              <span className="dc-flagrow__name">{name}</span>
-                              <span className="dc-chip dc-chip--out">Flag</span>
-                            </div>
-                            <div
-                              className="dc-flagrow__stars"
-                              aria-label={`${Math.max(0, Math.min(5, r.rating))} of 5 stars`}
-                            >
-                              {stars(r.rating)}
-                            </div>
-                            <p className="dc-flagrow__text">{r.body ?? "(no review text)"}</p>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-
-            <div className="dc-flagfoot">
-              <Link href="/reviews" className="dc-btn">
-                View all reviews
+      </header>
+      <ul className="dm-list">
+        {disputes.map((d) => {
+          const name = d.review?.reviewerName ?? "Anonymous";
+          const isSelected = d.id === selectedId;
+          return (
+            <li key={d.id}>
+              <Link
+                href={`/reviews/dispute?dispute=${d.id}`}
+                className={`dm-row${isSelected ? " is-selected" : ""}`}
+                aria-current={isSelected ? "true" : undefined}
+              >
+                <Avatar name={name} />
+                <span className="dm-row__main">
+                  <span className="dm-row__top">
+                    <span className="dm-row__name">{name}</span>
+                    <span className={`dm-status is-${statusTone(d.status)}`}>
+                      {statusView(d.status).label}
+                    </span>
+                  </span>
+                  <Stars rating={d.review?.rating ?? 0} />
+                  <span className="dm-row__text">{d.review?.body ?? "(no review text)"}</span>
+                  <span className="dm-row__meta">
+                    {disputeReasonLabel(d)} · {new Date(d.createdAt).toLocaleDateString()}
+                  </span>
+                </span>
+                <ChevronRight size={16} strokeWidth={2} className="dm-chev" aria-hidden="true" />
               </Link>
-            </div>
-          </>
-        )}
-      </div>
+            </li>
+          );
+        })}
+      </ul>
     </section>
   );
 }
 
-function chipClassFor(status: string): string {
-  switch (status) {
-    case "submitted_to_google":
-      return "dc-chip dc-chip--review";
-    case "removed":
-    case "accepted":
-      return "dc-chip dc-chip--won";
-    case "rejected":
-      return "dc-chip dc-chip--lost";
-    default:
-      return "dc-chip dc-chip--pending";
-  }
-}
+/* --- reviews eligible to flag ------------------------------------------------- */
 
-function EmptyFlagged() {
+type EligibleReview = Awaited<ReturnType<typeof listDisputableReviews>>[number];
+
+function EligibleList({ eligible }: { eligible: EligibleReview[] }) {
   return (
-    <div className="dc-empty">
-      {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-      <img className="dc-empty__art" src={`${A}/main-empty.svg`} alt="" aria-hidden="true" />
-      <h3 className="dc-empty__title">No disputes yet</h3>
-      <p className="dc-empty__text">
-        When a review is fake, off-topic, or violates Google&apos;s policies, file a dispute to
-        request its removal. We&apos;ll help you draft a strong, factual argument.
-      </p>
-      <div className="dc-empty__cta">
-        <Link href="/reviews/dispute/new" className="btn btn--pri">
-          <PlusIcon /> File your first dispute
+    <section className="dm-card" aria-labelledby="dm-eligible-title">
+      <header className="dm-card__head">
+        <div>
+          <h2 id="dm-eligible-title" className="dm-card__title">
+            Could be disputed
+          </h2>
+          <p className="dm-card__sub">Low-rated reviews with no dispute yet.</p>
+        </div>
+        <Link href="/reviews" className="dm-link">
+          All reviews <ChevronRight size={15} strokeWidth={2} />
         </Link>
-      </div>
-    </div>
+      </header>
+      <ul className="dm-list">
+        {eligible.map((r) => {
+          const name = r.reviewerName ?? "Anonymous";
+          return (
+            <li key={r.id}>
+              <Link
+                href={`/reviews/dispute/new?step=violation&reviewId=${r.id}`}
+                className="dm-row"
+              >
+                <Avatar name={name} />
+                <span className="dm-row__main">
+                  <span className="dm-row__top">
+                    <span className="dm-row__name">{name}</span>
+                  </span>
+                  <Stars rating={r.rating} />
+                  <span className="dm-row__text">{r.body ?? "(no review text)"}</span>
+                </span>
+                <span className="dm-pill dm-pill--sm dm-pill--tint">
+                  <Flag size={13} strokeWidth={2} />
+                  Dispute
+                </span>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
-/* --- Panel: AI dispute draft / evidence package ---------------------------- */
+/* --- evidence package for the selected dispute -------------------------------- */
 
-function DraftPanel({ dispute }: { dispute: DisputeWithReview | null }) {
-  if (!dispute) return null;
-
-  const view = statusView(dispute.status);
+function EvidencePanel({ dispute }: { dispute: DisputeWithReview }) {
   const violation =
     dispute.violationType && isViolationType(dispute.violationType)
       ? violationMeta(dispute.violationType)
       : null;
   const review = dispute.review;
   const isPending = dispute.status === "submitted";
+  const filed = dispute.filedAt ?? dispute.submittedToProviderAt;
 
   return (
-    <section className="dc-card" aria-label="AI dispute draft">
-      <div className="dc-card__head">
+    <section className="dm-card" aria-labelledby="dm-evidence-title">
+      <header className="dm-card__head">
         <div>
-          <h2 className="dc-card__title">AI dispute draft</h2>
-          <p className="dc-card__sub">Evidence package</p>
+          <h2 id="dm-evidence-title" className="dm-card__title">
+            Evidence package
+          </h2>
+          <p className="dm-card__sub">What we send to Google for this review.</p>
         </div>
-        <span className={chipClassFor(dispute.status)}>{view.label}</span>
+        <span className={`dm-status is-${statusTone(dispute.status)}`}>
+          {statusView(dispute.status).label}
+        </span>
+      </header>
+
+      {review ? (
+        <ReviewSnippet
+          rating={review.rating}
+          reviewerName={review.reviewerName}
+          source={review.source}
+          establishmentName={review.establishment?.name}
+          postedAt={review.postedAt}
+          body={review.body}
+          clamp
+        />
+      ) : (
+        <p className="dm-card__sub">The original review is no longer available.</p>
+      )}
+
+      <dl className="dm-facts">
+        <div>
+          <dt>Reason</dt>
+          <dd>{disputeReasonLabel(dispute)}</dd>
+        </div>
+        <div>
+          <dt>Google policy</dt>
+          <dd>{violation?.policy ?? "—"}</dd>
+        </div>
+        <div>
+          <dt>Prepared</dt>
+          <dd>{new Date(dispute.createdAt).toLocaleDateString()}</dd>
+        </div>
+        <div>
+          <dt>Filed with Google</dt>
+          <dd>{filed ? new Date(filed as Date).toLocaleDateString() : "Not yet"}</dd>
+        </div>
+      </dl>
+
+      <div className="dm-argument">
+        <div className="dm-argument__label">Your argument</div>
+        <p>{dispute.details ?? "No argument yet. Open the wizard to draft one."}</p>
       </div>
-      <div className="dc-card__body">
-        <div className="dc-evidence">
-          {review ? (
-            <ReviewSnippet
-              rating={review.rating}
-              reviewerName={review.reviewerName}
-              source={review.source}
-              establishmentName={review.establishment?.name}
-              postedAt={review.postedAt}
-              body={review.body}
-              clamp
-            />
-          ) : (
-            <p className="text-sm" style={{ color: "var(--dc-muted)" }}>
-              The original review is no longer available.
-            </p>
-          )}
 
-          <dl className="dc-evidence__meta">
-            <Meta label="Policy violation" value={disputeReasonLabel(dispute)} />
-            <Meta label="Google policy" value={violation?.policy ?? "—"} />
-            <Meta label="Prepared" value={new Date(dispute.createdAt).toLocaleDateString()} />
-            <Meta
-              label="Filed with Google"
-              value={
-                dispute.filedAt ?? dispute.submittedToProviderAt
-                  ? new Date(
-                      (dispute.filedAt ?? dispute.submittedToProviderAt) as Date,
-                    ).toLocaleDateString()
-                  : "Not yet filed"
-              }
-            />
-          </dl>
-
-          <div>
-            <div className="dc-evidence__k">Dispute argument</div>
-            <p className="dc-argument" style={{ marginTop: 6 }}>
-              {dispute.details ?? "(no argument recorded open the wizard to draft one)"}
-            </p>
-          </div>
-
-          <div className="dc-actions">
-            <Link href={`/reviews/dispute/${dispute.id}`} className="dc-btn dc-btn--sm">
-              View details
+      <div className="dm-actions">
+        <Link href={`/reviews/dispute/${dispute.id}`} className="dm-pill">
+          View details
+        </Link>
+        {isPending && (
+          <>
+            <Link href={`/reviews/dispute/${dispute.id}/ready`} className="dm-pill">
+              Ready to send
             </Link>
-            {isPending && (
-              <>
-                <Link href={`/reviews/dispute/${dispute.id}/ready`} className="dc-btn dc-btn--sm dc-btn--tonal">
-                  Open ready-to-send
-                </Link>
-                <form action={markDisputeFiled}>
-                  <input type="hidden" name="disputeId" value={dispute.id} />
-                  <button type="submit" className="dc-btn dc-btn--sm dc-btn--pri">
-                    Mark as Filed &amp; Track
-                  </button>
-                </form>
-              </>
-            )}
-            {isResubmittable(dispute.status) && (
-              <Link
-                href={`/reviews/dispute/new?step=argument&reviewId=${dispute.reviewId}${
-                  dispute.violationType ? `&violationType=${dispute.violationType}` : ""
-                }&resubmit=1`}
-                className="dc-btn dc-btn--sm dc-btn--pri"
-              >
-                Re-submit
-              </Link>
-            )}
-          </div>
-        </div>
+            <form action={markDisputeFiled}>
+              <input type="hidden" name="disputeId" value={dispute.id} />
+              <button type="submit" className="dm-pill dm-pill--pri">
+                <Send size={15} strokeWidth={1.8} />
+                Mark as filed
+              </button>
+            </form>
+          </>
+        )}
+        {isResubmittable(dispute.status) && (
+          <Link
+            href={`/reviews/dispute/new?step=argument&reviewId=${dispute.reviewId}${
+              dispute.violationType ? `&violationType=${dispute.violationType}` : ""
+            }&resubmit=1`}
+            className="dm-pill dm-pill--pri"
+          >
+            Re-submit
+          </Link>
+        )}
       </div>
     </section>
   );
 }
 
-function Meta({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <dt className="dc-evidence__k">{label}</dt>
-      <dd className="dc-evidence__v">{value}</dd>
-    </div>
-  );
-}
-
-/* --- Panel: status pipeline ------------------------------------------------ */
+/* --- status pipeline ------------------------------------------------------------ */
 
 function PipelinePanel({
   pipeline,
@@ -466,59 +422,89 @@ function PipelinePanel({
   const rows: Array<{
     key: string;
     art: string;
-    tone: "pri" | "amber" | "blue" | "green";
+    tone: string;
     title: string;
     sub: string;
     value: number;
   }> = [
-    { key: "draft", art: `${A}/pipe-draft.svg`, tone: "pri", title: "Draft", sub: "Ready for review", value: pipeline.draft },
-    { key: "submitted", art: `${A}/pipe-submitted.svg`, tone: "amber", title: "Submitted", sub: "Awaiting Google", value: pipeline.submitted },
-    { key: "won", art: `${A}/pipe-won.svg`, tone: "blue", title: "Won", sub: "Removal successful", value: pipeline.won },
-    { key: "lost", art: `${A}/pipe-lost.svg`, tone: "green", title: "Lost", sub: "No action taken", value: pipeline.lost },
+    {
+      key: "draft",
+      art: `${A}/pipe-draft.svg`,
+      tone: "accent",
+      title: "Ready to file",
+      sub: "Prepared, not sent yet",
+      value: pipeline.draft,
+    },
+    {
+      key: "submitted",
+      art: `${A}/pipe-submitted.svg`,
+      tone: "amber",
+      title: "With Google",
+      sub: "Waiting for a decision",
+      value: pipeline.submitted,
+    },
+    {
+      key: "won",
+      art: `${A}/pipe-won.svg`,
+      tone: "green",
+      title: "Removed",
+      sub: "Review taken down",
+      value: pipeline.won,
+    },
+    {
+      key: "lost",
+      art: `${A}/pipe-lost.svg`,
+      tone: "red",
+      title: "Rejected",
+      sub: "Review stays up",
+      value: pipeline.lost,
+    },
   ];
-
   return (
-    <section className="dc-card" style={{ padding: 0 }} aria-label="Status pipeline">
-      <div className="dc-card__head">
-        <div>
-          <h2 className="dc-card__title">Status Pipeline</h2>
-          <p className="dc-card__sub">Track every dispute at a glance</p>
-        </div>
+    <aside className="dm-card dm-pipe" aria-labelledby="dm-pipe-title">
+      <h2 id="dm-pipe-title" className="dm-card__title">
+        Pipeline
+      </h2>
+      <p className="dm-card__sub">Where every dispute stands.</p>
+      <ol className="dm-pipe__list">
+        {rows.map((r) => {
+          return (
+            <li key={r.key} className="dm-pipe__row">
+              <span className={`dm-stat__icon dm-stat__icon--art is-${r.tone}`} aria-hidden="true">
+                <img src={r.art} alt="" />
+              </span>
+              <span className="dm-pipe__text">
+                <span className="dm-pipe__t">{r.title}</span>
+                <span className="dm-pipe__d">{r.sub}</span>
+              </span>
+              <span className="dm-pipe__value">{r.value}</span>
+            </li>
+          );
+        })}
+      </ol>
+      <div className="dm-pipe__tip">
+        <ShieldCheck size={16} strokeWidth={1.8} aria-hidden="true" />
+        Disputes with a specific Google policy and clear facts are removed most often.
       </div>
-      <div className="dc-card__body">
-        <div className="dc-pipe">
-          {rows.map((r) => (
-            <div key={r.key} className="dc-piperow">
-              <div className={`dc-piperow__tile dc-piperow__tile--${r.tone}`}>
-                {/* biome-ignore lint/performance/noImgElement: static kit SVG */}
-                <img src={r.art} alt="" aria-hidden="true" />
-              </div>
-              <div className="dc-piperow__body">
-                <div className="dc-piperow__title">{r.title}</div>
-                <div className="dc-piperow__sub">{r.sub}</div>
-              </div>
-              <div className={`dc-piperow__value dc-piperow__value--${r.tone}`}>{r.value}</div>
-            </div>
-          ))}
-        </div>
-      </div>
+    </aside>
+  );
+}
+
+/* --- empty state ---------------------------------------------------------------- */
+
+function EmptyState() {
+  return (
+    <section className="dm-card dm-empty">
+      <img className="dm-empty__art" src={`${A}/main-empty.svg`} alt="" aria-hidden="true" />
+      <h2 className="dm-empty__title">No disputes. No problem reviews.</h2>
+      <p className="dm-empty__text">
+        When a review is fake, off-topic or breaks Google&apos;s rules, file a dispute and
+        we&apos;ll help you write a clear, factual case for removal.
+      </p>
+      <Link href="/reviews/dispute/new" className="dm-pill dm-pill--pri dm-pill--lg">
+        <Plus size={16} strokeWidth={2} />
+        File your first dispute
+      </Link>
     </section>
-  );
-}
-
-/* --- Inline icons ---------------------------------------------------------- */
-
-function PlusIcon() {
-  return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-function ArrowRight() {
-  return (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M5 12h14M13 6l6 6-6 6" />
-    </svg>
   );
 }

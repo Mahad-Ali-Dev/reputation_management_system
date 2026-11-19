@@ -64,7 +64,7 @@ export function TemplateStudio({
         <img src="/assets/repulabs/review-request/editor.svg" alt="" aria-hidden="true" />
         <div className="rr-miniempty__title">No templates yet</div>
         <p className="rr-miniempty__sub">Create your first template to get started</p>
-        <Link href="/outreach/templates/new" className="btn btn--pri btn--sm">
+        <Link href="/outreach?tab=templates&template=new" className="btn btn--pri btn--sm">
           <Icon name="edit" size={11} />
           Edit template
         </Link>
@@ -141,7 +141,10 @@ export function TemplateStudio({
             </button>
             <div className="row" style={{ gap: 8 }}>
               {active.isDefault && <span className="rr-tplbtn rr-tplbtn--tonal">Default</span>}
-              <Link href={`/outreach/templates/${active.id}`} className="rr-tplbtn rr-tplbtn--pri">
+              <Link
+                href={`/outreach?tab=templates&template=${active.id}`}
+                className="rr-tplbtn rr-tplbtn--pri"
+              >
                 <Icon name="edit" size={14} />
                 Edit template
               </Link>

@@ -18,22 +18,97 @@
       #ece7fe 0%,
       rgba(243, 240, 255, 0.55) 42%,
       transparent 72%
-    ),
-    linear-gradient(180deg, #ffffff 0%, #f7f5ff 55%, #f3f0ff 100%);
-  font-family: var(--f-ui, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
+    ), linear-gradient(180deg, #ffffff 0%, #f7f5ff 55%, #f3f0ff 100%);
+  font-family: var(
+    --f-ui,
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif
+  );
   color: #0b1220;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
 
+/* ---- glossy backdrop: a soft colour mesh with two drifting blurred orbs, so
+   the frosted card has colour to refract ---- */
+.na {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: #ece8ff;
+  background-image: radial-gradient(60% 55% at 12% 8%, #c9b8ff 0%, transparent 70%),
+    radial-gradient(55% 50% at 92% 14%, #ffd3b5 0%, transparent 70%),
+    radial-gradient(60% 60% at 88% 92%, #b7c8ff 0%, transparent 70%),
+    radial-gradient(55% 55% at 6% 94%, #ffc2e2 0%, transparent 70%),
+    linear-gradient(160deg, #f1edff 0%, #e9e4ff 100%);
+}
+.na::before,
+.na::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  width: 460px;
+  height: 460px;
+  border-radius: 999px;
+  filter: blur(70px);
+  opacity: 0.75;
+  pointer-events: none;
+  animation: na-drift 18s ease-in-out infinite alternate;
+}
+.na::before {
+  top: -120px;
+  left: calc(50% - 520px);
+  background: radial-gradient(circle, #8a5cff 0%, rgba(138, 92, 255, 0) 70%);
+}
+.na::after {
+  right: calc(50% - 540px);
+  bottom: -140px;
+  background: radial-gradient(circle, #4b3bff 0%, rgba(75, 59, 255, 0) 70%);
+  animation-delay: -9s;
+}
+@keyframes na-drift {
+  to {
+    transform: translate(60px, 40px) scale(1.08);
+  }
+}
+
+/* ---- the card: frosted glass with a glossy top sheen ---- */
 .na__card {
+  position: relative;
   width: 100%;
   max-width: 580px;
-  background: #ffffff;
-  border: 1px solid #ece7f7;
-  border-radius: 24px;
-  box-shadow: 0 24px 60px -30px rgba(92, 49, 170, 0.32);
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.58);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(255, 255, 255, 0.35),
+    0 40px 80px -36px rgba(75, 59, 255, 0.45), 0 8px 24px -12px rgba(21, 19, 43, 0.12);
   padding: 30px 34px 26px;
+}
+.na__card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 46%;
+  border-radius: 28px 28px 0 0;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+.na__card > * {
+  position: relative;
+}
+@media (prefers-reduced-motion: reduce) {
+  .na::before,
+  .na::after {
+    animation: none;
+  }
 }
 @media (max-width: 480px) {
   .na__card {
@@ -209,27 +284,32 @@
   margin: 3px 0 0;
 }
 
-/* curved connector arrow — follows the zig-zag: after a left circle it sits on
-   the left and sweeps right; after a right circle it sits on the right and is
-   mirrored to sweep left. */
-.na-arrow {
-  display: flex;
+/* curved connector arrow — runs circle-to-circle along the zig-zag. It spans
+   from the centre of this step's circle (43px = half of the 86px circle) to the
+   centre of the next one, leaving the bottom of one circle and landing on the
+   top of the next. `--l` mirrors it for the right→left leg. */
+.na-link {
+  position: relative;
+  align-self: stretch;
+  height: 46px;
+  margin: 6px 43px 4px;
   color: #7c3aed;
-  margin: 8px 0 2px;
+  filter: drop-shadow(0 4px 6px rgba(124, 58, 237, 0.22));
 }
-/* Step 1: arrow at the right end of its description, sweeping down toward step 2. */
-.na-arrow--r {
-  align-self: flex-end;
-}
-/* Step 2: arrow at the left end of its description, mirrored toward step 3. */
-.na-arrow--l {
-  align-self: flex-start;
-}
-.na-arrow--l svg {
+.na-link--l {
   transform: scaleX(-1);
 }
-.na-arrow svg {
-  filter: drop-shadow(0 4px 6px rgba(124, 58, 237, 0.22));
+.na-link__curve {
+  position: absolute;
+  inset: 0 0 8px;
+  width: 100%;
+  height: calc(100% - 8px);
+  overflow: visible;
+}
+.na-link__head {
+  position: absolute;
+  right: -10px;
+  bottom: -2px;
 }
 
 /* ---- CTA · Activate (primary, brand gradient) ---- */
@@ -316,4 +396,39 @@
 }
 .na__foot a:hover {
   color: #7c3aed;
+}
+
+/* ============================================================
+   Glossy finish on the controls (same layout, glass materials)
+   ============================================================ */
+.na__badge,
+.na__code {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.95), 0 4px 12px -6px rgba(21, 19, 43, 0.18);
+}
+.na-circle--img {
+  border: 3px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 0 1px rgba(124, 58, 237, 0.14), 0 14px 26px -12px rgba(75, 59, 255, 0.45);
+}
+.na-steptag {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 6px 14px -6px rgba(124, 58, 237, 0.6);
+}
+.na__cta {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 18px 38px -14px rgba(92, 49, 220, 0.65);
+}
+.na__cta::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 50%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.22) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+.na__foot {
+  border-top-color: rgba(124, 58, 237, 0.12);
 }

@@ -1,7 +1,7 @@
 import { Icon } from "@/components/shell/icon";
 import { withTenant } from "@/lib/db/with-tenant";
-import { deleteOutreachTemplate, duplicateOutreachTemplate } from "@/lib/outreach/template-actions";
 import { ensureDefaultTemplates } from "@/lib/outreach/seed-default-templates";
+import { deleteOutreachTemplate, duplicateOutreachTemplate } from "@/lib/outreach/template-actions";
 import Link from "next/link";
 
 /**
@@ -82,7 +82,8 @@ export async function TemplatesTab({ orgId }: { orgId: string }) {
       {/* ── List toolbar ── */}
       <div className="rr-listbar">
         <div className="rr-listbar__title">
-          {templates.length} template{templates.length === 1 ? "" : "s"} · reusable email + SMS bodies
+          {templates.length} template{templates.length === 1 ? "" : "s"} · reusable email + SMS
+          bodies
         </div>
         <div className="rr-listbar__ctrls">
           <span className="rr-sort">
@@ -107,7 +108,11 @@ export async function TemplatesTab({ orgId }: { orgId: string }) {
           <img src="/assets/repulabs/review-request/hero-templates.svg" alt="" aria-hidden="true" />
           <div className="rr-autoempty__title">No templates yet</div>
           <p className="rr-autoempty__body">Create your first template to get started.</p>
-          <Link href="/outreach/templates/new" className="btn btn--pri btn--pill">
+          <Link
+            href="/outreach?tab=templates&template=new"
+            scroll={false}
+            className="btn btn--pri btn--pill"
+          >
             <Icon name="plus" size={13} />
             New template
           </Link>
@@ -153,7 +158,9 @@ function SummaryCard({
         <img src={img} alt="" aria-hidden="true" />
       </div>
       <div className="rr-sumcard__label">{label}</div>
-      <div className={small ? "rr-sumcard__value rr-sumcard__value--sm" : "rr-sumcard__value"}>{value}</div>
+      <div className={small ? "rr-sumcard__value rr-sumcard__value--sm" : "rr-sumcard__value"}>
+        {value}
+      </div>
       <div className="rr-sumcard__help">{help}</div>
       <span className="rr-sumcard__arrow" aria-hidden>
         <Icon name="arrowR" size={14} />
@@ -218,7 +225,12 @@ function TemplateRow({
       </div>
 
       <div className="rr-tplrow__actions">
-        <Link href={`/outreach/templates/${t.id}`} className="rr-iconbtn" aria-label={`Edit ${t.name}`}>
+        <Link
+          href={`/outreach?tab=templates&template=${t.id}`}
+          scroll={false}
+          className="rr-iconbtn"
+          aria-label={`Edit ${t.name}`}
+        >
           <Icon name="edit" size={15} />
         </Link>
         <form action={duplicateOutreachTemplate}>
@@ -229,7 +241,11 @@ function TemplateRow({
         </form>
         <form action={deleteOutreachTemplate}>
           <input type="hidden" name="id" value={t.id} />
-          <button type="submit" className="rr-iconbtn rr-iconbtn--danger" aria-label={`Delete ${t.name}`}>
+          <button
+            type="submit"
+            className="rr-iconbtn rr-iconbtn--danger"
+            aria-label={`Delete ${t.name}`}
+          >
             <Icon name="trash" size={15} />
           </button>
         </form>

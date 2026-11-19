@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { GlassSelect } from "@/components/ui/glass-select";
 import type { AutomationRuleView } from "@/lib/outreach/automation";
 import { upsertAutomationRule } from "@/lib/outreach/automation-actions";
 import Link from "next/link";
@@ -93,8 +94,8 @@ export function AutomationForm({
             marginInline: "auto",
           }}
         >
-          Automated review requests fire when a connected platform reports an event e.g. a
-          completed Shopify order. Connect a store or CRM to turn this on.
+          Automated review requests fire when a connected platform reports an event e.g. a completed
+          Shopify order. Connect a store or CRM to turn this on.
         </p>
         <Link href="/connections" className="btn btn--pri">
           <Icon name="plug" size={12} />
@@ -128,17 +129,28 @@ export function AutomationForm({
         </span>
       </label>
 
-      <label className="lbl">
+      <div className="lbl">
         Trigger
-        <select className="ds-input" value={trigger} onChange={(e) => setTrigger(e.target.value)}>
-          <option value="post_purchase" disabled={!purchaseConnected}>
-            After Purchase (Shopify / WooCommerce){purchaseConnected ? "" : " not connected"}
-          </option>
-          <option value="post_visit" disabled={!apptConnected}>
-            After Appointment (HubSpot){apptConnected ? "" : " not connected"}
-          </option>
-        </select>
-      </label>
+        <GlassSelect
+          value={trigger}
+          onChange={setTrigger}
+          ariaLabel="Trigger"
+          options={[
+            {
+              value: "post_purchase",
+              label: "After a purchase",
+              hint: purchaseConnected ? "Shopify / WooCommerce" : "Not connected",
+              disabled: !purchaseConnected,
+            },
+            {
+              value: "post_visit",
+              label: "After an appointment",
+              hint: apptConnected ? "HubSpot" : "Not connected",
+              disabled: !apptConnected,
+            },
+          ]}
+        />
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
         <label className="lbl">
@@ -177,21 +189,22 @@ export function AutomationForm({
       </div>
 
       {templates.length > 0 && (
-        <label className="lbl">
+        <div className="lbl">
           Template (optional)
-          <select
-            className="ds-input"
+          <GlassSelect
             value={templateId}
-            onChange={(e) => setTemplateId(e.target.value)}
-          >
-            <option value="">Default body</option>
-            {templates.map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.name} ({t.channel})
-              </option>
-            ))}
-          </select>
-        </label>
+            onChange={setTemplateId}
+            ariaLabel="Template"
+            options={[
+              { value: "", label: "Default message" },
+              ...templates.map((t) => ({
+                value: t.id,
+                label: t.name,
+                hint: t.channel === "sms" ? "SMS" : "Email",
+              })),
+            ]}
+          />
+        </div>
       )}
 
       <div

@@ -1,20 +1,20 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
-import { z } from "zod";
 import { auth } from "@/lib/auth/config";
 import { assertEntitled } from "@/lib/billing/entitlements";
 import { withTenant } from "@/lib/db/with-tenant";
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { z } from "zod";
 
 const HoursSchema = z.object({
-  monday:    z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
-  tuesday:   z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
+  monday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
+  tuesday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
   wednesday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
-  thursday:  z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
-  friday:    z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
-  saturday:  z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
-  sunday:    z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
+  thursday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
+  friday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
+  saturday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
+  sunday: z.object({ open: z.string().optional(), close: z.string().optional() }).optional(),
 });
 
 const Schema = z.object({
@@ -30,7 +30,15 @@ const Schema = z.object({
   customPrompt: z.string().max(3000).optional(),
 });
 
-const DAYS = ["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"] as const;
+const DAYS = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+] as const;
 
 async function requireOrg() {
   const session = await auth();
@@ -73,27 +81,54 @@ async function persistTraining(orgId: string, form: FormData): Promise<void> {
   const hoursParsed = HoursSchema.safeParse(hours);
   if (!hoursParsed.success) throw new Error("Invalid hours format");
 
+  // Only write the fields this form actually SENT. The Behaviour tab and the
+  // Location & hours card each post a slice of the profile; writing every
+  // column (missing → null / default) used to wipe the other slice: saving
+  // Behaviour erased the business overview, services, pricing, address and
+  // hours, and saving hours reset the voice settings. A field that is present
+  // but empty still clears (null) or resets to its default, as before.
+  const sent = (key: string) => form.has(key);
+  const hoursSent = DAYS.some((d) => form.has(`${d}.open`) || form.has(`${d}.close`));
+  const defaults = {
+    aiPersonalityStyle: "friendly",
+    customerInquiryStyle: "warm_intro_quick_qualification",
+    bookingStyle: "propose_time_slots",
+    complaintStyle: "apologize_propose_fix",
+    supportStyle: "check_in_after_purchase",
+  } as const;
+  const d = parsed.data;
+  const data = {
+    ...(sent("businessOverview") && { businessOverview: d.businessOverview ?? null }),
+    ...(sent("servicesProducts") && { servicesProducts: d.servicesProducts ?? null }),
+    ...(sent("pricingDetails") && { pricingDetails: d.pricingDetails ?? null }),
+    ...(sent("locations") && { locations: d.locations ?? null }),
+    ...(hoursSent && { operatingHours: hoursParsed.data }),
+    ...(sent("aiPersonalityStyle") && {
+      aiPersonalityStyle: d.aiPersonalityStyle ?? defaults.aiPersonalityStyle,
+    }),
+    ...(sent("customerInquiryStyle") && {
+      customerInquiryStyle: d.customerInquiryStyle ?? defaults.customerInquiryStyle,
+    }),
+    ...(sent("bookingStyle") && { bookingStyle: d.bookingStyle ?? defaults.bookingStyle }),
+    ...(sent("complaintStyle") && {
+      complaintStyle: d.complaintStyle ?? defaults.complaintStyle,
+    }),
+    ...(sent("supportStyle") && { supportStyle: d.supportStyle ?? defaults.supportStyle }),
+    ...(sent("customPrompt") && { customPrompt: d.customPrompt ?? null }),
+  };
+
   await withTenant(orgId, async (tx) => {
     const existing = await tx.aiTrainingProfile.findUnique({
       where: { organizationId: orgId },
+      select: { organizationId: true },
     });
-    const data = {
-      businessOverview: parsed.data.businessOverview ?? null,
-      servicesProducts: parsed.data.servicesProducts ?? null,
-      operatingHours: hoursParsed.data,
-      pricingDetails: parsed.data.pricingDetails ?? null,
-      locations: parsed.data.locations ?? null,
-      aiPersonalityStyle: parsed.data.aiPersonalityStyle ?? "friendly",
-      customerInquiryStyle: parsed.data.customerInquiryStyle ?? "warm_intro_quick_qualification",
-      bookingStyle: parsed.data.bookingStyle ?? "propose_time_slots",
-      complaintStyle: parsed.data.complaintStyle ?? "apologize_propose_fix",
-      supportStyle: parsed.data.supportStyle ?? "check_in_after_purchase",
-      customPrompt: parsed.data.customPrompt ?? null,
-    };
     if (existing) {
       await tx.aiTrainingProfile.update({ where: { organizationId: orgId }, data });
     } else {
-      await tx.aiTrainingProfile.create({ data: { organizationId: orgId, ...data } });
+      // First save: columns not sent fall back to their defaults.
+      await tx.aiTrainingProfile.create({
+        data: { organizationId: orgId, ...defaults, ...data },
+      });
     }
   });
 }

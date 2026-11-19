@@ -1,7 +1,8 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
-import { type CSSProperties, useEffect, useState } from "react";
+import { GlassSelect } from "@/components/ui/glass-select";
+import { useEffect, useState } from "react";
 
 /**
  * Real search + channel + status filters for the Sent-History table.
@@ -42,39 +43,37 @@ export function HistoryFilters({ targetId }: { targetId: string }) {
 
   return (
     <>
-      <label className="rr-filterctrl" style={{ cursor: "pointer" }}>
-        <select
+      <div className="rr-gsel">
+        <GlassSelect
           value={channel}
-          onChange={(e) => setChannel(e.target.value as "all" | "email" | "sms")}
-          aria-label="Filter by channel"
-          style={selectStyle}
-        >
-          <option value="all">All channels</option>
-          <option value="email">Email</option>
-          <option value="sms">SMS</option>
-        </select>
-        <Icon name="chevD" size={13} />
-      </label>
-      <label className="rr-filterctrl" style={{ cursor: "pointer" }}>
-        <select
+          onChange={(v) => setChannel(v as "all" | "email" | "sms")}
+          ariaLabel="Filter by channel"
+          options={[
+            { value: "all", label: "All channels" },
+            { value: "email", label: "Email" },
+            { value: "sms", label: "SMS" },
+          ]}
+        />
+      </div>
+      <div className="rr-gsel">
+        <GlassSelect
           value={status}
-          onChange={(e) => setStatus(e.target.value)}
-          aria-label="Filter by status"
-          style={selectStyle}
-        >
-          <option value="all">All status</option>
-          <option value="queued">Queued</option>
-          <option value="scheduled">Scheduled</option>
-          <option value="sent">Sent</option>
-          <option value="delivered">Delivered</option>
-          <option value="opened">Opened</option>
-          <option value="clicked">Clicked</option>
-          <option value="reviewed">Reviewed</option>
-          <option value="bounced">Bounced</option>
-          <option value="failed">Failed</option>
-        </select>
-        <Icon name="chevD" size={13} />
-      </label>
+          onChange={setStatus}
+          ariaLabel="Filter by status"
+          options={[
+            { value: "all", label: "All statuses" },
+            { value: "queued", label: "Queued" },
+            { value: "scheduled", label: "Scheduled" },
+            { value: "sent", label: "Sent" },
+            { value: "delivered", label: "Delivered" },
+            { value: "opened", label: "Opened" },
+            { value: "clicked", label: "Clicked" },
+            { value: "reviewed", label: "Reviewed" },
+            { value: "bounced", label: "Bounced" },
+            { value: "failed", label: "Failed" },
+          ]}
+        />
+      </div>
       <span className="rr-searchbox" style={{ minWidth: 200 }}>
         <Icon name="search" size={14} />
         <input
@@ -96,13 +95,3 @@ export function HistoryFilters({ targetId }: { targetId: string }) {
     </>
   );
 }
-
-const selectStyle: CSSProperties = {
-  border: 0,
-  background: "none",
-  font: "inherit",
-  color: "inherit",
-  cursor: "pointer",
-  appearance: "none",
-  outline: "none",
-};

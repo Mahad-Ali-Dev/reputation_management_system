@@ -85,16 +85,18 @@ export default async function NotActivatedPage({
                     <span className="na-steptag">Step {s.n}</span>
                     <div className="na-stepitem__label">{s.label}</div>
                     <p className="na-stepitem__desc">{s.desc}</p>
-                    {i < STEPS.length - 1 && (
-                      <div
-                        className={`na-arrow ${circleLeft ? "na-arrow--r" : "na-arrow--l"}`}
-                        aria-hidden
-                      >
-                        <ArrowSvg />
-                      </div>
-                    )}
                   </div>
                 </div>
+                {/* Connector: runs from this step's circle to the next one's
+                    (left→right after a left circle, mirrored after a right one). */}
+                {i < STEPS.length - 1 && (
+                  <div
+                    className={`na-link ${circleLeft ? "na-link--r" : "na-link--l"}`}
+                    aria-hidden
+                  >
+                    <ConnectorSvg />
+                  </div>
+                )}
               </div>
             );
           })}
@@ -129,24 +131,49 @@ export default async function NotActivatedPage({
   );
 }
 
-/** Curved violet connector arrow — sweeps left→right-down. The `--l` wrapper
- * mirrors it (scaleX) for the right→left-down leg of the zig-zag. */
-function ArrowSvg() {
+/**
+ * Curved violet connector from one circle to the next. The curve stretches to
+ * the full gap between the two circle centres (preserveAspectRatio="none" with
+ * a non-scaling stroke, so the line stays an even 4px at any width); the
+ * arrowhead is a separate fixed-size SVG pinned to the end so it never
+ * distorts. The `--l` wrapper mirrors the whole thing for the right→left leg.
+ */
+function ConnectorSvg() {
   return (
-    <svg width="118" height="52" viewBox="0 0 118 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M10 8C60 2 104 12 104 36"
-        stroke="currentColor"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M95 28 104 40 113 28"
-        stroke="currentColor"
-        strokeWidth="4.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
+    <>
+      <svg
+        className="na-link__curve"
+        aria-hidden="true"
+        viewBox="0 0 100 40"
+        preserveAspectRatio="none"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M0 0 C 0 24, 100 8, 100 34"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+      <svg
+        className="na-link__head"
+        aria-hidden="true"
+        width="20"
+        height="14"
+        viewBox="0 0 20 14"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M2 2 10 11 18 2"
+          stroke="currentColor"
+          strokeWidth="4"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </>
   );
 }

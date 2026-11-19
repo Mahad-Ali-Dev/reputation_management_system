@@ -43,6 +43,9 @@ export function MergeTagBody({
       label="Body"
       maxLength={maxLength}
       showPreview={false}
+      // Everything the sender can resolve (incl. the legacy {{customerName}} /
+      // {{businessName}} / {{reviewLink}} aliases in older templates) is valid.
+      extraAllowedKeys={Object.keys(sampleData)}
     />
   );
 }

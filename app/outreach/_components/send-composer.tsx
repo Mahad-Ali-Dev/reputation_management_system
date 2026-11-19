@@ -1,13 +1,10 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { GlassSelect } from "@/components/ui/glass-select";
 import { createReviewRequest } from "@/lib/outreach/actions";
 import { generateRequestBody } from "@/lib/outreach/ai-generate";
-import {
-  OUTREACH_MERGE_TAGS,
-  resolveMergeTags,
-  sampleContext,
-} from "@/lib/outreach/merge-tags";
+import { OUTREACH_MERGE_TAGS, resolveMergeTags, sampleContext } from "@/lib/outreach/merge-tags";
 import Link from "next/link";
 import { useMemo, useRef, useState, useTransition } from "react";
 
@@ -77,14 +74,12 @@ export function SendComposer({
   const [body, setBody] = useState(
     `We'd love to hear your feedback on your recent experience with {{business_name}}!\n\nLeave a review: {{review_link}}`,
   );
-  const [tone, setTone] = useState<
-    "friendly" | "formal" | "brief" | "warm" | "playful"
-  >("friendly");
+  const [tone, setTone] = useState<"friendly" | "formal" | "brief" | "warm" | "playful">(
+    "friendly",
+  );
   const [sendEmail, setSendEmail] = useState(true);
   const [sendSms, setSendSms] = useState(false);
-  const [establishmentId, setEstablishmentId] = useState(
-    establishments[0]?.id ?? "",
-  );
+  const [establishmentId, setEstablishmentId] = useState(establishments[0]?.id ?? "");
   const [templateId, setTemplateId] = useState("");
   const [scheduleHours, setScheduleHours] = useState(0);
   const [consentAttested, setConsentAttested] = useState(false);
@@ -103,15 +98,11 @@ export function SendComposer({
     }),
     [businessName, customerName],
   );
-  const filled = (s: string) =>
-    resolveMergeTags(s, previewCtx, { keepUnknown: true });
+  const filled = (s: string) => resolveMergeTags(s, previewCtx, { keepUnknown: true });
 
   // Email-only send (SMS commented out, see file header) — an SMS-channel
   // template has nothing to apply itself to here.
-  const emailTemplates = useMemo(
-    () => templates.filter((t) => t.channel === "email"),
-    [templates],
-  );
+  const emailTemplates = useMemo(() => templates.filter((t) => t.channel === "email"), [templates]);
 
   function applyTemplate(id: string) {
     setTemplateId(id);
@@ -131,10 +122,7 @@ export function SendComposer({
     }
     const start = ta.selectionStart ?? body.length;
     const end = ta.selectionEnd ?? body.length;
-    const next = (body.slice(0, start) + token + body.slice(end)).slice(
-      0,
-      BODY_MAX,
-    );
+    const next = (body.slice(0, start) + token + body.slice(end)).slice(0, BODY_MAX);
     setBody(next);
     requestAnimationFrame(() => {
       const pos = Math.min(start + token.length, next.length);
@@ -168,20 +156,15 @@ export function SendComposer({
     setError(null);
     setSuccess(null);
 
-    if (!sendEmail && !sendSms)
-      return setError("Pick at least one delivery channel.");
+    if (!sendEmail && !sendSms) return setError("Pick at least one delivery channel.");
     if (sendEmail && !customerEmail.trim())
       return setError("Email channel requires an email address.");
-    if (sendSms && !customerPhone.trim())
-      return setError("SMS channel requires a phone number.");
-    if (sendSms && !consentAttested)
-      return setError("SMS requires TCPA consent attestation.");
+    if (sendSms && !customerPhone.trim()) return setError("SMS channel requires a phone number.");
+    if (sendSms && !consentAttested) return setError("SMS requires TCPA consent attestation.");
 
     startSendTransition(async () => {
       try {
-        const tasks: Array<
-          Promise<{ ok: true } | { ok: false; error: string }>
-        > = [];
+        const tasks: Array<Promise<{ ok: true } | { ok: false; error: string }>> = [];
         const fullBody = `${greeting}\n\n${body}`;
 
         if (sendEmail) {
@@ -295,20 +278,19 @@ export function SendComposer({
           <h3 className="rr-step__title">
             2. Message
             {emailTemplates.length > 0 && (
-              <select
-                className="rr-select"
-                style={{ maxWidth: 180, height: 36 }}
-                value={templateId}
-                onChange={(e) => applyTemplate(e.target.value)}
-                aria-label="Start from template"
-              >
-                <option value="">Start from template…</option>
-                {emailTemplates.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name} ({t.channel})
-                  </option>
-                ))}
-              </select>
+              <span className="rr-gsel rr-gsel--tpl">
+                <GlassSelect
+                  value={templateId}
+                  onChange={applyTemplate}
+                  placeholder="Start from template…"
+                  ariaLabel="Start from template"
+                  options={emailTemplates.map((t) => ({
+                    value: t.id,
+                    label: t.name,
+                    hint: t.channel === "sms" ? "SMS" : "Email",
+                  }))}
+                />
+              </span>
             )}
           </h3>
 
@@ -350,19 +332,20 @@ export function SendComposer({
 
           <div className="rr-msgctrls">
             <div className="row" style={{ gap: 8 }}>
-              <select
-                className="rr-select"
-                style={{ height: 38, maxWidth: 130 }}
-                value={tone}
-                onChange={(e) => setTone(e.target.value as typeof tone)}
-                aria-label="Tone"
-              >
-                <option value="friendly">Friendly</option>
-                <option value="formal">Formal</option>
-                <option value="brief">Brief</option>
-                <option value="warm">Warm</option>
-                <option value="playful">Playful</option>
-              </select>
+              <span className="rr-gsel rr-gsel--tone">
+                <GlassSelect
+                  value={tone}
+                  onChange={(v) => setTone(v as typeof tone)}
+                  ariaLabel="Tone"
+                  options={[
+                    { value: "friendly", label: "Friendly" },
+                    { value: "formal", label: "Formal" },
+                    { value: "brief", label: "Brief" },
+                    { value: "warm", label: "Warm" },
+                    { value: "playful", label: "Playful" },
+                  ]}
+                />
+              </span>
               <button
                 type="button"
                 className="rr-toolbtn"
@@ -389,10 +372,7 @@ export function SendComposer({
             {/* Email-only for now — nothing left to toggle, so this is a fixed
                 confirmation rather than an interactive checkbox. sendEmail
                 stays true; see the file header note. */}
-            <label
-              className="rr-check"
-              style={{ opacity: 0.75, cursor: "default" }}
-            >
+            <label className="rr-check" style={{ opacity: 0.75, cursor: "default" }}>
               <input type="checkbox" checked={sendEmail} disabled readOnly />
               Email
             </label>
@@ -412,47 +392,33 @@ export function SendComposer({
           </span>
           <h3 className="rr-step__title">4. Routing</h3>
           <div className="rr-2col">
-            <label className="rr-field">
+            <div className="rr-field">
               <span className="rr-field__lbl">Business location</span>
-              <div className="rr-inputwrap">
-                <span className="rr-inputwrap__icon">
-                  <Icon name="building" size={14} />
-                </span>
-                <select
-                  className="rr-input rr-select"
-                  value={establishmentId}
-                  onChange={(e) => setEstablishmentId(e.target.value)}
-                  required
-                  style={{ paddingLeft: 36 }}
-                >
-                  {establishments.map((e) => (
-                    <option key={e.id} value={e.id}>
-                      {e.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </label>
-            <label className="rr-field">
+              <GlassSelect
+                value={establishmentId}
+                onChange={setEstablishmentId}
+                ariaLabel="Business location"
+                searchable={establishments.length > 6}
+                icon={<Icon name="building" size={14} />}
+                options={establishments.map((e) => ({ value: e.id, label: e.name }))}
+              />
+            </div>
+            <div className="rr-field">
               <span className="rr-field__lbl">Send timing</span>
-              <div className="rr-inputwrap">
-                <span className="rr-inputwrap__icon">
-                  <Icon name="clock" size={14} />
-                </span>
-                <select
-                  className="rr-input rr-select"
-                  value={scheduleHours}
-                  onChange={(e) => setScheduleHours(Number(e.target.value))}
-                  style={{ paddingLeft: 36 }}
-                >
-                  <option value={0}>Now</option>
-                  <option value={1}>In 1 hour</option>
-                  <option value={24}>In 1 day</option>
-                  <option value={72}>In 3 days</option>
-                  <option value={168}>In 1 week</option>
-                </select>
-              </div>
-            </label>
+              <GlassSelect
+                value={String(scheduleHours)}
+                onChange={(v) => setScheduleHours(Number(v))}
+                ariaLabel="Send timing"
+                icon={<Icon name="clock" size={14} />}
+                options={[
+                  { value: "0", label: "Now" },
+                  { value: "1", label: "In 1 hour" },
+                  { value: "24", label: "In 1 day" },
+                  { value: "72", label: "In 3 days" },
+                  { value: "168", label: "In 1 week" },
+                ]}
+              />
+            </div>
           </div>
         </section>
 
@@ -464,9 +430,8 @@ export function SendComposer({
               onChange={(e) => setConsentAttested(e.target.checked)}
             />
             <span>
-              I attest this recipient has previously given written consent to
-              receive marketing SMS from my business (TCPA / A2P 10DLC
-              compliance).
+              I attest this recipient has previously given written consent to receive marketing SMS
+              from my business (TCPA / A2P 10DLC compliance).
             </span>
           </label>
         )}
@@ -475,11 +440,7 @@ export function SendComposer({
         {success && <p className="rr-msgok">{success}</p>}
 
         <div className="rr-formactions">
-          <button
-            type="submit"
-            className="rr-actbtn rr-actbtn--pri"
-            disabled={sendPending}
-          >
+          <button type="submit" className="rr-actbtn rr-actbtn--pri" disabled={sendPending}>
             <Icon name="send" size={14} />
             {sendPending ? "Sending…" : "Send request"}
           </button>
@@ -511,8 +472,7 @@ export function SendComposer({
               <span className="rr-meta__k">From:</span> {businessName}
             </div>
             <div>
-              <span className="rr-meta__k">To:</span>{" "}
-              {customerEmail || "customer@example.com"}
+              <span className="rr-meta__k">To:</span> {customerEmail || "customer@example.com"}
             </div>
             <div>
               <span className="rr-meta__k">Subject:</span> {subjectLine}

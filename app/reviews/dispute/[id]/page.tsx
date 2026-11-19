@@ -1,13 +1,21 @@
+import { AppShellServer } from "@/components/app-shell-server";
+import { PageHeader } from "@/components/page-header";
+import { TopBar } from "@/components/topbar";
+import { getOrgContext } from "@/lib/auth/org-context";
+import {
+  isResubmittable,
+  isViolationType,
+  statusView,
+  violationLabel,
+  violationMeta,
+} from "@/lib/reviews/dispute-meta";
+import { getDisputeById } from "@/lib/reviews/dispute-queries";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { AppShellServer } from "@/components/app-shell-server";
-import { TopBar } from "@/components/topbar";
-import { PageHeader } from "@/components/page-header";
-import { getOrgContext } from "@/lib/auth/org-context";
-import { getDisputeById } from "@/lib/reviews/dispute-queries";
-import { statusView, violationLabel, violationMeta, isViolationType, isResubmittable } from "@/lib/reviews/dispute-meta";
 import { ReviewSnippet } from "../_components/review-snippet";
 import "../disputes.css";
+import "../disputes-glass.css";
+import "../disputes-apple.css";
 
 export const dynamic = "force-dynamic";
 
@@ -65,7 +73,12 @@ export default async function DisputeDetailsPage({ params }: { params: Promise<{
         {/* Summary banner */}
         <div className="dc-detail-summary">
           {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-          <img className="dc-detail-summary__art" src={`${A}/det-banner.svg`} alt="" aria-hidden="true" />
+          <img
+            className="dc-detail-summary__art"
+            src={`${A}/det-banner.svg`}
+            alt=""
+            aria-hidden="true"
+          />
           <div className="dc-detail-summary__cols">
             <div className="dc-detail-summary__col">
               <div className="dc-detail-summary__k">Dispute ID</div>
@@ -73,9 +86,14 @@ export default async function DisputeDetailsPage({ params }: { params: Promise<{
             </div>
             <div className="dc-detail-summary__col">
               <div className="dc-detail-summary__k">Submitted</div>
-              <div className="dc-detail-summary__v">{new Date(dispute.createdAt).toLocaleDateString()}</div>
+              <div className="dc-detail-summary__v">
+                {new Date(dispute.createdAt).toLocaleDateString()}
+              </div>
               <div className="dc-detail-summary__sub">
-                {new Date(dispute.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {new Date(dispute.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </div>
             </div>
             <div className="dc-detail-summary__col">
@@ -96,7 +114,9 @@ export default async function DisputeDetailsPage({ params }: { params: Promise<{
           <div className="space-y-5">
             <section className="dc-card dc-detail-card" aria-label="Review snapshot">
               <div className="dc-detail-card__head">
-                <span className="dc-detail-card__icon dc-detail-card__icon--pri"><UserIcon /></span>
+                <span className="dc-detail-card__icon dc-detail-card__icon--pri">
+                  <UserIcon />
+                </span>
                 <span className="dc-detail-card__title">Review Snapshot</span>
               </div>
               {review ? (
@@ -117,7 +137,9 @@ export default async function DisputeDetailsPage({ params }: { params: Promise<{
 
             <section className="dc-card dc-detail-card" aria-label="Argument">
               <div className="dc-detail-card__head">
-                <span className="dc-detail-card__icon dc-detail-card__icon--pri"><DocIcon /></span>
+                <span className="dc-detail-card__icon dc-detail-card__icon--pri">
+                  <DocIcon />
+                </span>
                 <span className="dc-detail-card__title">Argument sent to Google</span>
               </div>
               <p className="dc-argument">{dispute.details ?? "(no argument recorded)"}</p>
@@ -146,7 +168,9 @@ export default async function DisputeDetailsPage({ params }: { params: Promise<{
           <div className="space-y-5">
             <section className="dc-card dc-detail-card" aria-label="Violation category">
               <div className="dc-detail-card__head">
-                <span className="dc-detail-card__icon dc-detail-card__icon--teal"><ShieldIcon /></span>
+                <span className="dc-detail-card__icon dc-detail-card__icon--teal">
+                  <ShieldIcon />
+                </span>
                 <span className="dc-detail-card__title">Violation Category</span>
               </div>
               <p style={{ fontSize: 16, fontWeight: 700, color: "var(--dc-ink)", margin: 0 }}>
@@ -161,7 +185,9 @@ export default async function DisputeDetailsPage({ params }: { params: Promise<{
 
             <section className="dc-card dc-detail-card" aria-label="Progress tracker">
               <div className="dc-detail-card__head">
-                <span className="dc-detail-card__icon dc-detail-card__icon--pri"><ClipboardIcon /></span>
+                <span className="dc-detail-card__icon dc-detail-card__icon--pri">
+                  <ClipboardIcon />
+                </span>
                 <span className="dc-detail-card__title">Progress Tracker</span>
               </div>
               <Timeline
@@ -210,7 +236,13 @@ function Timeline({
     status === "rejected" ? "Rejected by Google" : isResolved ? "Removed by Google" : "Resolution";
 
   const steps = [
-    { label: "Prepared", at: createdAt, done: true, current: status === "submitted", desc: "We've prepared your dispute." },
+    {
+      label: "Prepared",
+      at: createdAt,
+      done: true,
+      current: status === "submitted",
+      desc: "We've prepared your dispute.",
+    },
     {
       label: isWithdrawn ? "Withdrawn" : "Filed with Google",
       at: isWithdrawn ? decisionAt : filedAt,
@@ -218,7 +250,13 @@ function Timeline({
       current: inReview,
       desc: inReview ? "A specialist is reviewing your case." : "Submitted to Google for review.",
     },
-    { label: decisionLabel, at: decisionAt, done: isResolved, current: false, desc: "Pending final decision and notification." },
+    {
+      label: decisionLabel,
+      at: decisionAt,
+      done: isResolved,
+      current: false,
+      desc: "Pending final decision and notification.",
+    },
   ];
 
   return (
@@ -245,42 +283,105 @@ function Timeline({
 
 function ArrowLeft() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M19 12H5M11 18l-6-6 6-6" />
     </svg>
   );
 }
 function UserIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.9"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
     </svg>
   );
 }
 function DocIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><path d="M14 2v6h6M8 13h8M8 17h6" />
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" />
+      <path d="M14 2v6h6M8 13h8M8 17h6" />
     </svg>
   );
 }
 function ShieldIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
     </svg>
   );
 }
 function ClipboardIcon() {
   return (
-    <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <rect x="8" y="2" width="8" height="4" rx="1" /><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    <svg
+      width="17"
+      height="17"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <rect x="8" y="2" width="8" height="4" rx="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
     </svg>
   );
 }
 function CheckMini() {
   return (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <svg
+      width="13"
+      height="13"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
       <path d="M20 6 9 17l-5-5" />
     </svg>
   );
