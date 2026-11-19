@@ -104,3 +104,46 @@
   line-height: 1.5;
   margin: 4px 0 0;
 }
+
+/* Profile image upload control (establishment avatar). */
+.estab-avup {
+  position: relative;
+  flex-shrink: 0;
+}
+.estab-avup__btn {
+  position: absolute;
+  right: -4px;
+  bottom: -4px;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  background: var(--pri, #2457ff);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.28);
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+.estab-avup__btn:hover { transform: scale(1.08); }
+.estab-avup__btn:disabled { opacity: 0.7; cursor: default; }
+.estab-avup__spin {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #fff;
+  animation: estab-avup-spin 0.7s linear infinite;
+}
+@keyframes estab-avup-spin {
+  to { transform: rotate(360deg); }
+}
+.estab-avup__err {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  white-space: nowrap;
+  font-size: 11px;
+  color: var(--bad, #ef4444);
+}

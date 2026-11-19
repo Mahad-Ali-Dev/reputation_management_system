@@ -14,6 +14,7 @@ import { notFound } from "next/navigation";
 import { EstablishmentMenu } from "../_components/establishment-menu";
 import { PlacePicker } from "../_components/place-picker";
 import { DeleteEstablishmentModal } from "./_components/delete-establishment-modal";
+import { EstablishmentAvatar } from "./_components/establishment-avatar";
 
 /**
  * Establishment detail — repulabs v2 design.
@@ -191,7 +192,12 @@ export default async function EstablishmentDetailPage({
           }}
         />
         <div style={{ display: "flex", gap: 16, position: "relative", flexWrap: "wrap" }}>
-          <Avatar name={establishment.name} size={64} tone={5} />
+          <EstablishmentAvatar
+            id={id}
+            name={establishment.name}
+            imageUrl={establishment.imageUrl}
+            size={64}
+          />
           <div className="estab-header__info" style={{ flex: 1, minWidth: 280 }}>
             <div className="row" style={{ gap: 8, marginBottom: 4, flexWrap: "wrap" }}>
               <h2
