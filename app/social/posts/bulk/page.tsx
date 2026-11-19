@@ -4,6 +4,8 @@ import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import { BulkScheduleForm } from "./bulk-form";
 import "../social-compose.css";
+import "../social-compose-glass.css";
+import "../social-apple.css";
 
 /**
  * Bulk schedule (Module 10) — rebuilt to the delivered design kit (.sk-page /
@@ -27,7 +29,10 @@ export default async function BulkSocialPostsPage() {
   );
 
   return (
-    <AppShellServer topBar={<TopBar />} crumbs={["Inbox & Social", "Social Studio", "Bulk schedule"]}>
+    <AppShellServer
+      topBar={<TopBar />}
+      crumbs={["Inbox & Social", "Social Studio", "Bulk schedule"]}
+    >
       <div className="sk-page">
         {/* hero */}
         <div className="sk-bulk-hero">

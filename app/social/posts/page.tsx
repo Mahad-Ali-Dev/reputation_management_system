@@ -24,6 +24,7 @@ import { LibraryTab } from "./_components/library-tab";
 import { StudioKpis, StudioTabs } from "./_components/studio-kit";
 import "./social-compose.css";
 import "./social-compose-glass.css";
+import "./social-apple.css";
 
 /**
  * Social Studio (Module 10) — the 4-tab hub on `/social/posts`.

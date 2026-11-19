@@ -1088,6 +1088,7 @@ function HashtagEditor({
   }
   return (
     <div
+      className="sk-tagbox"
       style={{
         display: "flex",
         flexWrap: "wrap",
