@@ -16,7 +16,7 @@ import {
   getDeviceDashboardExtras,
   getDeviceMetrics,
   getScannedDevice,
-  listOrgDevices,
+  type listOrgDevices,
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
 import Link from "next/link";
@@ -283,7 +283,7 @@ export default async function QrCodesPage({
           activeDevices={extras.activeDeviceCount || activeDevices.length}
         />
 
-        {/* Devices section header — Active / Trash tabs + Add device. */}
+        {/* Devices section header — Active / Trash tabs + device count. */}
         <div className="md-devhead">
           <span className="md-devhead__title">Devices</span>
           <div className="seg">
@@ -304,14 +304,10 @@ export default async function QrCodesPage({
             </Link>
           </div>
           <div style={{ flex: 1 }} />
+          {/* One "Add device" lives in the page header; no duplicate here. */}
           <span className="md-devhead__count">
             {activeDevices.length} active device{activeDevices.length === 1 ? "" : "s"}
           </span>
-          <ConnectDeviceModal
-            establishments={businessOptions}
-            detectedQrUrl={detectedQrUrl}
-            detectedSerial={detectedSerial}
-          />
         </div>
 
         <DeviceTable
@@ -558,15 +554,15 @@ function EmptyState({
               {retiredCount > 0 ? (
                 <>
                   You have {retiredCount} deleted device{retiredCount === 1 ? "" : "s"} in{" "}
-                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the
-                  same QR, code and redirect, so a plaque you&rsquo;ve already printed keeps
-                  working. Or add a new device below.
+                  <Link href="/hardware?view=trash">Trash</Link> restoring one brings back the same
+                  QR, code and redirect, so a plaque you&rsquo;ve already printed keeps working. Or
+                  add a new device below.
                 </>
               ) : (
                 <>
-                  Got a repulabs card, plaque, or stand? Add your first device to start
-                  collecting scans and engage more customers enter the code from your package and
-                  we&rsquo;ll route every scan to your Google review page.
+                  Got a repulabs card, plaque, or stand? Add your first device to start collecting
+                  scans and engage more customers enter the code from your package and we&rsquo;ll
+                  route every scan to your Google review page.
                 </>
               )}
             </p>

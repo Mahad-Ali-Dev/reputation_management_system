@@ -1,97 +1,110 @@
 "use client";
 
 import { openAskAi } from "@/components/ask-ai";
-import { Icon } from "@/components/shell/icon";
 import { LazyFrog } from "@/components/ui/lazy-frog";
-import { useState } from "react";
+import { ArrowUp, MessageCircle, ShieldAlert, Sparkles, TrendingUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 
 /**
- * My Devices kit — AI Chatbot card.
+ * My Devices — AI assistant card, ChatGPT-style (2026-11 redesign).
  *
- * Wires the kit's "Ask anything" panel to the GLOBAL Ask-repulabs assistant via
- * `openAskAi(prompt)` (the same opener the dashboard copilot uses — no second
- * chat surface, no dead inputs). Prompt chips submit immediately; the inline
- * input opens the assistant with the typed question on submit/Send.
+ * The frog greets in the middle, suggestion chips sit under the greeting, and
+ * the ask box (the same Google-ring composer as the dashboard hero) is pinned
+ * to the bottom, so the card fills its height instead of leaving a blank
+ * block. Everything opens the GLOBAL Ask-repulabs assistant via
+ * `openAskAi(prompt)` (no second chat surface, no dead inputs).
  */
 
 const PROMPTS = [
-  "Summarize scan activity",
-  "Identify low ratings & risks",
-  "Suggest replies for new reviews",
-  "Improve conversion rate",
+  { label: "Summarize scan activity", icon: Sparkles },
+  { label: "Identify low ratings & risks", icon: ShieldAlert },
+  { label: "Suggest replies for new reviews", icon: MessageCircle },
+  { label: "Improve conversion rate", icon: TrendingUp },
 ] as const;
 
 export function AiChatbotCard() {
   const [draft, setDraft] = useState("");
+  const ref = useRef<HTMLTextAreaElement>(null);
 
-  function submit() {
-    const q = draft.trim();
+  // Grow with the text, up to ~5 lines.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: re-measure when the text changes
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    el.style.height = "0px";
+    el.style.height = `${Math.min(el.scrollHeight, 132)}px`;
+  }, [draft]);
+
+  function submit(text: string) {
+    const q = text.trim();
     if (!q) return;
     openAskAi(q);
     setDraft("");
   }
 
   return (
-    <section className="md-card md-chat" aria-label="AI Chatbot">
-      {/* The Repulabs AI frog (replaces the kit's robot orb); click opens Ask AI. */}
-      <button
-        type="button"
-        className="md-chat__orb md-chat__frog"
-        onClick={() => openAskAi()}
-        aria-label="Open the Repulabs AI assistant"
-      >
-        <LazyFrog size={76} showTag={false} followPointer />
-      </button>
-      <div className="md-card__head" style={{ padding: 0 }}>
-        <h3 className="md-card__title">AI Chatbot</h3>
-        <span className="chip chip--pri" style={{ height: 18, fontSize: 10, marginLeft: 8 }}>
-          New
-        </span>
+    <section className="md-card md-ai" aria-label="AI assistant">
+      <div className="md-ai__head">
+        <h3 className="md-card__title">AI assistant</h3>
+        <span className="md-ai__badge">New</span>
       </div>
-      <p className="md-chat__body">Get AI-powered help to manage reviews faster.</p>
 
-      <div className="md-chat__prompts">
-        {PROMPTS.map((p) => (
-          <button key={p} type="button" className="md-chat__prompt" onClick={() => openAskAi(p)}>
-            <Icon name="sparkle" size={13} style={{ color: "var(--md-purple)", flexShrink: 0 }} />
-            {p}
-          </button>
-        ))}
+      <div className="md-ai__hello">
+        <button
+          type="button"
+          className="md-ai__frog"
+          onClick={() => openAskAi()}
+          aria-label="Open the Repulabs AI assistant"
+        >
+          <LazyFrog size={104} showTag={false} followPointer />
+        </button>
+        <p className="md-ai__greet">How can I help with your devices?</p>
+        <p className="md-ai__sub">Ask about scans, ratings and reviews from your QR stands.</p>
+
+        <div className="md-ai__chips">
+          {PROMPTS.map((p) => (
+            <button
+              key={p.label}
+              type="button"
+              className="md-ai__chip"
+              onClick={() => submit(p.label)}
+            >
+              <p.icon size={14} strokeWidth={1.9} aria-hidden="true" />
+              {p.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <form
-        className="md-chat__inputrow"
+        className="md-ai__box"
         onSubmit={(e) => {
           e.preventDefault();
-          submit();
+          submit(draft);
         }}
       >
-        <input
-          type="text"
+        <textarea
+          ref={ref}
+          rows={1}
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Ask anything..."
-          aria-label="Ask the AI assistant a question"
-          style={{
-            flex: 1,
-            height: 40,
-            padding: "0 14px",
-            borderRadius: 11,
-            border: "1px solid var(--md-line-strong)",
-            background: "#fff",
-            fontSize: 13,
-            outline: "none",
-            color: "var(--md-ink)",
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              submit(draft);
+            }
           }}
+          placeholder="Ask anything about your devices…"
+          aria-label="Ask the AI assistant a question"
+          className="md-ai__input"
         />
         <button
           type="submit"
-          className="md-chat__send"
+          className="md-ai__send"
           aria-label="Send to AI assistant"
           disabled={draft.trim().length === 0}
-          style={{ opacity: draft.trim().length === 0 ? 0.55 : 1 }}
         >
-          <Icon name="send" size={17} />
+          <ArrowUp size={16} strokeWidth={2.2} aria-hidden="true" />
         </button>
       </form>
     </section>

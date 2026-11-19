@@ -5,7 +5,7 @@ import QRCode from "qrcode";
  * then dangerously sets it as innerHTML. The SVG is static — no scripts,
  * no external refs.
  *
- * The centered logo overlay (teal "r" badge) is drawn over the QR. We use
+ * The centered logo overlay (the repulabs logo mark on a white plate) is drawn over the QR. We use
  * high error-correction so the QR remains scannable with the overlay.
  */
 export async function QrCode({
@@ -49,23 +49,27 @@ export async function QrCode({
             pointerEvents: "none",
           }}
         >
-          <div
+          {/* The repulabs logo mark on a white rounded plate (replaced the
+              old coloured "r" text badge). */}
+          <span
             style={{
-              width: Math.round(size * 0.2),
-              height: Math.round(size * 0.2),
-              background: "var(--pri)",
-              borderRadius: 12,
+              width: Math.round(size * 0.22),
+              height: Math.round(size * 0.22),
               display: "grid",
               placeItems: "center",
-              border: "4px solid #fff",
-              color: "#fff",
-              fontSize: Math.round(size * 0.085),
-              fontWeight: 700,
-              letterSpacing: "-0.02em",
+              background: "#fff",
+              borderRadius: Math.round(size * 0.06),
+              boxShadow: "0 0 0 3px #fff, 0 2px 6px rgba(21, 19, 43, 0.12)",
             }}
           >
-            r
-          </div>
+            <img
+              src="/favicon.png"
+              alt=""
+              width={Math.round(size * 0.17)}
+              height={Math.round(size * 0.17)}
+              style={{ borderRadius: Math.round(size * 0.04), display: "block" }}
+            />
+          </span>
         </div>
       )}
     </div>

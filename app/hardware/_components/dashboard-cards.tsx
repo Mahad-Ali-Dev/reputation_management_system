@@ -1,7 +1,16 @@
 import { Icon } from "@/components/shell/icon";
 import type { DeviceDashboardExtras, ImpactDay, RecentReviewRow } from "@/lib/hardware/queries";
 import { getReviewSourceMeta } from "@/lib/reviews/source-meta";
-import { CalendarDays, type LucideIcon, QrCode, ScanLine, Star, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  CalendarDays,
+  type LucideIcon,
+  QrCode,
+  ScanLine,
+  Sparkles,
+  Star,
+  TrendingUp,
+} from "lucide-react";
 import Link from "next/link";
 
 /**
@@ -32,10 +41,8 @@ export function MdHero() {
 /* ── AI-training banner ─────────────────────────────────────────────── */
 export function MdTrainingBanner({ href }: { href: string }) {
   return (
-    <div className="md-train">
-      <span className="md-train__icon" aria-hidden>
-        <Icon name="sparkle" size={20} />
-      </span>
+    <div className="md-train md-train--clean">
+      <Sparkles size={20} strokeWidth={1.8} aria-hidden="true" className="md-train__glyph" />
       <div style={{ minWidth: 200, flex: 1 }}>
         <div className="md-train__title">Your scans are flowing</div>
         <div className="md-train__body">
@@ -43,9 +50,9 @@ export function MdTrainingBanner({ href }: { href: string }) {
           collect.
         </div>
       </div>
-      <Link href={href} className="md-train__cta">
+      <Link href={href} className="md-train__cta md-train__cta--clean">
         Train your AI
-        <Icon name="arrowR" size={13} />
+        <ArrowRight size={14} strokeWidth={2} aria-hidden="true" />
       </Link>
     </div>
   );
@@ -90,7 +97,7 @@ export function MdSummaryRow({
         <Metric
           icon={CalendarDays}
           tint="blue"
-          label="Today scan"
+          label="Today's scans"
           value={fmt(todayScans)}
           badge={todayScans > 0 ? { kind: "up", text: "today" } : null}
         />
@@ -247,19 +254,39 @@ export function MdReviewsByRating({
             <p className="md-empty__body">Reviews collected from scans will appear here.</p>
           </div>
         ) : (
-          <div className="md-rbr__bars">
-            {values.map((v, i) => (
-              <div className="md-rbr__col" key={`r${i + 1}`}>
-                <span className="md-rbr__count">{v}</span>
-                <div className="md-rbr__track">
-                  <div
-                    className="md-rbr__bar"
-                    style={{ height: `${(v / max) * 100}%`, background: BAR_TINTS[i] }}
-                  />
+          <div className="md-rbr2">
+            {[5, 4, 3, 2, 1].map((star) => {
+              const v = values[star - 1] ?? 0;
+              const pct = Math.round((v / total) * 100);
+              return (
+                <div className="md-rbr2__row" key={`r${star}`}>
+                  <span className="md-rbr2__label">
+                    {star}
+                    <Star size={12} strokeWidth={0} fill="currentColor" aria-hidden="true" />
+                  </span>
+                  <span className="md-rbr2__track">
+                    <span
+                      className="md-rbr2__fill"
+                      style={{
+                        width: `${v > 0 ? Math.max((v / max) * 100, 3) : 0}%`,
+                        background: BAR_TINTS[star - 1],
+                      }}
+                    />
+                  </span>
+                  <span className="md-rbr2__count">{v}</span>
+                  <span className="md-rbr2__pct">{pct}%</span>
                 </div>
-                <span className="md-rbr__axis">{i + 1}</span>
-              </div>
-            ))}
+              );
+            })}
+            <div className="md-rbr2__foot">
+              <span>
+                <b>{total}</b> reviews
+              </span>
+              <span>
+                <b>{(values.reduce((acc, v, i) => acc + v * (i + 1), 0) / total).toFixed(1)}</b>{" "}
+                average
+              </span>
+            </div>
           </div>
         )}
       </div>
