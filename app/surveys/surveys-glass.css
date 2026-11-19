@@ -22,3 +22,125 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Remove the coloured background boxes behind icons across Surveys + its
+   sub-tabs (KPI icons, routing icons, performance / benefit / AI-benefit
+   tiles). Each glyph keeps its tint, so it stays visible on bare glass. The
+   `.surv <class>` scope (3 classes) outranks the kit's `--variant` rules. */
+.app--glass .surv .surv-kpi__icon,
+.app--glass .surv .surv-route__icon,
+.app--glass .surv .surv-perf__tile,
+.app--glass .surv .surv-benefit__tile,
+.app--glass .surv .surv-ai-benefit__tile {
+  background: transparent;
+}
+
+/* Remove the decorative illustrations (hero clipboard, campaign artwork, the
+   incentive / automation / responses empty-state art, and the AI-unlock
+   graphic). */
+.app--glass .surv-hero__art,
+.app--glass .surv .surv-camp__art,
+.app--glass .surv .surv-redeem__art,
+.app--glass .surv .surv-auto-empty__art,
+.app--glass .surv .surv-dashed__art,
+.app--glass .surv .surv-ai-unlock__right img {
+  display: none;
+}
+/* The hero reserved 380px of right-hand room for the (now removed) artwork —
+   reclaim it so the heading spans the full width. */
+@media (min-width: 901px) {
+  .app--glass .surv .ph {
+    padding-right: 0;
+  }
+}
+/* Empty state ("No surveys yet") — drop its clipboard illustration too. */
+.app--glass .surv .surv-empty img {
+  display: none;
+}
+
+/* ── Tabs: remove the boxed container; use a clean underline bar ──
+   The kit wraps the TabBar in a white rounded card and fills the active tab as
+   a pill. Strip the box and switch to an underline indicator with a hairline
+   baseline, scoped to Surveys only (the TabBar is shared). */
+.app--glass .surv .tabbar {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+}
+.app--glass .surv .tabbar .tabs {
+  gap: 4px;
+  border-bottom: 1px solid var(--glass-border);
+}
+.app--glass .surv .tabbar .tabs__t {
+  border-radius: 0;
+  margin-bottom: -1px;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+}
+.app--glass .surv .tabbar .tabs__t:hover {
+  background: transparent;
+  color: var(--glass-text);
+}
+.app--glass .surv .tabbar .tabs__t.is-active {
+  background: transparent;
+  color: var(--glass-accent);
+  border-bottom-color: var(--glass-accent);
+}
+.app--glass .surv .tabbar .tabs__t.is-active svg {
+  color: var(--glass-accent);
+}
+
+/* ── KPI row → one compact bar (was 4–5 separate cards) ──
+   One bordered container, borderless segments split by dividers, and a smaller
+   icon + value so the strip is shorter. */
+.app--glass .surv .surv-kpis {
+  display: flex;
+  gap: 0;
+  grid-template-columns: none;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.app--glass .surv .surv-kpis .surv-kpi {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 0;
+  padding: 14px 18px;
+  gap: 12px;
+  border: 0;
+  border-radius: 0;
+}
+.app--glass .surv .surv-kpis .surv-kpi + .surv-kpi {
+  border-left: 1px solid var(--glass-border);
+}
+.app--glass .surv .surv-kpis .surv-kpi__icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.app--glass .surv .surv-kpis .surv-kpi__icon img,
+.app--glass .surv .surv-kpis .surv-kpi__icon svg {
+  width: 26px;
+  height: 26px;
+}
+.app--glass .surv .surv-kpis .surv-kpi__value {
+  font-size: 24px;
+  margin: 1px 0 3px;
+}
+/* Narrow: wrap to 2 columns, re-draw dividers along the new edges. */
+@media (max-width: 860px) {
+  .app--glass .surv .surv-kpis {
+    flex-wrap: wrap;
+  }
+  .app--glass .surv .surv-kpis .surv-kpi {
+    flex: 1 1 50%;
+  }
+  .app--glass .surv .surv-kpis .surv-kpi:nth-child(2n + 1) {
+    border-left: 0;
+  }
+  .app--glass .surv .surv-kpis .surv-kpi:nth-child(n + 3) {
+    border-top: 1px solid var(--glass-border);
+  }
+}
