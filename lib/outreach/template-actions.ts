@@ -1,10 +1,10 @@
 "use server";
 
+import { auth } from "@/lib/auth/config";
+import { withTenant } from "@/lib/db/with-tenant";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { auth } from "@/lib/auth/config";
-import { withTenant } from "@/lib/db/with-tenant";
 
 const TemplateSchema = z.object({
   id: z.string().uuid().optional(),
@@ -101,6 +101,30 @@ export async function upsertOutreachTemplate(form: FormData): Promise<void> {
 
   revalidatePath("/outreach");
   revalidatePath("/outreach/templates");
+}
+
+/**
+ * Modal-friendly save: same write as `upsertOutreachTemplate`, but returns
+ * `{ ok | error }` instead of throwing, so a validation problem shows inline in
+ * the template sheet rather than crashing the page.
+ */
+export async function saveOutreachTemplate(
+  form: FormData,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  try {
+    await upsertOutreachTemplate(form);
+    return { ok: true };
+  } catch (err) {
+    const digest = (err as { digest?: unknown } | null)?.digest;
+    if (typeof digest === "string" && digest.startsWith("NEXT_")) throw err;
+    const msg = err instanceof Error ? err.message : "";
+    return {
+      ok: false,
+      error: msg.startsWith("Validation:")
+        ? "Check the template: it needs a name and a message."
+        : "Couldn't save the template. Try again.",
+    };
+  }
 }
 
 export async function duplicateOutreachTemplate(form: FormData): Promise<void> {
