@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160" width="160" height="160" role="img" aria-label="Add your Google review link">
+  <defs>
+    <linearGradient id="rl-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4efff"/>
+      <stop offset="1" stop-color="#e7dcfb"/>
+    </linearGradient>
+    <linearGradient id="rl-chain" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b5cf6"/>
+      <stop offset="1" stop-color="#6d28d9"/>
+    </linearGradient>
+    <symbol id="rl-star" viewBox="0 0 20 20">
+      <path d="M10 1 L12.47 7.09 L19 7.5 L14 11.74 L15.6 18.09 L10 14.5 L4.4 18.09 L6 11.74 L1 7.5 L7.53 7.09 Z" fill="#f6b01e"/>
+    </symbol>
+  </defs>
+
+  <rect width="160" height="160" fill="url(#rl-bg)"/>
+
+  <!-- review card -->
+  <rect x="29" y="30" width="102" height="70" rx="16" fill="#ffffff"/>
+  <rect x="29.5" y="30.5" width="101" height="69" rx="15.5" fill="none" stroke="#e7dcfb"/>
+
+  <!-- 5 gold stars -->
+  <use href="#rl-star" x="39" y="44" width="15" height="15"/>
+  <use href="#rl-star" x="56" y="44" width="15" height="15"/>
+  <use href="#rl-star" x="73" y="44" width="15" height="15"/>
+  <use href="#rl-star" x="90" y="44" width="15" height="15"/>
+  <use href="#rl-star" x="107" y="44" width="15" height="15"/>
+
+  <!-- faux review-link URL row -->
+  <rect x="43" y="72" width="74" height="14" rx="7" fill="#f2ecff"/>
+  <circle cx="52" cy="79" r="3.4" fill="#7c3aed"/>
+  <rect x="60" y="76.5" width="46" height="5" rx="2.5" fill="#cdbdf2"/>
+
+  <!-- link badge -->
+  <g transform="translate(80 118)">
+    <circle r="23" fill="url(#rl-chain)"/>
+    <g transform="translate(-12 -12)" stroke="#ffffff" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 13a5 5 0 0 0 7.54 .54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/>
+      <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>
+    </g>
+  </g>
+</svg>

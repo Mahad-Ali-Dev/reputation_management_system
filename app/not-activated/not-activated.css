@@ -1,11 +1,10 @@
 /* ============================================================
-   /not-activated — public QR landing (premium repulabs skin)
+   /not-activated — public QR landing (repulabs brand skin)
 
-   "Set up your stand in 3 easy steps" layout. Restyle + restructure only;
-   all session logic, slug parsing and the CTA hrefs live in page.tsx. Colors
-   are pinned to the marketing palette so this public page stays on-brand
-   regardless of in-app token drift; fonts reuse the app's Inter (--f-ui) and
-   mono (--f-mono) stacks loaded by the root layout.
+   A vertical "how it works" flow: each step is an image circle with its
+   instruction beside it, connected by curved arrows, then the Activate CTA.
+   Session logic + CTA hrefs live in page.tsx. Brand accent is the Repulabs
+   indigo-violet (#7c3aed / #4f46e5), matching the auth pages.
    ============================================================ */
 
 .na {
@@ -16,11 +15,11 @@
   padding: 40px 18px;
   background: radial-gradient(
       1100px 680px at 50% -8%,
-      #e6effe 0%,
-      rgba(240, 245, 255, 0.55) 42%,
+      #ece7fe 0%,
+      rgba(243, 240, 255, 0.55) 42%,
       transparent 72%
     ),
-    linear-gradient(180deg, #ffffff 0%, #f5f8ff 55%, #f0f5ff 100%);
+    linear-gradient(180deg, #ffffff 0%, #f7f5ff 55%, #f3f0ff 100%);
   font-family: var(--f-ui, "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif);
   color: #0b1220;
   -webkit-font-smoothing: antialiased;
@@ -29,66 +28,18 @@
 
 .na__card {
   width: 100%;
-  max-width: 680px;
+  max-width: 580px;
   background: #ffffff;
-  border: 1px solid #e7ecf6;
+  border: 1px solid #ece7f7;
   border-radius: 24px;
-  box-shadow: 0 24px 60px -30px rgba(49, 92, 170, 0.35);
-  padding: 30px 36px 26px;
+  box-shadow: 0 24px 60px -30px rgba(92, 49, 170, 0.32);
+  padding: 30px 34px 26px;
 }
 @media (max-width: 480px) {
   .na__card {
     padding: 22px 18px 18px;
     border-radius: 20px;
   }
-}
-
-/* ---- top row: brand + "see your stats" ---- */
-.na__top {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 22px;
-}
-.na__brand {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-}
-.na__logo {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  display: block;
-}
-.na__wordmark {
-  font-size: 18px;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: #0b1220;
-}
-.na__wordmark span {
-  color: #2563eb;
-}
-.na__stats {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-  font-size: 12px;
-  font-weight: 600;
-  color: #2563eb;
-  text-decoration: none;
-  padding: 7px 12px;
-  border-radius: 999px;
-  background: #eef4ff;
-  border: 1px solid #e0eaff;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-.na__stats:hover {
-  background: #e3edff;
-  border-color: #cfe0ff;
 }
 
 /* ---- status row ---- */
@@ -128,8 +79,8 @@
   font-size: 11px;
   letter-spacing: 0.14em;
   color: #5b6473;
-  background: #f3f6fc;
-  border: 1px solid #e7ecf6;
+  background: #f5f3fb;
+  border: 1px solid #ece7f7;
   border-radius: 999px;
 }
 .na__code b {
@@ -144,164 +95,144 @@
   letter-spacing: -0.028em;
   line-height: 1.14;
   text-align: center;
-  margin: 0;
-}
-.na__lead {
-  font-size: 14px;
-  color: #5b6473;
-  line-height: 1.6;
-  text-align: center;
-  margin: 10px auto 22px;
-  max-width: 470px;
+  margin: 0 0 22px;
 }
 
-/* ---- staggered zig-zag of the 3 step circles + READY (mirrors the card) ----
-   2-column grid: step 1 top-left, step 2 mid-right, step 3 bottom-left, READY
-   bottom-right. The empty cells create the vertical stagger. */
-.na-flow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px 26px;
-  align-items: center;
-  justify-items: center;
-  margin: 8px 0 26px;
-}
-.na-flow__a {
-  grid-column: 1;
-  grid-row: 1;
-}
-.na-flow__b {
-  grid-column: 2;
-  grid-row: 2;
-}
-.na-flow__c {
-  grid-column: 1;
-  grid-row: 3;
-}
-.na-flow__ready {
-  grid-column: 2;
-  grid-row: 3;
-}
-.na-flow__cell {
+/* ---- vertical step flow ---- */
+.na-flow2 {
   display: flex;
   flex-direction: column;
+  align-items: stretch;
+  margin-bottom: 24px;
+}
+.na-stepwrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+.na-stepitem {
+  display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 18px;
+  width: 100%;
+}
+/* Even step (Step 2): circle on the right, instruction on the far left and
+   still left-aligned (tag + title start from the left). */
+.na-stepitem--rev {
+  justify-content: space-between;
+}
+.na-stepitem--rev .na-circle {
+  order: 2;
+}
+.na-stepitem--rev .na-stepitem__text {
+  order: 1;
+  text-align: left;
+  align-items: flex-start;
 }
 
-/* Circular step badge — an image placeholder (owner art drops in later). */
+/* image circle */
 .na-circle {
   position: relative;
-  width: 104px;
-  height: 104px;
+  flex-shrink: 0;
+  width: 86px;
+  height: 86px;
   border-radius: 999px;
   display: grid;
   place-items: center;
-  background: radial-gradient(circle at 50% 36%, #eef3ff 0%, #e6edfb 72%);
-  border: 1.5px dashed #c3d2f2;
-  color: #94a8d6;
+  background: radial-gradient(circle at 50% 36%, #f3efff 0%, #ece4fb 72%);
+  border: 1.5px dashed #d6c8f3;
+  color: #a593c9;
+}
+.na-circle--img {
+  background: #ffffff;
+  border-style: solid;
+  border-width: 1px;
+  border-color: #ece2f7;
 }
 .na-circle__num {
   position: absolute;
   top: -6px;
   left: -6px;
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 999px;
-  background: #2563eb;
+  background: #7c3aed;
   color: #ffffff;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
   display: grid;
   place-items: center;
   border: 3px solid #ffffff;
-  box-shadow: 0 3px 8px -2px rgba(37, 99, 235, 0.55);
+  box-shadow: 0 3px 8px -2px rgba(124, 58, 237, 0.55);
+  z-index: 2;
 }
-.na-circle__ph {
-  display: grid;
-  place-items: center;
-}
-.na-circle__ph svg {
-  width: 28px;
-  height: 28px;
-}
-
-/* Brand label pill under each circle. */
-.na-flow__label {
-  padding: 6px 14px;
-  border-radius: 10px;
-  background: #e9f0ff;
-  color: #2563eb;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-  text-align: center;
+.na-circle__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 999px;
+  display: block;
 }
 
-/* READY! — brand-blue pill, bottom-right, aligned to the row of step 3. */
-.na-ready-badge {
-  padding: 12px 28px;
-  border-radius: 14px;
-  background: linear-gradient(180deg, #2f6bff, #1e40af);
-  color: #ffffff;
-  font-size: 20px;
-  font-weight: 800;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  box-shadow: 0 12px 26px -14px rgba(35, 82, 255, 0.6);
-}
-
-/* ---- Step 1 / Step 2 / Step 3 description row ---- */
-.na-steps3 {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 20px;
-  margin-bottom: 24px;
-}
-.na-step3 {
+/* instruction beside the circle */
+.na-stepitem__text {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
-  gap: 9px;
+  align-items: flex-start;
+  min-width: 0;
+  flex: 0 1 220px;
+  max-width: 220px;
 }
-.na-step3__tag {
-  padding: 6px 16px;
-  border-radius: 9px;
-  background: #4b5567;
+.na-steptag {
+  display: inline-block;
+  padding: 4px 13px;
+  border-radius: 8px;
+  background: #7c3aed;
   color: #ffffff;
-  font-size: 13.5px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.01em;
 }
-.na-step3__d {
+.na-stepitem__label {
+  font-size: 15.5px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #0b1220;
+  margin-top: 8px;
+}
+.na-stepitem__desc {
   font-size: 12.5px;
   color: #5b6473;
   line-height: 1.5;
-  margin: 0;
+  margin: 3px 0 0;
 }
 
-/* Mobile: collapse the zig-zag + the description row to a single column. */
-@media (max-width: 560px) {
-  .na-flow {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-  .na-flow__a,
-  .na-flow__b,
-  .na-flow__c,
-  .na-flow__ready {
-    grid-column: 1;
-    grid-row: auto;
-  }
-  .na-steps3 {
-    grid-template-columns: 1fr;
-    gap: 16px;
-  }
+/* curved connector arrow — follows the zig-zag: after a left circle it sits on
+   the left and sweeps right; after a right circle it sits on the right and is
+   mirrored to sweep left. */
+.na-arrow {
+  display: flex;
+  color: #7c3aed;
+  margin: 8px 0 2px;
+}
+/* Step 1: arrow at the right end of its description, sweeping down toward step 2. */
+.na-arrow--r {
+  align-self: flex-end;
+}
+/* Step 2: arrow at the left end of its description, mirrored toward step 3. */
+.na-arrow--l {
+  align-self: flex-start;
+}
+.na-arrow--l svg {
+  transform: scaleX(-1);
+}
+.na-arrow svg {
+  filter: drop-shadow(0 4px 6px rgba(124, 58, 237, 0.22));
 }
 
-/* ---- CTA 1 · Activate (primary, branded gradient) ---- */
+/* ---- CTA · Activate (primary, brand gradient) ---- */
 .na__cta {
   display: flex;
   align-items: center;
@@ -309,19 +240,19 @@
   padding: 16px 18px;
   border-radius: 16px;
   text-decoration: none;
-  background: linear-gradient(180deg, #2f6bff, #1e40af);
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
   color: #ffffff;
-  box-shadow: 0 14px 34px -12px rgba(35, 82, 255, 0.5);
+  box-shadow: 0 14px 34px -12px rgba(124, 58, 237, 0.5);
   transition: transform 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 .na__cta:hover {
   transform: translateY(-1px);
-  box-shadow: 0 20px 42px -14px rgba(35, 82, 255, 0.6);
+  box-shadow: 0 20px 42px -14px rgba(124, 58, 237, 0.6);
   filter: saturate(1.04);
 }
 .na__cta:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #2563eb;
+  box-shadow: 0 0 0 3px #ffffff, 0 0 0 5px #7c3aed;
 }
 .na__cta-kicker {
   display: block;
@@ -360,7 +291,7 @@
   margin: 14px 0 2px;
 }
 .na__signin a {
-  color: #2563eb;
+  color: #7c3aed;
   text-decoration: none;
   font-weight: 600;
 }
@@ -372,7 +303,7 @@
 .na__foot {
   margin: 16px auto 0;
   padding-top: 18px;
-  border-top: 1px solid #eef2f9;
+  border-top: 1px solid #f1eef8;
   text-align: center;
   font-size: 11px;
   line-height: 1.55;
@@ -384,5 +315,5 @@
   text-decoration: none;
 }
 .na__foot a:hover {
-  color: #2563eb;
+  color: #7c3aed;
 }
