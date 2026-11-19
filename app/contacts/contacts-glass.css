@@ -85,3 +85,22 @@
   background: var(--glass-fill);
   border-color: var(--glass-accent, var(--pri));
 }
+
+/* Remove the coloured background boxes behind icons across Contacts + its
+   sub-tabs (KPI tiles, segment-card tiles, import/export head tiles, the check
+   and segment-table glyphs). Each glyph keeps its own tint, so it still reads
+   on bare glass. The `.cd-page <class>` scope (3 classes) outranks the kit's
+   single-class `--variant` background rules. */
+.app--glass .cd-page .cd-kpi__tile,
+.app--glass .cd-page .cd-seg-card__tile,
+.app--glass .cd-page .cd-ie-head__tile,
+.app--glass .cd-page .cd-check__ico,
+.app--glass .cd-page .cd-seg-tbl__ico {
+  background: transparent;
+}
+/* The small info "i" glyph was white-on-solid — recolour it to the accent so
+   it stays visible once its filled circle is gone. */
+.app--glass .cd-page .cd-info__ico {
+  background: transparent;
+  color: var(--glass-accent, var(--cd-vio));
+}

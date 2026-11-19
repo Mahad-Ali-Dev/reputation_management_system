@@ -15,3 +15,9 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* Remove the tinted background box behind the card icons — the glyph keeps its
+   accent colour and sits directly on the glass. */
+.app--glass .brp-card__badge {
+  background: transparent;
+}
