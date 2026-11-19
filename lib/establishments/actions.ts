@@ -266,6 +266,28 @@ export async function updateEstablishment(id: string, form: FormData): Promise<v
   revalidatePath("/establishments");
 }
 
+/**
+ * Save (or clear) an establishment's profile image URL. The file is uploaded
+ * separately via `uploadFile` (context "establishment_image"); this just writes
+ * the returned URL onto the row.
+ */
+export async function setEstablishmentImage(
+  id: string,
+  imageUrl: string | null,
+): Promise<void> {
+  const { orgId } = await requireRole("manager");
+  await withTenant(orgId, async (tx) => {
+    const before = await tx.establishment.findFirst({ where: { id }, select: { id: true } });
+    if (!before) return; // RLS hid it OR doesn't exist — no leak
+    await tx.establishment.update({
+      where: { id },
+      data: { imageUrl: imageUrl || null },
+    });
+  });
+  revalidatePath(`/establishments/${id}`);
+  revalidatePath("/establishments");
+}
+
 export async function deleteEstablishment(id: string) {
   const { orgId, userId } = await requireRole("admin");
 

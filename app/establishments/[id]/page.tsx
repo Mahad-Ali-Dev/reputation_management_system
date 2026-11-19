@@ -48,11 +48,15 @@ const RATING_COLORS: Record<number, string> = {
 
 export default async function EstablishmentDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ tab?: string }>;
 }) {
   const { id } = await params;
   if (!UUID_RE.test(id)) notFound();
+  const { tab } = await searchParams;
+  const activeTab = tab === "reviews" ? "reviews" : "overview";
 
   const { orgId } = await getOrgContext();
   const establishment = await getEstablishment(orgId, id);
@@ -94,6 +98,27 @@ export default async function EstablishmentDetailPage({
       recent,
     };
   });
+
+  // This business's reviews, shown in-place on the Reviews tab (only queried
+  // when that tab is active).
+  const businessReviews =
+    activeTab === "reviews"
+      ? await withTenant(orgId, (tx) =>
+          tx.review.findMany({
+            where: { establishmentId: id },
+            orderBy: { postedAt: "desc" },
+            take: 50,
+            select: {
+              id: true,
+              rating: true,
+              reviewerName: true,
+              body: true,
+              postedAt: true,
+              reply: { select: { id: true } },
+            },
+          }),
+        )
+      : [];
 
   const googleConn = establishment.connections.find((c) => c.provider === "google_business");
   const addr = establishment.address as Address | null;
@@ -229,12 +254,16 @@ export default async function EstablishmentDetailPage({
 
       {/* Tabs */}
       <div className="estab-tabs tabs" style={{ marginBottom: 16 }}>
-        <button type="button" className="tabs__t is-active">
-          Overview
-        </button>
         <Link
-          href={`/reviews?establishment=${establishment.id}`}
-          className="tabs__t"
+          href={`/establishments/${establishment.id}`}
+          className={`tabs__t${activeTab === "overview" ? " is-active" : ""}`}
+          style={{ textDecoration: "none" }}
+        >
+          Overview
+        </Link>
+        <Link
+          href={`/establishments/${establishment.id}?tab=reviews`}
+          className={`tabs__t${activeTab === "reviews" ? " is-active" : ""}`}
           style={{ textDecoration: "none" }}
         >
           Reviews
@@ -251,9 +280,6 @@ export default async function EstablishmentDetailPage({
             {stats.total}
           </span>
         </Link>
-        <Link href="/connections" className="tabs__t" style={{ textDecoration: "none" }}>
-          Connections
-        </Link>
         <Link
           href={`/establishments/${establishment.id}/settings`}
           className="tabs__t"
@@ -263,15 +289,53 @@ export default async function EstablishmentDetailPage({
         </Link>
       </div>
 
-      {/* Overview grid */}
-      <div
-        className="estab-overview-grid"
-        style={{
-          display: "grid",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.4fr)",
-          gap: 14,
-        }}
-      >
+      {activeTab === "reviews" && (
+        <section className="ds-card estab-reviews" aria-label="Reviews">
+          <div className="ds-card__head">
+            <h3 className="ds-card__title">Reviews ({stats.total})</h3>
+          </div>
+          <div className="ds-card__body">
+            {businessReviews.length === 0 ? (
+              <p className="dim" style={{ fontSize: 13, padding: "8px 0" }}>
+                No reviews yet for this business.
+              </p>
+            ) : (
+              <div className="estab-revlist">
+                {businessReviews.map((rv) => (
+                  <div key={rv.id} className="estab-revrow">
+                    <span className="estab-revrow__avatar">
+                      {(rv.reviewerName ?? "?").trim().charAt(0).toUpperCase() || "?"}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div className="estab-revrow__top">
+                        <span className="estab-revrow__name">
+                          {rv.reviewerName ?? "Anonymous"}
+                        </span>
+                        <Stars value={rv.rating} size={13} />
+                        <span className="estab-revrow__time">
+                          {rv.postedAt ? new Date(rv.postedAt).toLocaleDateString() : ""}
+                        </span>
+                        {rv.reply && <span className="estab-revrow__replied">Replied</span>}
+                      </div>
+                      {rv.body && <p className="estab-revrow__body">{rv.body}</p>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {activeTab === "overview" && (
+        <div
+          className="estab-overview-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1.4fr)",
+            gap: 14,
+          }}
+        >
         {/* Left: rating distribution + address + danger */}
         <div className="col" style={{ gap: 14 }}>
           <div className="ds-card">
@@ -533,6 +597,7 @@ export default async function EstablishmentDetailPage({
           </div>
         </div>
       </div>
+      )}
       </div>
     </AppShellServer>
   );
