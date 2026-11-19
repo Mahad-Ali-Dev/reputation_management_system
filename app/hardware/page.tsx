@@ -20,14 +20,11 @@ import {
   listOrgDevicesWithProduct,
 } from "@/lib/hardware/queries";
 import Link from "next/link";
-import { AiChatbotCard } from "./_components/ai-chatbot-card";
 import { ConnectDeviceModal } from "./_components/connect-device-modal";
 import {
   MdDevicesImpact,
   MdFooterTip,
   MdHero,
-  MdLiveFeed,
-  MdReviewsByRating,
   MdSummaryRow,
   MdTrainingBanner,
 } from "./_components/dashboard-cards";
@@ -323,15 +320,10 @@ export default async function QrCodesPage({
           selectedId={selectedDevice.id}
         />
 
-        {/* Lower section — Live feed · Reviews-by-rating · Devices-impact. */}
-        <div className="md-lower" style={{ marginTop: 14 }}>
-          <MdLiveFeed reviews={extras.recentReviews} />
-          <MdReviewsByRating dist={extras.reviewsByRating} />
-          <MdDevicesImpact impact={extras.impact} />
-        </div>
-
-        {/* Bottom row — QR product card + AI chatbot card. */}
-        <div id="qr-panel" className="md-bottom" style={{ scrollMarginTop: 80 }}>
+        {/* QR card + Devices impact side by side. Reviews (live feed, rating
+            split) and the AI assistant moved out: they belong to Review Inbox
+            and Ask AI, keeping this page about devices and scans only. */}
+        <div id="qr-panel" className="md-bottom md-bottom--scans" style={{ scrollMarginTop: 80 }}>
           <QrProductCard
             deviceId={selectedDevice.id}
             code={selectedDevice.shortSlug}
@@ -342,7 +334,7 @@ export default async function QrCodesPage({
             scans={selectedDevice.scanCount}
             reviews={reviewsByDeviceId.get(selectedDevice.id) ?? 0}
           />
-          <AiChatbotCard />
+          <MdDevicesImpact impact={extras.impact} />
         </div>
 
         {/* NFC tap-destination config (preserved — only for NFC kinds). */}
@@ -593,16 +585,9 @@ function EmptyState({
           </div>
         </section>
 
-        {/* Lower zero-state cards mirror the empty mockup. */}
-        <div className="md-lower" style={{ marginTop: 14 }}>
-          <MdLiveFeed reviews={[]} />
-          <MdReviewsByRating dist={{ 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 }} />
+        {/* Zero-state scan chart (reviews + AI assistant live elsewhere now). */}
+        <div style={{ marginTop: 14, marginBottom: 14 }}>
           <MdDevicesImpact impact={buildEmptyImpactForView()} />
-        </div>
-
-        {/* AI Chatbot card (kit) — no data dependency, useful even before any device. */}
-        <div className="md-bottom" style={{ gridTemplateColumns: "1fr" }}>
-          <AiChatbotCard />
         </div>
 
         <MdFooterTip />

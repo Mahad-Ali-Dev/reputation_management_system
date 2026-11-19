@@ -423,3 +423,44 @@
   color: rgba(21, 19, 43, 0.45);
   cursor: default;
 }
+
+/* QR card + Devices impact share one row (live feed / rating / AI card moved
+   out of Device Manager). */
+.app--glass .md-bottom--scans {
+  margin-top: 14px;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.3fr);
+  align-items: stretch;
+}
+.app--glass .md-bottom--scans > .md-card {
+  height: 100%;
+}
+/* In the QR + impact row the chart grows to fill the card's height. */
+.app--glass .md-bottom--scans .md-impact {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-sizing: border-box;
+}
+.app--glass .md-bottom--scans .md-impact__svg {
+  flex: 1;
+  min-height: 220px;
+  height: auto;
+}
+.app--glass .md-bottom--scans > .md-card {
+  display: flex;
+  flex-direction: column;
+}
+.app--glass .md-bottom--scans .md-impact {
+  flex: 1;
+  height: auto;
+}
+/* The stretched chart keeps a constant 2px line. */
+.app--glass .md-impact__svg path,
+.app--glass .md-impact__svg polyline,
+.app--glass .md-impact__svg line {
+  vector-effect: non-scaling-stroke;
+}
+.app--glass .md-bottom--scans .md-impact__svg {
+  max-height: 260px;
+  margin-top: auto;
+}

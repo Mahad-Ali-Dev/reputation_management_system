@@ -1,6 +1,5 @@
 import { Icon } from "@/components/shell/icon";
-import type { DeviceDashboardExtras, ImpactDay, RecentReviewRow } from "@/lib/hardware/queries";
-import { getReviewSourceMeta } from "@/lib/reviews/source-meta";
+import type { ImpactDay } from "@/lib/hardware/queries";
 import {
   ArrowRight,
   CalendarDays,
@@ -20,7 +19,6 @@ import Link from "next/link";
  * with the kit illustration. No fabricated numbers.
  */
 
-const ASSET = "/assets/repulabs/my-devices";
 
 /* ── Hero ───────────────────────────────────────────────────────────── */
 export function MdHero() {
@@ -155,142 +153,6 @@ function Metric({
         <div className="md-metric__sub">{sub}</div>
       ) : null}
     </div>
-  );
-}
-
-/* ── Live feed ──────────────────────────────────────────────────────── */
-const AVATAR_TINTS = ["#4b3bff", "#7466ff", "#12a26e", "#d9822b", "#e5484d"];
-
-export function MdLiveFeed({ reviews }: { reviews: RecentReviewRow[] }) {
-  return (
-    <section className="md-card" aria-label="Live feed">
-      <div className="md-card__head">
-        <h3 className="md-card__title">Live feed</h3>
-        <Link href="/reviews" className="md-card__link">
-          View all
-        </Link>
-      </div>
-      {reviews.length === 0 ? (
-        <div className="md-empty">
-          {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-          <img src={`${ASSET}/live-feed-empty.svg`} alt="" aria-hidden className="md-empty__art" />
-          <div className="md-empty__title">No activity yet</div>
-          <p className="md-empty__body">
-            Once customers scan and review, their activity will appear here.
-          </p>
-        </div>
-      ) : (
-        <div className="md-feed">
-          {reviews.map((r, i) => (
-            <FeedRow
-              key={r.id}
-              review={r}
-              tint={AVATAR_TINTS[i % AVATAR_TINTS.length] ?? "#4b3bff"}
-            />
-          ))}
-        </div>
-      )}
-    </section>
-  );
-}
-
-function FeedRow({ review: r, tint }: { review: RecentReviewRow; tint: string }) {
-  const meta = getReviewSourceMeta(r.source);
-  const name = r.reviewerName?.trim() || "Anonymous";
-  return (
-    <div className="md-feed__row">
-      <span className="md-feed__avatar" aria-hidden style={{ background: tint }}>
-        {name.charAt(0).toUpperCase()}
-      </span>
-      <div style={{ minWidth: 0, flex: 1 }}>
-        <div className="md-feed__name">{name}</div>
-        <div className="md-feed__stars" aria-label={`${r.rating} out of 5 stars`}>
-          {"★".repeat(Math.max(0, Math.min(5, r.rating)))}
-          <span style={{ color: "var(--md-line-strong)" }}>
-            {"★".repeat(5 - Math.max(0, Math.min(5, r.rating)))}
-          </span>
-        </div>
-        {r.body ? <div className="md-feed__snippet">{r.body}</div> : null}
-      </div>
-      <div className="col" style={{ alignItems: "flex-end", gap: 4 }}>
-        <span className="md-feed__time">{timeAgo(r.postedAt)}</span>
-        <span
-          className="md-feed__src"
-          title={meta.label}
-          style={{ background: meta.bgTint, color: meta.fg }}
-        >
-          {meta.glyph}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-/* ── Reviews by rating ──────────────────────────────────────────────── */
-export function MdReviewsByRating({
-  dist,
-}: {
-  dist: DeviceDashboardExtras["reviewsByRating"];
-}) {
-  const values = [dist[1], dist[2], dist[3], dist[4], dist[5]];
-  const max = Math.max(...values, 1);
-  const total = values.reduce((a, b) => a + b, 0);
-  const BAR_TINTS = ["#d9d4ff", "#bdb5ff", "#9d92ff", "#7466ff", "#4b3bff"];
-
-  return (
-    <section className="md-card" aria-label="Reviews by rating">
-      <div className="md-card__head">
-        <h3 className="md-card__title">Reviews by rating</h3>
-      </div>
-      <div className="md-rbr">
-        <p className="md-card__sub" style={{ margin: 0 }}>
-          See how customers rate your business
-        </p>
-        {total === 0 ? (
-          <div className="md-empty" style={{ padding: "10px 0 4px" }}>
-            {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
-            <img src={`${ASSET}/reviews-empty.svg`} alt="" aria-hidden className="md-empty__art" />
-            <div className="md-empty__title">No reviews yet</div>
-            <p className="md-empty__body">Reviews collected from scans will appear here.</p>
-          </div>
-        ) : (
-          <div className="md-rbr2">
-            {[5, 4, 3, 2, 1].map((star) => {
-              const v = values[star - 1] ?? 0;
-              const pct = Math.round((v / total) * 100);
-              return (
-                <div className="md-rbr2__row" key={`r${star}`}>
-                  <span className="md-rbr2__label">
-                    {star}
-                    <Star size={12} strokeWidth={0} fill="currentColor" aria-hidden="true" />
-                  </span>
-                  <span className="md-rbr2__track">
-                    <span
-                      className="md-rbr2__fill"
-                      style={{
-                        width: `${v > 0 ? Math.max((v / max) * 100, 3) : 0}%`,
-                        background: BAR_TINTS[star - 1],
-                      }}
-                    />
-                  </span>
-                  <span className="md-rbr2__count">{v}</span>
-                  <span className="md-rbr2__pct">{pct}%</span>
-                </div>
-              );
-            })}
-            <div className="md-rbr2__foot">
-              <span>
-                <b>{total}</b> reviews
-              </span>
-              <span>
-                <b>{(values.reduce((acc, v, i) => acc + v * (i + 1), 0) / total).toFixed(1)}</b>{" "}
-                average
-              </span>
-            </div>
-          </div>
-        )}
-      </div>
-    </section>
   );
 }
 
