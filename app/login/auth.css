@@ -778,17 +778,37 @@
 .auth-shell--bg-earth .auth-main {
   pointer-events: none;
 }
+/* Apple-style clear glass (visionOS-like): a thin smoky pane that blurs the
+   planet behind it, a hairline light rim, a soft top highlight and a deep
+   shadow so it floats. */
 .auth-shell--bg-earth .auth-card {
   pointer-events: auto;
-  background: transparent;
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-  border: 0;
-  box-shadow: none;
-  overflow: visible;
+  max-width: 440px;
+  padding: 40px 38px 32px;
+  border-radius: 32px;
+  overflow: hidden;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 45%, rgba(255, 255, 255, 0.07) 100%);
+  -webkit-backdrop-filter: blur(28px) saturate(170%);
+  backdrop-filter: blur(28px) saturate(170%);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.06),
+    0 40px 90px -30px rgba(0, 0, 0, 0.75),
+    0 12px 30px -16px rgba(0, 0, 0, 0.5);
 }
+/* soft specular sheen across the top of the pane */
 .auth-shell--bg-earth .auth-card::before {
-  display: none;
+  display: block;
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: 46%;
+  border-radius: inherit;
+  background: radial-gradient(120% 90% at 50% -20%, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 70%);
+  pointer-events: none;
 }
 .auth-shell--bg-earth .auth-title {
   color: #fff;
@@ -871,4 +891,10 @@
   color: rgba(255, 255, 255, 0.78);
   opacity: 1;
   box-shadow: none;
+}
+@media (max-width: 480px) {
+  .auth-shell--bg-earth .auth-card {
+    padding: 30px 22px 26px;
+    border-radius: 26px;
+  }
 }
