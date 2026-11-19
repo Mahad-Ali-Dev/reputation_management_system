@@ -19,6 +19,7 @@ export type SummaryCard = {
   type: string;
   tint: EstTint;
   tileIcon: string;
+  imageUrl: string | null;
   avgRating: number | null;
   totalReviews: number;
   trendPct: number | null;
@@ -31,8 +32,13 @@ export function SummaryCards({ cards }: { cards: SummaryCard[] }) {
         <Link key={c.id} href={`/establishments/${c.id}`} className="est-scard">
           <div className="est-scard__top">
             <span className={`est-tile est-tile--${c.tint}`}>
-              {/* biome-ignore lint/performance/noImgElement: static kit SVG glyph */}
-              <img src={c.tileIcon} alt="" width={56} height={56} />
+              {c.imageUrl ? (
+                // biome-ignore lint/performance/noImgElement: uploaded business logo
+                <img src={c.imageUrl} alt="" className="est-tile__img" />
+              ) : (
+                // biome-ignore lint/performance/noImgElement: static kit SVG glyph
+                <img src={c.tileIcon} alt="" width={56} height={56} />
+              )}
             </span>
             <div style={{ minWidth: 0 }}>
               <div className="est-scard__name">{c.name}</div>

@@ -180,3 +180,13 @@ button.est-scard--add {
   cursor: pointer;
   width: 100%;
 }
+
+/* Uploaded business logo fills the summary tile + the list-row avatar. */
+.est-tile__img,
+.est-avatar__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  display: block;
+}

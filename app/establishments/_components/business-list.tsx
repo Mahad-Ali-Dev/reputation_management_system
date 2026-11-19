@@ -31,7 +31,12 @@ export function BusinessList({
           <div key={card.id} id={`est-${card.id}`} className="est-row est-anchor">
             <div className="est-row__id">
               <span className={`est-avatar est-avatar--${tint}`} aria-hidden="true">
-                {initialsFor(card.name)}
+                {card.imageUrl ? (
+                  // biome-ignore lint/performance/noImgElement: uploaded business logo
+                  <img src={card.imageUrl} alt="" className="est-avatar__img" />
+                ) : (
+                  initialsFor(card.name)
+                )}
               </span>
               <div className="est-row__idtext">
                 <div className="est-row__nameline">

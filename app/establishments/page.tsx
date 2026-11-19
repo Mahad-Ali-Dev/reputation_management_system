@@ -63,6 +63,7 @@ export default async function EstablishmentsPage({
     type: c.category ?? "Business",
     tint: tintForIndex(i),
     tileIcon: TILE_ICONS[i] ?? TILE_ICONS[0]!,
+    imageUrl: c.imageUrl,
     avgRating: c.avgRating,
     totalReviews: c.totalReviews,
     trendPct: reviewTrendPct(rows[i]?.reviews ?? []),
