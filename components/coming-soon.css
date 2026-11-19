@@ -1,0 +1,104 @@
+/* ============================================================
+   Coming soon (components/coming-soon.tsx): Apple announcement style.
+   Centred column, the AI frog "at work", big light title, grey copy, an
+   inset list card, one pill button.
+   ============================================================ */
+.cs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 40px 20px 56px;
+  text-align: center;
+  color: #1d1d1f;
+}
+.cs__frog {
+  display: grid;
+  place-items: center;
+  margin-bottom: 22px;
+}
+.cs__eyebrow {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  background: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.cs__title {
+  margin: 6px 0 0;
+  font-size: clamp(32px, 4vw, 48px);
+  line-height: 1.06;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+}
+.cs__blurb {
+  max-width: 500px;
+  margin: 14px 0 0;
+  font-size: 17px;
+  line-height: 1.47;
+  color: #6e6e73;
+}
+.cs__list {
+  width: 100%;
+  max-width: 460px;
+  margin: 30px 0 0;
+  padding: 6px 0;
+  list-style: none;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05);
+  text-align: left;
+}
+.cs__item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 18px;
+  padding: 13px 0;
+  font-size: 15px;
+  line-height: 1.4;
+}
+.cs__item + .cs__item {
+  border-top: 1px solid rgba(60, 60, 67, 0.12);
+}
+.cs__tick {
+  display: grid;
+  flex: 0 0 22px;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #34c759;
+  color: #fff;
+}
+.cs__actions {
+  margin-top: 28px;
+}
+.cs__btn {
+  display: inline-flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--glass-accent, #4b3bff);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: background 0.15s ease;
+}
+.cs__btn:hover {
+  background: var(--glass-accent-hover, #3a2be0);
+}
+.cs__btn:focus-visible {
+  outline: 2px solid var(--glass-accent, #4b3bff);
+  outline-offset: 3px;
+}
+.cs__note {
+  margin: 12px 0 0;
+  font-size: 13px;
+  color: #86868b;
+}

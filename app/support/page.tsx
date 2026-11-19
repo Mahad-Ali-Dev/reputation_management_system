@@ -1,14 +1,14 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { ComingSoonPage } from "@/components/coming-soon";
 import { PageHeader } from "@/components/page-header";
-import { TopBar } from "@/components/topbar";
 import { Icon } from "@/components/shell/icon";
+import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 // Side-effect import: installs the AiAssist escalation hook so low-confidence
 // inbox AI is routed to a flagged thread. Importing the barrel registers it.
 import "@/lib/inbox";
 import Link from "next/link";
-import { InboxShell, type InboxSearchParams } from "./_components/inbox-shell";
+import { type InboxSearchParams, InboxShell } from "./_components/inbox-shell";
 
 /**
  * Unified Inbox — the tabbed customer hub (Module 09, Wave 3c).
@@ -27,11 +27,18 @@ import { InboxShell, type InboxSearchParams } from "./_components/inbox-shell";
 
 export const dynamic = "force-dynamic";
 
-export default async function SupportInboxPage() {
+export default async function SupportInboxPage({
+  searchParams,
+}: {
+  searchParams: Promise<InboxSearchParams>;
+}) {
   // LOCKED: not released yet — locked on every plan, Pro included. This also
   // supersedes the entitlement gate in <InboxShell> while the lock is on.
-  // To release: delete these two lines and restore the signature below.
-  return <ComingSoonPage module="inbox" />;
+  // To release: delete these lines and restore the signature below.
+  // The sidebar's "Booking Requests" item lands on ?tab=meetings, so it gets
+  // its own announcement instead of the Unified Inbox one.
+  const { tab } = await searchParams;
+  return <ComingSoonPage module={tab === "meetings" ? "bookings" : "inbox"} />;
 }
 
 async function SupportInboxPageLocked({
@@ -43,7 +50,10 @@ async function SupportInboxPageLocked({
   const sp = await searchParams;
 
   return (
-    <AppShellServer topBar={<TopBar title="Message Center" />} crumbs={["Inbox & Social", "Message Center"]}>
+    <AppShellServer
+      topBar={<TopBar title="Message Center" />}
+      crumbs={["Inbox & Social", "Message Center"]}
+    >
       <PageHeader
         title="Message Center"
         titleBadge={
