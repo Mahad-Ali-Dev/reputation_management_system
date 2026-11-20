@@ -1,12 +1,9 @@
 "use client";
 
-import { Icon } from "@/components/shell/icon";
 import { UpgradeCard } from "@/components/pro-gate";
-import {
-  MIN_RESPONSES_FOR_INSIGHTS,
-  type SurveyInsight,
-} from "@/lib/surveys/insights-types";
+import { Icon } from "@/components/shell/icon";
 import { refreshSurveyInsightsAction } from "@/lib/surveys/insight-actions";
+import { MIN_RESPONSES_FOR_INSIGHTS, type SurveyInsight } from "@/lib/surveys/insights-types";
 import { useState, useTransition } from "react";
 import { InsightCard } from "./insight-card";
 
@@ -40,7 +37,9 @@ export function AiInsightsPanel({
     startTransition(async () => {
       const result = await refreshSurveyInsightsAction();
       if (result.ok && result.gated) {
-        setNotice(`Collect at least ${MIN_RESPONSES_FOR_INSIGHTS} responses to unlock AI Insights.`);
+        setNotice(
+          `Collect at least ${MIN_RESPONSES_FOR_INSIGHTS} responses to unlock AI Insights.`,
+        );
         return;
       }
       if (result.ok) {
@@ -65,7 +64,7 @@ export function AiInsightsPanel({
   // Free plan → upgrade card (server already decided hasAccess).
   if (!hasAccess) {
     return (
-      <div style={{ display: "flex", justifyContent: "center", padding: "32px 16px" }}>
+      <div className="surv-upgrade">
         <UpgradeCard feature="surveys_insights" />
       </div>
     );
@@ -73,20 +72,17 @@ export function AiInsightsPanel({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <div className="row" style={{ alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+      <div className="surv-sechead">
         <div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 600, letterSpacing: "-0.015em" }}>
-            AI Insights
-          </h3>
-          <p className="dim" style={{ margin: "4px 0 0", fontSize: 12.5, maxWidth: 540, lineHeight: 1.55 }}>
+          <h3 className="surv-sechead__title">AI Insights</h3>
+          <p className="surv-sechead__sub">
             Claude reads all your survey responses and surfaces the few things worth acting on
             ranked by priority, with a concrete recommendation each.
           </p>
         </div>
         <button
           type="button"
-          className="btn btn--sm"
-          style={{ marginLeft: "auto" }}
+          className="btn btn--sm surv-sechead__action"
           onClick={handleRefresh}
           disabled={pending || gated}
         >
@@ -95,21 +91,14 @@ export function AiInsightsPanel({
         </button>
       </div>
 
-      {notice && (
-        <div
-          className="ds-card"
-          style={{ padding: "10px 14px", fontSize: 12.5, color: "var(--rl-muted)", background: "var(--surface-2)" }}
-        >
-          {notice}
-        </div>
-      )}
+      {notice && <div className="ds-card surv-notice">{notice}</div>}
 
       {gated ? (
         <GatedState responseCount={responseCount} />
       ) : insights.length === 0 ? (
         <EmptyState onRefresh={handleRefresh} pending={pending} />
       ) : (
-        <div className="grid-2" style={{ gap: 14, alignItems: "stretch" }}>
+        <div className="surv-ins-grid">
           {insights.slice(0, 4).map((ins, i) => (
             <InsightCard key={`${ins.type}-${i}`} insight={ins} />
           ))}
@@ -117,9 +106,10 @@ export function AiInsightsPanel({
       )}
 
       {lastGenerated && !gated && (
-        <div className="dim" style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 6 }}>
+        <div className="surv-generated">
           <Icon name="clock" size={11} />
-          Last generated {new Date(lastGenerated).toLocaleString()} · AI cost is metered against your plan.
+          Last generated {new Date(lastGenerated).toLocaleString()} · AI cost is metered against
+          your plan.
         </div>
       )}
     </div>
@@ -154,14 +144,31 @@ function GatedState({ responseCount }: { responseCount: number }) {
           confidence.
         </p>
         <div className="surv-ai-benefits">
-          <AiBenefit art="discover" tile="surv-tile--violet" title="Discover key themes" body="Understand the top topics your customers care about." />
-          <AiBenefit art="green-smiley" tile="surv-tile--green" title="Spot strengths" body="See what's working well and worth celebrating." />
-          <AiBenefit art="improve" tile="surv-tile--orange" title="Find areas to improve" body="Identify pain points and fix issues faster." />
+          <AiBenefit
+            art="discover"
+            tile="surv-tile--violet"
+            title="Discover key themes"
+            body="Understand the top topics your customers care about."
+          />
+          <AiBenefit
+            art="green-smiley"
+            tile="surv-tile--green"
+            title="Spot strengths"
+            body="See what's working well and worth celebrating."
+          />
+          <AiBenefit
+            art="improve"
+            tile="surv-tile--orange"
+            title="Find areas to improve"
+            body="Identify pain points and fix issues faster."
+          />
         </div>
       </div>
       <div className="surv-ai-unlock__right">
-        <img src="/assets/repulabs/customer-surveys/results/over-time.svg" alt="" aria-hidden style={{ width: "min(300px, 80%)" }} />
-        <h3 className="surv-ai-threshold-h">Collect at least {MIN_RESPONSES_FOR_INSIGHTS} responses</h3>
+        <img src="/assets/repulabs/customer-surveys/results/over-time.svg" alt="" aria-hidden />
+        <h3 className="surv-ai-threshold-h">
+          Collect at least {MIN_RESPONSES_FOR_INSIGHTS} responses
+        </h3>
         <p className="surv-ai-threshold-copy">
           You have <strong>{responseCount}</strong> so far {remaining} more to go. Insights get more
           accurate the more responses you gather.
@@ -170,6 +177,7 @@ function GatedState({ responseCount }: { responseCount: number }) {
           <Icon name="plus" size={12} />
           {responseCount} / {MIN_RESPONSES_FOR_INSIGHTS} responses
         </span>
+        {/* biome-ignore lint/a11y/useFocusableInteractive: read-only progress meter, not a control */}
         <div
           className="surv-ai-track"
           role="progressbar"
@@ -185,7 +193,12 @@ function GatedState({ responseCount }: { responseCount: number }) {
   );
 }
 
-function AiBenefit({ art, tile, title, body }: { art: string; tile: string; title: string; body: string }) {
+function AiBenefit({
+  art,
+  tile,
+  title,
+  body,
+}: { art: string; tile: string; title: string; body: string }) {
   return (
     <div className="surv-ai-benefit">
       <span className={`surv-ai-benefit__tile ${tile}`} aria-hidden>
@@ -201,29 +214,15 @@ function AiBenefit({ art, tile, title, body }: { art: string; tile: string; titl
 
 function EmptyState({ onRefresh, pending }: { onRefresh: () => void; pending: boolean }) {
   return (
-    <div className="ds-card" style={{ padding: 40, textAlign: "center", maxWidth: 520, marginInline: "auto" }}>
-      <div
-        aria-hidden
-        style={{
-          width: 52,
-          height: 52,
-          borderRadius: 14,
-          margin: "0 auto 16px",
-          background: "var(--pri-50, rgba(37,99,235,0.08))",
-          color: "var(--pri)",
-          display: "grid",
-          placeItems: "center",
-        }}
-      >
+    <div className="ds-card surv-ins-empty">
+      <div aria-hidden className="surv-ins-empty__icon">
         <Icon name="sparkle" size={24} />
       </div>
-      <h3 style={{ margin: 0, fontSize: 17, fontWeight: 600, letterSpacing: "-0.015em" }}>
-        Ready to analyze your responses
-      </h3>
-      <p className="dim" style={{ fontSize: 13, marginTop: 8, lineHeight: 1.6 }}>
+      <h3 className="surv-ins-empty__title">Ready to analyze your responses</h3>
+      <p className="surv-ins-empty__sub">
         Run the analysis to turn your survey responses into prioritized, actionable insights.
       </p>
-      <button type="button" className="btn btn--pri btn--lg" style={{ marginTop: 18 }} onClick={onRefresh} disabled={pending}>
+      <button type="button" className="btn btn--pri btn--lg" onClick={onRefresh} disabled={pending}>
         <Icon name="sparkle" size={14} />
         {pending ? "Analyzing…" : "Generate insights"}
       </button>

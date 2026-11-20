@@ -2,16 +2,16 @@
 
 import { Icon } from "@/components/shell/icon";
 import {
-  TRIGGER_EVENTS,
-  TRIGGER_PROVIDER,
-  type SurveyAutomationRow,
-  type TriggerEvent,
-} from "@/lib/surveys/automations";
-import {
   deleteSurveyAutomation,
   toggleSurveyAutomation,
   upsertSurveyAutomation,
 } from "@/lib/surveys/automation-actions";
+import {
+  type SurveyAutomationRow,
+  TRIGGER_EVENTS,
+  TRIGGER_PROVIDER,
+  type TriggerEvent,
+} from "@/lib/surveys/automations";
 import Link from "next/link";
 import { useState, useTransition } from "react";
 
@@ -86,8 +86,13 @@ export function AutomationsPanel({
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="surv-tabrow" style={{ justifyContent: "flex-end" }}>
-        <button type="button" className="surv-tab-action" style={{ marginLeft: "auto" }} onClick={openCreate}>
+      <div className="surv-tabrow">
+        <button
+          type="button"
+          className="surv-tab-action"
+          style={{ marginLeft: "auto" }}
+          onClick={openCreate}
+        >
           <Icon name="plus" size={14} />
           New automation
         </button>
@@ -106,27 +111,12 @@ export function AutomationsPanel({
         <AutomationsEmpty onCreate={openCreate} />
       ) : (
         <>
-          <div className="ds-card" style={{ padding: "18px 20px 8px" }}>
+          <div className="ds-card surv-autocard">
             <div className="row" style={{ alignItems: "flex-start" }}>
               <div>
                 <h2 className="surv-card-h">
                   Active automations
-                  <span
-                    style={{
-                      display: "inline-grid",
-                      placeItems: "center",
-                      minWidth: 21,
-                      height: 21,
-                      padding: "0 6px",
-                      borderRadius: 999,
-                      background: "var(--surv-pri-pale)",
-                      color: "var(--surv-pri)",
-                      fontSize: 11,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {activeCount}
-                  </span>
+                  <span className="surv-count">{activeCount}</span>
                 </h2>
                 <p className="surv-card-sub">
                   Your automations are running and sending surveys based on customer interactions.
@@ -173,10 +163,30 @@ export function AutomationsPanel({
             <p>Automate surveys at the right moment and get more responses.</p>
           </div>
           <div className="surv-benefits">
-            <Benefit art="trigger" tile="surv-tile--violet" title="Trigger smartly" body="Send surveys after purchases, visits, appointments, and more." />
-            <Benefit art="boost-response" tile="surv-tile--green" title="Boost responses" body="Reach customers at the perfect time for higher response rates." />
-            <Benefit art="improve-reputation" tile="surv-tile--yellow" title="Improve reputation" body="Collect more 5-star reviews and reduce negative feedback." />
-            <Benefit art="save-time" tile="surv-tile--blue" title="Save time" body="Set it once and let automation do the rest." />
+            <Benefit
+              art="trigger"
+              tile="surv-tile--violet"
+              title="Trigger smartly"
+              body="Send surveys after purchases, visits, appointments, and more."
+            />
+            <Benefit
+              art="boost-response"
+              tile="surv-tile--green"
+              title="Boost responses"
+              body="Reach customers at the perfect time for higher response rates."
+            />
+            <Benefit
+              art="improve-reputation"
+              tile="surv-tile--yellow"
+              title="Improve reputation"
+              body="Collect more 5-star reviews and reduce negative feedback."
+            />
+            <Benefit
+              art="save-time"
+              tile="surv-tile--blue"
+              title="Save time"
+              body="Set it once and let automation do the rest."
+            />
           </div>
         </>
       )}
@@ -218,16 +228,41 @@ function AutomationsEmpty({ onCreate }: { onCreate: () => void }) {
         <p>Automate surveys at the right moment and get more responses.</p>
       </div>
       <div className="surv-benefits">
-        <Benefit art="trigger" tile="surv-tile--violet" title="Trigger smartly" body="Send surveys after purchases, visits, appointments, and more." />
-        <Benefit art="boost-response" tile="surv-tile--green" title="Boost responses" body="Reach customers at the perfect time for higher response rates." />
-        <Benefit art="improve-reputation" tile="surv-tile--yellow" title="Improve reputation" body="Collect more 5-star reviews and reduce negative feedback." />
-        <Benefit art="save-time" tile="surv-tile--blue" title="Save time" body="Set it once and let automation do the rest." />
+        <Benefit
+          art="trigger"
+          tile="surv-tile--violet"
+          title="Trigger smartly"
+          body="Send surveys after purchases, visits, appointments, and more."
+        />
+        <Benefit
+          art="boost-response"
+          tile="surv-tile--green"
+          title="Boost responses"
+          body="Reach customers at the perfect time for higher response rates."
+        />
+        <Benefit
+          art="improve-reputation"
+          tile="surv-tile--yellow"
+          title="Improve reputation"
+          body="Collect more 5-star reviews and reduce negative feedback."
+        />
+        <Benefit
+          art="save-time"
+          tile="surv-tile--blue"
+          title="Save time"
+          body="Set it once and let automation do the rest."
+        />
       </div>
     </>
   );
 }
 
-function Benefit({ art, tile, title, body }: { art: string; tile: string; title: string; body: string }) {
+function Benefit({
+  art,
+  tile,
+  title,
+  body,
+}: { art: string; tile: string; title: string; body: string }) {
   return (
     <div className="ds-card surv-benefit">
       <span className={`surv-benefit__tile ${tile}`} aria-hidden>
@@ -301,7 +336,7 @@ function AutomationRow({
       </td>
       <td>
         {needsConnection && provider ? (
-          <Link href="/connections" className="surv-tab-action" style={{ height: 30, padding: "0 12px", fontSize: 12 }}>
+          <Link href="/connections" className="surv-tab-action surv-tab-action--sm">
             <Icon name="plug" size={12} />
             Connect {PROVIDER_LABEL[provider] ?? provider}
           </Link>
@@ -384,11 +419,9 @@ function AutomationForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="ds-card" style={{ padding: 18, display: "flex", flexDirection: "column", gap: 12 }}>
+    <form onSubmit={handleSubmit} className="ds-card surv-autoform">
       {editing && <input type="hidden" name="id" value={editing.id} />}
-      <div style={{ fontSize: 15, fontWeight: 700, color: "var(--surv-ink)" }}>
-        {editing ? "Edit automation" : "New automation"}
-      </div>
+      <div className="surv-autoform__title">{editing ? "Edit automation" : "New automation"}</div>
 
       <div className="grid-2" style={{ gap: 12 }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12.5 }}>
@@ -410,7 +443,12 @@ function AutomationForm({
 
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12.5 }}>
           <span className="surv-field-lbl">Survey template</span>
-          <select name="campaignId" className="surv-input" defaultValue={editing?.campaignId ?? ""} style={{ fontFamily: "inherit" }}>
+          <select
+            name="campaignId"
+            className="surv-input"
+            defaultValue={editing?.campaignId ?? ""}
+            style={{ fontFamily: "inherit" }}
+          >
             <option value=""> Select </option>
             {campaigns.map((c) => (
               <option key={c.id} value={c.id}>
@@ -435,7 +473,12 @@ function AutomationForm({
 
         <label style={{ display: "flex", flexDirection: "column", gap: 4, fontSize: 12.5 }}>
           <span className="surv-field-lbl">Status</span>
-          <select name="status" className="surv-input" defaultValue={editing?.status ?? "paused"} style={{ fontFamily: "inherit" }}>
+          <select
+            name="status"
+            className="surv-input"
+            defaultValue={editing?.status ?? "paused"}
+            style={{ fontFamily: "inherit" }}
+          >
             <option value="paused">Paused</option>
             <option value="active" disabled={needsConnection}>
               Active{needsConnection ? " (connect first)" : ""}
@@ -447,11 +490,23 @@ function AutomationForm({
       {needsConnection && provider && (
         <div
           className="row"
-          style={{ gap: 8, alignItems: "center", fontSize: 12, color: "var(--surv-warn)", background: "var(--surv-warn-soft)", padding: "8px 12px", borderRadius: 8 }}
+          style={{
+            gap: 8,
+            alignItems: "center",
+            fontSize: 12,
+            color: "var(--surv-warn)",
+            background: "var(--surv-warn-soft)",
+            padding: "8px 12px",
+            borderRadius: 8,
+          }}
         >
           <Icon name="alert" size={13} />
-          {PROVIDER_LABEL[provider] ?? provider} isn&apos;t connected. The rule saves as paused until you{" "}
-          <Link href="/connections" style={{ color: "var(--surv-warn)", textDecoration: "underline" }}>
+          {PROVIDER_LABEL[provider] ?? provider} isn&apos;t connected. The rule saves as paused
+          until you{" "}
+          <Link
+            href="/connections"
+            style={{ color: "var(--surv-warn)", textDecoration: "underline" }}
+          >
             connect it
           </Link>
           .
@@ -464,7 +519,12 @@ function AutomationForm({
         <button type="submit" className="btn btn--pri btn--sm" disabled={pending}>
           {pending ? "Saving…" : editing ? "Save changes" : "Create automation"}
         </button>
-        <button type="button" className="btn btn--sm btn--ghost" onClick={onClose} disabled={pending}>
+        <button
+          type="button"
+          className="btn btn--sm btn--ghost"
+          onClick={onClose}
+          disabled={pending}
+        >
           Cancel
         </button>
       </div>

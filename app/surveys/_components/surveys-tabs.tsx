@@ -1,14 +1,10 @@
 "use client";
 
-import { TabBar, type TabItem } from "@/components/tab-bar";
 import { Icon } from "@/components/shell/icon";
+import { TabBar, type TabItem } from "@/components/tab-bar";
 import type { SurveyAutomationRow } from "@/lib/surveys/automations";
 import type { IncentiveCoupon, IncentiveStats } from "@/lib/surveys/coupon-queries";
-import {
-  PRIORITY_COLOR,
-  PRIORITY_LABEL,
-  type SurveyInsight,
-} from "@/lib/surveys/insights-types";
+import { PRIORITY_COLOR, PRIORITY_LABEL, type SurveyInsight } from "@/lib/surveys/insights-types";
 import type {
   DetailedResponse,
   NpsDistribution,
@@ -18,10 +14,10 @@ import type {
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useState } from "react";
-import type { WizardContact, WizardTemplate } from "./create-wizard";
-import { NewSurveyModal } from "./new-survey-modal";
 import { AiInsightsPanel } from "./ai-insights-panel";
 import { AutomationsPanel } from "./automations-panel";
+import type { WizardContact, WizardTemplate } from "./create-wizard";
+import { NewSurveyModal } from "./new-survey-modal";
 // Incentives tab is hidden for now (not removed — see TAB_KEYS/tabs[] below).
 // import { IncentivesPanel } from "./incentives-panel";
 import { ResponsesCharts } from "./responses-charts";
@@ -29,6 +25,7 @@ import { ResponsesTable } from "./responses-table";
 import { StatCards } from "./stat-cards";
 import "../surveys-kit.css";
 import "../surveys-glass.css";
+import "../surveys-apple.css";
 
 const KIT = "/assets/repulabs/customer-surveys";
 
@@ -137,9 +134,19 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
   );
 
   const tabs: TabItem[] = [
-    { key: "surveys", label: "Campaigns", icon: "survey", badge: data.campaigns.length || undefined },
+    {
+      key: "surveys",
+      label: "Campaigns",
+      icon: "survey",
+      badge: data.campaigns.length || undefined,
+    },
     { key: "templates", label: "Templates", icon: "copy" },
-    { key: "automations", label: "Automations", icon: "bolt", badge: data.automations.length || undefined },
+    {
+      key: "automations",
+      label: "Automations",
+      icon: "bolt",
+      badge: data.automations.length || undefined,
+    },
     { key: "responses", label: "Results", icon: "pie", badge: data.responseCount || undefined },
     { key: "insights", label: "AI Insights", icon: "brain" },
     // Hidden for now — not removed. Re-enable by uncommenting this entry,
@@ -153,8 +160,8 @@ export function SurveysTabs({ initialTab, data }: { initialTab: TabKey; data: Su
   ];
 
   return (
-    <div>
-      <div style={{ marginBottom: 18 }}>
+    <div className="surv-tabs">
+      <div className="surv-tabs__bar">
         <TabBar tabs={tabs} activeKey={tab} onChange={onChange} />
       </div>
 
@@ -231,8 +238,8 @@ function SurveysPanel({
           <img src={`${KIT}/campaigns/survey.svg`} alt="" />
           <h3>No surveys yet</h3>
           <p>
-            Create a 1-question NPS survey. Promoters auto-route to leave a Google review; detractors
-            land in your private inbox.
+            Create a 1-question NPS survey. Promoters auto-route to leave a Google review;
+            detractors land in your private inbox.
           </p>
           <div className="surv-empty__cta">
             <NewSurveyModal
@@ -303,7 +310,7 @@ function SurveysPanel({
  */
 function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
   return (
-    <div className="ds-card" style={{ padding: 20 }}>
+    <div className="ds-card surv-routing">
       <div className="row" style={{ alignItems: "flex-start", gap: 12 }}>
         <div style={{ minWidth: 0 }}>
           <div className="surv-card-h">
@@ -325,7 +332,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
         <div className="surv-route surv-route--happy">
           <div className="surv-route__top">
             <span className="surv-route__icon" aria-hidden>
-              <img src={`${KIT}/campaigns/happy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
+              <img src={`${KIT}/campaigns/happy.svg`} alt="" width={22} height={22} />
             </span>
             <div className="surv-route__title">Happy → Public review</div>
             <div className="surv-route__count">
@@ -338,7 +345,7 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
         <div className="surv-route surv-route--unhappy">
           <div className="surv-route__top">
             <span className="surv-route__icon" aria-hidden>
-              <img src={`${KIT}/campaigns/unhappy.svg`} alt="" width={22} height={22} style={{ mixBlendMode: "multiply" }} />
+              <img src={`${KIT}/campaigns/unhappy.svg`} alt="" width={22} height={22} />
             </span>
             <div className="surv-route__title">Unhappy → Private recovery</div>
             <div className="surv-route__count">
@@ -350,7 +357,9 @@ function SmartRoutingCard({ routing }: { routing: SurveyRoutingSnapshot }) {
         </div>
       </div>
 
-      <p className="surv-route-foot">One question, two outcomes passives (7) are simply recorded.</p>
+      <p className="surv-route-foot">
+        One question, two outcomes passives (7) are simply recorded.
+      </p>
     </div>
   );
 }
@@ -376,12 +385,18 @@ function AiThemesRail({
   // Even weights across the shown themes give an on-brand bar chart without
   // fabricating per-theme percentages we don't have. Descending for realism.
   const weights = [32, 24, 18, 14, 12];
-  const barColors = ["var(--surv-pri)", "var(--surv-blue)", "var(--surv-ok)", "var(--surv-warn)", "var(--surv-yellow)"];
+  const barColors = [
+    "var(--surv-pri)",
+    "var(--surv-blue)",
+    "var(--surv-ok)",
+    "var(--surv-warn)",
+    "var(--surv-yellow)",
+  ];
 
   return (
-    <div className="ds-card surv-themes" style={{ padding: 20 }}>
+    <div className="ds-card surv-themes">
       <div className="row" style={{ gap: 8 }}>
-        <div className="surv-card-h" style={{ fontSize: 16 }}>
+        <div className="surv-card-h">
           <Icon name="brain" size={17} style={{ color: "var(--surv-pri)" }} />
           AI themes
         </div>
@@ -419,9 +434,20 @@ function AiThemesRail({
               className="surv-theme-row"
               onClick={() => onNavigate("insights")}
               title={ins.description}
-              style={{ background: "none", border: 0, cursor: "pointer", textAlign: "left", padding: 0, width: "100%" }}
+              style={{
+                background: "none",
+                border: 0,
+                cursor: "pointer",
+                textAlign: "left",
+                padding: 0,
+                width: "100%",
+              }}
             >
-              <span className="surv-theme-dot" style={{ background: barColors[i % barColors.length] }} aria-hidden />
+              <span
+                className="surv-theme-dot"
+                style={{ background: barColors[i % barColors.length] }}
+                aria-hidden
+              />
               <span className="surv-theme-label">{ins.headline}</span>
               <span className="surv-theme-pct" style={{ color: PRIORITY_COLOR[ins.priority] }}>
                 {PRIORITY_LABEL[ins.priority]}
@@ -429,7 +455,10 @@ function AiThemesRail({
               <span className="surv-theme-track">
                 <span
                   className="surv-theme-fill"
-                  style={{ width: `${weights[i] ?? 10}%`, background: barColors[i % barColors.length] }}
+                  style={{
+                    width: `${weights[i] ?? 10}%`,
+                    background: barColors[i % barColors.length],
+                  }}
                 />
               </span>
             </button>
@@ -454,10 +483,10 @@ function RecentResponsesCard({
 }) {
   const recent = responses.slice(0, 6);
   return (
-    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-      <div className="row" style={{ padding: "16px 20px", borderBottom: "1px solid var(--surv-line-soft)" }}>
+    <div className="ds-card surv-listcard">
+      <div className="surv-listhead">
         <div>
-          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--surv-ink)" }}>Recent responses</div>
+          <div className="surv-listhead__title">Recent responses</div>
           <div className="surv-card-sub">Latest feedback and where it was routed</div>
         </div>
         <button
@@ -486,7 +515,9 @@ function RecentResponsesCard({
                 <td>
                   <span style={{ fontWeight: 500 }}>{r.recipient ?? "Anonymous"}</span>
                   {r.campaignName && (
-                    <div className="dim" style={{ fontSize: 11 }}>{r.campaignName}</div>
+                    <div className="dim" style={{ fontSize: 11 }}>
+                      {r.campaignName}
+                    </div>
                   )}
                 </td>
                 <td>
@@ -494,16 +525,26 @@ function RecentResponsesCard({
                 </td>
                 <td>
                   {r.smartRouteTo === "review_request" ? (
-                    <span className="chip chip--ok" style={{ fontSize: 11 }}>Public review</span>
+                    <span className="chip chip--ok" style={{ fontSize: 11 }}>
+                      Public review
+                    </span>
                   ) : r.smartRouteTo === "internal_alert" ? (
-                    <span className="chip chip--warn" style={{ fontSize: 11 }}>Private recovery</span>
+                    <span className="chip chip--warn" style={{ fontSize: 11 }}>
+                      Private recovery
+                    </span>
                   ) : (
                     <span className="dim">—</span>
                   )}
                 </td>
                 <td className="surv-hide-sm">
                   <span className="dim" style={{ whiteSpace: "nowrap", fontSize: 12 }}>
-                    Completed {new Date(r.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })}
+                    Completed{" "}
+                    {new Date(r.createdAt).toLocaleDateString("en-US", {
+                      timeZone: "UTC",
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
                   </span>
                 </td>
               </tr>
@@ -527,7 +568,12 @@ function ScoreChip({ nps, rating }: { nps: number | null; rating: number | null 
     return (
       <span
         className="chip"
-        style={{ background: tone.bg, color: tone.fg, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
+        style={{
+          background: tone.bg,
+          color: tone.fg,
+          fontWeight: 600,
+          fontVariantNumeric: "tabular-nums",
+        }}
       >
         {nps}/10
       </span>
@@ -539,18 +585,42 @@ function ScoreChip({ nps, rating }: { nps: number | null; rating: number | null 
 
 /** Rotating kit tones so each real template card gets an on-brand accent tile. */
 const TPL_TONES = [
-  { tile: "surv-tile--violet", tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" }, art: "loyalty-pulse" },
-  { tile: "surv-tile--blue", tag: { background: "var(--surv-blue-soft)", color: "var(--surv-blue)" }, art: "experience-checkin" },
-  { tile: "surv-tile--green", tag: { background: "var(--surv-ok-soft)", color: "var(--surv-ok)" }, art: "product-sentiment" },
-  { tile: "surv-tile--orange", tag: { background: "var(--surv-warn-soft)", color: "var(--surv-warn)" }, art: "service-recovery" },
-  { tile: "surv-tile--violet", tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" }, art: "visit-followup" },
-  { tile: "surv-tile--yellow", tag: { background: "#fdf6e1", color: "#d99b20" }, art: "feature-reaction" },
+  {
+    tile: "surv-tile--violet",
+    tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" },
+    art: "loyalty-pulse",
+  },
+  {
+    tile: "surv-tile--blue",
+    tag: { background: "var(--surv-blue-soft)", color: "var(--surv-blue)" },
+    art: "experience-checkin",
+  },
+  {
+    tile: "surv-tile--green",
+    tag: { background: "var(--surv-ok-soft)", color: "var(--surv-ok)" },
+    art: "product-sentiment",
+  },
+  {
+    tile: "surv-tile--orange",
+    tag: { background: "var(--surv-warn-soft)", color: "var(--surv-warn)" },
+    art: "service-recovery",
+  },
+  {
+    tile: "surv-tile--violet",
+    tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" },
+    art: "visit-followup",
+  },
+  {
+    tile: "surv-tile--yellow",
+    tag: { background: "#fdf6e1", color: "#d99b20" },
+    art: "feature-reaction",
+  },
 ] as const;
 
 function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-      <div className="surv-tabrow" style={{ justifyContent: "flex-end" }}>
+      <div className="surv-tabrow">
         <Link href="/surveys/templates" className="surv-tab-action" style={{ marginLeft: "auto" }}>
           <Icon name="folder" size={14} />
           Open template library
@@ -585,7 +655,7 @@ function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {
                   </span>
                   <div className="surv-tpl__top">
                     <span className={`surv-tpl__tile ${tone.tile}`} aria-hidden>
-                      <img src={`${KIT}/templates/${tone.art}.svg`} alt="" style={{ mixBlendMode: "multiply" }} />
+                      <img src={`${KIT}/templates/${tone.art}.svg`} alt="" />
                     </span>
                     <div style={{ minWidth: 0 }}>
                       <div className="row" style={{ gap: 8 }}>
@@ -615,12 +685,16 @@ function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {
                   <div className="surv-tpl__actions">
                     <Link
                       href={`/surveys/new?template=${c.id}`}
-                      className={i === 0 ? "btn btn--pri btn--sm" : "surv-tab-action"}
-                      style={{ height: 37 }}
+                      className={
+                        i === 0 ? "btn btn--pri btn--sm" : "surv-tab-action surv-tab-action--sm"
+                      }
                     >
                       Use template
                     </Link>
-                    <Link href={`/surveys/templates/${c.id}`} className="btn btn--sm btn--ghost" style={{ color: "var(--surv-pri)" }}>
+                    <Link
+                      href={`/surveys/templates/${c.id}`}
+                      className="btn btn--sm btn--ghost surv-tpl__preview"
+                    >
                       <Icon name="eye" size={13} />
                       Preview
                     </Link>
@@ -636,7 +710,7 @@ function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {
                 <Icon name="sparkle" size={22} />
               </span>
               <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--surv-ink)" }}>
+                <div className="surv-benefits-strip__title">
                   Templates save time and keep your brand consistent
                 </div>
                 <div className="surv-card-sub">

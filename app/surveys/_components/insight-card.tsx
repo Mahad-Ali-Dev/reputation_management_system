@@ -1,9 +1,9 @@
 import { Icon, type IconName } from "@/components/shell/icon";
 import {
-  PRIORITY_COLOR,
-  PRIORITY_LABEL,
   type InsightPriority,
   type InsightType,
+  PRIORITY_COLOR,
+  PRIORITY_LABEL,
   type SurveyInsight,
 } from "@/lib/surveys/insights-types";
 
@@ -47,81 +47,31 @@ function tintFor(priority: InsightPriority): string {
 
 export function InsightCard({ insight }: { insight: SurveyInsight }) {
   const color = PRIORITY_COLOR[insight.priority];
+  const tone = { "--ins-c": color, "--ins-tint": tintFor(insight.priority) } as React.CSSProperties;
   return (
-    <div
-      className="ds-card"
-      style={{
-        padding: 18,
-        display: "flex",
-        flexDirection: "column",
-        gap: 10,
-        borderLeft: `3px solid ${color}`,
-        height: "100%",
-      }}
-    >
-      <div className="row" style={{ gap: 8, alignItems: "center" }}>
-        <span
-          aria-hidden
-          style={{
-            display: "inline-grid",
-            placeItems: "center",
-            width: 30,
-            height: 30,
-            borderRadius: 9,
-            background: tintFor(insight.priority),
-            color,
-            flexShrink: 0,
-          }}
-        >
+    <div className="ds-card surv-ins" style={tone}>
+      <div className="surv-ins__top">
+        <span aria-hidden className="surv-ins__icon">
           <Icon name={TYPE_ICON[insight.type]} size={15} />
         </span>
-        <span
-          className="chip"
-          style={{
-            background: tintFor(insight.priority),
-            color,
-            fontWeight: 600,
-            fontSize: 10.5,
-            textTransform: "uppercase",
-            letterSpacing: "0.03em",
-          }}
-        >
-          {PRIORITY_LABEL[insight.priority]}
-        </span>
-        <span className="lbl-mono" style={{ marginLeft: "auto", margin: 0 }}>
-          {TYPE_LABEL[insight.type]}
-        </span>
+        <span className="surv-ins__prio">{PRIORITY_LABEL[insight.priority]}</span>
+        <span className="surv-ins__type">{TYPE_LABEL[insight.type]}</span>
       </div>
 
-      <h4 style={{ margin: 0, fontSize: 15.5, fontWeight: 600, letterSpacing: "-0.015em", lineHeight: 1.3 }}>
-        {insight.headline}
-      </h4>
+      <h4 className="surv-ins__title">{insight.headline}</h4>
 
-      <p className="dim" style={{ margin: 0, fontSize: 12.5, lineHeight: 1.6 }}>
-        {insight.description}
-      </p>
+      <p className="surv-ins__desc">{insight.description}</p>
 
-      <div
-        style={{
-          marginTop: "auto",
-          paddingTop: 10,
-          borderTop: "1px solid var(--line)",
-          display: "flex",
-          gap: 8,
-          alignItems: "flex-start",
-        }}
-      >
-        <Icon name="arrowR" size={13} style={{ color, marginTop: 2, flexShrink: 0 }} />
+      <div className="surv-ins__rec">
+        <Icon name="arrowR" size={13} className="surv-ins__rec-icon" />
         <div>
-          <div className="lbl-mono" style={{ marginBottom: 2 }}>
-            Recommended
-          </div>
-          <div style={{ fontSize: 12.5, lineHeight: 1.5, color: "var(--ink)" }}>{insight.recommendation}</div>
+          <div className="surv-ins__rec-lbl">Recommended</div>
+          <div className="surv-ins__rec-body">{insight.recommendation}</div>
         </div>
       </div>
 
       {insight.evidenceCount > 0 && (
-        <div style={{ fontSize: 11, color: "var(--rl-muted-2)" }}>
+        <div className="surv-ins__foot">
           Based on {insight.evidenceCount} response{insight.evidenceCount === 1 ? "" : "s"}
         </div>
       )}

@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { BodyPortal } from "@/components/ui/body-portal";
 import { type ReactNode, useEffect, useState } from "react";
 import { CreateWizard, type WizardContact, type WizardTemplate } from "./create-wizard";
 
@@ -51,37 +52,42 @@ export function NewSurveyModal({
       </button>
 
       {open && (
-        <div className="svm-overlay" role="dialog" aria-modal="true" aria-label="New survey">
-          <button
-            type="button"
-            className="svm-scrim"
-            aria-label="Close"
-            onClick={() => setOpen(false)}
-          />
-          <div className="svm-modal">
-            <div className="svm-modal__head">
-              <div style={{ minWidth: 0 }}>
-                <span className="svm-modal__eyebrow">Send in 3 steps</span>
-                <h2 className="svm-modal__title">New survey</h2>
+        // Portalled to <body>: the header/empty-state triggers sit inside
+        // frosted cards whose backdrop-filter would trap a fixed overlay.
+        <BodyPortal>
+          {/* biome-ignore lint/a11y/useSemanticElements: overlay dialog; matches the other glass sheets */}
+          <div className="svm-overlay" role="dialog" aria-modal="true" aria-label="New survey">
+            <button
+              type="button"
+              className="svm-scrim"
+              aria-label="Close"
+              onClick={() => setOpen(false)}
+            />
+            <div className="svm-modal">
+              <div className="svm-modal__head">
+                <div style={{ minWidth: 0 }}>
+                  <span className="svm-modal__eyebrow">Send in 3 steps</span>
+                  <h2 className="svm-modal__title">New survey</h2>
+                </div>
+                <button
+                  type="button"
+                  className="svm-modal__close"
+                  aria-label="Close"
+                  onClick={() => setOpen(false)}
+                >
+                  <Icon name="x" size={14} />
+                </button>
               </div>
-              <button
-                type="button"
-                className="svm-modal__close"
-                aria-label="Close"
-                onClick={() => setOpen(false)}
-              >
-                ×
-              </button>
-            </div>
-            <div className="svm-modal__body">
-              <CreateWizard
-                contacts={contacts}
-                templates={templates}
-                defaultEstablishmentId={defaultEstablishmentId}
-              />
+              <div className="svm-modal__body">
+                <CreateWizard
+                  contacts={contacts}
+                  templates={templates}
+                  defaultEstablishmentId={defaultEstablishmentId}
+                />
+              </div>
             </div>
           </div>
-        </div>
+        </BodyPortal>
       )}
     </>
   );

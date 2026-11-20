@@ -4,7 +4,12 @@ import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { withTenant } from "@/lib/db/with-tenant";
 import { listCampaigns } from "@/lib/surveys/queries";
-import { CreateWizard, type WizardContact, type WizardTemplate } from "../_components/create-wizard";
+import {
+  CreateWizard,
+  type WizardContact,
+  type WizardTemplate,
+} from "../_components/create-wizard";
+import "../surveys-apple.css";
 
 /**
  * Create Survey — the 3-step wizard host (Module 11). Fetches contacts (for
@@ -55,7 +60,10 @@ export default async function NewSurveyPage({
   }));
 
   return (
-    <AppShellServer topBar={<TopBar title="New Survey" />} crumbs={["CRM", "Customer Feedback", "New"]}>
+    <AppShellServer
+      topBar={<TopBar title="New Survey" />}
+      crumbs={["CRM", "Customer Feedback", "New"]}
+    >
       <PageHeader
         kicker="Send in 3 steps"
         title="New survey"

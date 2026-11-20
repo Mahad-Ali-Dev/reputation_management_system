@@ -62,23 +62,19 @@ export function ResponsesTable({
     scored.length > 0
       ? (scored.reduce((a, r) => a + (r.npsScore as number), 0) / scored.length).toFixed(1)
       : null;
-  const pct = (n: number) => (scored.length > 0 ? `${((n / scored.length) * 100).toFixed(1)}%` : "0%");
+  const pct = (n: number) =>
+    scored.length > 0 ? `${((n / scored.length) * 100).toFixed(1)}%` : "0%";
 
   return (
-    <div className="ds-card" style={{ padding: 0, overflow: "hidden" }}>
-      <div
-        className="row"
-        style={{ padding: "16px 20px", gap: 12, flexWrap: "wrap", alignItems: "center", borderBottom: "1px solid var(--surv-line-soft)" }}
-      >
+    <div className="ds-card surv-listcard">
+      <div className="surv-listhead">
         <div>
-          <div style={{ fontSize: 20, fontWeight: 700, color: "var(--surv-ink)", letterSpacing: "-0.01em" }}>
-            Individual responses
-          </div>
+          <div className="surv-listhead__title">Individual responses</div>
           <div className="surv-card-sub">{responses.length.toLocaleString()} responses</div>
         </div>
 
         {scored.length > 0 && (
-          <div className="surv-chips" style={{ marginLeft: "auto" }}>
+          <div className="surv-chips">
             <span className="surv-chip">
               <span className="surv-theme-dot" style={{ background: "var(--surv-ok)" }} />
               Promoters <b style={{ color: "var(--surv-ok)" }}>{promoters}</b>{" "}
@@ -104,8 +100,7 @@ export function ResponsesTable({
 
         <button
           type="button"
-          className="surv-tab-action"
-          style={{ height: 36 }}
+          className="surv-tab-action surv-listhead__action"
           onClick={handleExport}
           disabled={pending || responses.length === 0}
         >
@@ -114,7 +109,11 @@ export function ResponsesTable({
         </button>
       </div>
 
-      {error && <div style={{ padding: "10px 20px", color: "var(--surv-bad)", fontSize: 12.5 }}>{error}</div>}
+      {error && (
+        <div style={{ padding: "10px 20px", color: "var(--surv-bad)", fontSize: 12.5 }}>
+          {error}
+        </div>
+      )}
 
       {responses.length === 0 ? (
         <div className="surv-dashed">
@@ -159,13 +158,19 @@ export function ResponsesTable({
                   <tr key={r.id}>
                     <td>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
-                        <span className="surv-avatar" style={{ background: AVATAR_BG[i % AVATAR_BG.length] }} aria-hidden>
+                        <span
+                          className="surv-avatar"
+                          style={{ background: AVATAR_BG[i % AVATAR_BG.length] }}
+                          aria-hidden
+                        >
                           {initials || "?"}
                         </span>
                         <span style={{ minWidth: 0 }}>
                           <span style={{ fontWeight: 500, color: "var(--surv-ink)" }}>{name}</span>
                           {!campaignId && r.campaignName && (
-                            <span className="dim" style={{ display: "block", fontSize: 10.5 }}>{r.campaignName}</span>
+                            <span className="dim" style={{ display: "block", fontSize: 10.5 }}>
+                              {r.campaignName}
+                            </span>
                           )}
                         </span>
                       </span>
@@ -175,13 +180,19 @@ export function ResponsesTable({
                         <span className="dim">—</span>
                       ) : (
                         <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                          <b style={{ fontVariantNumeric: "tabular-nums", color: "var(--surv-ink)" }}>{r.npsScore}</b>
+                          <b
+                            style={{ fontVariantNumeric: "tabular-nums", color: "var(--surv-ink)" }}
+                          >
+                            {r.npsScore}
+                          </b>
                           <Stars score={r.npsScore} />
                         </span>
                       )}
                     </td>
                     <td>
-                      <span className={`surv-status surv-status--${sentiment.cls}`}>{sentiment.label}</span>
+                      <span className={`surv-status surv-status--${sentiment.cls}`}>
+                        {sentiment.label}
+                      </span>
                     </td>
                     <td>
                       {r.comment ? (
@@ -198,7 +209,14 @@ export function ResponsesTable({
                           >
                             {r.comment}
                           </summary>
-                          <div style={{ marginTop: 6, whiteSpace: "pre-wrap", color: "var(--surv-ink)", maxWidth: 420 }}>
+                          <div
+                            style={{
+                              marginTop: 6,
+                              whiteSpace: "pre-wrap",
+                              color: "var(--surv-ink)",
+                              maxWidth: 420,
+                            }}
+                          >
                             {r.comment}
                           </div>
                         </details>
@@ -207,12 +225,24 @@ export function ResponsesTable({
                       )}
                     </td>
                     <td>
-                      <span className="dim" style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>
-                        {new Date(r.createdAt).toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "2-digit", year: "numeric" })}
+                      <span
+                        className="dim"
+                        style={{ whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}
+                      >
+                        {new Date(r.createdAt).toLocaleDateString("en-US", {
+                          timeZone: "UTC",
+                          month: "short",
+                          day: "2-digit",
+                          year: "numeric",
+                        })}
                       </span>
                     </td>
                     <td>
-                      <button type="button" className="surv-view-btn" aria-label={`View response from ${name}`}>
+                      <button
+                        type="button"
+                        className="surv-view-btn"
+                        aria-label={`View response from ${name}`}
+                      >
                         View
                       </button>
                     </td>
@@ -228,7 +258,10 @@ export function ResponsesTable({
 }
 
 /** NPS group → sentiment pill (promoter=positive, passive=neutral, detractor=negative). */
-function sentimentOf(nps: number | null): { label: string; cls: "active" | "scheduled" | "expired" } {
+function sentimentOf(nps: number | null): {
+  label: string;
+  cls: "active" | "scheduled" | "expired";
+} {
   if (nps === null) return { label: "—", cls: "scheduled" };
   if (nps >= 9) return { label: "Positive", cls: "active" };
   if (nps >= 7) return { label: "Neutral", cls: "scheduled" };
@@ -238,7 +271,8 @@ function sentimentOf(nps: number | null): { label: string; cls: "active" | "sche
 /** 0–10 NPS → 5-star row (half-star rounding). */
 function Stars({ score }: { score: number }) {
   const filled = Math.round(score / 2);
-  const color = score >= 7 ? "var(--surv-ok)" : score >= 4 ? "var(--surv-yellow)" : "var(--surv-bad)";
+  const color =
+    score >= 7 ? "var(--surv-ok)" : score >= 4 ? "var(--surv-yellow)" : "var(--surv-bad)";
   return (
     <span className="surv-stars" aria-hidden>
       {Array.from({ length: 5 }).map((_, i) => (
