@@ -59,9 +59,9 @@ export function AuthBackground({ variant }: { variant: AuthBg }) {
       )}
       {variant === "earth" && (
         <EarthBlaze
-          // The NASA texture host is blocked by our CSP; the rim-lit planet,
-          // nebula and stars render without it.
-          textureUrl=""
+          // NASA Blue Marble (public domain), self-hosted at 4096x2048 because
+          // the CSP blocks the original CDN host.
+          textureUrl="/textures/earth-4k.jpg"
           // Pointer moves the sunlight along the horizon; press-and-hold, then
           // release, sends an aurora along the limb. Mouse/touch only: the
           // canvas stays out of the Tab order so keyboard users go straight to
