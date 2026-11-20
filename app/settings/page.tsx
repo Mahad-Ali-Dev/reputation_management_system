@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import Link from "next/link";
 import { loadSettingsData, memberRoleLabel } from "./_lib/data";
+import "./settings-apple.css";
 
 /**
  * /settings — workspace overview hub (designs/settings/main/mockup.png).
@@ -107,15 +108,14 @@ async function loadUsage(orgId: string): Promise<UsageCounters | null> {
   try {
     return await withTenant(orgId, async (tx) => {
       const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-      const [locations, requestsSent30d, smsRequests30d, repliesDrafted30d] =
-        await Promise.all([
-          tx.establishment.count(),
-          tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
-          tx.reviewRequest.count({
-            where: { sentAt: { gte: since30d }, channel: "sms" },
-          }),
-          tx.reviewReply.count({ where: { createdAt: { gte: since30d } } }),
-        ]);
+      const [locations, requestsSent30d, smsRequests30d, repliesDrafted30d] = await Promise.all([
+        tx.establishment.count(),
+        tx.reviewRequest.count({ where: { sentAt: { gte: since30d } } }),
+        tx.reviewRequest.count({
+          where: { sentAt: { gte: since30d }, channel: "sms" },
+        }),
+        tx.reviewReply.count({ where: { createdAt: { gte: since30d } } }),
+      ]);
       return { locations, requestsSent30d, smsRequests30d, repliesDrafted30d };
     });
   } catch {
@@ -144,17 +144,11 @@ export default async function SettingsOverviewPage() {
   const renewsAt = orgBilling?.subscription?.currentPeriodEnd ?? null;
   const trialDaysLeft =
     plan === "trial" && trialEndsAt
-      ? Math.max(
-          0,
-          Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000),
-        )
+      ? Math.max(0, Math.ceil((trialEndsAt.getTime() - Date.now()) / 86_400_000))
       : null;
 
   const ownerDisplayName =
-    org.ownerName ??
-    sessionUser.name ??
-    sessionUser.email?.split("@")[0] ??
-    "Owner";
+    org.ownerName ?? sessionUser.name ?? sessionUser.email?.split("@")[0] ?? "Owner";
   const myRole = memberRoleLabel(members, sessionUser.email ?? "");
 
   // Quota semantics mirror /subscription: paid/trial = Pro tier limits.
@@ -176,12 +170,12 @@ export default async function SettingsOverviewPage() {
       : planLabel(plan).toLowerCase();
 
   return (
-    <div className="set-hub">
+    <div className="set-hub set-ap">
       <div className="set-hub__top">
         {/* ── Profile / workspace ─────────────────────────────────── */}
         <section className="set-card set-sum">
           <div className="set-sum__head">
-            <span className="set-tile set-tile--sm set-tile--indigo">
+            <span className="set-tile set-tile--sm set-tile--blue">
               <Icon name="user" size={16} />
             </span>
             <div className="set-sum__titles">
@@ -222,9 +216,7 @@ export default async function SettingsOverviewPage() {
                 })}
               </div>
             </div>
-            <span
-              className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}
-            >
+            <span className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}>
               {entitled && <span className="set-pill__dot" />}
               {entitled ? "Active" : planLabel(plan)}
             </span>
@@ -240,14 +232,10 @@ export default async function SettingsOverviewPage() {
             <div className="set-sum__titles">
               <h2 className="set-sum__title">Team roles</h2>
               <p className="set-sum__sub">
-                {members.length} {members.length === 1 ? "member" : "members"} ·
-                RBAC
+                {members.length} {members.length === 1 ? "member" : "members"} · RBAC
               </p>
             </div>
-            <Link
-              href="/settings/team"
-              className="set-btn set-btn--primary set-btn--sm"
-            >
+            <Link href="/settings/team" className="set-btn set-btn--primary set-btn--sm">
               <Icon name="plus" size={13} className="set-btn__ic" />
               Invite teammate
             </Link>
@@ -282,12 +270,8 @@ export default async function SettingsOverviewPage() {
                             tone={tone}
                           />
                           <div style={{ minWidth: 0 }}>
-                            <div className="set-mini__name">
-                              {m.user.name ?? m.user.email}
-                            </div>
-                            <div className="set-mini__email">
-                              {m.user.email}
-                            </div>
+                            <div className="set-mini__name">{m.user.name ?? m.user.email}</div>
+                            <div className="set-mini__email">{m.user.email}</div>
                           </div>
                         </div>
                       </td>
@@ -299,9 +283,7 @@ export default async function SettingsOverviewPage() {
                           {m.role}
                         </span>
                       </td>
-                      <td className="set-mini__access">
-                        {ROLE_ACCESS[m.role] ?? "Member"}
-                      </td>
+                      <td className="set-mini__access">{ROLE_ACCESS[m.role] ?? "Member"}</td>
                     </tr>
                   );
                 })}
@@ -323,7 +305,7 @@ export default async function SettingsOverviewPage() {
         {/* ── Plan ────────────────────────────────────────────────── */}
         <section className="set-card set-sum">
           <div className="set-sum__head">
-            <span className="set-tile set-tile--sm set-tile--indigo">
+            <span className="set-tile set-tile--sm set-tile--emerald">
               <Icon name="card" size={16} />
             </span>
             <div className="set-sum__titles">
@@ -343,21 +325,13 @@ export default async function SettingsOverviewPage() {
               {isPaid ? "Monthly" : plan === "trial" ? "Trial" : "Current plan"}
             </div>
             <div className="set-plan__pricerow">
-              <span className="set-plan__price">
-                {isPaid ? `A$${PRO_PRICE_AUD}` : "$0"}
-              </span>
+              <span className="set-plan__price">{isPaid ? `A$${PRO_PRICE_AUD}` : "$0"}</span>
               <span className="set-plan__suffix">
-                {isPaid
-                  ? "/mo per location"
-                  : plan === "trial"
-                    ? "during trial"
-                    : "free plan"}
+                {isPaid ? "/mo per location" : plan === "trial" ? "during trial" : "free plan"}
               </span>
             </div>
             <div style={{ marginTop: 8 }}>
-              <span
-                className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}
-              >
+              <span className={`set-pill ${entitled ? "set-pill--ok" : "set-pill--muted"}`}>
                 {entitled && <span className="set-pill__dot" />}
                 {planStatusLabel}
               </span>
@@ -372,7 +346,6 @@ export default async function SettingsOverviewPage() {
                 })}
               </div>
             )}
-            {/* biome-ignore lint/a11y/useAltText: decorative plan art */}
             <img
               src={`${ASSET}/main-plan.svg`}
               alt=""
@@ -396,13 +369,11 @@ export default async function SettingsOverviewPage() {
       {/* ── Usage meters ──────────────────────────────────────────── */}
       <section className="set-card">
         <div className="set-sec-head" style={{ alignItems: "center" }}>
-          <span className="set-tile set-tile--sm set-tile--indigo">
+          <span className="set-tile set-tile--sm set-tile--amber">
             <Icon name="bars" size={16} />
           </span>
           <div style={{ flex: 1 }}>
-            <h2 className="set-card__title set-card__title--sm">
-              Usage meters
-            </h2>
+            <h2 className="set-card__title set-card__title--sm">Usage meters</h2>
             <p className="set-card__sub">Across limits · rolling 30 days</p>
           </div>
           <Link href="/subscription" className="set-link">
@@ -455,7 +426,6 @@ export default async function SettingsOverviewPage() {
               <Icon name="chevR" size={16} />
             </span>
             <span className={`set-tile ${s.tint}`}>
-              {/* biome-ignore lint/a11y/useAltText: decorative section art */}
               <img src={s.art} alt="" aria-hidden="true" />
             </span>
             <div>
@@ -486,17 +456,16 @@ function Meter({
   max: number | null;
   color: string;
 }) {
-  const pct =
-    max && max > 0 ? Math.min(100, Math.round((used / max) * 100)) : null;
+  const pct = max && max > 0 ? Math.min(100, Math.round((used / max) * 100)) : null;
   return (
     <div className="set-meter">
       <span className="set-meter__tile">
-        {/* biome-ignore lint/a11y/useAltText: decorative meter art */}
         <img src={art} alt="" aria-hidden="true" />
       </span>
       <div
         className="set-meter__body"
         role="progressbar"
+        tabIndex={-1}
         aria-label={`${label} ${used}${max !== null ? ` of ${max}` : ""}`}
         aria-valuenow={pct ?? used}
         aria-valuemin={0}
@@ -506,33 +475,22 @@ function Meter({
           <span className="set-meter__label">{label}</span>
           <span className="set-meter__val">
             {used.toLocaleString()}
-            {max !== null && (
-              <span className="set-dim"> / {max.toLocaleString()}</span>
-            )}
+            {max !== null && <span className="set-dim"> / {max.toLocaleString()}</span>}
           </span>
-          <span
-            className="set-meter__pct"
-            style={{ color: pct === null ? undefined : color }}
-          >
+          <span className="set-meter__pct" style={{ color: pct === null ? undefined : color }}>
             {pct === null ? "Unlimited" : `${pct}%`}
           </span>
         </div>
         <div className="set-track">
-          <i
-            style={{ width: `${pct === null ? 100 : pct}%`, background: color }}
-          />
+          <i style={{ width: `${pct === null ? 100 : pct}%`, background: color }} />
         </div>
         {note && (
-          <div
-            className={`set-meter__note${noteRight ? " set-meter__note--right" : ""}`}
-          >
+          <div className={`set-meter__note${noteRight ? " set-meter__note--right" : ""}`}>
             {note}
           </div>
         )}
         {noteRight && !note && max === null && (
-          <div className="set-meter__note set-meter__note--right">
-            Unlimited
-          </div>
+          <div className="set-meter__note set-meter__note--right">Unlimited</div>
         )}
       </div>
     </div>

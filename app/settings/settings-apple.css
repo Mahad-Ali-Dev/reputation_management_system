@@ -1,0 +1,555 @@
+/* ============================================================
+   settings-apple.css: the Settings overview (/settings) in the Apple
+   language. Imported LAST, from app/settings/page.tsx only.
+
+   Scope: the overview hub root carries `.set-ap`; the shared hero lives in
+   the layout, so it is reached through `.set-shell:has(> .set-ap)`. Every
+   other settings sub-page (billing, team, brand, security…) renders without
+   `.set-ap` and keeps the kit look untouched.
+
+   Re-maps the kit tokens onto Apple greys + the brand accent, then restyles:
+   big light title + gradient eyebrow, frosted cards, iOS Settings-style
+   coloured icon tiles, inset hairline lists, dot + text status, pill
+   buttons, thin rounded meters on grey tracks, four tidy entry tiles.
+   Illustrations (hero scene, plan art, meter + section art) are all kept.
+   ============================================================ */
+
+.app--glass .set-shell:has(> .set-ap) {
+  --ap-ink: #1d1d1f;
+  --ap-2: #6e6e73;
+  --ap-3: #86868b;
+  --ap-fill: rgba(120, 120, 128, 0.12);
+  --ap-fill-2: rgba(120, 120, 128, 0.08);
+  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-accent: var(--glass-accent, #4b3bff);
+  --ap-accent-hover: var(--glass-accent-hover, #3a2be0);
+  --ap-glass: rgba(255, 255, 255, 0.72);
+  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14);
+
+  /* kit tokens → Apple values (meter fills read these via inline styles) */
+  --set-ink: var(--ap-ink);
+  --set-ink-2: #3a3a3c;
+  --set-mut: var(--ap-2);
+  --set-mut-2: var(--ap-3);
+  --set-line: var(--ap-sep);
+  --set-track: var(--ap-fill);
+  --set-indigo: var(--ap-accent);
+  --set-indigo-2: var(--ap-accent-hover);
+  --set-indigo-soft: rgba(75, 59, 255, 0.09);
+  --set-indigo-tint: rgba(75, 59, 255, 0.04);
+  --set-emerald: #34c759;
+  --set-emerald-2: #248a3d;
+  --set-amber: #ff9500;
+
+  gap: 28px;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+}
+
+/* ---------- hero: big light title, gradient eyebrow, art kept ---------- */
+.app--glass .set-shell:has(> .set-ap) .set-hero {
+  overflow: visible;
+  min-height: 200px;
+}
+.app--glass .set-shell:has(> .set-ap) .set-hero__copy {
+  max-width: 480px;
+}
+.app--glass .set-shell:has(> .set-ap) .set-hero__eyebrow {
+  margin: 0 0 6px;
+  font-family: var(--f-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.app--glass .set-shell:has(> .set-ap) .set-hero__eyebrow::before {
+  display: none;
+}
+.app--glass .set-shell:has(> .set-ap) .set-hero__title {
+  font-family: var(--f-head);
+  font-size: clamp(32px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--ap-ink);
+}
+.app--glass .set-shell:has(> .set-ap) .set-hero__sub {
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--ap-2);
+}
+/* The scene is a transparent PNG: draw it normally (multiply washes out over
+   the aurora canvas) and crop the empty top/bottom margin of the 3:2 frame. */
+.app--glass .set-shell:has(> .set-ap) .set-hero__art {
+  width: 520px;
+  max-width: 50%;
+  height: 232px;
+  object-fit: cover;
+  object-position: center 46%;
+  mix-blend-mode: normal;
+  filter: drop-shadow(0 18px 30px rgba(75, 59, 255, 0.12));
+}
+@media (max-width: 1080px) {
+  .app--glass .set-shell:has(> .set-ap) .set-hero {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    min-height: 0;
+  }
+  .app--glass .set-shell:has(> .set-ap) .set-hero__art {
+    display: block;
+    align-self: center;
+    width: 100%;
+    max-width: 460px;
+    height: auto;
+    aspect-ratio: 16 / 8;
+    object-position: center 48%;
+  }
+}
+
+/* ---------- surfaces: frosted cards ---------- */
+.app--glass .set-ap .set-card:not(.set-card--accent):not(.set-card--green):not(.set-card--danger),
+.app--glass .set-ap .set-seccard {
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  background: var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .set-ap {
+  gap: 22px;
+}
+.app--glass .set-ap .set-hub__top {
+  gap: 22px;
+}
+@media (min-width: 1281px) {
+  .app--glass .set-ap .set-hub__top {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7.4fr) minmax(0, 4.8fr);
+  }
+}
+.app--glass .set-ap .set-card {
+  padding: 22px;
+}
+.app--glass .set-ap .set-sum {
+  padding: 20px 22px 22px;
+}
+
+/* card heads */
+.app--glass .set-ap .set-sum__head {
+  gap: 12px;
+  margin-bottom: 14px;
+}
+.app--glass .set-ap .set-sum__title,
+.app--glass .set-ap .set-card__title {
+  font-family: var(--f-head);
+  font-size: 17px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink);
+}
+.app--glass .set-ap .set-sum__sub,
+.app--glass .set-ap .set-card__sub {
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--ap-2);
+}
+.app--glass .set-ap .set-sum__chev {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  color: var(--ap-3);
+  transition: background 0.15s ease;
+}
+.app--glass .set-ap .set-sum__chev:hover {
+  background: var(--ap-fill-2);
+  color: var(--ap-2);
+}
+
+/* iOS Settings-style icon tiles: solid colour, soft top light, white glyph */
+.app--glass .set-ap .set-tile--sm {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  color: #fff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.28), 0 4px 10px -6px rgba(21, 19, 43, 0.45);
+}
+.app--glass .set-ap .set-tile--sm.set-tile--blue {
+  background: linear-gradient(180deg, #47a3ff 0%, #0a7aff 100%);
+}
+.app--glass .set-ap .set-tile--sm.set-tile--indigo {
+  background: linear-gradient(180deg, #7566ff 0%, #4b3bff 100%);
+}
+.app--glass .set-ap .set-tile--sm.set-tile--emerald {
+  background: linear-gradient(180deg, #4cd964 0%, #28b84c 100%);
+}
+.app--glass .set-ap .set-tile--sm.set-tile--amber {
+  background: linear-gradient(180deg, #ffb340 0%, #ff8a00 100%);
+}
+
+/* ---------- Profile: inset list with hairlines after the avatar ---------- */
+.app--glass .set-ap .set-idrow {
+  position: relative;
+  gap: 12px;
+  padding: 12px 0;
+}
+.app--glass .set-ap .set-idrow + .set-idrow {
+  border-top: 0;
+}
+.app--glass .set-ap .set-idrow + .set-idrow::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 46px;
+  height: 1px;
+  background: var(--ap-sep);
+}
+.app--glass .set-ap .set-idrow__name,
+.app--glass .set-ap .set-idrow__sub {
+  white-space: normal;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.app--glass .set-ap .set-idrow__name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ap-ink);
+}
+.app--glass .set-ap .set-idrow__sub {
+  margin-top: 1px;
+  font-size: 13px;
+  color: var(--ap-2);
+}
+
+/* ---------- status: dot + text (no badge chrome) ---------- */
+.app--glass .set-ap .set-pill--ok,
+.app--glass .set-ap .set-pill--muted {
+  height: auto;
+  padding: 0;
+  gap: 6px;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.app--glass .set-ap .set-pill--ok {
+  color: #248a3d;
+}
+.app--glass .set-ap .set-pill--ok .set-pill__dot {
+  width: 7px;
+  height: 7px;
+  background: #34c759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.16);
+}
+.app--glass .set-ap .set-pill--muted {
+  color: var(--ap-2);
+}
+/* role chips stay as quiet grey pills */
+.app--glass .set-ap .set-pill--neutral {
+  height: 24px;
+  padding: 0 10px;
+  background: var(--ap-fill-2);
+  color: var(--ap-ink);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+/* ---------- buttons + links: pills ---------- */
+.app--glass .set-ap .set-btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+  font-weight: 500;
+  box-shadow: none;
+}
+.app--glass .set-ap .set-btn:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .set-ap .set-btn--primary {
+  background: var(--ap-accent);
+  color: #fff;
+  box-shadow: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+}
+.app--glass .set-ap .set-btn--primary:hover {
+  background: var(--ap-accent-hover);
+}
+.app--glass .set-ap .set-btn--sm {
+  height: 34px;
+  padding: 0 14px;
+  font-size: 13.5px;
+}
+.app--glass .set-ap .set-link {
+  color: var(--ap-accent);
+  font-weight: 500;
+}
+
+/* ---------- Team roles: inset table ---------- */
+.app--glass .set-ap .set-mini th {
+  padding: 0 0 8px;
+  border-bottom: 1px solid var(--ap-sep);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-2);
+}
+.app--glass .set-ap .set-mini td {
+  padding: 11px 0;
+}
+.app--glass .set-ap .set-mini td + td,
+.app--glass .set-ap .set-mini th + th {
+  padding-left: 12px;
+}
+.app--glass .set-ap .set-mini tbody tr + tr td {
+  border-top: 1px solid var(--ap-sep);
+}
+.app--glass .set-ap .set-mini__name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .set-ap .set-mini__email {
+  max-width: 230px;
+  font-size: 12.5px;
+  color: var(--ap-3);
+  white-space: nowrap;
+}
+.app--glass .set-ap .set-mini__access {
+  font-size: 13px;
+  color: var(--ap-2);
+}
+
+/* ---------- Plan: soft accent plate that fills the card, art kept ---------- */
+.app--glass .set-ap .set-plan {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 196px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: radial-gradient(circle at 100% 100%, rgba(138, 92, 255, 0.16), transparent 55%),
+    linear-gradient(160deg, rgba(75, 59, 255, 0.09), rgba(138, 92, 255, 0.04));
+}
+.app--glass .set-ap .set-plan__eyebrow {
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-2);
+}
+.app--glass .set-ap .set-plan__pricerow {
+  flex-wrap: wrap;
+  column-gap: 6px;
+  row-gap: 0;
+  margin-top: 4px;
+}
+.app--glass .set-ap .set-plan__price {
+  font-family: var(--f-num);
+  font-size: 38px;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--ap-ink);
+}
+.app--glass .set-ap .set-plan__suffix {
+  font-size: 13px;
+  color: var(--ap-2);
+}
+.app--glass .set-ap .set-plan__renew {
+  margin-top: 6px;
+  font-size: 13px;
+  color: var(--ap-2);
+}
+.app--glass .set-ap .set-plan__art {
+  right: 12px;
+  bottom: 10px;
+  width: 116px;
+  height: 86px;
+  filter: drop-shadow(0 8px 14px rgba(75, 59, 255, 0.18));
+}
+
+/* ---------- Usage meters: three quiet inset tiles, thin bars ---------- */
+.app--glass .set-ap .set-sec-head {
+  align-items: center;
+  gap: 12px;
+}
+.app--glass .set-ap .set-meters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+.app--glass .set-ap .set-meter {
+  grid-template-columns: 36px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.06);
+}
+.app--glass .set-ap .set-meter__tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 2px 6px -2px rgba(21, 19, 43, 0.14);
+}
+.app--glass .set-ap .set-meter__tile img {
+  width: 24px;
+  height: 24px;
+  object-fit: contain;
+}
+.app--glass .set-ap .set-meter__row {
+  margin-bottom: 9px;
+  gap: 8px;
+}
+.app--glass .set-ap .set-meter__label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ap-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.app--glass .set-ap .set-meter__val {
+  font-family: var(--f-num);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .set-ap .set-meter__val .set-dim {
+  color: var(--ap-3);
+  font-weight: 500;
+}
+.app--glass .set-ap .set-meter__pct {
+  min-width: 0;
+  font-family: var(--f-num);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ap-2);
+}
+.app--glass .set-ap .set-track {
+  height: 6px;
+  background: var(--ap-fill);
+}
+/* Unlimited quotas: a soft full-width tint, not a solid "maxed out" bar. */
+.app--glass .set-ap .set-meter__body:has(.set-meter__pct:not([style*="color"])) .set-track > i {
+  opacity: 0.32;
+}
+.app--glass .set-ap .set-meter__note {
+  margin-top: 7px;
+  font-size: 12.5px;
+  color: var(--ap-3);
+}
+/* "Unlimited" already reads in the row above — drop the duplicate note. */
+.app--glass .set-ap .set-meter__note--right {
+  display: none;
+}
+@media (max-width: 1100px) {
+  .app--glass .set-ap .set-meters {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+}
+
+/* ---------- section entry tiles: four equal cards ---------- */
+.app--glass .set-ap .set-cards {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+.app--glass .set-ap .set-seccard {
+  gap: 14px;
+  padding: 20px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.app--glass .set-ap .set-seccard:hover {
+  border-color: rgba(255, 255, 255, 0.95);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 18px 36px
+    -16px rgba(75, 59, 255, 0.28);
+  transform: translateY(-2px);
+}
+.app--glass .set-ap .set-seccard .set-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  box-shadow: 0 6px 14px -8px rgba(21, 19, 43, 0.35);
+}
+.app--glass .set-ap .set-seccard__chev {
+  top: 20px;
+  right: 18px;
+  color: var(--ap-3);
+}
+.app--glass .set-ap .set-seccard__title {
+  font-family: var(--f-head);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--ap-ink);
+}
+.app--glass .set-ap .set-seccard__desc {
+  margin-top: 3px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ap-2);
+}
+@media (max-width: 1100px) {
+  .app--glass .set-ap .set-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+  }
+}
+
+/* ---------- phone ---------- */
+@media (max-width: 640px) {
+  .app--glass .set-shell:has(> .set-ap) {
+    gap: 20px;
+  }
+  .app--glass .set-ap,
+  .app--glass .set-ap .set-hub__top {
+    gap: 16px;
+  }
+  .app--glass .set-ap .set-card,
+  .app--glass .set-ap .set-sum {
+    padding: 18px;
+  }
+  .app--glass .set-ap .set-cards {
+    gap: 12px;
+  }
+  .app--glass .set-ap .set-seccard {
+    padding: 16px;
+  }
+  .app--glass .set-ap .set-seccard .set-tile {
+    width: 44px;
+    height: 44px;
+  }
+  /* table: keep name + role; the access column moves out of the way */
+  .app--glass .set-ap .set-mini th:nth-child(3),
+  .app--glass .set-ap .set-mini td:nth-child(3) {
+    display: none;
+  }
+  .app--glass .set-ap .set-mini td:first-child {
+    max-width: 0;
+    width: 100%;
+  }
+  .app--glass .set-ap .set-mini__name,
+  .app--glass .set-ap .set-mini__email {
+    max-width: none;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
