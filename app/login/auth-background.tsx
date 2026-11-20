@@ -69,6 +69,12 @@ export function AuthBackground({ variant }: { variant: AuthBg }) {
           interactive
           auroraEnabled
           keyboard={false}
+          // Brighter than the stock look: dense starfield, vivid nebula, and a
+          // softly lit planet surface along the sunrise.
+          starCount={5400}
+          galaxyBrightness={2.2}
+          surfaceBrightness={3}
+          illumination={1.6}
           style={{ position: "absolute", inset: 0, height: "100%", aspectRatio: "auto" }}
         />
       )}
