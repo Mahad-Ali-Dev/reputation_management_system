@@ -1,0 +1,1377 @@
+/* ============================================================
+   contacts-apple.css: Customer Directory in the Apple language.
+   Loaded LAST on /contacts (after contacts.css + contacts-glass.css).
+   Re-maps the kit (--cd-*) and shared design-system tokens onto Apple greys
+   + the brand accent, then restyles the surfaces: big light title with a
+   gradient kicker, iOS segmented tabs, frosted cards, quiet stat tiles,
+   segment filter chips, inset list tables, grey-fill fields, pill buttons,
+   dot + text statuses. Every kit illustration is kept, sized to fit.
+   ============================================================ */
+
+.app--glass .cd-page,
+.cd-modal {
+  --ap-ink: #1d1d1f;
+  --ap-2: #6e6e73;
+  --ap-3: #86868b;
+  --ap-fill: rgba(120, 120, 128, 0.12);
+  --ap-fill-2: rgba(120, 120, 128, 0.08);
+  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-accent: var(--glass-accent, #4b3bff);
+  --ap-accent-hover: var(--glass-accent-hover, #3a2be0);
+  --ap-tint: rgba(75, 59, 255, 0.09);
+  --ap-glass: rgba(255, 255, 255, 0.72);
+  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14);
+
+  /* kit tokens */
+  --cd-vio: var(--ap-accent);
+  --cd-vio-2: var(--ap-accent);
+  --cd-vio-3: var(--ap-accent-hover);
+  --cd-vio-grad: var(--ap-accent);
+  --cd-lav: var(--ap-tint);
+  --cd-lav-2: var(--ap-tint);
+  --cd-lav-border: rgba(75, 59, 255, 0.22);
+  --cd-ink: var(--ap-ink);
+  --cd-ink-2: var(--ap-2);
+  --cd-muted: var(--ap-2);
+  --cd-muted-2: var(--ap-3);
+  --cd-line: var(--ap-sep);
+  --cd-line-2: var(--ap-sep);
+  --cd-blue: #0a84ff;
+  --cd-blue-tile: rgba(10, 132, 255, 0.1);
+  --cd-green: #34c759;
+  --cd-green-ink: #248a3d;
+  --cd-green-tile: rgba(52, 199, 89, 0.12);
+  --cd-orange: #ff9500;
+  --cd-orange-tile: rgba(255, 149, 0, 0.12);
+  --cd-shadow: none;
+  --cd-shadow-lg: none;
+
+  /* shared design-system tokens used by the .ds-card / .crm-* islands */
+  --ink: var(--ap-ink);
+  --ink-2: var(--ap-2);
+  --ink-3: var(--ap-3);
+  --rl-muted: var(--ap-2);
+  --rl-muted-2: var(--ap-3);
+  --rl-muted-3: var(--ap-3);
+  --line: var(--ap-sep);
+  --line-2: var(--ap-sep);
+  --pri: var(--ap-accent);
+  --pri-50: rgba(75, 59, 255, 0.07);
+  --pri-100: rgba(75, 59, 255, 0.14);
+  --surface-2: rgba(120, 120, 128, 0.05);
+  --surface-3: var(--ap-fill-2);
+
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+}
+
+/* ---------- header ---------- */
+.app--glass .cd-page .ph {
+  align-items: flex-end;
+  margin-bottom: 22px;
+}
+.app--glass .cd-page .ph__kicker {
+  padding: 0;
+  margin-bottom: 6px;
+  background: none;
+  font-family: var(--f-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.app--glass .cd-page .ph__kicker::before {
+  display: none;
+}
+.app--glass .cd-page .ph__title {
+  font-family: var(--f-head);
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .ph__sub {
+  max-width: 620px;
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ap-2);
+}
+
+/* ---------- tabs: iOS segmented control ---------- */
+.app--glass .cd-page .cd-tabs {
+  display: inline-flex;
+  gap: 0;
+  max-width: 100%;
+  margin-bottom: 22px;
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.app--glass .cd-page .cd-tab {
+  height: 34px;
+  margin: 0;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.app--glass .cd-page .cd-tab:hover {
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .cd-tab .cd-tab__ico {
+  color: var(--ap-2);
+  opacity: 1;
+}
+.app--glass .cd-page .cd-tab.is-active {
+  background: #fff;
+  color: var(--ap-ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+.app--glass .cd-page .cd-tab.is-active .cd-tab__ico {
+  color: var(--ap-accent);
+}
+
+/* ---------- frosted surfaces ---------- */
+.app--glass .cd-page .cd-card,
+.app--glass .cd-page .cd-seg-card,
+.app--glass .cd-page .ds-card {
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  background: var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .cd-page .ds-card__head,
+.app--glass .cd-page .cd-sec-head {
+  border-bottom: 0;
+}
+.app--glass .cd-page .ds-card__title,
+.app--glass .cd-page .cd-sec-title,
+.app--glass .cd-page .cd-ie-head__title,
+.app--glass .cd-page .cd-edu__title,
+.app--glass .cd-page .cd-empty__title,
+.app--glass .cd-page .cd-seg-card__name {
+  font-family: var(--f-head);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .ds-card__title,
+.app--glass .cd-page .cd-sec-title {
+  font-size: 17px;
+}
+.app--glass .cd-page .cd-sec-head {
+  padding: 20px 22px 12px;
+}
+.app--glass .cd-page .cd-sec-sub,
+.app--glass .cd-page .cd-ie-head__sub {
+  margin-top: 4px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .cd-card--pad {
+  padding: 22px;
+}
+.app--glass .cd-page .dim {
+  color: var(--ap-3);
+}
+
+/* ---------- buttons: pills ---------- */
+.app--glass .cd-page .btn,
+.cd-modal .btn {
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-weight: 500;
+  box-shadow: none;
+}
+.app--glass .cd-page .btn:hover,
+.cd-modal .btn:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .cd-page .btn--sm,
+.cd-modal .btn--sm {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13.5px;
+}
+.app--glass .cd-page .btn--ghost,
+.cd-modal .btn--ghost {
+  background: transparent;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .btn--pri,
+.app--glass .cd-page .cd-btn-pri,
+.cd-modal .btn--pri {
+  background: var(--ap-accent);
+  color: #fff;
+  box-shadow: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+  filter: none;
+}
+.app--glass .cd-page .btn--pri:hover,
+.app--glass .cd-page .cd-btn-pri:hover,
+.cd-modal .btn--pri:hover {
+  background: var(--ap-accent-hover);
+  filter: none;
+}
+.app--glass .cd-page .btn--pri::before,
+.cd-modal .btn--pri::before {
+  display: none;
+}
+.app--glass .cd-page .btn:disabled,
+.cd-modal .btn:disabled {
+  opacity: 0.45;
+}
+.app--glass .cd-page .ph .btn--pri {
+  height: 40px;
+  padding: 0 18px;
+  font-size: 14px;
+}
+/* secondary kit buttons → tinted pills */
+.app--glass .cd-page .cd-btn-out,
+.app--glass .cd-page .cd-btn-ghost-vio {
+  height: 36px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-tint);
+  color: var(--ap-accent);
+  font-family: var(--f-ui);
+  font-size: 13.5px;
+  font-weight: 500;
+}
+.app--glass .cd-page .cd-btn-out:hover,
+.app--glass .cd-page .cd-btn-ghost-vio:hover {
+  background: rgba(75, 59, 255, 0.15);
+}
+.app--glass .cd-page .cd-btn-out[href^="/connections"] {
+  background: rgba(52, 199, 89, 0.12);
+  color: #248a3d !important;
+}
+.app--glass .cd-page .cd-link {
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--ap-accent);
+}
+.app--glass .cd-page .cd-link:hover {
+  text-decoration: none;
+  opacity: 0.8;
+}
+.app--glass .cd-page .btn:focus-visible,
+.app--glass .cd-page .cd-btn-out:focus-visible,
+.app--glass .cd-page .cd-tab:focus-visible,
+.app--glass .cd-page .crm-rail__item:focus-visible,
+.app--glass .cd-page .cd-drop:focus-visible {
+  outline: 2px solid var(--ap-accent);
+  outline-offset: 2px;
+}
+
+/* ---------- fields: grey fill, accent focus ring ---------- */
+.app--glass .cd-page .ds-input,
+.app--glass .cd-page .ds-select,
+.app--glass .cd-page input[type="search"],
+.app--glass .cd-page input[type="text"],
+.app--glass .cd-page input[type="email"],
+.cd-modal .ds-input,
+.cd-modal .ds-select {
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background-color: var(--ap-fill-2);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-size: 14px;
+  box-shadow: none;
+}
+.app--glass .cd-page .ds-input:focus,
+.app--glass .cd-page .ds-select:focus,
+.app--glass .cd-page input[type="search"]:focus,
+.app--glass .cd-page input[type="text"]:focus,
+.app--glass .cd-page input[type="email"]:focus,
+.cd-modal .ds-input:focus,
+.cd-modal .ds-select:focus {
+  border-color: rgba(75, 59, 255, 0.45);
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
+  outline: none;
+}
+.app--glass .cd-page input[type="checkbox"],
+.app--glass .cd-page input[type="radio"],
+.cd-modal input[type="checkbox"],
+.cd-modal input[type="radio"] {
+  accent-color: var(--ap-accent);
+}
+.app--glass .cd-page .lbl,
+.cd-modal .lbl {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+
+/* ---------- chips: soft pills, no borders ---------- */
+.app--glass .cd-page .chip,
+.cd-modal .chip {
+  border: 0;
+  border-radius: 999px;
+  font-weight: 500;
+}
+.app--glass .cd-page .chip--out,
+.cd-modal .chip--out {
+  background: var(--ap-fill-2);
+  color: var(--ap-2);
+}
+.app--glass .cd-page .chip--pri {
+  background: var(--ap-tint);
+  color: var(--ap-accent);
+}
+
+/* ============================================================
+   CONTACTS TAB
+   ============================================================ */
+
+/* quiet stat tiles */
+.app--glass .cd-page .cd-kpis {
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.app--glass .cd-page .cd-kpi {
+  gap: 14px;
+  padding: 18px 20px;
+}
+.app--glass .cd-page .cd-kpi__tile {
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+}
+.app--glass .cd-page .cd-kpi__tile svg {
+  width: 21px;
+  height: 21px;
+}
+.app--glass .cd-page .cd-kpi__tile--vio {
+  background: var(--ap-tint);
+  color: var(--ap-accent);
+}
+.app--glass .cd-page .cd-kpi__tile--blue {
+  background: rgba(10, 132, 255, 0.1);
+  color: #0a84ff;
+}
+.app--glass .cd-page .cd-kpi__tile--green {
+  background: rgba(52, 199, 89, 0.12);
+  color: #248a3d;
+}
+.app--glass .cd-page .cd-kpi__tile--orange {
+  background: rgba(255, 149, 0, 0.12);
+  color: #c93400;
+}
+.app--glass .cd-page .cd-kpi__label {
+  margin: 0 0 2px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .cd-kpi__value {
+  font-family: var(--f-num);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .cd-kpi__sub {
+  margin-top: 3px;
+  font-size: 12px;
+  color: var(--ap-3);
+}
+
+/* workspace: segment chips across the top, table + profile below */
+.app--glass .cd-page .crm-workspace {
+  grid-template-areas:
+    "rail rail"
+    "main drawer";
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 14px;
+}
+.app--glass .cd-page .crm-rail-col {
+  position: static;
+}
+.app--glass .cd-page .crm-rail-col .ds-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 10px 8px 20px;
+  border-radius: 20px;
+}
+.app--glass .cd-page .crm-rail-col .ds-card__head {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  padding: 0;
+}
+.app--glass .cd-page .crm-rail-col .ds-card__title {
+  font-size: 15px;
+}
+.app--glass .cd-page .crm-rail-col .ds-card__head .mono {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--f-ui);
+  font-size: 11.5px !important;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: #248a3d;
+}
+.app--glass .cd-page .crm-rail-col .ds-card__head .mono::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34c759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18);
+}
+.app--glass .cd-page .crm-rail__list {
+  flex: 1;
+  flex-direction: row;
+  gap: 6px;
+  min-width: 0;
+  padding: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.app--glass .cd-page .crm-rail__list::-webkit-scrollbar {
+  display: none;
+}
+.app--glass .cd-page .crm-rail__list > li {
+  flex: 0 0 auto;
+}
+@media (min-width: 881px) {
+  /* desktop: every segment visible, wrapping instead of scrolling */
+  .app--glass .cd-page .crm-rail__list {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+}
+.app--glass .cd-page .crm-rail__item {
+  gap: 7px;
+  height: 36px;
+  padding: 0 12px 0 13px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill-2);
+  color: var(--ap-ink);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.app--glass .cd-page .crm-rail__item:hover {
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .crm-rail__icon {
+  color: var(--ap-2);
+  opacity: 1;
+}
+.app--glass .cd-page .crm-rail__label {
+  overflow: visible;
+}
+.app--glass .cd-page .crm-rail__count {
+  min-width: 0;
+  padding: 0;
+  background: none;
+  color: var(--ap-3);
+  font-family: var(--f-num);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.app--glass .cd-page .crm-rail__item.is-active {
+  background: var(--ap-accent);
+  color: #fff;
+  box-shadow: 0 8px 18px -10px rgba(75, 59, 255, 0.8);
+}
+.app--glass .cd-page .crm-rail__item.is-active .crm-rail__icon,
+.app--glass .cd-page .crm-rail__item.is-active .crm-rail__count {
+  background: none;
+  color: rgba(255, 255, 255, 0.85);
+}
+.app--glass .cd-page .crm-rail__connect {
+  color: #248a3d;
+  font-size: 12px;
+  font-weight: 600;
+}
+.app--glass .cd-page .crm-rail__divider {
+  width: 1px;
+  height: 20px;
+  margin: 8px 2px 0;
+  background: var(--ap-sep);
+}
+
+/* contacts table card */
+.app--glass .cd-page .crm-main > div > .ds-card > .ds-card__head:first-child {
+  padding: 18px 20px 10px;
+}
+.app--glass .cd-page .crm-main .ds-card__head:first-child > .row > div:first-child {
+  flex: 1 1 180px !important;
+  min-width: 160px !important;
+}
+.app--glass .cd-page .crm-main .ds-card__head:first-child > .row > .ds-select {
+  min-width: 0 !important;
+}
+.app--glass .cd-page .crm-main input.ds-input[aria-label="Search contacts"] {
+  height: 38px !important;
+  border-radius: 999px;
+  padding-left: 36px !important;
+}
+.app--glass .cd-page .crm-main .ds-select {
+  height: 38px !important;
+  border-radius: 999px;
+  padding-left: 14px;
+}
+
+/* inset list table */
+.app--glass .cd-page .tbl th {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--ap-sep);
+  background: none;
+  font-family: var(--f-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .tbl td {
+  padding: 13px 12px;
+  border-bottom: 1px solid var(--ap-sep);
+  font-size: 13.5px;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .tbl th:first-child,
+.app--glass .cd-page .tbl td:first-child {
+  padding-left: 22px;
+}
+.app--glass .cd-page .tbl th:last-child,
+.app--glass .cd-page .tbl td:last-child {
+  padding-right: 22px;
+}
+.app--glass .cd-page .tbl tr:hover td {
+  background: rgba(120, 120, 128, 0.05);
+}
+.app--glass .cd-page .tbl th button {
+  font-weight: 500 !important;
+}
+.app--glass .cd-page .crm-main .tbl td a {
+  font-weight: 600 !important;
+  color: var(--ap-ink) !important;
+}
+.app--glass .cd-page .crm-main .tbl td a:hover {
+  color: var(--ap-accent) !important;
+}
+.app--glass .cd-page .crm-main .tbl td:nth-child(2) {
+  white-space: nowrap;
+}
+.app--glass .cd-page .crm-main .tbl th,
+.app--glass .cd-page .crm-main .tbl td {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+.app--glass .cd-page .crm-main .tbl th:first-child,
+.app--glass .cd-page .crm-main .tbl td:first-child {
+  padding-left: 20px;
+}
+.app--glass .cd-page .crm-main .tbl th:last-child,
+.app--glass .cd-page .crm-main .tbl td:last-child {
+  padding-right: 20px;
+}
+.app--glass .cd-page .crm-main .tbl td a > span {
+  display: inline-flex;
+  vertical-align: -1px;
+}
+/* email / phone lines: icon inline with the value */
+.app--glass .cd-page .crm-main .tbl td span > svg {
+  display: inline-block;
+}
+.app--glass .cd-page .crm-main .tbl td:nth-child(3) span {
+  font-size: 12.5px !important;
+  white-space: nowrap;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .crm-main .tbl td:nth-child(3) .mono {
+  font-family: var(--f-num);
+}
+.app--glass .cd-page .crm-main .tbl tr.crm-row--open td {
+  background: rgba(75, 59, 255, 0.07);
+}
+.app--glass .cd-page .crm-main .tbl tr.crm-row--open {
+  box-shadow: inset 3px 0 0 var(--ap-accent);
+}
+/* source: dot + text */
+.cd-page .cd-src {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-ink, #1d1d1f);
+  white-space: nowrap;
+}
+.cd-page .cd-src__dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+/* row tag editor */
+.app--glass .cd-page .crm-main .tbl td .chip--out {
+  height: 22px !important;
+  padding: 0 8px;
+  font-size: 11.5px !important;
+}
+/* pagination footer */
+.app--glass .cd-page .crm-main .ds-card > .ds-card__head[style*="border-top"] {
+  padding: 12px 20px;
+  border-top: 1px solid var(--ap-sep) !important;
+}
+.app--glass .cd-page .crm-main .ds-card .mono {
+  font-family: var(--f-num);
+}
+/* empty table */
+.app--glass .cd-page .crm-main .ds-card__body h3 {
+  font-family: var(--f-head);
+  font-size: 17px !important;
+}
+
+/* profile column */
+.app--glass .cd-page .crm-drawer .ds-card__head {
+  padding: 18px 20px 6px;
+}
+.app--glass .cd-page .crm-drawer .ds-card__head .btn {
+  width: 30px;
+  height: 30px;
+  padding: 0 !important;
+  justify-content: center;
+  background: var(--ap-fill);
+  color: var(--ap-2);
+}
+.app--glass .cd-page .crm-drawer__section {
+  margin: 0 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--ap-sep);
+}
+.app--glass .cd-page .crm-drawer .ds-card__head + .crm-drawer__section,
+.app--glass .cd-page .crm-drawer__section:first-of-type {
+  border-top: 0;
+}
+.app--glass .cd-page .crm-drawer__section:last-child {
+  padding-bottom: 20px;
+}
+.app--glass .cd-page .crm-drawer__avatar {
+  width: 46px;
+  height: 46px;
+  background: linear-gradient(140deg, #4b3bff, #8a5cff 60%, #c25cff);
+  color: #fff;
+  font-family: var(--f-head);
+  font-size: 16px;
+  font-weight: 600;
+}
+.app--glass .cd-page .crm-drawer__name {
+  font-family: var(--f-head);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .crm-drawer__kicker {
+  margin-bottom: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-3);
+}
+.app--glass .cd-page .crm-drawer__row {
+  padding: 4px 0;
+  font-size: 13.5px;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .crm-drawer__row svg {
+  color: var(--ap-3);
+}
+.app--glass .cd-page .crm-drawer__row.mono {
+  font-family: var(--f-num);
+}
+.app--glass .cd-page .crm-elig {
+  padding: 11px 13px;
+  border-radius: 14px;
+  font-size: 13px;
+}
+.app--glass .cd-page .crm-elig--ok {
+  background: rgba(52, 199, 89, 0.12);
+  color: #1f7a36;
+}
+.app--glass .cd-page .crm-elig--warn {
+  background: rgba(255, 149, 0, 0.12);
+  color: #a34700;
+}
+.app--glass .cd-page .crm-elig--bad {
+  background: rgba(255, 59, 48, 0.1);
+  color: #c4141f;
+}
+.app--glass .cd-page .crm-tl__dot {
+  background: var(--ap-fill-2);
+  color: var(--ap-2);
+}
+.app--glass .cd-page .crm-tl__line {
+  background: var(--ap-sep);
+}
+.app--glass .cd-page .crm-tl__title {
+  font-size: 13px;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .crm-tl__time {
+  font-family: var(--f-num);
+  font-size: 11.5px;
+  color: var(--ap-3);
+}
+/* "No contact selected": the illustration sits on a soft plate */
+.app--glass .cd-page .crm-drawer__empty {
+  padding: 8px 22px 26px;
+}
+.app--glass .cd-page .crm-drawer__empty img {
+  max-width: 230px !important;
+  padding: 14px 10px 6px;
+  border-radius: 22px;
+  background: radial-gradient(circle at 50% 40%, rgba(75, 59, 255, 0.1), transparent 70%);
+}
+.app--glass .cd-page .crm-drawer__empty h4 {
+  font-family: var(--f-head);
+  font-size: 17px !important;
+  color: var(--ap-ink) !important;
+}
+.app--glass .cd-page .crm-drawer__empty p {
+  font-size: 13.5px !important;
+  line-height: 1.5 !important;
+  color: var(--ap-2);
+}
+
+/* ---------- empty directory (Contacts + Segments) ---------- */
+.app--glass .cd-page .cd-empty {
+  min-height: 0;
+  padding: 32px 36px;
+}
+.app--glass .cd-page .cd-empty__title {
+  font-size: 28px;
+  letter-spacing: -0.03em;
+}
+.app--glass .cd-page .cd-empty__body,
+.app--glass .cd-page .cd-edu__body {
+  font-size: 15px;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .cd-illus--book {
+  width: 260px !important;
+}
+.app--glass .cd-page .cd-illus--edu {
+  width: 180px;
+}
+.app--glass .cd-page .cd-pill {
+  background: var(--ap-tint);
+  color: var(--ap-accent);
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.app--glass .cd-page .cd-check li {
+  font-size: 14px;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .cd-check__ico {
+  background: var(--ap-tint) !important;
+  color: var(--ap-accent);
+}
+.app--glass .cd-page .cd-source {
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill-2);
+  color: var(--ap-ink);
+  font-weight: 500;
+}
+.app--glass .cd-page .cd-source:hover {
+  background: var(--ap-fill);
+}
+.app--glass .cd-page .cd-or {
+  color: var(--ap-3);
+  font-weight: 600;
+}
+
+/* ============================================================
+   SEGMENTS TAB
+   ============================================================ */
+.app--glass .cd-page .cd-seg-cards {
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.app--glass .cd-page .cd-seg-card {
+  padding: 20px 20px 18px;
+}
+.app--glass .cd-page .cd-seg-card__top {
+  margin-bottom: 14px;
+}
+.app--glass .cd-page .cd-seg-card__tile,
+.app--glass .cd-page .cd-seg-tbl__ico {
+  background: var(--ap-tint) !important;
+  color: var(--ap-accent);
+}
+.app--glass .cd-page .cd-seg-card__tile {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+}
+.app--glass .cd-page .cd-seg-card__tile.cd-kpi__tile--green,
+.app--glass .cd-page .cd-seg-tbl__ico.cd-kpi__tile--green {
+  background: rgba(52, 199, 89, 0.12) !important;
+  color: #248a3d;
+}
+.app--glass .cd-page .cd-seg-card__tile.cd-kpi__tile--orange,
+.app--glass .cd-page .cd-seg-tbl__ico.cd-kpi__tile--orange {
+  background: rgba(255, 149, 0, 0.12) !important;
+  color: #c93400;
+}
+.app--glass .cd-page .cd-seg-card__val {
+  margin-left: auto;
+  font-family: var(--f-num);
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .cd-seg-card__name {
+  margin-bottom: 4px;
+  font-size: 16px;
+}
+.app--glass .cd-page .cd-seg-card__desc {
+  margin-bottom: 16px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--ap-2);
+}
+
+.app--glass .cd-page .cd-seg-layout {
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 14px;
+}
+.app--glass .cd-page .cd-seg-right {
+  gap: 14px;
+}
+.app--glass .cd-page .cd-seg-tbl th {
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .cd-seg-tbl td {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+.app--glass .cd-page .cd-seg-tbl td:nth-child(2) {
+  color: var(--ap-2) !important;
+  font-size: 13px !important;
+}
+.app--glass .cd-page .cd-seg-tbl td:nth-child(3) {
+  font-family: var(--f-num);
+  font-weight: 500 !important;
+}
+.app--glass .cd-page .cd-seg-tbl__ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+/* status: dot + text */
+.app--glass .cd-page .cd-seg-tbl .cd-badge,
+.app--glass .cd-page .cd-export .cd-badge {
+  gap: 7px;
+  padding: 0;
+  background: none;
+  color: var(--ap-ink);
+  font-size: 13px;
+  font-weight: 500;
+}
+.app--glass .cd-page .cd-seg-tbl .cd-badge::before,
+.app--glass .cd-page .cd-export .cd-badge::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ap-3);
+}
+.app--glass .cd-page .cd-seg-tbl .cd-badge--ok::before,
+.app--glass .cd-page .cd-export .cd-badge--ok::before {
+  background: #34c759;
+}
+.app--glass .cd-page .cd-seg-tbl .cd-badge--warn::before,
+.app--glass .cd-page .cd-export .cd-badge--warn::before {
+  background: #ff9500;
+}
+.app--glass .cd-page .cd-sec-head .cd-badge {
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.app--glass .cd-page .cd-seg-left .cd-card > .cd-sec-head:last-child {
+  padding: 14px 22px 16px;
+  border-top: 1px solid var(--ap-sep) !important;
+}
+.app--glass .cd-page .cd-seg-left .cd-card > .cd-sec-head:last-child span {
+  font-size: 13px !important;
+  color: var(--ap-3) !important;
+}
+/* right analytics: inset grey tiles */
+.app--glass .cd-page .cd-perf-grid {
+  gap: 10px;
+}
+.app--glass .cd-page .cd-perf {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: var(--ap-fill-2);
+}
+.app--glass .cd-page .cd-perf__l {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .cd-perf__v {
+  font-family: var(--f-num);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .cd-seg-right .cd-card--pad > .row > span:last-child {
+  font-family: var(--f-num);
+  font-size: 28px !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.03em;
+}
+.app--glass .cd-page .cd-seg-right .cd-card--pad > .row > div > div:first-child {
+  font-weight: 600 !important;
+  font-size: 15px !important;
+}
+.app--glass .cd-page .cd-sugg {
+  gap: 0;
+}
+.app--glass .cd-page .cd-sugg li {
+  padding: 12px 0;
+  border-top: 1px solid var(--ap-sep);
+}
+.app--glass .cd-page .cd-sugg li:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+.app--glass .cd-page .cd-sugg li:last-child {
+  padding-bottom: 0;
+}
+.app--glass .cd-page .cd-sugg__t {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .cd-page .cd-sugg__s {
+  font-size: 12.5px;
+  color: var(--ap-3);
+}
+.app--glass .cd-page .cd-sugg .cd-btn-out {
+  height: 32px;
+  padding: 0 14px;
+  font-size: 13px;
+}
+
+/* ============================================================
+   IMPORT & EXPORT TAB
+   ============================================================ */
+.app--glass .cd-page .cd-ie-grid {
+  gap: 14px;
+}
+.app--glass .cd-page .cd-ie-head {
+  gap: 14px;
+  padding: 22px 22px 0;
+}
+.app--glass .cd-page .cd-ie-head__tile {
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+}
+.app--glass .cd-page .cd-ie-head__tile--vio {
+  background: var(--ap-tint);
+  color: var(--ap-accent);
+}
+.app--glass .cd-page .cd-ie-head__tile--green {
+  background: rgba(52, 199, 89, 0.12);
+}
+.app--glass .cd-page .cd-ie-head__title {
+  margin: 0 0 2px;
+  font-size: 20px;
+}
+
+/* CSV dropzone */
+.cd-page .cd-drop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  width: 100%;
+  padding: 24px 26px;
+  border: 1.5px dashed rgba(75, 59, 255, 0.28);
+  border-radius: 20px;
+  background: rgba(75, 59, 255, 0.035);
+  color: var(--ap-2, #6e6e73);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.cd-page .cd-drop:hover {
+  border-color: rgba(75, 59, 255, 0.45);
+  background: rgba(75, 59, 255, 0.06);
+}
+.cd-page .cd-drop.is-over {
+  border-color: var(--ap-accent, #4b3bff);
+  background: rgba(75, 59, 255, 0.09);
+}
+.cd-page .cd-drop .cd-illus--csv {
+  width: 160px;
+  flex-shrink: 0;
+}
+.cd-page .cd-drop__title {
+  font-family: var(--f-head);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink, #1d1d1f);
+}
+.cd-page .cd-drop__sub {
+  margin-top: 4px;
+  font-size: 14px;
+}
+.cd-page .cd-drop__link {
+  color: var(--ap-accent, #4b3bff);
+  font-weight: 600;
+}
+.app--glass .cd-page .cd-info {
+  gap: 10px;
+  padding: 12px 14px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--ap-fill-2);
+  font-size: 13px;
+  color: var(--ap-2);
+}
+.app--glass .cd-page .cd-info__ico {
+  background: var(--ap-tint);
+  color: var(--ap-accent);
+}
+
+/* export: illustration plate on top, controls below */
+.app--glass .cd-page .cd-ie-grid > .cd-card {
+  display: flex;
+  flex-direction: column;
+}
+.app--glass .cd-page .cd-export {
+  flex: 1;
+  flex-direction: column-reverse;
+  align-items: stretch;
+  justify-content: flex-end;
+  gap: 18px;
+  padding: 4px 22px 22px;
+}
+.app--glass .cd-page .cd-export__art {
+  display: grid;
+  place-items: center;
+  height: 150px;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 45%, rgba(75, 59, 255, 0.1), transparent 70%),
+    var(--ap-fill-2);
+}
+.app--glass .cd-page .cd-illus--export {
+  width: 190px;
+}
+.app--glass .cd-page .cd-export__ctrls {
+  padding-right: 0;
+  border-right: 0;
+}
+.cd-page .cd-scope__lbl {
+  margin-bottom: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-2, #6e6e73);
+}
+.cd-page .cd-scope {
+  display: inline-flex;
+  max-width: 100%;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.cd-page .cd-scope__opt {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  padding: 0 14px;
+  border-radius: 9px;
+  color: var(--ap-ink, #1d1d1f);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.cd-page .cd-scope__opt input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.cd-page .cd-scope__opt.is-active {
+  background: #fff;
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+.cd-page .cd-scope__opt:has(input:focus-visible) {
+  outline: 2px solid var(--ap-accent, #4b3bff);
+  outline-offset: 1px;
+}
+.app--glass .cd-page .cd-export .ds-select {
+  height: 40px;
+  margin-top: 2px;
+}
+.app--glass .cd-page .cd-fmt {
+  height: 30px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill-2);
+  color: var(--ap-2);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+/* ============================================================
+   MODALS (portalled to <body>, so not under .app--glass)
+   ============================================================ */
+.cd-modal__panel.ds-card {
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 26px;
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  backdrop-filter: blur(30px) saturate(180%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 30px 80px -24px rgba(21, 19, 43, 0.35);
+  color: var(--ap-ink);
+}
+.cd-modal .ds-card__head {
+  padding: 20px 22px 8px;
+  border-bottom: 0;
+}
+.cd-modal .ds-card__head:first-child .ds-card__title {
+  font-family: var(--f-head);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: var(--ap-ink);
+}
+.cd-modal .ds-card__head:first-child .btn {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  justify-content: center;
+  background: var(--ap-fill);
+  color: var(--ap-2);
+}
+.cd-modal .ds-card__body {
+  padding: 12px 22px 18px;
+}
+.cd-modal form > .ds-card__head {
+  padding: 14px 22px 18px;
+}
+.cd-modal .ds-input {
+  height: 40px;
+}
+.cd-modal .dim {
+  color: var(--ap-3);
+}
+.cd-modal .seg {
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+}
+.cd-modal .seg__t {
+  border-radius: 9px;
+}
+.cd-modal .seg__t.is-active {
+  background: #fff;
+  color: var(--ap-ink);
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 1180px) {
+  /* Stack: chips, table, then the profile. An open profile moves above the
+     table so it's in view; the empty placeholder stays last. */
+  .app--glass .cd-page .crm-workspace {
+    grid-template-areas:
+      "rail"
+      "main"
+      "drawer";
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app--glass
+    .cd-page
+    .crm-workspace:has(.crm-drawer-col .crm-drawer:not([aria-label="Contact profile (empty)"])) {
+    grid-template-areas:
+      "rail"
+      "drawer"
+      "main";
+  }
+  .app--glass .cd-page .crm-drawer-col {
+    position: static;
+  }
+  .app--glass .cd-page .cd-seg-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 880px) {
+  .app--glass .cd-page .crm-rail-col .ds-card__head {
+    display: flex;
+  }
+}
+@media (max-width: 720px) {
+  .app--glass .cd-page .ph {
+    align-items: stretch;
+  }
+  .app--glass .cd-page .ph .row {
+    justify-content: flex-start;
+  }
+  .app--glass .cd-page .ph__sub {
+    font-size: 15px;
+  }
+  .app--glass .cd-page .cd-tabs {
+    display: flex;
+    width: 100%;
+  }
+  .app--glass .cd-page .cd-tab {
+    flex: 1;
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 13.5px;
+  }
+  .app--glass .cd-page .cd-tab__ico {
+    display: none;
+  }
+  .app--glass .cd-page .cd-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .app--glass .cd-page .cd-kpi {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px;
+  }
+  .app--glass .cd-page .cd-kpi__tile {
+    width: 36px;
+    height: 36px;
+    border-radius: 11px;
+  }
+  .app--glass .cd-page .cd-kpi__tile svg {
+    width: 18px;
+    height: 18px;
+  }
+  .app--glass .cd-page .cd-kpi__value {
+    font-size: 26px;
+  }
+  .app--glass .cd-page .crm-rail-col .ds-card {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px 12px 12px 16px;
+  }
+  .app--glass .cd-page .crm-main > div > .ds-card > .ds-card__head:first-child {
+    padding: 16px 14px 8px;
+  }
+  .app--glass .cd-page .crm-main > div > .ds-card > .ds-card__head:first-child > .row > div {
+    flex: 1 1 100% !important;
+    min-width: 0 !important;
+  }
+  .app--glass .cd-page .crm-main .ds-select {
+    flex: 1 1 0;
+  }
+  .app--glass .cd-page .crm-main > div > .ds-card > .ds-card__head:first-child > .btn--pri {
+    width: 100%;
+    justify-content: center;
+  }
+  .app--glass .cd-page .crm-main .ds-card > .ds-card__head[style*="border-top"] {
+    flex-wrap: wrap;
+    padding: 12px 14px;
+  }
+  .app--glass .cd-page .tbl th:first-child,
+  .app--glass .cd-page .tbl td:first-child {
+    padding-left: 16px;
+  }
+  .app--glass .cd-page .cd-seg-card__desc {
+    margin-bottom: 14px;
+  }
+  .app--glass .cd-page .cd-drop {
+    flex-direction: column;
+    gap: 14px;
+    padding: 22px 16px;
+    text-align: center;
+  }
+  .app--glass .cd-page .cd-drop .cd-illus--csv {
+    width: 140px;
+  }
+  .app--glass .cd-page .cd-ie-head {
+    padding: 18px 18px 0;
+  }
+  .app--glass .cd-page .cd-ie-grid > .cd-card > div[style] {
+    padding: 16px !important;
+  }
+  .app--glass .cd-page .cd-export {
+    padding: 4px 16px 18px;
+  }
+  .app--glass .cd-page .cd-scope {
+    display: flex;
+  }
+  .app--glass .cd-page .cd-scope__opt {
+    flex: 1;
+    justify-content: center;
+    padding: 0 8px;
+    font-size: 13px;
+  }
+  .app--glass .cd-page .cd-empty {
+    padding: 26px 20px;
+  }
+  .app--glass .cd-page .cd-illus--book {
+    width: 210px !important;
+  }
+}

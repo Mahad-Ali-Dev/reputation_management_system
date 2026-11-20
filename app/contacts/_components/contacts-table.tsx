@@ -2,9 +2,9 @@
 
 import { EmptyIllustration } from "@/components/empty-state";
 import { Icon } from "@/components/shell/icon";
-import { getContactSourceMeta } from "@/lib/contacts/source-meta";
 import { updateContactTags } from "@/lib/contacts/actions";
 import type { ContactListItem } from "@/lib/contacts/queries";
+import { getContactSourceMeta } from "@/lib/contacts/source-meta";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
@@ -150,7 +150,10 @@ export function ContactsTable({
   const selectionCount = selectedIds.length;
 
   const hasFilters =
-    !!filters.q || (filters.source && filters.source !== "all") || (filters.tag && filters.tag !== "all") || !!filters.seg;
+    !!filters.q ||
+    (filters.source && filters.source !== "all") ||
+    (filters.tag && filters.tag !== "all") ||
+    !!filters.seg;
 
   // Profile drawer: the open contact comes from `?contact=` (server-rendered
   // drawer); rows link to the same URL with `contact` swapped — no client state.
@@ -259,7 +262,13 @@ export function ContactsTable({
               type="button"
               onClick={() => setFilter("seg", "all")}
               aria-label="Clear segment"
-              style={{ background: "none", border: 0, cursor: "pointer", color: "inherit", display: "inline-flex" }}
+              style={{
+                background: "none",
+                border: 0,
+                cursor: "pointer",
+                color: "inherit",
+                display: "inline-flex",
+              }}
             >
               <Icon name="x" size={12} />
             </button>
@@ -292,7 +301,11 @@ export function ContactsTable({
               </button>
             ) : (
               <>
-                <button type="button" className="btn btn--pri btn--sm" onClick={() => setAddOpen(true)}>
+                <button
+                  type="button"
+                  className="btn btn--pri btn--sm"
+                  onClick={() => setAddOpen(true)}
+                >
                   <Icon name="plus" size={13} />
                   Add contact
                 </button>
@@ -352,10 +365,15 @@ export function ContactsTable({
       {rows.length > 0 && (
         <div
           className="ds-card__head"
-          style={{ borderTop: "1px solid var(--line)", borderBottom: "none", justifyContent: "space-between" }}
+          style={{
+            borderTop: "1px solid var(--line)",
+            borderBottom: "none",
+            justifyContent: "space-between",
+          }}
         >
           <span className="dim" style={{ fontSize: 12 }}>
-            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total.toLocaleString()}
+            Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of{" "}
+            {total.toLocaleString()}
           </span>
           <div className="row" style={{ gap: 6 }}>
             <button
@@ -414,7 +432,11 @@ const SOURCE_FILTER_OPTIONS = [
   { key: "shopify", label: "Shopify" },
 ];
 
-function SortableTh({ label, active, onClick }: { label: string; active: boolean; onClick: () => void }) {
+function SortableTh({
+  label,
+  active,
+  onClick,
+}: { label: string; active: boolean; onClick: () => void }) {
   return (
     <th>
       <button
@@ -469,7 +491,12 @@ function ContactRow({
       style={selected && !open ? { background: "var(--pri-50)" } : undefined}
     >
       <td>
-        <input type="checkbox" aria-label={`Select ${displayName}`} checked={selected} onChange={onToggle} />
+        <input
+          type="checkbox"
+          aria-label={`Select ${displayName}`}
+          checked={selected}
+          onChange={onToggle}
+        />
       </td>
       <td>
         <Link
@@ -508,11 +535,8 @@ function ContactRow({
         </div>
       </td>
       <td>
-        <span
-          className="chip"
-          style={{ background: meta.bgTint, color: meta.fg }}
-          title={meta.description}
-        >
+        <span className="cd-src" title={meta.description}>
+          <span className="cd-src__dot" style={{ background: meta.fg }} aria-hidden />
           {meta.label}
         </span>
       </td>
@@ -578,7 +602,14 @@ function RowTagEditor({ contactId, tags }: { contactId: string; tags: string[] }
             type="button"
             onClick={() => removeTag(t)}
             aria-label={`Remove tag ${t}`}
-            style={{ background: "none", border: 0, cursor: "pointer", color: "inherit", display: "inline-flex", padding: 0 }}
+            style={{
+              background: "none",
+              border: 0,
+              cursor: "pointer",
+              color: "inherit",
+              display: "inline-flex",
+              padding: 0,
+            }}
           >
             <Icon name="x" size={10} />
           </button>
@@ -586,6 +617,7 @@ function RowTagEditor({ contactId, tags }: { contactId: string; tags: string[] }
       ))}
       {editing ? (
         <input
+          // biome-ignore lint/a11y/noAutofocus: the field appears only after the user clicks "+ tag".
           autoFocus
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

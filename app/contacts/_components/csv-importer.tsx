@@ -3,14 +3,14 @@
 import { Icon } from "@/components/shell/icon";
 import { importContactsMapped } from "@/lib/contacts/actions";
 import {
+  type ColumnMapping,
+  type ImportField,
   MAX_IMPORT_ROWS,
+  type MappedRows,
+  type ParsedCsv,
   applyMapping,
   autoMap,
   parseImportCsv,
-  type ColumnMapping,
-  type ImportField,
-  type MappedRows,
-  type ParsedCsv,
 } from "@/lib/contacts/import";
 import { useRouter } from "next/navigation";
 import { useMemo, useRef, useState, useTransition } from "react";
@@ -46,10 +46,16 @@ export function CsvImporter() {
   const [fileName, setFileName] = useState("");
   const [fileText, setFileText] = useState("");
   const [parsed, setParsed] = useState<ParsedCsv | null>(null);
-  const [mapping, setMapping] = useState<Record<number, { field: ImportField | "skip"; customKey: string }>>({});
+  const [mapping, setMapping] = useState<
+    Record<number, { field: ImportField | "skip"; customKey: string }>
+  >({});
   const [dragOver, setDragOver] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ created: number; duplicates: number; invalid: number } | null>(null);
+  const [result, setResult] = useState<{
+    created: number;
+    duplicates: number;
+    invalid: number;
+  } | null>(null);
   const [pending, startTransition] = useTransition();
 
   function handleFile(file: File) {
@@ -165,20 +171,7 @@ export function CsvImporter() {
                 const f = e.dataTransfer.files?.[0];
                 if (f) handleFile(f);
               }}
-              style={{
-                width: "100%",
-                display: "flex",
-                alignItems: "center",
-                gap: 20,
-                justifyContent: "center",
-                border: `1.6px dashed ${dragOver ? "var(--cd-vio)" : "var(--cd-lav-border)"}`,
-                background: dragOver ? "var(--glass-fill-subtle, #efeafe)" : "transparent",
-                borderRadius: 12,
-                padding: "26px 20px",
-                cursor: "pointer",
-                textAlign: "left",
-                color: "var(--cd-muted)",
-              }}
+              className={`cd-drop${dragOver ? " is-over" : ""}`}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -187,18 +180,18 @@ export function CsvImporter() {
                 aria-hidden
                 className="cd-illus cd-illus--csv"
               />
-              <div>
-                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--cd-ink)" }}>
-                  Drag &amp; drop your CSV file here
-                </div>
-                <div style={{ fontSize: 13, marginTop: 4 }}>
-                  or <span style={{ color: "var(--cd-vio)", fontWeight: 600 }}>click to browse</span>
+              <div className="cd-drop__copy">
+                <div className="cd-drop__title">Drag &amp; drop your CSV file here</div>
+                <div className="cd-drop__sub">
+                  or <span className="cd-drop__link">click to browse</span>
                 </div>
               </div>
             </button>
             <div className="cd-info" style={{ marginTop: 16 }}>
               <span className="cd-info__ico">i</span>
-              <span>We support .csv files up to 10MB and {MAX_IMPORT_ROWS.toLocaleString()} rows.</span>
+              <span>
+                We support .csv files up to 10MB and {MAX_IMPORT_ROWS.toLocaleString()} rows.
+              </span>
             </div>
             <input
               ref={fileRef}
@@ -226,11 +219,20 @@ export function CsvImporter() {
             </div>
             {parsed.truncated && (
               <p className="chip chip--warn" style={{ display: "inline-flex", marginBottom: 12 }}>
-                File exceeded {MAX_IMPORT_ROWS.toLocaleString()} rows only the first {MAX_IMPORT_ROWS.toLocaleString()} will import.
+                File exceeded {MAX_IMPORT_ROWS.toLocaleString()} rows only the first{" "}
+                {MAX_IMPORT_ROWS.toLocaleString()} will import.
               </p>
             )}
 
-            <div style={{ display: "flex", flexDirection: "column", gap: 8, maxHeight: 280, overflowY: "auto" }}>
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 8,
+                maxHeight: 280,
+                overflowY: "auto",
+              }}
+            >
               {parsed.headers.map((h, i) => {
                 const m = mapping[i] ?? { field: "skip", customKey: "" };
                 const sample = parsed.rows[0]?.[i] ?? "";
@@ -238,9 +240,19 @@ export function CsvImporter() {
                   // biome-ignore lint/suspicious/noArrayIndexKey: header position is the stable id here.
                   <div key={i} className="row" style={{ gap: 10, alignItems: "center" }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>{h || `Column ${i + 1}`}</div>
+                      <div style={{ fontSize: 13, fontWeight: 500, color: "var(--ink)" }}>
+                        {h || `Column ${i + 1}`}
+                      </div>
                       {sample && (
-                        <div className="dim" style={{ fontSize: 11.5, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        <div
+                          className="dim"
+                          style={{
+                            fontSize: 11.5,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
                           e.g. {sample}
                         </div>
                       )}
@@ -251,7 +263,10 @@ export function CsvImporter() {
                       style={{ height: 32, width: 150 }}
                       value={m.field}
                       onChange={(e) =>
-                        setMapping((prev) => ({ ...prev, [i]: { ...m, field: e.target.value as ImportField | "skip" } }))
+                        setMapping((prev) => ({
+                          ...prev,
+                          [i]: { ...m, field: e.target.value as ImportField | "skip" },
+                        }))
                       }
                     >
                       {FIELD_OPTIONS.map((o) => (
@@ -266,7 +281,12 @@ export function CsvImporter() {
                         style={{ height: 32, width: 120 }}
                         placeholder="Field key"
                         value={m.customKey}
-                        onChange={(e) => setMapping((prev) => ({ ...prev, [i]: { ...m, customKey: e.target.value } }))}
+                        onChange={(e) =>
+                          setMapping((prev) => ({
+                            ...prev,
+                            [i]: { ...m, customKey: e.target.value },
+                          }))
+                        }
                       />
                     )}
                   </div>
@@ -277,12 +297,18 @@ export function CsvImporter() {
             {/* Preview summary */}
             {preview && (
               <div className="row" style={{ gap: 8, marginTop: 14, flexWrap: "wrap" }}>
-                <span className="chip chip--ok">{preview.records.length.toLocaleString()} to import</span>
+                <span className="chip chip--ok">
+                  {preview.records.length.toLocaleString()} to import
+                </span>
                 {preview.duplicatesInFile > 0 && (
-                  <span className="chip chip--out">{preview.duplicatesInFile.toLocaleString()} in-file duplicates</span>
+                  <span className="chip chip--out">
+                    {preview.duplicatesInFile.toLocaleString()} in-file duplicates
+                  </span>
                 )}
                 {preview.invalid.length > 0 && (
-                  <span className="chip chip--warn">{preview.invalid.length.toLocaleString()} invalid (need email or phone)</span>
+                  <span className="chip chip--warn">
+                    {preview.invalid.length.toLocaleString()} invalid (need email or phone)
+                  </span>
                 )}
               </div>
             )}
@@ -294,7 +320,11 @@ export function CsvImporter() {
             )}
 
             {error && (
-              <p className="chip chip--bad" style={{ display: "inline-flex", marginTop: 12 }} role="alert">
+              <p
+                className="chip chip--bad"
+                style={{ display: "inline-flex", marginTop: 12 }}
+                role="alert"
+              >
                 {error}
               </p>
             )}
@@ -320,11 +350,24 @@ export function CsvImporter() {
             <span style={{ color: "var(--ok, #047857)", display: "inline-flex" }}>
               <Icon name="checkCircle" size={32} />
             </span>
-            <h4 style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginTop: 10 }}>Import complete</h4>
-            <div className="row" style={{ justifyContent: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}>
+            <h4 style={{ fontSize: 15, fontWeight: 600, color: "var(--ink)", marginTop: 10 }}>
+              Import complete
+            </h4>
+            <div
+              className="row"
+              style={{ justifyContent: "center", gap: 8, marginTop: 12, flexWrap: "wrap" }}
+            >
               <span className="chip chip--ok">{result.created.toLocaleString()} created</span>
-              {result.duplicates > 0 && <span className="chip chip--out">{result.duplicates.toLocaleString()} duplicates skipped</span>}
-              {result.invalid > 0 && <span className="chip chip--warn">{result.invalid.toLocaleString()} invalid skipped</span>}
+              {result.duplicates > 0 && (
+                <span className="chip chip--out">
+                  {result.duplicates.toLocaleString()} duplicates skipped
+                </span>
+              )}
+              {result.invalid > 0 && (
+                <span className="chip chip--warn">
+                  {result.invalid.toLocaleString()} invalid skipped
+                </span>
+              )}
             </div>
             <div style={{ marginTop: 16 }}>
               <button type="button" className="btn btn--sm" onClick={reset}>

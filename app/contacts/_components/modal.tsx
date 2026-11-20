@@ -1,6 +1,7 @@
 "use client";
 
 import { Icon } from "@/components/shell/icon";
+import { BodyPortal } from "@/components/ui/body-portal";
 import { useEffect, useRef } from "react";
 
 /**
@@ -31,6 +32,8 @@ export function Modal({
   // on EVERY keystroke inside the dialog (bug 008 in the June 2026 assessment:
   // Add Contact inputs lost focus after each character).
   const onCloseRef = useRef(onClose);
+  // The panel mounts a tick late (portal), so focus it once when it attaches.
+  const focusedRef = useRef(false);
   onCloseRef.current = onClose;
 
   useEffect(() => {
@@ -40,49 +43,65 @@ export function Modal({
     document.addEventListener("keydown", onKey);
     const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
-    panelRef.current?.focus();
     return () => {
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = prevOverflow;
     };
   }, []);
 
+  // Portalled to <body>: the frosted (backdrop-filter) cards that host the
+  // triggers would otherwise trap this fixed overlay inside the card.
   return (
-    <div
-      role="presentation"
-      onMouseDown={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      style={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 60,
-        background: "rgba(11,13,14,0.42)",
-        backdropFilter: "blur(2px)",
-        display: "flex",
-        alignItems: "flex-start",
-        justifyContent: "center",
-        padding: "6vh 16px 16px",
-        overflowY: "auto",
-      }}
-    >
+    <BodyPortal>
       <div
-        ref={panelRef}
-        tabIndex={-1}
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        className="ds-card"
-        style={{ width: "100%", maxWidth: width, outline: "none", background: "var(--surface)" }}
+        role="presentation"
+        className="cd-modal"
+        onMouseDown={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
+        style={{
+          position: "fixed",
+          inset: 0,
+          zIndex: 60,
+          background: "rgba(28,28,30,0.26)",
+          backdropFilter: "blur(10px) saturate(140%)",
+          display: "flex",
+          alignItems: "flex-start",
+          justifyContent: "center",
+          padding: "6vh 16px 16px",
+          overflowY: "auto",
+        }}
       >
-        <div className="ds-card__head">
-          <h3 className="ds-card__title">{title}</h3>
-          <button type="button" className="btn btn--ghost btn--xs" onClick={onClose} aria-label="Close">
-            <Icon name="x" size={15} />
-          </button>
+        <div
+          ref={(el) => {
+            panelRef.current = el;
+            if (el && !focusedRef.current) {
+              focusedRef.current = true;
+              el.focus();
+            }
+          }}
+          tabIndex={-1}
+          // biome-ignore lint/a11y/useSemanticElements: custom overlay; a native <dialog> needs showModal() wiring.
+          role="dialog"
+          aria-modal="true"
+          aria-label={title}
+          className="ds-card cd-modal__panel"
+          style={{ width: "100%", maxWidth: width, outline: "none" }}
+        >
+          <div className="ds-card__head">
+            <h3 className="ds-card__title">{title}</h3>
+            <button
+              type="button"
+              className="btn btn--ghost btn--xs"
+              onClick={onClose}
+              aria-label="Close"
+            >
+              <Icon name="x" size={15} />
+            </button>
+          </div>
+          {children}
         </div>
-        {children}
       </div>
-    </div>
+    </BodyPortal>
   );
 }

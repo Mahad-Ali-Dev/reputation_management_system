@@ -42,7 +42,9 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
       try {
         const result = await exportContacts(fd);
         triggerDownload(result.dataUrl, result.filename);
-        setNote(`Exported ${result.count.toLocaleString()} contact${result.count === 1 ? "" : "s"}.`);
+        setNote(
+          `Exported ${result.count.toLocaleString()} contact${result.count === 1 ? "" : "s"}.`,
+        );
       } catch (e) {
         setError(e instanceof Error ? e.message : "Export failed.");
       }
@@ -51,30 +53,29 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
 
   return (
     <div className="cd-card">
-      <div className="cd-sec-head" style={{ borderBottom: "none" }}>
-        <div>
-          <h3 className="cd-sec-title">Export contacts</h3>
-          <p className="cd-sec-sub">Download a CSV of all contacts, your current filter, or a segment.</p>
+      <div className="cd-ie-head" style={{ paddingBottom: 18 }}>
+        <span className="cd-ie-head__tile cd-ie-head__tile--vio">
+          <Icon name="download" size={22} />
+        </span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 className="cd-ie-head__title">Export contacts</h3>
+          <p className="cd-ie-head__sub">
+            Download a CSV of all contacts, your current filter, or a segment.
+          </p>
         </div>
       </div>
       <div className="cd-export">
         <div className="cd-export__ctrls">
           <fieldset style={{ border: 0, padding: 0, margin: 0 }}>
-            <legend
-              style={{
-                fontSize: 10.5,
-                fontWeight: 700,
-                letterSpacing: "0.05em",
-                textTransform: "uppercase",
-                color: "var(--cd-muted)",
-                marginBottom: 10,
-              }}
-            >
-              Export scope
-            </legend>
-            <div className="row" style={{ gap: 20, flexWrap: "wrap" }}>
+            <legend className="cd-scope__lbl">Export scope</legend>
+            <div className="cd-scope">
               <ScopeRadio value="all" current={scope} onChange={setScope} label="All contacts" />
-              <ScopeRadio value="filter" current={scope} onChange={setScope} label="Current filter" />
+              <ScopeRadio
+                value="filter"
+                current={scope}
+                onChange={setScope}
+                label="Current filter"
+              />
               <ScopeRadio value="segment" current={scope} onChange={setScope} label="A segment" />
             </div>
           </fieldset>
@@ -82,7 +83,11 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
           {scope === "segment" && (
             <label style={{ display: "block", maxWidth: 280, marginTop: 12 }}>
               <span className="lbl">Segment</span>
-              <select className="ds-select" value={segKey} onChange={(e) => setSegKey(e.target.value)}>
+              <select
+                className="ds-select"
+                value={segKey}
+                onChange={(e) => setSegKey(e.target.value)}
+              >
                 {segments.map((s) => (
                   <option key={s.key} value={s.key}>
                     {s.label}
@@ -92,13 +97,17 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
             </label>
           )}
 
-          <div className="row" style={{ gap: 12, alignItems: "center", marginTop: 16, flexWrap: "wrap" }}>
+          <div
+            className="row"
+            style={{ gap: 12, alignItems: "center", marginTop: 16, flexWrap: "wrap" }}
+          >
             <button type="button" className="btn btn--pri btn--sm" disabled={pending} onClick={run}>
               <Icon name="download" size={13} />
               {pending ? "Preparing…" : "Export CSV"}
             </button>
             <span className="cd-fmt">.csv file · UTF-8</span>
             {note && (
+              // biome-ignore lint/a11y/useSemanticElements: inline live-region badge; <output> isn't a fit here.
               <span className="cd-badge cd-badge--ok" role="status">
                 {note}
               </span>
@@ -112,7 +121,12 @@ export function ExportControls({ segments }: { segments: { key: string; label: s
         </div>
         <div className="cd-export__art">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={`${ART}/export-list.svg`} alt="" aria-hidden className="cd-illus cd-illus--export" />
+          <img
+            src={`${ART}/export-list.svg`}
+            alt=""
+            aria-hidden
+            className="cd-illus cd-illus--export"
+          />
         </div>
       </div>
     </div>
@@ -131,9 +145,14 @@ function ScopeRadio({
   label: string;
 }) {
   return (
-    <label className="row" style={{ gap: 8, cursor: "pointer", fontSize: 13, fontWeight: 600, color: "var(--cd-ink-2)" }}>
-      <input type="radio" name="export-scope" checked={current === value} onChange={() => onChange(value)} />
-      {label}
+    <label className={`cd-scope__opt${current === value ? " is-active" : ""}`}>
+      <input
+        type="radio"
+        name="export-scope"
+        checked={current === value}
+        onChange={() => onChange(value)}
+      />
+      <span>{label}</span>
     </label>
   );
 }

@@ -1,21 +1,22 @@
 import { AppShellServer } from "@/components/app-shell-server";
 import { PageHeader } from "@/components/page-header";
-import { TopBar } from "@/components/topbar";
 import { Icon } from "@/components/shell/icon";
+import { TopBar } from "@/components/topbar";
 import { getOrgContext } from "@/lib/auth/org-context";
 import { getContactStats } from "@/lib/contacts/queries";
 import Link from "next/link";
 import { Suspense } from "react";
-import { ContactsTabs } from "./_components/contacts-tabs";
-import { ContactsPanel } from "./_components/contacts-panel";
 import { ContactsEmpty } from "./_components/contacts-empty";
-import { SegmentsPanel } from "./_components/segments-panel";
-import { SegmentsRail } from "./_components/segments-rail";
+import { ContactsPanel } from "./_components/contacts-panel";
+import { ContactsTabs } from "./_components/contacts-tabs";
 import { ImportExportPanel } from "./_components/import-export-panel";
 import { ProfileDrawer, ProfileDrawerPlaceholder } from "./_components/profile-drawer";
+import { SegmentsPanel } from "./_components/segments-panel";
+import { SegmentsRail } from "./_components/segments-rail";
 import { StatCards } from "./_components/stat-cards";
 import "./contacts.css";
 import "./contacts-glass.css";
+import "./contacts-apple.css";
 
 /**
  * Contact Directory — the CRM workspace (Module 12), re-skinned to the delivered
@@ -65,12 +66,15 @@ export default async function ContactsPage({
   const isEmpty = forceEmpty || stats.total === 0;
 
   return (
-    <AppShellServer topBar={<TopBar title="Customer Directory" />} crumbs={["CRM", "Customer Directory"]}>
+    <AppShellServer
+      topBar={<TopBar title="Customer Directory" />}
+      crumbs={["CRM", "Customer Directory"]}
+    >
       <div className="cd-page">
         <PageHeader
           title="Contacts"
           description="Your cross-channel customer directory every person who interacts with your business, in one place."
-          breadcrumb={[{ label: "CRM" }, { label: "Contacts" }]}
+          kicker="Customer Directory"
           actions={
             <Link href="/contacts?tab=import" className="btn btn--pri btn--sm">
               <Icon name="upload" size={13} />
