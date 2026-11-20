@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useRef } from "react";
+
 /**
  * "Scene controls" for the Earth login background, the same knobs as the
  * Earth Blaze component's own demo: illumination, nebula, Earth detail, stars,
@@ -78,8 +80,29 @@ export function EarthControls({
   const set = <K extends keyof EarthSettings>(key: K, v: EarthSettings[K]) =>
     onChange({ ...value, [key]: v });
 
+  // Closed by default (no `open` attribute) on every screen size. Once opened,
+  // a tap/click outside the panel or Escape closes it again.
+  const ref = useRef<HTMLDetailsElement>(null);
+  useEffect(() => {
+    const close = () => {
+      if (ref.current?.open) ref.current.open = false;
+    };
+    const onPointer = (e: PointerEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) close();
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") close();
+    };
+    document.addEventListener("pointerdown", onPointer);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onPointer);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
   return (
-    <details className="eb-ctl">
+    <details ref={ref} className="eb-ctl">
       <summary>
         <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
           <path
