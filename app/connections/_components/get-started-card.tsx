@@ -87,7 +87,7 @@ export function GetStartedCard() {
                     height: 24,
                     borderRadius: 7,
                     background: "var(--ink)",
-                    color: "#fff",
+                    color: "var(--dk-bg, #fff)",
                     display: "grid",
                     placeItems: "center",
                     fontSize: 11,

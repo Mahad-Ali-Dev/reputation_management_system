@@ -714,14 +714,14 @@ export function Composer({
                 {error && (
                   <span
                     className="row"
-                    style={{ fontSize: 12.5, color: "#c0344a", gap: 6 }}
+                    style={{ fontSize: 12.5, color: "var(--dk-danger-text, #c0344a)", gap: 6 }}
                     role="alert"
                   >
                     <Icon name="alert" size={13} /> {error}
                   </span>
                 )}
                 {success && !error && (
-                  <span className="row" style={{ fontSize: 12.5, color: "#0f8a4d", gap: 6 }}>
+                  <span className="row" style={{ fontSize: 12.5, color: "var(--dk-success-text, #0f8a4d)", gap: 6 }}>
                     <Icon name="checkCircle" size={13} /> {success}
                   </span>
                 )}

@@ -11,7 +11,7 @@
   margin: 0 auto;
   padding: 40px 20px 56px;
   text-align: center;
-  color: #1d1d1f;
+  color: var(--dk-text, #1d1d1f);
 }
 .cs__frog {
   display: grid;
@@ -39,7 +39,7 @@
   margin: 14px 0 0;
   font-size: 17px;
   line-height: 1.47;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
 }
 .cs__list {
   width: 100%;
@@ -48,8 +48,8 @@
   padding: 6px 0;
   list-style: none;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.82);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05);
+  background: var(--dk-surface, rgba(255, 255, 255, 0.82));
+  box-shadow: var(--dk-shadow-sm, 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05));
   text-align: left;
 }
 .cs__item {
@@ -62,7 +62,7 @@
   line-height: 1.4;
 }
 .cs__item + .cs__item {
-  border-top: 1px solid rgba(60, 60, 67, 0.12);
+  border-top: 1px solid var(--dk-border, rgba(60, 60, 67, 0.12));
 }
 .cs__tick {
   display: grid;
@@ -100,5 +100,5 @@
 .cs__note {
   margin: 12px 0 0;
   font-size: 13px;
-  color: #86868b;
+  color: var(--dk-text-subtle, #86868b);
 }

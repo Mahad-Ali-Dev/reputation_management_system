@@ -202,7 +202,7 @@ export function PhonePreview({
         borderRadius: 28,
         border: "1px solid var(--line)",
         background: "var(--surface)",
-        boxShadow: "0 10px 30px -12px rgba(15,23,42,0.18)",
+        boxShadow: "var(--dk-shadow, 0 10px 30px -12px rgba(15,23,42,0.18))",
         overflow: "hidden",
       }}
     >

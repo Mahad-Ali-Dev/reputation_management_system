@@ -142,7 +142,7 @@ export function EstablishmentMenu({
               width: "min(460px, calc(100vw - 32px))",
               background: "var(--surface)",
               borderRadius: 16,
-              boxShadow: "0 30px 60px -20px rgba(15,23,42,.4)",
+              boxShadow: "var(--dk-shadow, 0 30px 60px -20px rgba(15,23,42,.4))",
               zIndex: 81,
               padding: 24,
               textAlign: "left",

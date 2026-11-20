@@ -175,11 +175,11 @@ function Field({
         required={required}
         style={{
           ...inputStyle,
-          borderColor: fieldError ? "#fca5a5" : undefined,
+          borderColor: fieldError ? "var(--dk-danger-text, #fca5a5)" : undefined,
         }}
       />
       {fieldError ? (
-        <span style={{ fontSize: 11.5, color: "#b91c1c" }}>{fieldError}</span>
+        <span style={{ fontSize: 11.5, color: "var(--dk-danger-text, #b91c1c)" }}>{fieldError}</span>
       ) : hint ? (
         <span className="dim" style={{ fontSize: 11.5, lineHeight: 1.5 }}>
           {hint}
@@ -217,11 +217,11 @@ function FieldTextarea({
           padding: "10px 12px",
           resize: "vertical",
           fontFamily: "inherit",
-          borderColor: fieldError ? "#fca5a5" : undefined,
+          borderColor: fieldError ? "var(--dk-danger-text, #fca5a5)" : undefined,
         }}
       />
       {fieldError ? (
-        <span style={{ fontSize: 11.5, color: "#b91c1c" }}>{fieldError}</span>
+        <span style={{ fontSize: 11.5, color: "var(--dk-danger-text, #b91c1c)" }}>{fieldError}</span>
       ) : hint ? (
         <span className="dim" style={{ fontSize: 11.5, lineHeight: 1.5 }}>
           {hint}
@@ -262,9 +262,9 @@ const inputStyle: React.CSSProperties = {
 const errorBoxStyle: React.CSSProperties = {
   padding: "12px 14px",
   borderRadius: 10,
-  background: "#fef2f2",
-  border: "1px solid #fecaca",
-  color: "#7f1d1d",
+  background: "var(--dk-danger-soft, #fef2f2)",
+  border: "1px solid var(--dk-danger-soft, #fecaca)",
+  color: "var(--dk-danger-text, #7f1d1d)",
   fontSize: 13,
   lineHeight: 1.55,
 };

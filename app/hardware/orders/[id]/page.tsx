@@ -37,7 +37,7 @@ export default async function OrderDetailPage({
 
       <div className="space-y-6">
         {sp.status === "success" && (
-          <div className="rounded-md bg-emerald-50 p-4 text-sm text-emerald-900">
+          <div className="rounded-md bg-[var(--dk-success-soft,#ecfdf5)] p-4 text-sm text-[var(--dk-success-text,#064e3b)]">
             ✓ Payment received. We've started preparing your order check your email for the
             shipment notification, then follow the activation card in the box.
           </div>
@@ -108,7 +108,7 @@ export default async function OrderDetailPage({
             ) : (
               <div className="space-y-2">
                 {order.devices.map((d) => (
-                  <div key={d.id} className="flex justify-between rounded-md border bg-white p-2 text-sm">
+                  <div key={d.id} className="flex justify-between rounded-md border bg-[var(--dk-surface,#fff)] p-2 text-sm">
                     <code>{d.shortSlug}</code>
                     <span className="capitalize text-muted-foreground">{d.status}</span>
                   </div>

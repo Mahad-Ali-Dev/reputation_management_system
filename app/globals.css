@@ -1350,8 +1350,17 @@
     --aurora-opacity: 1;
   }
 
-  /* ── DARK (aurora) ── */
-  .glass-theme[data-glass-mode="dark"] {
+  /* Every dark value below is screen-only: printing / "Export PDF" always
+     renders the light theme, whatever the user picked on screen. */
+  @media not print {
+  /* ── DARK (aurora) ──
+     Also driven by the app-wide switch: <html data-theme="dark"> (set before
+     paint by components/theme-provider.tsx). Scoped with :has(.app--glass) so
+     only signed-in glass app pages go dark; login/landing/public pages keep
+     their own look. Declared on <html> too so body-portaled sheets inherit it. */
+  .glass-theme[data-glass-mode="dark"],
+  html[data-theme="dark"]:has(.app--glass, .sys-load, .sys-load-min),
+  html[data-theme="dark"]:has(.app--glass, .sys-load, .sys-load-min) .glass-theme {
     color-scheme: dark;
 
     --glass-fill: rgba(255, 255, 255, 0.08);
@@ -1396,6 +1405,195 @@
     --aurora-2: rgba(18, 185, 152, 0.4);
     --aurora-3: rgba(139, 92, 246, 0.48);
     --aurora-opacity: 1;
+  }
+
+  /* ── DARK — core app tokens ──
+     The :root palette above (and its .rl-theme re-declaration) recoloured for
+     dark, so every shared primitive that reads var(--surface)/var(--ink)/
+     var(--line)… (design-system.css, glass-chrome.css, most page kits) adapts
+     without per-rule overrides. Light values are untouched. */
+  html[data-theme="dark"]:has(.app--glass, .sys-load, .sys-load-min),
+  html[data-theme="dark"]:has(.app--glass, .sys-load, .sys-load-min) .rl-theme {
+    color-scheme: dark;
+
+    /* shadcn HSL fragments (mirrors the .dark set) */
+    --background: 228 47% 8%;
+    --foreground: 220 60% 96%;
+    --card: 226 40% 13%;
+    --card-foreground: 220 60% 96%;
+    --primary: 245 100% 70%;
+    --primary-foreground: 230 60% 8%;
+    --secondary: 226 30% 18%;
+    --secondary-foreground: 220 60% 96%;
+    --muted: 226 30% 18%;
+    --muted-foreground: 222 18% 68%;
+    --accent: 226 30% 18%;
+    --accent-foreground: 220 60% 96%;
+    --destructive: 0 84% 68%;
+    --destructive-foreground: 230 60% 8%;
+    --border: 226 25% 22%;
+    --input: 226 25% 22%;
+    --ring: 245 100% 72%;
+
+    --bg: #0b1020;
+    --bg-2: #0d1326;
+    --surface: #141b2f;
+    --surface-2: #182038;
+    --surface-3: #1e2741;
+
+    --ink: #eef2fb;
+    --ink-2: #dde3f1;
+    --ink-3: #b3bdd4;
+
+    --rl-muted: #98a3bd;
+    --rl-muted-2: #7c87a3;
+    --rl-muted-3: #4a5470;
+
+    --line: rgba(255, 255, 255, 0.09);
+    --line-2: rgba(255, 255, 255, 0.13);
+    --line-3: rgba(255, 255, 255, 0.2);
+
+    /* brand blue lifted so it reads as text on dark and still carries white
+       button labels */
+    --pri: #7466ff;
+    --pri-50: rgba(123, 109, 255, 0.14);
+    --pri-100: rgba(123, 109, 255, 0.22);
+    --pri-300: #aaa2ff;
+    --pri-700: #b3abff;
+    --pri-900: #d6d1ff;
+    --indigo: #9b88ff;
+    --indigo-50: rgba(122, 99, 255, 0.16);
+    --indigo-soft: rgba(122, 99, 255, 0.24);
+
+    --trust: #2fd0ae;
+    --trust-soft: rgba(18, 185, 152, 0.18);
+
+    --m3-primary: #7466ff;
+    --m3-on-primary: #ffffff;
+    --m3-primary-container: rgba(116, 102, 255, 0.22);
+    --m3-on-primary-container: #dcd8ff;
+    --m3-secondary: #aab5d4;
+    --m3-on-secondary: #0b1020;
+    --m3-secondary-container: rgba(255, 255, 255, 0.08);
+    --m3-on-secondary-container: #dde3f1;
+    --m3-tertiary: #2fd0ae;
+    --m3-on-tertiary: #04201a;
+    --m3-tertiary-container: rgba(18, 185, 152, 0.2);
+    --m3-on-tertiary-container: #a7f3e0;
+    --m3-error: #f87171;
+    --m3-on-error: #2a0a0f;
+    --m3-error-container: rgba(248, 113, 113, 0.18);
+    --m3-on-error-container: #fecaca;
+
+    --surface-tint: #7466ff;
+    --surface-tint-1: rgba(123, 109, 255, 0.05);
+    --surface-tint-2: rgba(123, 109, 255, 0.07);
+    --surface-tint-3: rgba(123, 109, 255, 0.09);
+    --surface-tint-4: rgba(123, 109, 255, 0.11);
+    --surface-tint-5: rgba(123, 109, 255, 0.13);
+    --surface-container-tint: rgba(123, 109, 255, 0.1);
+    --surface-container-tint-high: rgba(123, 109, 255, 0.16);
+
+    --ok: #34d399;
+    --ok-soft: rgba(52, 211, 153, 0.16);
+    --warn: #fbbf24;
+    --warn-soft: rgba(251, 191, 36, 0.16);
+    --bad: #f87171;
+    --bad-soft: rgba(248, 113, 113, 0.16);
+    --info: #8f84ff;
+    --info-soft: rgba(143, 132, 255, 0.16);
+    --gold: #f5a623;
+
+    --surface-dim: #0b1020;
+    --surface-bright: #1f2940;
+    --surface-container-lowest: #0f1628;
+    --surface-container-low: #131a2d;
+    --surface-container: #161e33;
+    --surface-container-high: #1a2339;
+    --surface-container-highest: #1f2940;
+    --on-surface: #eef2fb;
+    --on-surface-variant: #b3bdd4;
+    --outline: rgba(255, 255, 255, 0.2);
+    --outline-variant: rgba(255, 255, 255, 0.12);
+    --state-on-surface: 238, 242, 251;
+    --state-pri: 123, 109, 255;
+
+    --sh: 0 1px 2px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.04);
+    --sh-1: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 30px -18px rgba(0, 0, 0, 0.55);
+    --sh-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.55);
+    --sh-2: 0 1px 2px rgba(0, 0, 0, 0.3), 0 20px 44px -18px rgba(0, 0, 0, 0.6), 0 6px 16px -8px
+      rgba(0, 0, 0, 0.4);
+    --sh-pop: 0 30px 66px -22px rgba(0, 0, 0, 0.7), 0 10px 22px -10px rgba(0, 0, 0, 0.5);
+    --sh-sm: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 3px rgba(0, 0, 0, 0.3);
+    --sh-md: 0 1px 2px rgba(0, 0, 0, 0.35), 0 6px 16px -6px rgba(0, 0, 0, 0.5);
+    --sh-lg: 0 2px 4px -1px rgba(0, 0, 0, 0.4), 0 12px 28px -8px rgba(0, 0, 0, 0.55);
+    --sh-xl: 0 4px 8px -2px rgba(0, 0, 0, 0.45), 0 24px 48px -12px rgba(0, 0, 0, 0.6);
+    --shadow-sm: var(--sh-sm);
+    --shadow-md: var(--sh-md);
+    --shadow-lg: var(--sh-lg);
+    --shadow-xl: var(--sh-xl);
+    --sh-glow: 0 0 0 4px rgba(123, 109, 255, 0.24);
+    --grad-pri: linear-gradient(180deg, #7466ff 0%, #5d4dff 100%);
+    --grad-pri-hover: linear-gradient(180deg, #8578ff 0%, #6a5bff 100%);
+    --grad-ink: linear-gradient(180deg, #2a3350 0%, #1c2440 100%);
+    --grad-canvas: linear-gradient(140deg, #0a1022 0%, #070b18 50%, #0b0f1e 100%);
+  }
+
+  /* ── DARK — adaptive overrides for hard-coded light colours ──
+     Page kits still carry literal light colours (#fff cards, #0e1238 ink…).
+     Those are written as `var(--dk-<role>, <original>)`: the --dk-* tokens are
+     declared ONLY here, so in light mode the var is undefined and the original
+     literal renders byte-for-byte; in dark the role value takes over. Use the
+     role that matches what the colour DOES, not its hex. */
+  html[data-theme="dark"]:has(.app--glass, .sys-load, .sys-load-min) {
+    --dk-bg: #0b1020; /* flat page canvases */
+    /* route loading screens (app/system-states.css) — the app's dark canvas */
+    --dk-loading-canvas: linear-gradient(140deg, #0a1022 0%, #070b18 50%, #0b0f1e 100%);
+    --dk-surface: #141b2f; /* white cards, panels, inputs, menus, modals */
+    --dk-surface-2: #182038; /* light grey bands, insets, table heads */
+    --dk-surface-3: #1e2741; /* hover / pressed / stronger grey fills */
+    --dk-glass: rgba(255, 255, 255, 0.06); /* translucent white fills */
+    --dk-glass-strong: rgba(255, 255, 255, 0.1);
+
+    --dk-text: #eef2fb; /* near-black headings + body ink */
+    --dk-text-2: #c9d1e4; /* dark-grey secondary ink */
+    --dk-text-muted: #98a3bd; /* mid-grey helper text */
+    --dk-text-subtle: #7c87a3; /* light-grey captions, placeholders */
+    --dk-on-accent: #ffffff;
+
+    --dk-border: rgba(255, 255, 255, 0.1); /* hairlines */
+    --dk-border-soft: rgba(255, 255, 255, 0.06);
+    --dk-border-strong: rgba(255, 255, 255, 0.18); /* stronger / dashed */
+
+    --dk-accent-text: #a79fff; /* brand purple/blue used as text or icon */
+    --dk-accent-soft: rgba(143, 132, 255, 0.16); /* lavender / pale-blue tints */
+    --dk-accent-faint: rgba(143, 132, 255, 0.08); /* barely-there accent washes */
+    --dk-accent-border: rgba(143, 132, 255, 0.38);
+
+    --dk-success-text: #4ade80;
+    --dk-success-soft: rgba(74, 222, 128, 0.14);
+    --dk-danger-text: #f87171;
+    --dk-danger-soft: rgba(248, 113, 113, 0.14);
+    --dk-warning-text: #fbbf24;
+    --dk-warning-soft: rgba(251, 191, 36, 0.14);
+    --dk-info-text: #7cb4ff;
+    --dk-info-soft: rgba(96, 165, 250, 0.14);
+    --dk-teal-text: #2dd4bf;
+    --dk-teal-soft: rgba(45, 212, 191, 0.14);
+    --dk-pink-text: #f472b6;
+    --dk-pink-soft: rgba(244, 114, 182, 0.14);
+
+    --dk-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    --dk-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
+    --dk-scrim: rgba(3, 6, 15, 0.66);
+    --dk-none: none; /* drop decorative light gradients/glows */
+
+    /* Kit illustrations bake a near-white background and rely on
+       mix-blend-mode: multiply, which turns black on a dark canvas. Invert +
+       hue-rotate keeps their hues, and screen drops the (now black) backing. */
+    --dk-art-blend: screen;
+    --dk-art-filter: invert(1) hue-rotate(180deg) brightness(1.05) saturate(1.1);
+  }
   }
 
   .glass-theme {

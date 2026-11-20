@@ -12,24 +12,24 @@
   --bill-indigo: #4f46e5;
   --bill-purple: #7c3aed;
   --bill-purple-2: #8b5cf6;
-  --bill-lav: #ede9fe;
-  --bill-lav-soft: #f5f3ff;
+  --bill-lav: var(--dk-accent-soft, #ede9fe);
+  --bill-lav-soft: var(--dk-accent-faint, #f5f3ff);
   --bill-blue: #3b82f6;
-  --bill-blue-soft: #dbeafe;
+  --bill-blue-soft: var(--dk-info-soft, #dbeafe);
   --bill-teal: #0ea5a5;
   --bill-green: #10b981;
-  --bill-green-soft: #dcfce7;
-  --bill-green-tint: #f0fdf4;
+  --bill-green-soft: var(--dk-success-soft, #dcfce7);
+  --bill-green-tint: var(--dk-success-soft, #f0fdf4);
   --bill-orange: #f97316;
-  --bill-orange-soft: #fff1e6;
-  --bill-ink: #1e293b;
-  --bill-ink-2: #475569;
-  --bill-mut: #64748b;
-  --bill-mut-2: #94a3b8;
-  --bill-line: #e2e8f0;
-  --bill-track: #eef1f6;
-  --bill-card: #ffffff;
-  --bill-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.035);
+  --bill-orange-soft: var(--dk-warning-soft, #fff1e6);
+  --bill-ink: var(--dk-text, #1e293b);
+  --bill-ink-2: var(--dk-text-2, #475569);
+  --bill-mut: var(--dk-text-muted, #64748b);
+  --bill-mut-2: var(--dk-text-subtle, #94a3b8);
+  --bill-line: var(--dk-border, #e2e8f0);
+  --bill-track: var(--dk-surface-3, #eef1f6);
+  --bill-card: var(--dk-surface, #ffffff);
+  --bill-shadow: var(--dk-shadow, 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.035));
   --bill-shadow-float: 0 12px 34px rgba(124, 58, 237, 0.14);
 
   display: flex;
@@ -43,7 +43,7 @@
    teal/gold gradient. Page-scoped via :has() so only this page swaps canvas. */
 .app--canvas:has(.bill) {
   background-image: none;
-  background-color: #f6f7fb;
+  background-color: var(--dk-bg, #f6f7fb);
 }
 
 /* ── Header ─────────────────────────────────────────────────────────── */
@@ -62,7 +62,7 @@
   font-weight: 700;
   letter-spacing: 0.055em;
   text-transform: uppercase;
-  color: var(--bill-indigo);
+  color: var(--dk-accent-text, var(--bill-indigo));
   margin-bottom: 12px;
 }
 .bill-eyebrow .sep {
@@ -117,8 +117,8 @@
   padding: 12px 16px;
   border-radius: 12px;
   background: var(--bill-green-tint);
-  border: 1px solid #bbf7d0;
-  color: #166534;
+  border: 1px solid var(--dk-border, #bbf7d0);
+  color: var(--dk-success-text, #166534);
   font-size: 13px;
   line-height: 1.5;
 }
@@ -155,13 +155,13 @@
   text-transform: uppercase;
 }
 .bill-card__tier--standard {
-  color: var(--bill-indigo);
+  color: var(--dk-accent-text, var(--bill-indigo));
 }
 .bill-card__tier--pro {
-  color: var(--bill-purple);
+  color: var(--dk-accent-text, var(--bill-purple));
 }
 .bill-card__tier--scale {
-  color: var(--bill-blue);
+  color: var(--dk-info-text, var(--bill-blue));
 }
 
 .bill-card__badge {
@@ -175,7 +175,7 @@
   padding: 0 11px;
   border-radius: 999px;
   background: var(--bill-lav);
-  color: #6d28d9;
+  color: var(--dk-accent-text, #6d28d9);
   font-size: 10.5px;
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -216,7 +216,8 @@
   height: 100px;
   width: auto;
   pointer-events: none;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .bill-card--pro .bill-card__art {
   height: 112px;
@@ -244,7 +245,7 @@
   cursor: pointer;
   text-decoration: none;
   border: 1px solid var(--bill-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--bill-ink-2);
   transition:
     background 0.15s ease,
@@ -252,7 +253,7 @@
     transform 0.05s ease;
 }
 .bill-card__cta:hover {
-  background: #f8fafc;
+  background: var(--dk-surface-2, #f8fafc);
 }
 .bill-card__cta:active {
   transform: translateY(1px);
@@ -260,12 +261,12 @@
 /* current-plan (non-actionable) — outline, muted, no hover lift */
 .bill-card__cta--current {
   cursor: default;
-  color: var(--bill-indigo);
-  border-color: #c7d2fe;
-  background: #fff;
+  color: var(--dk-accent-text, var(--bill-indigo));
+  border-color: var(--dk-accent-border, #c7d2fe);
+  background: var(--dk-surface, #fff);
 }
 .bill-card__cta--current:hover {
-  background: #fff;
+  background: var(--dk-surface, #fff);
 }
 .bill-card__cta--current:active {
   transform: none;
@@ -275,7 +276,7 @@
   cursor: default;
   background: var(--bill-lav);
   border-color: transparent;
-  color: #6d28d9;
+  color: var(--dk-accent-text, #6d28d9);
 }
 .bill-card__cta--lav:hover {
   background: var(--bill-lav);
@@ -295,11 +296,11 @@
 }
 /* danger (cancel) */
 .bill-card__cta--danger {
-  color: #b91c1c;
-  border-color: #fecaca;
+  color: var(--dk-danger-text, #b91c1c);
+  border-color: var(--dk-border-strong, #fecaca);
 }
 .bill-card__cta--danger:hover {
-  background: #fef2f2;
+  background: var(--dk-danger-soft, #fef2f2);
 }
 
 .bill-card__sep {
@@ -393,12 +394,12 @@
   white-space: nowrap;
 }
 .bill-pill--neutral {
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--bill-mut);
 }
 .bill-pill--ok {
   background: var(--bill-green-soft);
-  color: #16a34a;
+  color: var(--dk-success-text, #16a34a);
 }
 
 /* ── Usage meters ───────────────────────────────────────────────────── */
@@ -494,12 +495,12 @@
 }
 .bill-banner--lav {
   background: var(--bill-lav-soft);
-  border: 1px solid #ede9fe;
+  border: 1px solid var(--dk-border, #ede9fe);
   margin-top: 20px;
 }
 .bill-banner--green {
   background: var(--bill-green-tint);
-  border: 1px solid #dcfce7;
+  border: 1px solid var(--dk-border, #dcfce7);
   margin-top: 20px;
 }
 .bill-banner__ic {
@@ -518,7 +519,7 @@
   padding: 0 14px;
   border-radius: 9px;
   border: 1px solid var(--bill-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--bill-ink-2);
   font-family: var(--f-ui);
   font-size: 12.5px;
@@ -529,7 +530,7 @@
   transition: background 0.15s ease;
 }
 .bill-banner__cta:hover {
-  background: #f8fafc;
+  background: var(--dk-surface-2, #f8fafc);
 }
 
 /* ── Billing-overview key/value list (dl) ───────────────────────────── */

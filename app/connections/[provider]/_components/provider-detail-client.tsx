@@ -203,9 +203,9 @@ export function ProviderDetailClient({
                 marginTop: 14,
                 padding: "10px 12px",
                 borderRadius: 9,
-                border: "1px solid #fde68a",
-                background: "#fffbeb",
-                color: "#92400e",
+                border: "1px solid var(--dk-border, #fde68a)",
+                background: "var(--dk-warning-soft, #fffbeb)",
+                color: "var(--dk-warning-text, #92400e)",
                 fontSize: 12.5,
                 alignItems: "flex-start",
               }}

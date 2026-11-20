@@ -130,7 +130,7 @@ export default async function SecuritySettingsPage({
 
       {/* ── Two-factor authentication ─────────────────────────────────── */}
       <div className="set-sec-head" style={{ alignItems: "center", marginBottom: 4 }}>
-        <span className="set-tile set-tile--sm" style={{ background: "#f1f5f9", color: "var(--set-mut)" }}>
+        <span className="set-tile set-tile--sm" style={{ background: "var(--dk-surface-3, #f1f5f9)", color: "var(--set-mut)" }}>
           <Icon name="smartphone" size={16} />
         </span>
         <div style={{ flex: 1 }}>
@@ -180,7 +180,7 @@ export default async function SecuritySettingsPage({
               gap: 8,
               padding: 14,
               borderRadius: 10,
-              background: "#f8fafc",
+              background: "var(--dk-surface-2, #f8fafc)",
               border: "1px solid var(--set-line)",
               fontFamily: "var(--f-mono, monospace)",
               fontSize: 13,
@@ -239,7 +239,7 @@ export default async function SecuritySettingsPage({
                   marginTop: 6,
                   padding: "8px 10px",
                   borderRadius: 8,
-                  background: "#f8fafc",
+                  background: "var(--dk-surface-2, #f8fafc)",
                   border: "1px solid var(--set-line)",
                   fontFamily: "var(--f-mono, monospace)",
                   fontSize: 13,
@@ -378,10 +378,10 @@ function FeatureRow({
   return (
     <div
       className="set-export-row"
-      style={{ marginTop: 0, marginBottom: 10, background: "#fbfcfe" }}
+      style={{ marginTop: 0, marginBottom: 10, background: "var(--dk-surface-2, #fbfcfe)" }}
     >
       <div className="set-export-row__info">
-        <span className="set-tile set-tile--sm" style={{ background: "#f1f5f9", color: "var(--set-mut)" }}>
+        <span className="set-tile set-tile--sm" style={{ background: "var(--dk-surface-3, #f1f5f9)", color: "var(--set-mut)" }}>
           <Icon name={icon} size={16} />
         </span>
         <div>

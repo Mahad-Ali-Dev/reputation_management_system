@@ -15,43 +15,43 @@
 
 .surv {
   /* ── kit palette (from the campaigns/incentives/results handoffs) ───────── */
-  --surv-canvas: #f8faff;
-  --surv-surface: #ffffff;
-  --surv-surface-soft: #fbfbfd;
-  --surv-ink: #0a0e27;
-  --surv-text: #30324b;
-  --surv-text-2: #565a6f;
-  --surv-muted: #6d7092;
-  --surv-muted-2: #8a90a8;
-  --surv-line: #e1e1e9;
-  --surv-line-soft: #e8eaf1;
-  --surv-divider: #eef1f6;
+  --surv-canvas: var(--dk-bg, #f8faff);
+  --surv-surface: var(--dk-surface, #ffffff);
+  --surv-surface-soft: var(--dk-surface-2, #fbfbfd);
+  --surv-ink: var(--dk-text, #0a0e27);
+  --surv-text: var(--dk-text-2, #30324b);
+  --surv-text-2: var(--dk-text-muted, #565a6f);
+  --surv-muted: var(--dk-text-muted, #6d7092);
+  --surv-muted-2: var(--dk-text-subtle, #8a90a8);
+  --surv-line: var(--dk-border, #e1e1e9);
+  --surv-line-soft: var(--dk-border, #e8eaf1);
+  --surv-divider: var(--dk-surface-3, #eef1f6);
 
-  --surv-pri: #3b17fd;
+  --surv-pri: var(--dk-accent-text, #3b17fd);
   --surv-pri-bright: #4727fb;
   --surv-pri-mid: #645afb;
-  --surv-pri-soft: #eae9fb; /* active tab / nav pill */
-  --surv-pri-pale: #f0eefc; /* icon tiles / chips */
-  --surv-pri-border: #c9c5fb;
-  --surv-lavender: #dad7fc;
+  --surv-pri-soft: var(--dk-accent-soft, #eae9fb); /* active tab / nav pill */
+  --surv-pri-pale: var(--dk-accent-soft, #f0eefc); /* icon tiles / chips */
+  --surv-pri-border: var(--dk-accent-border, #c9c5fb);
+  --surv-lavender: var(--dk-accent-border, #dad7fc);
 
   --surv-ok: #1ba965;
-  --surv-ok-soft: #d8f4e4;
-  --surv-ok-pale: #e3f8ec;
+  --surv-ok-soft: var(--dk-success-soft, #d8f4e4);
+  --surv-ok-pale: var(--dk-success-soft, #e3f8ec);
   --surv-warn: #fb6316;
-  --surv-warn-soft: #fdeae2;
-  --surv-warn-pale: #fee7dc;
+  --surv-warn-soft: var(--dk-warning-soft, #fdeae2);
+  --surv-warn-pale: var(--dk-warning-soft, #fee7dc);
   --surv-blue: #195dfa;
-  --surv-blue-soft: #dae5fc;
+  --surv-blue-soft: var(--dk-info-soft, #dae5fc);
   --surv-yellow: #fdcc72;
   --surv-pink: #ec3476;
-  --surv-pink-soft: #fce5ef;
+  --surv-pink-soft: var(--dk-pink-soft, #fce5ef);
   --surv-bad: #f13a36;
-  --surv-bad-soft: #fde9e7;
+  --surv-bad-soft: var(--dk-danger-soft, #fde9e7);
 
   --surv-r-card: 14px;
   --surv-r-ctrl: 8px;
-  --surv-shadow: 0 4px 14px rgba(17, 24, 39, 0.045);
+  --surv-shadow: var(--dk-shadow-sm, 0 4px 14px rgba(17, 24, 39, 0.045));
   --surv-shadow-pri: 0 5px 12px rgba(59, 23, 253, 0.18);
 
   color: var(--surv-text);
@@ -119,7 +119,8 @@
   height: auto;
   display: block;
   /* the kit hero PNG has a transparent bg already; multiply guards any halo */
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 /* keep hero copy clear of the artwork on wide screens */
 @media (min-width: 901px) {
@@ -388,12 +389,12 @@
   color: inherit;
 }
 .surv-route--happy {
-  background: #f2fcf6;
-  border-color: #c4ecd4;
+  background: var(--dk-success-soft, #f2fcf6);
+  border-color: var(--dk-border, #c4ecd4);
 }
 .surv-route--unhappy {
-  background: #fff4f2;
-  border-color: #f8d4cd;
+  background: var(--dk-danger-soft, #fff4f2);
+  border-color: var(--dk-border, #f8d4cd);
 }
 .surv-route__top {
   display: flex;
@@ -508,7 +509,8 @@
 .surv-themes-empty img {
   width: min(240px, 90%);
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 
 /* donut center label overlay */
@@ -664,7 +666,8 @@
   height: auto;
   margin: 0 auto 8px;
   display: block;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-empty h3 {
   margin: 0;
@@ -714,7 +717,8 @@
   width: 76px;
   height: 76px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-redeem__fields {
   display: grid;
@@ -842,7 +846,8 @@ select.surv-input::-ms-expand {
 .surv-card-deco img {
   width: 100%;
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 
 /* ── Automations table (kit) ────────────────────────────────────────────── */
@@ -863,7 +868,8 @@ select.surv-input::-ms-expand {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-auto-primary {
   font-size: 12px;
@@ -977,7 +983,8 @@ select.surv-input::-ms-expand {
   width: 28px;
   height: 28px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-perf__label {
   font-size: 11px;
@@ -1027,7 +1034,8 @@ select.surv-input::-ms-expand {
   width: 26px;
   height: 26px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-benefit__title {
   font-size: 13px;
@@ -1048,7 +1056,7 @@ select.surv-input::-ms-expand {
   background: var(--surv-ok-pale);
 }
 .surv-tile--yellow {
-  background: #fdf2d6;
+  background: var(--dk-warning-soft, #fdf2d6);
 }
 .surv-tile--blue {
   background: var(--surv-blue-soft);
@@ -1065,9 +1073,11 @@ select.surv-input::-ms-expand {
   min-height: 400px;
   overflow: hidden;
   position: relative;
-  background:
+  background: var(
+    --dk-surface,
     radial-gradient(circle at 24% 51%, rgba(118, 103, 247, 0.08), transparent 34%),
-    linear-gradient(180deg, #ffffff 0%, #fcfbff 100%);
+    linear-gradient(180deg, #ffffff 0%, #fcfbff 100%)
+  );
 }
 @media (max-width: 900px) {
   .surv-auto-empty {
@@ -1083,7 +1093,8 @@ select.surv-input::-ms-expand {
 .surv-auto-empty__art img {
   width: min(360px, 100%);
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-auto-empty__body {
   padding: 32px 40px 32px 8px;
@@ -1143,9 +1154,11 @@ select.surv-input::-ms-expand {
   display: grid;
   grid-template-columns: 425px minmax(0, 1fr);
   min-height: 520px;
-  background:
+  background: var(
+    --dk-surface,
     radial-gradient(circle at 69% 37%, rgba(105, 90, 229, 0.08), transparent 30%),
-    linear-gradient(180deg, #ffffff 0%, #fbfaff 100%);
+    linear-gradient(180deg, #ffffff 0%, #fbfaff 100%)
+  );
   overflow: hidden;
 }
 @media (max-width: 980px) {
@@ -1208,7 +1221,8 @@ select.surv-input::-ms-expand {
   width: 28px;
   height: 28px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-ai-benefit__title {
   font-size: 12px;
@@ -1232,7 +1246,8 @@ select.surv-input::-ms-expand {
 .surv-ai-unlock__right img {
   width: min(443px, 100%);
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-ai-threshold-h {
   margin: 8px 0 0;
@@ -1317,7 +1332,8 @@ select.surv-input::-ms-expand {
   width: 22px;
   height: 22px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-foot-pill {
   display: inline-flex;
@@ -1372,15 +1388,15 @@ select.surv-input::-ms-expand {
 }
 .surv-sent--pos {
   background: var(--surv-ok-pale);
-  border-color: #bfe9d3;
+  border-color: var(--dk-border, #bfe9d3);
 }
 .surv-sent--neu {
   background: var(--surv-warn-pale);
-  border-color: #f9d3bf;
+  border-color: var(--dk-border, #f9d3bf);
 }
 .surv-sent--neg {
   background: var(--surv-pink-soft);
-  border-color: #f6c9dc;
+  border-color: var(--dk-border, #f6c9dc);
 }
 .surv-sent__label {
   font-size: 12px;
@@ -1416,7 +1432,8 @@ select.surv-input::-ms-expand {
   width: 100%;
   height: 100%;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 
 /* individual-responses summary chips row */
@@ -1499,7 +1516,8 @@ select.surv-input::-ms-expand {
 .surv-dashed__art img {
   width: min(340px, 100%);
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .surv-dashed h3 {
   margin: 0;

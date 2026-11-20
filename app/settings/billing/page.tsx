@@ -218,7 +218,7 @@ export default async function BillingSettingsPage() {
             padding: "28px 20px",
             borderRadius: 12,
             border: "1px solid var(--set-track)",
-            background: "#fff",
+            background: "var(--dk-surface, #fff)",
             textAlign: "center",
           }}
         >

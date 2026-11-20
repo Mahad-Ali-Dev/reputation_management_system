@@ -7,16 +7,16 @@
    ============================================================ */
 
 .app--glass .rr {
-  --ap-ink: #1d1d1f;
-  --ap-2: #6e6e73;
-  --ap-3: #86868b;
-  --ap-fill: rgba(120, 120, 128, 0.12);
-  --ap-fill-2: rgba(120, 120, 128, 0.08);
-  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-ink: var(--dk-text, #1d1d1f);
+  --ap-2: var(--dk-text-muted, #6e6e73);
+  --ap-3: var(--dk-text-subtle, #86868b);
+  --ap-fill: var(--dk-glass-strong, rgba(120, 120, 128, 0.12));
+  --ap-fill-2: var(--dk-glass, rgba(120, 120, 128, 0.08));
+  --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
   --ap-accent: var(--glass-accent, #4b3bff);
-  --ap-glass: rgba(255, 255, 255, 0.72);
-  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14);
+  --ap-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
+  --ap-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14));
 
   --rr-text: var(--ap-ink);
   --rr-text-strong: var(--ap-ink);
@@ -24,13 +24,13 @@
   --rr-muted: var(--ap-2);
   --rr-soft: var(--ap-3);
   --rr-border: var(--ap-sep);
-  --rr-border-soft: rgba(60, 60, 67, 0.08);
+  --rr-border-soft: var(--dk-border-soft, rgba(60, 60, 67, 0.08));
   --rr-border-violet: rgba(75, 59, 255, 0.2);
   --rr-pri: var(--ap-accent);
   --rr-pri-strong: var(--glass-accent-hover, #3a2be0);
   --rr-pri-soft: rgba(75, 59, 255, 0.09);
   --rr-pri-soft-2: rgba(75, 59, 255, 0.05);
-  --rr-ok: #248a3d;
+  --rr-ok: var(--dk-success-text, #248a3d);
   --rr-ok-soft: rgba(52, 199, 89, 0.12);
   --rr-green: #34c759;
   --rr-green-soft: rgba(52, 199, 89, 0.12);
@@ -85,7 +85,7 @@
   padding: 3px;
   border: 0;
   border-radius: 12px;
-  background: rgba(118, 118, 128, 0.12);
+  background: var(--dk-glass, rgba(118, 118, 128, 0.12));
 }
 .app--glass .rr .tabs a,
 .app--glass .rr .tabs button,
@@ -108,10 +108,10 @@
 .app--glass .rr .tabs [aria-selected="true"],
 .app--glass .rr .tabs .is-active,
 .app--glass .rr .tab.is-active {
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   color: var(--ap-ink);
   font-weight: 600;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04));
 }
 
 /* ---------- surfaces ---------- */
@@ -126,7 +126,7 @@
 .app--glass .rr .rr-feed,
 .app--glass .rr .rr-tablecard,
 .app--glass .rr .rr-autoempty {
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -196,7 +196,8 @@
 .app--glass .rr .rr-sumcard__tile img,
 .app--glass .rr .rr-statcard__tile img,
 .app--glass .rr .rr-rule__tile img {
-  mix-blend-mode: normal;
+  mix-blend-mode: var(--dk-art-blend, normal);
+  filter: var(--dk-art-filter, none);
 }
 /* template rows: a square thumbnail on a soft plate */
 .app--glass .rr .rr-tplrow {
@@ -233,7 +234,7 @@
   height: 112px;
   object-fit: contain;
   border-radius: 22px;
-  box-shadow: 0 6px 18px -10px rgba(21, 19, 43, 0.25);
+  box-shadow: var(--dk-shadow-sm, 0 6px 18px -10px rgba(21, 19, 43, 0.25));
 }
 /* email preview art in the corner: smaller, behind the content */
 .app--glass .rr .rr-preview__art {
@@ -298,7 +299,7 @@
 .app--glass .rr .rr-toolbtn:hover,
 .app--glass .rr .rr-pillbtn:hover,
 .app--glass .rr .rr-feedbtn:hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.18));
 }
 .app--glass .rr .btn--pri,
 .app--glass .rr .rr-tplbtn--pri,
@@ -326,7 +327,7 @@
   color: var(--ap-2);
 }
 .app--glass .rr .rr-iconbtn--danger {
-  color: #d70015;
+  color: var(--dk-danger-text, #d70015);
 }
 
 /* ---------- chips: soft pills, no borders ---------- */
@@ -365,7 +366,7 @@
 .app--glass .rr .ds-input:focus,
 .app--glass .rr .rr-searchbox:focus-within {
   border-color: rgba(75, 59, 255, 0.45);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 .app--glass .rr .rr-field__lbl {
@@ -426,7 +427,7 @@
   border-color: var(--ap-sep);
 }
 .app--glass .rr .rr-table tbody tr:hover {
-  background: rgba(120, 120, 128, 0.05);
+  background: var(--dk-glass, rgba(120, 120, 128, 0.05));
 }
 .app--glass .rr .rr-cust__name {
   font-weight: 600;
@@ -465,7 +466,7 @@
 .app--glass .rr .rr-programs {
   padding: 4px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.55));
 }
 .app--glass .rr .rr-program {
   border: 0;
@@ -501,7 +502,7 @@
   padding: 2px;
   border: 0;
   border-radius: 10px;
-  background: rgba(118, 118, 128, 0.12);
+  background: var(--dk-glass, rgba(118, 118, 128, 0.12));
 }
 .app--glass .rr .rr-viewtoggle button {
   border: 0;
@@ -509,9 +510,9 @@
   background: transparent;
 }
 .app--glass .rr .rr-viewtoggle button.is-active {
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   color: var(--ap-accent);
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(0, 0, 0, 0.12));
 }
 /* calmer stat tiles */
 .app--glass .rr .rr-statcard__tile,

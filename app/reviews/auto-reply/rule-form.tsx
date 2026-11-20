@@ -119,9 +119,9 @@ export function AutoReplyRuleForm({
           style={{
             padding: "10px 14px",
             borderRadius: 10,
-            background: "#fef2f2",
-            border: "1px solid #fecaca",
-            color: "#7f1d1d",
+            background: "var(--dk-danger-soft, #fef2f2)",
+            border: "1px solid var(--dk-border, #fecaca)",
+            color: "var(--dk-danger-text, #7f1d1d)",
             fontSize: 13,
           }}
         >
@@ -368,8 +368,8 @@ export function AutoReplyRuleForm({
                 gap: 8,
                 padding: 12,
                 borderRadius: 10,
-                background: "var(--warn-50, #fffbeb)",
-                border: "1px solid var(--warn-100, #fde68a)",
+                background: "var(--warn-50, var(--dk-warning-soft, #fffbeb))",
+                border: "1px solid var(--warn-100, var(--dk-border, #fde68a))",
               }}
             >
               <label className="col" style={{ gap: 4 }}>
@@ -390,7 +390,7 @@ export function AutoReplyRuleForm({
                 style={{
                   margin: 0,
                   fontSize: 12,
-                  color: "var(--warn-700, #92400e)",
+                  color: "var(--warn-700, var(--dk-warning-text, #92400e))",
                   lineHeight: 1.6,
                 }}
               >
@@ -542,7 +542,7 @@ function RadioCard({
         border: `1px solid ${checked ? (warning ? "var(--warn, #f59e0b)" : "var(--pri, #0f766e)") : "var(--line)"}`,
         background: checked
           ? warning
-            ? "var(--warn-50, #fffbeb)"
+            ? "var(--warn-50, var(--dk-warning-soft, #fffbeb))"
             : "var(--pri-50, #ecfdf7)"
           : "var(--surface)",
         cursor: "pointer",

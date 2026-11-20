@@ -1,16 +1,19 @@
 "use client";
 
 import { AskAi } from "@/components/ask-ai";
+import { ThemeProvider } from "@/components/theme-provider";
 import { ToastProvider } from "@/components/toast";
 import { SessionProvider, useSession } from "next-auth/react";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <SessionProvider>
-      <ToastProvider>
-        {children}
-        <FloatingAskAi />
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          {children}
+          <FloatingAskAi />
+        </ToastProvider>
+      </ThemeProvider>
     </SessionProvider>
   );
 }

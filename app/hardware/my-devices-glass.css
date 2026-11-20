@@ -97,10 +97,10 @@
   color: var(--glass-accent, #4b3bff);
 }
 .app--glass .md-metric__tile--yellow .md-metric__icon {
-  color: #c47d12;
+  color: var(--dk-warning-text, #c47d12);
 }
 .app--glass .md-metric__tile--green .md-metric__icon {
-  color: #0f8a5d;
+  color: var(--dk-success-text, #0f8a5d);
 }
 
 /* AI Chatbot card: the frog replaces the robot orb, no backdrop. */
@@ -147,8 +147,8 @@
 
 /* "Your scans are flowing": a clean strip — no fill, bare icon, outline CTA. */
 .app--glass .md-train--clean {
-  background: rgba(255, 255, 255, 0.5);
-  border: 1px solid rgba(21, 19, 43, 0.07);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.5));
+  border: 1px solid var(--dk-border, rgba(21, 19, 43, 0.07));
   border-radius: 16px;
   padding: 14px 16px 14px 18px;
   box-shadow: none;
@@ -235,7 +235,7 @@
   position: relative;
   height: 8px;
   border-radius: 999px;
-  background: rgba(21, 19, 43, 0.06);
+  background: var(--dk-glass-strong, rgba(21, 19, 43, 0.06));
   overflow: hidden;
 }
 .md-rbr2__fill {
@@ -261,7 +261,7 @@
   justify-content: space-between;
   margin-top: 6px;
   padding-top: 12px;
-  border-top: 1px solid rgba(21, 19, 43, 0.07);
+  border-top: 1px solid var(--dk-border, rgba(21, 19, 43, 0.07));
   font-size: 12px;
   color: var(--glass-text-subtle, #6b6880);
 }
@@ -341,8 +341,8 @@
   height: 34px;
   padding: 0 14px;
   border-radius: 999px;
-  border: 1px solid rgba(21, 19, 43, 0.1);
-  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--dk-border, rgba(21, 19, 43, 0.1));
+  background: var(--dk-glass, rgba(255, 255, 255, 0.7));
   color: var(--glass-text-muted, #4a4763);
   font: inherit;
   font-size: 12.5px;
@@ -354,7 +354,7 @@
   color: var(--glass-text-subtle, #6b6880);
 }
 .md-ai__chip:hover {
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   border-color: rgba(75, 59, 255, 0.3);
   color: var(--glass-text, #15132b);
 }
@@ -369,7 +369,7 @@
   padding: 10px 10px 10px 18px;
   border-radius: 24px;
   border: 2px solid transparent;
-  background: linear-gradient(#fff, #fff) padding-box,
+  background: linear-gradient(var(--dk-surface, #fff), var(--dk-surface, #fff)) padding-box,
     linear-gradient(
       90deg,
       #4285f4 0%,
@@ -382,7 +382,7 @@
       #34a853 100%
     )
     border-box;
-  box-shadow: 0 1px 2px rgba(21, 19, 43, 0.04), 0 10px 26px -14px rgba(21, 19, 43, 0.2);
+  box-shadow: var(--dk-shadow, 0 1px 2px rgba(21, 19, 43, 0.04), 0 10px 26px -14px rgba(21, 19, 43, 0.2));
 }
 .md-ai__box:focus-within {
   box-shadow: 0 1px 2px rgba(21, 19, 43, 0.04), 0 12px 30px -12px rgba(21, 19, 43, 0.26), 0 0 0 4px
@@ -414,13 +414,13 @@
   border: 0;
   border-radius: 999px;
   background: var(--glass-text, #15132b);
-  color: #fff;
+  color: var(--dk-bg, #fff);
   cursor: pointer;
   transition: opacity 0.15s ease, background 0.15s ease;
 }
 .md-ai__send:disabled {
-  background: rgba(21, 19, 43, 0.12);
-  color: rgba(21, 19, 43, 0.45);
+  background: var(--dk-glass-strong, rgba(21, 19, 43, 0.12));
+  color: var(--dk-text-subtle, rgba(21, 19, 43, 0.45));
   cursor: default;
 }
 
@@ -474,13 +474,13 @@
    one accent colour for actions only. Layout unchanged.
    ============================================================ */
 .app--glass .md {
-  --ap-ink: #1d1d1f;
-  --ap-2: #6e6e73;
-  --ap-3: #86868b;
-  --ap-fill: rgba(120, 120, 128, 0.12); /* iOS tertiary fill */
-  --ap-sep: rgba(60, 60, 67, 0.12); /* iOS separator */
-  --ap-card: rgba(255, 255, 255, 0.82);
-  --ap-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05);
+  --ap-ink: var(--dk-text, #1d1d1f);
+  --ap-2: var(--dk-text-muted, #6e6e73);
+  --ap-3: var(--dk-text-subtle, #86868b);
+  --ap-fill: var(--dk-glass-strong, rgba(120, 120, 128, 0.12)); /* iOS tertiary fill */
+  --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12)); /* iOS separator */
+  --ap-card: var(--dk-glass-strong, rgba(255, 255, 255, 0.82));
+  --ap-shadow: var(--dk-shadow, 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05));
   --md-ink: var(--ap-ink);
   --md-muted: var(--ap-2);
   --md-muted-2: var(--ap-3);
@@ -530,7 +530,7 @@
   color: var(--ap-ink);
 }
 .app--glass .md-head__actions .btn:not(.btn--pri):hover {
-  background: rgba(120, 120, 128, 0.2);
+  background: var(--dk-border-strong, rgba(120, 120, 128, 0.2));
 }
 .app--glass .md-head__actions .btn--pri {
   background: var(--glass-accent, #4b3bff);
@@ -638,7 +638,7 @@
   padding: 2px;
   border: 0;
   border-radius: 9px;
-  background: rgba(118, 118, 128, 0.12);
+  background: var(--dk-glass-strong, rgba(118, 118, 128, 0.12));
 }
 .app--glass .md .seg__t {
   padding: 5px 14px;
@@ -648,9 +648,9 @@
   color: var(--ap-ink);
 }
 .app--glass .md .seg__t.is-active {
-  background: #fff;
+  background: var(--dk-border-strong, #fff);
   font-weight: 600;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04));
 }
 .app--glass .md .md-devhead__count {
   font-size: 13px;
@@ -686,7 +686,7 @@
 .app--glass .md .md-trow:hover,
 .app--glass .md .md-trow--sel,
 .app--glass .md .md-trow--sel:hover {
-  background: rgba(118, 118, 128, 0.07);
+  background: var(--dk-glass, rgba(118, 118, 128, 0.07));
   box-shadow: none;
 }
 .app--glass .md .md-trow td:first-child {
@@ -740,10 +740,10 @@
   color: var(--ap-ink);
 }
 .app--glass .md .md-iconbtn:hover {
-  background: rgba(120, 120, 128, 0.2);
+  background: var(--dk-border-strong, rgba(120, 120, 128, 0.2));
 }
 .app--glass .md .md-iconbtn--bad {
-  color: #ff3b30; /* Apple system red */
+  color: var(--dk-danger-text, #ff3b30); /* Apple system red */
 }
 .app--glass .md .md-iconbtn--bad:hover {
   background: rgba(255, 59, 48, 0.12);
@@ -776,7 +776,7 @@
   box-shadow: none;
 }
 .app--glass .md .md-qr__btn:hover {
-  background: rgba(120, 120, 128, 0.2);
+  background: var(--dk-border-strong, rgba(120, 120, 128, 0.2));
 }
 .app--glass .md .md-qr__btn--pri {
   background: var(--glass-accent, #4b3bff);
@@ -903,7 +903,7 @@
   padding: 12px 16px;
   border-radius: 14px;
   background: rgba(52, 199, 89, 0.1);
-  color: #1d7a3a;
+  color: var(--dk-success-text, #1d7a3a);
   font-size: 14px;
 }
 .mdt__toast a {
@@ -960,7 +960,7 @@
   text-decoration: none;
 }
 .mdt__pill:hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-border-strong, rgba(120, 120, 128, 0.18));
 }
 .mdt__foot {
   max-width: 640px;
@@ -980,7 +980,7 @@
 }
 .mdt .tdc:hover {
   transform: none;
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 10px 30px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--dk-shadow, 0 1px 1px rgba(0, 0, 0, 0.02), 0 10px 30px rgba(0, 0, 0, 0.08));
 }
 .mdt .tdc__code {
   border: 0;
@@ -1022,7 +1022,7 @@
   background: var(--ap-fill, rgba(120, 120, 128, 0.12));
 }
 .mdt .tdc__btn--danger {
-  color: #ff3b30;
+  color: var(--dk-danger-text, #ff3b30);
 }
 .mdt .tdc__btn--danger-solid {
   border-color: transparent;
@@ -1048,17 +1048,17 @@
   line-height: 1.12;
   font-weight: 600;
   letter-spacing: -0.03em;
-  color: #1d1d1f;
+  color: var(--dk-text, #1d1d1f);
 }
 .mde__title span {
-  color: #86868b;
+  color: var(--dk-text-subtle, #86868b);
 }
 .mde__note {
   margin: 14px auto 0;
   max-width: 520px;
   font-size: 15px;
   line-height: 1.5;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
 }
 .mde__note a {
   color: var(--glass-accent, #4b3bff);
@@ -1076,23 +1076,23 @@
   align-items: flex-start;
   min-width: 0;
   padding: 28px 26px 26px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.72);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.72));
   -webkit-backdrop-filter: blur(24px) saturate(170%);
   backdrop-filter: blur(24px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 14px 36px
-    -16px rgba(21, 19, 43, 0.16);
+  box-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 14px 36px
+    -16px rgba(21, 19, 43, 0.16));
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .mde-tile:hover {
   transform: translateY(-2px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.03), 0 22px 48px
-    -18px rgba(21, 19, 43, 0.22);
+  box-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.03), 0 22px 48px
+    -18px rgba(21, 19, 43, 0.22));
 }
 .mde-tile--hero {
   background: radial-gradient(circle at 85% -10%, rgba(75, 59, 255, 0.16), transparent 60%),
-    rgba(255, 255, 255, 0.78);
+    var(--dk-glass, rgba(255, 255, 255, 0.78));
 }
 .mde-tile__badge {
   display: grid;
@@ -1115,14 +1115,14 @@
   font-size: 21px;
   font-weight: 600;
   letter-spacing: -0.025em;
-  color: #1d1d1f;
+  color: var(--dk-text, #1d1d1f);
 }
 .mde-tile__body {
   flex: 1;
   margin: 8px 0 22px;
   font-size: 15px;
   line-height: 1.47;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
 }
 .mde-btn {
   display: inline-flex;
@@ -1132,7 +1132,7 @@
   padding: 0 20px;
   border: 0;
   border-radius: 999px;
-  background: rgba(120, 120, 128, 0.12);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.12));
   color: var(--glass-accent, #4b3bff);
   font: 500 14.5px var(--f-ui);
   text-decoration: none;
@@ -1140,7 +1140,7 @@
   transition: background 0.15s ease;
 }
 .mde-btn:hover {
-  background: rgba(120, 120, 128, 0.2);
+  background: var(--dk-border-strong, rgba(120, 120, 128, 0.2));
 }
 .mde-btn--pri {
   background: var(--glass-accent, #4b3bff);

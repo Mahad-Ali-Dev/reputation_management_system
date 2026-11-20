@@ -77,7 +77,7 @@ export function DeleteEstablishmentModal({
         >
           <div
             className="ds-card estab-dialog"
-            style={{ width: "min(440px, 100%)", boxShadow: "0 24px 60px -20px rgba(11, 13, 14, 0.4)" }}
+            style={{ width: "min(440px, 100%)", boxShadow: "var(--dk-shadow, 0 24px 60px -20px rgba(11, 13, 14, 0.4))" }}
           >
             <div className="ds-card__body" style={{ padding: 22 }}>
               <div className="row" style={{ gap: 12, alignItems: "flex-start" }}>

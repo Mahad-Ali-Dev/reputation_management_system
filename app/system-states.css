@@ -161,7 +161,7 @@
 .sys-skel {
   position: relative;
   overflow: hidden;
-  background: #e8edf3;
+  background: var(--dk-surface-3, #e8edf3);
   border-radius: 8px;
 }
 
@@ -173,7 +173,7 @@
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(255, 255, 255, 0.65) 50%,
+    var(--dk-glass, rgba(255, 255, 255, 0.65)) 50%,
     transparent 100%
   );
   animation: sys-shimmer 1.6s ease-in-out infinite;
@@ -200,10 +200,12 @@
   min-height: 100vh;
   min-height: 100dvh;
   /* Glass aurora canvas — matches the app's light glass background. */
-  background:
+  background: var(
+    --dk-loading-canvas,
     radial-gradient(1100px 620px at 10% -8%, rgba(79, 102, 255, 0.12) 0%, transparent 60%),
     radial-gradient(1000px 640px at 96% 112%, rgba(18, 185, 152, 0.12) 0%, transparent 55%),
-    linear-gradient(180deg, #f3f6ff 0%, #f7f9ff 52%, #f1fbf6 100%);
+    linear-gradient(180deg, #f3f6ff 0%, #f7f9ff 52%, #f1fbf6 100%)
+  );
   padding: 28px 24px 48px;
 }
 
@@ -218,7 +220,7 @@
 .sys-load__panel {
   /* Transparent glass card — mirrors the real dashboard's see-through cards. */
   background: transparent;
-  border: 1px solid rgba(148, 163, 184, 0.22);
+  border: 1px solid var(--dk-border, rgba(148, 163, 184, 0.22));
   border-radius: var(--r-lg, 16px);
   box-shadow: none;
   padding: 20px;
@@ -288,9 +290,11 @@
   min-height: 100dvh;
   display: grid;
   place-items: center;
-  background:
+  background: var(
+    --dk-loading-canvas,
     radial-gradient(at 100% 0%, rgba(18, 185, 152, 0.06) 0%, transparent 46%),
-    linear-gradient(180deg, #fbfaf6 0%, #f4f8f5 100%);
+    linear-gradient(180deg, #fbfaf6 0%, #f4f8f5 100%)
+  );
 }
 
 .sys-load-min__stack {
@@ -298,7 +302,7 @@
   flex-direction: column;
   align-items: center;
   gap: 14px;
-  color: #64748b;
+  color: var(--dk-text-muted, #64748b);
   font-size: 13px;
   font-weight: 500;
   letter-spacing: -0.005em;
@@ -308,7 +312,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  border: 3px solid #dbeafe;
+  border: 3px solid var(--dk-accent-soft, #dbeafe);
   border-top-color: var(--pri, #4b3bff);
   animation: sys-spin 0.8s linear infinite;
 }

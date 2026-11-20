@@ -95,7 +95,7 @@ export function BrandKitPanel({
                         height: "100%",
                         background: colors[key],
                         border:
-                          key === "light" ? "1px solid #e2e8f0" : undefined,
+                          key === "light" ? "1px solid var(--dk-border, #e2e8f0)" : undefined,
                       }}
                     />
                     <input

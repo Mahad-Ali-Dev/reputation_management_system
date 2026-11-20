@@ -6,26 +6,26 @@
    ============================================================ */
 
 .apa-grid {
-  --apa-bg-hover: #f6f8fc;
-  --apa-border: #e4eaf5;
-  --apa-border-soft: #edf1f7;
-  --apa-border-dash: #d8e0ee;
-  --apa-text: #0b1220;
-  --apa-text-2: #475569;
-  --apa-muted: #94a3b8;
-  --apa-primary: #2563eb;
-  --apa-primary-soft: #eaf1ff;
-  --apa-purple: #7c3aed;
-  --apa-purple-soft: #f3e8ff;
-  --apa-success: #10b981;
-  --apa-success-deep: #047857;
-  --apa-success-soft: #e8fff6;
-  --apa-warning: #f59e0b;
-  --apa-warning-deep: #b45309;
-  --apa-warning-soft: #fff7e6;
-  --apa-danger: #ef4444;
-  --apa-danger-deep: #b91c1c;
-  --apa-danger-soft: #fff1f2;
+  --apa-bg-hover: var(--dk-glass, #f6f8fc);
+  --apa-border: var(--dk-border, #e4eaf5);
+  --apa-border-soft: var(--dk-border-soft, #edf1f7);
+  --apa-border-dash: var(--dk-border-strong, #d8e0ee);
+  --apa-text: var(--dk-text, #0b1220);
+  --apa-text-2: var(--dk-text-2, #475569);
+  --apa-muted: var(--dk-text-subtle, #94a3b8);
+  --apa-primary: var(--dk-accent-text, #2563eb);
+  --apa-primary-soft: var(--dk-accent-soft, #eaf1ff);
+  --apa-purple: var(--dk-accent-text, #7c3aed);
+  --apa-purple-soft: var(--dk-accent-soft, #f3e8ff);
+  --apa-success: var(--dk-success-text, #10b981);
+  --apa-success-deep: var(--dk-success-text, #047857);
+  --apa-success-soft: var(--dk-success-soft, #e8fff6);
+  --apa-warning: var(--dk-warning-text, #f59e0b);
+  --apa-warning-deep: var(--dk-warning-text, #b45309);
+  --apa-warning-soft: var(--dk-warning-soft, #fff7e6);
+  --apa-danger: var(--dk-danger-text, #ef4444);
+  --apa-danger-deep: var(--dk-danger-text, #b91c1c);
+  --apa-danger-soft: var(--dk-danger-soft, #fff1f2);
 
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(340px, 460px);
@@ -35,12 +35,12 @@
 
 /* ---- card shell ---- */
 .apa-card {
-  background: #ffffff;
+  background: var(--dk-surface, #ffffff);
   border: 1px solid var(--apa-border);
   border-radius: 18px;
   padding: 20px;
   min-height: 320px;
-  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--dk-shadow-sm, 0 8px 24px rgba(15, 23, 42, 0.05));
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -92,7 +92,7 @@
 }
 
 .apa-link:hover {
-  color: #155eef;
+  color: var(--dk-accent-text, #155eef);
   text-decoration: underline;
 }
 
@@ -244,7 +244,7 @@ a.apa-row:hover {
 
 .apa-chip--info {
   background: var(--apa-primary-soft);
-  color: #1d4ed8;
+  color: var(--dk-info-text, #1d4ed8);
 }
 
 .apa-chip--warn {

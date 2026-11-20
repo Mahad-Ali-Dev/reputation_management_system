@@ -3,7 +3,7 @@
    file edit), same technique as the dashboard. */
 .app--canvas:has(.md) {
   background-image: none;
-  background-color: #f7fafc;
+  background-color: var(--dk-bg, #f7fafc);
 }
 
 /* ============================================================
@@ -17,24 +17,24 @@
 .md {
   --md-blue: #245bff;
   --md-purple: #6c4dff;
-  --md-lav: #f2eeff;
-  --md-soft-blue: #eef4ff;
-  --md-soft-green: #e8fcf1;
-  --md-soft-yellow: #fff4da;
-  --md-ink: #101828;
-  --md-muted: #667085;
-  --md-muted-2: #8a94a6;
-  --md-line: #e4eaf6;
-  --md-line-strong: #d2dcf8;
-  --md-ok: #18be78;
+  --md-lav: var(--dk-accent-soft, #f2eeff);
+  --md-soft-blue: var(--dk-accent-soft, #eef4ff);
+  --md-soft-green: var(--dk-success-soft, #e8fcf1);
+  --md-soft-yellow: var(--dk-warning-soft, #fff4da);
+  --md-ink: var(--dk-text, #101828);
+  --md-muted: var(--dk-text-muted, #667085);
+  --md-muted-2: var(--dk-text-subtle, #8a94a6);
+  --md-line: var(--dk-border, #e4eaf6);
+  --md-line-strong: var(--dk-border-strong, #d2dcf8);
+  --md-ok: var(--dk-success-text, #18be78);
   --md-warn: #ffb020;
-  --md-bad: #ff5969;
-  --md-card-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+  --md-bad: var(--dk-danger-text, #ff5969);
+  --md-card-shadow: var(--dk-shadow, 0 8px 24px rgba(15, 23, 42, 0.04));
 }
 
 /* ── Generic kit card ──────────────────────────────────────────────── */
 .md-card {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--md-line);
   border-radius: 14px;
   box-shadow: var(--md-card-shadow);
@@ -170,8 +170,8 @@
   height: 40px;
   flex: 0 0 40px;
   border-radius: 11px;
-  background: #fff;
-  color: var(--md-purple);
+  background: var(--dk-surface, #fff);
+  color: var(--dk-accent-text, var(--md-purple));
   box-shadow: 0 4px 10px rgba(108, 77, 255, 0.12);
 }
 .md-train__title {
@@ -569,7 +569,7 @@
   font-weight: 700;
   text-decoration: none;
   border: 1px solid var(--md-line-strong);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--md-ink);
   cursor: pointer;
 }
@@ -645,7 +645,7 @@
 }
 .md-chat__prompt:hover {
   border-color: var(--md-blue);
-  background: #fff;
+  background: var(--dk-surface, #fff);
 }
 .md-chat__inputrow {
   display: flex;
@@ -703,8 +703,8 @@
   height: 32px;
   flex: 0 0 32px;
   border-radius: 9px;
-  background: #fff;
-  color: var(--md-purple);
+  background: var(--dk-surface, #fff);
+  color: var(--dk-accent-text, var(--md-purple));
 }
 .md-tip__text {
   font-size: 12.5px;
@@ -713,7 +713,7 @@
   min-width: 200px;
 }
 .md-tip__text strong {
-  color: var(--md-purple);
+  color: var(--dk-accent-text, var(--md-purple));
 }
 .md-tip__link {
   font-size: 12px;
@@ -846,7 +846,7 @@
   height: 30px;
   border-radius: 8px;
   border: 1px solid var(--md-line-strong);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--md-blue);
   cursor: pointer;
   text-decoration: none;
@@ -858,7 +858,7 @@
   color: var(--md-bad);
 }
 .md-iconbtn--bad:hover {
-  background: #fff0f1;
+  background: var(--dk-danger-soft, #fff0f1);
 }
 @media (max-width: 900px) {
   .md-hide-md {

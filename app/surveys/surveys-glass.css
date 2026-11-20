@@ -221,7 +221,7 @@
 .app--glass .surv .surv-camp:hover {
   transform: translateY(-3px);
   border-color: var(--glass-accent, #7c3aed);
-  box-shadow: 0 26px 52px -28px rgba(80, 50, 160, 0.5);
+  box-shadow: var(--dk-shadow, 0 26px 52px -28px rgba(80, 50, 160, 0.5));
 }
 .app--glass .surv .surv-camp:hover .surv-camp__open {
   background: linear-gradient(135deg, #7c3aed, #4f46e5);

@@ -6,29 +6,29 @@
    Page-level tokens (--ap-*) cascade from .ap2-page in autopilot.css. */
 
 .apr-root {
-  --apr-line: #dde7f1;
-  --apr-line-soft: #e6eef4;
-  --apr-ink: #111827;
-  --apr-body: #475569;
-  --apr-mut: #64748b;
-  --apr-mut-2: #94a3b8;
-  --apr-blue: #315bff;
-  --apr-blue-soft: #eef2ff;
+  --apr-line: var(--dk-border, #dde7f1);
+  --apr-line-soft: var(--dk-border-soft, #e6eef4);
+  --apr-ink: var(--dk-text, #111827);
+  --apr-body: var(--dk-text-2, #475569);
+  --apr-mut: var(--dk-text-muted, #64748b);
+  --apr-mut-2: var(--dk-text-subtle, #94a3b8);
+  --apr-blue: var(--dk-accent-text, #315bff);
+  --apr-blue-soft: var(--dk-accent-soft, #eef2ff);
   --apr-indigo: #5b5cff;
   --apr-pink: #ec5a7e;
   --apr-amber: #fbbf24;
   --apr-purple: #7c58ff;
-  --apr-purple-soft: #f2eeff;
+  --apr-purple-soft: var(--dk-accent-soft, #f2eeff);
   --apr-green: #10b981;
-  --apr-green-soft: #e5faf0;
+  --apr-green-soft: var(--dk-success-soft, #e5faf0);
   --apr-cyan: #06b6d4;
-  --apr-cyan-soft: #e2fafe;
+  --apr-cyan-soft: var(--dk-teal-soft, #e2fafe);
   --apr-orange: #f59e0b;
-  --apr-yellow-soft: #fff7dd;
-  --apr-gray-soft: #f1f5f9;
-  --apr-soft: #f7f9fc;
-  --apr-panel: #fafcfb;
-  --apr-shadow: 0 10px 30px rgba(18, 28, 48, 0.06);
+  --apr-yellow-soft: var(--dk-warning-soft, #fff7dd);
+  --apr-gray-soft: var(--dk-surface-3, #f1f5f9);
+  --apr-soft: var(--dk-surface-2, #f7f9fc);
+  --apr-panel: var(--dk-surface-2, #fafcfb);
+  --apr-shadow: var(--dk-shadow-sm, 0 10px 30px rgba(18, 28, 48, 0.06));
 
   display: flex;
   flex-direction: column;
@@ -61,7 +61,7 @@
 
 /* ---------- Card chrome ---------- */
 .apr-card {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--apr-line);
   border-radius: 14px;
   box-shadow: var(--apr-shadow);
@@ -98,6 +98,8 @@
   height: 44px;
   object-fit: contain;
   display: block;
+  mix-blend-mode: var(--dk-art-blend, normal);
+  filter: var(--dk-art-filter, none);
 }
 
 .apr-title {
@@ -142,7 +144,7 @@
 
 .apr-pill--amber {
   background: var(--apr-yellow-soft);
-  color: #b45309;
+  color: var(--dk-warning-text, #b45309);
 }
 
 .apr-pill--gray {
@@ -238,7 +240,7 @@
   letter-spacing: -0.02em;
   font-variant-numeric: tabular-nums;
   line-height: 1.15;
-  color: #121c30;
+  color: var(--dk-text, #121c30);
 }
 
 .apr-rev__pills {
@@ -262,6 +264,8 @@
   height: 132px;
   flex-shrink: 0;
   object-fit: contain;
+  mix-blend-mode: var(--dk-art-blend, normal);
+  filter: var(--dk-art-filter, none);
 }
 
 .apr-cta {
@@ -271,9 +275,9 @@
   height: 30px;
   padding: 0 14px;
   margin-top: 12px;
-  border: 1px solid rgba(49, 91, 255, 0.35);
+  border: 1px solid var(--dk-accent-border, rgba(49, 91, 255, 0.35));
   border-radius: 999px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--apr-blue);
   font-size: 12px;
   font-weight: 600;
@@ -395,6 +399,8 @@
   height: 32px;
   object-fit: contain;
   display: block;
+  mix-blend-mode: var(--dk-art-blend, normal);
+  filter: var(--dk-art-filter, none);
 }
 
 .apr-source__label {
@@ -456,7 +462,7 @@
 
 .apr-bysrc__cell {
   background: var(--apr-soft);
-  border: 1px solid #edf2f9; /* kit: near-invisible ring on the soft fill */
+  border: 1px solid var(--dk-border-soft, #edf2f9); /* kit: near-invisible ring on the soft fill */
   border-radius: 12px;
   padding: 12px;
   min-width: 0;
@@ -483,14 +489,14 @@
   font-weight: 700;
   letter-spacing: -0.01em;
   font-variant-numeric: tabular-nums;
-  color: #121c30;
+  color: var(--dk-text, #121c30);
 }
 
 .apr-bysrc__bar {
   margin-top: 7px;
   height: 5px;
   border-radius: 999px;
-  background: #e9eef8;
+  background: var(--dk-surface-3, #e9eef8);
   overflow: hidden;
 }
 
@@ -557,6 +563,8 @@
   height: 26px;
   object-fit: contain;
   display: block;
+  mix-blend-mode: var(--dk-art-blend, normal);
+  filter: var(--dk-art-filter, none);
 }
 
 /* The Currency field has no dedicated kit illustration — keep a tinted "$". */
@@ -569,9 +577,9 @@
   height: 36px;
   width: 100%;
   padding: 0 12px;
-  border: 1px solid #d3ddec;
+  border: 1px solid var(--dk-border-strong, #d3ddec);
   border-radius: 10px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   font-size: 13px;
   font-weight: 600;
   font-family: inherit;
@@ -614,10 +622,10 @@ select.apr-input {
   gap: 7px;
   height: 32px;
   padding: 0 14px;
-  border: 1px solid #d3ddec;
+  border: 1px solid var(--dk-border-strong, #d3ddec);
   border-radius: 999px;
-  background: #fff;
-  color: #2a3548;
+  background: var(--dk-surface, #fff);
+  color: var(--dk-text-2, #2a3548);
   font-size: 12px;
   font-weight: 700;
   font-family: inherit;
@@ -627,7 +635,7 @@ select.apr-input {
 
 .apr-savebtn:hover:not(:disabled) {
   border-color: var(--apr-blue);
-  background: #f6f9ff;
+  background: var(--dk-glass, #f6f9ff);
 }
 
 .apr-savebtn:disabled {
@@ -640,7 +648,7 @@ select.apr-input {
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #ef4444;
+  color: var(--dk-danger-text, #ef4444);
 }
 
 .apr-sum {
@@ -670,7 +678,7 @@ select.apr-input {
   font-size: 14.5px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  color: #121c30;
+  color: var(--dk-text, #121c30);
 }
 
 .apr-sumrow--ok {

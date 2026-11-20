@@ -544,7 +544,7 @@ const TPL_TONES = [
   { tile: "surv-tile--green", tag: { background: "var(--surv-ok-soft)", color: "var(--surv-ok)" }, art: "product-sentiment" },
   { tile: "surv-tile--orange", tag: { background: "var(--surv-warn-soft)", color: "var(--surv-warn)" }, art: "service-recovery" },
   { tile: "surv-tile--violet", tag: { background: "var(--surv-pri-pale)", color: "var(--surv-pri)" }, art: "visit-followup" },
-  { tile: "surv-tile--yellow", tag: { background: "#fdf6e1", color: "#d99b20" }, art: "feature-reaction" },
+  { tile: "surv-tile--yellow", tag: { background: "var(--dk-warning-soft, #fdf6e1)", color: "var(--dk-warning-text, #d99b20)" }, art: "feature-reaction" },
 ] as const;
 
 function TemplatesPanel({ campaigns }: { campaigns: SurveyCampaignCard[] }) {

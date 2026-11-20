@@ -515,7 +515,7 @@ function DeliverabilityDonut({
     <div className="rr-donutwrap">
       <div className="rr-donut" role="img" aria-label={`Deliverability ${pct} percent`}>
         <svg width="128" height="128" viewBox="0 0 128 128">
-          <circle cx="64" cy="64" r="54" fill="none" stroke="#eef0f4" strokeWidth="10" />
+          <circle cx="64" cy="64" r="54" fill="none" stroke="var(--dk-surface-3, #eef0f4)" strokeWidth="10" />
           <g transform="rotate(-90 64 64)">
             <circle
               cx="64"

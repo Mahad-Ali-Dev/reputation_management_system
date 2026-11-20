@@ -112,16 +112,16 @@ export function EmptyState({
   secondaryAction?: { label: string; href: string };
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200/80 bg-white py-20 px-8 text-center">
+    <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-[color:var(--dk-border-strong,rgb(226_232_240/0.8))] bg-[color:var(--dk-surface,#fff)] py-20 px-8 text-center">
       {illustration ? (
         <EmptyIllustration name={illustration} style={{ marginBottom: 12 }} />
       ) : (
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-indigo-50 to-violet-50 text-4xl">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-[color:var(--dk-accent-soft,#eef2ff)] to-[color:var(--dk-accent-faint,#f5f3ff)] text-4xl">
           {icon}
         </div>
       )}
-      <h3 className="mt-4 text-lg font-semibold text-slate-900">{title}</h3>
-      <p className="mt-2 max-w-md text-sm text-slate-600">{description}</p>
+      <h3 className="mt-4 text-lg font-semibold text-[color:var(--dk-text,#0f172a)]">{title}</h3>
+      <p className="mt-2 max-w-md text-sm text-[color:var(--dk-text-2,#475569)]">{description}</p>
       {(primaryAction || secondaryAction) && (
         <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
           {primaryAction && (

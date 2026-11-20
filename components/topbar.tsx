@@ -4,6 +4,7 @@ import { resolveSessionOrg } from "@/lib/auth/active-org";
 import { signOut } from "@/lib/auth/config";
 import Link from "next/link";
 import { NotificationsBell } from "./notifications-bell";
+import { ThemeToggle } from "./theme-toggle";
 
 /**
  * Right side of the AppShell topbar — repulabs v3.
@@ -22,6 +23,8 @@ export async function TopBar(_props: { title?: string } = {}) {
 
   return (
     <>
+      <ThemeToggle />
+
       <div className="tb__iconbtn" aria-label="Notifications">
         <NotificationsBell />
       </div>
