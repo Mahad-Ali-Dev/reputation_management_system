@@ -128,7 +128,7 @@ export function EditRoleModal({
               overflowY: "auto",
               background: "var(--set-card, #fff)",
               borderRadius: 16,
-              boxShadow: "0 30px 60px -20px rgba(15,23,42,.4)",
+              boxShadow: "var(--dk-shadow, 0 30px 60px -20px rgba(15,23,42,.4))",
               zIndex: 81,
               padding: 24,
               textAlign: "left",
@@ -180,7 +180,7 @@ export function EditRoleModal({
               {error && (
                 <p
                   role="alert"
-                  style={{ margin: 0, fontSize: 12.5, color: "#dc2626", lineHeight: 1.5 }}
+                  style={{ margin: 0, fontSize: 12.5, color: "var(--dk-danger-text, #dc2626)", lineHeight: 1.5 }}
                 >
                   {error}
                 </p>

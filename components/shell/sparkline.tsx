@@ -9,12 +9,15 @@ export function Sparkline({
   width = 110,
   height = 28,
   area = true,
+  responsive = false,
 }: {
   points?: number[];
   color?: string;
   width?: number;
   height?: number;
   area?: boolean;
+  /** Fill the container width (viewBox scales) instead of a fixed pixel size. */
+  responsive?: boolean;
 }) {
   if (points.length < 2) return null;
   const max = Math.max(...points);
@@ -33,9 +36,11 @@ export function Sparkline({
   const lastY = height - ((lastValue - min) / range) * (height - 4) - 2;
   return (
     <svg
-      width={width}
-      height={height}
-      style={{ display: "block" }}
+      viewBox={`0 0 ${width} ${height}`}
+      width={responsive ? undefined : width}
+      height={responsive ? undefined : height}
+      preserveAspectRatio={responsive ? "none" : undefined}
+      style={responsive ? { display: "block", width: "100%", height } : { display: "block" }}
       role="presentation"
       aria-hidden="true"
       focusable="false"

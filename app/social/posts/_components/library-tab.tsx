@@ -180,7 +180,7 @@ function AssetCard({ asset }: { asset: LibraryAsset }) {
             <button
               type="submit"
               className="sk-btn-out"
-              style={{ height: 32, padding: "0 10px", borderColor: "#f3c0c8", color: "#c0344a" }}
+              style={{ height: 32, padding: "0 10px", borderColor: "var(--dk-danger-soft, #f3c0c8)", color: "var(--dk-danger-text, #c0344a)" }}
               aria-label="Delete asset"
               title="Delete (admin)"
             >

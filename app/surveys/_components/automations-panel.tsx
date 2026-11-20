@@ -13,7 +13,7 @@ import {
   type TriggerEvent,
 } from "@/lib/surveys/automations";
 import Link from "next/link";
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 
 /**
  * Automations tab (Module 11), re-skinned to the "Customer Surveys" kit. Lists
@@ -82,6 +82,21 @@ export function AutomationsPanel({
     setShowForm(true);
   }
 
+  // Esc to close + lock background scroll while the modal is open.
+  useEffect(() => {
+    if (!showForm) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowForm(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [showForm]);
+
   const activeCount = automations.filter((a) => a.status === "active").length;
 
   return (
@@ -99,12 +114,27 @@ export function AutomationsPanel({
       </div>
 
       {showForm && (
-        <AutomationForm
-          editing={editing}
-          campaigns={campaigns}
-          connected={connected}
-          onClose={() => setShowForm(false)}
-        />
+        <div
+          className="svm-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-label={editing ? "Edit automation" : "New automation"}
+        >
+          <button
+            type="button"
+            className="svm-scrim"
+            aria-label="Close"
+            onClick={() => setShowForm(false)}
+          />
+          <div className="svm-modal" style={{ width: "min(560px, 100%)" }}>
+            <AutomationForm
+              editing={editing}
+              campaigns={campaigns}
+              connected={connected}
+              onClose={() => setShowForm(false)}
+            />
+          </div>
+        </div>
       )}
 
       {automations.length === 0 ? (
@@ -215,10 +245,6 @@ function AutomationsEmpty({ onCreate }: { onCreate: () => void }) {
               <Icon name="plus" size={14} />
               New automation
             </button>
-            <Link href="/surveys/templates" className="surv-tab-action">
-              <Icon name="file" size={14} />
-              Explore automation templates
-            </Link>
           </div>
         </div>
       </div>
@@ -286,9 +312,25 @@ function AutomationRow({
   onEdit: () => void;
 }) {
   const [pending, startTransition] = useTransition();
+  const [confirming, setConfirming] = useState(false);
   const isActive = row.status === "active";
   const trigger = row.triggerEvent as TriggerEvent;
   const art = TRIGGER_ART[trigger] ?? { art: "trigger", tile: "surv-tile--violet" };
+
+  // Esc to close + lock scroll while the delete-confirm modal is open.
+  useEffect(() => {
+    if (!confirming) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setConfirming(false);
+    };
+    window.addEventListener("keydown", onKey);
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prev;
+    };
+  }, [confirming]);
 
   function toggle() {
     const fd = new FormData();
@@ -373,13 +415,63 @@ function AutomationRow({
           <button
             type="button"
             className="btn btn--sm btn--ghost"
-            onClick={remove}
+            onClick={() => setConfirming(true)}
             disabled={pending}
             aria-label="Delete automation"
           >
             <Icon name="trash" size={13} />
           </button>
         </div>
+
+        {confirming && (
+          <div
+            className="svm-overlay"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Delete automation"
+          >
+            <button
+              type="button"
+              className="svm-scrim"
+              aria-label="Cancel"
+              onClick={() => setConfirming(false)}
+            />
+            <div className="svm-modal" style={{ width: "min(420px, 100%)" }}>
+              <div style={{ padding: 22, textAlign: "left" }}>
+                <div style={{ fontSize: 16, fontWeight: 700, color: "var(--surv-ink)" }}>
+                  Delete automation?
+                </div>
+                <p className="dim" style={{ fontSize: 13, lineHeight: 1.5, margin: "8px 0 18px" }}>
+                  This removes the “{TRIGGER_LABEL[trigger] ?? row.triggerEvent}” automation. Surveys
+                  already sent aren&apos;t affected. This can&apos;t be undone.
+                </p>
+                <div className="row" style={{ gap: 8, justifyContent: "flex-end" }}>
+                  <button
+                    type="button"
+                    className="btn btn--sm btn--ghost"
+                    onClick={() => setConfirming(false)}
+                    disabled={pending}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn--sm"
+                    style={{ background: "#e5484d", color: "#fff", borderColor: "#e5484d" }}
+                    onClick={() => {
+                      setConfirming(false);
+                      remove();
+                    }}
+                    disabled={pending}
+                  >
+                    <Icon name="trash" size={13} />
+                    Delete
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </td>
     </tr>
   );

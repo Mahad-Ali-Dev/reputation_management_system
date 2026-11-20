@@ -7,7 +7,7 @@
   text-decoration: none;
 }
 .as .gs-hint b {
-  color: #1d1d1f;
+  color: var(--dk-text, #1d1d1f);
   font-weight: 600;
 }
 .as .gs-error b,
@@ -25,7 +25,7 @@
   margin-left: auto;
   font-size: 12.5px;
   font-weight: 500;
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .as-link {
   align-self: flex-start;
@@ -57,9 +57,9 @@
   height: 40px;
   flex-shrink: 0;
   border-radius: 12px;
-  background: #fff;
-  color: #1d1d1f;
-  box-shadow: 0 2px 6px rgba(21, 19, 43, 0.08);
+  background: var(--dk-surface, #fff);
+  color: var(--dk-text, #1d1d1f);
+  box-shadow: var(--dk-shadow-sm, 0 2px 6px rgba(21, 19, 43, 0.08));
 }
 .as-device__body {
   min-width: 0;
@@ -73,7 +73,7 @@
 .as-device__meta {
   overflow: hidden;
   font-size: 12.5px;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
   white-space: nowrap;
   text-overflow: ellipsis;
 }
@@ -88,7 +88,7 @@
   border: 1.5px dashed rgba(75, 59, 255, 0.3);
   border-radius: 14px;
   background: rgba(75, 59, 255, 0.04);
-  color: #1d1d1f;
+  color: var(--dk-text, #1d1d1f);
   font-family: var(--f-ui);
   text-align: left;
   cursor: pointer;
@@ -119,7 +119,7 @@
 }
 .as-scan__d {
   font-size: 13px;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
 }
 
 /* one-time-code boxes */
@@ -147,20 +147,20 @@
   height: 56px;
   border: 1px solid transparent;
   border-radius: 14px;
-  background: rgba(120, 120, 128, 0.08);
-  color: #1d1d1f;
+  background: var(--dk-glass, rgba(120, 120, 128, 0.08));
+  color: var(--dk-text, #1d1d1f);
   font-family: var(--f-num);
   font-size: 24px;
   font-weight: 600;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .as-box.is-filled {
-  background: #fff;
-  box-shadow: 0 2px 8px -2px rgba(21, 19, 43, 0.12);
+  background: var(--dk-glass-strong, #fff);
+  box-shadow: var(--dk-shadow-sm, 0 2px 8px -2px rgba(21, 19, 43, 0.12));
 }
 .as-code:focus-within .as-box.is-next {
   border-color: rgba(75, 59, 255, 0.5);
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 .as-code:focus-within .as-box.is-next::after {

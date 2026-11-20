@@ -923,17 +923,17 @@ const PILL_CSS = `
 .frog-mascot-pill {
   position: relative;
   isolation: isolate;
-  color: #18181b;
-  background: linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.22));
+  color: var(--dk-text, #18181b);
+  background: var(--dk-glass, linear-gradient(180deg, rgba(255,255,255,0.5), rgba(255,255,255,0.22)));
   -webkit-backdrop-filter: blur(6px) saturate(210%) brightness(1.08);
   backdrop-filter: blur(6px) saturate(210%) brightness(1.08);
-  box-shadow:
+  box-shadow: var(--dk-shadow-sm,
     inset 0 1px 0 rgba(255,255,255,0.95),
     inset 0 -12px 18px -12px rgba(255,255,255,0.75),
     inset 0 8px 14px -10px rgba(0,0,0,0.1),
     0 0 0 0.5px rgba(0,0,0,0.05),
     0 10px 28px rgba(0,0,0,0.12),
-    0 2px 5px rgba(0,0,0,0.07);
+    0 2px 5px rgba(0,0,0,0.07));
 }
 .frog-mascot-pill::before {
   content: "";
@@ -941,7 +941,7 @@ const PILL_CSS = `
   inset: 0;
   border-radius: inherit;
   padding: 1.5px;
-  background: linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.05) 55%, rgba(255,255,255,0.85) 100%);
+  background: var(--dk-border-strong, linear-gradient(135deg, rgba(255,255,255,1) 0%, rgba(255,255,255,0.25) 30%, rgba(255,255,255,0.05) 55%, rgba(255,255,255,0.85) 100%));
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
@@ -952,15 +952,15 @@ const PILL_CSS = `
   position: absolute;
   inset: 1.5px 5% 50% 5%;
   border-radius: inherit;
-  background: radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.75), rgba(255,255,255,0) 70%);
+  background: var(--dk-none, radial-gradient(120% 100% at 50% 0%, rgba(255,255,255,0.75), rgba(255,255,255,0) 70%));
   opacity: 0.7;
   pointer-events: none;
   z-index: -1;
 }
-.frog-mascot-status { color: #6b6b74; }
+.frog-mascot-status { color: var(--dk-text-muted, #6b6b74); }
 .frog-mascot-status.frog-mascot-shimmer { color: transparent; }
 @media (prefers-reduced-motion: reduce) {
-  .frog-mascot-shimmer { animation: none; background: none; color: #71717a; }
+  .frog-mascot-shimmer { animation: none; background: none; color: var(--dk-text-muted, #71717a); }
 }
 `;
 

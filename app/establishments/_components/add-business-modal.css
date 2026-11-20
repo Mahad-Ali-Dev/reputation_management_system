@@ -12,7 +12,7 @@
   position: fixed;
   inset: 0;
   border: 0;
-  background: rgba(240, 238, 255, 0.3);
+  background: var(--dk-scrim, rgba(240, 238, 255, 0.3));
   -webkit-backdrop-filter: blur(14px) saturate(140%);
   backdrop-filter: blur(14px) saturate(140%);
   cursor: default;
@@ -25,14 +25,14 @@
   width: min(620px, 100%);
   max-height: calc(100dvh - 48px);
   overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.8));
   border-radius: 28px;
   background: radial-gradient(circle at 50% -10%, rgba(75, 59, 255, 0.12), transparent 55%),
-    rgba(255, 255, 255, 0.78);
+    var(--dk-surface, rgba(255, 255, 255, 0.78));
   -webkit-backdrop-filter: blur(30px) saturate(170%);
   backdrop-filter: blur(30px) saturate(170%);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 30px 80px -20px rgba(21, 19, 43, 0.35);
-  color: #1d1d1f;
+  box-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 30px 80px -20px rgba(21, 19, 43, 0.35));
+  color: var(--dk-text, #1d1d1f);
   font-family: var(--f-ui);
   animation: abm-in 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
@@ -53,13 +53,13 @@
   height: 32px;
   border: 0;
   border-radius: 999px;
-  background: rgba(120, 120, 128, 0.12);
-  color: #6e6e73;
+  background: var(--dk-glass, rgba(120, 120, 128, 0.12));
+  color: var(--dk-text-muted, #6e6e73);
   cursor: pointer;
 }
 .abm__close:hover {
-  background: rgba(120, 120, 128, 0.2);
-  color: #1d1d1f;
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.2));
+  color: var(--dk-text, #1d1d1f);
 }
 
 .abm__hero {
@@ -91,7 +91,7 @@
   margin: 8px 0 0;
   font-size: 15px;
   line-height: 1.45;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
 }
 
 .abm__form {
@@ -115,8 +115,8 @@
   padding: 18px;
   border: 0;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.7);
-  box-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 20px -10px rgba(21, 19, 43, 0.15);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.7));
+  box-shadow: var(--dk-shadow-sm, 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 20px -10px rgba(21, 19, 43, 0.15));
 }
 .abm-grid {
   display: grid;
@@ -130,7 +130,7 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: uppercase;
-  color: #86868b;
+  color: var(--dk-text-subtle, #86868b);
 }
 .abm-field {
   display: flex;
@@ -144,10 +144,10 @@
 .abm-field__lbl {
   font-size: 13px;
   font-weight: 500;
-  color: #6e6e73;
+  color: var(--dk-text-muted, #6e6e73);
 }
 .abm-field__req {
-  color: #ff3b30;
+  color: var(--dk-danger-text, #ff3b30);
 }
 .abm-input {
   width: 100%;
@@ -155,28 +155,28 @@
   padding: 0 14px;
   border: 1px solid transparent;
   border-radius: 12px;
-  background: rgba(120, 120, 128, 0.08);
-  color: #1d1d1f;
+  background: var(--dk-glass, rgba(120, 120, 128, 0.08));
+  color: var(--dk-text, #1d1d1f);
   font: 400 15px var(--f-ui);
   outline: none;
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .abm-input::placeholder {
-  color: #86868b;
+  color: var(--dk-text-subtle, #86868b);
 }
 .abm-input:hover {
-  background: rgba(120, 120, 128, 0.12);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.12));
 }
 .abm-input:focus {
   border-color: rgba(75, 59, 255, 0.45);
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 .abm-inputwrap {
   position: relative;
   display: flex;
   align-items: center;
-  color: #86868b;
+  color: var(--dk-text-subtle, #86868b);
 }
 .abm-inputwrap svg {
   position: absolute;
@@ -198,14 +198,14 @@
   padding: 0 22px;
   border: 0;
   border-radius: 999px;
-  background: rgba(120, 120, 128, 0.12);
-  color: #1d1d1f;
+  background: var(--dk-glass, rgba(120, 120, 128, 0.12));
+  color: var(--dk-text, #1d1d1f);
   font: 500 15px var(--f-ui);
   cursor: pointer;
   transition: background 0.15s ease;
 }
 .abm-btn:hover {
-  background: rgba(120, 120, 128, 0.2);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.2));
 }
 .abm-btn--pri {
   background: var(--glass-accent, #4b3bff);

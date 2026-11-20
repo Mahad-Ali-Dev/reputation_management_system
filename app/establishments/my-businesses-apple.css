@@ -5,16 +5,16 @@
    ============================================================ */
 
 .mb {
-  --mb-ink: #1d1d1f;
-  --mb-2: #6e6e73;
-  --mb-3: #86868b;
-  --mb-fill: rgba(120, 120, 128, 0.12);
-  --mb-fill-2: rgba(120, 120, 128, 0.08);
-  --mb-sep: rgba(60, 60, 67, 0.12);
+  --mb-ink: var(--dk-text, #1d1d1f);
+  --mb-2: var(--dk-text-muted, #6e6e73);
+  --mb-3: var(--dk-text-subtle, #86868b);
+  --mb-fill: var(--dk-glass-strong, rgba(120, 120, 128, 0.12));
+  --mb-fill-2: var(--dk-glass, rgba(120, 120, 128, 0.08));
+  --mb-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
   --mb-accent: var(--glass-accent, #4b3bff);
-  --mb-glass: rgba(255, 255, 255, 0.72);
-  --mb-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14);
+  --mb-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
+  --mb-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14));
   max-width: 1240px;
   margin: 0 auto;
   color: var(--mb-ink);
@@ -32,7 +32,7 @@
 .mb-eyebrow {
   font-size: 13px;
   font-weight: 600;
-  background: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  background: var(--dk-accent-text, linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%));
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -85,7 +85,7 @@
   transition: background 0.15s ease;
 }
 .mb-pill:hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.18));
 }
 .mb-pill--pri {
   background: var(--mb-accent);
@@ -131,7 +131,7 @@
   gap: 18px;
   min-width: 0;
   padding: 22px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--mb-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -140,8 +140,8 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .mb-card:not(.mb-add):hover {
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.03), 0 20px 44px
-    -16px rgba(21, 19, 43, 0.2);
+  box-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.03), 0 20px 44px
+    -16px rgba(21, 19, 43, 0.2));
 }
 .mb-card__head {
   display: flex;
@@ -227,7 +227,7 @@
   flex-shrink: 0;
   font-size: 12.5px;
   font-weight: 500;
-  color: #c93400;
+  color: var(--dk-warning-text, #c93400);
   white-space: nowrap;
 }
 .mb-status::before {
@@ -238,7 +238,7 @@
   background: #ff9500;
 }
 .mb-status.is-on {
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .mb-status.is-on::before {
   background: #34c759;
@@ -265,10 +265,10 @@
   letter-spacing: -0.02em;
 }
 .mb-stat__val.is-up {
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .mb-stat__val.is-down {
-  color: #c93400;
+  color: var(--dk-warning-text, #c93400);
 }
 .mb-star {
   color: #ff9f0a;
@@ -295,7 +295,7 @@
   transition: background 0.15s ease;
 }
 .mb-devline:hover {
-  background: rgba(120, 120, 128, 0.14);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.14));
 }
 .mb-devline svg:first-child {
   color: var(--mb-accent);
@@ -343,8 +343,8 @@
   justify-content: center;
   gap: 6px;
   min-height: 260px;
-  border: 1.5px dashed rgba(75, 59, 255, 0.28);
-  background: rgba(255, 255, 255, 0.4);
+  border: 1.5px dashed var(--dk-accent-border, rgba(75, 59, 255, 0.28));
+  background: var(--dk-glass, rgba(255, 255, 255, 0.4));
   box-shadow: none;
   color: var(--mb-ink);
   font-family: var(--f-ui);
@@ -352,8 +352,8 @@
   cursor: pointer;
 }
 .mb-add:hover {
-  border-color: rgba(75, 59, 255, 0.5);
-  background: rgba(255, 255, 255, 0.6);
+  border-color: var(--dk-accent-border, rgba(75, 59, 255, 0.5));
+  background: var(--dk-glass-strong, rgba(255, 255, 255, 0.6));
 }
 .mb-add__plus {
   display: grid;
@@ -395,7 +395,7 @@
   margin: 0;
   padding: 6px;
   list-style: none;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 20px;
   background: var(--mb-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -495,7 +495,7 @@
   flex-direction: column;
   align-items: center;
   padding: 72px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--mb-glass);
   box-shadow: var(--mb-shadow);

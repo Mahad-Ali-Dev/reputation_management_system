@@ -145,12 +145,12 @@ export function LibraryUploader({
       </button>
       {hiddenInput}
       {error && (
-        <span style={{ fontSize: 11, color: "#c0344a", maxWidth: 240, textAlign: "right" }} role="alert">
+        <span style={{ fontSize: 11, color: "var(--dk-danger-text, #c0344a)", maxWidth: 240, textAlign: "right" }} role="alert">
           {error}
         </span>
       )}
       {!error && count > 0 && (
-        <span style={{ fontSize: 10.5, color: "#0f8a4d" }}>{count} uploaded</span>
+        <span style={{ fontSize: 10.5, color: "var(--dk-success-text, #0f8a4d)" }}>{count} uploaded</span>
       )}
     </div>
   );

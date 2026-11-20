@@ -9,26 +9,26 @@
    ============================================================ */
 
 .app--glass .sk-page {
-  --ap-ink: #1d1d1f;
-  --ap-2: #6e6e73;
-  --ap-3: #86868b;
-  --ap-fill: rgba(120, 120, 128, 0.12);
-  --ap-fill-2: rgba(120, 120, 128, 0.08);
-  --ap-sep: rgba(60, 60, 67, 0.12);
-  --ap-card: rgba(255, 255, 255, 0.82);
-  --ap-shadow: 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05);
+  --ap-ink: var(--dk-text, #1d1d1f);
+  --ap-2: var(--dk-text-muted, #6e6e73);
+  --ap-3: var(--dk-text-subtle, #86868b);
+  --ap-fill: var(--dk-glass-strong, rgba(120, 120, 128, 0.12));
+  --ap-fill-2: var(--dk-glass, rgba(120, 120, 128, 0.08));
+  --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
+  --ap-card: var(--dk-glass-strong, rgba(255, 255, 255, 0.82));
+  --ap-shadow: var(--dk-shadow, 0 1px 1px rgba(0, 0, 0, 0.02), 0 6px 24px rgba(0, 0, 0, 0.05));
 
   /* re-map the kit tokens onto Apple greys + brand accent */
   --pri: var(--glass-accent, #4b3bff);
   --pri-50: rgba(75, 59, 255, 0.08);
   --pri-100: rgba(75, 59, 255, 0.14);
   --pri-700: var(--glass-accent-hover, #3a2be0);
-  --sk-surface: #fff;
-  --sk-soft: #f5f5f7;
+  --sk-surface: var(--dk-surface, #fff);
+  --sk-soft: var(--dk-surface-2, #f5f5f7);
   --sk-line: var(--ap-sep);
-  --sk-divider: rgba(60, 60, 67, 0.08);
+  --sk-divider: var(--dk-border-soft, rgba(60, 60, 67, 0.08));
   --sk-ink: var(--ap-ink);
-  --sk-ink-2: #3a3a3c;
+  --sk-ink-2: var(--dk-text-2, #3a3a3c);
   --sk-muted: var(--ap-2);
   --sk-pri: var(--glass-accent, #4b3bff);
   --sk-pri-soft: rgba(75, 59, 255, 0.08);
@@ -57,7 +57,7 @@
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0.01em;
-  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  background-image: linear-gradient(90deg, var(--dk-accent-text, #4b3bff) 0%, #8a5cff 55%, #c25cff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -95,7 +95,7 @@
   color: var(--ap-ink);
 }
 .app--glass .sk-page .btn:not(.btn--pri):hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.18));
 }
 .app--glass .sk-page .btn--pri {
   border: 0;
@@ -116,7 +116,7 @@
   font-weight: 500;
 }
 .app--glass .sk-page .sk-btn-out:hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.18));
 }
 
 /* ---- KPI cards: big light numbers, no decorative art ---- */
@@ -165,11 +165,11 @@
   font-weight: 500;
 }
 .app--glass .sk-page .sk-kpi__delta--green {
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .app--glass .sk-page .sk-kpi__delta--orange,
 .app--glass .sk-page .sk-kpi__delta--down {
-  color: #c93400;
+  color: var(--dk-warning-text, #c93400);
 }
 .app--glass .sk-page .sk-kpi__helper {
   color: var(--ap-3);
@@ -183,7 +183,7 @@
   padding: 2px;
   border: 0;
   border-radius: 10px;
-  background: rgba(118, 118, 128, 0.12);
+  background: var(--dk-glass, rgba(118, 118, 128, 0.12));
 }
 .app--glass .sk-page .sk-tabs__t {
   gap: 7px;
@@ -199,10 +199,10 @@
   color: var(--ap-2);
 }
 .app--glass .sk-page .sk-tabs__t.is-active {
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   color: var(--ap-ink);
   font-weight: 600;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04));
 }
 .app--glass .sk-page .sk-tabs__t.is-active svg {
   color: var(--glass-accent, #4b3bff);
@@ -245,7 +245,7 @@
 .app--glass .sk-page .sk-select:focus,
 .app--glass .sk-page .sk-textarea:focus {
   border-color: rgba(75, 59, 255, 0.45);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 
@@ -254,7 +254,7 @@
   padding: 2px;
   border: 0;
   border-radius: 9px;
-  background: rgba(118, 118, 128, 0.12);
+  background: var(--dk-glass, rgba(118, 118, 128, 0.12));
 }
 .app--glass .sk-page .sk-seg__b {
   border-radius: 7px;
@@ -262,10 +262,10 @@
   color: var(--ap-ink);
 }
 .app--glass .sk-page .sk-seg__b.is-active {
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   color: var(--ap-ink);
   font-weight: 600;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04));
 }
 
 /* ---- chips: grey, ink when active ---- */
@@ -276,11 +276,11 @@
   font-weight: 500;
 }
 .app--glass .sk-page .sk-chip:hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.18));
 }
 .app--glass .sk-page .sk-chip.is-active {
   background: var(--ap-ink);
-  color: #fff;
+  color: var(--dk-bg, #fff);
 }
 
 /* ---- platform picker + channels: inset rows ---- */
@@ -293,7 +293,7 @@
 .app--glass .sk-page .sk-platform:hover,
 .app--glass .sk-page .sk-channel:hover:not(:disabled) {
   border-color: transparent;
-  background: rgba(120, 120, 128, 0.14);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.14));
 }
 .app--glass .sk-page .sk-platform.is-on,
 .app--glass .sk-page .sk-channel.is-on {
@@ -316,7 +316,7 @@
   border-bottom: 1px solid var(--ap-sep);
 }
 .app--glass .sk-page .sk-table__row:hover {
-  background: rgba(120, 120, 128, 0.05);
+  background: var(--dk-glass, rgba(120, 120, 128, 0.05));
 }
 .app--glass .sk-page .sk-post-cell__thumb,
 .app--glass .sk-page .sk-post-cell__thumb--ph {
@@ -353,7 +353,7 @@
 }
 .app--glass .sk-page .sk-cal-navbtn:hover,
 .app--glass .sk-page .sk-cal-today:hover {
-  background: rgba(120, 120, 128, 0.18);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.18));
 }
 .app--glass .sk-page .sk-cal-month {
   font-weight: 600;
@@ -372,10 +372,10 @@
 }
 .app--glass .sk-page .sk-cal-cell {
   background: transparent;
-  border-color: rgba(60, 60, 67, 0.08);
+  border-color: var(--dk-border-soft, rgba(60, 60, 67, 0.08));
 }
 .app--glass .sk-page .sk-cal-cell--out {
-  background: rgba(120, 120, 128, 0.04);
+  background: var(--dk-glass, rgba(120, 120, 128, 0.04));
 }
 .app--glass .sk-page .sk-cal-daynum {
   font-weight: 500;
@@ -392,7 +392,7 @@
   font-weight: 500;
 }
 .app--glass .sk-page .sk-weekcol {
-  border-color: rgba(60, 60, 67, 0.08);
+  border-color: var(--dk-border-soft, rgba(60, 60, 67, 0.08));
 }
 .app--glass .sk-page .sk-weekcard {
   border: 0;
@@ -402,7 +402,7 @@
 .app--glass .sk-page .sk-weekcard:hover {
   transform: none;
   box-shadow: none;
-  background: rgba(120, 120, 128, 0.14);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.14));
 }
 
 /* ---- creative ideas + library ---- */
@@ -415,11 +415,11 @@
 .app--glass .sk-page .sk-idea:hover {
   transform: none;
   box-shadow: none;
-  background: rgba(120, 120, 128, 0.14);
+  background: var(--dk-glass-strong, rgba(120, 120, 128, 0.14));
 }
 .app--glass .sk-page .sk-idea__art {
   border-radius: 12px;
-  background: #fff;
+  background: var(--dk-glass, #fff);
 }
 .app--glass .sk-page .sk-idea__name {
   font-weight: 600;
@@ -428,9 +428,9 @@
   color: var(--ap-2);
 }
 .app--glass .sk-page .sk-dropzone {
-  border: 1.5px dashed rgba(60, 60, 67, 0.2);
+  border: 1.5px dashed var(--dk-border-strong, rgba(60, 60, 67, 0.2));
   border-radius: 18px;
-  background: rgba(120, 120, 128, 0.04);
+  background: var(--dk-glass, rgba(120, 120, 128, 0.04));
 }
 .app--glass .sk-page .sk-asset {
   border: 0;
@@ -447,7 +447,7 @@
 }
 .app--glass .sk-page .sk-tagbox:focus-within {
   border-color: rgba(75, 59, 255, 0.45) !important;
-  background: #fff !important;
+  background: var(--dk-surface, #fff) !important;
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 .app--glass .sk-page .sk-tagbox .sk-chip.is-active {

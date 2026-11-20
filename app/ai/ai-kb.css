@@ -2,7 +2,7 @@
    teal/gold app-shell gradient. Page-scoped override (no shared-file edit). */
 .app--canvas:has(.akb) {
   background-image: none;
-  background-color: #fbfcff;
+  background-color: var(--dk-bg, #fbfcff);
 }
 
 /* =====================================================================
@@ -17,29 +17,29 @@
   --akb-primary: #4f2cff;
   --akb-primary-blue: #3157ff;
   --akb-primary-purple: #5d32f5;
-  --akb-deep: #0e1238;
-  --akb-soft: #f1edff;
-  --akb-lavender: #f4f1ff;
-  --akb-surface-purple: #f5f1ff;
-  --akb-hero-border: #b8a9ff;
+  --akb-deep: var(--dk-text, #0e1238);
+  --akb-soft: var(--dk-accent-soft, #f1edff);
+  --akb-lavender: var(--dk-accent-faint, #f4f1ff);
+  --akb-surface-purple: var(--dk-accent-faint, #f5f1ff);
+  --akb-hero-border: var(--dk-accent-border, #b8a9ff);
   --akb-aqua-border: #45d9d0;
   --akb-success: #12b76a;
-  --akb-success-soft: #e9fff3;
-  --akb-success-pill: #dffbea;
+  --akb-success-soft: var(--dk-success-soft, #e9fff3);
+  --akb-success-pill: var(--dk-success-soft, #dffbea);
   --akb-warning: #f79009;
-  --akb-warning-soft: #fff1d8;
-  --akb-warning-text: #b7791f;
+  --akb-warning-soft: var(--dk-warning-soft, #fff1d8);
+  --akb-warning-text: var(--dk-warning-text, #b7791f);
   --akb-info-blue: #2f6bff;
-  --akb-ink: #0e1238;
-  --akb-ink-2: #414a7a;
-  --akb-muted: #667098;
-  --akb-soft-text: #8c94b4;
-  --akb-line: #e3e7f2;
-  --akb-line-soft: #edf0f7;
-  --akb-dashed: #d8ddeb;
-  --akb-divider: #dfe3ee;
-  --akb-track: #d9dde6;
-  --akb-shadow: 0 10px 24px rgba(17, 24, 39, 0.04);
+  --akb-ink: var(--dk-text, #0e1238);
+  --akb-ink-2: var(--dk-text-2, #414a7a);
+  --akb-muted: var(--dk-text-muted, #667098);
+  --akb-soft-text: var(--dk-text-subtle, #8c94b4);
+  --akb-line: var(--dk-border, #e3e7f2);
+  --akb-line-soft: var(--dk-border-soft, #edf0f7);
+  --akb-dashed: var(--dk-border-strong, #d8ddeb);
+  --akb-divider: var(--dk-border, #dfe3ee);
+  --akb-track: var(--dk-surface-3, #d9dde6);
+  --akb-shadow: var(--dk-shadow-sm, 0 10px 24px rgba(17, 24, 39, 0.04));
   --akb-shadow-cta: 0 12px 24px rgba(79, 44, 255, 0.24);
 
   display: grid;
@@ -51,7 +51,7 @@
 .akb-card {
   border: 1px solid var(--akb-line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: var(--akb-shadow);
 }
 .akb-card__pad {
@@ -108,7 +108,7 @@
   padding: 0 16px;
   border-radius: 8px;
   border: 1px solid var(--akb-divider);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--akb-ink);
   font-size: 13px;
   font-weight: 700;
@@ -217,22 +217,22 @@
   gap: 16px;
   min-height: 220px;
   padding: 28px 24px 28px 32px;
-  background:
+  background: var(--dk-surface,
     radial-gradient(circle at 74% 50%, rgba(111, 86, 255, 0.13), transparent 40%),
-    linear-gradient(100deg, #ffffff 0%, #fbfaff 52%, #f7f3ff 100%);
+    linear-gradient(100deg, #ffffff 0%, #fbfaff 52%, #f7f3ff 100%));
 }
 .akb-hero--empty {
   border-color: var(--akb-aqua-border);
-  background:
+  background: var(--dk-surface,
     radial-gradient(circle at 72% 50%, rgba(111, 86, 255, 0.1), transparent 36%),
-    linear-gradient(100deg, #f8ffff 0%, #f5ffff 46%, #ffffff 100%);
+    linear-gradient(100deg, #f8ffff 0%, #f5ffff 46%, #ffffff 100%));
 }
 .akb-hero__eyebrow {
   font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #00aeca;
+  color: var(--dk-teal-text, #00aeca);
 }
 .akb-hero__title {
   font-size: 37px;
@@ -246,7 +246,7 @@
   font-size: 15px;
   line-height: 1.55;
   font-weight: 500;
-  color: #3f4777;
+  color: var(--dk-text-2, #3f4777);
   margin: 12px 0 0;
   max-width: 500px;
 }
@@ -264,7 +264,8 @@
   height: auto;
   /* The kit brain illustration ships a baked white background; multiply drops
      it onto the lavender hero gradient (white → transparent, art stays). */
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .akb-hero__cta {
   position: absolute;
@@ -296,7 +297,7 @@
   align-self: stretch;
   min-height: 130px;
   border-radius: 12px;
-  background: linear-gradient(160deg, #f4fffb 0%, #eafff4 100%);
+  background: var(--dk-success-soft, linear-gradient(160deg, #f4fffb 0%, #eafff4 100%));
   display: grid;
   place-items: center;
   padding: 12px;
@@ -305,7 +306,8 @@
   width: 76px;
   height: auto;
   /* book+check art ships a baked white bg — blend onto the mint tile. */
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .akb-readiness__body {
   flex: 1;
@@ -376,7 +378,7 @@
 
 /* --- Stats 2x2 card --- */
 .akb-stats {
-  border: 1px solid #d5caff;
+  border: 1px solid var(--dk-accent-border, #d5caff);
   display: grid;
   grid-template-columns: 1fr 1fr;
 }
@@ -460,7 +462,7 @@
   padding: 16px 12px;
   border-radius: 10px;
   border: 1px solid var(--akb-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   cursor: pointer;
   text-decoration: none;
   color: inherit;
@@ -471,7 +473,7 @@
   background: var(--akb-lavender);
 }
 .akb-source--upload {
-  background: #f8f6ff;
+  background: var(--dk-accent-faint, #f8f6ff);
   border: 1px dashed var(--akb-dashed);
 }
 .akb-source--full {
@@ -495,7 +497,7 @@
   gap: 10px;
 }
 .akb-source--grid {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px dashed var(--akb-dashed);
   justify-content: center;
   gap: 8px;
@@ -624,7 +626,8 @@
   width: 100%;
   height: auto;
   /* robot ships a baked white bg — blend it onto the white card. */
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 
 /* ===================================================================
@@ -696,7 +699,7 @@
   height: 26px;
   border-radius: 7px;
   border: 1px solid var(--akb-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--akb-muted);
   cursor: pointer;
   flex-shrink: 0;
@@ -747,7 +750,7 @@
   height: 32px;
   border-radius: 8px;
   border: 1px solid var(--akb-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--akb-muted);
   font-size: 11px;
   font-weight: 700;
@@ -774,7 +777,7 @@
   padding: 0 12px;
   border: 1px solid var(--akb-line);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   font-size: 12.5px;
   font-weight: 600;
   color: var(--akb-ink);
@@ -853,7 +856,7 @@
 .akb-empty {
   border: 1px dashed var(--akb-dashed);
   border-radius: 10px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   padding: 18px 16px;
   text-align: center;
   display: flex;
@@ -911,7 +914,7 @@
   grid-template-columns: repeat(6, minmax(0, 1fr));
   border: 1px solid var(--akb-line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   margin: 16px 0 0;
 }
 .akb-summary-item {
@@ -957,7 +960,7 @@
 .akb-beh-card {
   border: 1px solid var(--akb-line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   padding: 24px;
 }
 .akb-beh-card__title {
@@ -1030,7 +1033,7 @@
   border: 1px solid var(--akb-divider);
   border-radius: 8px;
   padding: 0 12px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--akb-ink);
   font-size: 13px;
   font-weight: 600;
@@ -1088,9 +1091,9 @@
   max-width: 480px;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(14, 18, 56, 0.22);
+  box-shadow: var(--dk-shadow, 0 24px 60px rgba(14, 18, 56, 0.22));
   padding: 24px;
 }
 .akb-rules-modal__head {
@@ -1180,9 +1183,9 @@
   max-width: 520px;
   max-height: calc(100vh - 40px);
   overflow-y: auto;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border-radius: 16px;
-  box-shadow: 0 24px 60px rgba(14, 18, 56, 0.22);
+  box-shadow: var(--dk-shadow, 0 24px 60px rgba(14, 18, 56, 0.22));
   padding: 24px;
 }
 .akb-teach-modal__head {
@@ -1261,7 +1264,7 @@
   border: 1px solid var(--akb-divider);
   font-size: 13px;
   color: var(--akb-ink);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   outline: none;
 }
 .akb-teach-modal__input:focus {
@@ -1274,7 +1277,7 @@
   font-size: 13px;
   line-height: 1.55;
   color: var(--akb-ink);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   resize: vertical;
   outline: none;
   font-family: inherit;
@@ -1287,7 +1290,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12.5px;
-  color: #e14d62;
+  color: var(--dk-danger-text, #e14d62);
 }
 .akb-teach-modal__foot {
   display: flex;
@@ -1300,8 +1303,8 @@
   gap: 10px;
   margin-top: 16px;
   padding: 16px 18px;
-  background: #f8f7ff;
-  border: 1px solid #e5e7f2;
+  background: var(--dk-accent-faint, #f8f7ff);
+  border: 1px solid var(--dk-border, #e5e7f2);
   border-radius: 9px;
   font-size: 13.5px;
   color: var(--akb-ink);
@@ -1347,7 +1350,7 @@
   padding: 9px 14px;
   border: 1px solid var(--akb-line);
   border-radius: 999px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--akb-ink);
   font-size: 12.5px;
   font-weight: 600;
@@ -1382,7 +1385,7 @@
   padding: 8px 14px 8px 10px;
   border: 1px solid var(--akb-line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--akb-ink);
   cursor: pointer;
   text-align: left;
@@ -1411,7 +1414,8 @@
 }
 /* general-inquiries art ships a baked white bg — blend it onto the chip. */
 .akb-topic__icon--blend img {
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .akb-topic__t {
   font-size: 12.5px;
@@ -1444,7 +1448,8 @@
   height: 18px;
   flex-shrink: 0;
   /* test-info ships a baked white bg — blend onto the lavender callout. */
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 
 .akb-perf {
@@ -1473,7 +1478,8 @@
   width: 24px;
   height: 24px;
   /* some kit metric icons ship a baked white bg — blend onto the tinted circle. */
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .akb-perf__icon--success {
   background: var(--akb-success-soft);
@@ -1482,10 +1488,10 @@
   background: var(--akb-soft);
 }
 .akb-perf__icon--warning {
-  background: #fff1e6;
+  background: var(--dk-warning-soft, #fff1e6);
 }
 .akb-perf__icon--danger {
-  background: #fdeaec;
+  background: var(--dk-danger-soft, #fdeaec);
 }
 .akb-perf__value {
   font-size: 26px;
@@ -1506,7 +1512,7 @@
 }
 
 .akb-teach-empty {
-  border: 1px solid #d8ccff;
+  border: 1px solid var(--dk-accent-border, #d8ccff);
   border-radius: 10px;
   padding: 28px 18px;
   text-align: center;

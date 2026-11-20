@@ -282,7 +282,7 @@ function GenerateKeyForm({
               fontSize: 13,
               borderRadius: 8,
               border: "1px solid var(--line)",
-              background: "#fff",
+              background: "var(--dk-surface, #fff)",
               color: "var(--ink)",
             }}
           />

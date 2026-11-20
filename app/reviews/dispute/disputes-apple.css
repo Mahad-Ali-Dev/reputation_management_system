@@ -7,16 +7,20 @@
 
 .dm,
 .dc {
-  --ap-ink: #1d1d1f;
-  --ap-2: #6e6e73;
-  --ap-3: #86868b;
+  --ap-ink: var(--dk-text, #1d1d1f);
+  --ap-2: var(--dk-text-muted, #6e6e73);
+  --ap-3: var(--dk-text-subtle, #86868b);
   --ap-fill: rgba(120, 120, 128, 0.12);
   --ap-fill-2: rgba(120, 120, 128, 0.08);
-  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
   --ap-accent: var(--glass-accent, #4b3bff);
-  --ap-glass: rgba(255, 255, 255, 0.72);
-  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14);
+  --ap-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
+  --ap-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 12px 32px -14px rgba(21, 19, 43, 0.14)
+  );
 }
 
 /* ---------- list page ---------- */
@@ -122,7 +126,7 @@
 .dm-card {
   min-width: 0;
   padding: 22px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -177,7 +181,7 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   padding: 22px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -202,15 +206,15 @@
 }
 .dm-stat__icon.is-amber {
   background: rgba(255, 149, 0, 0.13);
-  color: #c93400;
+  color: var(--dk-warning-text, #c93400);
 }
 .dm-stat__icon.is-green {
   background: rgba(52, 199, 89, 0.13);
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .dm-stat__icon.is-red {
   background: rgba(255, 59, 48, 0.11);
-  color: #d70015;
+  color: var(--dk-danger-text, #d70015);
 }
 .dm-stat__value {
   margin-top: 12px;
@@ -243,7 +247,7 @@
   padding: 4px;
   list-style: none;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.55));
 }
 .dm-list li {
   position: relative;
@@ -353,13 +357,13 @@
   background: currentColor;
 }
 .dm-status.is-amber {
-  color: #c93400;
+  color: var(--dk-warning-text, #c93400);
 }
 .dm-status.is-green {
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .dm-status.is-red {
-  color: #d70015;
+  color: var(--dk-danger-text, #d70015);
 }
 
 /* evidence */
@@ -462,7 +466,7 @@
   padding: 12px 14px;
   border-radius: 14px;
   background: rgba(52, 199, 89, 0.09);
-  color: #1d7a3a;
+  color: var(--dk-success-text, #1d7a3a);
   font-size: 13px;
   line-height: 1.45;
 }
@@ -507,12 +511,12 @@
 /* ---------- detail / wizard / ready pages (.dc) ---------- */
 .app--glass .dc {
   --dc-ink: var(--ap-ink);
-  --dc-text: #3a3a3c;
+  --dc-text: var(--dk-text-2, #3a3a3c);
   --dc-body: var(--ap-2);
   --dc-muted: var(--ap-2);
   --dc-soft: var(--ap-3);
   --dc-line: var(--ap-sep);
-  --dc-line-soft: rgba(60, 60, 67, 0.08);
+  --dc-line-soft: var(--dk-border-soft, rgba(60, 60, 67, 0.08));
   --dc-line-violet: rgba(75, 59, 255, 0.2);
   --dc-pri: var(--ap-accent);
   --dc-pri-strong: var(--glass-accent-hover, #3a2be0);
@@ -540,7 +544,7 @@
 .app--glass .dc .dc-detail-card,
 .app--glass .dc .dc-violcard,
 .app--glass .dc .dc-method {
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -632,7 +636,7 @@
 .app--glass .dc .dc-pkgitem img,
 .app--glass .dc .dc-benefit img,
 .app--glass .dc .dc-empty__art {
-  mix-blend-mode: normal;
+  mix-blend-mode: var(--dk-art-blend, normal);
 }
 .app--glass .dc .dc-wizhead {
   grid-template-columns: minmax(0, 1fr) 300px;
@@ -698,7 +702,7 @@
   text-transform: none !important;
 }
 .app--glass .dc .dc-detail-summary {
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: radial-gradient(circle at 0% 50%, rgba(75, 59, 255, 0.1), transparent 45%),
     var(--ap-glass);
@@ -723,7 +727,7 @@
 
 /* wizard: stepper, search, review rows, violation options */
 .app--glass .dc .dc-stepper {
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   box-shadow: var(--ap-shadow);
@@ -738,7 +742,7 @@
 }
 .app--glass .dc .dc-searchrow__field:focus-within {
   border-color: rgba(75, 59, 255, 0.45);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 .app--glass .dc .dc-searchrow__btn {
@@ -750,7 +754,7 @@
 .app--glass .dc .dc-revlist {
   padding: 4px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.55));
 }
 .app--glass .dc .dc-revrow {
   border: 0;
@@ -769,11 +773,11 @@
 .app--glass .dc .dc-violopt {
   border: 1px solid transparent;
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.6);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.6));
   box-shadow: none;
 }
 .app--glass .dc .dc-violopt:hover {
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--dk-glass-strong, rgba(255, 255, 255, 0.9));
 }
 .app--glass .dc .dc-violopt:has(input:checked) {
   border-color: rgba(75, 59, 255, 0.45);
@@ -791,7 +795,7 @@
   box-shadow: none;
 }
 .app--glass .dc .dc-benefit {
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 20px;
   background: var(--ap-glass);
   box-shadow: var(--ap-shadow);

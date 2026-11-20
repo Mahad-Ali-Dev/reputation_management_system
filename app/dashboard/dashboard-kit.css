@@ -10,22 +10,22 @@
 .dk {
   --dk-pri: #2563eb;
   --dk-pri-dark: #1d4ed8;
-  --dk-pri-soft: #eff6ff;
+  --dk-pri-soft: var(--dk-accent-soft, #eff6ff);
   --dk-green: #16a34a;
-  --dk-green-soft: #ecfdf5;
+  --dk-green-soft: var(--dk-success-soft, #ecfdf5);
   --dk-star: #facc15;
   --dk-red: #ef4444;
   --dk-orange: #f97316;
   --dk-purple: #7c3aed;
-  --dk-purple-soft: #f5f3ff;
-  --dk-card: #ffffff;
-  --dk-card-2: #f9fafb;
-  --dk-ink: #111827;
-  --dk-mut: #4d5a80; /* mockup-sampled navy-slate secondary (#4C5B82/#4F5986) */
-  --dk-name: #303d87; /* reviewer names — mockup-sampled indigo */
-  --dk-lilac: #f0d9fd; /* reviewer avatar tile — mockup-sampled lilac */
-  --dk-ph: #8d96b8;
-  --dk-line: #e5e7eb;
+  --dk-purple-soft: var(--dk-accent-soft, #f5f3ff);
+  --dk-card: var(--dk-surface, #ffffff);
+  --dk-card-2: var(--dk-surface-2, #f9fafb);
+  --dk-ink: var(--dk-text, #111827);
+  --dk-mut: var(--dk-text-muted, #4d5a80); /* mockup-sampled navy-slate secondary (#4C5B82/#4F5986) */
+  --dk-name: var(--dk-accent-text, #303d87); /* reviewer names — mockup-sampled indigo */
+  --dk-lilac: var(--dk-accent-soft, #f0d9fd); /* reviewer avatar tile — mockup-sampled lilac */
+  --dk-ph: var(--dk-text-subtle, #8d96b8);
+  --dk-line: var(--dk-border, #e5e7eb);
   display: flex;
   flex-direction: column;
   gap: 24px;
@@ -37,7 +37,7 @@
   background: var(--dk-card);
   border: 1px solid var(--dk-line);
   border-radius: 16px;
-  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 1px 2px rgba(17, 24, 39, 0.04));
 }
 
 /* The kit's canvas is a flat neutral wash that fades near-white toward the
@@ -45,8 +45,8 @@
    teal-mist gradient. Scoped with :has() so only pages rendering the kit
    (.dk) swap canvas; every other page keeps the app canvas. */
 .app--canvas:has(.dk) {
-  background-image: linear-gradient(180deg, #fcfcfe 0%, #fdfdff 55%, #ffffff 100%);
-  background-color: #fcfcfe;
+  background-image: var(--dk-none, linear-gradient(180deg, #fcfcfe 0%, #fdfdff 55%, #ffffff 100%));
+  background-color: var(--dk-bg, #fcfcfe);
 }
 
 /* ============================================================
@@ -459,7 +459,7 @@
   flex: 1;
   height: 8px;
   border-radius: 999px;
-  background: #f1f3f6;
+  background: var(--dk-surface-3, #f1f3f6);
   overflow: hidden;
 }
 
@@ -554,7 +554,7 @@
   height: 40px;
   border-radius: 12px;
   background: var(--dk-lilac);
-  color: #46327e;
+  color: var(--dk-accent-text, #46327e);
   display: grid;
   place-items: center;
   font-size: 12.5px;
@@ -562,9 +562,9 @@
   flex-shrink: 0;
 }
 
-.dk-review-row__avatar--a { background: #f4e2ff; color: #451789; }
-.dk-review-row__avatar--b { background: #e5e8ff; color: #222d89; }
-.dk-review-row__avatar--c { background: #dcfbea; color: #00632d; }
+.dk-review-row__avatar--a { background: var(--dk-accent-soft, #f4e2ff); color: var(--dk-accent-text, #451789); }
+.dk-review-row__avatar--b { background: var(--dk-info-soft, #e5e8ff); color: var(--dk-info-text, #222d89); }
+.dk-review-row__avatar--c { background: var(--dk-success-soft, #dcfbea); color: var(--dk-success-text, #00632d); }
 
 .dk-review-row__name {
   font-size: 13px;
@@ -691,7 +691,8 @@
 /* The recent-reviews asset ships with a baked near-white background; multiply
    melts it into the white card cleanly. */
 .dk-cardempty__art--blend {
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 
 .dk-cardempty__title {
@@ -805,11 +806,11 @@
 .dk-copilot {
   position: relative;
   overflow: hidden;
-  border: 1px solid #dfe5fb;
+  border: 1px solid var(--dk-border, #dfe5fb);
   border-radius: 20px;
   padding: 26px 30px;
   /* Mockup panel wash is a light, low-saturation lavender (sampled ~#F2F3FD). */
-  background: linear-gradient(120deg, #f5f6fe 0%, #f0f2fd 55%, #ebeefc 100%);
+  background: var(--dk-surface, linear-gradient(120deg, #f5f6fe 0%, #f0f2fd 55%, #ebeefc 100%));
   min-height: 210px;
 }
 
@@ -857,11 +858,11 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: #fff;
-  border: 1px solid #dbe5ff;
+  background: var(--dk-surface, #fff);
+  border: 1px solid var(--dk-border-strong, #dbe5ff);
   border-radius: 12px;
   padding: 6px 6px 6px 14px;
-  box-shadow: 0 4px 14px -8px rgba(37, 99, 235, 0.25);
+  box-shadow: var(--dk-shadow-sm, 0 4px 14px -8px rgba(37, 99, 235, 0.25));
 }
 
 .dk-copilot__form:focus-within {
@@ -917,8 +918,8 @@
   gap: 7px;
   padding: 8px 13px;
   border-radius: 999px;
-  border: 1px solid #dbe5ff;
-  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, #dbe5ff);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.85));
   color: var(--dk-ink);
   font-size: 12px;
   font-weight: 600;
@@ -929,7 +930,7 @@
 
 .dk-copilot__chip:hover {
   border-color: var(--dk-pri);
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
 }
 
 /* Kit copilot mascot ("Ai assistant/robot_exact.svg") floats on the panel's

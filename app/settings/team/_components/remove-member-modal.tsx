@@ -111,7 +111,7 @@ export function RemoveMemberModal({
               overflowY: "auto",
               background: "var(--set-card, #fff)",
               borderRadius: 16,
-              boxShadow: "0 30px 60px -20px rgba(15,23,42,.4)",
+              boxShadow: "var(--dk-shadow, 0 30px 60px -20px rgba(15,23,42,.4))",
               zIndex: 81,
               padding: 24,
               textAlign: "left",
@@ -127,8 +127,8 @@ export function RemoveMemberModal({
                     width: 36,
                     height: 36,
                     borderRadius: "50%",
-                    background: "#fef2f2",
-                    color: "#dc2626",
+                    background: "var(--dk-danger-soft, #fef2f2)",
+                    color: "var(--dk-danger-text, #dc2626)",
                     display: "grid",
                     placeItems: "center",
                     flexShrink: 0,
@@ -163,7 +163,7 @@ export function RemoveMemberModal({
             </p>
 
             {error && (
-              <p role="alert" style={{ margin: "0 0 14px", fontSize: 12.5, color: "#dc2626", lineHeight: 1.5 }}>
+              <p role="alert" style={{ margin: "0 0 14px", fontSize: 12.5, color: "var(--dk-danger-text, #dc2626)", lineHeight: 1.5 }}>
                 {error}
               </p>
             )}

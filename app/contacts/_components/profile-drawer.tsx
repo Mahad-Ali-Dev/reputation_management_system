@@ -123,7 +123,7 @@ export async function ProfileDrawer({
         </div>
         <div className="row" style={{ gap: 6, flexWrap: "wrap", marginTop: 10 }}>
           {contact.vip && (
-            <span className="chip" style={{ background: "#fef3c7", color: "#b45309" }}>
+            <span className="chip" style={{ background: "var(--dk-warning-soft, #fef3c7)", color: "var(--dk-warning-text, #b45309)" }}>
               <Icon name="star" size={11} />
               VIP
             </span>

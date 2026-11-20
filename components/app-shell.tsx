@@ -9,6 +9,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { CommandPalette } from "./command-palette";
 import { SidebarNav } from "./sidebar-nav";
+import { useTheme } from "./theme-provider";
 
 /**
  * Top-level app shell — repulabs v2 design.
@@ -75,11 +76,12 @@ export function AppShell({
   }, [drawerOpen]);
 
   const isGlass = variant !== "plain";
+  const { theme } = useTheme();
 
   return (
     <div
       className={`app app--responsive app--canvas${isGlass ? " app--glass app--frame glass-theme" : ""}`}
-      data-glass-mode={isGlass ? "light" : undefined}
+      data-glass-mode={isGlass ? theme : undefined}
     >
       {/* Full-width top bar: logo far left, page actions far right. */}
       <header className="tb">

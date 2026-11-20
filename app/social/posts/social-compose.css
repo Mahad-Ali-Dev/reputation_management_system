@@ -21,39 +21,39 @@
    page-scoped technique autopilot / My Devices use, no shared-file edit. */
 .app--canvas:has(.sk-page) {
   background-image: none;
-  background-color: #f8faff;
+  background-color: var(--dk-bg, #f8faff);
 }
 
 .sk-page {
   /* Kit palette, page-scoped — re-maps the shared design-system tokens so the
      existing .ph / .btn / .tabs / .chip primitives render in kit purple. */
   --pri: #5b3dff;
-  --pri-50: #efedff;
-  --pri-100: #e2ddff;
+  --pri-50: var(--dk-accent-soft, #efedff);
+  --pri-100: var(--dk-accent-soft, #e2ddff);
   --pri-700: #4a2fe0;
 
   /* Kit-local aliases (used by .sk-* rules below). */
-  --sk-bg: #f8faff;
-  --sk-surface: #ffffff;
-  --sk-soft: #f6f8ff;
-  --sk-line: #e3e8f4;
-  --sk-divider: #edf1f8;
-  --sk-ink: #08102d;
-  --sk-ink-2: #26365f;
-  --sk-muted: #687596;
+  --sk-bg: var(--dk-bg, #f8faff);
+  --sk-surface: var(--dk-surface, #ffffff);
+  --sk-soft: var(--dk-surface-2, #f6f8ff);
+  --sk-line: var(--dk-border, #e3e8f4);
+  --sk-divider: var(--dk-border-soft, #edf1f8);
+  --sk-ink: var(--dk-text, #08102d);
+  --sk-ink-2: var(--dk-text-2, #26365f);
+  --sk-muted: var(--dk-text-muted, #687596);
   --sk-pri: #5b3dff;
-  --sk-pri-soft: #efedff;
+  --sk-pri-soft: var(--dk-accent-soft, #efedff);
   --sk-grad: linear-gradient(135deg, #7448ff 0%, #2447ff 100%);
-  --sk-shadow: 0 10px 28px rgba(31, 45, 100, 0.06);
+  --sk-shadow: var(--dk-shadow, 0 10px 28px rgba(31, 45, 100, 0.06));
   --sk-shadow-btn: 0 12px 24px rgba(86, 66, 255, 0.24);
 
   /* status */
   --sk-published: #18bd69;
-  --sk-published-soft: #e8f8ef;
+  --sk-published-soft: var(--dk-success-soft, #e8f8ef);
   --sk-scheduled: #4f35e8;
-  --sk-scheduled-soft: #f0edff;
+  --sk-scheduled-soft: var(--dk-accent-soft, #f0edff);
   --sk-draft: #ff7a1a;
-  --sk-draft-soft: #fff0e2;
+  --sk-draft-soft: var(--dk-warning-soft, #fff0e2);
 
   /* Contain width like the kit (max ~1240, centered) + bleed over the shell's
      .scroll padding so the wash covers the viewport edges. */
@@ -240,17 +240,17 @@
 }
 .sk-kpi__delta--green {
   background: var(--sk-published-soft);
-  color: #0f8a4d;
+  color: var(--dk-success-text, #0f8a4d);
 }
 .sk-kpi__delta--orange {
   background: var(--sk-draft-soft);
-  color: #c25a07;
+  color: var(--dk-warning-text, #c25a07);
 }
 /* A genuine decline always shows the warm "down" treatment regardless of card
    tone, so a falling metric never looks like growth. */
 .sk-kpi__delta--down {
   background: var(--sk-draft-soft);
-  color: #c25a07;
+  color: var(--dk-warning-text, #c25a07);
 }
 /* Faint pastel watercolor illustration, large, anchored to the card's
    bottom-right corner behind the content (matches the kit). */
@@ -397,7 +397,7 @@
   transition: border-color 0.12s ease, background 0.12s ease;
 }
 .sk-channel:hover:not(:disabled) {
-  border-color: #c9d2e8;
+  border-color: var(--dk-border-strong, #c9d2e8);
 }
 .sk-channel.is-on {
   border-color: var(--sk-pri);
@@ -488,7 +488,7 @@
 .sk-seg__b.is-active {
   background: var(--sk-pri-soft);
   color: var(--sk-pri);
-  box-shadow: 0 1px 2px rgba(31, 45, 100, 0.06);
+  box-shadow: var(--dk-shadow-sm, 0 1px 2px rgba(31, 45, 100, 0.06));
 }
 
 /* inputs */
@@ -826,7 +826,7 @@ a.sk-minical__day:hover {
   transition: background 0.12s, border-color 0.12s;
 }
 .sk-chip:hover {
-  border-color: #c9d2e8;
+  border-color: var(--dk-border-strong, #c9d2e8);
 }
 .sk-chip.is-active {
   background: var(--sk-pri-soft);
@@ -856,7 +856,7 @@ a.sk-minical__day:hover {
   transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
 }
 .sk-asset:hover {
-  border-color: #c9d2e8;
+  border-color: var(--dk-border-strong, #c9d2e8);
   box-shadow: var(--sk-shadow);
   transform: translateY(-2px);
 }
@@ -912,7 +912,7 @@ a.sk-minical__day:hover {
   width: 44px;
   height: 44px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.9);
+  background: var(--dk-surface, rgba(255, 255, 255, 0.9));
   color: var(--sk-pri);
   display: grid;
   place-items: center;
@@ -926,7 +926,7 @@ a.sk-minical__day:hover {
   height: 26px;
   border-radius: 8px;
   border: 0;
-  background: rgba(255, 255, 255, 0.92);
+  background: var(--dk-surface, rgba(255, 255, 255, 0.92));
   color: var(--sk-ink-2);
   display: grid;
   place-items: center;
@@ -960,7 +960,7 @@ a.sk-minical__day:hover {
   display: grid;
   place-items: center;
   text-align: center;
-  border: 1.5px dashed rgba(91, 61, 255, 0.4);
+  border: 1.5px dashed var(--dk-accent-border, rgba(91, 61, 255, 0.4));
   border-radius: 14px;
   background: var(--sk-surface);
   padding: 44px 32px;
@@ -1004,7 +1004,7 @@ a.sk-minical__day:hover {
   transition: background 0.12s;
 }
 .sk-table__row:hover {
-  background: #fbfcff;
+  background: var(--dk-glass, #fbfcff);
 }
 .sk-table__row:last-child {
   border-bottom: 0;
@@ -1069,15 +1069,15 @@ a.sk-minical__day:hover {
 .sk-status--published,
 .sk-status--posted {
   background: var(--sk-published-soft);
-  color: #0f8a4d;
+  color: var(--dk-success-text, #0f8a4d);
 }
 .sk-status--published .sk-status__dot,
 .sk-status--posted .sk-status__dot {
   background: var(--sk-published);
 }
 .sk-status--scheduled {
-  background: #eaf2ff;
-  color: #1c54d4;
+  background: var(--dk-info-soft, #eaf2ff);
+  color: var(--dk-info-text, #1c54d4);
 }
 .sk-status--scheduled .sk-status__dot {
   background: #4b3bff;
@@ -1093,14 +1093,14 @@ a.sk-minical__day:hover {
 }
 .sk-status--draft {
   background: var(--sk-draft-soft);
-  color: #c25a07;
+  color: var(--dk-warning-text, #c25a07);
 }
 .sk-status--draft .sk-status__dot {
   background: var(--sk-draft);
 }
 .sk-status--failed {
-  background: #ffe4e8;
-  color: #c0344a;
+  background: var(--dk-danger-soft, #ffe4e8);
+  color: var(--dk-danger-text, #c0344a);
 }
 .sk-status--failed .sk-status__dot {
   background: #e14d62;
@@ -1122,13 +1122,13 @@ a.sk-minical__day:hover {
   color: #ff2f6d;
 }
 .sk-engage--comment svg {
-  color: #1d74ff;
+  color: var(--dk-info-text, #1d74ff);
 }
 .sk-engage--share svg {
   color: var(--sk-pri);
 }
 .sk-engage--reach svg {
-  color: #0f6dff;
+  color: var(--dk-info-text, #0f6dff);
 }
 .sk-when {
   text-align: right;
@@ -1273,7 +1273,7 @@ a.sk-minical__day:hover {
 .sk-cal-weekhead {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  background: #f4f3ff;
+  background: var(--dk-accent-soft, #f4f3ff);
   border-bottom: 1px solid var(--sk-line);
 }
 .sk-cal-weekhead span {
@@ -1471,7 +1471,7 @@ a.sk-minical__day:hover {
   transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
 }
 .sk-weekcard:hover {
-  border-color: #c9d2e8;
+  border-color: var(--dk-border-strong, #c9d2e8);
   box-shadow: var(--sk-shadow);
   transform: translateY(-1px);
 }
@@ -1611,7 +1611,7 @@ a.sk-minical__day:hover {
   transition: border-color 0.12s, background 0.12s;
 }
 .sk-platform:hover {
-  border-color: #c9d2e8;
+  border-color: var(--dk-border-strong, #c9d2e8);
 }
 .sk-platform.is-on {
   border-color: var(--sk-pri);
@@ -1722,10 +1722,10 @@ a.sk-minical__day:hover {
   font-variant-numeric: tabular-nums;
 }
 .sk-counter--warn {
-  color: #c25a07;
+  color: var(--dk-warning-text, #c25a07);
 }
 .sk-counter--over {
-  color: #c0344a;
+  color: var(--dk-danger-text, #c0344a);
 }
 
 /* small note row */
@@ -1746,12 +1746,12 @@ a.sk-minical__day:hover {
   border-radius: 10px;
 }
 .sk-alert--err {
-  border: 1px solid #f3c0c8;
-  background: #fff5f6;
-  color: #c0344a;
+  border: 1px solid var(--dk-danger-soft, #f3c0c8);
+  background: var(--dk-danger-soft, #fff5f6);
+  color: var(--dk-danger-text, #c0344a);
 }
 .sk-alert--ok {
-  border: 1px solid #b7e8cf;
-  background: #f1fbf6;
-  color: #0f8a4d;
+  border: 1px solid var(--dk-success-soft, #b7e8cf);
+  background: var(--dk-success-soft, #f1fbf6);
+  color: var(--dk-success-text, #0f8a4d);
 }

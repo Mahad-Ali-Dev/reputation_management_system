@@ -207,7 +207,7 @@ export function AiAssistPanel({
                 height: 64,
                 borderRadius: 10,
                 background:
-                  "linear-gradient(90deg, var(--rl-line, #eee) 25%, var(--rl-line-2, #f3f3f3) 37%, var(--rl-line, #eee) 63%)",
+                  "linear-gradient(90deg, var(--rl-line, var(--dk-surface-3, #eee)) 25%, var(--rl-line-2, var(--dk-surface-2, #f3f3f3)) 37%, var(--rl-line, var(--dk-surface-3, #eee)) 63%)",
                 opacity: 0.7,
               }}
             />
@@ -226,7 +226,7 @@ export function AiAssistPanel({
               <div
                 key={opt.aiMessageId}
                 className="ds-card"
-                style={{ padding: 12, border: "1px solid var(--rl-line, #e6e6e6)" }}
+                style={{ padding: 12, border: "1px solid var(--rl-line, var(--dk-border, #e6e6e6))" }}
               >
                 <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
                   <span className="chip chip--out" style={{ fontSize: 10.5 }}>

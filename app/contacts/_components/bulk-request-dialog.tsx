@@ -183,7 +183,7 @@ export function BulkRequestDialog({
           {channel === "sms" && (
             <label
               className="row"
-              style={{ gap: 8, alignItems: "flex-start", fontSize: 12, background: "var(--warn-soft)", color: "#92400e", padding: 10, borderRadius: "var(--r)" }}
+              style={{ gap: 8, alignItems: "flex-start", fontSize: 12, background: "var(--warn-soft)", color: "var(--dk-warning-text, #92400e)", padding: 10, borderRadius: "var(--r)" }}
             >
               <input type="checkbox" checked={consentAttested} onChange={(e) => setConsentAttested(e.target.checked)} style={{ marginTop: 2 }} />
               <span>

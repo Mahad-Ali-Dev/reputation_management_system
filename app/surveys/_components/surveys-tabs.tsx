@@ -612,7 +612,10 @@ const TPL_TONES = [
   },
   {
     tile: "surv-tile--yellow",
-    tag: { background: "#fdf6e1", color: "#d99b20" },
+    tag: {
+      background: "var(--dk-warning-soft, #fdf6e1)",
+      color: "var(--dk-warning-text, #d99b20)",
+    },
     art: "feature-reaction",
   },
 ] as const;

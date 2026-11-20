@@ -229,7 +229,7 @@ export default async function SubscriptionPage({
           >
             <span className="bill-card__tier bill-card__tier--pro">Pro</span>
             <span className="bill-card__badge">
-              <Icon name="star" size={11} style={{ color: "#8b5cf6" }} />
+              <Icon name="star" size={11} style={{ color: "var(--dk-accent-text, #8b5cf6)" }} />
               MOST POPULAR
             </span>
             {/* biome-ignore lint/performance/noImgElement: static kit illustration */}
@@ -338,7 +338,7 @@ export default async function SubscriptionPage({
               used={usage.repliesDrafted}
               max={500}
               fill="#4f46e5"
-              infColor="#7c3aed"
+              infColor="var(--dk-accent-text, #7c3aed)"
             />
             <UsageMeter
               icon="meter-survey-responses"
@@ -457,7 +457,7 @@ function FeatureList({ features }: { features: Array<[string, boolean]> }) {
             {on ? (
               <Icon name="check" size={14} stroke={2.6} style={{ color: "#10b981" }} />
             ) : (
-              <Icon name="x" size={13} stroke={2.2} style={{ color: "#94a3b8" }} />
+              <Icon name="x" size={13} stroke={2.2} style={{ color: "var(--dk-text-subtle, #94a3b8)" }} />
             )}
           </span>
           <span className="bill-feat__txt-hidden">{on ? "Included:" : "Not included:"}</span>
@@ -510,7 +510,12 @@ function UsageMeter({
               ∞
             </span>
           ) : (
-            <span className="bill-meter__pct" style={{ color: warn ? "#d97706" : "#94a3b8" }}>
+            <span
+              className="bill-meter__pct"
+              style={{
+                color: warn ? "var(--dk-warning-text, #d97706)" : "var(--dk-text-subtle, #94a3b8)",
+              }}
+            >
               {pct}%
             </span>
           )}

@@ -127,8 +127,8 @@ export function BulkActionBar({
         <div
           className="ds-card"
           style={{
-            background: "var(--ink)",
-            borderColor: "var(--ink)",
+            background: "var(--dk-surface-3, var(--ink))",
+            borderColor: "var(--dk-border-strong, var(--ink))",
             color: "#fff",
             boxShadow: "0 12px 32px -8px rgba(11,13,14,0.45)",
             padding: "10px 14px",

@@ -20,3 +20,126 @@
   border: 1px solid var(--glass-border);
   box-shadow: none;
 }
+
+/* ── Clean-up pass — lighter, glassier surfaces ──────────────────────────────
+   The kit shipped the panel, status banner and glyph tiles with solid green /
+   lavender fills. On the frosted canvas those read heavy; make them transparent
+   glass and strip the coloured icon boxes so the page reads clean. */
+
+/* "Bring your systems together" panel + the live-status banner → glass. */
+.app--glass .conn-panel,
+.app--glass .conn-banner {
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  box-shadow: none;
+}
+.app--glass .conn-banner__inner {
+  border-top-color: var(--glass-border);
+}
+
+/* Remove the coloured background boxes behind the stat-card icons, the 3-step
+   glyphs, and the banner check — each glyph keeps its own tint on bare glass. */
+.app--glass .conn-stat__tile,
+.app--glass .conn-step__ico,
+.app--glass .conn-banner__check {
+  background: transparent;
+}
+
+/* ── Stat row → one compact bar (was 4 separate cards; sparkline removed) ──
+   One bordered container, borderless divider-split segments. ── */
+.app--glass .conn-stats {
+  display: flex;
+  grid-template-columns: none;
+  gap: 0;
+  border: 1px solid var(--glass-border);
+  border-radius: 14px;
+  overflow: hidden;
+}
+.app--glass .conn-stats .conn-stat {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 0;
+}
+/* Icon beside the text (not stacked above) → a shorter bar. */
+.app--glass .conn-stats .conn-stat__tile {
+  width: 40px;
+  height: 40px;
+  margin-bottom: 0;
+  flex-shrink: 0;
+}
+.app--glass .conn-stats .conn-stat__text {
+  min-width: 0;
+}
+.app--glass .conn-stats .conn-stat__value {
+  font-size: 21px;
+  margin: 1px 0 0;
+}
+.app--glass .conn-stats .conn-stat__pill,
+.app--glass .conn-stats .conn-stat__sub {
+  margin-top: 4px;
+}
+.app--glass .conn-stats .conn-stat + .conn-stat {
+  border-left: 1px solid var(--glass-border);
+}
+@media (max-width: 860px) {
+  .app--glass .conn-stats {
+    flex-wrap: wrap;
+  }
+  .app--glass .conn-stats .conn-stat {
+    flex: 1 1 50%;
+  }
+  .app--glass .conn-stats .conn-stat:nth-child(2n + 1) {
+    border-left: 0;
+  }
+  .app--glass .conn-stats .conn-stat:nth-child(n + 3) {
+    border-top: 1px solid var(--glass-border);
+  }
+}
+
+/* ── Connected banner (70%) + 3-step explainer (30%) in one row ──
+   The banner fills the wide left column; the steps stack vertically in the
+   narrow right column, their dividers flipped from left borders to top. ── */
+.conn-split {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 3fr);
+  gap: 20px;
+  margin-bottom: 20px;
+  align-items: start;
+}
+.conn-split > * {
+  min-width: 0;
+}
+/* Left column (70%) stacks Connected systems + Connected integrations. */
+.conn-split__main {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+.conn-split .conn-banner {
+  margin-bottom: 0;
+  height: 100%;
+}
+.conn-split .conn-steps {
+  grid-template-columns: 1fr;
+  padding: 16px 12px;
+  margin-bottom: 0;
+}
+.conn-split .conn-step {
+  border-left: 0;
+  border-top: 1px solid var(--glass-border);
+  padding: 14px 14px;
+}
+.conn-split .conn-step:first-child {
+  border-top: 0;
+}
+@media (max-width: 900px) {
+  .conn-split {
+    grid-template-columns: 1fr;
+  }
+}

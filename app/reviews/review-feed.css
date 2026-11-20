@@ -11,17 +11,17 @@
 
 .rf {
   /* Kit palette (from handoff :root) */
-  --rf-text-primary: #090f24;
-  --rf-text-secondary: #405074;
-  --rf-text-body: #4a5a7d;
-  --rf-muted: #8a95ad;
-  --rf-border-soft: #e6eaf3;
-  --rf-border-card: #e5e8f2;
+  --rf-text-primary: var(--dk-text, #090f24);
+  --rf-text-secondary: var(--dk-text-2, #405074);
+  --rf-text-body: var(--dk-text-2, #4a5a7d);
+  --rf-muted: var(--dk-text-subtle, #8a95ad);
+  --rf-border-soft: var(--dk-border, #e6eaf3);
+  --rf-border-card: var(--dk-border, #e5e8f2);
   --rf-primary: #4b22f6;
-  --rf-primary-soft: #e6ddff;
-  --rf-green: #16a34a;
-  --rf-green-soft: #ddfbea;
-  --rf-shadow-soft: 0 18px 45px rgba(39, 53, 92, 0.08);
+  --rf-primary-soft: var(--dk-accent-border, #e6ddff);
+  --rf-green: var(--dk-success-text, #16a34a);
+  --rf-green-soft: var(--dk-success-soft, #ddfbea);
+  --rf-shadow-soft: var(--dk-shadow, 0 18px 45px rgba(39, 53, 92, 0.08));
 }
 
 /* Page-scoped canvas override (Review Feed only).
@@ -32,7 +32,7 @@
  * shared-file edit. */
 .app--canvas:has(.rf) {
   background-image: none;
-  background-color: #fbfcff;
+  background-color: var(--dk-bg, #fbfcff);
 }
 
 /* ───────────────────────── Inbox header ───────────────────────── */
@@ -75,7 +75,7 @@
   padding: 0 18px;
   border-radius: 12px;
   border: 1px solid var(--rf-border-card);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--rf-text-secondary);
   font-size: 14px;
   font-weight: 600;
@@ -88,7 +88,7 @@
 
 .rf-head__disputes:hover {
   border-color: var(--rf-primary-soft);
-  box-shadow: 0 6px 16px rgba(39, 53, 92, 0.07);
+  box-shadow: var(--dk-shadow-sm, 0 6px 16px rgba(39, 53, 92, 0.07));
   transform: translateY(-1px);
 }
 
@@ -101,7 +101,7 @@
 
 .rf-card {
   border-radius: 20px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--rf-border-card);
   box-shadow: var(--rf-shadow-soft);
   overflow: hidden;
@@ -118,10 +118,12 @@
   position: relative;
   padding: 64px 24px 8px;
   text-align: center;
-  background:
+  background: var(
+    --dk-none,
     radial-gradient(circle at 12% 10%, rgba(111, 73, 255, 0.12), transparent 34%),
     radial-gradient(circle at 92% 12%, rgba(255, 168, 99, 0.13), transparent 36%),
-    linear-gradient(112deg, #faf8ff 0%, #ffffff 46%, #fff8f3 100%);
+    linear-gradient(112deg, #faf8ff 0%, #ffffff 46%, #fff8f3 100%)
+  );
 }
 
 /* Dotted corner patterns (upper corners) */
@@ -283,15 +285,15 @@
 }
 
 .rf-benefit__icon--purple {
-  background: #e1d4ff;
+  background: var(--dk-accent-soft, #e1d4ff);
 }
 
 .rf-benefit__icon--blue {
-  background: #dce7ff;
+  background: var(--dk-info-soft, #dce7ff);
 }
 
 .rf-benefit__icon--green {
-  background: #d8f7e5;
+  background: var(--dk-success-soft, #d8f7e5);
 }
 
 .rf-benefit__title {

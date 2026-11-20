@@ -161,15 +161,15 @@ export function CommandPalette() {
         style={{
           width: "100%",
           maxWidth: 560,
-          background: "#ffffff",
+          background: "var(--dk-surface, #ffffff)",
           borderRadius: 16,
-          border: "1px solid #e3eae6",
-          boxShadow: "0 24px 60px -12px rgba(15,23,42,0.35)",
+          border: "1px solid var(--dk-border, #e3eae6)",
+          boxShadow: "var(--dk-shadow, 0 24px 60px -12px rgba(15,23,42,0.35))",
           overflow: "hidden",
         }}
       >
-        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid #edf1ee" }}>
-          <Icon name="search" size={16} style={{ color: "#94a3b8" }} />
+        <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "14px 16px", borderBottom: "1px solid var(--dk-border, #edf1ee)" }}>
+          <Icon name="search" size={16} style={{ color: "var(--dk-text-subtle, #94a3b8)" }} />
           <input
             ref={inputRef}
             value={query}
@@ -182,15 +182,15 @@ export function CommandPalette() {
               border: "none",
               outline: "none",
               fontSize: 15,
-              color: "#0f172a",
+              color: "var(--dk-text, #0f172a)",
               background: "transparent",
             }}
           />
           <kbd
             style={{
               fontSize: 10.5,
-              color: "#94a3b8",
-              border: "1px solid #e3eae6",
+              color: "var(--dk-text-subtle, #94a3b8)",
+              border: "1px solid var(--dk-border, #e3eae6)",
               borderRadius: 6,
               padding: "2px 6px",
               fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
@@ -202,7 +202,7 @@ export function CommandPalette() {
 
         <div role="listbox" style={{ maxHeight: "min(56vh, 420px)", overflowY: "auto", padding: 6 }}>
           {results.length === 0 && (
-            <div style={{ padding: "28px 16px", textAlign: "center", color: "#94a3b8", fontSize: 13.5 }}>
+            <div style={{ padding: "28px 16px", textAlign: "center", color: "var(--dk-text-subtle, #94a3b8)", fontSize: 13.5 }}>
               No matches for “{query}”.
             </div>
           )}
@@ -219,7 +219,7 @@ export function CommandPalette() {
                       fontWeight: 600,
                       letterSpacing: ".08em",
                       textTransform: "uppercase",
-                      color: "#94a3b8",
+                      color: "var(--dk-text-subtle, #94a3b8)",
                       padding: "10px 10px 4px",
                     }}
                   >
@@ -242,8 +242,8 @@ export function CommandPalette() {
                     border: "none",
                     cursor: "pointer",
                     textAlign: "left",
-                    background: isActive ? "#f4f6ff" : "transparent",
-                    color: "#0f172a",
+                    background: isActive ? "var(--dk-accent-faint, #f4f6ff)" : "transparent",
+                    color: "var(--dk-text, #0f172a)",
                   }}
                 >
                   <span
@@ -253,15 +253,15 @@ export function CommandPalette() {
                       width: 28,
                       height: 28,
                       borderRadius: 7,
-                      background: isActive ? "#e0e7ff" : "#f3f5f0",
-                      color: isActive ? "#4b3bff" : "#475569",
+                      background: isActive ? "var(--dk-accent-soft, #e0e7ff)" : "var(--dk-surface-3, #f3f5f0)",
+                      color: isActive ? "var(--dk-accent-text, #4b3bff)" : "var(--dk-text-2, #475569)",
                       flex: "0 0 28px",
                     }}
                   >
                     <Icon name={cmd.icon} size={14} />
                   </span>
                   <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{cmd.label}</span>
-                  {isActive && <Icon name="arrowR" size={13} style={{ color: "#94a3b8" }} />}
+                  {isActive && <Icon name="arrowR" size={13} style={{ color: "var(--dk-text-subtle, #94a3b8)" }} />}
                 </button>
               </div>
             );

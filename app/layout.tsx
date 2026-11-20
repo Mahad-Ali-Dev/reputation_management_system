@@ -1,3 +1,4 @@
+import { themeInitScript } from "@/components/theme-provider";
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, Geist_Mono, Manrope, Onest } from "next/font/google";
 import { Providers } from "./providers";
@@ -122,6 +123,10 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${text.variable} ${head.variable} ${num.variable} ${geistMono.variable}`}
     >
+      <head>
+        {/* biome-ignore lint/security/noDangerouslySetInnerHtml: static, first-party theme bootstrap; must run before paint */}
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>{children}</Providers>
       </body>

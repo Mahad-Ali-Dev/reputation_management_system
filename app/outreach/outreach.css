@@ -12,44 +12,44 @@
 
 .rr {
   /* ── Kit palette (from handoffs) ── */
-  --rr-bg: #ffffff;
-  --rr-surface: #ffffff;
-  --rr-surface-soft: #fbfcff;
-  --rr-banner: #faf9ff;
-  --rr-border: #e7eaf0;
-  --rr-border-soft: #edf0f5;
-  --rr-border-violet: #d9ccff;
+  --rr-bg: var(--dk-bg, #ffffff);
+  --rr-surface: var(--dk-surface, #ffffff);
+  --rr-surface-soft: var(--dk-surface-2, #fbfcff);
+  --rr-banner: var(--dk-surface-2, #faf9ff);
+  --rr-border: var(--dk-border, #e7eaf0);
+  --rr-border-soft: var(--dk-border-soft, #edf0f5);
+  --rr-border-violet: var(--dk-accent-border, #d9ccff);
 
-  --rr-text: #0b1020;
-  --rr-text-strong: #090b19;
-  --rr-muted: #667085;
-  --rr-soft: #8a93a5;
-  --rr-head: #253047;
+  --rr-text: var(--dk-text, #0b1020);
+  --rr-text-strong: var(--dk-text, #090b19);
+  --rr-muted: var(--dk-text-muted, #667085);
+  --rr-soft: var(--dk-text-subtle, #8a93a5);
+  --rr-head: var(--dk-text, #253047);
 
   --rr-pri: #5627f4;
   --rr-pri-strong: #4516e8;
-  --rr-pri-soft: #efe8ff;
-  --rr-pri-soft-2: #f6f1ff;
+  --rr-pri-soft: var(--dk-accent-soft, #efe8ff);
+  --rr-pri-soft-2: var(--dk-accent-faint, #f6f1ff);
 
-  --rr-ok: #12a35b;
-  --rr-ok-soft: #ddf8e9;
-  --rr-blue: #1577f2;
-  --rr-blue-soft: #e8f2ff;
-  --rr-green: #20b979;
-  --rr-green-soft: #e7f9ef;
-  --rr-orange: #ff8a1d;
-  --rr-orange-soft: #fff0e1;
+  --rr-ok: var(--dk-success-text, #12a35b);
+  --rr-ok-soft: var(--dk-success-soft, #ddf8e9);
+  --rr-blue: var(--dk-info-text, #1577f2);
+  --rr-blue-soft: var(--dk-info-soft, #e8f2ff);
+  --rr-green: var(--dk-success-text, #20b979);
+  --rr-green-soft: var(--dk-success-soft, #e7f9ef);
+  --rr-orange: var(--dk-warning-text, #ff8a1d);
+  --rr-orange-soft: var(--dk-warning-soft, #fff0e1);
   --rr-yellow: #ffbd2e;
-  --rr-yellow-soft: #fff4dd;
-  --rr-pink: #ff4ea3;
-  --rr-pink-soft: #ffeaf4;
-  --rr-red: #ff3b55;
-  --rr-red-soft: #ffecef;
-  --rr-paused: #667085;
-  --rr-paused-soft: #eef0f4;
+  --rr-yellow-soft: var(--dk-warning-soft, #fff4dd);
+  --rr-pink: var(--dk-pink-text, #ff4ea3);
+  --rr-pink-soft: var(--dk-pink-soft, #ffeaf4);
+  --rr-red: var(--dk-danger-text, #ff3b55);
+  --rr-red-soft: var(--dk-danger-soft, #ffecef);
+  --rr-paused: var(--dk-text-muted, #667085);
+  --rr-paused-soft: var(--dk-surface-3, #eef0f4);
 
-  --rr-shadow-card: 0 8px 24px rgba(15, 23, 42, 0.04);
-  --rr-shadow-soft: 0 12px 34px rgba(15, 23, 42, 0.06);
+  --rr-shadow-card: var(--dk-shadow-sm, 0 8px 24px rgba(15, 23, 42, 0.04));
+  --rr-shadow-soft: var(--dk-shadow, 0 12px 34px rgba(15, 23, 42, 0.06));
   --rr-shadow-pri: 0 10px 24px rgba(86, 39, 244, 0.22);
 
   /* Contain page width on wide screens (lesson #3) */
@@ -65,7 +65,7 @@
  * (AppShell › main › scroll › .rr), so the descendant-:has form is correct. */
 .app--canvas:has(.rr) {
   background-image: none;
-  background-color: #ffffff;
+  background-color: var(--dk-bg, #ffffff);
 }
 
 /* ── Kit-styled page header (overrides the shared .ph for this page) ── */
@@ -88,7 +88,7 @@
   font-weight: 700;
 }
 .rr .ph__sub {
-  color: #344054;
+  color: var(--dk-text-2, #344054);
   font-weight: 500;
 }
 
@@ -107,7 +107,8 @@
   right: 80px;
   display: block;
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
   pointer-events: none;
   z-index: 0;
 }
@@ -144,7 +145,7 @@
   border-bottom: 1px solid var(--rr-border);
 }
 .rr .tabbar .tabs__t {
-  color: #1f2937;
+  color: var(--dk-text, #1f2937);
   font-weight: 700;
 }
 .rr .tabbar .tabs__t.is-active {
@@ -337,7 +338,7 @@
 }
 .rr-program:hover {
   border-color: color-mix(in srgb, var(--rr-pri) 35%, var(--rr-border));
-  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--dk-shadow-sm, 0 1px 4px rgba(15, 23, 42, 0.05));
 }
 .rr-program__ava {
   flex-shrink: 0;
@@ -433,7 +434,7 @@
 .rr-msg {
   border: 1px solid var(--rr-border);
   border-radius: 8px;
-  background: linear-gradient(160deg, #f7f7fa, #ffffff);
+  background: var(--dk-surface-2, linear-gradient(160deg, #f7f7fa, #ffffff));
   padding: 16px 18px;
   font-size: 13px;
   line-height: 1.65;
@@ -501,7 +502,7 @@
   box-shadow: none;
 }
 .rr-tplbtn--ghost {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border-color: var(--rr-border);
   color: var(--rr-text);
 }
@@ -613,7 +614,7 @@
   font-size: 11px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #53607a;
+  color: var(--dk-text-muted, #53607a);
   padding: 13px 14px;
   border-top: 1px solid var(--rr-border);
   border-bottom: 1px solid var(--rr-border);
@@ -631,7 +632,7 @@
   border-bottom: none;
 }
 .rr-table tr:hover td {
-  background: #fafbff;
+  background: var(--dk-surface-2, #fafbff);
 }
 .rr-cust {
   display: flex;
@@ -696,7 +697,8 @@
   width: 34px;
   height: 34px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-metric__tile--pri {
   background: var(--rr-pri-soft);
@@ -764,7 +766,8 @@
   max-width: 188px;
   height: auto;
   margin: 0 auto 8px;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-miniempty__title {
   font-size: 14px;
@@ -803,7 +806,7 @@
   top: 34px;
   bottom: 28px;
   width: 2px;
-  background: #d9ccff;
+  background: var(--dk-accent-border, #d9ccff);
 }
 .rr-step {
   position: relative;
@@ -868,8 +871,8 @@
   width: 100%;
   padding: 0 12px;
   border-radius: 9px;
-  border: 1px solid #dde3ec;
-  background: #fff;
+  border: 1px solid var(--dk-border-strong, #dde3ec);
+  background: var(--dk-surface, #fff);
   color: var(--rr-text);
   outline: 0;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -930,7 +933,7 @@
   cursor: pointer;
 }
 .rr-mergechip:hover {
-  background: color-mix(in srgb, var(--rr-pri) 16%, #fff);
+  background: var(--dk-accent-soft, color-mix(in srgb, var(--rr-pri) 16%, #fff));
 }
 .rr-msgctrls {
   display: flex;
@@ -948,7 +951,7 @@
   padding: 0 12px;
   border: 1px solid var(--rr-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--rr-text);
   font-size: 12px;
   font-weight: 700;
@@ -1000,7 +1003,7 @@
   cursor: pointer;
   text-decoration: none;
   border: 1px solid var(--rr-border);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--rr-text);
 }
 .rr-actbtn--pri {
@@ -1078,7 +1081,7 @@
   color: var(--rr-text);
 }
 .rr-meta__k {
-  color: #53607a;
+  color: var(--dk-text-muted, #53607a);
   font-weight: 700;
   display: inline-block;
   min-width: 56px;
@@ -1105,7 +1108,8 @@
   bottom: 10px;
   width: 132px;
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
   pointer-events: none;
 }
 
@@ -1116,9 +1120,9 @@
   max-width: 100%;
   border: 8px solid #1a1f2e;
   border-radius: 30px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   overflow: hidden;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.12);
+  box-shadow: var(--dk-shadow, 0 12px 30px rgba(15, 23, 42, 0.12));
 }
 .rr-phone__bar {
   display: flex;
@@ -1137,7 +1141,7 @@
   min-height: 150px;
 }
 .rr-bubble {
-  background: #e8fae9;
+  background: var(--dk-success-soft, #e8fae9);
   border-radius: 12px 12px 12px 4px;
   padding: 12px 14px;
   font-size: 13px;
@@ -1200,16 +1204,16 @@
   flex-direction: column;
 }
 .rr-sumcard--pri {
-  background: linear-gradient(160deg, #f7f3ff, #fff);
+  background: var(--dk-surface, linear-gradient(160deg, #f7f3ff, #fff));
 }
 .rr-sumcard--blue {
-  background: linear-gradient(160deg, #eef5ff, #fff);
+  background: var(--dk-surface, linear-gradient(160deg, #eef5ff, #fff));
 }
 .rr-sumcard--green {
-  background: linear-gradient(160deg, #ecfaf3, #fff);
+  background: var(--dk-surface, linear-gradient(160deg, #ecfaf3, #fff));
 }
 .rr-sumcard--orange {
-  background: linear-gradient(160deg, #fff4ea, #fff);
+  background: var(--dk-surface, linear-gradient(160deg, #fff4ea, #fff));
 }
 .rr-sumcard__tile {
   width: 56px;
@@ -1224,7 +1228,8 @@
   width: 38px;
   height: 38px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-sumcard__label {
   font-size: 13px;
@@ -1304,7 +1309,7 @@
   padding: 0 12px;
   border: 1px solid var(--rr-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   font-size: 13px;
   font-weight: 700;
   color: var(--rr-text);
@@ -1321,7 +1326,7 @@
   height: 36px;
   display: grid;
   place-items: center;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 0;
   color: var(--rr-muted);
   cursor: pointer;
@@ -1370,7 +1375,8 @@
   width: 100%;
   max-width: 168px;
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-tplrow__top {
   display: flex;
@@ -1392,7 +1398,7 @@
 .rr-tplrow__body {
   font-size: 13px;
   line-height: 1.6;
-  color: #3a4355;
+  color: var(--dk-text-2, #3a4355);
   font-weight: 500;
   white-space: pre-wrap;
   display: -webkit-box;
@@ -1445,10 +1451,10 @@
   height: 40px;
   border-radius: 8px;
   border: 1px solid var(--rr-border);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   display: grid;
   place-items: center;
-  color: #1f2937;
+  color: var(--dk-text, #1f2937);
   cursor: pointer;
   padding: 0;
 }
@@ -1457,8 +1463,8 @@
   color: var(--rr-pri);
 }
 .rr-iconbtn--danger {
-  background: #fff8f8;
-  border-color: #ffd4d4;
+  background: var(--dk-danger-soft, #fff8f8);
+  border-color: var(--dk-danger-soft, #ffd4d4);
   color: var(--rr-red);
 }
 .rr-iconbtn--danger:hover {
@@ -1486,7 +1492,7 @@
 /* ════════════════════════ AUTOMATION ════════════════════════ */
 
 .rr-banner {
-  background: linear-gradient(120deg, #faf9ff 0%, #f3f0ff 100%);
+  background: var(--dk-surface-2, linear-gradient(120deg, #faf9ff 0%, #f3f0ff 100%));
   border: 1px solid var(--rr-border);
   border-radius: 12px;
   padding: 24px 28px;
@@ -1505,7 +1511,8 @@
 .rr-banner__art {
   width: 144px;
   height: auto;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
   flex-shrink: 0;
 }
 .rr-banner__title {
@@ -1605,7 +1612,8 @@
   width: 40px;
   height: 40px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-rule__tile--pri {
   background: var(--rr-pri-soft);
@@ -1694,7 +1702,7 @@
   position: absolute;
   inset: 0;
   border-radius: 999px;
-  background: #e5e7eb;
+  background: var(--dk-surface-3, #e5e7eb);
   transition: background 0.15s;
   cursor: pointer;
 }
@@ -1724,7 +1732,7 @@
 .rr-autoempty {
   border: 1px solid var(--rr-border-violet);
   border-radius: 12px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   padding: 48px 24px;
   text-align: center;
 }
@@ -1733,7 +1741,8 @@
   max-width: 320px;
   height: auto;
   margin: 0 auto 10px;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-autoempty__title {
   font-size: 26px;
@@ -1743,7 +1752,7 @@
 }
 .rr-autoempty__body {
   font-size: 15px;
-  color: #344054;
+  color: var(--dk-text-2, #344054);
   margin: 10px auto 22px;
   max-width: 420px;
   line-height: 1.5;
@@ -1793,7 +1802,8 @@
   width: 32px;
   height: 32px;
   object-fit: contain;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-statcard__label {
   font-size: 12px;
@@ -1870,7 +1880,7 @@
   padding: 0 12px;
   border: 1px solid var(--rr-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   font-size: 12.5px;
   font-weight: 600;
   color: var(--rr-text);
@@ -1884,7 +1894,7 @@
   padding: 0 12px;
   border: 1px solid var(--rr-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--rr-muted);
   font-size: 12.5px;
   min-width: 220px;
@@ -1939,7 +1949,7 @@
   padding: 0 8px;
   border: 1px solid var(--rr-border);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--rr-text);
   font-size: 12.5px;
   font-weight: 700;
@@ -2079,7 +2089,7 @@
   height: 42px;
   border: 1px solid var(--rr-pri);
   border-radius: 8px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--rr-pri);
   font-size: 13px;
   font-weight: 700;
@@ -2100,7 +2110,8 @@
   max-width: 300px;
   height: auto;
   margin: 0 auto 14px;
-  mix-blend-mode: multiply;
+  mix-blend-mode: var(--dk-art-blend, multiply);
+  filter: var(--dk-art-filter, none);
 }
 .rr-emptybig__title {
   font-size: 16px;

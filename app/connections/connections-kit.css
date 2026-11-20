@@ -12,30 +12,30 @@
    shared-file edit), same technique as the dashboard / My Devices. */
 .app--canvas:has(.conn-page) {
   background-image: none;
-  background-color: #fbfcff;
+  background-color: var(--dk-bg, #fbfcff);
 }
 
 .conn-page {
   --conn-indigo: #4f46e5;
-  --conn-indigo-ink: #4338ca;
-  --conn-violet: #7c3aed;
-  --conn-lav: #f5f5fe;
-  --conn-lav-tile: #ede9fe;
-  --conn-blue-tile: #eef2ff;
-  --conn-green-tile: #dcfce7;
-  --conn-ink: #1e293b;
-  --conn-ink-2: #334155;
-  --conn-muted: #64748b;
-  --conn-muted-2: #94a3b8;
-  --conn-line: #e2e8f0;
-  --conn-line-soft: #eef1f6;
-  --conn-ok: #16a34a;
+  --conn-indigo-ink: var(--dk-accent-text, #4338ca);
+  --conn-violet: var(--dk-accent-text, #7c3aed);
+  --conn-lav: var(--dk-accent-faint, #f5f5fe);
+  --conn-lav-tile: var(--dk-accent-soft, #ede9fe);
+  --conn-blue-tile: var(--dk-accent-soft, #eef2ff);
+  --conn-green-tile: var(--dk-success-soft, #dcfce7);
+  --conn-ink: var(--dk-text, #1e293b);
+  --conn-ink-2: var(--dk-text-2, #334155);
+  --conn-muted: var(--dk-text-muted, #64748b);
+  --conn-muted-2: var(--dk-text-subtle, #94a3b8);
+  --conn-line: var(--dk-border, #e2e8f0);
+  --conn-line-soft: var(--dk-border-soft, #eef1f6);
+  --conn-ok: var(--dk-success-text, #16a34a);
   --conn-ok-dot: #22c55e;
-  --conn-warn: #b45309;
+  --conn-warn: var(--dk-warning-text, #b45309);
   --conn-warn-dot: #f59e0b;
   --conn-warn-line: #fdba74;
-  --conn-warn-bg: #fff7ed;
-  --conn-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04);
+  --conn-warn-bg: var(--dk-warning-soft, #fff7ed);
+  --conn-card-shadow: var(--dk-shadow, 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.04));
 }
 
 /* ── Eyebrow "N OF M CONNECTED" (green dot · indigo numbers) ──────────── */
@@ -58,13 +58,13 @@
   box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.18);
 }
 .conn-eyebrow b {
-  color: var(--conn-indigo);
+  color: var(--dk-accent-text, var(--conn-indigo));
   font-weight: 700;
 }
 
 /* ── Generic kit card ────────────────────────────────────────────────── */
 .conn-card {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--conn-line);
   border-radius: 16px;
   box-shadow: var(--conn-card-shadow);
@@ -79,7 +79,7 @@
   padding: 0 18px;
   border-radius: 11px;
   border: 1px solid var(--conn-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--conn-ink-2);
   font-size: 13.5px;
   font-weight: 600;
@@ -87,13 +87,13 @@
   text-decoration: none;
   white-space: nowrap;
   cursor: pointer;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 1px 2px rgba(15, 23, 42, 0.04));
   transition: background 0.14s ease, border-color 0.14s ease, box-shadow 0.14s ease,
     transform 0.14s ease;
 }
 .conn-btn:hover {
-  border-color: #cbd5e1;
-  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.07);
+  border-color: var(--dk-border-strong, #cbd5e1);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(15, 23, 42, 0.07));
 }
 .conn-btn:active {
   transform: translateY(0.5px);
@@ -151,7 +151,7 @@
 }
 .conn-stat__tile--green {
   background: var(--conn-green-tile);
-  color: #10b981;
+  color: var(--dk-success-text, #10b981);
 }
 .conn-stat__label {
   font-size: 13.5px;
@@ -194,10 +194,10 @@
 }
 .conn-stat__pill--indigo {
   background: var(--conn-blue-tile);
-  color: var(--conn-indigo);
+  color: var(--dk-accent-text, var(--conn-indigo));
 }
 .conn-stat__pill--grey {
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--conn-muted);
 }
 /* Decorative sparkline pinned bottom-right */
@@ -220,7 +220,7 @@
   padding: 32px;
   border-radius: 20px;
   background: var(--conn-lav);
-  border: 1px solid #eae8fb;
+  border: 1px solid var(--dk-border, #eae8fb);
   margin-bottom: 20px;
   overflow: hidden;
 }
@@ -256,7 +256,7 @@
 .conn-constel__orbit {
   position: absolute;
   border-radius: 999px;
-  border: 1.5px dashed #cbd5e1;
+  border: 1.5px dashed var(--dk-border-strong, #cbd5e1);
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
@@ -325,7 +325,7 @@
   width: 11px;
   height: 11px;
   border-radius: 999px;
-  border: 2px solid #fff;
+  border: 2px solid var(--dk-surface, #fff);
 }
 .conn-constel__node--green {
   background: #22c55e;
@@ -373,10 +373,10 @@
   height: 30px;
 }
 .conn-step__ico--violet {
-  background: #ede9fe;
+  background: var(--dk-accent-soft, #ede9fe);
 }
 .conn-step__ico--green {
-  background: #dcfce7;
+  background: var(--dk-success-soft, #dcfce7);
 }
 .conn-step__badge {
   position: absolute;
@@ -385,14 +385,14 @@
   width: 24px;
   height: 24px;
   border-radius: 999px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--conn-line);
   display: grid;
   place-items: center;
   font-size: 12px;
   font-weight: 700;
-  color: var(--conn-indigo);
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+  color: var(--dk-accent-text, var(--conn-indigo));
+  box-shadow: var(--dk-shadow-sm, 0 2px 6px rgba(15, 23, 42, 0.08));
 }
 .conn-step__title {
   font-size: 16px;
@@ -411,14 +411,14 @@
 /* ── Live-status banner (green success surface) ──────────────────────── */
 .conn-banner {
   border-radius: 16px;
-  border: 1px solid #bbf7d0;
-  background: #f0fdf4;
+  border: 1px solid var(--dk-border, #bbf7d0);
+  background: var(--dk-success-soft, #f0fdf4);
   padding: 22px 24px;
   margin-bottom: 20px;
 }
 .conn-banner--neutral {
   border-color: var(--conn-line);
-  background: #f8fafc;
+  background: var(--dk-surface-2, #f8fafc);
 }
 .conn-banner__top {
   display: flex;
@@ -430,7 +430,7 @@
   height: 48px;
   flex-shrink: 0;
   border-radius: 999px;
-  background: #dcfce7;
+  background: var(--dk-success-soft, #dcfce7);
   display: grid;
   place-items: center;
 }
@@ -440,7 +440,7 @@
   height: 30px;
 }
 .conn-banner--neutral .conn-banner__check {
-  background: #eef2f6;
+  background: var(--dk-surface-3, #eef2f6);
   color: var(--conn-muted);
 }
 .conn-banner__title {
@@ -482,7 +482,7 @@
   gap: 12px;
   margin-top: 16px;
   padding-top: 16px;
-  border-top: 1px solid #bbf7d0;
+  border-top: 1px solid var(--dk-border, #bbf7d0);
   font-size: 13px;
   color: var(--conn-ink-2);
 }
@@ -513,7 +513,7 @@
   flex-shrink: 0;
   border-radius: 9px;
   background: var(--conn-blue-tile);
-  color: var(--conn-indigo);
+  color: var(--dk-accent-text, var(--conn-indigo));
   display: grid;
   place-items: center;
 }
@@ -537,7 +537,7 @@
   height: 22px;
   padding: 0 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--conn-muted);
   font-size: 12px;
   font-weight: 600;
@@ -553,7 +553,7 @@
   padding: 0 12px;
   border-radius: 9px;
   border: 1px solid var(--conn-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--conn-muted-2);
 }
 .conn-search input {
@@ -580,7 +580,7 @@
   padding: 16px;
   border-radius: 14px;
   border: 1px solid var(--conn-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   cursor: pointer;
   box-shadow: var(--conn-card-shadow);
   transition: border-color 0.14s ease, box-shadow 0.14s ease, transform 0.14s ease;
@@ -588,12 +588,12 @@
   color: inherit;
 }
 .conn-cat:hover {
-  border-color: #c7d2fe;
+  border-color: var(--dk-accent-border, #c7d2fe);
   box-shadow: 0 6px 16px -6px rgba(79, 70, 229, 0.18);
 }
 .conn-cat--active {
-  border-color: #c7d2fe;
-  box-shadow: 0 0 0 1px #c7d2fe, 0 6px 16px -6px rgba(79, 70, 229, 0.2);
+  border-color: var(--dk-accent-border, #c7d2fe);
+  box-shadow: 0 0 0 1px var(--dk-accent-border, #c7d2fe), 0 6px 16px -6px rgba(79, 70, 229, 0.2);
 }
 .conn-cat__tile {
   width: 40px;
@@ -603,7 +603,7 @@
   display: grid;
   place-items: center;
   background: var(--conn-blue-tile);
-  color: var(--conn-indigo);
+  color: var(--dk-accent-text, var(--conn-indigo));
 }
 .conn-cat__tile img {
   width: 24px;
@@ -637,14 +637,14 @@
   height: 22px;
   padding: 0 7px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--conn-muted);
   font-size: 12px;
   font-weight: 600;
 }
 .conn-cat--active .conn-cat__count {
   background: var(--conn-blue-tile);
-  color: var(--conn-indigo);
+  color: var(--dk-accent-text, var(--conn-indigo));
 }
 
 /* ── Integration list rows ───────────────────────────────────────────── */
@@ -663,7 +663,7 @@
   border-bottom: 0;
 }
 .conn-row:hover {
-  background: #fafbff;
+  background: var(--dk-surface-2, #fafbff);
 }
 .conn-row__logo {
   width: 34px;
@@ -697,7 +697,7 @@
   height: 20px;
   padding: 0 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--conn-muted);
   font-size: 11px;
   font-weight: 500;
@@ -792,18 +792,18 @@
   white-space: nowrap;
   cursor: pointer;
   border: 1px solid var(--conn-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   color: var(--conn-ink-2);
   transition: background 0.12s ease, border-color 0.12s ease;
 }
 .conn-act:hover {
-  border-color: #cbd5e1;
-  background: #f8fafc;
+  border-color: var(--dk-border-strong, #cbd5e1);
+  background: var(--dk-surface-2, #f8fafc);
 }
 .conn-act--connect {
-  border-color: #c7d2fe;
-  color: var(--conn-indigo);
-  background: #fff;
+  border-color: var(--dk-accent-border, #c7d2fe);
+  color: var(--dk-accent-text, var(--conn-indigo));
+  background: var(--dk-surface, #fff);
 }
 .conn-act--connect:hover {
   background: var(--conn-blue-tile);
@@ -811,7 +811,7 @@
 .conn-act--reconnect {
   border-color: var(--conn-warn-line);
   color: var(--conn-warn);
-  background: #fff;
+  background: var(--dk-surface, #fff);
 }
 .conn-act--reconnect:hover {
   background: var(--conn-warn-bg);
@@ -845,7 +845,7 @@
   cursor: pointer;
 }
 .conn-kebab:hover {
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--conn-ink-2);
 }
 
@@ -855,7 +855,7 @@
   gap: 6px;
   padding: 6px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--dk-surface-2, #f8fafc);
   border: 1px solid var(--conn-line);
 }
 .conn-toggle__seg {
@@ -875,7 +875,7 @@
 }
 .conn-toggle__seg--active {
   background: var(--conn-blue-tile);
-  color: var(--conn-indigo);
+  color: var(--dk-accent-text, var(--conn-indigo));
   box-shadow: 0 1px 2px rgba(79, 70, 229, 0.08);
 }
 .conn-drop {
@@ -885,8 +885,8 @@
   margin-top: 16px;
   padding: 20px;
   border-radius: 16px;
-  border: 1.5px dashed #cbd5e1;
-  background: #fff;
+  border: 1.5px dashed var(--dk-border-strong, #cbd5e1);
+  background: var(--dk-surface, #fff);
 }
 .conn-drop__ico {
   width: 52px;

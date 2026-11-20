@@ -78,7 +78,7 @@ export async function SegmentsPanel({
               <p className="cd-seg-card__desc">{seg.description}</p>
               <div className="cd-seg-card__cta">
                 {needsConnect ? (
-                  <Link href="/connections#connection-sources" className="cd-btn-out" style={{ color: "var(--cd-green-ink)", borderColor: "#bfe6cd" }}>
+                  <Link href="/connections#connection-sources" className="cd-btn-out" style={{ color: "var(--cd-green-ink)", borderColor: "var(--dk-border, #bfe6cd)" }}>
                     <Icon name="plug" size={12} />
                     Connect Shopify
                   </Link>

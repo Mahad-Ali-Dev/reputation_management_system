@@ -88,6 +88,7 @@ export function ResponsesCharts({
                 width={380}
                 height={110}
                 color="var(--surv-pri)"
+                responsive
               />
             </div>
             <div className="surv-legend" style={{ marginTop: 10, flexDirection: "row", gap: 18 }}>
@@ -131,16 +132,20 @@ function NpsGauge({ nps, pct }: { nps: number | null; pct: number }) {
     <div style={{ position: "relative", width: size, height: size }}>
       <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} style={{ transform: "rotate(-90deg)" }}>
         <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke="var(--surv-pri-pale)" strokeWidth={stroke} />
-        <circle
-          cx={size / 2}
-          cy={size / 2}
-          r={r}
-          fill="none"
-          stroke="var(--surv-pri)"
-          strokeWidth={stroke}
-          strokeLinecap="round"
-          strokeDasharray={`${c * p} ${c}`}
-        />
+        {/* Only draw the progress arc when there's a real score — otherwise the
+            round linecap on a 0-length dash renders a stray dot. */}
+        {nps !== null && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="var(--surv-pri)"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${c * p} ${c}`}
+          />
+        )}
       </svg>
       <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", textAlign: "center", lineHeight: 1 }}>
         <div>
@@ -166,8 +171,34 @@ function LegendRow({ color, label, value }: { color: string; label: string; valu
 
 function EmptyChart({ label }: { label: string }) {
   return (
-    <div style={{ height: 160, display: "grid", placeItems: "center", gap: 10, color: "var(--surv-muted)", fontSize: 12.5 }}>
-      <img src={`${KIT}/nps.svg`} alt="" aria-hidden style={{ width: 90, height: 90, objectFit: "contain", mixBlendMode: "multiply", opacity: 0.9 }} />
+    <div
+      style={{
+        minHeight: 150,
+        display: "grid",
+        placeItems: "center",
+        gap: 10,
+        color: "var(--surv-muted)",
+        fontSize: 12.5,
+        textAlign: "center",
+        padding: "22px 12px",
+      }}
+    >
+      <span
+        aria-hidden
+        style={{
+          display: "grid",
+          placeItems: "center",
+          width: 48,
+          height: 48,
+          borderRadius: 999,
+          border: "1.5px dashed var(--surv-line)",
+          color: "var(--surv-muted)",
+          fontSize: 20,
+          lineHeight: 1,
+        }}
+      >
+        —
+      </span>
       {label}
     </div>
   );

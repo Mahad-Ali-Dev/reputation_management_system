@@ -81,14 +81,26 @@ export function KbCrawlStrip({ initial }: { initial: CrawlRow[] }) {
               alignItems: "center",
               gap: 10,
               fontSize: 12.5,
-              borderColor: failed ? "#fecaca" : done ? "#bbf7d0" : undefined,
-              background: failed ? "#fef2f2" : done ? "#f0fdf4" : undefined,
+              borderColor: failed
+                ? "var(--dk-danger-soft, #fecaca)"
+                : done
+                  ? "var(--dk-success-soft, #bbf7d0)"
+                  : undefined,
+              background: failed
+                ? "var(--dk-danger-soft, #fef2f2)"
+                : done
+                  ? "var(--dk-success-soft, #f0fdf4)"
+                  : undefined,
             }}
           >
             <span
               aria-hidden="true"
               style={{
-                color: failed ? "#e14d62" : done ? "#10b981" : "var(--rl-primary, #2563eb)",
+                color: failed
+                  ? "var(--dk-danger-text, #e14d62)"
+                  : done
+                    ? "var(--dk-success-text, #10b981)"
+                    : "var(--rl-primary, #2563eb)",
               }}
             >
               <Icon name={failed ? "alert" : done ? "checkCircle" : "refresh"} size={14} />
@@ -101,7 +113,13 @@ export function KbCrawlStrip({ initial }: { initial: CrawlRow[] }) {
                 {done && r.chunks > 0 && ` · ${r.chunks} sections`}
               </span>
               {failed && r.message && (
-                <span style={{ display: "block", color: "#e14d62", marginTop: 2 }}>
+                <span
+                  style={{
+                    display: "block",
+                    color: "var(--dk-danger-text, #e14d62)",
+                    marginTop: 2,
+                  }}
+                >
                   {r.message}
                 </span>
               )}

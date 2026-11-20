@@ -249,9 +249,9 @@
   flex-direction: column;
   padding: 22px;
   border-radius: 18px;
-  border: 1px solid #ece8ff;
-  background: radial-gradient(circle at 100% 0%, rgba(124, 92, 255, 0.06), transparent 52%), #fff;
-  box-shadow: 0 16px 38px -30px rgba(49, 43, 230, 0.42);
+  border: 1px solid var(--dk-border, #ece8ff);
+  background: var(--dk-surface, radial-gradient(circle at 100% 0%, rgba(124, 92, 255, 0.06), transparent 52%), #fff);
+  box-shadow: var(--dk-shadow, 0 16px 38px -30px rgba(49, 43, 230, 0.42));
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
   /* REQUIRED. .grid-3 is `repeat(3, 1fr)`, and `1fr` means `minmax(auto, 1fr)`
      — the auto floor is the item's min-content width. A nowrap review URL has
@@ -260,15 +260,15 @@
   min-width: 0;
 }
 .tdc:hover {
-  border-color: #ddd6ff;
-  box-shadow: 0 20px 44px -30px rgba(49, 43, 230, 0.5);
+  border-color: var(--dk-accent-border, #ddd6ff);
+  box-shadow: var(--dk-shadow, 0 20px 44px -30px rgba(49, 43, 230, 0.5));
 }
 /* Confirm state warms the whole card, so there's no chance of mistaking which
    device you're about to destroy when several are on screen. */
 .tdc--confirming {
-  border-color: #fecaca;
-  background: linear-gradient(180deg, #fffbfb, #fff5f5);
-  box-shadow: 0 16px 38px -28px rgba(185, 28, 28, 0.4);
+  border-color: var(--dk-danger-soft, #fecaca);
+  background: var(--dk-danger-soft, linear-gradient(180deg, #fffbfb, #fff5f5));
+  box-shadow: var(--dk-shadow, 0 16px 38px -28px rgba(185, 28, 28, 0.4));
 }
 
 .tdc__top {
@@ -283,9 +283,9 @@
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.09em;
-  color: #3d2f8f;
-  background: #f1ecff;
-  border: 1px solid #e5e0ff;
+  color: var(--dk-accent-text, #3d2f8f);
+  background: var(--dk-accent-soft, #f1ecff);
+  border: 1px solid var(--dk-accent-border, #e5e0ff);
   border-radius: 7px;
   padding: 3px 9px;
   user-select: all;
@@ -296,16 +296,16 @@
   font-weight: 700;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #8b93b5;
-  background: #f4f5fa;
-  border: 1px solid #e7e9f2;
+  color: var(--dk-text-subtle, #8b93b5);
+  background: var(--dk-surface-3, #f4f5fa);
+  border: 1px solid var(--dk-border, #e7e9f2);
   border-radius: 999px;
   padding: 3px 9px;
 }
 .tdc--confirming .tdc__pill {
-  color: #b91c1c;
-  background: #fef2f2;
-  border-color: #fecaca;
+  color: var(--dk-danger-text, #b91c1c);
+  background: var(--dk-danger-soft, #fef2f2);
+  border-color: var(--dk-danger-soft, #fecaca);
 }
 
 .tdc__name {
@@ -314,7 +314,7 @@
   font-size: 15.5px;
   font-weight: 650;
   letter-spacing: -0.012em;
-  color: #111936;
+  color: var(--dk-text, #111936);
   /* Establishment names are user-supplied — a long unbroken one must wrap
      rather than widen the card. */
   overflow-wrap: anywhere;
@@ -323,7 +323,7 @@
   margin: 6px 0 16px;
   min-width: 0;
   font-size: 11.5px;
-  color: #5f6b8f;
+  color: var(--dk-text-muted, #5f6b8f);
   overflow-wrap: anywhere;
 }
 
@@ -334,12 +334,12 @@
   max-width: 100%;
   padding: 11px 13px;
   border-radius: 11px;
-  background: #faf9ff;
-  border: 1px solid #e5e0ff;
+  background: var(--dk-surface-2, #faf9ff);
+  border: 1px solid var(--dk-border, #e5e0ff);
   font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
   font-size: 11.5px;
   line-height: 1.5;
-  color: #4a4478;
+  color: var(--dk-text-2, #4a4478);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -401,14 +401,14 @@
 .tdc__btn--danger {
   width: auto;
   flex-shrink: 0;
-  background: #fff;
-  border-color: #e7e9f2;
-  color: #7d8398;
+  background: var(--dk-surface, #fff);
+  border-color: var(--dk-border-strong, #e7e9f2);
+  color: var(--dk-text-muted, #7d8398);
 }
 .tdc__btn--danger:hover {
-  background: #fef2f2;
-  border-color: #fecaca;
-  color: #b91c1c;
+  background: var(--dk-danger-soft, #fef2f2);
+  border-color: var(--dk-danger-soft, #fecaca);
+  color: var(--dk-danger-text, #b91c1c);
 }
 
 .tdc__btn--danger-solid {
@@ -423,13 +423,13 @@
 .tdc__btn--ghost {
   width: auto;
   flex-shrink: 0;
-  background: #fff;
-  border-color: #e2ddf7;
-  color: #4a5178;
+  background: var(--dk-surface, #fff);
+  border-color: var(--dk-border-strong, #e2ddf7);
+  color: var(--dk-text-2, #4a5178);
 }
 .tdc__btn--ghost:hover {
-  border-color: #c9b8ff;
-  background: #f7f6ff;
+  border-color: var(--dk-accent-border, #c9b8ff);
+  background: var(--dk-accent-faint, #f7f6ff);
 }
 
 .tdc__confirm {
@@ -441,20 +441,20 @@
   gap: 9px;
   padding: 13px 14px;
   border-radius: 11px;
-  background: #fef2f2;
-  border: 1px solid #fecaca;
-  color: #7f1d1d;
+  background: var(--dk-danger-soft, #fef2f2);
+  border: 1px solid var(--dk-danger-soft, #fecaca);
+  color: var(--dk-danger-text, #7f1d1d);
   font-size: 11.5px;
   line-height: 1.55;
 }
 .tdc__warn-icon {
   flex-shrink: 0;
   margin-top: 1px;
-  color: #b91c1c;
+  color: var(--dk-danger-text, #b91c1c);
 }
 .tdc__warn code {
   font-family: var(--f-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
-  background: #fee2e2;
+  background: var(--dk-danger-soft, #fee2e2);
   border-radius: 5px;
   padding: 1px 5px;
   font-size: 11px;

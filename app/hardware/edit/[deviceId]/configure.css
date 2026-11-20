@@ -50,8 +50,8 @@
   height: 30px;
   padding: 0 12px;
   border-radius: 999px;
-  border: 1px solid rgba(21, 19, 43, 0.1);
-  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--dk-border, rgba(21, 19, 43, 0.1));
+  background: var(--dk-glass, rgba(255, 255, 255, 0.6));
   font-size: 12.5px;
   font-weight: 600;
   color: var(--glass-text-muted, #4a4763);
@@ -64,7 +64,7 @@
   background: var(--glass-warning, #d9822b);
 }
 .qcfg__status.is-live {
-  color: #0f8a5d;
+  color: var(--dk-success-text, #0f8a5d);
   border-color: rgba(18, 162, 110, 0.3);
 }
 .qcfg__status.is-live .qcfg__dot {
@@ -80,7 +80,7 @@
   border-radius: 14px;
   border: 1px solid rgba(18, 162, 110, 0.25);
   background: rgba(18, 162, 110, 0.07);
-  color: #0f6b49;
+  color: var(--dk-success-text, #0f6b49);
   font-size: 13px;
   font-weight: 500;
 }
@@ -101,11 +101,11 @@
 .qcfg__card {
   padding: 22px;
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.55);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.55));
   -webkit-backdrop-filter: blur(18px) saturate(150%);
   backdrop-filter: blur(18px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 1px 2px rgba(21, 19, 43, 0.04), 0 14px 36px -24px rgba(21, 19, 43, 0.2);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.7));
+  box-shadow: var(--dk-shadow, 0 1px 2px rgba(21, 19, 43, 0.04), 0 14px 36px -24px rgba(21, 19, 43, 0.2));
 }
 .qcfg__h2 {
   margin: 0;
@@ -164,7 +164,7 @@
   width: 100%;
   margin-top: 12px;
   padding-top: 12px;
-  border-top: 1px solid rgba(21, 19, 43, 0.07);
+  border-top: 1px solid var(--dk-border, rgba(21, 19, 43, 0.07));
   font-size: 11px;
   color: var(--glass-text-subtle, #6b6880);
 }
@@ -184,8 +184,8 @@
   height: 40px;
   padding: 0 16px;
   border-radius: 999px;
-  border: 1px solid rgba(21, 19, 43, 0.12);
-  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid var(--dk-border-strong, rgba(21, 19, 43, 0.12));
+  background: var(--dk-glass, rgba(255, 255, 255, 0.8));
   color: var(--glass-text, #15132b);
   font: inherit;
   font-size: 13px;
@@ -196,8 +196,8 @@
   transition: background 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
 }
 .qcfg__btn:hover {
-  background: #fff;
-  border-color: rgba(21, 19, 43, 0.2);
+  background: var(--dk-glass-strong, #fff);
+  border-color: var(--dk-border-strong, rgba(21, 19, 43, 0.2));
 }
 .qcfg__btn--pri {
   border-color: transparent;
@@ -212,7 +212,7 @@
 .qcfg__btn--danger {
   border-color: rgba(229, 72, 77, 0.35);
   background: transparent;
-  color: #c9343a;
+  color: var(--dk-danger-text, #c9343a);
 }
 .qcfg__btn--danger:hover {
   background: rgba(229, 72, 77, 0.07);
@@ -235,7 +235,7 @@
   border-radius: 14px;
   background: rgba(18, 162, 110, 0.07);
   border: 1px solid rgba(18, 162, 110, 0.2);
-  color: #0f8a5d;
+  color: var(--dk-success-text, #0f8a5d);
   font-size: 12.5px;
 }
 .qcfg__now span {
@@ -246,7 +246,7 @@
 .qcfg__now.is-empty {
   background: rgba(217, 130, 43, 0.08);
   border-color: rgba(217, 130, 43, 0.25);
-  color: #b26a1d;
+  color: var(--dk-warning-text, #b26a1d);
 }
 .qcfg__form {
   margin-top: 18px;
@@ -267,8 +267,8 @@
   height: 44px;
   padding: 0 16px;
   border-radius: 14px;
-  border: 1px solid rgba(21, 19, 43, 0.12);
-  background: #fff;
+  border: 1px solid var(--dk-border-strong, rgba(21, 19, 43, 0.12));
+  background: var(--dk-surface, #fff);
   font-size: 13px;
   color: var(--glass-text, #15132b);
   outline: none;
@@ -332,7 +332,7 @@
 .qcfg__muted code {
   padding: 1px 6px;
   border-radius: 6px;
-  background: rgba(21, 19, 43, 0.05);
+  background: var(--dk-glass, rgba(21, 19, 43, 0.05));
   font-family: var(--f-mono, ui-monospace, monospace);
   font-size: 11px;
 }

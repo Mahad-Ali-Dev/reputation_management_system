@@ -44,7 +44,7 @@ const PLATFORM_COLOR: Record<string, string> = {
   facebook: "#1877F2",
   instagram: "#E1306C",
   linkedin: "#0A66C2",
-  twitter: "#0F1419",
+  twitter: "var(--dk-text, #0F1419)",
 };
 
 /** Map a post status → the kit's 3 calendar event tones. */
@@ -256,7 +256,7 @@ export function CalendarClient({
                 <Icon name="refresh" size={13} /> Saving…
               </>
             ) : error ? (
-              <span style={{ color: "#c0344a" }} role="alert">
+              <span style={{ color: "var(--dk-danger-text, #c0344a)" }} role="alert">
                 <Icon name="alert" size={13} /> {error}
               </span>
             ) : (

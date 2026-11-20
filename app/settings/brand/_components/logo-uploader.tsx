@@ -59,7 +59,7 @@ export function LogoUploader() {
           upload(e.dataTransfer.files?.[0]);
         }}
       >
-        <Icon name={pending ? "refresh" : "upload"} size={24} style={{ color: "#6366f1" }} />
+        <Icon name={pending ? "refresh" : "upload"} size={24} style={{ color: "var(--dk-accent-text, #6366f1)" }} />
         <span className="set-dropzone__title">
           {pending ? (
             "Uploading…"

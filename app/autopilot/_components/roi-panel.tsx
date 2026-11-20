@@ -172,7 +172,7 @@ function FunnelStream({ stages }: { stages: number[] }): JSX.Element {
   return (
     <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden="true">
       {[152, 300, 448].map((x) => (
-        <line key={x} x1={x} y1={10} x2={x} y2={H - 10} stroke="#E6EDF2" strokeWidth={1} />
+        <line key={x} x1={x} y1={10} x2={x} y2={H - 10} stroke="var(--dk-border, #E6EDF2)" strokeWidth={1} />
       ))}
       <path
         d={bandPath(
@@ -231,7 +231,7 @@ function RevenueMiniChart({ values }: { values: number[] }): JSX.Element {
           width={16}
           height={r1(p.bh)}
           rx={8}
-          fill="#EAF0FF"
+          fill="var(--dk-accent-soft, #EAF0FF)"
         />
       ))}
       <path

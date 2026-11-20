@@ -18,7 +18,7 @@
    (no shared-file edit), same technique as dashboard / connections / devices. */
 .app--canvas:has(.cd-page) {
   background-image: none;
-  background-color: #fbfcff;
+  background-color: var(--dk-bg, #fbfcff);
 }
 
 .cd-page {
@@ -26,26 +26,26 @@
   --cd-vio-2: #5635ff;
   --cd-vio-3: #3417dd;
   --cd-vio-grad: linear-gradient(135deg, #5635ff, #3417dd);
-  --cd-lav: #eee9ff;
-  --cd-lav-2: #efeaff;
-  --cd-lav-border: #c8bcff;
-  --cd-ink: #070b2f;
-  --cd-ink-2: #34446d;
-  --cd-muted: #6a7592;
-  --cd-muted-2: #94a1bd;
-  --cd-line: #e1e6f3;
-  --cd-line-2: #e8ecf5;
+  --cd-lav: var(--dk-accent-soft, #eee9ff);
+  --cd-lav-2: var(--dk-accent-soft, #efeaff);
+  --cd-lav-border: var(--dk-accent-border, #c8bcff);
+  --cd-ink: var(--dk-text, #070b2f);
+  --cd-ink-2: var(--dk-text-2, #34446d);
+  --cd-muted: var(--dk-text-muted, #6a7592);
+  --cd-muted-2: var(--dk-text-subtle, #94a1bd);
+  --cd-line: var(--dk-border, #e1e6f3);
+  --cd-line-2: var(--dk-border, #e8ecf5);
   --cd-blue: #1c78ff;
-  --cd-blue-tile: #e4f1ff;
+  --cd-blue-tile: var(--dk-info-soft, #e4f1ff);
   --cd-green: #10b981;
-  --cd-green-ink: #047857;
-  --cd-green-tile: #ddf8eb;
+  --cd-green-ink: var(--dk-success-text, #047857);
+  --cd-green-tile: var(--dk-success-soft, #ddf8eb);
   --cd-orange: #f97316;
-  --cd-orange-tile: #fff0e0;
+  --cd-orange-tile: var(--dk-warning-soft, #fff0e0);
   --cd-pink: #ec4c89;
-  --cd-pink-tile: #fce7f0;
-  --cd-shadow: 0 1px 2px rgba(20, 28, 70, 0.04), 0 8px 24px rgba(20, 28, 70, 0.05);
-  --cd-shadow-lg: 0 10px 28px rgba(20, 28, 70, 0.06);
+  --cd-pink-tile: var(--dk-pink-soft, #fce7f0);
+  --cd-shadow: var(--dk-shadow-sm, 0 1px 2px rgba(20, 28, 70, 0.04), 0 8px 24px rgba(20, 28, 70, 0.05));
+  --cd-shadow-lg: var(--dk-shadow, 0 10px 28px rgba(20, 28, 70, 0.06));
   display: block;
   color: var(--cd-ink);
 }
@@ -62,7 +62,7 @@
 
 /* ── Card primitive (kit) ─────────────────────────────────────────────── */
 .cd-card {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--cd-line);
   border-radius: 14px;
   box-shadow: var(--cd-shadow);
@@ -96,7 +96,7 @@
   color: var(--cd-ink-2);
 }
 .cd-tab.is-active {
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
   border-bottom-color: var(--cd-vio);
 }
 .cd-tab__ico {
@@ -127,7 +127,7 @@
 }
 .cd-kpi__tile--vio {
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
 }
 .cd-kpi__tile--blue {
   background: var(--cd-blue-tile);
@@ -191,7 +191,7 @@
   gap: 5px;
   font-size: 12.5px;
   font-weight: 600;
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
   text-decoration: none;
   white-space: nowrap;
 }
@@ -220,13 +220,13 @@
   font-size: 13px;
   font-weight: 600;
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
   border: 1px solid transparent;
   text-decoration: none;
   cursor: pointer;
 }
 .cd-btn-ghost-vio:hover {
-  background: #e6dfff;
+  background: var(--dk-glass-strong, #e6dfff);
 }
 .cd-btn-out {
   display: inline-flex;
@@ -237,8 +237,8 @@
   border-radius: 10px;
   font-size: 12.5px;
   font-weight: 600;
-  background: #fff;
-  color: var(--cd-vio);
+  background: var(--dk-surface, #fff);
+  color: var(--dk-accent-text, var(--cd-vio));
   border: 1px solid var(--cd-lav-border);
   text-decoration: none;
   cursor: pointer;
@@ -274,7 +274,7 @@
   place-items: center;
   flex-shrink: 0;
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
 }
 .cd-seg-card__val {
   font-size: 24px;
@@ -326,11 +326,11 @@
 }
 .cd-ie-head__tile--vio {
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
 }
 .cd-ie-head__tile--green {
   background: var(--cd-green-tile);
-  color: #4baa3d;
+  color: var(--dk-success-text, #4baa3d);
 }
 .cd-ie-head__title {
   font-size: 18px;
@@ -376,7 +376,7 @@
   gap: 10px;
   padding: 11px 14px;
   border-radius: 10px;
-  background: #f5f2ff;
+  background: var(--dk-accent-faint, #f5f2ff);
   border: 1px solid var(--cd-line-2);
   font-size: 12.5px;
   color: var(--cd-ink-2);
@@ -418,7 +418,7 @@
   padding: 5px 12px;
   border-radius: 999px;
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
   font-size: 11.5px;
   font-weight: 700;
   margin-bottom: 14px;
@@ -477,7 +477,7 @@
   gap: 8px;
   padding: 9px 14px;
   border-radius: 10px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--cd-line);
   font-size: 12.5px;
   font-weight: 600;
@@ -487,7 +487,7 @@
 }
 .cd-source:hover {
   border-color: var(--cd-lav-border);
-  background: #fbfaff;
+  background: var(--dk-accent-faint, #fbfaff);
 }
 
 /* Right education panel (checklist) */
@@ -523,7 +523,7 @@
   height: 22px;
   border-radius: 999px;
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
   display: grid;
   place-items: center;
   flex-shrink: 0;
@@ -535,12 +535,12 @@
   padding: 16px 18px;
 }
 .cd-shop--ok {
-  background: #f5fcf7;
-  border: 1px solid #cdeedb;
+  background: var(--dk-success-soft, #f5fcf7);
+  border: 1px solid var(--dk-border, #cdeedb);
 }
 .cd-shop--off {
-  background: #f8fbf8;
-  border: 1px solid #dceade;
+  background: var(--dk-surface-2, #f8fbf8);
+  border: 1px solid var(--dk-border, #dceade);
 }
 .cd-shop__row {
   display: flex;
@@ -553,7 +553,7 @@
   gap: 12px;
   margin: 14px 0;
   padding-top: 14px;
-  border-top: 1px solid #d7eadf;
+  border-top: 1px solid var(--dk-border, #d7eadf);
 }
 .cd-shop__metric-v {
   font-size: 17px;
@@ -583,12 +583,12 @@
   color: var(--cd-green-ink);
 }
 .cd-badge--warn {
-  background: #fff0d6;
-  color: #b45309;
+  background: var(--dk-warning-soft, #fff0d6);
+  color: var(--dk-warning-text, #b45309);
 }
 .cd-badge--info {
   background: var(--cd-blue-tile);
-  color: #1554b3;
+  color: var(--dk-info-text, #1554b3);
 }
 
 /* ── Export card layout (Import & Export tab) ─────────────────────────── */
@@ -612,7 +612,7 @@
   align-items: center;
   padding: 7px 12px;
   border-radius: 9px;
-  background: #f4f5fa;
+  background: var(--dk-surface-2, #f4f5fa);
   color: var(--cd-muted);
   font-size: 12px;
   font-weight: 600;
@@ -665,7 +665,7 @@
   place-items: center;
   flex-shrink: 0;
   background: var(--cd-lav);
-  color: var(--cd-vio);
+  color: var(--dk-accent-text, var(--cd-vio));
 }
 
 /* Right analytics: performance 2×2 */
@@ -996,18 +996,18 @@
 }
 
 .crm-elig--ok {
-  background: color-mix(in srgb, #047857 8%, transparent);
-  color: #047857;
+  background: var(--dk-success-soft, color-mix(in srgb, #047857 8%, transparent));
+  color: var(--dk-success-text, #047857);
 }
 
 .crm-elig--warn {
-  background: color-mix(in srgb, #b45309 9%, transparent);
-  color: #b45309;
+  background: var(--dk-warning-soft, color-mix(in srgb, #b45309 9%, transparent));
+  color: var(--dk-warning-text, #b45309);
 }
 
 .crm-elig--bad {
-  background: color-mix(in srgb, #b91c1c 8%, transparent);
-  color: #b91c1c;
+  background: var(--dk-danger-soft, color-mix(in srgb, #b91c1c 8%, transparent));
+  color: var(--dk-danger-text, #b91c1c);
 }
 
 /* Empty drawer placeholder */

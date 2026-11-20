@@ -435,9 +435,9 @@ function Banner({ tone, children }: { tone: "ok" | "bad"; children: React.ReactN
           padding: "10px 14px",
           marginBottom: 16,
           fontSize: 12.5,
-          background: "#fef2f2",
-          border: "1px solid #fecaca",
-          color: "#7f1d1d",
+          background: "var(--dk-danger-soft, #fef2f2)",
+          border: "1px solid var(--dk-danger-soft, #fecaca)",
+          color: "var(--dk-danger-text, #7f1d1d)",
         }}
       >
         {children}

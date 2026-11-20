@@ -14,41 +14,41 @@
    file edit), same technique as the dashboard / My Devices. */
 .app--canvas:has(.est) {
   background-image: none;
-  background-color: #f7f8fc;
+  background-color: var(--dk-bg, #f7f8fc);
 }
 
 .est {
   --est-indigo: #4f46e5;
   --est-indigo-dark: #4338ca;
-  --est-indigo-50: #eef2ff;
+  --est-indigo-50: var(--dk-accent-soft, #eef2ff);
   --est-violet: #7c3aed;
-  --est-ink: #1e293b;
-  --est-body: #475569;
-  --est-muted: #64748b;
-  --est-muted-2: #94a3b8;
-  --est-line: #e2e8f0;
-  --est-line-soft: #eef1f6;
-  --est-dashed: #cbd5e1;
-  --est-ok: #16a34a;
+  --est-ink: var(--dk-text, #1e293b);
+  --est-body: var(--dk-text-2, #475569);
+  --est-muted: var(--dk-text-muted, #64748b);
+  --est-muted-2: var(--dk-text-subtle, #94a3b8);
+  --est-line: var(--dk-border, #e2e8f0);
+  --est-line-soft: var(--dk-border-soft, #eef1f6);
+  --est-dashed: var(--dk-border-strong, #cbd5e1);
+  --est-ok: var(--dk-success-text, #16a34a);
   --est-ok-dot: #22c55e;
   --est-gold: #fbbf24;
-  --est-shadow: 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04);
+  --est-shadow: var(--dk-shadow-sm, 0 1px 3px rgba(16, 24, 40, 0.06), 0 1px 2px rgba(16, 24, 40, 0.04));
   --est-shadow-btn: 0 6px 16px rgba(79, 70, 229, 0.28);
 
   /* icon-tile tints (design-tokens.json · iconTileTints) */
-  --tint-violet: #ede9fe;
-  --tint-peach: #ffead5;
-  --tint-teal: #ccfbf1;
-  --tint-indigo: #e0e7ff;
-  --tint-blue: #dbeafe;
-  --tint-green: #dcfce7;
-  --tint-amber: #fef3c7;
-  --tint-pink: #fce7f3;
+  --tint-violet: var(--dk-accent-soft, #ede9fe);
+  --tint-peach: var(--dk-warning-soft, #ffead5);
+  --tint-teal: var(--dk-teal-soft, #ccfbf1);
+  --tint-indigo: var(--dk-accent-soft, #e0e7ff);
+  --tint-blue: var(--dk-info-soft, #dbeafe);
+  --tint-green: var(--dk-success-soft, #dcfce7);
+  --tint-amber: var(--dk-warning-soft, #fef3c7);
+  --tint-pink: var(--dk-pink-soft, #fce7f3);
 
-  --gl-violet: #7c3aed;
+  --gl-violet: var(--dk-accent-text, #7c3aed);
   --gl-orange: #f97316;
   --gl-teal: #14b8a6;
-  --gl-indigo: #4f46e5;
+  --gl-indigo: var(--dk-accent-text, #4f46e5);
   --gl-blue: #3b82f6;
   --gl-green: #10b981;
   --gl-pink: #ec4899;
@@ -59,7 +59,7 @@
 
 /* ───────── generic kit card ───────── */
 .est-card {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--est-line);
   border-radius: 16px;
   box-shadow: var(--est-shadow);
@@ -81,7 +81,7 @@
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
   margin-bottom: 12px;
 }
 .est-hero__eyebrow::before {
@@ -155,25 +155,25 @@
   background: var(--est-indigo-dark);
 }
 .est-btn--out {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border-color: var(--est-line);
   color: var(--est-body);
 }
 .est-btn--out:hover {
   border-color: var(--est-dashed);
-  background: #fafbfc;
+  background: var(--dk-surface-2, #fafbfc);
 }
 .est-btn--ghost {
   background: transparent;
   color: var(--est-body);
 }
 .est-btn--ghost:hover {
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
 }
 .est-btn--outpri {
-  background: #fff;
-  border-color: #c7d2fe;
-  color: var(--est-indigo);
+  background: var(--dk-surface, #fff);
+  border-color: var(--dk-accent-border, #c7d2fe);
+  color: var(--dk-accent-text, var(--est-indigo));
 }
 .est-btn--outpri:hover {
   background: var(--est-indigo-50);
@@ -194,7 +194,7 @@
   text-decoration: none;
 }
 .est-backlink:hover {
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
 }
 
 /* ───────── Row A: summary cards (4-up) ───────── */
@@ -215,7 +215,7 @@
   }
 }
 .est-scard {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--est-line);
   border-radius: 16px;
   box-shadow: var(--est-shadow);
@@ -228,7 +228,7 @@
   transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 a.est-scard:hover {
-  box-shadow: 0 8px 24px rgba(79, 70, 229, 0.1);
+  box-shadow: var(--dk-shadow, 0 8px 24px rgba(79, 70, 229, 0.1));
 }
 .est-scard__top {
   display: flex;
@@ -337,21 +337,21 @@ a.est-scard:hover {
   height: 48px;
   border-radius: 999px;
   background: var(--est-indigo-50);
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
   display: grid;
   place-items: center;
 }
 .est-scard--add span {
   font-size: 14px;
   font-weight: 600;
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
 }
 
 /* ───────── Row B: business list ───────── */
 .est-list {
   border: 1px solid var(--est-line);
   border-radius: 16px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: var(--est-shadow);
   overflow: hidden;
   margin-bottom: 22px;
@@ -419,7 +419,7 @@ a.est-scard:hover {
   white-space: nowrap;
 }
 .est-row__name:hover {
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
 }
 .est-typebadge {
   flex-shrink: 0;
@@ -428,7 +428,7 @@ a.est-scard:hover {
   height: 20px;
   padding: 0 8px;
   border-radius: 999px;
-  background: #f1f5f9;
+  background: var(--dk-surface-3, #f1f5f9);
   color: var(--est-muted);
   font-size: 11px;
   font-weight: 600;
@@ -484,7 +484,7 @@ a.est-scard:hover {
   gap: 12px;
   padding: 12px 16px;
   border-radius: 12px;
-  background: #f8fafc;
+  background: var(--dk-surface-2, #f8fafc);
   border: 1px solid var(--est-line-soft);
 }
 .est-linked__icon {
@@ -530,7 +530,7 @@ a.est-scard:hover {
   background: var(--est-ok-dot);
 }
 .est-status--warn {
-  color: #b45309;
+  color: var(--dk-warning-text, #b45309);
 }
 .est-status--warn .est-status__dot {
   background: #f59e0b;
@@ -543,7 +543,7 @@ a.est-scard:hover {
   text-decoration: none;
 }
 .est-chev:hover {
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
 }
 
 /* Row wrapping for medium widths — banner drops below identity */
@@ -586,7 +586,7 @@ a.est-scard:hover {
   flex: 0 0 30px;
   border-radius: 8px;
   background: var(--est-indigo-50);
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
   display: grid;
   place-items: center;
 }
@@ -621,14 +621,14 @@ a.est-scard:hover {
   padding: 14px 16px;
   border-radius: 14px;
   border: 1px solid var(--est-line-soft);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: var(--est-shadow);
   text-decoration: none;
   color: inherit;
   transition: box-shadow 0.15s ease;
 }
 .est-devcard:hover {
-  box-shadow: 0 6px 18px rgba(79, 70, 229, 0.08);
+  box-shadow: var(--dk-shadow, 0 6px 18px rgba(79, 70, 229, 0.08));
 }
 .est-devcard__tile {
   width: 40px;
@@ -680,7 +680,7 @@ a.est-scard:hover {
   padding: 18px 20px;
   border-radius: 12px;
   border: 1px solid var(--est-line-soft);
-  background: #fff;
+  background: var(--dk-surface, #fff);
 }
 .est-devempty__tile {
   width: 40px;
@@ -688,7 +688,7 @@ a.est-scard:hover {
   flex: 0 0 40px;
   border-radius: 11px;
   background: var(--est-indigo-50);
-  color: var(--est-indigo);
+  color: var(--dk-accent-text, var(--est-indigo));
   display: grid;
   place-items: center;
   overflow: hidden;
@@ -713,7 +713,7 @@ a.est-scard:hover {
 
 /* ───────── empty state — counters + block ───────── */
 .est-counter {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--est-line);
   border-radius: 16px;
   box-shadow: var(--est-shadow);
@@ -747,7 +747,7 @@ a.est-scard:hover {
 .est-empty {
   border: 1px solid var(--est-line);
   border-radius: 16px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: var(--est-shadow);
   padding: 40px 24px 44px;
   text-align: center;
@@ -792,7 +792,7 @@ a.est-scard:hover {
   padding: 20px;
   border: 1px solid var(--est-line);
   border-radius: 16px;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: var(--est-shadow);
   margin-bottom: 22px;
   list-style: none;
@@ -845,7 +845,7 @@ a.est-scard:hover {
   place-items: center;
   font-size: 10px;
   font-weight: 700;
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1.5px solid var(--est-line);
   color: var(--est-muted-2);
 }
@@ -926,7 +926,7 @@ a.est-scard:hover {
 }
 
 .est-form {
-  background: #fff;
+  background: var(--dk-surface, #fff);
   border: 1px solid var(--est-line);
   border-radius: 16px;
   box-shadow: var(--est-shadow);
@@ -956,7 +956,7 @@ a.est-scard:hover {
   margin-bottom: 7px;
 }
 .est-field__req {
-  color: #ef4444;
+  color: var(--dk-danger-text, #ef4444);
 }
 .est-inputwrap {
   position: relative;
@@ -977,7 +977,7 @@ a.est-scard:hover {
   padding: 0 12px 0 38px;
   border-radius: 10px;
   border: 1px solid var(--est-line);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   font-size: 14px;
   color: var(--est-ink);
   font-family: inherit;
@@ -1017,7 +1017,7 @@ select.est-input {
 
 /* promo panel */
 .est-promo {
-  background: #f3f1fd;
+  background: var(--dk-accent-faint, #f3f1fd);
   border-radius: 16px;
   padding: 28px 32px 32px;
   display: flex;
