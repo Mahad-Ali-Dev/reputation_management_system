@@ -42,6 +42,57 @@ function niceMax(max: number): number {
 
 // ── trend (line + area) ──────────────────────────────────────────
 
+/**
+ * Monotone cubic (Fritsch–Carlson) through the points: a soft curve that never
+ * overshoots between samples, so a day of zero never dips below the axis.
+ */
+function smoothPath(pts: Array<[number, number]>): string {
+  const n = pts.length;
+  const p = (i: number) => pts[i] ?? [0, 0];
+  if (n < 2) return "";
+  const slope: number[] = [];
+  for (let i = 0; i < n - 1; i++) {
+    const dx = p(i + 1)[0] - p(i)[0];
+    slope.push(dx === 0 ? 0 : (p(i + 1)[1] - p(i)[1]) / dx);
+  }
+  const tan: number[] = pts.map((_, i) => {
+    if (i === 0) return slope[0] ?? 0;
+    if (i === n - 1) return slope[n - 2] ?? 0;
+    const a = slope[i - 1] ?? 0;
+    const b = slope[i] ?? 0;
+    return a * b <= 0 ? 0 : (a + b) / 2;
+  });
+  for (let i = 0; i < n - 1; i++) {
+    const s = slope[i] ?? 0;
+    if (s === 0) {
+      tan[i] = 0;
+      tan[i + 1] = 0;
+      continue;
+    }
+    const a = (tan[i] ?? 0) / s;
+    const b = (tan[i + 1] ?? 0) / s;
+    const h = a * a + b * b;
+    if (h > 9) {
+      const k = 3 / Math.sqrt(h);
+      tan[i] = k * a * s;
+      tan[i + 1] = k * b * s;
+    }
+  }
+  let d = `M ${p(0)[0].toFixed(1)} ${p(0)[1].toFixed(1)}`;
+  for (let i = 0; i < n - 1; i++) {
+    const [x0, y0] = p(i);
+    const [x1, y1] = p(i + 1);
+    const third = (x1 - x0) / 3;
+    d += ` C ${(x0 + third).toFixed(1)} ${(y0 + (tan[i] ?? 0) * third).toFixed(1)}, ${(x1 - third).toFixed(1)} ${(y1 - (tan[i + 1] ?? 0) * third).toFixed(1)}, ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+  }
+  return d;
+}
+
+/**
+ * The plot is a stretched SVG (it fills whatever width its column has), but the
+ * axis labels and point markers are HTML laid over it by percentage — text and
+ * dots inside a non-uniformly scaled SVG come out squashed into ellipses.
+ */
 export function AreaTrend({
   points,
   title,
@@ -55,92 +106,106 @@ export function AreaTrend({
   if (points.length < 2) {
     return <ChartEmpty title={title} message="Not enough days in this period to chart." />;
   }
+  if (total === 0) {
+    return <ChartEmpty title={title} message="Nothing to chart in this period." />;
+  }
 
   const W = 600;
-  const H = height;
-  const padL = 26;
-  const padR = 8;
-  const padT = 10;
-  const padB = 22;
-  const plotW = W - padL - padR;
-  const plotH = H - padT - padB;
+  const H = 150;
+  const padT = 8;
+  const plotH = H - padT;
 
   const max = niceMax(Math.max(...points.map((p) => p.count), 1));
-  const x = (i: number) => padL + (i * plotW) / (points.length - 1);
+  const x = (i: number) => (i * W) / (points.length - 1);
   const y = (v: number) => padT + plotH - (v / max) * plotH;
 
-  const line = points
-    .map((p, i) => `${i === 0 ? "M" : "L"} ${x(i).toFixed(1)} ${y(p.count).toFixed(1)}`)
-    .join(" ");
-  const area = `${line} L ${x(points.length - 1).toFixed(1)} ${padT + plotH} L ${padL} ${padT + plotH} Z`;
+  const line = smoothPath(points.map((p, i) => [x(i), y(p.count)]));
+  const area = `${line} L ${W} ${H} L 0 ${H} Z`;
   const ticks = tickIndices(points.length);
-  const gridLines = [0, 0.5, 1];
+  const yTicks = [max, max / 2, 0];
 
   return (
     <figure className="brp-chart">
       <figcaption className="brp-chart__title">{title}</figcaption>
-      <svg
-        viewBox={`0 0 ${W} ${H}`}
-        className="brp-chart__svg"
-        preserveAspectRatio="none"
-        role="img"
-        aria-label={`${title}: ${total} in total across ${points.length} days`}
-      >
-        <defs>
-          <linearGradient id="brpArea" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={ACCENT} stopOpacity="0.22" />
-            <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
-          </linearGradient>
-        </defs>
-
-        {gridLines.map((g) => (
-          <line
-            key={g}
-            x1={padL}
-            x2={W - padR}
-            y1={padT + plotH * g}
-            y2={padT + plotH * g}
-            className="brp-chart__grid"
-          />
-        ))}
-        {[max, Math.round(max / 2), 0].map((v, i) => (
-          // biome-ignore lint/suspicious/noArrayIndexKey: fixed 3-item [max, mid, 0] axis labels, order never changes
-          <text key={i} x={padL - 6} y={padT + plotH * (i / 2) + 3} className="brp-chart__ylab">
-            {v}
-          </text>
-        ))}
-
-        <path d={area} fill="url(#brpArea)" className="brp-chart__area" />
-        <path
-          d={line}
-          fill="none"
-          stroke={ACCENT}
-          strokeWidth="2"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-          pathLength={1}
-          className="brp-chart__line"
-        />
-
-        {points.map((p, i) => (
-          <circle
-            key={p.date}
-            cx={x(i)}
-            cy={y(p.count)}
-            r="3"
-            className="brp-chart__dot"
-            style={{ animationDelay: `${380 + i * 26}ms` }}
+      <div className="brp-trend" style={{ height }}>
+        <div className="brp-trend__y" aria-hidden="true">
+          {yTicks.map((v, i) => (
+            <span
+              // biome-ignore lint/suspicious/noArrayIndexKey: fixed 3-item [max, mid, 0] axis labels, order never changes
+              key={i}
+              style={{ top: `${((padT + plotH * (i / 2)) / H) * 100}%` }}
+            >
+              {Number.isInteger(v) ? v : ""}
+            </span>
+          ))}
+        </div>
+        <div className="brp-trend__plot">
+          <svg
+            viewBox={`0 0 ${W} ${H}`}
+            className="brp-trend__svg"
+            preserveAspectRatio="none"
+            role="img"
+            aria-label={`${title}: ${total} in total across ${points.length} days`}
           >
-            <title>{`${shortDate(p.date)}: ${p.count}`}</title>
-          </circle>
-        ))}
-
-        {ticks.map((i) => (
-          <text key={i} x={x(i)} y={H - 6} className="brp-chart__xlab">
-            {shortDate(points[i]?.date ?? "")}
-          </text>
-        ))}
-      </svg>
+            <defs>
+              <linearGradient id="brpArea" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={ACCENT} stopOpacity="0.24" />
+                <stop offset="100%" stopColor={ACCENT} stopOpacity="0" />
+              </linearGradient>
+            </defs>
+            {yTicks.map((_, i) => (
+              <line
+                // biome-ignore lint/suspicious/noArrayIndexKey: fixed 3-item grid, order never changes
+                key={i}
+                x1={0}
+                x2={W}
+                y1={padT + plotH * (i / 2)}
+                y2={padT + plotH * (i / 2)}
+                className="brp-chart__grid"
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
+            <path d={area} fill="url(#brpArea)" className="brp-trend__area" />
+            <path
+              d={line}
+              fill="none"
+              stroke={ACCENT}
+              strokeWidth="2"
+              strokeLinejoin="round"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+              className="brp-trend__line"
+            />
+          </svg>
+          {points.map((p, i) =>
+            p.count > 0 ? (
+              <span
+                key={p.date}
+                className="brp-trend__dot"
+                title={`${shortDate(p.date)}: ${p.count}`}
+                style={{
+                  left: `${(x(i) / W) * 100}%`,
+                  top: `${(y(p.count) / H) * 100}%`,
+                  animationDelay: `${380 + i * 20}ms`,
+                }}
+              />
+            ) : null,
+          )}
+        </div>
+        <div className="brp-trend__x" aria-hidden="true">
+          {ticks.map((i) => (
+            <span
+              key={i}
+              style={{
+                left: `${(x(i) / W) * 100}%`,
+                transform: `translateX(${i === 0 ? "0" : i === points.length - 1 ? "-100%" : "-50%"})`,
+              }}
+            >
+              {shortDate(points[i]?.date ?? "")}
+            </span>
+          ))}
+        </div>
+      </div>
     </figure>
   );
 }
@@ -152,15 +217,9 @@ export function Sparkline({ points, label }: { points: DailyPoint[]; label: stri
   const W = 300;
   const H = 44;
 
-  // All-zero series: a flat dashed baseline reads as "nothing happened",
-  // where a solid line pinned to the floor reads as a real measurement.
-  if (points.length < 2 || total === 0) {
-    return (
-      <svg viewBox={`0 0 ${W} ${H}`} className="brp-spark" role="img" aria-label={`${label}: none`}>
-        <line x1="4" x2={W - 4} y1={H / 2} y2={H / 2} className="brp-spark__flat" />
-      </svg>
-    );
-  }
+  // All-zero series: draw nothing. The card's own empty state says so in words;
+  // a flat line (dashed or solid) just looks like a broken chart.
+  if (points.length < 2 || total === 0) return null;
 
   const max = Math.max(...points.map((p) => p.count), 1);
   const x = (i: number) => 4 + (i * (W - 8)) / (points.length - 1);
@@ -196,7 +255,8 @@ export function DayBars({ points, label }: { points: DailyPoint[]; label: string
   const W = 320;
   const H = 64;
   const padB = 16;
-  if (points.length === 0) return null;
+  // Nothing published: no bare axis with dates under it — the card's empty state covers it.
+  if (points.length === 0 || total === 0) return null;
 
   const max = niceMax(Math.max(...points.map((p) => p.count), 1));
   const slot = W / points.length;
@@ -241,7 +301,7 @@ export function DayBars({ points, label }: { points: DailyPoint[]; label: string
 
 // ── donut ────────────────────────────────────────────────────────
 
-const DONUT_COLORS = ["#2563eb", "#7c3aed", "#0ea5e9", "#f59e0b", "#10b981", "#ef4444"];
+const DONUT_COLORS = ["#4b3bff", "#0a84ff", "#8a5cff", "#ff9500", "#34c759", "#ff2d55"];
 
 export function Donut({
   slices,
@@ -317,12 +377,12 @@ export function Donut({
 // ── stacked bar ──────────────────────────────────────────────────
 
 const STATUS_COLORS: Record<string, string> = {
-  removed: "#10b981",
-  accepted: "#10b981",
-  submitted: "#2563eb",
-  submitted_to_google: "#0ea5e9",
-  rejected: "#ef4444",
-  withdrawn: "#94a3b8",
+  removed: "#34c759",
+  accepted: "#34c759",
+  submitted: "#4b3bff",
+  submitted_to_google: "#0a84ff",
+  rejected: "#ff3b30",
+  withdrawn: "#aeaeb2",
 };
 
 export function StackedBar({
@@ -335,6 +395,9 @@ export function StackedBar({
   const total = segments.reduce((s, r) => s + r.count, 0);
   if (total === 0) return <p className="brp-empty">Nothing in this period.</p>;
 
+  const color = (label: string, i: number) =>
+    STATUS_COLORS[label] ?? DONUT_COLORS[i % DONUT_COLORS.length];
+
   return (
     <div className="brp-stack">
       <div className="brp-stack__bar">
@@ -344,19 +407,34 @@ export function StackedBar({
             className="brp-stack__seg"
             style={{
               width: `${(s.count / total) * 100}%`,
-              background: STATUS_COLORS[s.label] ?? DONUT_COLORS[i % DONUT_COLORS.length],
+              background: color(s.label, i),
               animationDelay: `${i * 90}ms`,
             }}
             title={`${s.label}: ${s.count}`}
           />
         ))}
       </div>
+      <ul className="brp-stack__legend">
+        {segments.map((s, i) => (
+          <li key={s.label}>
+            <i style={{ background: color(s.label, i) }} />
+            <span>{statusLabel(s.label)}</span>
+            <span className="brp-num">{s.count}</span>
+          </li>
+        ))}
+      </ul>
       <div className="brp-stack__foot">
         <span>{totalLabel}</span>
         <span className="brp-num">{total}</span>
       </div>
     </div>
   );
+}
+
+/** "submitted_to_google" → "Submitted to google". */
+function statusLabel(s: string): string {
+  const t = s.replace(/_/g, " ").trim();
+  return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
 // ── shared empty ─────────────────────────────────────────────────

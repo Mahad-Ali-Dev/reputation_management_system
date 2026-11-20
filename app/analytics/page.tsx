@@ -15,6 +15,8 @@ import "./business-report-glass.css";
 import { AreaTrend, DayBars, Donut, Sparkline, StackedBar } from "./_components/charts";
 import { ExportPdfButton } from "./_components/export-pdf-button";
 import { ReportRangePicker } from "./_components/report-range-picker";
+// Apple skin last, so it wins over the base + glass layers.
+import "./business-report-apple.css";
 
 export const dynamic = "force-dynamic";
 
@@ -49,10 +51,7 @@ export default async function AnalyticsPage({
   ]);
 
   return (
-    <AppShellServer
-      topBar={<TopBar title="Analytics" />}
-      crumbs={["Data & Insights", "Analytics"]}
-    >
+    <AppShellServer topBar={<TopBar title="Analytics" />} crumbs={["Data & Insights", "Analytics"]}>
       <div className="brp" id="business-report">
         <BrandHeader brand={brand} period={range.label} />
 
@@ -128,7 +127,7 @@ function Card({
   breakBefore?: boolean;
 }) {
   return (
-    <section className={`brp-card${breakBefore ? " brp-section-break" : ""}`}>
+    <section className={`brp-card brp-card--${icon}${breakBefore ? " brp-section-break" : ""}`}>
       <div className="brp-card__head">
         <span className="brp-card__badge" aria-hidden="true">
           <Icon name={icon} size={16} />
@@ -374,7 +373,10 @@ function SurveysCard({ data }: { data: BusinessReport["surveys"] }) {
           <div className="brp-stats" style={{ marginBottom: 16 }}>
             <Stat value={data.sent} label="Sent" />
             <Stat value={data.responses} label="Responses" />
-            <Stat value={data.responseRate !== null ? `${data.responseRate}%` : "—"} label="Response rate" />
+            <Stat
+              value={data.responseRate !== null ? `${data.responseRate}%` : "—"}
+              label="Response rate"
+            />
             <Stat value={data.avgRating ?? "—"} label="Average score" />
           </div>
 
@@ -399,7 +401,9 @@ function SurveysCard({ data }: { data: BusinessReport["surveys"] }) {
                       <td>
                         {c.campaign}
                         <div className="brp-td-sub">
-                          {c.avgRating !== null ? `${c.avgRating.toFixed(1)} avg score` : "No ratings yet"}
+                          {c.avgRating !== null
+                            ? `${c.avgRating.toFixed(1)} avg score`
+                            : "No ratings yet"}
                         </div>
                       </td>
                       <td className="brp-num">{c.sent > 0 ? c.sent.toLocaleString() : "—"}</td>
@@ -414,13 +418,22 @@ function SurveysCard({ data }: { data: BusinessReport["surveys"] }) {
                           <div className="brp-dist">
                             <div className="brp-dist__track">
                               <span
-                                style={{ width: `${(c.promoters / rated) * 100}%`, background: "var(--ok)" }}
+                                style={{
+                                  width: `${(c.promoters / rated) * 100}%`,
+                                  background: "var(--ok)",
+                                }}
                               />
                               <span
-                                style={{ width: `${(c.passives / rated) * 100}%`, background: "var(--warn)" }}
+                                style={{
+                                  width: `${(c.passives / rated) * 100}%`,
+                                  background: "var(--warn)",
+                                }}
                               />
                               <span
-                                style={{ width: `${(c.detractors / rated) * 100}%`, background: "var(--bad)" }}
+                                style={{
+                                  width: `${(c.detractors / rated) * 100}%`,
+                                  background: "var(--bad)",
+                                }}
                               />
                             </div>
                             <div className="brp-dist__legend">

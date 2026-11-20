@@ -226,7 +226,10 @@
   background: #eef1f6;
   overflow: hidden;
 }
+/* A <span>: without display:block its inline width is ignored and the bar
+   never shows — only the empty track did. */
 .brp-bar__fill {
+  display: block;
   height: 100%;
   border-radius: 999px;
   background: var(--rl-primary, #2563eb);
@@ -421,6 +424,65 @@
   animation: brp-grow-y 480ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
+/* trend: stretched SVG plot + HTML axis labels / point markers laid over it */
+.brp-trend {
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) 18px;
+  column-gap: 6px;
+}
+.brp-trend__y {
+  position: relative;
+  grid-column: 1;
+  grid-row: 1;
+}
+.brp-trend__y span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+  font-size: 10px;
+  line-height: 1;
+  color: var(--rl-muted, #98a2b3);
+  font-variant-numeric: tabular-nums;
+}
+.brp-trend__plot {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  min-width: 0;
+}
+.brp-trend__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  animation: brp-reveal 900ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+.brp-trend__dot {
+  position: absolute;
+  width: 7px;
+  height: 7px;
+  margin: -3.5px 0 0 -3.5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 2px var(--rl-primary, #2563eb);
+  opacity: 0;
+  animation: brp-pop 260ms ease-out forwards;
+}
+.brp-trend__x {
+  position: relative;
+  grid-column: 2;
+  grid-row: 2;
+}
+.brp-trend__x span {
+  position: absolute;
+  bottom: 0;
+  font-size: 10px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--rl-muted, #98a2b3);
+}
+
 /* donut */
 .brp-donut {
   display: flex;
@@ -510,6 +572,29 @@
   transform-origin: left;
   animation: brp-grow-x 620ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
+.brp-stack__legend {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+.brp-stack__legend li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+}
+.brp-stack__legend li span:first-of-type {
+  flex: 1;
+  min-width: 0;
+}
+.brp-stack__legend i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
 .brp-stack__foot {
   display: flex;
   justify-content: space-between;
@@ -550,6 +635,14 @@
     transform: scale(1);
   }
 }
+@keyframes brp-reveal {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
 @keyframes brp-arc {
   to {
     stroke-dasharray: var(--len) 100;
@@ -564,6 +657,8 @@
   .brp-chart__line,
   .brp-chart__area,
   .brp-chart__dot,
+  .brp-trend__svg,
+  .brp-trend__dot,
   .brp-daybar,
   .brp-donut__arc,
   .brp-stack__seg,
@@ -645,10 +740,15 @@
     animation: none !important;
     transform: none !important;
   }
-  .brp-chart__dot {
+  .brp-chart__dot,
+  .brp-trend__dot {
     animation: none !important;
     opacity: 1 !important;
     transform: none !important;
+  }
+  .brp-trend__svg {
+    animation: none !important;
+    clip-path: none !important;
   }
   .brp-donut__arc {
     animation: none !important;
@@ -661,6 +761,9 @@
   }
 
   .brp-chart__svg,
+  .brp-trend__svg,
+  .brp-trend__dot,
+  .brp-stack__legend i,
   .brp-daybars,
   .brp-spark,
   .brp-donut__arc,

@@ -1,0 +1,717 @@
+/* ============================================================
+   business-report-apple.css: Business Report (/analytics) in the Apple
+   language. Imported LAST by page.tsx. Re-maps the report's --rl-* tokens
+   onto Apple greys + the brand accent and restyles the surfaces: hero
+   brand card with gradient eyebrow, iOS segmented period control, frosted
+   cards, quiet stat tiles, accent bars on soft grey tracks, inset tables,
+   calm empty states. The @media print block at the end flattens it all
+   back to ink-friendly output so Export PDF is unchanged.
+   ============================================================ */
+
+.app--glass .brp {
+  --ap-ink: #1d1d1f;
+  --ap-2: #6e6e73;
+  --ap-3: #86868b;
+  --ap-fill: rgba(120, 120, 128, 0.12);
+  --ap-fill-2: rgba(120, 120, 128, 0.08);
+  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-accent: var(--glass-accent, #4b3bff);
+  --ap-glass: rgba(255, 255, 255, 0.72);
+  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14);
+
+  /* the report's own tokens → Apple values (charts read --rl-primary) */
+  --rl-primary: var(--ap-accent);
+  --rl-ink: var(--ap-ink);
+  --rl-muted: var(--ap-2);
+  --rl-border: var(--ap-sep);
+  --rl-border-soft: rgba(60, 60, 67, 0.08);
+  --rl-surface: var(--ap-glass);
+  /* survey promoter / passive / detractor bars */
+  --ok: #34c759;
+  --warn: #ff9f0a;
+  --bad: #ff3b30;
+
+  gap: 18px;
+  max-width: 1240px;
+  width: 100%;
+  margin: 0 auto;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+}
+
+/* ---------- hero: brand card ----------
+   Grid placement puts the "Business Report · period" line above the name as
+   an eyebrow, Apple-hero style, without touching the markup the PDF uses. */
+.app--glass .brp .brp-brand {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    "logo eyebrow"
+    "logo meta";
+  align-items: center;
+  column-gap: 20px;
+  row-gap: 4px;
+  padding: 28px 30px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 28px;
+  background: radial-gradient(circle at 0% 0%, rgba(75, 59, 255, 0.1), transparent 42%),
+    radial-gradient(circle at 100% 100%, rgba(194, 92, 255, 0.08), transparent 40%), var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .brp .brp-brand__logo {
+  grid-area: logo;
+  width: 76px;
+  height: 76px;
+  border-radius: 22px;
+  background: #fff;
+  box-shadow: 0 8px 20px -10px rgba(21, 19, 43, 0.3), inset 0 0 0 1px rgba(60, 60, 67, 0.06);
+}
+.app--glass .brp .brp-brand__fallback {
+  background: linear-gradient(145deg, #4b3bff 0%, #8a5cff 60%, #c25cff 100%);
+  color: #fff;
+  font-family: var(--f-head);
+  font-size: 32px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 12px 24px -12px rgba(75, 59, 255, 0.7);
+}
+.app--glass .brp .brp-brand__right {
+  grid-area: eyebrow;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 10px;
+  text-align: left;
+}
+.app--glass .brp .brp-brand__title {
+  font-family: var(--f-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.app--glass .brp .brp-brand__period {
+  margin: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: var(--ap-fill-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-brand__meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0;
+}
+.app--glass .brp .brp-brand__name {
+  flex: 0 0 100%;
+  margin-bottom: 6px;
+  font-family: var(--f-head);
+  font-size: clamp(26px, 3vw, 38px);
+  line-height: 1.1;
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-brand__line {
+  margin: 0;
+  font-size: 14.5px;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-brand__line + .brp-brand__line::before {
+  content: "·";
+  margin: 0 8px;
+  color: var(--ap-3);
+}
+
+/* ---------- toolbar: iOS segmented control + pill ---------- */
+.app--glass .brp .brp-toolbar {
+  align-items: center;
+}
+.app--glass .brp .brp-range__presets {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0;
+  margin: 0;
+  padding: 3px;
+  border: 0;
+  border-radius: 12px;
+  background: rgba(118, 118, 128, 0.12);
+  min-inline-size: 0;
+}
+.app--glass .brp .brp-chip {
+  height: 32px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  box-shadow: none;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.app--glass .brp .brp-chip:hover:not(:disabled):not(.is-active) {
+  background: rgba(255, 255, 255, 0.5);
+}
+.app--glass .brp .brp-chip.is-active {
+  background: #fff;
+  color: var(--ap-ink);
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+}
+.app--glass .brp .brp-chip:focus-visible,
+.app--glass .brp .brp-btn:focus-visible {
+  outline: 2px solid var(--ap-accent);
+  outline-offset: 2px;
+}
+.app--glass .brp .brp-range__custom {
+  gap: 10px;
+}
+.app--glass .brp .brp-range__field {
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-range__field input {
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: var(--ap-fill-2);
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-size: 14px;
+}
+.app--glass .brp .brp-range__field input:focus {
+  outline: none;
+  border-color: rgba(75, 59, 255, 0.45);
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
+}
+.app--glass .brp .brp-btn {
+  height: 38px;
+  padding: 0 18px;
+  gap: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-size: 14px;
+  font-weight: 500;
+  box-shadow: none;
+  transition: background 0.15s ease;
+}
+.app--glass .brp .brp-btn--primary {
+  background: var(--ap-accent);
+  color: #fff;
+  box-shadow: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+}
+.app--glass .brp .brp-btn--primary:hover:not(:disabled) {
+  background: var(--glass-accent-hover, #3a2be0);
+}
+
+/* ---------- cards ---------- */
+.app--glass .brp .brp-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  padding: 22px 24px 24px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  background: var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .brp .brp-grid-3,
+.app--glass .brp .brp-grid-2 {
+  gap: 18px;
+}
+.app--glass .brp .brp-card__head {
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.app--glass .brp .brp-card__title {
+  font-family: var(--f-head);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-card__sub {
+  margin-top: 3px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--ap-2);
+}
+
+/* small coloured icon tiles, one hue per section */
+.app--glass .brp .brp-card__badge {
+  --tone: var(--ap-accent);
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--tone) 12%, transparent);
+  color: var(--tone);
+}
+.app--glass .brp .brp-card--star .brp-card__badge {
+  --tone: #ff9500;
+}
+.app--glass .brp .brp-card--bot .brp-card__badge {
+  --tone: #4b3bff;
+}
+.app--glass .brp .brp-card--share .brp-card__badge {
+  --tone: #0a84ff;
+}
+.app--glass .brp .brp-card--flag .brp-card__badge {
+  --tone: #ff3b30;
+}
+.app--glass .brp .brp-card--pin .brp-card__badge {
+  --tone: #34c759;
+}
+.app--glass .brp .brp-card--qr .brp-card__badge {
+  --tone: #5856d6;
+}
+.app--glass .brp .brp-card--survey .brp-card__badge {
+  --tone: #ff2d55;
+}
+
+/* ---------- stats: quiet tiles ---------- */
+.app--glass .brp .brp-stats {
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 10px;
+}
+.app--glass .brp .brp-grid-3 .brp-stats,
+.app--glass .brp .brp-grid-2 .brp-stats {
+  grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+  gap: 8px;
+}
+.app--glass .brp .brp-stats > div {
+  min-width: 0;
+  padding: 13px 14px 12px;
+  border-radius: 16px;
+  background: rgba(120, 120, 128, 0.06);
+}
+.app--glass .brp .brp-stat__value {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 2px 8px;
+  font-family: var(--f-num);
+  font-size: 30px;
+  font-weight: 500;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-grid-3 .brp-stat__value {
+  font-size: 26px;
+}
+.app--glass .brp .brp-stat__label {
+  margin-top: 4px;
+  font-size: 12.5px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-delta {
+  margin: 0;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-family: var(--f-num);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+.app--glass .brp .brp-delta--up {
+  background: rgba(52, 199, 89, 0.14);
+  color: #248a3d;
+}
+.app--glass .brp .brp-delta--down {
+  background: rgba(255, 59, 48, 0.1);
+  color: #d70015;
+}
+
+/* ---------- chart captions + axes ---------- */
+.app--glass .brp .brp-chart__title {
+  margin: 0 0 12px;
+  font-family: var(--f-ui);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-chart__grid {
+  stroke: rgba(60, 60, 67, 0.1);
+  stroke-dasharray: none;
+}
+.app--glass .brp .brp-chart__xlab,
+.app--glass .brp .brp-chart__ylab {
+  fill: var(--ap-3);
+  font-family: var(--f-num);
+}
+.app--glass .brp .brp-trend__y span,
+.app--glass .brp .brp-trend__x span {
+  font-family: var(--f-num);
+  font-size: 10.5px;
+  color: var(--ap-3);
+}
+
+/* Reviews: give the trend the wider column when there's room */
+@media (min-width: 1280px) {
+  .app--glass .brp .brp-card--star > .brp-grid-3 {
+    grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr) minmax(0, 1fr);
+    gap: 28px;
+  }
+}
+
+/* sparkline + day bars sit between the stats and the breakdown */
+.app--glass .brp .brp-spark,
+.app--glass .brp .brp-daybars {
+  margin-bottom: 14px;
+}
+.app--glass .brp .brp-daybar {
+  fill: var(--ap-accent);
+}
+
+/* ---------- bars: accent on soft grey tracks ----------
+   Inside a card body: label + value on one line, the bar underneath
+   (Screen Time style). Inside the Reviews grid: compact single row. */
+.app--glass .brp .brp-bars {
+  gap: 12px;
+}
+.app--glass .brp .brp-bar {
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas:
+    "label value"
+    "track track";
+  row-gap: 6px;
+  column-gap: 12px;
+  font-size: 13.5px;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-bar > span:first-child {
+  grid-area: label;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.app--glass .brp .brp-bar__track {
+  grid-area: track;
+  height: 8px;
+  background: rgba(120, 120, 128, 0.12);
+}
+.app--glass .brp .brp-bar__value {
+  grid-area: value;
+  font-family: var(--f-num);
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-bar__fill {
+  background: linear-gradient(90deg, #4b3bff 0%, #8a5cff 100%);
+}
+.app--glass .brp .brp-grid-3 .brp-bars {
+  gap: 10px;
+}
+.app--glass .brp .brp-grid-3 .brp-bar {
+  grid-template-columns: 48px minmax(0, 1fr) 28px;
+  grid-template-areas: "label track value";
+}
+.app--glass .brp .brp-grid-3 .brp-bar > span:first-child {
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-grid-3 .brp-bar__track {
+  height: 10px;
+}
+
+/* totals foot */
+.app--glass .brp .brp-stack__foot {
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--ap-sep);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-stack__foot .brp-num {
+  font-family: var(--f-num);
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+
+/* donut */
+.app--glass .brp .brp-donut {
+  gap: 20px;
+}
+.app--glass .brp .brp-donut__ring {
+  width: 128px;
+}
+.app--glass .brp .brp-donut__track {
+  stroke: rgba(120, 120, 128, 0.12);
+  stroke-width: 5;
+}
+.app--glass .brp .brp-donut__arc {
+  stroke-width: 5;
+}
+.app--glass .brp .brp-donut__total {
+  font-family: var(--f-num);
+  font-size: 26px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-donut__caption {
+  font-size: 12px;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-donut__legend {
+  gap: 10px;
+}
+.app--glass .brp .brp-donut__legend li,
+.app--glass .brp .brp-stack__legend li {
+  font-size: 13.5px;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-donut__count,
+.app--glass .brp .brp-stack__legend .brp-num {
+  font-family: var(--f-num);
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+
+/* dispute status bar */
+.app--glass .brp .brp-stack__bar {
+  height: 10px;
+  gap: 2px;
+  background: rgba(120, 120, 128, 0.12);
+}
+.app--glass .brp .brp-stack__seg {
+  border-radius: 999px;
+}
+.app--glass .brp .brp-stack__legend {
+  margin-top: 14px;
+  gap: 8px;
+}
+
+/* ---------- tables: inset list ---------- */
+.app--glass .brp .brp-table {
+  font-size: 14px;
+  color: var(--ap-ink);
+}
+.app--glass .brp .brp-table th {
+  padding: 0 12px 10px 0;
+  border-bottom: 1px solid var(--ap-sep);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-table td {
+  padding: 12px 12px 12px 0;
+  border-bottom: 1px solid var(--ap-sep);
+  vertical-align: middle;
+}
+.app--glass .brp .brp-table th:last-child,
+.app--glass .brp .brp-table td:last-child {
+  padding-right: 0;
+}
+.app--glass .brp .brp-table td.brp-num {
+  font-family: var(--f-num);
+  font-weight: 600;
+}
+.app--glass .brp .brp-table tbody tr {
+  transition: background 0.15s ease;
+}
+.app--glass .brp .brp-table tbody tr:hover {
+  background: rgba(120, 120, 128, 0.05);
+}
+.app--glass .brp .brp-td-sub {
+  margin-top: 3px;
+  font-size: 12.5px;
+  color: var(--ap-3);
+}
+.app--glass .brp .brp-dist__track {
+  height: 10px;
+  gap: 2px;
+  background: rgba(120, 120, 128, 0.12);
+}
+.app--glass .brp .brp-dist__track span {
+  border-radius: 999px;
+}
+.app--glass .brp .brp-dist__legend {
+  margin-top: 8px;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-dist__legend i {
+  width: 8px;
+  height: 8px;
+}
+
+/* ---------- empty states: calm, intentional ----------
+   A soft inset plate with a small accent glyph, filling the card's free
+   space so a quiet card reads as "nothing yet", not as a broken box. */
+.app--glass .brp .brp-empty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 112px;
+  margin: 0;
+  padding: 20px 16px;
+  border-radius: 18px;
+  background: rgba(120, 120, 128, 0.06);
+  font-size: 13.5px;
+  line-height: 1.4;
+  text-align: center;
+  color: var(--ap-2);
+}
+.app--glass .brp .brp-empty::before {
+  content: "";
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  background: rgba(75, 59, 255, 0.1)
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b3bff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v16a2 2 0 0 0 2 2h16'/%3E%3Cpath d='M18 17V9'/%3E%3Cpath d='M13 17V5'/%3E%3Cpath d='M8 17v-3'/%3E%3C/svg%3E")
+    center / 18px 18px no-repeat;
+}
+/* inside a chart column (Reviews grid) the plate keeps the chart's height */
+.app--glass .brp .brp-chart .brp-empty,
+.app--glass .brp .brp-grid-3 > div > .brp-empty {
+  min-height: 150px;
+}
+/* stats are followed by the plate: tighten the gap a touch */
+.app--glass .brp .brp-stats + .brp-empty {
+  margin-top: 2px;
+}
+
+/* ---------- phone ---------- */
+@media (max-width: 640px) {
+  .app--glass .brp {
+    gap: 14px;
+  }
+  .app--glass .brp .brp-brand {
+    grid-template-areas:
+      "logo eyebrow"
+      "meta meta";
+    column-gap: 14px;
+    row-gap: 14px;
+    padding: 20px;
+    border-radius: 24px;
+  }
+  .app--glass .brp .brp-brand__logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 17px;
+  }
+  .app--glass .brp .brp-brand__fallback {
+    font-size: 24px;
+  }
+  .app--glass .brp .brp-brand__right {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+  .app--glass .brp .brp-brand__name {
+    font-size: 28px;
+  }
+  .app--glass .brp .brp-brand__line {
+    flex: 0 0 100%;
+    font-size: 14px;
+  }
+  .app--glass .brp .brp-brand__line + .brp-brand__line::before {
+    content: none;
+  }
+  .app--glass .brp .brp-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .app--glass .brp .brp-range__presets {
+    display: flex;
+  }
+  .app--glass .brp .brp-chip {
+    flex: 1;
+    padding: 0 8px;
+  }
+  .app--glass .brp .brp-btn--primary {
+    justify-content: center;
+  }
+  .app--glass .brp .brp-card {
+    padding: 18px 18px 20px;
+    border-radius: 22px;
+  }
+  .app--glass .brp .brp-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .app--glass .brp .brp-grid-3 .brp-stats,
+  .app--glass .brp .brp-grid-2 .brp-stats {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .app--glass .brp .brp-stat__value,
+  .app--glass .brp .brp-grid-3 .brp-stat__value {
+    font-size: 24px;
+  }
+  /* wide tables scroll inside their card rather than the page */
+  .app--glass .brp .brp-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* ---------- print / PDF: flatten the skin back to ink ---------- */
+@media print {
+  .app--glass .brp {
+    max-width: none;
+  }
+  .app--glass .brp .brp-brand,
+  .app--glass .brp .brp-card {
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    border-radius: 14px;
+  }
+  /* gradient-clipped text has no fill once print drops backgrounds */
+  .app--glass .brp .brp-brand__title {
+    background: none;
+    color: #4b3bff;
+  }
+  .app--glass .brp .brp-brand__fallback,
+  .app--glass .brp .brp-card__badge,
+  .app--glass .brp .brp-bar__track,
+  .app--glass .brp .brp-stack__bar,
+  .app--glass .brp .brp-dist__track,
+  .app--glass .brp .brp-stats > div,
+  .app--glass .brp .brp-empty,
+  .app--glass .brp .brp-delta {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .app--glass .brp .brp-brand__logo {
+    box-shadow: none;
+  }
+  .app--glass .brp .brp-empty {
+    min-height: 0;
+  }
+  .app--glass .brp .brp-table tbody tr:hover {
+    background: none;
+  }
+}
