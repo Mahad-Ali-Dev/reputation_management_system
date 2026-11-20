@@ -15,29 +15,33 @@
    ============================================================ */
 
 .app--glass .set-shell:has(> .set-ap) {
-  --ap-ink: #1d1d1f;
-  --ap-2: #6e6e73;
-  --ap-3: #86868b;
+  --ap-ink: var(--dk-text, #1d1d1f);
+  --ap-2: var(--dk-text-muted, #6e6e73);
+  --ap-3: var(--dk-text-subtle, #86868b);
   --ap-fill: rgba(120, 120, 128, 0.12);
   --ap-fill-2: rgba(120, 120, 128, 0.08);
-  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
   --ap-accent: var(--glass-accent, #4b3bff);
   --ap-accent-hover: var(--glass-accent-hover, #3a2be0);
-  --ap-glass: rgba(255, 255, 255, 0.72);
-  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14);
+  --ap-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
+  --ap-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 12px 32px -14px rgba(21, 19, 43, 0.14)
+  );
 
   /* kit tokens → Apple values (meter fills read these via inline styles) */
   --set-ink: var(--ap-ink);
-  --set-ink-2: #3a3a3c;
+  --set-ink-2: var(--dk-text-2, #3a3a3c);
   --set-mut: var(--ap-2);
   --set-mut-2: var(--ap-3);
   --set-line: var(--ap-sep);
   --set-track: var(--ap-fill);
   --set-indigo: var(--ap-accent);
   --set-indigo-2: var(--ap-accent-hover);
-  --set-indigo-soft: rgba(75, 59, 255, 0.09);
-  --set-indigo-tint: rgba(75, 59, 255, 0.04);
+  --set-indigo-soft: var(--dk-accent-soft, rgba(75, 59, 255, 0.09));
+  --set-indigo-tint: var(--dk-accent-faint, rgba(75, 59, 255, 0.04));
   --set-emerald: #34c759;
   --set-emerald-2: #248a3d;
   --set-amber: #ff9500;
@@ -62,10 +66,10 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;
-  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  background-image: var(--dk-none, linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%));
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
+  color: var(--dk-accent-text, transparent);
 }
 .app--glass .set-shell:has(> .set-ap) .set-hero__eyebrow::before {
   display: none;
@@ -116,7 +120,7 @@
 /* ---------- surfaces: frosted cards ---------- */
 .app--glass .set-ap .set-card:not(.set-card--accent):not(.set-card--green):not(.set-card--danger),
 .app--glass .set-ap .set-seccard {
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -244,7 +248,7 @@
   letter-spacing: 0;
 }
 .app--glass .set-ap .set-pill--ok {
-  color: #248a3d;
+  color: var(--dk-success-text, #248a3d);
 }
 .app--glass .set-ap .set-pill--ok .set-pill__dot {
   width: 7px;
@@ -398,15 +402,15 @@
   align-items: center;
   padding: 14px 16px;
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.6);
-  box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.06);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.6));
+  box-shadow: inset 0 0 0 1px var(--dk-border-soft, rgba(60, 60, 67, 0.06));
 }
 .app--glass .set-ap .set-meter__tile {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #fff;
-  box-shadow: 0 2px 6px -2px rgba(21, 19, 43, 0.14);
+  background: var(--dk-glass-strong, #fff);
+  box-shadow: var(--dk-shadow-sm, 0 2px 6px -2px rgba(21, 19, 43, 0.14));
 }
 .app--glass .set-ap .set-meter__tile img {
   width: 24px;
@@ -477,9 +481,9 @@
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 .app--glass .set-ap .set-seccard:hover {
-  border-color: rgba(255, 255, 255, 0.95);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 18px 36px
-    -16px rgba(75, 59, 255, 0.28);
+  border-color: var(--dk-border-strong, rgba(255, 255, 255, 0.95));
+  box-shadow: inset 0 1px 0 var(--dk-glass, rgba(255, 255, 255, 0.9)), 0 1px 2px rgba(0, 0, 0, 0.03),
+    0 18px 36px -16px rgba(75, 59, 255, 0.28);
   transform: translateY(-2px);
 }
 .app--glass .set-ap .set-seccard .set-tile {

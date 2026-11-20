@@ -9,23 +9,27 @@
    ============================================================ */
 
 .app--glass .brp {
-  --ap-ink: #1d1d1f;
-  --ap-2: #6e6e73;
-  --ap-3: #86868b;
+  --ap-ink: var(--dk-text, #1d1d1f);
+  --ap-2: var(--dk-text-muted, #6e6e73);
+  --ap-3: var(--dk-text-subtle, #86868b);
   --ap-fill: rgba(120, 120, 128, 0.12);
   --ap-fill-2: rgba(120, 120, 128, 0.08);
-  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
   --ap-accent: var(--glass-accent, #4b3bff);
-  --ap-glass: rgba(255, 255, 255, 0.72);
-  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14);
+  --ap-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
+  --ap-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 12px 32px -14px rgba(21, 19, 43, 0.14)
+  );
 
   /* the report's own tokens → Apple values (charts read --rl-primary) */
   --rl-primary: var(--ap-accent);
   --rl-ink: var(--ap-ink);
   --rl-muted: var(--ap-2);
   --rl-border: var(--ap-sep);
-  --rl-border-soft: rgba(60, 60, 67, 0.08);
+  --rl-border-soft: var(--dk-border-soft, rgba(60, 60, 67, 0.08));
   --rl-surface: var(--ap-glass);
   /* survey promoter / passive / detractor bars */
   --ok: #34c759;
@@ -53,7 +57,7 @@
   column-gap: 20px;
   row-gap: 4px;
   padding: 28px 30px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 28px;
   background: radial-gradient(circle at 0% 0%, rgba(75, 59, 255, 0.1), transparent 42%),
     radial-gradient(circle at 100% 100%, rgba(194, 92, 255, 0.08), transparent 40%), var(--ap-glass);
@@ -92,10 +96,10 @@
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;
-  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  background-image: var(--dk-none, linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%));
   -webkit-background-clip: text;
   background-clip: text;
-  color: transparent;
+  color: var(--dk-accent-text, transparent);
 }
 .app--glass .brp .brp-brand__period {
   margin: 0;
@@ -164,13 +168,13 @@
   transition: background 0.15s ease, box-shadow 0.15s ease;
 }
 .app--glass .brp .brp-chip:hover:not(:disabled):not(.is-active) {
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--dk-glass, rgba(255, 255, 255, 0.5));
 }
 .app--glass .brp .brp-chip.is-active {
-  background: #fff;
+  background: var(--dk-glass-strong, #fff);
   color: var(--ap-ink);
   font-weight: 600;
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04);
+  box-shadow: var(--dk-shadow-sm, 0 3px 8px rgba(0, 0, 0, 0.12), 0 3px 1px rgba(0, 0, 0, 0.04));
 }
 .app--glass .brp .brp-chip:focus-visible,
 .app--glass .brp .brp-btn:focus-visible {
@@ -198,7 +202,7 @@
 .app--glass .brp .brp-range__field input:focus {
   outline: none;
   border-color: rgba(75, 59, 255, 0.45);
-  background: #fff;
+  background: var(--dk-surface, #fff);
   box-shadow: 0 0 0 4px rgba(75, 59, 255, 0.12);
 }
 .app--glass .brp .brp-btn {
@@ -230,7 +234,7 @@
   flex-direction: column;
   min-width: 0;
   padding: 22px 24px 24px;
-  border: 1px solid rgba(255, 255, 255, 0.85);
+  border: 1px solid var(--dk-border, rgba(255, 255, 255, 0.85));
   border-radius: 24px;
   background: var(--ap-glass);
   -webkit-backdrop-filter: blur(24px) saturate(170%);
@@ -272,7 +276,7 @@
   --tone: #ff9500;
 }
 .app--glass .brp .brp-card--bot .brp-card__badge {
-  --tone: #4b3bff;
+  --tone: var(--dk-accent-text, #4b3bff);
 }
 .app--glass .brp .brp-card--share .brp-card__badge {
   --tone: #0a84ff;
@@ -338,12 +342,12 @@
   letter-spacing: 0;
 }
 .app--glass .brp .brp-delta--up {
-  background: rgba(52, 199, 89, 0.14);
-  color: #248a3d;
+  background: var(--dk-success-soft, rgba(52, 199, 89, 0.14));
+  color: var(--dk-success-text, #248a3d);
 }
 .app--glass .brp .brp-delta--down {
-  background: rgba(255, 59, 48, 0.1);
-  color: #d70015;
+  background: var(--dk-danger-soft, rgba(255, 59, 48, 0.1));
+  color: var(--dk-danger-text, #d70015);
 }
 
 /* ---------- chart captions + axes ---------- */
@@ -355,7 +359,7 @@
   color: var(--ap-ink);
 }
 .app--glass .brp .brp-chart__grid {
-  stroke: rgba(60, 60, 67, 0.1);
+  stroke: var(--dk-border, rgba(60, 60, 67, 0.1));
   stroke-dasharray: none;
 }
 .app--glass .brp .brp-chart__xlab,
@@ -589,7 +593,7 @@
   width: 34px;
   height: 34px;
   border-radius: 11px;
-  background: rgba(75, 59, 255, 0.1)
+  background: var(--dk-accent-soft, rgba(75, 59, 255, 0.1))
     url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234b3bff' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 3v16a2 2 0 0 0 2 2h16'/%3E%3Cpath d='M18 17V9'/%3E%3Cpath d='M13 17V5'/%3E%3Cpath d='M8 17v-3'/%3E%3C/svg%3E")
     center / 18px 18px no-repeat;
 }
