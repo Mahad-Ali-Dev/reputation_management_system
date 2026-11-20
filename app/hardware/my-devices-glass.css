@@ -505,10 +505,8 @@
   color: var(--ap-ink);
 }
 .app--glass .md-hero__title em {
-  background: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: none;
+  color: var(--dk-accent-text, var(--glass-accent, #4b3bff));
 }
 .app--glass .md-hero__sub {
   margin-top: 12px;

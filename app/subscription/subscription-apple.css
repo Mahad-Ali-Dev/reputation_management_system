@@ -60,10 +60,8 @@
   font-size: 12.5px;
   font-weight: 600;
   letter-spacing: 0.04em;
-  background-image: var(--dk-none, linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: var(--dk-accent-text, transparent);
+  background: none;
+  color: var(--dk-accent-text, var(--glass-accent, #4b3bff));
 }
 .app--glass .bill-eyebrow > span {
   gap: 6px !important;

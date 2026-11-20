@@ -78,16 +78,13 @@
 .app--glass .cd-page .ph__kicker {
   padding: 0;
   margin-bottom: 6px;
-  background: none;
   font-family: var(--f-ui);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;
-  background-image: var(--dk-none, linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: var(--dk-accent-text, transparent);
+  background: none;
+  color: var(--dk-accent-text, var(--glass-accent, #4b3bff));
 }
 .app--glass .cd-page .ph__kicker::before {
   display: none;

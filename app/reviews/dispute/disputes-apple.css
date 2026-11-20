@@ -43,10 +43,8 @@
 .dm-eyebrow {
   font-size: 13px;
   font-weight: 600;
-  background: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: none;
+  color: var(--dk-accent-text, var(--glass-accent, #4b3bff));
 }
 .dm-title {
   margin: 4px 0 0;

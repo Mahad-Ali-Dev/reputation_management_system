@@ -15,8 +15,12 @@
   --ap-sep: var(--dk-border, rgba(60, 60, 67, 0.12));
   --ap-accent: var(--glass-accent, #4b3bff);
   --ap-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
-  --ap-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14));
+  --ap-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 12px 32px -14px rgba(21, 19, 43, 0.14)
+  );
 
   --rr-text: var(--ap-ink);
   --rr-text-strong: var(--ap-ink);
@@ -51,16 +55,13 @@
 .app--glass .rr .ph__kicker {
   padding: 0;
   margin-bottom: 6px;
-  background: none;
   font-family: var(--f-ui);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
   text-transform: none;
-  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: none;
+  color: var(--dk-accent-text, var(--glass-accent, #4b3bff));
 }
 .app--glass .rr .ph__kicker::before {
   display: none;
