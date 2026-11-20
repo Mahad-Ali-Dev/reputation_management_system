@@ -546,45 +546,70 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   gap: 16px;
-  padding: 20px 22px;
+  padding: 22px 22px 24px 24px;
   text-decoration: none;
   color: inherit;
   position: relative;
   overflow: hidden;
+  border-radius: 18px;
+  transition: transform 0.18s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+/* soft brand glow bloom in the art corner */
+.surv-camp::before {
+  content: "";
+  position: absolute;
+  top: -55px;
+  right: -45px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(124, 58, 237, 0.17), transparent 68%);
+  pointer-events: none;
+}
+.surv-camp > * {
+  position: relative;
+  z-index: 1;
 }
 .surv-camp__eyebrow {
-  font-size: 9px;
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 7px;
+  background: var(--surv-pri-pale);
+  color: var(--surv-pri);
+  font-size: 9.5px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--surv-muted);
 }
 .surv-camp__name {
-  font-size: 20px;
-  font-weight: 700;
-  letter-spacing: -0.015em;
+  font-size: 21px;
+  font-weight: 750;
+  letter-spacing: -0.02em;
   color: var(--surv-ink);
-  margin: 4px 0 2px;
+  margin: 12px 0 3px;
 }
 .surv-camp__meta {
-  font-size: 11px;
+  font-size: 11.5px;
   color: var(--surv-muted);
 }
 .surv-camp__tiles {
   display: flex;
   gap: 10px;
-  margin-top: 14px;
+  margin-top: 18px;
 }
 .surv-camp__tile {
-  min-width: 96px;
-  padding: 10px 12px;
-  border-radius: 10px;
+  min-width: 104px;
+  padding: 11px 14px;
+  border-radius: 13px;
+  border: 1px solid transparent;
 }
 .surv-camp__tile--blue {
   background: var(--surv-blue-soft);
+  border-color: rgba(52, 120, 246, 0.14);
 }
 .surv-camp__tile--green {
   background: var(--surv-ok-soft);
+  border-color: rgba(16, 185, 120, 0.16);
 }
 .surv-camp__tile-lbl {
   font-size: 9px;
@@ -594,34 +619,39 @@
   color: var(--surv-muted);
 }
 .surv-camp__tile-val {
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 750;
   color: var(--surv-ink);
   font-variant-numeric: tabular-nums;
   line-height: 1.1;
+  margin-top: 2px;
 }
 .surv-camp__art {
-  align-self: center;
-  width: 78px;
+  align-self: start;
+  justify-self: end;
+  width: 62px;
   flex: none;
 }
 .surv-camp__art img {
   width: 100%;
   height: auto;
-  mix-blend-mode: multiply;
+  filter: drop-shadow(0 10px 18px rgba(124, 58, 237, 0.3));
+  transition: transform 0.2s ease;
 }
 .surv-camp__open {
   position: absolute;
-  right: 18px;
-  bottom: 18px;
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  right: 20px;
+  bottom: 20px;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
   border: 1px solid var(--surv-line);
   background: var(--surv-surface);
   display: grid;
   place-items: center;
   color: var(--surv-pri);
+  z-index: 2;
+  transition: background 0.18s ease, color 0.18s ease, border-color 0.18s ease;
 }
 
 /* ── Generic kit empty state (illustration + copy centered) ─────────────── */
@@ -715,9 +745,25 @@
   color: var(--surv-text);
 }
 .surv-input:focus-visible {
-  outline: 2px solid var(--surv-pri);
-  outline-offset: 1px;
+  outline: none;
   border-color: var(--surv-pri);
+  box-shadow: 0 0 0 3px var(--surv-pri-pale);
+}
+/* Selects: drop the native arrow for a clean custom chevron + consistent look. */
+select.surv-input {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  padding-right: 34px;
+  cursor: pointer;
+  background-color: var(--surv-surface);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%236b6f84' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+}
+select.surv-input::-ms-expand {
+  display: none;
 }
 
 /* kit-styled tables (incentives / results / automations) */

@@ -47,41 +47,6 @@ type CatDef = {
   glyph: "grid" | null;
 };
 
-const CATS: CatDef[] = [
-  {
-    key: "all",
-    title: "All integrations",
-    desc: "Browse all available tools and connect the ones you use.",
-    asset: "all-integrations.svg",
-    glyph: null,
-  },
-  {
-    key: "reviews",
-    title: "Reviews & Google",
-    desc: "Sync reviews and ratings from Google and partners.",
-    asset: "google.svg",
-    glyph: null,
-  },
-  {
-    key: "social",
-    title: "Social publishing",
-    desc: "Post to Facebook, Instagram and LinkedIn.",
-    asset: "meta.svg",
-    glyph: null,
-  },
-  // Email category delisted 2026-08 alongside the Gmail provider. This list is
-  // rendered in full with no empty-state guard, so leaving the entry in would
-  // show a category chip that filters to zero tiles.
-  // {
-  //   key: "email",
-  //   title: "Email",
-  //   desc: "Connect Gmail to send from your own address.",
-  //   asset: "email-crm.svg",
-  //   glyph: null,
-  // },
-];
-
-const ASSET_BASE = "/assets/repulabs/connections/";
 
 /** Resolve the 3-state status pill for a provider row from its connections. */
 function statusFor(p: SerializedProviderRow): {
@@ -281,7 +246,6 @@ export function ConnectionsBrowser({
   sections: SerializedSection[];
   disconnectAction: (formData: FormData) => void | Promise<void>;
 }) {
-  const [activeCat, setActiveCat] = useState("all");
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
 
@@ -291,20 +255,13 @@ export function ConnectionsBrowser({
     [sections],
   );
 
-  // Category counts (# providers in each category); "all" = total.
-  const counts = useMemo(() => {
-    const c: Record<string, number> = { all: allRows.length };
-    for (const s of sections) c[s.key] = s.providers.length;
-    return c;
-  }, [sections, allRows.length]);
-
   const visible = useMemo(() => {
-    let rows = activeCat === "all" ? allRows : allRows.filter((r) => r.categoryKey === activeCat);
+    let rows = allRows;
     if (q) {
       rows = rows.filter((r) => `${r.displayName} ${r.description}`.toLowerCase().includes(q));
     }
     return rows;
-  }, [allRows, activeCat, q]);
+  }, [allRows, q]);
 
   const connectedCount = useMemo(
     () => allRows.filter((r) => isConnected(r.connections)).length,
@@ -313,37 +270,6 @@ export function ConnectionsBrowser({
 
   return (
     <div className="col" style={{ gap: 20 }}>
-      {/* Category filter cards */}
-      <div className="conn-cats" role="tablist" aria-label="Integration categories">
-        {CATS.map((cat) => {
-          const active = activeCat === cat.key;
-          return (
-            <button
-              key={cat.key}
-              type="button"
-              role="tab"
-              aria-selected={active}
-              className={`conn-cat${active ? " conn-cat--active" : ""}`}
-              onClick={() => setActiveCat(cat.key)}
-            >
-              <span className={`conn-cat__tile${cat.asset ? " conn-cat__tile--plain" : ""}`}>
-                {cat.asset ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={`${ASSET_BASE}${cat.asset}`} alt="" aria-hidden="true" />
-                ) : (
-                  <Icon name="grid" size={20} />
-                )}
-              </span>
-              <div style={{ minWidth: 0 }}>
-                <div className="conn-cat__title">{cat.title}</div>
-                <div className="conn-cat__desc">{cat.desc}</div>
-              </div>
-              <span className="conn-cat__count">{counts[cat.key] ?? 0}</span>
-            </button>
-          );
-        })}
-      </div>
-
       {/* Integration list card */}
       <div className="conn-card" style={{ overflow: "hidden" }}>
         <div className="conn-sec">
