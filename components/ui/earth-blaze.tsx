@@ -345,10 +345,6 @@ const fragment = `
         surface *= vec3(.61, .74, 1.);
         color += surface * pool * (.045 + reveal * .24 + bloom * .20 + charge * .045) * inside * surfaceBrightness * illumination;
         color += vec3(.010, .018, .032) * pool * (reveal + bloom) * inside * surfaceBrightness * illumination;
-        // Daylight wash: a soft blue glow that spreads inward from the sunlit limb,
-        // so the planet reads as an illuminated surface rather than a black disc.
-        float daylight = exp(-depth / .14) * (.3 + .7 * gauss(angleDistance, .6));
-        color += (surface * .35 + vec3(.012, .03, .066)) * daylight * inside * surfaceBrightness * illumination;
       }
 
       float light = max(color.r, max(color.g, color.b));
@@ -427,7 +423,7 @@ const starVertex = `
       sharp = step(.988, star.w);
       gl_PointSize = mix(star.z, 20. + star.w * 8., sharp) * max(1., resolution.y / 900.);
       float twinkle = .82 + .18 * sin(clock * (.45 + star.w) + star.w * 123.);
-      alpha = min(1., (.36 + star.w * .64 + sharp * .55) * twinkle);
+      alpha = (.24 + star.w * .58 + sharp * .55) * twinkle;
       alpha *= tail < .5 ? 1. : charge * (1. - tail / 7.) * .19 * (1. - still);
       alpha *= 1. + impulse * .8;
       tint = mix(vec3(.49, .70, 1.), vec3(1., .69, .49), smoothstep(.32, .90, fract(star.w * 13.7)));
@@ -579,8 +575,7 @@ function createRenderer(canvas: HTMLCanvasElement, fallback: HTMLDivElement, ini
       0,
       gl.RGB,
       gl.UNSIGNED_BYTE,
-      // deep-ocean blue, so the lit limb reads as a planet surface with no texture
-      new Uint8Array([22, 52, 98]),
+      new Uint8Array([5, 9, 16]),
     );
     textureOptions();
   }

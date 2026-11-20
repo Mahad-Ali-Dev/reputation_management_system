@@ -898,3 +898,11 @@
     border-radius: 26px;
   }
 }
+/* Desktop: sit the form over the night side of the planet so the sunrise (the
+   spot that reveals the map on hover) stays uncovered and reachable. */
+@media (min-width: 1024px) {
+  .auth-shell--bg-earth .auth-main {
+    align-items: flex-end;
+    padding-right: clamp(32px, 9vw, 180px);
+  }
+}
