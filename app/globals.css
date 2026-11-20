@@ -1381,11 +1381,11 @@
       --glass-text-muted: #a8b0bd;
       --glass-text-subtle: #7e8796;
 
-      --glass-accent: #8f84ff;
-      --glass-accent-hover: #a79fff;
-      --glass-accent-contrast: #0a0c10;
-      --glass-accent-soft: rgba(143, 132, 255, 0.18);
-      --glass-ring: rgba(160, 150, 255, 0.65);
+      --glass-accent: #0a84ff;
+      --glass-accent-hover: #4ea3ff;
+      --glass-accent-contrast: #ffffff;
+      --glass-accent-soft: rgba(10, 132, 255, 0.18);
+      --glass-ring: rgba(64, 156, 255, 0.65);
 
       /* status — lifted for contrast on the dark canvas */
       --glass-success: #4ade80;
@@ -1396,9 +1396,9 @@
 
       --glass-canvas-base: #0a0c10;
       --glass-canvas-gradient: linear-gradient(140deg, #0c0e13 0%, #0a0c10 50%, #0b0d11 100%);
-      --aurora-1: rgba(75, 59, 255, 0.16);
+      --aurora-1: rgba(10, 132, 255, 0.12);
       --aurora-2: rgba(18, 185, 152, 0.07);
-      --aurora-3: rgba(139, 92, 246, 0.12);
+      --aurora-3: rgba(64, 156, 255, 0.07);
       --aurora-opacity: 1;
     }
 
@@ -1416,7 +1416,7 @@
       --foreground: 220 60% 96%;
       --card: 226 40% 13%;
       --card-foreground: 220 60% 96%;
-      --primary: 245 100% 70%;
+      --primary: 211 100% 52%;
       --primary-foreground: 230 60% 8%;
       --secondary: 226 30% 18%;
       --secondary-foreground: 220 60% 96%;
@@ -1428,7 +1428,7 @@
       --destructive-foreground: 230 60% 8%;
       --border: 226 25% 22%;
       --input: 226 25% 22%;
-      --ring: 245 100% 72%;
+      --ring: 211 100% 60%;
 
       --bg: #0a0c10;
       --bg-2: #0d1015;
@@ -1450,23 +1450,23 @@
 
       /* brand blue lifted so it reads as text on dark and still carries white
        button labels */
-      --pri: #7466ff;
-      --pri-50: rgba(123, 109, 255, 0.14);
-      --pri-100: rgba(123, 109, 255, 0.22);
-      --pri-300: #aaa2ff;
-      --pri-700: #b3abff;
-      --pri-900: #d6d1ff;
-      --indigo: #9b88ff;
-      --indigo-50: rgba(122, 99, 255, 0.16);
-      --indigo-soft: rgba(122, 99, 255, 0.24);
+      --pri: #0a84ff;
+      --pri-50: rgba(10, 132, 255, 0.14);
+      --pri-100: rgba(10, 132, 255, 0.22);
+      --pri-300: #6cb4ff;
+      --pri-700: #8ac4ff;
+      --pri-900: #cfe4ff;
+      --indigo: #4ea3ff;
+      --indigo-50: rgba(10, 132, 255, 0.16);
+      --indigo-soft: rgba(10, 132, 255, 0.24);
 
       --trust: #2fd0ae;
       --trust-soft: rgba(18, 185, 152, 0.18);
 
-      --m3-primary: #7466ff;
+      --m3-primary: #0a84ff;
       --m3-on-primary: #ffffff;
-      --m3-primary-container: rgba(116, 102, 255, 0.22);
-      --m3-on-primary-container: #dcd8ff;
+      --m3-primary-container: rgba(10, 132, 255, 0.22);
+      --m3-on-primary-container: #cfe4ff;
       --m3-secondary: #adb4c0;
       --m3-on-secondary: #0a0c10;
       --m3-secondary-container: rgba(255, 255, 255, 0.08);
@@ -1480,14 +1480,14 @@
       --m3-error-container: rgba(248, 113, 113, 0.18);
       --m3-on-error-container: #fecaca;
 
-      --surface-tint: #7466ff;
-      --surface-tint-1: rgba(123, 109, 255, 0.05);
-      --surface-tint-2: rgba(123, 109, 255, 0.07);
-      --surface-tint-3: rgba(123, 109, 255, 0.09);
-      --surface-tint-4: rgba(123, 109, 255, 0.11);
-      --surface-tint-5: rgba(123, 109, 255, 0.13);
-      --surface-container-tint: rgba(123, 109, 255, 0.1);
-      --surface-container-tint-high: rgba(123, 109, 255, 0.16);
+      --surface-tint: #0a84ff;
+      --surface-tint-1: rgba(10, 132, 255, 0.05);
+      --surface-tint-2: rgba(10, 132, 255, 0.07);
+      --surface-tint-3: rgba(10, 132, 255, 0.09);
+      --surface-tint-4: rgba(10, 132, 255, 0.11);
+      --surface-tint-5: rgba(10, 132, 255, 0.13);
+      --surface-container-tint: rgba(10, 132, 255, 0.1);
+      --surface-container-tint-high: rgba(10, 132, 255, 0.16);
 
       --ok: #34d399;
       --ok-soft: rgba(52, 211, 153, 0.16);
@@ -1495,8 +1495,8 @@
       --warn-soft: rgba(251, 191, 36, 0.16);
       --bad: #f87171;
       --bad-soft: rgba(248, 113, 113, 0.16);
-      --info: #8f84ff;
-      --info-soft: rgba(143, 132, 255, 0.16);
+      --info: #0a84ff;
+      --info-soft: rgba(10, 132, 255, 0.16);
       --gold: #f5a623;
 
       --surface-dim: #0a0c10;
@@ -1527,8 +1527,8 @@
       --shadow-md: var(--sh-md);
       --shadow-lg: var(--sh-lg);
       --shadow-xl: var(--sh-xl);
-      --sh-glow: 0 0 0 4px rgba(123, 109, 255, 0.24);
-      --grad-pri: linear-gradient(180deg, #7466ff 0%, #5d4dff 100%);
+      --sh-glow: 0 0 0 4px rgba(10, 132, 255, 0.24);
+      --grad-pri: linear-gradient(180deg, #0a84ff 0%, #5d4dff 100%);
       --grad-pri-hover: linear-gradient(180deg, #8578ff 0%, #6a5bff 100%);
       --grad-ink: linear-gradient(180deg, #2a3350 0%, #1c2440 100%);
       --grad-canvas: linear-gradient(140deg, #0c0e13 0%, #0a0c10 50%, #0b0d11 100%);
@@ -1560,10 +1560,10 @@
       --dk-border-soft: rgba(255, 255, 255, 0.06);
       --dk-border-strong: rgba(255, 255, 255, 0.18); /* stronger / dashed */
 
-      --dk-accent-text: #a79fff; /* brand purple/blue used as text or icon */
-      --dk-accent-soft: rgba(143, 132, 255, 0.16); /* lavender / pale-blue tints */
-      --dk-accent-faint: rgba(143, 132, 255, 0.08); /* barely-there accent washes */
-      --dk-accent-border: rgba(143, 132, 255, 0.38);
+      --dk-accent-text: #4ea3ff; /* brand purple/blue used as text or icon */
+      --dk-accent-soft: rgba(10, 132, 255, 0.16); /* lavender / pale-blue tints */
+      --dk-accent-faint: rgba(10, 132, 255, 0.08); /* barely-there accent washes */
+      --dk-accent-border: rgba(10, 132, 255, 0.38);
 
       --dk-success-text: #4ade80;
       --dk-success-soft: rgba(74, 222, 128, 0.14);
