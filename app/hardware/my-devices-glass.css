@@ -382,7 +382,11 @@
       #34a853 100%
     )
     border-box;
-  box-shadow: var(--dk-shadow, 0 1px 2px rgba(21, 19, 43, 0.04), 0 10px 26px -14px rgba(21, 19, 43, 0.2));
+  box-shadow: var(
+    --dk-shadow,
+    0 1px 2px rgba(21, 19, 43, 0.04),
+    0 10px 26px -14px rgba(21, 19, 43, 0.2)
+  );
 }
 .md-ai__box:focus-within {
   box-shadow: 0 1px 2px rgba(21, 19, 43, 0.04), 0 12px 30px -12px rgba(21, 19, 43, 0.26), 0 0 0 4px
@@ -1081,14 +1085,22 @@
   background: var(--dk-glass, rgba(255, 255, 255, 0.72));
   -webkit-backdrop-filter: blur(24px) saturate(170%);
   backdrop-filter: blur(24px) saturate(170%);
-  box-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 14px 36px
-    -16px rgba(21, 19, 43, 0.16));
+  box-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 14px 36px -16px rgba(21, 19, 43, 0.16)
+  );
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .mde-tile:hover {
   transform: translateY(-2px);
-  box-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 2px 4px rgba(0, 0, 0, 0.03), 0 22px 48px
-    -18px rgba(21, 19, 43, 0.22));
+  box-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 4px rgba(0, 0, 0, 0.03),
+    0 22px 48px -18px rgba(21, 19, 43, 0.22)
+  );
 }
 .mde-tile--hero {
   background: radial-gradient(circle at 85% -10%, rgba(75, 59, 255, 0.16), transparent 60%),
@@ -1157,5 +1169,56 @@
 @media (max-width: 980px) {
   .mde__grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ---- responsive (2026-11): QR card + Devices impact stack, table fits ----
+   The two-column scans row above had no breakpoint, so on tablet/phone the
+   QR card and the chart squeezed into each other. */
+@media (max-width: 1023px) {
+  .app--glass .md .md-bottom--scans,
+  .app--glass .md-bottom--scans {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .app--glass .md .md-bottom--scans .md-impact__svg {
+    flex: none;
+    height: 240px;
+    min-height: 0;
+  }
+  .app--glass .md .md-qr .md-qr__id {
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+}
+@media (max-width: 560px) {
+  .app--glass .md .md-devtable {
+    padding: 4px 6px;
+  }
+  .app--glass .md .md-table {
+    width: 100%;
+    table-layout: auto;
+    font-size: 13.5px;
+  }
+  .app--glass .md .md-table thead th,
+  .app--glass .md .md-table td {
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  .app--glass .md .md-table td {
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+  .app--glass .md .md-table th:last-child,
+  .app--glass .md .md-table td:last-child {
+    width: auto !important;
+    white-space: nowrap;
+  }
+  .app--glass .md .md-tname {
+    overflow-wrap: anywhere;
+  }
+  /* QR action buttons: two per row, full labels */
+  .app--glass .md .md-qr .md-qr__actions,
+  .app--glass .md .md-qr [class*="actions"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
