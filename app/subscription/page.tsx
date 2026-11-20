@@ -12,6 +12,7 @@ import { logger } from "@/lib/logger";
 import { redirect } from "next/navigation";
 import "./subscription-bill.css";
 import "./subscription-bill-glass.css";
+import "./subscription-apple.css";
 
 /**
  * Account & Billing → "Plans & billing" — repulabs design-kit surface.
@@ -367,8 +368,7 @@ export default async function SubscriptionPage({
                 aria-hidden="true"
               />
               <span className="bill-banner__txt">
-                Need more capacity? Upgrade your plan or reach out we&apos;re here to help you
-                grow.
+                Need more capacity? Upgrade your plan or reach out we&apos;re here to help you grow.
               </span>
               <a
                 href="mailto:info@repulabs.com?subject=More%20capacity"

@@ -1,0 +1,534 @@
+/* ============================================================
+   subscription-apple.css: Plans & billing in the Apple language.
+   Loaded LAST on /subscription. Re-maps the kit tokens onto Apple greys +
+   the brand accent and restyles the surfaces: big light title, gradient
+   eyebrow, frosted Apple-store plan cards (illustrations kept, top-right at
+   one size), pill buttons, thin usage meters, iOS inset grouped billing list.
+   Visual only: no billing logic lives here.
+   ============================================================ */
+
+.app--glass .bill {
+  --ap-ink: #1d1d1f;
+  --ap-2: #6e6e73;
+  --ap-3: #86868b;
+  --ap-fill: rgba(120, 120, 128, 0.12);
+  --ap-fill-2: rgba(120, 120, 128, 0.08);
+  --ap-sep: rgba(60, 60, 67, 0.12);
+  --ap-accent: var(--glass-accent, #4b3bff);
+  --ap-accent-hover: var(--glass-accent-hover, #3a2be0);
+  --ap-accent-soft: rgba(75, 59, 255, 0.09);
+  --ap-glass: rgba(255, 255, 255, 0.72);
+  --ap-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
+    -14px rgba(21, 19, 43, 0.14);
+
+  /* kit tokens → Apple values */
+  --bill-indigo: var(--ap-accent);
+  --bill-purple: var(--ap-accent);
+  --bill-purple-2: var(--ap-accent);
+  --bill-lav: var(--ap-accent-soft);
+  --bill-lav-soft: rgba(75, 59, 255, 0.06);
+  --bill-ink: var(--ap-ink);
+  --bill-ink-2: #3a3a3c;
+  --bill-mut: var(--ap-2);
+  --bill-mut-2: var(--ap-3);
+  --bill-line: var(--ap-sep);
+  --bill-track: var(--ap-fill);
+  --bill-green: #34c759;
+  --bill-green-soft: rgba(52, 199, 89, 0.12);
+  --bill-green-tint: rgba(52, 199, 89, 0.08);
+  /* CancelSubscriptionButton colours itself with var(--bad) inline */
+  --bad: #d70015;
+
+  gap: 28px;
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+}
+
+/* ---------- header ---------- */
+.app--glass .bill-head {
+  align-items: flex-end;
+}
+.app--glass .bill-eyebrow {
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-family: var(--f-ui);
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  background-image: linear-gradient(90deg, #4b3bff 0%, #8a5cff 55%, #c25cff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.app--glass .bill-eyebrow > span {
+  gap: 6px !important;
+}
+.app--glass .bill-eyebrow .sep {
+  color: transparent;
+  font-weight: 600;
+}
+.app--glass .bill-title {
+  font-family: var(--f-head);
+  font-size: clamp(30px, 3.4vw, 44px);
+  font-weight: 600;
+  letter-spacing: -0.035em;
+  line-height: 1.05;
+  color: var(--ap-ink);
+}
+.app--glass .bill-sub {
+  margin-top: 10px;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--ap-2);
+}
+
+/* ---------- pill buttons ---------- */
+.app--glass .bill-btn-primary {
+  height: 44px;
+  padding: 0 22px;
+  border-radius: 999px;
+  background: var(--ap-accent);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+}
+.app--glass .bill-btn-primary:hover {
+  background: var(--ap-accent-hover);
+}
+
+/* ---------- notices ---------- */
+.app--glass .bill-notice {
+  padding: 14px 18px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 18px;
+  background: rgba(52, 199, 89, 0.1);
+  color: #1d6b34;
+  font-size: 14px;
+}
+
+/* ---------- plan cards: frosted Apple-store tiles ---------- */
+.app--glass .bill-plans {
+  gap: 22px;
+  padding-top: 14px; /* room for the floating "Most popular" pill */
+}
+.app--glass .bill-card {
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 26px;
+  background: var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+/* Pro = the current plan: accent ring + soft glow, no lift */
+.app--glass .bill-card--pro {
+  border-color: transparent;
+  transform: none;
+  background: radial-gradient(120% 70% at 100% 0%, rgba(75, 59, 255, 0.08), transparent 60%),
+    rgba(255, 255, 255, 0.8);
+  box-shadow: 0 0 0 2px var(--ap-accent), inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 22px 48px -18px
+    rgba(75, 59, 255, 0.42);
+}
+
+/* tier name: quiet headline above the price */
+.app--glass .bill-card__tier {
+  font-family: var(--f-head);
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  text-transform: none;
+  color: var(--ap-ink);
+}
+.app--glass .bill-card__tier--pro {
+  color: var(--ap-accent);
+}
+
+/* "Most popular": small pill floating on the card's top edge */
+.app--glass .bill-card__badge {
+  top: -12px;
+  right: auto;
+  left: 50%;
+  z-index: 2;
+  height: 24px;
+  padding: 0 12px;
+  transform: translateX(-50%);
+  background: var(--ap-accent);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  box-shadow: 0 6px 14px -6px rgba(75, 59, 255, 0.7);
+}
+.app--glass .bill-card__badge svg {
+  color: #fff !important;
+}
+
+/* illustrations: kept, one consistent size, top-right of every card */
+.app--glass .bill-card__art,
+.app--glass .bill-card--pro .bill-card__art,
+.app--glass .bill-card--scale .bill-card__art {
+  display: block;
+  top: 22px;
+  right: 22px;
+  width: 104px;
+  height: 104px;
+  object-fit: contain;
+  mix-blend-mode: normal;
+}
+
+/* price: big numerals, cleared of the art */
+.app--glass .bill-card__pricewrap {
+  margin-top: 18px;
+  min-height: 0;
+  padding-right: 112px;
+}
+.app--glass .bill-card__price {
+  font-family: var(--f-num);
+  font-size: 44px;
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  color: var(--ap-ink);
+}
+.app--glass .bill-card__price-suffix {
+  font-family: var(--f-ui);
+  font-size: 15px;
+  color: var(--ap-2);
+}
+.app--glass .bill-card__period {
+  margin-top: 8px;
+  font-size: 14px;
+  color: var(--ap-2);
+}
+
+/* CTAs: pills. Secondary = grey fill, primary = accent fill. */
+.app--glass .bill-card__cta,
+.app--glass .bill-card .btn--ghost {
+  height: 44px;
+  margin-top: 26px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ap-fill);
+  color: var(--ap-ink);
+  font-family: var(--f-ui);
+  font-size: 15px;
+  font-weight: 600;
+  box-shadow: none;
+}
+.app--glass .bill-card__cta:hover,
+.app--glass .bill-card .btn--ghost:hover {
+  background: rgba(120, 120, 128, 0.18);
+}
+.app--glass .bill-card__cta--purple {
+  background: var(--ap-accent);
+  color: #fff;
+  box-shadow: 0 10px 22px -12px rgba(75, 59, 255, 0.75);
+}
+.app--glass .bill-card__cta--purple:hover {
+  background: var(--ap-accent-hover);
+}
+/* non-actionable "current plan" states: tinted, no hover */
+.app--glass .bill-card__cta--current,
+.app--glass .bill-card__cta--current:hover,
+.app--glass .bill-card__cta--lav,
+.app--glass .bill-card__cta--lav:hover {
+  background: var(--ap-accent-soft);
+  color: var(--ap-accent);
+}
+
+.app--glass .bill-card__sep {
+  margin: 24px 0 18px;
+  background: var(--ap-sep);
+}
+.app--glass .bill-card__section {
+  margin-bottom: 14px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+
+/* feature list: check / cross on small tinted discs */
+.app--glass .bill-feats {
+  gap: 12px;
+}
+.app--glass .bill-feat {
+  gap: 10px;
+  font-size: 14px;
+  color: var(--ap-ink);
+}
+.app--glass .bill-feat--off {
+  color: var(--ap-3);
+}
+.app--glass .bill-feat__ic {
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  background: rgba(52, 199, 89, 0.14);
+}
+.app--glass .bill-feat__ic svg {
+  width: 12px;
+  height: 12px;
+  color: #248a3d !important;
+}
+.app--glass .bill-feat--off .bill-feat__ic {
+  background: var(--ap-fill-2);
+}
+.app--glass .bill-feat--off .bill-feat__ic svg {
+  width: 11px;
+  height: 11px;
+  color: var(--ap-3) !important;
+}
+
+/* ---------- bottom panels ---------- */
+.app--glass .bill-panels {
+  gap: 22px;
+}
+.app--glass .bill-panel {
+  padding: 26px;
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 26px;
+  background: var(--ap-glass);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  backdrop-filter: blur(24px) saturate(170%);
+  box-shadow: var(--ap-shadow);
+}
+.app--glass .bill-panel__head {
+  gap: 12px;
+  margin-bottom: 22px;
+}
+.app--glass .bill-panel__ic {
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border-radius: 10px;
+  background: var(--ap-accent-soft);
+}
+.app--glass .bill-panel__title {
+  font-family: var(--f-head);
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--ap-ink);
+}
+/* status pills → dot + text */
+.app--glass .bill-pill {
+  height: 26px;
+  padding: 0 11px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.app--glass .bill-pill--neutral {
+  background: var(--ap-fill-2);
+  color: var(--ap-2);
+}
+.app--glass .bill-pill--ok {
+  background: rgba(52, 199, 89, 0.12);
+  color: #248a3d;
+}
+.app--glass .bill-pill--ok svg {
+  display: none;
+}
+.app--glass .bill-pill--ok::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #34c759;
+  box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18);
+}
+
+/* ---------- usage meters: thin rounded bars on grey tracks ---------- */
+.app--glass .bill-meter {
+  grid-template-columns: 36px 1fr;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.app--glass .bill-meter__tile {
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+}
+.app--glass .bill-meter__tile--blue {
+  background: rgba(10, 132, 255, 0.1);
+}
+.app--glass .bill-meter__tile--purple {
+  background: var(--ap-accent-soft);
+}
+.app--glass .bill-meter__tile--orange {
+  background: rgba(255, 149, 0, 0.12);
+}
+.app--glass .bill-meter__tile--green {
+  background: rgba(52, 199, 89, 0.12);
+}
+.app--glass .bill-meter__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ap-ink);
+}
+.app--glass .bill-meter__val {
+  font-family: var(--f-num);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ap-ink);
+}
+.app--glass .bill-meter__pct {
+  font-family: var(--f-num);
+  font-weight: 600;
+}
+.app--glass .bill-track {
+  height: 6px;
+  background: var(--ap-fill);
+}
+
+/* ---------- footer banners: soft tinted insets ---------- */
+.app--glass .bill-banner {
+  gap: 14px;
+  padding: 14px 16px;
+  border: 0;
+  border-radius: 18px;
+  font-size: 13.5px;
+  color: #3a3a3c;
+}
+.app--glass .bill-banner--lav {
+  margin-top: auto;
+  background: rgba(75, 59, 255, 0.06);
+}
+/* keep a gap above the usage banner now it pins to the panel foot */
+.app--glass .bill-panel > .bill-meter:nth-last-child(2) {
+  margin-bottom: 24px;
+}
+.app--glass .bill-banner--green {
+  background: rgba(52, 199, 89, 0.08);
+}
+.app--glass .bill-banner__cta {
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ap-ink);
+  font-size: 13px;
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06), 0 4px 12px -6px rgba(21, 19, 43, 0.2);
+}
+.app--glass .bill-banner__cta:hover {
+  background: #f5f5f7;
+}
+
+/* ---------- billing overview: iOS inset grouped list ---------- */
+.app--glass .bill-dl {
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: inset 0 0 0 1px rgba(60, 60, 67, 0.06);
+}
+.app--glass .bill-dl__row,
+.app--glass .bill-dl__row:first-child {
+  position: relative;
+  gap: 12px;
+  min-height: 48px;
+  padding: 12px 16px;
+  border-bottom: 0;
+}
+/* hairline separators, inset past the icon like iOS */
+.app--glass .bill-dl__row + .bill-dl__row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  left: 46px;
+  height: 1px;
+  background: var(--ap-sep);
+}
+.app--glass .bill-dl__ic {
+  width: 18px;
+  height: 18px;
+  opacity: 0.75;
+}
+.app--glass .bill-dl__label {
+  font-size: 14px;
+  color: var(--ap-2);
+}
+.app--glass .bill-dl__value {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ap-ink);
+}
+.app--glass .bill-dl__value--mono {
+  font-size: 12.5px;
+  color: var(--ap-2);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 1180px) {
+  .app--glass .bill-plans {
+    gap: 26px;
+  }
+}
+@media (max-width: 640px) {
+  .app--glass .bill-head {
+    align-items: stretch;
+  }
+  .app--glass .bill-head > form,
+  .app--glass .bill-head .bill-btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+  .app--glass .bill-card,
+  .app--glass .bill-panel {
+    padding: 22px;
+    border-radius: 24px;
+  }
+  .app--glass .bill-card__art,
+  .app--glass .bill-card--pro .bill-card__art,
+  .app--glass .bill-card--scale .bill-card__art {
+    top: 18px;
+    right: 18px;
+    width: 88px;
+    height: 88px;
+  }
+  .app--glass .bill-card__pricewrap {
+    padding-right: 96px;
+  }
+  .app--glass .bill-card__price {
+    font-size: 38px;
+  }
+  .app--glass .bill-panel__head {
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .app--glass .bill-panel__title {
+    font-size: 18px;
+    white-space: nowrap;
+  }
+  .app--glass .bill-panel__head .bill-pill {
+    margin-left: 44px;
+  }
+  .app--glass .bill-banner {
+    flex-wrap: wrap;
+  }
+  .app--glass .bill-banner__txt {
+    flex-basis: calc(100% - 34px);
+  }
+  .app--glass .bill-banner__cta {
+    margin-left: 34px;
+  }
+  /* label keeps its line; a long value drops beneath, still right-aligned */
+  .app--glass .bill-dl__row,
+  .app--glass .bill-dl__row:first-child {
+    flex-wrap: wrap;
+    row-gap: 4px;
+  }
+  .app--glass .bill-dl__label {
+    flex: 1 0 auto;
+    white-space: nowrap;
+  }
+  .app--glass .bill-dl__value {
+    max-width: 100%;
+    margin-left: auto;
+    overflow-wrap: anywhere;
+  }
+}
