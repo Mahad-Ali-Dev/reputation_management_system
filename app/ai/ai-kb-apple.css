@@ -17,8 +17,12 @@
   --kb-accent: var(--glass-accent, #4b3bff);
   --kb-accent-soft: rgba(75, 59, 255, 0.09);
   --kb-glass: var(--dk-glass, rgba(255, 255, 255, 0.72));
-  --kb-shadow: var(--dk-shadow, inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 1px 2px rgba(0, 0, 0, 0.03), 0 12px 32px
-    -14px rgba(21, 19, 43, 0.14));
+  --kb-shadow: var(
+    --dk-shadow,
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(0, 0, 0, 0.03),
+    0 12px 32px -14px rgba(21, 19, 43, 0.14)
+  );
   /* legacy tokens used by the location editor / source sheets */
   --akb-primary: var(--kb-accent);
   --akb-ink: var(--kb-ink);
@@ -1419,6 +1423,13 @@ button.kb-list__row:hover:not(:disabled) {
   }
   .kb-ready__stats {
     grid-template-columns: 1fr 1fr;
+    row-gap: 12px;
+    width: 100%;
+  }
+  /* 2x2: the divider only belongs between the two cells of a row */
+  .kb-ready__stats div:nth-child(odd) {
+    border-left: 0;
+    padding-left: 0;
   }
   .kb-setting {
     flex-direction: column;

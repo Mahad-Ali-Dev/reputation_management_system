@@ -57,7 +57,12 @@
   font-weight: 600;
   text-transform: none;
   letter-spacing: 0.01em;
-  background-image: linear-gradient(90deg, var(--dk-accent-text, #4b3bff) 0%, #8a5cff 55%, #c25cff 100%);
+  background-image: linear-gradient(
+    90deg,
+    var(--dk-accent-text, #4b3bff) 0%,
+    #8a5cff 55%,
+    #c25cff 100%
+  );
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -527,4 +532,36 @@
 .app--glass .sk-page .sk-minical__legend {
   justify-content: center;
   font-size: 11.5px;
+}
+
+/* ---- phone: KPIs become a compact three-up widget row ---- */
+@media (max-width: 560px) {
+  .app--glass .sk-page .sk-kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .app--glass .sk-page .sk-kpi {
+    gap: 8px;
+    padding: 14px 12px;
+    border-radius: 18px;
+  }
+  .app--glass .sk-page .sk-kpi__tile svg {
+    width: 16px;
+    height: 16px;
+  }
+  .app--glass .sk-page .sk-kpi__label {
+    font-size: 11.5px;
+    line-height: 1.25;
+  }
+  .app--glass .sk-page .sk-kpi__value {
+    margin-top: 2px;
+    font-size: 24px;
+  }
+  .app--glass .sk-page .sk-kpi__delta,
+  .app--glass .sk-page .sk-kpi__helper {
+    margin-top: 4px;
+    font-size: 11px;
+    line-height: 1.3;
+  }
 }
