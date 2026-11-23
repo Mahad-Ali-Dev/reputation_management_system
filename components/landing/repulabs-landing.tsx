@@ -171,13 +171,16 @@ function Nav() {
       className={`pointer-events-none sticky top-0 z-50 transition-all duration-300 ${scrolled ? "px-3 pt-3 sm:pt-4" : "px-0 pt-0"}`}
     >
       <header
-        className={`pointer-events-auto mx-auto flex h-14 items-center gap-3 px-5 sm:px-6 ${scrolled ? "w-[90%] max-w-[1180px] rounded-full" : "w-full max-w-[1200px] rounded-none"}`}
+        className={`pointer-events-auto relative mx-auto flex h-14 items-center gap-3 px-5 sm:px-6 ${scrolled ? "w-[90%] max-w-[1180px] rounded-full" : "w-full max-w-[1200px] rounded-none"}`}
         style={headerStyle}
       >
         <Link href="/" aria-label="repulabs home" style={{ color: "inherit", textDecoration: "none" }}>
           <Logo size={27} />
         </Link>
-        <nav className="mx-auto hidden items-center gap-1 md:flex">
+        {/* From lg up, pinned to the true centre of the bar regardless of the
+            logo and right-hand buttons' widths. On tablets the bar is too
+            narrow for that, so the links just flow between them. */}
+        <nav className="mx-auto hidden items-center gap-1 md:flex lg:absolute lg:left-1/2 lg:top-1/2 lg:mx-0 lg:-translate-x-1/2 lg:-translate-y-1/2">
           {links.map((l) => (
             <a
               key={l.href}
