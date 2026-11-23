@@ -88,8 +88,7 @@ function StepCard({
       className={`relative w-full transition-transform duration-300 hover:z-30 hover:scale-105 md:w-[280px] ${position.rotate} ${position.className}`}
     >
       <div
-        className="rounded-[25px] border bg-white p-2"
-        style={{ borderColor: "#eef2fa", boxShadow: "0 18px 40px -22px rgba(49,92,170,.42)" }}
+        className="glass-surface glass-surface--raised rounded-[25px] p-2"
       >
         <Pin color={accent.fill} />
         <div

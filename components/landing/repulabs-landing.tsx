@@ -221,7 +221,7 @@ function Nav() {
 function Hero() {
   const [tab, setTab] = useState<ScreenId>("dashboard");
   return (
-    <section className="relative overflow-x-clip px-2.5 pb-10 pt-2.5 sm:px-4" style={{ background: "#eceeea" }}>
+    <section className="relative overflow-x-clip px-2.5 pb-10 pt-2.5 sm:px-4">
       {/* the rounded-corner hero box — sits inset below the nav, on the page bg */}
       <div
         className="relative mx-auto overflow-hidden rounded-[30px] sm:rounded-[40px]"
@@ -331,7 +331,7 @@ function Hero() {
 
 function MiniReviewCard() {
   return (
-    <div className="rounded-2xl border bg-white p-3.5" style={{ borderColor: C.line2, boxShadow: "0 26px 50px -24px rgba(0,0,0,.5)" }}>
+    <div className="glass-surface glass-surface--raised rounded-2xl p-3.5">
       <div className="flex items-center gap-2">
         <GoogleMark size={20} />
         <span className="text-[12.5px] font-bold" style={{ color: C.ink }}>New 5★ review</span>
@@ -344,7 +344,7 @@ function MiniReviewCard() {
 
 function MiniRatingCard() {
   return (
-    <div className="rounded-2xl border bg-white p-3.5" style={{ borderColor: C.line2, boxShadow: "0 26px 50px -24px rgba(0,0,0,.5)" }}>
+    <div className="glass-surface glass-surface--raised rounded-2xl p-3.5">
       <p className="text-[12px] font-medium" style={{ color: C.mute2 }}>Average rating</p>
       <div className="mt-1 flex items-center gap-2">
         <p className="text-[28px] font-bold leading-none" style={{ color: C.ink }}>4.8</p>
@@ -385,7 +385,7 @@ function StatsStrip() {
     { Icon: BadgeCheck, count: 0, label: "Lock-in contracts — cancel anytime" },
   ];
   return (
-    <section className="py-12 sm:py-16" style={{ background: C.wash }}>
+    <section className="py-12 sm:py-16">
       <div className={MAXW}>
         <div className="grid grid-cols-2 lg:grid-cols-4">
           {stats.map((s, i) => (
@@ -472,8 +472,7 @@ function CountUp({ to, decimals = 0 }: { to: number; decimals?: number }) {
 function Marquee() {
   return (
     <section
-      className="border-b py-7 sm:py-8"
-      style={{ borderColor: C.line, background: C.surface }}
+      className="py-7 sm:py-8"
       aria-label="Built for every kind of local business"
     >
       <BusinessScroller />
@@ -500,11 +499,11 @@ const AUDIENCES: TimelineStep[] = [
 
 function WhoItsFor() {
   return (
-    <section className="py-20 sm:py-24" style={{ background: C.surface }}>
+    <section className="py-20 sm:py-24">
       <div className={MAXW}>
         <StepTimeline
           steps={AUDIENCES}
-          ringColor={C.surface}
+          ringColor="rgba(255,255,255,.75)"
           header={
             <SectionHead
               eyebrow="Who it's for"
@@ -546,7 +545,7 @@ const HOW_STEPS: HowStep[] = [
 
 function HowItWorks() {
   return (
-    <section id="how" className="relative overflow-hidden py-20 sm:py-24" style={{ background: C.wash }}>
+    <section id="how" className="relative overflow-hidden py-20 sm:py-24">
       <div className={`${MAXW} relative`}>
         <SectionHead eyebrow="How it works" title="Your reputation, on a loop." sub="Five steps that run on their own once they’re set up." />
         <div className="mt-14 md:mt-16">
@@ -605,7 +604,7 @@ function Features() {
     "Competitor tracking",
   ];
   return (
-    <section id="features" className="py-20 sm:py-24" style={{ background: C.surface }}>
+    <section id="features" className="py-20 sm:py-24">
       <div className={MAXW}>
         <SectionHead eyebrow="Features" title="Everything your reputation needs, in one place." sub="Reviews, replies, requests, phone and autopilot — one premium workspace." />
 
@@ -614,7 +613,7 @@ function Features() {
         </div>
 
         {/* everyday list */}
-        <div className="mt-20 rounded-2xl border p-6 sm:p-7 md:mt-28" style={{ borderColor: C.line, background: "#fbfcff" }}>
+        <div className="glass-surface mt-20 rounded-2xl p-6 sm:p-7 md:mt-28">
           <div className="flex items-center gap-2">
             <BarChart3 size={16} style={{ color: C.pri }} />
             <h3 className="text-[15px] font-bold" style={{ color: C.ink }}>And the everyday things</h3>
@@ -638,7 +637,7 @@ function Tour() {
   const [tab, setTab] = useState<ScreenId>("dashboard");
   const active = SCREEN_BY_ID[tab];
   return (
-    <section id="tour" className="py-20 sm:py-24" style={{ background: C.wash }}>
+    <section id="tour" className="py-20 sm:py-24">
       <div className={MAXW}>
         <SectionHead eyebrow="Take the tour" title="See the real workspace." sub="Pick a tab to see the actual screen, in dark mode." />
         <div className="mx-auto mt-10 flex max-w-[1000px] flex-col items-center">
@@ -686,7 +685,7 @@ function Pricing() {
     "White-label reports",
   ];
   return (
-    <section id="pricing" className="py-20 sm:py-24" style={{ background: C.surface }}>
+    <section id="pricing" className="py-20 sm:py-24">
       <div className={MAXW}>
         <SectionHead eyebrow="Pricing" title="One plan. Everything included." sub="Start with a 14-day free trial, then pay monthly or save with annual." />
 
@@ -711,7 +710,7 @@ function Pricing() {
 
         <div className="mx-auto mt-10 grid max-w-[880px] gap-5 md:grid-cols-2">
           {/* Growth */}
-          <div className="rounded-[22px] border p-7" style={{ borderColor: "#dbe6ff", background: "#fbfcff" }}>
+          <div className="glass-surface glass-surface--raised rounded-[22px] p-7">
             <h3 className="text-[15px] font-bold" style={{ color: C.ink }}>Growth</h3>
             <p className="mt-1 text-[13px]" style={{ color: C.mute }}>Everything one business needs to climb the ratings.</p>
             <div className="mt-5 flex items-end gap-1">
@@ -732,7 +731,7 @@ function Pricing() {
           </div>
 
           {/* Scale / enterprise */}
-          <div className="rounded-[22px] border p-7" style={{ borderColor: C.line, background: C.surface }}>
+          <div className="glass-surface rounded-[22px] p-7">
             <div className="flex items-center gap-2">
               <h3 className="text-[15px] font-bold" style={{ color: C.ink }}>Scale</h3>
               <span className="rounded-full px-2 py-0.5 text-[10.5px] font-bold uppercase" style={{ background: "#eef2ff", color: C.pri, letterSpacing: ".08em" }}>Multi-location</span>
@@ -799,7 +798,7 @@ const FAQ_ITEMS: FaqItem[] = [
 
 function Faq() {
   return (
-    <section id="faq" className="py-20 sm:py-24" style={{ background: C.wash }}>
+    <section id="faq" className="py-20 sm:py-24">
       <div className={MAXW}>
         <ScrollFaq
           items={FAQ_ITEMS}
@@ -813,8 +812,7 @@ function Faq() {
         />
 
         <div
-          className="mx-auto mt-12 flex max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border px-6 py-5 sm:flex-row"
-          style={{ borderColor: C.line, background: C.surface }}
+          className="glass-surface mx-auto mt-12 flex max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl px-6 py-5 sm:flex-row"
         >
           <div className="text-center sm:text-left">
             <p className="text-[16px] font-bold" style={{ color: C.ink }}>Still have questions?</p>
@@ -837,7 +835,7 @@ function Faq() {
 
 function CtaBand() {
   return (
-    <section className="py-20 sm:py-24" style={{ background: C.surface }}>
+    <section className="py-20 sm:py-24">
       <div className={MAXW}>
         <div className="relative overflow-hidden rounded-[28px] px-8 py-16 text-center sm:px-12" style={{ background: "linear-gradient(135deg,#0b1220,#172554)" }}>
           <div aria-hidden className="pointer-events-none absolute inset-0" style={{ background: "radial-gradient(600px 300px at 50% -20%, rgba(59,130,246,.35), transparent 70%)" }} />
@@ -874,7 +872,7 @@ function CtaBand() {
 
 export function RepulabsLanding() {
   return (
-    <main className="overflow-x-clip" style={{ background: "#eceeea", color: C.ink, fontFamily: "var(--f-ui)" }}>
+    <main className="glass-theme glass-canvas overflow-x-clip" data-glass-mode="light" style={{ color: C.ink, fontFamily: "var(--f-ui)" }}>
       <Nav />
       <Hero />
       <StatsStrip />

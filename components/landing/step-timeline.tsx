@@ -4,7 +4,8 @@
  * Adapted from a community "orbital timeline" component, restyled for
  * repulabs:
  *   - brand-blue rail and gradient number dots (was cyan), success-green check
- *     icons (was fuchsia), landing ink / muted text, line border + soft panel
+ *     icons (was fuchsia), landing ink / muted text, steps on the app's frosted
+ *     .glass-surface panels
  *   - the heading column is passed in, so the page's own SectionHead (blue
  *     mono eyebrow pill) keeps every section consistent
  *   - fonts inherit the landing's --f-ui
@@ -17,7 +18,6 @@ import type { ReactNode } from "react";
 
 const INK = "#0b1220";
 const MUTE = "#5b6473";
-const LINE = "#e7ecf6";
 const OK = "#0f9d63";
 
 export type TimelineStep = { title: string; description: string };
@@ -42,8 +42,7 @@ export function StepTimeline({
         {steps.map((step, index) => (
           <li
             key={step.title}
-            className="relative rounded-2xl border p-5 transition-shadow duration-300 hover:shadow-[0_22px_46px_-30px_rgba(49,92,170,.45)] sm:p-6"
-            style={{ borderColor: LINE, background: "#fbfcff" }}
+            className="glass-surface glass-surface--hover relative rounded-2xl p-5 sm:p-6"
           >
             {/* rail segment: this dot's centre (top 40px) down to the next
                 dot's centre (this li's height + the 20px space-y-5 gap) */}

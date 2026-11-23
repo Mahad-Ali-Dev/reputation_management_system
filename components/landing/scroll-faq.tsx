@@ -31,7 +31,6 @@ export type FaqItem = { id: string; question: string; answer: string };
 const INK = "#0b1220";
 const MUTE = "#5b6473";
 const PRI = "#2563eb";
-const LINE = "#e7ecf6";
 
 /** Gap kept above the pinned FAQ so it clears the floating nav pill. */
 const PIN_OFFSET = 96;
@@ -93,21 +92,21 @@ export function ScrollFaq({ items, header }: { items: FaqItem[]; header?: ReactN
               <Accordion.Header>
                 <Accordion.Trigger className="group flex w-full items-center gap-3 text-left">
                   <span
-                    className="rounded-2xl border px-4 py-2.5 text-[15px] font-semibold transition-colors duration-300"
+                    className="glass-surface rounded-2xl border px-4 py-2.5 text-[15px] font-semibold transition-colors duration-300"
                     style={
                       isOpen
                         ? { background: "rgba(37,99,235,.1)", borderColor: "rgba(37,99,235,.28)", color: PRI }
-                        : { background: "#ffffff", borderColor: LINE, color: INK }
+                        : { color: INK }
                     }
                   >
                     {item.question}
                   </span>
                   <span
-                    className="grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-colors duration-300"
+                    className="glass-surface grid h-8 w-8 shrink-0 place-items-center rounded-full border transition-colors duration-300"
                     style={
                       isOpen
                         ? { borderColor: "rgba(37,99,235,.28)", color: PRI, background: "rgba(37,99,235,.08)" }
-                        : { borderColor: LINE, color: MUTE, background: "#ffffff" }
+                        : { color: MUTE }
                     }
                     aria-hidden
                   >
