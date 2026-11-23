@@ -1,14 +1,13 @@
-import { ZeitraLanding } from "@/components/landing/zeitra-landing";
+import { RepulabsLanding } from "@/components/landing/repulabs-landing";
 
 /**
  * Marketing home ("/") — repulabs landing page.
  *
- * Rebuilt to mirror the clean, focused section flow of zeitra.app:
- *   Nav → Hero (tab-labelled product frame) → Stats strip → Marquee ticker
- *   → Who it's for → How it works (numbered timeline) → Features (bento)
- *   → Product tour (tabbed) → Pricing → FAQ → CTA band → Footer.
+ *   Nav → Hero (product screenshots) → Stats tiles → Marquee → Who it's for
+ *   → How it works → Features (bento) → Product tour (tabbed) → Pricing
+ *   → FAQ → CTA band → Footer.
  *
- * All of that lives in <ZeitraLanding>. The previous animation-heavy kit
+ * All of that lives in <RepulabsLanding>. The previous animation-heavy kit
  * (hero/workspace/ai-robot/tour/steps/metrics/command-center/integrations/
  * locations/frames) is retired from the home route but its components remain
  * in components/landing/* for reuse elsewhere.
@@ -21,5 +20,5 @@ export const metadata = {
 };
 
 export default function LandingPage() {
-  return <ZeitraLanding />;
+  return <RepulabsLanding />;
 }

@@ -1,24 +1,24 @@
 "use client";
 
 /**
- * ZeitraLanding — the repulabs marketing home, rebuilt to mirror the clean,
- * focused section flow of zeitra.app:
+ * RepulabsLanding — the repulabs marketing home ("/"):
  *
- *   Nav → Hero (tab-labelled product frame) → Stats strip → Marquee ticker
- *   → Who it's for (3 cards) → How it works (numbered vertical timeline)
- *   → Features (bento grid + "everyday things" list) → Product tour (tabbed)
- *   → Pricing (monthly / annual) → FAQ (reused) → CTA band → Footer (reused).
+ *   Nav (transparent → floating pill on scroll) → Hero (rounded blue box with
+ *   real product screenshots + integration dock) → Stats tiles → Marquee
+ *   → Who it's for → How it works (pinned step cards) → Features (bento)
+ *   → Product tour (tabbed screenshots) → Pricing (monthly / annual)
+ *   → FAQ (scroll-driven) → CTA band → Footer (reused MarketingFooter).
  *
- * Brand stays repulabs LIGHT premium (white / pale-blue, #2563eb primary,
- * rounded, soft shadows) so it reads as one system with the other marketing
- * pages (About / Pricing / Contact use the same MarketingShell), while the
- * STRUCTURE follows zeitra. Self-contained, "use client" for the small tab /
- * toggle interactions; heavy animation kit of the old page is dropped on
- * purpose to keep this fast and legible.
+ * Brand: repulabs LIGHT premium (white / pale-blue, #2563eb primary, rounded,
+ * soft shadows) so it reads as one system with the other marketing pages
+ * (About / Pricing / Contact use the same MarketingShell). "use client" for the
+ * small tab / toggle / scroll interactions.
  */
 
 import { Logo } from "@/components/shell/logo";
-import { LandingFaq } from "@/components/landing/sections/faq";
+import { type HowStep, HowItWorksSteps } from "@/components/landing/how-it-works-steps";
+import { IntegrationDock } from "@/components/landing/integration-dock";
+import { type FaqItem, ScrollFaq } from "@/components/landing/scroll-faq";
 import { MarketingFooter } from "@/components/landing/marketing-shell";
 import {
   ArrowRight,
@@ -28,13 +28,10 @@ import {
   Building2,
   Check,
   Clock,
-  Globe,
   Inbox,
   MapPin,
   Phone,
-  QrCode,
   Send,
-  Shield,
   Sparkles,
   Star,
   TrendingUp,
@@ -228,6 +225,8 @@ const SCREENS = [
     label: "Dashboard",
     path: "dashboard",
     src: "/assets/repulabs/landing/screens/dashboard.png",
+    w: 1365,
+    h: 594,
     line: "Your whole reputation at a glance, with Repulabs AI ready to answer anything.",
   },
   {
@@ -235,6 +234,8 @@ const SCREENS = [
     label: "AI Autopilot",
     path: "autopilot",
     src: "/assets/repulabs/landing/screens/autopilot.png",
+    w: 1354,
+    h: 591,
     line: "One switch runs the whole loop — 5★ replies published, everything else drafted to approve.",
   },
   {
@@ -242,6 +243,8 @@ const SCREENS = [
     label: "Review inbox",
     path: "reviews",
     src: "/assets/repulabs/landing/screens/review-inbox.png",
+    w: 1365,
+    h: 595,
     line: "Every review across every platform in one queue, with AI drafting the reply you approve.",
   },
   {
@@ -249,6 +252,8 @@ const SCREENS = [
     label: "Device Manager",
     path: "devices",
     src: "/assets/repulabs/landing/screens/device-manager.png",
+    w: 1365,
+    h: 597,
     line: "QR plaques and cards that send customers straight to a review, with scan and impact tracking.",
   },
   {
@@ -256,6 +261,8 @@ const SCREENS = [
     label: "Analytics",
     path: "analytics",
     src: "/assets/repulabs/landing/screens/analytics.png",
+    w: 1365,
+    h: 595,
     line: "Trends, rating breakdowns and sources — see exactly how your reputation is moving.",
   },
 ] as const;
@@ -289,7 +296,9 @@ function ProductWindow({ id, priority }: { id: ScreenId; priority?: boolean }) {
       <img
         src={screen.src}
         alt={`Repulabs ${screen.label} — dark mode`}
-        className="block w-full"
+        width={screen.w}
+        height={screen.h}
+        className="block h-auto w-full"
         loading={priority ? "eager" : "lazy"}
       />
     </div>
@@ -401,18 +410,7 @@ function Hero() {
         <span className="text-[11px] font-bold uppercase" style={{ letterSpacing: ".22em", color: C.mute2 }}>
           Connects with
         </span>
-        <div className="flex flex-wrap items-center justify-center gap-7">
-          {["google", "meta", "instagram", "whatsapp", "square", "slack"].map((f) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              key={f}
-              src={`/assets/repulabs/landing/integrations/${f}.svg`}
-              alt={f}
-              className="h-[22px] w-auto opacity-55 transition-opacity hover:opacity-100"
-              loading="lazy"
-            />
-          ))}
-        </div>
+        <IntegrationDock />
       </div>
     </section>
   );
@@ -454,19 +452,60 @@ function MiniRatingCard() {
 /* ═══════════════════════════ STATS STRIP ═══════════════════════════ */
 
 function StatsStrip() {
-  const stats = [
-    { v: "4.8★", k: "average across 12k+ businesses" },
-    { v: "6 min", k: "to your first automated request" },
-    { v: "24/7", k: "AI phone receptionist" },
-    { v: "0", k: "lock-in contracts, ever" },
+  const stats: {
+    Icon: ComponentType<{ size?: number; style?: CSSProperties }>;
+    value: string;
+    suffix?: string;
+    suffixColor?: string;
+    label: string;
+  }[] = [
+    { Icon: Star, value: "4.8", suffix: "★", suffixColor: "#f5a623", label: "Average rating across 12k+ businesses" },
+    { Icon: Clock, value: "6", suffix: "min", label: "To your first automated review request" },
+    { Icon: Phone, value: "24/7", label: "AI phone receptionist, never off the clock" },
+    { Icon: BadgeCheck, value: "0", label: "Lock-in contracts — cancel anytime" },
   ];
   return (
-    <section className="border-y" style={{ borderColor: C.line, background: C.wash }}>
-      <div className={`${MAXW} grid grid-cols-2 gap-x-6 gap-y-7 py-10 sm:grid-cols-4`}>
+    <section className="py-12 sm:py-14" style={{ background: C.wash }}>
+      <div className={`${MAXW} grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4`}>
         {stats.map((s) => (
-          <div key={s.k} className="text-center sm:text-left">
-            <p className="text-[28px] font-bold leading-none sm:text-[32px]" style={{ color: C.ink }}>{s.v}</p>
-            <p className="mt-2 text-[13px]" style={{ color: C.mute }}>{s.k}</p>
+          <div
+            key={s.label}
+            className="group relative overflow-hidden rounded-[20px] border p-5 transition-all duration-300 hover:-translate-y-1 sm:p-6"
+            style={{
+              borderColor: C.line,
+              background: C.surface,
+              boxShadow: "0 18px 40px -30px rgba(49,92,170,.45)",
+            }}
+          >
+            {/* soft brand glow in the corner, brighter on hover */}
+            <span
+              aria-hidden
+              className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-60 transition-opacity duration-300 group-hover:opacity-100"
+              style={{ background: "radial-gradient(closest-side, rgba(37,99,235,.14), transparent)" }}
+            />
+            <span
+              className="relative grid h-10 w-10 place-items-center rounded-xl"
+              style={{ background: "#eef2ff", color: C.pri }}
+            >
+              <s.Icon size={18} />
+            </span>
+            <p
+              className="relative mt-5 flex items-baseline gap-1 font-bold leading-none"
+              style={{ color: C.ink, fontSize: "clamp(30px, 3.4vw, 40px)", letterSpacing: "-0.03em" }}
+            >
+              {s.value}
+              {s.suffix && (
+                <span
+                  className="font-semibold"
+                  style={{ fontSize: "0.55em", letterSpacing: 0, color: s.suffixColor ?? C.mute }}
+                >
+                  {s.suffix}
+                </span>
+              )}
+            </p>
+            <p className="relative mt-2.5 text-[13px] leading-snug sm:text-[13.5px]" style={{ color: C.mute }}>
+              {s.label}
+            </p>
           </div>
         ))}
       </div>
@@ -484,7 +523,7 @@ function Marquee() {
   const loop = [...items, ...items];
   return (
     <section className="overflow-hidden border-b py-5" style={{ borderColor: C.line, background: C.surface }} aria-label="Built for local businesses">
-      <div className="zl-marquee flex w-max items-center gap-8">
+      <div className="rl-marquee flex w-max items-center gap-8">
         {loop.map((it, i) => (
           <span key={`${it}-${i}`} className="inline-flex items-center gap-8 text-[15px] font-semibold" style={{ color: C.mute2 }}>
             {it}
@@ -530,39 +569,36 @@ function WhoItsFor() {
 
 /* ═══════════════════════════ HOW IT WORKS ═══════════════════════════ */
 
+const HOW_STEPS: HowStep[] = [
+  {
+    title: "Connect your platforms",
+    description: "Link Google Business, Facebook, Yelp and your POS or CRM in a few clicks. The setup wizard does the rest.",
+  },
+  {
+    title: "Ask for the review",
+    description: "A QR plaque, SMS or email reaches each customer at the perfect moment, right after a great experience.",
+  },
+  {
+    title: "Smart routing",
+    description: "Happy customers go straight to Google. A low rating opens a private feedback form and alerts your team instead.",
+  },
+  {
+    title: "AI drafts the reply",
+    description: "Every review gets an on-brand response in your voice. Approve, tweak or let autopilot send it.",
+  },
+  {
+    title: "Autopilot keeps it running",
+    description: "Requests, replies and follow-ups run on their own, so your rating climbs while you get on with work.",
+  },
+];
+
 function HowItWorks() {
-  const steps = [
-    { Icon: Globe, title: "Connect your platforms", body: "Link Google Business, Facebook, Yelp and your POS or CRM in a few clicks. The setup wizard does the rest." },
-    { Icon: QrCode, title: "Ask for the review", body: "A QR plaque, SMS or email reaches each customer at the perfect moment, right after a great experience." },
-    { Icon: Star, title: "Happy? Straight to Google", body: "Delighted customers are routed to leave a public review on the platform that matters most." },
-    { Icon: Shield, title: "Unhappy? Caught privately", body: "A low rating opens a private feedback form and alerts your team — before it ever becomes a public star." },
-    { Icon: Sparkles, title: "AI drafts the reply", body: "Every review gets an on-brand response drafted in your voice. Approve, tweak or let autopilot send it." },
-    { Icon: Zap, title: "Autopilot keeps it running", body: "Requests, replies and follow-ups run on their own, so your rating climbs while you get on with work." },
-  ];
   return (
-    <section id="how" className="py-20 sm:py-24" style={{ background: C.wash }}>
-      <div className={MAXW}>
-        <SectionHead eyebrow="How it works" title="Your reputation, on a loop." sub="Six steps that run on their own once they’re set up." />
-        <div className="mx-auto mt-14 max-w-3xl">
-          <div className="relative flex flex-col gap-8">
-            <span aria-hidden className="absolute bottom-3 left-[23px] top-3 w-px" style={{ background: C.line2 }} />
-            {steps.map((s, i) => (
-              <div key={s.title} className="relative flex gap-5">
-                <span className="relative z-10 grid h-12 w-12 flex-shrink-0 place-items-center rounded-full text-white" style={{ background: `linear-gradient(180deg,#2f6bff,${C.pri2})`, boxShadow: "0 12px 24px -12px rgba(37,99,235,.6)" }}>
-                  <s.Icon size={19} />
-                </span>
-                <div className="pt-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold" style={{ fontFamily: "var(--f-mono)", color: C.mute2, letterSpacing: ".1em" }}>
-                      {String(i + 1).padStart(2, "0")}
-                    </span>
-                    <h3 className="text-[18px] font-bold" style={{ color: C.ink, letterSpacing: "-0.01em" }}>{s.title}</h3>
-                  </div>
-                  <p className="mt-1.5 text-[14.5px] leading-relaxed" style={{ color: C.mute }}>{s.body}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+    <section id="how" className="relative overflow-hidden py-20 sm:py-24" style={{ background: C.wash }}>
+      <div className={`${MAXW} relative`}>
+        <SectionHead eyebrow="How it works" title="Your reputation, on a loop." sub="Five steps that run on their own once they’re set up." />
+        <div className="mt-14 md:mt-16">
+          <HowItWorksSteps steps={HOW_STEPS} />
         </div>
       </div>
     </section>
@@ -779,6 +815,77 @@ function Pricing() {
   );
 }
 
+/* ═══════════════════════════ FAQ ═══════════════════════════ */
+
+const FAQ_ITEMS: FaqItem[] = [
+  {
+    id: "setup",
+    question: "How quickly can I set up repulabs?",
+    answer:
+      "Most teams are sending automated requests within 6 minutes. Connect Google Business, plug in one POS or CRM, and the wizard does the rest.",
+  },
+  {
+    id: "voice",
+    question: "Does the AI actually sound like me?",
+    answer:
+      "It learns from your past reviews, replies and website, then drafts every response in your brand's tone. You stay in control — approve, tweak or auto-send — and it sharpens with every edit.",
+  },
+  {
+    id: "phone",
+    question: "Can I use the AI receptionist with my existing number?",
+    answer:
+      "Yes. Forward missed or after-hours calls to your AI receptionist, or port your number across. It answers 24/7, books jobs and texts callers back, with recording consent handled.",
+  },
+  {
+    id: "security",
+    question: "Is my customer data secure?",
+    answer:
+      "Every record is encrypted in transit and at rest and isolated per workspace with role-based access. We never sell your data or train shared models on it, and you can export or delete it anytime.",
+  },
+  {
+    id: "cancel",
+    question: "Can I cancel anytime?",
+    answer:
+      "Always. No lock-in contracts — cancel in one click and keep access until the end of your billing period. Start with a 14-day free trial, no card required.",
+  },
+];
+
+function Faq() {
+  return (
+    <section id="faq" className="py-20 sm:py-24" style={{ background: C.wash }}>
+      <div className={MAXW}>
+        <ScrollFaq
+          items={FAQ_ITEMS}
+          header={
+            <SectionHead
+              eyebrow="FAQ"
+              title="Questions, answered."
+              sub="Everything you need to know about repulabs. Keep scrolling — each answer opens in turn."
+            />
+          }
+        />
+
+        <div
+          className="mx-auto mt-12 flex max-w-3xl flex-col items-center justify-between gap-4 rounded-2xl border px-6 py-5 sm:flex-row"
+          style={{ borderColor: C.line, background: C.surface }}
+        >
+          <div className="text-center sm:text-left">
+            <p className="text-[16px] font-bold" style={{ color: C.ink }}>Still have questions?</p>
+            <p className="mt-0.5 text-[14px]" style={{ color: C.mute }}>Talk to a specialist — no pressure, no sales script.</p>
+          </div>
+          <Link
+            href="/contact"
+            className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-full px-5 text-[14px] font-semibold text-white transition-transform hover:-translate-y-0.5"
+            style={{ background: `linear-gradient(180deg,#2f6bff,${C.pri2})`, boxShadow: "0 12px 26px -12px rgba(37,99,235,.6)" }}
+          >
+            Contact us <ArrowRight size={15} />
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /* ═══════════════════════════ CTA BAND ═══════════════════════════ */
 
 function CtaBand() {
@@ -818,13 +925,13 @@ function CtaBand() {
 
 /* ═══════════════════════════ ROOT ═══════════════════════════ */
 
-export function ZeitraLanding() {
+export function RepulabsLanding() {
   return (
     <main className="overflow-x-clip" style={{ background: "#eceeea", color: C.ink, fontFamily: "var(--f-ui)" }}>
       <style>{`
-        @keyframes zl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .zl-marquee { animation: zl-scroll 36s linear infinite; }
-        @media (prefers-reduced-motion: reduce) { .zl-marquee { animation: none; } }
+        @keyframes rl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+        .rl-marquee { animation: rl-scroll 36s linear infinite; }
+        @media (prefers-reduced-motion: reduce) { .rl-marquee { animation: none; } }
       `}</style>
       <Nav />
       <Hero />
@@ -835,11 +942,11 @@ export function ZeitraLanding() {
       <Bento />
       <Tour />
       <Pricing />
-      <LandingFaq />
+      <Faq />
       <CtaBand />
       <MarketingFooter />
     </main>
   );
 }
 
-export default ZeitraLanding;
+export default RepulabsLanding;
