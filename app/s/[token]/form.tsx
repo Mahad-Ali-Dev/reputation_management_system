@@ -34,14 +34,20 @@ export default function SurveyForm({
   questions,
   thankYouMessage,
   accent,
+  initialNps = null,
 }: {
   token: string;
   action: (form: FormData) => Promise<SubmitResult>;
   questions: PublicQuestion[];
   thankYouMessage: string | null;
   accent: string | null;
+  /** Score tapped in the invite email; pre-fills the first NPS question. */
+  initialNps?: number | null;
 }) {
-  const [answers, setAnswers] = useState<Record<string, AnswerValue>>({});
+  const [answers, setAnswers] = useState<Record<string, AnswerValue>>(() => {
+    const nps = questions.find((q) => q.type === "nps");
+    return nps && initialNps !== null ? { [nps.id]: { number: initialNps } } : {};
+  });
   const [submitted, setSubmitted] = useState<SubmitResult | null>(null);
   const [pending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);

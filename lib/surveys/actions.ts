@@ -9,6 +9,7 @@ import { requireRole } from "@/lib/auth/rbac";
 import { captureContactInBackground } from "@/lib/contacts/upsert-from-interaction";
 import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
+import { surveyInviteEmail, unhappySurveyAlertEmail } from "@/lib/email/survey-emails";
 import { logger } from "@/lib/logger";
 import { createNotification } from "@/lib/notifications/actions";
 import { notificationEnabled } from "@/lib/notifications/prefs";
@@ -214,6 +215,8 @@ export async function sendSurveyInvite(form: FormData): Promise<void> {
       where: { id: campaignId, status: "active" },
       include: {
         establishment: { select: { name: true } },
+        // Only to decide whether the invite shows the 0 to 10 scale.
+        questions: { where: { type: "nps" }, select: { id: true }, take: 1 },
       },
     });
   });
@@ -250,27 +253,16 @@ export async function sendSurveyInvite(form: FormData): Promise<void> {
   const responseUrl = `${APP_URL}/s/${tokenPlaintext}`;
   const businessName = campaign.establishment?.name ?? "us";
 
-  const text = `Hi${recipientName ? ` ${recipientName}` : ""},
-
-Quick favor — we'd love your feedback on your recent experience with ${businessName}. It takes 30 seconds:
-
-${responseUrl}
-
-Thanks!`;
-
-  const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;">
-<div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;">
-  <h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Quick favor${recipientName ? `, ${recipientName.replace(/[<>"]/g, "")}` : ""}</h1>
-  <p style="color:#475569;">We'd love your honest feedback on your recent experience with <strong>${businessName.replace(/[<>"]/g, "")}</strong>. It takes 30 seconds.</p>
-  <p style="margin:24px 0;">
-    <a href="${responseUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Share feedback →</a>
-  </p>
-  <p style="color:#94a3b8;font-size:13px;">Thanks for your time. Your answers help us improve.</p>
-</div></body></html>`;
+  const { html, text } = surveyInviteEmail({
+    recipientName: recipientName ?? null,
+    businessName,
+    responseUrl,
+    hasNps: campaign.questions.length > 0,
+  });
 
   const result = await sendReviewRequestEmail({
     to: email,
-    subject: `Quick favor — how was ${businessName}?`,
+    subject: `Quick favour: how was ${businessName}?`,
     bodyText: text,
     bodyHtml: html,
     unsubscribeUrl: `${APP_URL}/u?t=&s=`, // surveys don't get unsubscribe link (transactional); placeholder
@@ -318,7 +310,11 @@ export async function sendSurveyBatch(input: {
   const campaign = await withTenant(orgId, async (tx) =>
     tx.surveyCampaign.findFirst({
       where: { id: campaignId, status: "active" },
-      include: { establishment: { select: { name: true } } },
+      include: {
+        establishment: { select: { name: true } },
+        // Only to decide whether the invite shows the 0 to 10 scale.
+        questions: { where: { type: "nps" }, select: { id: true }, take: 1 },
+      },
     }),
   );
   if (!campaign) return { ok: false, error: "Campaign not active or not found" };
@@ -345,12 +341,17 @@ export async function sendSurveyBatch(input: {
       });
 
       const responseUrl = `${APP_URL}/s/${tokenPlaintext}`;
-      const safeName = r.name ? r.name.replace(/[<>"]/g, "") : "";
+      const invite = surveyInviteEmail({
+        recipientName: r.name ?? null,
+        businessName,
+        responseUrl,
+        hasNps: campaign.questions.length > 0,
+      });
       const result = await sendReviewRequestEmail({
         to: r.email,
-        subject: `Quick favor — how was ${businessName}?`,
-        bodyText: `Hi${r.name ? ` ${r.name}` : ""},\n\nWe'd love your feedback on your recent experience with ${businessName}. It takes 30 seconds:\n\n${responseUrl}\n\nThanks!`,
-        bodyHtml: `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;"><h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Quick favor${safeName ? `, ${safeName}` : ""}</h1><p style="color:#475569;">We'd love your honest feedback on your recent experience with <strong>${businessName.replace(/[<>"]/g, "")}</strong>. It takes 30 seconds.</p><p style="margin:24px 0;"><a href="${responseUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Share feedback →</a></p><p style="color:#94a3b8;font-size:13px;">Thanks for your time.</p></div></body></html>`,
+        subject: `Quick favour: how was ${businessName}?`,
+        bodyText: invite.text,
+        bodyHtml: invite.html,
         unsubscribeUrl: `${APP_URL}/u?t=&s=`,
       });
       if (result.ok) sent++;
@@ -466,12 +467,15 @@ async function notifyInternalAlert(args: {
       if (ownerEmail) {
         const dashUrl = `${APP_URL}${href}`;
         const text = `${who} just left an unhappy survey response (${scoreLabel})${businessName ? ` for ${businessName}` : ""}.\n\nThey were told someone from your team would follow up. Review the response and reach out:\n\n${dashUrl}`;
-        const safeWho = who.replace(/[<>"]/g, "");
-        const safeBiz = (businessName ?? "").replace(/[<>"]/g, "");
-        const html = `<!doctype html><html><body style="font-family:-apple-system,Segoe UI,sans-serif;background:#f8fafc;padding:24px;"><div style="max-width:480px;margin:0 auto;background:#fff;padding:32px;border-radius:12px;border:1px solid #e2e8f0;"><h1 style="margin:0 0 12px;font-size:20px;color:#0f172a;">Unhappy survey response (${scoreLabel})</h1><p style="color:#475569;">${safeWho} just left a low score${safeBiz ? ` for <strong>${safeBiz}</strong>` : ""} and was told someone from your team would follow up.</p><p style="margin:24px 0;"><a href="${dashUrl}" style="display:inline-block;background:#4f46e5;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;font-weight:600;">Review the response →</a></p><p style="color:#94a3b8;font-size:13px;">Reaching out quickly is the best way to turn a detractor around.</p></div></body></html>`;
+        const html = unhappySurveyAlertEmail({
+          who: recipient,
+          businessName,
+          scoreLabel: npsScore !== null ? `${npsScore}/10` : args.ratingSummary !== null ? `${args.ratingSummary}/5` : "Low",
+          dashUrl,
+        });
         const result = await sendReviewRequestEmail({
           to: ownerEmail,
-          subject: `Action needed — unhappy survey response${businessName ? ` (${businessName})` : ""}`,
+          subject: `${recipient ?? "A customer"} left a low score${businessName ? ` for ${businessName}` : ""}`,
           bodyText: text,
           bodyHtml: html,
           unsubscribeUrl: `${APP_URL}/u?t=&s=`, // internal alert is transactional; placeholder

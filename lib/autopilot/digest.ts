@@ -27,7 +27,18 @@ import { prisma } from "@/lib/db/client";
 import { withTenant } from "@/lib/db/with-tenant";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { senderFor } from "@/lib/email/senders";
-import { ctaButton, emailHeading, emailParagraph, emailShell } from "@/lib/email/templates";
+import {
+  BRAND,
+  ctaButton,
+  emailActivityRows,
+  emailBarRows,
+  emailFrog,
+  emailIconChip,
+  emailLabel,
+  emailParagraph,
+  emailPill,
+  emailShell,
+} from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { type RoiHeadline, getRoiHeadline } from "@/lib/roi/summary";
@@ -73,18 +84,51 @@ const LOOP_LABELS: Record<string, string> = {
   escalation: "Escalated to you",
 };
 
+/** Email icon (public/assets/repulabs/email) for each Autopilot loop. */
+const LOOP_ICONS: Record<string, string> = {
+  auto_reply: "icon-auto-reply.png",
+  low_star_draft: "icon-draft-replies.png",
+  review_request: "icon-send.png",
+  voice_review: "icon-voice.png",
+  dispute: "icon-dispute.png",
+  geo_post: "icon-geo.png",
+  inbox_reply: "icon-draft-replies.png",
+  escalation: "icon-escalation.png",
+};
+const loopIcon = (loop: string) => LOOP_ICONS[loop] ?? "icon-auto-reply.png";
+
+/** "£4,820"; falls back to "GBP 4,820" for an unknown currency code. */
+function formatMoney(amount: number, currency: string): string {
+  try {
+    return new Intl.NumberFormat("en-GB", { style: "currency", currency, maximumFractionDigits: 0 }).format(amount);
+  } catch {
+    return `${currency} ${Math.round(amount).toLocaleString("en-GB")}`;
+  }
+}
+
+/** "16 to 22 November" for the week starting `iso`. */
+function weekRange(iso: string): string {
+  const start = new Date(iso);
+  const end = new Date(start.getTime() + 6 * 24 * 60 * 60 * 1000);
+  const day = (d: Date) => d.toLocaleDateString("en-GB", { day: "numeric", timeZone: "UTC" });
+  const month = (d: Date) => d.toLocaleDateString("en-GB", { month: "long", timeZone: "UTC" });
+  return month(start) === month(end)
+    ? `${day(start)} to ${day(end)} ${month(end)}`
+    : `${day(start)} ${month(start)} to ${day(end)} ${month(end)}`;
+}
+
 export type AutopilotDigest = {
   orgId: string;
   orgName: string;
   weekStart: string;
   /** Deterministic or AI-generated one-paragraph intro. */
   intro: string;
-  /** "What I did" — label + count, biggest first. */
-  whatIDid: { label: string; count: number }[];
+  /** "What I did" — label + count, biggest first. `loop` picks the email icon. */
+  whatIDid: { loop: string; label: string; count: number }[];
   /** Total actions in the week. */
   totalActions: number;
   /** "What needs you" — short descriptions of the escalation/draft queue. */
-  needsYou: { label: string; detail: string | null }[];
+  needsYou: { loop: string; label: string; detail: string | null }[];
   needsYouCount: number;
   roi: RoiHeadline;
   recipients: { email: string; name: string | null }[];
@@ -120,10 +164,11 @@ export async function buildAutopilotDigest(
   if (summary.total === 0 && needsRows.length === 0) return null;
 
   const whatIDid = Object.entries(summary.byLoop)
-    .map(([loop, count]) => ({ label: LOOP_LABELS[loop] ?? loop, count }))
+    .map(([loop, count]) => ({ loop, label: LOOP_LABELS[loop] ?? loop, count }))
     .sort((a, b) => b.count - a.count);
 
   const needsYou = needsRows.map((r) => ({
+    loop: r.loop,
     label: LOOP_LABELS[r.loop] ?? r.loop,
     detail: describeDetail(r.detail),
   }));
@@ -282,50 +327,64 @@ export function renderAutopilotDigestEmail(
   const text = lines.join("\n");
 
   // HTML
-  const didRows = digest.whatIDid
-    .map(
-      (w) =>
-        `<tr><td style="padding:4px 8px;color:#475569;">${escapeHtml(w.label)}</td><td style="padding:4px 8px;color:#0f172a;font-weight:600;text-align:right;">${w.count}</td></tr>`,
-    )
-    .join("");
-  const needsRows = digest.needsYou
-    .map(
-      (n) =>
-        `<li style="margin:4px 0;color:#0f172a;font-size:13px;">${escapeHtml(n.label)}${n.detail ? ` — <span style="color:#64748b;">${escapeHtml(n.detail)}</span>` : ""}</li>`,
-    )
-    .join("");
+  const total = digest.totalActions;
+  const hero = `<tr><td style="padding:10px 10px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td class="rl-hero" bgcolor="${BRAND.primary50}" style="background:${BRAND.primary50};border-radius:20px;padding:28px 24px 28px 28px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+          <td style="vertical-align:middle;">
+            <div style="margin:0 0 14px;">${emailPill(escapeHtml(weekRange(digest.weekStart)), "white", BRAND.primary)}</div>
+            <div style="font-size:15px;color:${BRAND.ink2};">This week Autopilot handled</div>
+            <div class="rl-big" style="font-family:'Manrope','DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:64px;line-height:1.05;font-weight:800;letter-spacing:-0.04em;color:${BRAND.ink};">${total}<span style="font-size:22px;letter-spacing:0;color:${BRAND.primary};"> task${total === 1 ? "" : "s"}</span></div>
+            <div style="font-size:15px;line-height:1.55;color:${BRAND.ink2};margin-top:4px;">at ${escapeHtml(digest.orgName)}.</div>
+          </td>
+          <td class="rl-side" width="150" style="width:150px;vertical-align:middle;">${emailFrog(150)}</td>
+        </tr></table>
+      </td>
+    </tr></table>
+  </td></tr>`;
+
+  const revenue =
+    digest.roi.estimatedRevenue > 0
+      ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 6px;"><tr>
+          <td bgcolor="${BRAND.okBg}" style="background:${BRAND.okBg};border-radius:18px;padding:18px 20px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+              <td width="56" style="width:56px;">${emailIconChip("icon-revenue.png", 42)}</td>
+              <td>
+                <div style="font-family:'Manrope','DM Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:26px;line-height:1.1;font-weight:800;color:${BRAND.ink};">${escapeHtml(formatMoney(digest.roi.estimatedRevenue, digest.roi.currency))}</div>
+                <div style="font-size:13.5px;color:${BRAND.ink2};margin-top:2px;">estimated revenue${digest.roi.topDriver !== "—" ? ` &middot; top driver: ${escapeHtml(digest.roi.topDriver)}` : ""}</div>
+              </td>
+            </tr></table>
+          </td>
+        </tr></table>`
+      : "";
 
   const html = emailShell({
     preheader: digest.intro.slice(0, 120),
-    title: `${digest.orgName} — Autopilot this week`,
+    title: `${digest.orgName}, Autopilot this week`,
+    hero,
     body: `
-      <div style="font-size:11px;color:#2563eb;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">Reputation Autopilot</div>
-      ${emailHeading(`${digest.orgName} — this week`)}
       ${emailParagraph(escapeHtml(digest.intro))}
+      ${revenue}
       ${
-        didRows
-          ? `<div style="font-size:11px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px;">What Autopilot did</div>
-             <table role="presentation" style="border-collapse:collapse;width:100%;margin:0 0 18px;">${didRows}</table>`
+        digest.whatIDid.length > 0
+          ? `${emailLabel("What Autopilot did", { top: revenue ? 22 : 6 })}
+             ${emailBarRows(digest.whatIDid.map((w) => ({ icon: loopIcon(w.loop), label: w.label, value: w.count })))}`
           : ""
       }
-      <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px;background:#eff6ff;border-left:3px solid #2563eb;border-radius:6px;">
-        <tr><td style="padding:12px 16px;">
-          <div style="font-size:11px;color:#1d4ed8;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">Estimated booked revenue</div>
-          <div style="font-size:24px;font-weight:700;color:#0b0d0e;margin-top:2px;">${escapeHtml(digest.roi.currency)} ${digest.roi.estimatedRevenue.toLocaleString()}</div>
-          <div style="color:#64748b;font-size:12px;margin-top:2px;">${digest.roi.topDriver !== "—" ? `Top driver: ${escapeHtml(digest.roi.topDriver)} · ` : ""}Estimated, not booked.</div>
-        </td></tr>
-      </table>
       ${
-        needsRows
-          ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
-              <tr><td style="padding:12px 16px;">
-                <div style="font-size:11px;color:#b45309;text-transform:uppercase;font-weight:600;letter-spacing:0.04em;margin-bottom:4px;">Needs you (${digest.needsYouCount})</div>
-                <ul style="margin:0;padding-left:18px;color:#0b0d0e;font-size:14px;line-height:1.6;">${needsRows}</ul>
-              </td></tr>
-            </table>`
+        digest.needsYou.length > 0
+          ? `${emailLabel("Waiting for your OK", { right: emailPill(`${digest.needsYouCount} waiting`, "warning"), top: 20 })}
+             ${emailActivityRows(
+               digest.needsYou.slice(0, 6).map((n) => ({
+                 icon: loopIcon(n.loop),
+                 label: n.detail ? `${n.label}: ${n.detail}` : n.label,
+               })),
+             )}
+             ${digest.needsYou.length > 6 ? `<p style="margin:4px 0 0;font-size:13.5px;color:${BRAND.muted};">and ${digest.needsYou.length - 6} more in Autopilot.</p>` : ""}`
           : ""
       }
-      <div style="margin:26px 0 0;">${ctaButton({ url: `${appUrl}/autopilot`, label: "Open Autopilot" })}</div>
+      ${ctaButton({ url: `${appUrl}/autopilot`, label: "Open Autopilot" })}
     `,
     footerNote: `Don't want these? <a href="${unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe with one click</a>.`,
   });

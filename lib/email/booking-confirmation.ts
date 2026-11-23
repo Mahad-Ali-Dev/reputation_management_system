@@ -18,7 +18,21 @@
  */
 
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
-import { type EmailBrand, emailShell } from "@/lib/email/templates";
+import {
+  BRAND,
+  type EmailBrand,
+  ctaButton,
+  emailCalendar,
+  emailDetailCard,
+  emailHero,
+  emailHeroIcon,
+  emailParagraph,
+  emailPersonCard,
+  emailPill,
+  emailShell,
+  emailSmall,
+  emailTeamName,
+} from "@/lib/email/templates";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { Resend } from "resend";
 import { senderFor } from "./senders";
@@ -69,20 +83,28 @@ export async function sendCustomerBookingEmail(args: {
 }): Promise<BookingEmailResult> {
   const subject = `Booking confirmed at ${args.ctx.businessName}`;
   const when = formatHuman(args.ctx.startAt, args.ctx.timezone);
-  const phoneLine = args.ctx.attendeePhone
-    ? `<p>We'll reach you at <strong>${escapeHtml(args.ctx.attendeePhone)}</strong> if anything changes.</p>`
-    : "";
 
+  const biz = escapeHtml(args.ctx.businessName);
   const html = buildEmailShell({
     preheader: `Your booking at ${args.ctx.businessName} is confirmed for ${when}.`,
     title: subject,
+    brand: { name: args.ctx.businessName },
+    hero: emailHero({
+      tone: "success",
+      badge: emailPill("&#10003;&nbsp; Booking confirmed", "white", BRAND.ok),
+      visual: emailCalendar(calendarParts(args.ctx.startAt, args.ctx.timezone)),
+      title: `You're booked in, ${escapeHtml(firstName(args.ctx.attendeeName))}`,
+      sub: "We can't wait to see you. Here are your booking details.",
+    }),
     body: `
-      <p>Hi ${escapeHtml(firstName(args.ctx.attendeeName))},</p>
-      <p>You're booked at <strong>${escapeHtml(args.ctx.businessName)}</strong> for <strong>${escapeHtml(when)}</strong>.</p>
-      ${phoneLine}
-      ${args.ctx.notes ? `<p>What we noted from your call: <em>${escapeHtml(args.ctx.notes)}</em></p>` : ""}
-      <p>To reschedule or cancel, just reply to this email and a human at ${escapeHtml(args.ctx.businessName)} will get back to you.</p>
-      <p style="margin-top:32px;color:#64748b;font-size:13px;">The team at ${escapeHtml(args.ctx.businessName)}</p>
+      ${emailDetailCard([
+        { label: "When", value: escapeHtml(when) },
+        { label: "Where", value: biz },
+        ...(args.ctx.attendeePhone ? [{ label: "Phone", value: escapeHtml(args.ctx.attendeePhone) }] : []),
+        ...(args.ctx.notes ? [{ label: "Notes", value: escapeHtml(args.ctx.notes) }] : []),
+      ])}
+      ${emailParagraph("Need to change or cancel? Just reply to this email and someone from the team will sort it out.", "margin:22px 0 0;text-align:center;")}
+      ${emailSmall(`See you soon,<br>${emailTeamName(args.ctx.businessName)}`, `margin-top:16px;text-align:center;color:${BRAND.ink2};`)}
     `,
   });
   const text = [
@@ -126,27 +148,29 @@ export async function sendOwnerBookingEmail(args: {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? "https://repulabs.com";
   const callDetailUrl = `${appUrl}/phone/calls/${encodeURIComponent(args.callId)}`;
 
+  const contact = [
+    args.ctx.attendeePhone
+      ? `<a href="tel:${encodeURIComponent(args.ctx.attendeePhone)}" style="color:${BRAND.muted};text-decoration:none;">${escapeHtml(args.ctx.attendeePhone)}</a>`
+      : "",
+    `<a href="mailto:${encodeURIComponent(args.ctx.attendeeEmail)}" style="color:${BRAND.muted};text-decoration:none;">${escapeHtml(args.ctx.attendeeEmail)}</a>`,
+  ]
+    .filter(Boolean)
+    .join(" &middot; ");
+
   const html = buildEmailShell({
     preheader: `${args.ctx.attendeeName} booked ${when}.`,
     title: subject,
+    hero: emailHero({
+      tone: "success",
+      badge: emailPill("AI receptionist", "white", BRAND.ok),
+      visual: emailHeroIcon("hero-phone.gif"),
+      title: `New booking from ${escapeHtml(args.ctx.attendeeName)}`,
+      sub: `Your AI receptionist just booked them in for ${escapeHtml(when)}.`,
+    }),
     body: `
-      <p>Hi ${escapeHtml(firstName(args.ctx.ownerName ?? "there"))},</p>
-      <p>Your AI receptionist just booked a meeting.</p>
-      <table cellpadding="0" cellspacing="0" border="0" style="width:100%;border:1px solid #eceeea;border-radius:8px;margin:16px 0;background:#fafbf8;">
-        <tr><td style="padding:14px 16px;">
-          <table cellpadding="0" cellspacing="0" border="0" style="width:100%;font-size:14px;line-height:1.55;color:#0b0d0e;">
-            <tr><td style="padding:4px 0;width:96px;color:#64748b;">Who</td><td style="padding:4px 0;">${escapeHtml(args.ctx.attendeeName)}</td></tr>
-            <tr><td style="padding:4px 0;color:#64748b;">When</td><td style="padding:4px 0;"><strong>${escapeHtml(when)}</strong></td></tr>
-            <tr><td style="padding:4px 0;color:#64748b;">Email</td><td style="padding:4px 0;"><a href="mailto:${encodeURIComponent(args.ctx.attendeeEmail)}" style="color:#2563eb;">${escapeHtml(args.ctx.attendeeEmail)}</a></td></tr>
-            ${args.ctx.attendeePhone ? `<tr><td style="padding:4px 0;color:#64748b;">Phone</td><td style="padding:4px 0;"><a href="tel:${encodeURIComponent(args.ctx.attendeePhone)}" style="color:#2563eb;">${escapeHtml(args.ctx.attendeePhone)}</a></td></tr>` : ""}
-            ${args.ctx.notes ? `<tr><td style="padding:4px 0;color:#64748b;vertical-align:top;">Notes</td><td style="padding:4px 0;">${escapeHtml(args.ctx.notes)}</td></tr>` : ""}
-          </table>
-        </td></tr>
-      </table>
-      <p style="margin:18px 0;">
-        <a href="${callDetailUrl}" style="display:inline-block;background:#0b0d0e;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none;font-weight:500;font-size:13px;">Open call in dashboard →</a>
-      </p>
-      <p style="color:#64748b;font-size:12px;margin-top:24px;">You can change who gets these notifications under <a href="${appUrl}/phone/assistant" style="color:#64748b;">/phone/assistant settings</a>, or disable them entirely.</p>
+      ${emailPersonCard({ name: args.ctx.attendeeName, sub: contact, quote: args.ctx.notes })}
+      ${ctaButton({ url: callDetailUrl, label: "Open the call" })}
+      ${emailSmall(`Change who gets these in <a href="${appUrl}/phone/assistant" style="color:${BRAND.muted};">AI receptionist settings</a>.`)}
     `,
   });
 
@@ -235,9 +259,9 @@ export function firstName(full: string): string {
 
 export function formatHuman(d: Date, tz: string): string {
   try {
-    return d.toLocaleString("en-US", {
+    return d.toLocaleString("en-GB", {
       weekday: "long",
-      month: "short",
+      month: "long",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
@@ -247,9 +271,9 @@ export function formatHuman(d: Date, tz: string): string {
     });
   } catch {
     // Invalid timezone → fall back to UTC; better than throwing.
-    return d.toLocaleString("en-US", {
+    return d.toLocaleString("en-GB", {
       weekday: "long",
-      month: "short",
+      month: "long",
       day: "numeric",
       hour: "numeric",
       minute: "2-digit",
@@ -279,12 +303,24 @@ function buildEmailShell(opts: {
   preheader: string;
   title: string;
   body: string;
+  hero?: string;
   brand?: EmailBrand | null;
 }): string {
   return emailShell({
     preheader: opts.preheader,
     title: opts.title,
     body: opts.body,
+    hero: opts.hero,
     brand: opts.brand ?? null,
   });
+}
+
+/** Month / day / weekday for the calendar tile, in the booking's timezone. */
+function calendarParts(d: Date, tz: string): { month: string; day: string; weekday: string } {
+  const fmt = (o: Intl.DateTimeFormatOptions, zone: string) => d.toLocaleDateString("en-GB", { ...o, timeZone: zone });
+  try {
+    return { month: fmt({ month: "short" }, tz), day: fmt({ day: "numeric" }, tz), weekday: fmt({ weekday: "long" }, tz) };
+  } catch {
+    return { month: fmt({ month: "short" }, "UTC"), day: fmt({ day: "numeric" }, "UTC"), weekday: fmt({ weekday: "long" }, "UTC") };
+  }
 }

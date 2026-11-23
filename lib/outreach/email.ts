@@ -1,9 +1,17 @@
 import { senderAsBusiness } from "@/lib/email/senders";
 import {
+  BRAND,
   ctaButton,
-  emailHeading,
+  emailAccentTint,
+  emailFirstName,
+  emailHero,
+  emailHeroIcon,
   emailParagraph,
   emailShell,
+  emailSmall,
+  emailStarRow,
+  emailTeamName,
+  emailUnsubscribeLine,
   escapeHtml,
 } from "@/lib/email/templates";
 import { Resend } from "resend";
@@ -106,25 +114,32 @@ The ${args.businessName} team
 To unsubscribe: ${args.unsubscribeUrl}`;
 
   // Rendered through the SHARED shell, branded as the BUSINESS. This email goes
-  // to their customer, who has no relationship with Repulabs — our masthead on
-  // it reads as a third party asking for a review, which is both confusing and a
-  // worse conversion story. The old hand-rolled markup also skipped the
-  // preheader and the Outlook-safe button the shell provides.
+  // to their customer, who has no relationship with Repulabs, so the masthead,
+  // hero tint and button all carry the business's own brand.
+  const biz = escapeHtml(args.businessName);
+  const accent = args.accentColor ?? null;
+  const first = args.reviewerName ? emailFirstName(args.reviewerName) : null;
   const html = emailShell({
-    preheader: `Share your experience with ${args.businessName}`,
-    title: `How was your experience at ${args.businessName}?`,
+    preheader: `Tap a star to tell ${args.businessName} how your visit went.`,
+    title: `How was your visit to ${args.businessName}?`,
     brand: {
       name: args.businessName,
       logoUrl: args.logoUrl ?? null,
-      accent: args.accentColor ?? null,
+      accent,
     },
+    hero: emailHero({
+      visual: emailHeroIcon("hero-star.gif"),
+      title: first ? `How was your visit, ${escapeHtml(first)}?` : "How was your visit?",
+      sub: `Tap a star to leave ${biz} a review.`,
+      tint: emailAccentTint(accent),
+      extra: emailStarRow(args.reviewLink),
+    }),
     body: `
-      ${emailHeading(`Hi ${name},`)}
-      ${emailParagraph(`Thanks for choosing <strong>${escapeHtml(args.businessName)}</strong>! If you have a moment, we'd love your honest feedback on Google.`)}
-      <div style="margin:26px 0;">${ctaButton({ url: args.reviewLink, label: "Leave a review", accent: args.accentColor ?? null })}</div>
-      ${emailParagraph("Your review helps us improve and helps other locals find us. Thank you!")}
+      ${emailParagraph("Thanks for coming in. Your review helps other locals find us, and we read every single one.", "text-align:center;")}
+      ${ctaButton({ url: args.reviewLink, label: "Leave a review", accent })}
+      ${emailSmall(`Thanks,<br>${emailTeamName(args.businessName)}`, `text-align:center;color:${BRAND.ink2};`)}
     `,
-    footerNote: `Don't want these emails? <a href="${args.unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe</a>`,
+    footerNote: `You're getting this because you visited ${biz}. ${emailUnsubscribeLine(args.unsubscribeUrl)}`,
   });
 
   return { html, text };

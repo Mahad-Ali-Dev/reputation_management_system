@@ -31,7 +31,17 @@ import { createHmac } from "node:crypto";
 import { resolveBrandColorsFromSettings } from "@/lib/account/brand-colors";
 import { withTenant } from "@/lib/db/with-tenant";
 import { resolveBusinessReplyTo } from "@/lib/email/reply-to";
-import { ctaButton, emailShell } from "@/lib/email/templates";
+import {
+  BRAND,
+  ctaButton,
+  emailAccentTint,
+  emailFirstName,
+  emailHero,
+  emailHeroIcon,
+  emailShell,
+  emailUnsubscribeLine,
+  escapeHtml,
+} from "@/lib/email/templates";
 import { googleReviewUrl } from "@/lib/hardware/codes";
 import { logger } from "@/lib/logger";
 import { getHmacSecret } from "@/lib/secrets";
@@ -209,6 +219,7 @@ export async function dispatchReviewRequest(
         reviewLink,
         unsubscribeUrl,
         accentColor,
+        reviewerName: rr.recipientName,
       });
     } else {
       const generated = defaultReviewRequestHtml({
@@ -320,7 +331,7 @@ function safeAttrUrl(value: string | null | undefined): string | null {
  * preheader, no Outlook-safe button, different spacing. The body is still
  * escaped here: it's owner-authored, not owner-trusted HTML.
  */
-function renderEmailHtml(args: {
+export function renderEmailHtml(args: {
   body: string;
   logoUrl: string | null;
   businessName: string;
@@ -328,6 +339,8 @@ function renderEmailHtml(args: {
   unsubscribeUrl: string;
   /** Org's brand primary color (Settings → Brand), CTA button background. */
   accentColor?: string;
+  /** Customer's name, for the hero greeting. */
+  reviewerName?: string | null;
 }): string {
   const escaped = args.body
     .replace(/&/g, "&amp;")
@@ -340,6 +353,8 @@ function renderEmailHtml(args: {
   const unsubscribeHref = safeAttrUrl(args.unsubscribeUrl) ?? "#";
   const accent = args.accentColor ?? null;
 
+  const first = args.reviewerName ? emailFirstName(args.reviewerName) : null;
+  const biz = escapeHtml(args.businessName);
   return emailShell({
     preheader: `Share your experience with ${args.businessName}`,
     title: `How was your experience at ${args.businessName}?`,
@@ -348,11 +363,16 @@ function renderEmailHtml(args: {
       logoUrl: safeAttrUrl(args.logoUrl),
       accent,
     },
+    hero: emailHero({
+      visual: emailHeroIcon("hero-star.gif"),
+      title: first ? `Thanks for visiting, ${escapeHtml(first)}` : `Thanks for visiting ${biz}`,
+      tint: emailAccentTint(accent),
+    }),
     body: `
-      <div style="color:#0b0d0e;font-size:15px;line-height:1.6;">${escaped}</div>
-      <div style="margin:26px 0;">${ctaButton({ url: reviewHref, label: "Leave a review", accent })}</div>
+      <div style="font-size:15.5px;line-height:1.7;color:${BRAND.ink};">${escaped}</div>
+      ${ctaButton({ url: reviewHref, label: "Leave a review", accent })}
     `,
-    footerNote: `Don't want these emails? <a href="${unsubscribeHref}" style="color:inherit;text-decoration:underline;">Unsubscribe</a>`,
+    footerNote: `You're getting this because you visited ${biz}. ${emailUnsubscribeLine(unsubscribeHref)}`,
   });
 }
 

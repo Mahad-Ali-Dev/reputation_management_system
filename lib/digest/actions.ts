@@ -5,10 +5,15 @@ import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { senderFor } from "@/lib/email/senders";
 import {
   ctaButton,
-  emailHeading,
+  emailActivityRows,
+  emailHero,
+  emailHeroIcon,
+  emailLabel,
   emailParagraph,
+  emailPill,
+  emailRatingSummary,
+  emailReviewCard,
   emailShell,
-  emailStatRow,
 } from "@/lib/email/templates";
 import { logger } from "@/lib/logger";
 import { notificationEnabled } from "@/lib/notifications/prefs";
@@ -209,61 +214,55 @@ export function renderDigestEmail(
   const text = lines.join("\n");
 
   // HTML version
-  const starsRows = ([5, 4, 3, 2, 1] as const)
-    .filter((s) => stats.starBreakdown[s] > 0)
-    .map(
-      (s) =>
-        `<tr><td style="padding:4px 8px;color:#475569;">${s}★</td><td style="padding:4px 8px;color:#0f172a;font-weight:600;">${stats.starBreakdown[s]}</td></tr>`,
-    )
-    .join("");
-
-  // Quote card for the best/lowest review — the one bit of colour in the digest,
-  // so the reader sees the sentiment before reading the text.
-  const quote = (
-    tone: "good" | "bad",
-    label: string,
-    body: string | null,
-    who: string | null,
-    rating: number,
-  ) =>
-    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 14px;background:${tone === "good" ? "#ecfdf5" : "#fef2f2"};border-left:3px solid ${tone === "good" ? "#10b981" : "#ef4444"};border-radius:6px;">
-      <tr><td style="padding:12px 16px;">
-        <div style="font-size:11px;color:${tone === "good" ? "#059669" : "#dc2626"};text-transform:uppercase;font-weight:600;letter-spacing:0.04em;">${escapeHtml(label)}</div>
-        <p style="margin:6px 0 0;color:#0b0d0e;font-size:14px;line-height:1.55;">&ldquo;${escapeHtml((body ?? "").slice(0, 240))}&rdquo;</p>
-        <div style="margin-top:6px;color:#64748b;font-size:12px;">— ${escapeHtml(who ?? "Anonymous")} · ${rating}&#9733;</div>
-      </td></tr>
-    </table>`;
+  const n = stats.reviewCount;
+  const pending = stats.pendingReplyCount;
+  const org = escapeHtml(stats.orgName);
 
   const html = emailShell({
     preheader:
-      stats.reviewCount > 0
-        ? `${stats.reviewCount} new review${stats.reviewCount === 1 ? "" : "s"}, ${stats.avgRating.toFixed(2)} average`
-        : "No new reviews yesterday",
-    title: `${stats.orgName} — yesterday's review digest`,
+      n > 0
+        ? `${n} new review${n === 1 ? "" : "s"}, ${stats.avgRating.toFixed(2)} average${pending > 0 ? `. ${pending} waiting for a reply.` : "."}`
+        : `No new reviews yesterday. ${pending} repl${pending === 1 ? "y is" : "ies are"} waiting for you.`,
+    title: `${stats.orgName}, yesterday's review digest`,
+    hero: emailHero({
+      badge: emailPill("Daily digest"),
+      visual: n > 0 ? undefined : emailHeroIcon("hero-star.gif"),
+      title: `Yesterday at ${org}`,
+      sub:
+        n > 0
+          ? `${n} new review${n === 1 ? "" : "s"} came in yesterday.`
+          : "No new reviews came in yesterday, but some replies are waiting for you.",
+      extra:
+        n > 0
+          ? emailRatingSummary({ average: stats.avgRating, count: n, breakdown: stats.starBreakdown })
+          : undefined,
+    }),
     body: `
-      ${emailHeading(stats.orgName)}
-      ${emailParagraph('<span style="color:#64748b;">Yesterday&rsquo;s review digest</span>')}
       ${
-        stats.reviewCount > 0
-          ? `
-      ${emailStatRow([
-        { value: stats.reviewCount, label: "New reviews" },
-        { value: stats.avgRating.toFixed(2), label: "Avg rating" },
-      ])}
-      ${starsRows ? `<table role="presentation" style="border-collapse:collapse;margin:0 0 18px;">${starsRows}</table>` : ""}
-      ${stats.bestReview ? quote("good", "Best review", stats.bestReview.body, stats.bestReview.reviewerName, stats.bestReview.rating) : ""}
-      ${stats.worstReview ? quote("bad", "Lowest review", stats.worstReview.body, stats.worstReview.reviewerName, stats.worstReview.rating) : ""}
-      `
-          : emailParagraph("No new reviews came in yesterday.")
-      }
-      ${
-        stats.pendingReplyCount > 0
-          ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:0 0 18px;background:#fffbeb;border-left:3px solid #f59e0b;border-radius:6px;">
-              <tr><td style="padding:12px 16px;color:#92400e;font-size:14px;font-weight:600;">${stats.pendingReplyCount} repl${stats.pendingReplyCount === 1 ? "y" : "ies"} pending your approval</td></tr>
-            </table>`
+        pending > 0
+          ? `${emailLabel("Needs a reply", { right: emailPill(`${pending} waiting`, "danger") })}
+             ${emailActivityRows([
+               {
+                 icon: "icon-draft-replies.png",
+                 label: `${pending} AI-drafted repl${pending === 1 ? "y is" : "ies are"} ready for your approval`,
+               },
+             ])}`
           : ""
       }
-      <div style="margin:26px 0 0;">${ctaButton({ url: `${appUrl}/reviews`, label: "Open dashboard" })}</div>
+      ${
+        stats.worstReview
+          ? `${emailLabel("Lowest review", { right: emailPill(`${stats.worstReview.rating} star${stats.worstReview.rating === 1 ? "" : "s"}`, "warning"), top: pending > 0 ? 18 : 0 })}
+             ${emailReviewCard({ name: stats.worstReview.reviewerName, rating: stats.worstReview.rating, body: stats.worstReview.body })}`
+          : ""
+      }
+      ${
+        stats.bestReview
+          ? `${emailLabel("Top review", { right: emailPill(`${stats.bestReview.rating} star${stats.bestReview.rating === 1 ? "" : "s"}`, "success"), top: pending > 0 || stats.worstReview ? 18 : 0 })}
+             ${emailReviewCard({ name: stats.bestReview.reviewerName, rating: stats.bestReview.rating, body: stats.bestReview.body })}`
+          : ""
+      }
+      ${n === 0 && pending === 0 ? emailParagraph("Nothing new yesterday.", "text-align:center;") : ""}
+      ${ctaButton({ url: `${appUrl}/reviews`, label: "Open review inbox" })}
     `,
     footerNote: `Don't want these digests? <a href="${unsubscribeUrl}" style="color:inherit;text-decoration:underline;">Unsubscribe with one click</a>.`,
   });

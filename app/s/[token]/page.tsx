@@ -31,10 +31,17 @@ function toPublicQuestion(q: {
 
 export default async function SurveyResponsePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ token: string }>;
+  searchParams: Promise<{ nps?: string | string[] }>;
 }) {
   const { token } = await params;
+  // A number tapped in the invite email arrives as ?nps=n and pre-selects
+  // the first NPS question (the customer can still change it).
+  const npsRaw = (await searchParams).nps;
+  const npsNum = Number(Array.isArray(npsRaw) ? npsRaw[0] : npsRaw);
+  const initialNps = Number.isInteger(npsNum) && npsNum >= 0 && npsNum <= 10 ? npsNum : null;
 
   if (!token || token.length < 20 || token.length > 120) notFound();
 
@@ -103,6 +110,7 @@ export default async function SurveyResponsePage({
         questions={questions}
         thankYouMessage={branding.thankYou ?? null}
         accent={branding.primaryColor ?? null}
+        initialNps={initialNps}
       />
     </ResponsePage>
   );

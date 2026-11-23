@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import { senderFor } from "@/lib/email/senders";
+import { buildReminderHtml } from "@/lib/email/stay-reminder";
 import { logger } from "@/lib/logger";
 import { assertSendableEmailConfig } from "@/lib/outreach/email-guard";
 import { getCronSecret, verifyCronRequest } from "@/lib/secrets";
@@ -194,27 +195,6 @@ async function sendDueReminders(): Promise<SendSummary> {
 // =========================================================================
 // Email body — deliberately mild (compliance with Airbnb's no-coercion policy)
 // =========================================================================
-
-function buildReminderHtml(args: { listingName: string; listingUrl: string }): string {
-  const safeName = args.listingName.replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  return `<!doctype html>
-<html lang="en"><body style="margin:0;padding:0;background:#f6f7f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-<table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f6f7f4;padding:24px 12px;">
-  <tr><td align="center">
-    <table cellpadding="0" cellspacing="0" border="0" width="520" style="max-width:520px;background:#ffffff;border:1px solid #eceeea;border-radius:14px;">
-      <tr><td style="padding:28px;font-size:15px;line-height:1.6;color:#0b0d0e;">
-        <h1 style="margin:0 0 12px;font-size:22px;font-weight:600;letter-spacing:-0.01em;">Hope you enjoyed your stay</h1>
-        <p style="margin:0 0 14px;">Thanks for staying at <strong>${safeName}</strong>. If you have a minute, your host would love to hear how the trip went.</p>
-        <p style="margin:0 0 22px;">
-          <a href="${args.listingUrl}" style="display:inline-block;background:#0b0d0e;color:#fff;padding:11px 20px;border-radius:8px;text-decoration:none;font-weight:500;font-size:14px;">Open the listing on Airbnb</a>
-        </p>
-        <p style="margin:0;font-size:13px;color:#64748b;">You're getting this because you tapped the welcome card at the property and asked for a reminder. We won't email you again about this stay.</p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body></html>`;
-}
 
 function buildReminderText(args: { listingName: string; listingUrl: string }): string {
   return [
