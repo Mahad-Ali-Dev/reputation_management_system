@@ -48,13 +48,11 @@ import { DotGrid, Float, Reveal, ShinyText } from "@/components/landing/anim";
 
 /* ─────────────────────────── shared panel shell ─────────────────────────── */
 
-const PANEL_SHADOW = "0 14px 34px -18px rgba(26,43,95,0.16)";
-
 function Panel({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
+    // Glass panel, matching the rest of the glassmorphism landing page.
     <div
-      className={`relative h-full overflow-hidden rounded-2xl border border-[#e7ecf6] bg-white ${className}`}
-      style={{ boxShadow: PANEL_SHADOW }}
+      className={`glass-surface glass-surface--raised relative h-full overflow-hidden rounded-2xl ${className}`}
     >
       {children}
     </div>
@@ -83,7 +81,10 @@ type Arc = {
 
 const ARCS: Arc[] = [
   { start: { lat: 34.05, lng: -118.24 }, end: { lat: 30.27, lng: -97.74, label: "Austin" } },
-  { start: { lat: 40.71, lng: -74.0, label: "New York" }, end: { lat: 51.51, lng: -0.13, label: "London" } },
+  {
+    start: { lat: 40.71, lng: -74.0, label: "New York" },
+    end: { lat: 51.51, lng: -0.13, label: "London" },
+  },
   { start: { lat: 30.27, lng: -97.74 }, end: { lat: 25.77, lng: -80.19 } },
   { start: { lat: 51.51, lng: -0.13 }, end: { lat: 28.61, lng: 77.21 } },
   { start: { lat: -33.87, lng: 151.21, label: "Sydney" }, end: { lat: 1.35, lng: 103.82 } },
@@ -140,7 +141,7 @@ function WorldMap({
         radius: 0.22,
         color: "#94a3c8",
         shape: "circle",
-        backgroundColor: "white",
+        backgroundColor: "transparent",
       }),
     [map],
   );
@@ -152,7 +153,7 @@ function WorldMap({
   const fullCycleDuration = totalAnimationTime + pauseTime;
 
   return (
-    <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-white font-sans">
+    <div className="relative aspect-[2/1] w-full overflow-hidden rounded-lg bg-transparent font-sans">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`data:image/svg+xml;utf8,${encodeURIComponent(svgMap)}`}
@@ -266,8 +267,22 @@ function WorldMap({
                       className="drop-shadow-lg"
                     />
                     <circle cx={point.x} cy={point.y} r="3" fill={ARC_BLUE} opacity="0.5">
-                      <animate attributeName="r" from="3" to="12" dur="2s" begin={begin} repeatCount="indefinite" />
-                      <animate attributeName="opacity" from="0.6" to="0" dur="2s" begin={begin} repeatCount="indefinite" />
+                      <animate
+                        attributeName="r"
+                        from="3"
+                        to="12"
+                        dur="2s"
+                        begin={begin}
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        from="0.6"
+                        to="0"
+                        dur="2s"
+                        begin={begin}
+                        repeatCount="indefinite"
+                      />
                     </circle>
                   </motion.g>
                   {label && <MapLabel x={point.x} y={point.y} text={label} delay={delay} />}
@@ -546,17 +561,13 @@ function FeatureCard({
   art: ReactNode;
 }) {
   return (
-    <div
-      className="group relative flex h-full min-h-[220px] flex-col gap-3 overflow-hidden rounded-2xl border border-[#e7ecf6] bg-white p-5 pb-28 transition-transform duration-300 ease-out hover:-translate-y-1"
-      style={{ boxShadow: PANEL_SHADOW }}
-    >
+    <div className="glass-surface glass-surface--raised group relative flex h-full min-h-[220px] flex-col gap-3 overflow-hidden rounded-2xl p-5 pb-28 transition-transform duration-300 ease-out hover:-translate-y-1">
       <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7a86a3]">
         {icon}
         {title}
       </span>
       <h4 className="text-lg font-bold leading-snug text-[#0b1220]">
-        {subtitle}{" "}
-        <span className="font-normal text-[#5b6473]">{description}</span>
+        {subtitle} <span className="font-normal text-[#5b6473]">{description}</span>
       </h4>
 
       {/* capability chips — pinned above the corner panel, clear of the art */}
@@ -608,16 +619,28 @@ function DigestArt() {
 
 /* ─────────────────────────── section ─────────────────────────── */
 
-export function LandingCommandCenter() {
+export function LandingCommandCenter({
+  header,
+  transparent = false,
+}: {
+  /** Replaces the built-in header (the new landing passes its own SectionHead). */
+  header?: ReactNode;
+  /** Skip the section's own background so a glass page canvas shows through. */
+  transparent?: boolean;
+} = {}) {
   return (
     <section
       id="command"
-      aria-labelledby="command-heading"
-      className="relative isolate overflow-hidden py-24 sm:py-28"
-      style={{
-        background:
-          "radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #f0f5ff 45%, #f8faff 100%)",
-      }}
+      aria-labelledby={header ? undefined : "command-heading"}
+      className="relative isolate overflow-hidden py-20 sm:py-24"
+      style={
+        transparent
+          ? undefined
+          : {
+              background:
+                "radial-gradient(120% 90% at 50% -10%, #ffffff 0%, #f0f5ff 45%, #f8faff 100%)",
+            }
+      }
     >
       {/* ── decorative background (aria-hidden) ── */}
       <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
@@ -634,38 +657,40 @@ export function LandingCommandCenter() {
 
       <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
         {/* ── header ── */}
-        <div className="mx-auto max-w-3xl text-center">
-          <Reveal>
-            <span
-              className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
-              style={{ borderColor: "#D9DDF7", background: "rgba(255,255,255,0.65)" }}
-            >
-              <ShinyText
-                text="✦ COMMAND CENTER"
-                className="text-[13px] font-bold tracking-[0.16em] text-[#2563eb]"
-              />
-            </span>
-          </Reveal>
-
-          <Reveal delay={0.06}>
-            <h2
-              id="command-heading"
-              className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.025em] text-[#0b1220] sm:text-[56px]"
-            >
-              Every location.{" "}
-              <span className="bg-gradient-to-r from-[#2563eb] to-[#7c3aed] bg-clip-text text-transparent">
-                One pane of glass.
+        {header ?? (
+          <div className="mx-auto max-w-3xl text-center">
+            <Reveal>
+              <span
+                className="inline-flex items-center gap-2 rounded-full border px-4 py-2 backdrop-blur"
+                style={{ borderColor: "#D9DDF7", background: "rgba(255,255,255,0.65)" }}
+              >
+                <ShinyText
+                  text="✦ COMMAND CENTER"
+                  className="text-[13px] font-bold tracking-[0.16em] text-[#2563eb]"
+                />
               </span>
-            </h2>
-          </Reveal>
+            </Reveal>
 
-          <Reveal delay={0.12}>
-            <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#5b6473] sm:text-[19px]">
-              Reviews, messages, calls and reports from every storefront stream
-              into one live command center so nothing slips, anywhere.
-            </p>
-          </Reveal>
-        </div>
+            <Reveal delay={0.06}>
+              <h2
+                id="command-heading"
+                className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.025em] text-[#0b1220] sm:text-[56px]"
+              >
+                Every location.{" "}
+                <span className="bg-gradient-to-r from-[#2563eb] to-[#7c3aed] bg-clip-text text-transparent">
+                  One pane of glass.
+                </span>
+              </h2>
+            </Reveal>
+
+            <Reveal delay={0.12}>
+              <p className="mx-auto mt-5 max-w-[620px] text-[17px] leading-[1.55] text-[#5b6473] sm:text-[19px]">
+                Reviews, messages, calls and reports from every storefront stream into one live
+                command center so nothing slips, anywhere.
+              </p>
+            </Reveal>
+          </div>
+        )}
 
         {/* ── 2×2 command grid ── */}
         <div className="mt-14 grid grid-cols-1 gap-5 md:grid-cols-2">

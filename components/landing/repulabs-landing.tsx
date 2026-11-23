@@ -24,6 +24,7 @@ import { BusinessScroller } from "@/components/landing/business-scroller";
 import { type FaqItem, ScrollFaq } from "@/components/landing/scroll-faq";
 import { StepTimeline, type TimelineStep } from "@/components/landing/step-timeline";
 import { MarketingFooter } from "@/components/landing/marketing-shell";
+import { LandingCommandCenter } from "@/components/landing/sections/command-center";
 import {
   ArrowRight,
   BadgeCheck,
@@ -635,6 +636,30 @@ function Features() {
 
 /* ═══════════════════════════ PRICING ═══════════════════════════ */
 
+/* ═══════════════════════════ COMMAND CENTER ═══════════════════════════ */
+
+/** The multi-location section from the previous landing page (world map, unified
+ *  inbox, volume chart, Autopilot/digest cards), on the glass canvas with this
+ *  page's section heading. */
+function CommandCenter() {
+  return (
+    <LandingCommandCenter
+      transparent
+      header={
+        <SectionHead
+          eyebrow="Command center"
+          title={
+            <>
+              Every location. <span style={{ color: C.pri }}>One pane of glass.</span>
+            </>
+          }
+          sub="Reviews, messages, calls and reports from every location stream into one live command center, so nothing slips."
+        />
+      }
+    />
+  );
+}
+
 function Pricing() {
   const [annual, setAnnual] = useState(true);
   const monthly = 99;
@@ -846,6 +871,7 @@ export function RepulabsLanding() {
       <WhoItsFor />
       <HowItWorks />
       <Features />
+      <CommandCenter />
       <Pricing />
       <Faq />
       <CtaBand />
