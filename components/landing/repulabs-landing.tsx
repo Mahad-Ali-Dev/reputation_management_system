@@ -6,7 +6,7 @@
  *   Nav (transparent → floating pill on scroll) → Hero (rounded blue box with
  *   real product screenshots + integration dock) → Stats tiles → Marquee
  *   → Who it's for → How it works (pinned step cards) → Features (bento)
- *   → Product tour (tabbed screenshots) → Pricing (monthly / annual)
+ *   → Pricing (monthly / annual)
  *   → FAQ (scroll-driven) → CTA band → Footer (reused MarketingFooter).
  *
  * Brand: repulabs LIGHT premium (white / pale-blue, #2563eb primary, rounded,
@@ -19,7 +19,7 @@ import { Logo } from "@/components/shell/logo";
 import { type HowStep, HowItWorksSteps } from "@/components/landing/how-it-works-steps";
 import { type Feature, FeatureParallax } from "@/components/landing/feature-parallax";
 import { IntegrationDock } from "@/components/landing/integration-dock";
-import { ProductWindow, SCREEN_BY_ID, SCREENS, type ScreenId } from "@/components/landing/product-screens";
+import { ProductWindow, SCREENS, type ScreenId } from "@/components/landing/product-screens";
 import { BusinessScroller } from "@/components/landing/business-scroller";
 import { type FaqItem, ScrollFaq } from "@/components/landing/scroll-faq";
 import { StepTimeline, type TimelineStep } from "@/components/landing/step-timeline";
@@ -140,7 +140,6 @@ function Nav() {
   const links = [
     { href: "#features", label: "Features" },
     { href: "#how", label: "How it works" },
-    { href: "#tour", label: "Tour" },
     { href: "#pricing", label: "Pricing" },
     { href: "#faq", label: "FAQ" },
   ];
@@ -631,42 +630,6 @@ function Features() {
   );
 }
 
-/* ═══════════════════════════ PRODUCT TOUR ═══════════════════════════ */
-
-function Tour() {
-  const [tab, setTab] = useState<ScreenId>("dashboard");
-  const active = SCREEN_BY_ID[tab];
-  return (
-    <section id="tour" className="py-20 sm:py-24">
-      <div className={MAXW}>
-        <SectionHead eyebrow="Take the tour" title="See the real workspace." sub="Pick a tab to see the actual screen, in dark mode." />
-        <div className="mx-auto mt-10 flex max-w-[1000px] flex-col items-center">
-          <div className="flex max-w-xl flex-wrap items-center justify-center gap-1.5">
-            {SCREENS.map((t) => {
-              const on = tab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setTab(t.id)}
-                  className="rounded-full px-4 py-2 text-[13px] font-semibold transition-all"
-                  style={{ background: on ? C.pri : "transparent", color: on ? "#fff" : C.mute, boxShadow: on ? "0 10px 22px -10px rgba(37,99,235,.55)" : "none" }}
-                >
-                  {t.label}
-                </button>
-              );
-            })}
-          </div>
-          <p className="mt-4 max-w-md text-center text-[14.5px]" style={{ color: C.mute }}>{active.line}</p>
-          <div className="mt-6 w-full">
-            <ProductWindow id={tab} />
-          </div>
-        </div>
-      </div>
-    </section>
-  );
-}
-
 /* ═══════════════════════════ PRICING ═══════════════════════════ */
 
 function Pricing() {
@@ -880,7 +843,6 @@ export function RepulabsLanding() {
       <WhoItsFor />
       <HowItWorks />
       <Features />
-      <Tour />
       <Pricing />
       <Faq />
       <CtaBand />
