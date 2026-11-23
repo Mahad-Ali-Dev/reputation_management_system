@@ -17,29 +17,28 @@
 
 import { Logo } from "@/components/shell/logo";
 import { type HowStep, HowItWorksSteps } from "@/components/landing/how-it-works-steps";
+import { type Feature, FeatureParallax } from "@/components/landing/feature-parallax";
 import { IntegrationDock } from "@/components/landing/integration-dock";
+import { ProductWindow, SCREEN_BY_ID, SCREENS, type ScreenId } from "@/components/landing/product-screens";
 import { type FaqItem, ScrollFaq } from "@/components/landing/scroll-faq";
+import { StepTimeline, type TimelineStep } from "@/components/landing/step-timeline";
 import { MarketingFooter } from "@/components/landing/marketing-shell";
 import {
   ArrowRight,
   BadgeCheck,
   BarChart3,
-  Bot,
-  Building2,
   Check,
   Clock,
   Inbox,
-  MapPin,
   Phone,
-  Send,
+  QrCode,
   Sparkles,
   Star,
   TrendingUp,
-  Users,
-  Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { type ComponentType, type CSSProperties, useEffect, useState } from "react";
+import { animate, useInView, useReducedMotion } from "motion/react";
+import { type ComponentType, type CSSProperties, useEffect, useRef, useState } from "react";
 
 /* ─────────────────────────── palette ─────────────────────────── */
 
@@ -218,93 +217,6 @@ function Nav() {
 
 /* ═══════════════════════════════ HERO ═══════════════════════════════ */
 
-/* Real product screenshots (the live app, dark mode, with data). */
-const SCREENS = [
-  {
-    id: "dashboard",
-    label: "Dashboard",
-    path: "dashboard",
-    src: "/assets/repulabs/landing/screens/dashboard.png",
-    w: 1365,
-    h: 594,
-    line: "Your whole reputation at a glance, with Repulabs AI ready to answer anything.",
-  },
-  {
-    id: "autopilot",
-    label: "AI Autopilot",
-    path: "autopilot",
-    src: "/assets/repulabs/landing/screens/autopilot.png",
-    w: 1354,
-    h: 591,
-    line: "One switch runs the whole loop — 5★ replies published, everything else drafted to approve.",
-  },
-  {
-    id: "inbox",
-    label: "Review inbox",
-    path: "reviews",
-    src: "/assets/repulabs/landing/screens/review-inbox.png",
-    w: 1365,
-    h: 595,
-    line: "Every review across every platform in one queue, with AI drafting the reply you approve.",
-  },
-  {
-    id: "devices",
-    label: "Device Manager",
-    path: "devices",
-    src: "/assets/repulabs/landing/screens/device-manager.png",
-    w: 1365,
-    h: 597,
-    line: "QR plaques and cards that send customers straight to a review, with scan and impact tracking.",
-  },
-  {
-    id: "analytics",
-    label: "Analytics",
-    path: "analytics",
-    src: "/assets/repulabs/landing/screens/analytics.png",
-    w: 1365,
-    h: 595,
-    line: "Trends, rating breakdowns and sources — see exactly how your reputation is moving.",
-  },
-] as const;
-type ScreenId = (typeof SCREENS)[number]["id"];
-
-const SCREEN_BY_ID = Object.fromEntries(SCREENS.map((s) => [s.id, s])) as Record<
-  ScreenId,
-  (typeof SCREENS)[number]
->;
-
-/** A dark browser-window chrome wrapping a real product screenshot. */
-function ProductWindow({ id, priority }: { id: ScreenId; priority?: boolean }) {
-  const screen = SCREEN_BY_ID[id];
-  return (
-    <div
-      className="overflow-hidden rounded-[16px] border"
-      style={{ borderColor: "rgba(255,255,255,.12)", background: "#0b0f1a", boxShadow: "0 30px 80px -34px rgba(0,0,0,.65)" }}
-    >
-      <div
-        className="flex items-center gap-1.5 px-3.5 py-2.5"
-        style={{ background: "#11151f", borderBottom: "1px solid rgba(255,255,255,.07)" }}
-      >
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#ff5f57" }} />
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#febc2e" }} />
-        <span className="h-2.5 w-2.5 rounded-full" style={{ background: "#28c840" }} />
-        <span className="ml-3 truncate text-[11px] font-medium" style={{ color: "rgba(255,255,255,.4)" }}>
-          app.repulabs.com/{screen.path}
-        </span>
-      </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={screen.src}
-        alt={`Repulabs ${screen.label} — dark mode`}
-        width={screen.w}
-        height={screen.h}
-        className="block h-auto w-full"
-        loading={priority ? "eager" : "lazy"}
-      />
-    </div>
-  );
-}
-
 function Hero() {
   const [tab, setTab] = useState<ScreenId>("dashboard");
   return (
@@ -451,65 +363,106 @@ function MiniRatingCard() {
 
 /* ═══════════════════════════ STATS STRIP ═══════════════════════════ */
 
+const HAIR_V = "linear-gradient(180deg, transparent, #c9d6ee 20%, #c9d6ee 80%, transparent)";
+const HAIR_H = "linear-gradient(90deg, transparent, #c9d6ee 20%, #c9d6ee 80%, transparent)";
+
+/** Open metric band: big numbers on the page background, divided by fading
+ *  hairlines (no cards). Numbers count up as the band scrolls into view. */
 function StatsStrip() {
   const stats: {
     Icon: ComponentType<{ size?: number; style?: CSSProperties }>;
-    value: string;
+    count: number;
+    decimals?: number;
+    tail?: string;
     suffix?: string;
     suffixColor?: string;
     label: string;
   }[] = [
-    { Icon: Star, value: "4.8", suffix: "★", suffixColor: "#f5a623", label: "Average rating across 12k+ businesses" },
-    { Icon: Clock, value: "6", suffix: "min", label: "To your first automated review request" },
-    { Icon: Phone, value: "24/7", label: "AI phone receptionist, never off the clock" },
-    { Icon: BadgeCheck, value: "0", label: "Lock-in contracts — cancel anytime" },
+    { Icon: Star, count: 4.8, decimals: 1, suffix: "★", suffixColor: "#f5a623", label: "Average rating across 12k+ businesses" },
+    { Icon: Clock, count: 6, suffix: "min", label: "To your first automated review request" },
+    { Icon: Phone, count: 24, tail: "/7", label: "AI phone receptionist, never off the clock" },
+    { Icon: BadgeCheck, count: 0, label: "Lock-in contracts — cancel anytime" },
   ];
   return (
-    <section className="py-12 sm:py-14" style={{ background: C.wash }}>
-      <div className={`${MAXW} grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4`}>
-        {stats.map((s) => (
-          <div
-            key={s.label}
-            className="group relative overflow-hidden rounded-[20px] border p-5 transition-all duration-300 hover:-translate-y-1 sm:p-6"
-            style={{
-              borderColor: C.line,
-              background: C.surface,
-              boxShadow: "0 18px 40px -30px rgba(49,92,170,.45)",
-            }}
-          >
-            {/* soft brand glow in the corner, brighter on hover */}
-            <span
-              aria-hidden
-              className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full opacity-60 transition-opacity duration-300 group-hover:opacity-100"
-              style={{ background: "radial-gradient(closest-side, rgba(37,99,235,.14), transparent)" }}
-            />
-            <span
-              className="relative grid h-10 w-10 place-items-center rounded-xl"
-              style={{ background: "#eef2ff", color: C.pri }}
-            >
-              <s.Icon size={18} />
-            </span>
-            <p
-              className="relative mt-5 flex items-baseline gap-1 font-bold leading-none"
-              style={{ color: C.ink, fontSize: "clamp(30px, 3.4vw, 40px)", letterSpacing: "-0.03em" }}
-            >
-              {s.value}
-              {s.suffix && (
+    <section className="py-12 sm:py-16" style={{ background: C.wash }}>
+      <div className={MAXW}>
+        <div className="grid grid-cols-2 lg:grid-cols-4">
+          {stats.map((s, i) => (
+            <div key={s.label} className="relative flex flex-col items-center px-3 py-7 text-center sm:px-6 lg:py-3">
+              {/* vertical hairline between columns (2 per row on mobile, 4 on desktop) */}
+              {i > 0 && (
                 <span
-                  className="font-semibold"
-                  style={{ fontSize: "0.55em", letterSpacing: 0, color: s.suffixColor ?? C.mute }}
-                >
-                  {s.suffix}
-                </span>
+                  aria-hidden
+                  className={`pointer-events-none absolute left-0 top-1/2 h-[70%] w-px -translate-y-1/2 ${i % 2 === 1 ? "" : "hidden lg:block"}`}
+                  style={{ background: HAIR_V }}
+                />
               )}
-            </p>
-            <p className="relative mt-2.5 text-[13px] leading-snug sm:text-[13.5px]" style={{ color: C.mute }}>
-              {s.label}
-            </p>
-          </div>
-        ))}
+              {/* horizontal hairline between the two mobile rows */}
+              {i >= 2 && (
+                <span
+                  aria-hidden
+                  className="pointer-events-none absolute inset-x-[10%] top-0 h-px lg:hidden"
+                  style={{ background: HAIR_H }}
+                />
+              )}
+              <s.Icon size={18} style={{ color: C.pri }} />
+              <p
+                className="mt-3 flex items-baseline justify-center gap-1 font-bold leading-none"
+                style={{ color: C.ink, fontSize: "clamp(38px, 5vw, 56px)", letterSpacing: "-0.035em" }}
+              >
+                <CountUp to={s.count} decimals={s.decimals} />
+                {s.tail}
+                {s.suffix && (
+                  <span className="font-semibold" style={{ fontSize: "0.42em", letterSpacing: 0, color: s.suffixColor ?? C.mute }}>
+                    {s.suffix}
+                  </span>
+                )}
+              </p>
+              <span aria-hidden className="mt-4 h-[3px] w-7 rounded-full" style={{ background: C.pri }} />
+              <p className="mt-3 max-w-[210px] text-[13.5px] leading-snug sm:text-[14px]" style={{ color: C.mute }}>
+                {s.label}
+              </p>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
+  );
+}
+
+/**
+ * Counts up from 0 when scrolled into view. The server HTML has the real value
+ * (crawlers / no-JS see real figures). On mount, a number that's off-screen
+ * quietly resets to 0 and counts up once it's actually visible; one already on
+ * screen, or reduced motion, just shows the value. Uses no IntersectionObserver
+ * rootMargin, which browsers ignore inside iframes (previews, embeds).
+ */
+function CountUp({ to, decimals = 0 }: { to: number; decimals?: number }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const reduce = useReducedMotion();
+  const visible = useInView(ref, { once: true, amount: 0.6 });
+  const [armed, setArmed] = useState(false);
+  const [value, setValue] = useState(to);
+
+  useEffect(() => {
+    if (reduce || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    if (r.top > window.innerHeight || r.bottom < 0) {
+      setArmed(true);
+      setValue(0);
+    }
+  }, [reduce]);
+
+  useEffect(() => {
+    if (!armed || !visible) return;
+    const controls = animate(0, to, { duration: 1.4, ease: [0.16, 1, 0.3, 1], onUpdate: setValue });
+    return () => controls.stop();
+  }, [armed, visible, to]);
+
+  return (
+    <span ref={ref} style={{ fontVariantNumeric: "tabular-nums" }}>
+      {value.toFixed(decimals)}
+    </span>
   );
 }
 
@@ -537,31 +490,37 @@ function Marquee() {
 
 /* ═══════════════════════════ WHO IT'S FOR ═══════════════════════════ */
 
+const AUDIENCES: TimelineStep[] = [
+  {
+    title: "Single location",
+    description: "Turn every happy customer into a public 5-star review, and quietly catch the unhappy ones before they post.",
+  },
+  {
+    title: "Multi-location brands",
+    description: "One dashboard for every branch — compare ratings, standardise replies and keep each listing on brand.",
+  },
+  {
+    title: "Agencies",
+    description: "Run reputation for all your clients under one roof, with white-label reports and per-client workspaces.",
+  },
+];
+
 function WhoItsFor() {
-  const cards: { Icon: ComponentType<{ size?: number; style?: React.CSSProperties }>; title: string; body: string }[] = [
-    { Icon: Building2, title: "Single location", body: "Turn every happy customer into a public 5-star review, and quietly catch the unhappy ones before they post." },
-    { Icon: MapPin, title: "Multi-location brands", body: "One dashboard for every branch — compare ratings, standardise replies and keep each listing on brand." },
-    { Icon: Users, title: "Agencies", body: "Run reputation for all your clients under one roof, with white-label reports and per-client workspaces." },
-  ];
   return (
     <section className="py-20 sm:py-24" style={{ background: C.surface }}>
       <div className={MAXW}>
-        <SectionHead
-          eyebrow="Who it's for"
-          title="Built for the businesses stars matter to."
-          sub="From a single storefront to a portfolio of locations — repulabs scales with you."
+        <StepTimeline
+          steps={AUDIENCES}
+          ringColor={C.surface}
+          header={
+            <SectionHead
+              eyebrow="Who it's for"
+              title="Built for the businesses stars matter to."
+              sub="From a single storefront to a portfolio of locations — repulabs scales with you."
+              center={false}
+            />
+          }
         />
-        <div className="mt-12 grid gap-5 md:grid-cols-3">
-          {cards.map((c) => (
-            <div key={c.title} className="rounded-2xl border p-6 transition-shadow hover:shadow-[0_24px_50px_-28px_rgba(49,92,170,.4)]" style={{ borderColor: C.line, background: "#fbfcff" }}>
-              <span className="grid h-11 w-11 place-items-center rounded-xl" style={{ background: "#eef2ff", color: C.pri }}>
-                <c.Icon size={20} />
-              </span>
-              <h3 className="mt-4 text-[18px] font-bold" style={{ color: C.ink, letterSpacing: "-0.01em" }}>{c.title}</h3>
-              <p className="mt-2 text-[14px] leading-relaxed" style={{ color: C.mute }}>{c.body}</p>
-            </div>
-          ))}
-        </div>
       </div>
     </section>
   );
@@ -605,9 +564,48 @@ function HowItWorks() {
   );
 }
 
-/* ═══════════════════════════ FEATURES (BENTO) ═══════════════════════════ */
+/* ═══════════════════════════ FEATURES ═══════════════════════════ */
 
-function Bento() {
+const FEATURES: Feature[] = [
+  {
+    id: "inbox",
+    Icon: Inbox,
+    eyebrow: "Unified inbox",
+    title: "Every review, in one queue.",
+    description: "Google, Facebook and Yelp reviews land in one inbox, sorted so the ones that need you come first.",
+    points: ["Filter by rating, platform or location", "A needs-reply queue so nothing slips", "One-click AI reply drafts"],
+    screen: "inbox",
+  },
+  {
+    id: "autopilot",
+    Icon: Sparkles,
+    eyebrow: "AI replies",
+    title: "Replies in your voice, on autopilot.",
+    description: "Five-star reviews get an on-brand reply automatically; everything else is drafted for you to approve.",
+    points: ["Learns your tone from past replies", "Choose how much it handles alone", "A weekly digest of what it did"],
+    screen: "autopilot",
+  },
+  {
+    id: "requests",
+    Icon: QrCode,
+    eyebrow: "Review requests",
+    title: "Ask at the perfect moment.",
+    description: "QR stands, cards, SMS and email send happy customers straight to your review page, and every scan is tracked.",
+    points: ["QR stands, cards and links", "SMS and email requests", "Scans and reviews tracked per device"],
+    screen: "devices",
+  },
+  {
+    id: "analytics",
+    Icon: BarChart3,
+    eyebrow: "Analytics",
+    title: "Watch your rating climb.",
+    description: "New reviews, average rating and where they came from, over any period, with a report you can export.",
+    points: ["Trends and rating breakdowns", "Review sources at a glance", "One-click PDF export"],
+    screen: "analytics",
+  },
+];
+
+function Features() {
   const everyday = [
     "QR plaques & cards", "SMS & email requests", "Smart review routing", "Sentiment analysis",
     "Local SEO & listings", "Surveys & NPS", "Team roles & approvals", "White-label reports",
@@ -618,31 +616,12 @@ function Bento() {
       <div className={MAXW}>
         <SectionHead eyebrow="Features" title="Everything your reputation needs, in one place." sub="Reviews, replies, requests, phone and autopilot — one premium workspace." />
 
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {/* wide: AI replies */}
-          <BentoCard className="md:col-span-2" Icon={Sparkles} title="AI replies in your brand voice" body="Every review gets an on-brand response drafted from your past replies and website. Approve, edit or auto-send.">
-            <div className="mt-4 rounded-xl border p-3" style={{ borderColor: "#dbe6ff", background: "#f3f7ff" }}>
-              <div className="mb-1 flex items-center gap-1.5 text-[11px] font-semibold" style={{ color: C.pri }}><Sparkles size={12} /> Suggested reply</div>
-              <p className="text-[12.5px]" style={{ color: C.ink2 }}>Thank you so much, Sarah! We can’t wait to welcome you back. 🙌</p>
-            </div>
-          </BentoCard>
-
-          {/* tall stat */}
-          <BentoCard Icon={Star} title="4.8★ and climbing" body="Teams lift their average rating within the first 60 days.">
-            <div className="mt-4 flex items-end gap-1.5">
-              {[40, 55, 48, 68, 74, 90].map((h, i) => (
-                <span key={i} className="flex-1 rounded-t-md" style={{ height: h, background: i === 5 ? C.pri : "#dbe6ff" }} />
-              ))}
-            </div>
-          </BentoCard>
-
-          <BentoCard Icon={Phone} title="AI phone receptionist" body="Answers every call 24/7, books jobs and texts callers back — in your business’s voice." />
-          <BentoCard Icon={Send} title="Review requests" body="QR plaques, SMS and email reach customers at the perfect moment to ask." />
-          <BentoCard Icon={Inbox} title="Unified inbox" body="Google, Facebook and Yelp reviews in one feed, triaged and tagged by sentiment." />
+        <div className="mt-14 md:mt-20">
+          <FeatureParallax features={FEATURES} />
         </div>
 
         {/* everyday list */}
-        <div className="mt-6 rounded-2xl border p-6 sm:p-7" style={{ borderColor: C.line, background: "#fbfcff" }}>
+        <div className="mt-20 rounded-2xl border p-6 sm:p-7 md:mt-28" style={{ borderColor: C.line, background: "#fbfcff" }}>
           <div className="flex items-center gap-2">
             <BarChart3 size={16} style={{ color: C.pri }} />
             <h3 className="text-[15px] font-bold" style={{ color: C.ink }}>And the everyday things</h3>
@@ -657,31 +636,6 @@ function Bento() {
         </div>
       </div>
     </section>
-  );
-}
-
-function BentoCard({
-  Icon,
-  title,
-  body,
-  children,
-  className,
-}: {
-  Icon: ComponentType<{ size?: number; style?: React.CSSProperties }>;
-  title: string;
-  body: string;
-  children?: React.ReactNode;
-  className?: string;
-}) {
-  return (
-    <div className={`rounded-2xl border p-6 transition-shadow hover:shadow-[0_24px_50px_-28px_rgba(49,92,170,.4)] ${className ?? ""}`} style={{ borderColor: C.line, background: C.surface }}>
-      <span className="grid h-10 w-10 place-items-center rounded-xl" style={{ background: "#eef2ff", color: C.pri }}>
-        <Icon size={19} />
-      </span>
-      <h3 className="mt-4 text-[17px] font-bold" style={{ color: C.ink, letterSpacing: "-0.01em" }}>{title}</h3>
-      <p className="mt-1.5 text-[14px] leading-relaxed" style={{ color: C.mute }}>{body}</p>
-      {children}
-    </div>
   );
 }
 
@@ -939,7 +893,7 @@ export function RepulabsLanding() {
       <Marquee />
       <WhoItsFor />
       <HowItWorks />
-      <Bento />
+      <Features />
       <Tour />
       <Pricing />
       <Faq />
