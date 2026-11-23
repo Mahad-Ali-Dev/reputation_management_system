@@ -20,6 +20,7 @@ import { type HowStep, HowItWorksSteps } from "@/components/landing/how-it-works
 import { type Feature, FeatureParallax } from "@/components/landing/feature-parallax";
 import { IntegrationDock } from "@/components/landing/integration-dock";
 import { ProductWindow, SCREEN_BY_ID, SCREENS, type ScreenId } from "@/components/landing/product-screens";
+import { BusinessScroller } from "@/components/landing/business-scroller";
 import { type FaqItem, ScrollFaq } from "@/components/landing/scroll-faq";
 import { StepTimeline, type TimelineStep } from "@/components/landing/step-timeline";
 import { MarketingFooter } from "@/components/landing/marketing-shell";
@@ -469,21 +470,13 @@ function CountUp({ to, decimals = 0 }: { to: number; decimals?: number }) {
 /* ═══════════════════════════ MARQUEE ═══════════════════════════ */
 
 function Marquee() {
-  const items = [
-    "Restaurants", "Dental clinics", "Salons & spas", "Gyms & studios", "Cafés", "Law firms",
-    "Auto shops", "Real estate", "Med spas", "Home services", "Veterinary", "Retail",
-  ];
-  const loop = [...items, ...items];
   return (
-    <section className="overflow-hidden border-b py-5" style={{ borderColor: C.line, background: C.surface }} aria-label="Built for local businesses">
-      <div className="rl-marquee flex w-max items-center gap-8">
-        {loop.map((it, i) => (
-          <span key={`${it}-${i}`} className="inline-flex items-center gap-8 text-[15px] font-semibold" style={{ color: C.mute2 }}>
-            {it}
-            <span className="h-1.5 w-1.5 rounded-full" style={{ background: C.line2 }} />
-          </span>
-        ))}
-      </div>
+    <section
+      className="border-b py-7 sm:py-8"
+      style={{ borderColor: C.line, background: C.surface }}
+      aria-label="Built for every kind of local business"
+    >
+      <BusinessScroller />
     </section>
   );
 }
@@ -882,11 +875,6 @@ function CtaBand() {
 export function RepulabsLanding() {
   return (
     <main className="overflow-x-clip" style={{ background: "#eceeea", color: C.ink, fontFamily: "var(--f-ui)" }}>
-      <style>{`
-        @keyframes rl-scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-        .rl-marquee { animation: rl-scroll 36s linear infinite; }
-        @media (prefers-reduced-motion: reduce) { .rl-marquee { animation: none; } }
-      `}</style>
       <Nav />
       <Hero />
       <StatsStrip />
