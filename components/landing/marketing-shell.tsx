@@ -134,12 +134,6 @@ export function MarketingFooter() {
       ],
     },
     {
-      h: "Resources",
-      links: [
-        { label: "Docs", href: "/docs" },
-      ],
-    },
-    {
       h: "Company",
       links: [
         { label: "About", href: "/about" },
@@ -155,6 +149,12 @@ export function MarketingFooter() {
         { label: "Terms", href: "/legal/terms" },
         { label: "Security", href: "/legal/security" },
         { label: "DPA", href: "/legal/dpa" },
+      ],
+    },
+    {
+      h: "Resources",
+      links: [
+        { label: "Docs", href: "/docs" },
       ],
     },
   ];
