@@ -20,14 +20,14 @@
  * Animation primitives (from `@/components/landing/anim`):
  *   - Reveal   → staggered scroll-in fade-up for the header and each panel
  *   - ShinyText→ premium sheen sweep across the COMMAND CENTER badge label
- *   - DotGrid  → interactive dot matrix in the section background
  *   - Float    → gentle idle bob on the floating "new 5-star" chip
  *
  * Brand: light premium — white / very-light-blue surface, 1px #e7ecf6 card
- * borders, blue #2563eb primary, cyan #22d3ee + violet #7c3aed accents,
+ * borders, brand blue #2563eb only (matches the glass landing page),
  * Inter ≤700 (no faux-bold).
  */
 
+import { Float, Reveal, ShinyText } from "@/components/landing/anim";
 import DottedMap from "dotted-map";
 import {
   Activity,
@@ -40,11 +40,10 @@ import {
   MessageSquare,
   Phone,
 } from "lucide-react";
-import type { ComponentType } from "react";
 import { AnimatePresence, motion, useInView } from "motion/react";
-import { useId, useMemo, useRef, useState, type ReactNode } from "react";
+import type { ComponentType } from "react";
+import { type ReactNode, useId, useMemo, useRef, useState } from "react";
 import { Area, AreaChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
-import { DotGrid, Float, Reveal, ShinyText } from "@/components/landing/anim";
 
 /* ─────────────────────────── shared panel shell ─────────────────────────── */
 
@@ -62,7 +61,10 @@ function Panel({ children, className = "" }: { children: ReactNode; className?: 
 /** Small icon+label kicker row shared by every panel (original tag row). */
 function PanelKicker({ icon, label }: { icon: ReactNode; label: string }) {
   return (
-    <span className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7a86a3]">
+    <span
+      className="mb-3 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2563eb]"
+      style={{ fontFamily: "var(--f-mono)" }}
+    >
       {icon}
       {label}
     </span>
@@ -71,7 +73,7 @@ function PanelKicker({ icon, label }: { icon: ReactNode; label: string }) {
 
 /* ─────────────────────────── 1. WorldMap ───────────────────────────
    Port of the founder's WorldMap (dotted-map + motion arcs). Light-only:
-   #94a3c8 dots, arcs sweep blue #2563eb → cyan #22d3ee, comet heads ride
+   #94a3c8 dots, arcs sweep blue #2563eb → light blue #60a5fa, comet heads ride
    each arc via CSS offset-path, endpoints pulse, labels fade in. */
 
 type Arc = {
@@ -91,7 +93,7 @@ const ARCS: Arc[] = [
 ];
 
 const ARC_BLUE = "#2563eb";
-const ARC_CYAN = "#22d3ee";
+const ARC_CYAN = "#60a5fa";
 
 function projectPoint(lat: number, lng: number) {
   const x = (lng + 180) * (800 / 360);
@@ -115,7 +117,7 @@ function MapLabel({ x, y, text, delay }: { x: number; y: number; text: string; d
     >
       <foreignObject x={x - 50} y={y - 35} width="100" height="30" className="block">
         <div className="flex h-full items-center justify-center">
-          <span className="rounded-md border border-[#e7ecf6] bg-white/95 px-2 py-0.5 text-sm font-medium text-[#0b1220] shadow-sm">
+          <span className="rounded-md bg-white/95 px-2 py-0.5 text-sm font-medium text-[#0b1220] shadow-[0_4px_12px_-6px_rgba(16,24,40,.3)]">
             {text}
           </span>
         </div>
@@ -300,7 +302,7 @@ function WorldMap({
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="absolute bottom-4 left-4 rounded-lg border border-[#e7ecf6] bg-white/90 px-3 py-2 text-sm font-medium text-[#0b1220] backdrop-blur-sm sm:hidden"
+            className="absolute bottom-4 left-4 rounded-lg bg-white/90 px-3 py-2 text-sm font-medium text-[#0b1220] shadow-md backdrop-blur-sm sm:hidden"
           >
             {hoveredLocation}
           </motion.div>
@@ -316,14 +318,13 @@ function WorldMap({
    start animating once scrolled into view. */
 
 /* Each row carries either a real brand SVG (`brand`) or a lucide glyph on a
-   tinted tile (`Icon` + `tint`) for the system channels that have no logo. */
+   brand-blue tile (`Icon`) for the system channels that have no logo. */
 type FeedMessage = {
   title: string;
   time: string;
   content: string;
   brand?: string;
   Icon?: ComponentType<{ size?: number; className?: string }>;
-  tint?: string;
 };
 
 const BRAND = "/assets/repulabs/landing/integrations";
@@ -346,14 +347,12 @@ const FEED: FeedMessage[] = [
     time: "6m ago",
     content: "Missed call answered callback booked for 2:30 pm.",
     Icon: Phone,
-    tint: "#7c3aed",
   },
   {
     title: "SMS Requests",
     time: "10m ago",
     content: "Review request delivered to 24 of today's customers.",
     Icon: MessageSquare,
-    tint: "#2563eb",
   },
   {
     title: "Instagram",
@@ -366,7 +365,6 @@ const FEED: FeedMessage[] = [
     time: "15m ago",
     content: "Your Monday digest is ready rating climbed to 4.8.",
     Icon: BarChart3,
-    tint: "#0891b2",
   },
 ];
 
@@ -383,7 +381,7 @@ function InboxFeed() {
         {FEED.map((msg, i) => (
           <div
             key={msg.title}
-            className="flex cursor-pointer items-start gap-3 rounded-lg border border-[#e7ecf6] bg-white p-3 transition duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-sm"
+            className="flex cursor-pointer items-start gap-3 rounded-xl bg-white/85 p-3 shadow-[0_6px_16px_-10px_rgba(16,24,40,.25)] transition duration-300 ease-in-out hover:-translate-y-0.5 hover:shadow-[0_10px_22px_-12px_rgba(16,24,40,.35)]"
             style={{
               opacity: 0,
               animation: inView
@@ -393,7 +391,7 @@ function InboxFeed() {
           >
             {msg.brand ? (
               // real brand logo on a white tile with a soft ring
-              <span className="grid h-8 w-8 min-h-[2rem] min-w-[2rem] place-items-center rounded-lg border border-[#e7ecf6] bg-white">
+              <span className="grid h-8 w-8 min-h-[2rem] min-w-[2rem] place-items-center rounded-lg bg-white shadow-[0_2px_6px_-2px_rgba(16,24,40,.18)]">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`${BRAND}/${msg.brand}`}
@@ -409,7 +407,7 @@ function InboxFeed() {
               // system channel — lucide glyph on a tinted tile
               <span
                 className="grid h-8 w-8 min-h-[2rem] min-w-[2rem] place-items-center rounded-lg text-white"
-                style={{ background: msg.tint }}
+                style={{ background: "linear-gradient(160deg,#3b82f6,#1d4ed8)" }}
               >
                 {msg.Icon ? <msg.Icon size={16} /> : null}
               </span>
@@ -473,7 +471,7 @@ function ChartTip({
   if (!active || !payload?.length) return null;
   return (
     <div
-      className="rounded-xl border border-[#e7ecf6] bg-white px-3 py-2"
+      className="rounded-xl bg-white px-3 py-2"
       style={{ boxShadow: "0 10px 26px -12px rgba(26,43,95,0.28)" }}
     >
       <div className="text-xs font-semibold text-[#0b1220]">{label}</div>
@@ -562,11 +560,14 @@ function FeatureCard({
 }) {
   return (
     <div className="glass-surface glass-surface--raised group relative flex h-full min-h-[220px] flex-col gap-3 overflow-hidden rounded-2xl p-5 pb-28 transition-transform duration-300 ease-out hover:-translate-y-1">
-      <span className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.12em] text-[#7a86a3]">
+      <span
+        className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-[#2563eb]"
+        style={{ fontFamily: "var(--f-mono)" }}
+      >
         {icon}
         {title}
       </span>
-      <h4 className="text-lg font-bold leading-snug text-[#0b1220]">
+      <h4 className="text-lg font-semibold leading-snug tracking-[-0.015em] text-[#0b1220]">
         {subtitle} <span className="font-normal text-[#5b6473]">{description}</span>
       </h4>
 
@@ -575,7 +576,7 @@ function FeatureCard({
         {chips.map((chip) => (
           <span
             key={chip}
-            className="whitespace-nowrap rounded-full border border-[#e7ecf6] bg-[#f6f9ff] px-2.5 py-1 text-[11px] font-medium text-[#5b6473]"
+            className="whitespace-nowrap rounded-full bg-[rgba(37,99,235,.08)] px-2.5 py-1 text-[11px] font-medium text-[#283449]"
           >
             {chip}
           </span>
@@ -583,12 +584,12 @@ function FeatureCard({
       </div>
 
       {/* preview panel pinned to bottom right (original thick-framed Card) */}
-      <div className="absolute bottom-0 right-0 h-24 w-28 overflow-hidden rounded-tl-xl border-8 border-b-0 border-r-0 border-[#eef3fc] sm:h-28 sm:w-36">
+      <div className="absolute bottom-0 right-0 h-24 w-28 overflow-hidden rounded-tl-xl border-8 border-b-0 border-r-0 border-white/70 sm:h-28 sm:w-36">
         {art}
       </div>
 
       {/* arrow chip on top — rotates on hover */}
-      <div className="absolute bottom-2.5 right-2.5 z-10 grid h-10 w-10 place-items-center rounded-full border border-[#e7ecf6] bg-white shadow-sm transition-transform duration-300 group-hover:-rotate-45">
+      <div className="absolute bottom-2.5 right-2.5 z-10 grid h-10 w-10 place-items-center rounded-full bg-white shadow-[0_6px_16px_-8px_rgba(16,24,40,.35)] transition-transform duration-300 group-hover:-rotate-45">
         <ArrowRight className="h-4 w-4 text-[#2563eb]" />
       </div>
     </div>
@@ -597,7 +598,7 @@ function FeatureCard({
 
 function AutopilotArt() {
   return (
-    <div className="flex h-full w-full flex-col justify-center gap-1.5 bg-gradient-to-br from-[#2563eb] to-[#22d3ee] p-3">
+    <div className="flex h-full w-full flex-col justify-center gap-1.5 bg-gradient-to-br from-[#3b82f6] to-[#1d4ed8] p-3">
       <div className="h-1.5 w-3/4 rounded-full bg-white/70" />
       <div className="h-1.5 w-1/2 rounded-full bg-white/45" />
       <div className="mt-1 inline-flex w-max items-center gap-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[9px] font-semibold text-[#2563eb]">
@@ -609,7 +610,7 @@ function AutopilotArt() {
 
 function DigestArt() {
   return (
-    <div className="flex h-full w-full items-end gap-1.5 bg-gradient-to-br from-[#7c3aed] to-[#2563eb] p-3">
+    <div className="flex h-full w-full items-end gap-1.5 bg-gradient-to-br from-[#2563eb] to-[#1e3a8a] p-3">
       {[35, 55, 45, 70, 88, 100].map((h) => (
         <div key={h} className="w-full rounded-t-sm bg-white/70" style={{ height: `${h}%` }} />
       ))}
@@ -642,19 +643,6 @@ export function LandingCommandCenter({
             }
       }
     >
-      {/* ── decorative background (aria-hidden) ── */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-        <div
-          className="absolute right-0 top-0 h-[360px] w-[460px]"
-          style={{
-            WebkitMaskImage: "radial-gradient(100% 100% at 100% 0%, #000 0%, transparent 72%)",
-            maskImage: "radial-gradient(100% 100% at 100% 0%, #000 0%, transparent 72%)",
-          }}
-        >
-          <DotGrid color="37, 99, 235" spacing={22} />
-        </div>
-      </div>
-
       <div className="mx-auto w-full max-w-[1200px] px-5 sm:px-8">
         {/* ── header ── */}
         {header ?? (
@@ -676,10 +664,7 @@ export function LandingCommandCenter({
                 id="command-heading"
                 className="mx-auto mt-6 max-w-[16ch] text-balance text-[40px] font-bold leading-[1.04] tracking-[-0.025em] text-[#0b1220] sm:text-[56px]"
               >
-                Every location.{" "}
-                <span className="bg-gradient-to-r from-[#2563eb] to-[#7c3aed] bg-clip-text text-transparent">
-                  One pane of glass.
-                </span>
+                Every location. <span className="text-[#2563eb]">One pane of glass.</span>
               </h2>
             </Reveal>
 
@@ -698,7 +683,7 @@ export function LandingCommandCenter({
           <Reveal className="h-full">
             <Panel className="p-5 sm:p-6">
               <PanelKicker icon={<MapPin className="h-4 w-4" />} label="Live locations" />
-              <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
+              <h3 className="text-xl font-semibold leading-snug tracking-[-0.015em] text-[#0b1220]">
                 Reviews landing from every location.{" "}
                 <span className="font-normal text-[#5b6473]">
                   Watch feedback stream in across the map, live.
@@ -708,7 +693,7 @@ export function LandingCommandCenter({
               <div className="relative mt-4">
                 <div className="absolute left-1/2 top-0 z-10 -translate-x-1/2">
                   <Float amount={5} duration={4.4}>
-                    <div className="flex items-center gap-2 whitespace-nowrap rounded-full border border-[#e7ecf6] bg-white px-3 py-1 text-xs font-medium text-[#0b1220] shadow-md">
+                    <div className="flex items-center gap-2 whitespace-nowrap rounded-full bg-white px-3 py-1 text-xs font-medium text-[#0b1220] shadow-[0_8px_20px_-10px_rgba(16,24,40,.4)]">
                       🌟 New 5-star from Austin, TX
                     </div>
                   </Float>
@@ -723,7 +708,7 @@ export function LandingCommandCenter({
             <Panel className="flex flex-col justify-between gap-4 p-5 sm:p-6">
               <div>
                 <PanelKicker icon={<Inbox className="h-4 w-4" />} label="Unified inbox" />
-                <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
+                <h3 className="text-xl font-semibold leading-snug tracking-[-0.015em] text-[#0b1220]">
                   Every channel, one inbox.{" "}
                   <span className="font-normal text-[#5b6473]">
                     Google, WhatsApp, SMS, socials and your AI phone line.
@@ -742,7 +727,7 @@ export function LandingCommandCenter({
           <Reveal delay={0.12} className="h-full">
             <Panel className="space-y-4 p-5 sm:p-6">
               <PanelKicker icon={<Activity className="h-4 w-4" />} label="repulabs analytics" />
-              <h3 className="text-xl font-bold leading-snug text-[#0b1220]">
+              <h3 className="text-xl font-semibold leading-snug tracking-[-0.015em] text-[#0b1220]">
                 Watch the volume climb.{" "}
                 <span className="font-normal text-[#5b6473]">
                   Requests out, reviews in trending up every month.
