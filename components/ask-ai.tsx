@@ -9,7 +9,7 @@ import {
   MessageSquareReply,
   Phone,
   QrCode,
-  Sparkles,
+  Sparkle,
   X,
 } from "lucide-react";
 import dynamic from "next/dynamic";
@@ -209,7 +209,19 @@ export function AskAi() {
           onClick={() => setOpen(true)}
           className="askai-launcher"
         >
-          <Sparkles size={22} strokeWidth={1.9} aria-hidden="true" />
+          {/* The Repulabs AI frog (same mascot as the dashboard) with a
+              sparkle badge marking it as the AI assistant. */}
+          <img
+            src="/assets/repulabs/ai/frog-launcher.png"
+            alt=""
+            width={38}
+            height={29}
+            className="askai-launcher__frog"
+            draggable={false}
+          />
+          <span className="askai-launcher__badge" aria-hidden="true">
+            <Sparkle size={11} strokeWidth={2.4} />
+          </span>
         </button>
       )}
 
@@ -225,8 +237,19 @@ export function AskAi() {
           {/* biome-ignore lint/a11y/useSemanticElements: dialog role on aside is intentional for slide-over panels */}
           <aside role="dialog" aria-label="Ask repulabs assistant" className="askai-sheet">
             <header className="askai-head">
+              {/* Same frog + sparkle badge as the launcher button. */}
               <span className="askai-mark" aria-hidden="true">
-                <Sparkles size={19} strokeWidth={1.9} />
+                <img
+                  src="/assets/repulabs/ai/frog-launcher.png"
+                  alt=""
+                  width={28}
+                  height={21}
+                  className="askai-mark__frog"
+                  draggable={false}
+                />
+                <span className="askai-mark__badge">
+                  <Sparkle size={9} strokeWidth={2.6} />
+                </span>
               </span>
               <div>
                 <p className="askai-title">Ask Repulabs</p>
@@ -297,7 +320,14 @@ export function AskAi() {
                     >
                       {m.role === "assistant" && (
                         <span className="askai-avatar" aria-hidden="true">
-                          <Sparkles size={13} strokeWidth={2} />
+                          <img
+                            src="/assets/repulabs/ai/frog-launcher.png"
+                            alt=""
+                            width={19}
+                            height={15}
+                            className="askai-avatar__frog"
+                            draggable={false}
+                          />
                         </span>
                       )}
                       <div
@@ -311,7 +341,14 @@ export function AskAi() {
                   {pending && (
                     <div className="askai-row">
                       <span className="askai-avatar" aria-hidden="true">
-                        <Sparkles size={13} strokeWidth={2} />
+                        <img
+                          src="/assets/repulabs/ai/frog-launcher.png"
+                          alt=""
+                          width={19}
+                          height={15}
+                          className="askai-avatar__frog"
+                          draggable={false}
+                        />
                       </span>
                       <div
                         className="askai-bubble askai-bubble--bot"
