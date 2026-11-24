@@ -62,8 +62,8 @@ export default function PrivacyPage() {
 
       <h2>3. Sharing</h2>
       <p>
-        We share data only with the sub-processors listed at{" "}
-        <a href="/legal/subprocessors">/legal/subprocessors</a> and only as needed to operate
+        We share data only with our sub-processors (the current list is available on request
+        from <a href="mailto:info@repulabs.com">info@repulabs.com</a>) and only as needed to operate
         the service. We do not sell your data.
       </p>
 

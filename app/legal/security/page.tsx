@@ -114,8 +114,8 @@ export default function SecurityPage() {
           (access, deletion, portability). DPA available at <a href="/legal/dpa">/legal/dpa</a>.
         </li>
         <li>
-          <strong>Sub-processors</strong> listed at{" "}
-          <a href="/legal/subprocessors">/legal/subprocessors</a> with 30-day notice for additions.
+          <strong>Sub-processors</strong> current list available on request from{" "}
+          <a href="mailto:info@repulabs.com">info@repulabs.com</a>, with 30-day notice for additions.
         </li>
       </ul>
 

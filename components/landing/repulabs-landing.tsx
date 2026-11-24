@@ -137,12 +137,14 @@ function SectionHead({
 
 /* ═══════════════════════════════ NAV ═══════════════════════════════ */
 
-function Nav() {
+/** The landing nav. Other marketing pages (e.g. /legal) reuse it with
+ *  `linkBase="/"` so the section links jump back to the homepage. */
+export function LandingNav({ linkBase = "" }: { linkBase?: string } = {}) {
   const links = [
-    { href: "#features", label: "Features" },
-    { href: "#how", label: "How it works" },
-    { href: "#pricing", label: "Pricing" },
-    { href: "#faq", label: "FAQ" },
+    { href: `${linkBase}#features`, label: "Features" },
+    { href: `${linkBase}#how`, label: "How it works" },
+    { href: `${linkBase}#pricing`, label: "Pricing" },
+    { href: `${linkBase}#faq`, label: "FAQ" },
   ];
   // At the top of the page: the previous full-width, transparent navbar on the
   // page background. Once scrolled: it morphs into a floating dark pill (90%
@@ -864,7 +866,7 @@ function CtaBand() {
 export function RepulabsLanding() {
   return (
     <main className="glass-theme glass-canvas overflow-x-clip" data-glass-mode="light" style={{ color: C.ink, fontFamily: "var(--f-ui)" }}>
-      <Nav />
+      <LandingNav />
       <Hero />
       <StatsStrip />
       <Marquee />

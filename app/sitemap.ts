@@ -40,10 +40,8 @@ const PAGES: Entry[] = [
   { path: "/status", priority: 0.3, changeFrequency: "daily" },
   { path: "/legal/privacy", priority: 0.3, changeFrequency: "yearly" },
   { path: "/legal/terms", priority: 0.3, changeFrequency: "yearly" },
-  { path: "/legal/cookies", priority: 0.2, changeFrequency: "yearly" },
   { path: "/legal/dpa", priority: 0.2, changeFrequency: "yearly" },
   { path: "/legal/security", priority: 0.2, changeFrequency: "yearly" },
-  { path: "/legal/subprocessors", priority: 0.2, changeFrequency: "yearly" },
 ];
 
 export default function sitemap(): MetadataRoute.Sitemap {

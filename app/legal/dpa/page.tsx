@@ -52,8 +52,8 @@ export default function DPAPage() {
 
       <h2>3. Sub-processors</h2>
       <p>
-        Repulabs engages sub-processors listed at{" "}
-        <a href="/legal/subprocessors">/legal/subprocessors</a>. New sub-processors are notified by
+        A current list of the sub-processors Repulabs engages is available on request from{" "}
+        <a href="mailto:info@repulabs.com">info@repulabs.com</a>. New sub-processors are notified by
         email at least 30 days in advance. The Customer may object in writing to{" "}
         <a href="mailto:info@repulabs.com">info@repulabs.com</a>; if Repulabs cannot accommodate the
         objection, the Customer may terminate the Agreement for the affected service.

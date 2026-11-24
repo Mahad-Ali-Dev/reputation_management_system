@@ -159,8 +159,6 @@ export function MarketingFooter() {
         { label: "Terms", href: "/legal/terms" },
         { label: "Security", href: "/legal/security" },
         { label: "DPA", href: "/legal/dpa" },
-        { label: "Sub-processors", href: "/legal/subprocessors" },
-        { label: "Cookies", href: "/legal/cookies" },
       ],
     },
   ];
