@@ -1,4 +1,5 @@
 import { Icon } from "@/components/shell/icon";
+import { LOGO_SIGNAL } from "@/components/shell/logo";
 import { acceptInvite, lookupInvite } from "@/lib/account/actions";
 import { auth } from "@/lib/auth/config";
 import Image from "next/image";
@@ -52,7 +53,7 @@ function CenteredShell({ children }: { children: React.ReactNode }) {
             style={{ borderRadius: 9, objectFit: "contain" }}
           />
           <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.025em" }}>
-            repu<span style={{ color: "var(--pri)" }}>labs</span>
+            repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
           </div>
         </div>
         {children}
@@ -64,10 +65,21 @@ function CenteredShell({ children }: { children: React.ReactNode }) {
 function ErrorState({ title, body }: { title: string; body: string }) {
   return (
     <>
-      <div className="lbl-mono" style={{ color: "var(--bad, #dc2626)", marginBottom: 10, fontWeight: 600 }}>
+      <div
+        className="lbl-mono"
+        style={{ color: "var(--bad, #dc2626)", marginBottom: 10, fontWeight: 600 }}
+      >
         INVITATION UNAVAILABLE
       </div>
-      <h1 style={{ fontSize: 22, fontWeight: 600, margin: 0, letterSpacing: "-0.025em", color: "var(--ink)" }}>
+      <h1
+        style={{
+          fontSize: 22,
+          fontWeight: 600,
+          margin: 0,
+          letterSpacing: "-0.025em",
+          color: "var(--ink)",
+        }}
+      >
         {title}
       </h1>
       <p className="dim" style={{ fontSize: 13.5, marginTop: 8, lineHeight: 1.55 }}>
@@ -149,13 +161,22 @@ export default async function AcceptInvitePage({
       <div className="lbl-mono" style={{ color: "var(--pri)", marginBottom: 10, fontWeight: 600 }}>
         YOU'VE BEEN INVITED
       </div>
-      <h1 style={{ fontSize: 23, fontWeight: 600, margin: 0, letterSpacing: "-0.025em", color: "var(--ink)" }}>
+      <h1
+        style={{
+          fontSize: 23,
+          fontWeight: 600,
+          margin: 0,
+          letterSpacing: "-0.025em",
+          color: "var(--ink)",
+        }}
+      >
         Join {result.orgName}
       </h1>
       <p className="dim" style={{ fontSize: 13.5, marginTop: 8, lineHeight: 1.55 }}>
-        You've been invited to join <strong style={{ color: "var(--ink)" }}>{result.orgName}</strong> as{" "}
-        <strong style={{ color: "var(--ink)" }}>{roleLabel}</strong>. Accept to add this workspace to your
-        account.
+        You've been invited to join{" "}
+        <strong style={{ color: "var(--ink)" }}>{result.orgName}</strong> as{" "}
+        <strong style={{ color: "var(--ink)" }}>{roleLabel}</strong>. Accept to add this workspace
+        to your account.
       </p>
 
       <div

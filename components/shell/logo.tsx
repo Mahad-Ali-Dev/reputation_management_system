@@ -1,6 +1,12 @@
 import Image from "next/image";
 
 /**
+ * The blue of the signal arcs in the logo mark. "labs" in the wordmark uses it
+ * everywhere, so the wordmark always matches the mark beside it.
+ */
+export const LOGO_SIGNAL = "#005AFC";
+
+/**
  * Brand logo. Single source of truth for the repulabs mark.
  *
  * Modes:
@@ -64,7 +70,7 @@ export function Logo({
             top: 1,
           }}
         >
-          repu<span style={{ color: "var(--pri)" }}>labs</span>
+          repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
         </span>
       )}
     </span>

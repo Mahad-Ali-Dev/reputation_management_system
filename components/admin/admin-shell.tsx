@@ -1,4 +1,5 @@
 import { Icon, type IconName } from "@/components/shell/icon";
+import { LOGO_SIGNAL } from "@/components/shell/logo";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -99,8 +100,10 @@ export function AdminShell({
             style={{ borderRadius: 9, objectFit: "contain", background: "#fff", padding: 3 }}
           />
           <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-            <span style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", color: "#fff" }}>
-              repu<span style={{ color: "#5eead4" }}>labs</span>
+            <span
+              style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", color: "#fff" }}
+            >
+              repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
             </span>
             <span
               style={{

@@ -6,6 +6,7 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 import { verifyLoginTotp } from "./actions";
 import "../auth.css";
+import { LOGO_SIGNAL } from "@/components/shell/logo";
 
 export const dynamic = "force-dynamic";
 
@@ -63,7 +64,7 @@ export default async function Login2faPage({
           className="auth-brand-logo"
         />
         <span className="auth-brand-name">
-          repu<span style={{ color: "#5eead4" }}>labs</span>
+          repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
         </span>
       </header>
 

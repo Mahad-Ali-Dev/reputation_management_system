@@ -359,7 +359,8 @@
   color: var(--glass-text, #15132b);
 }
 .app--frame .tb__brandname span {
-  color: var(--glass-accent, #4b3bff);
+  /* the blue of the logo's signal arcs (LOGO_SIGNAL in components/shell/logo.tsx) */
+  color: #005afc;
 }
 .app--frame .app__body {
   position: relative;

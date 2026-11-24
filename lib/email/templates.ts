@@ -116,7 +116,7 @@ export type EmailBrand = {
 };
 
 const wordmark = (size: number) =>
-  `<span style="font-family:${FONT_BODY};font-size:${size}px;font-weight:600;letter-spacing:-0.025em;color:${BRAND.ink};">repu<span style="color:${BRAND.primary};">labs</span></span>`;
+  `<span style="font-family:${FONT_BODY};font-size:${size}px;font-weight:600;letter-spacing:-0.025em;color:${BRAND.ink};">repu<span style="color:#005AFC;">labs</span></span>`;
 
 export function emailShell(opts: {
   preheader: string;

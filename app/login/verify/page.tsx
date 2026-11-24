@@ -1,5 +1,6 @@
 import Image from "next/image";
 import "../auth.css";
+import { LOGO_SIGNAL } from "@/components/shell/logo";
 
 /**
  * /login/verify — NextAuth `pages.verifyRequest` target (lib/auth/config.ts).
@@ -24,7 +25,7 @@ export default function VerifyRequestPage() {
           className="auth-brand-logo"
         />
         <span className="auth-brand-name">
-          repu<span style={{ color: "#5eead4" }}>labs</span>
+          repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
         </span>
       </header>
 
@@ -46,8 +47,8 @@ export default function VerifyRequestPage() {
             Your sign-in link is on its way
           </h1>
           <p className="auth-sub">
-            We emailed you a secure sign-in link. Click it on this device to continue it expires
-            in 15 minutes. Didn&rsquo;t get it? Check your spam folder.
+            We emailed you a secure sign-in link. Click it on this device to continue it expires in
+            15 minutes. Didn&rsquo;t get it? Check your spam folder.
           </p>
           <div className="auth-solo-actions">
             <a href="/login" className="auth-btn-ghost">
