@@ -223,8 +223,56 @@ export function LandingNav({ linkBase = "" }: { linkBase?: string } = {}) {
 
 /* ═══════════════════════════════ HERO ═══════════════════════════════ */
 
+/** How long each hero tab stays up before auto-advancing. */
+const HERO_TAB_MS = 5000;
+
 function Hero() {
   const [tab, setTab] = useState<ScreenId>("dashboard");
+  // Auto-rotate the product tabs. Pauses while the visitor hovers or focuses
+  // the tabs / screenshot, while the browser tab is hidden, and never runs for
+  // reduced-motion visitors. A click restarts the timer from that tab.
+  const reduce = useReducedMotion();
+  const [hovering, setHovering] = useState(false);
+  const [pageHidden, setPageHidden] = useState(false);
+  const [cycle, setCycle] = useState(0);
+  const paused = hovering || pageHidden;
+  const autoplay = !reduce;
+
+  useEffect(() => {
+    const onVis = () => setPageHidden(document.hidden);
+    onVis();
+    document.addEventListener("visibilitychange", onVis);
+    // Warm the cache so the first switch to each screenshot doesn't flash.
+    for (const sc of SCREENS) {
+      const img = new Image();
+      img.src = sc.src;
+    }
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `cycle` restarts the timer after a click
+  useEffect(() => {
+    if (!autoplay || paused) return;
+    const t = window.setTimeout(() => {
+      setTab((cur) => {
+        const i = SCREENS.findIndex((x) => x.id === cur);
+        return SCREENS[(i + 1) % SCREENS.length]?.id ?? cur;
+      });
+    }, HERO_TAB_MS);
+    return () => window.clearTimeout(t);
+  }, [tab, autoplay, paused, cycle]);
+
+  const pick = (id: ScreenId) => {
+    setTab(id);
+    setCycle((c) => c + 1);
+  };
+  const pauseProps = {
+    onMouseEnter: () => setHovering(true),
+    onMouseLeave: () => setHovering(false),
+    onFocus: () => setHovering(true),
+    onBlur: () => setHovering(false),
+  };
+
   return (
     <section className="relative overflow-x-clip px-2.5 pb-10 pt-2.5 sm:px-4">
       {/* the rounded-corner hero box — sits inset below the nav, on the page bg */}
@@ -290,23 +338,46 @@ function Hero() {
             14-day free trial · No card required · Cancel anytime
           </p>
 
-          {/* tab chips */}
-          <div className="mt-9 flex max-w-xl flex-wrap items-center justify-center gap-1.5">
+          {/* tab chips (auto-advancing; the active chip fills up as its time runs) */}
+          <div
+            className="mt-9 flex max-w-xl flex-wrap items-center justify-center gap-1.5"
+            role="tablist"
+            aria-label="Product screens"
+            {...pauseProps}
+          >
             {SCREENS.map((t) => {
               const on = tab === t.id;
               return (
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => setTab(t.id)}
-                  className="rounded-full px-4 py-2 text-[13px] font-semibold transition-all"
+                  role="tab"
+                  aria-selected={on}
+                  onClick={() => pick(t.id)}
+                  className="relative overflow-hidden rounded-full px-4 py-2 text-[13px] font-semibold transition-all"
                   style={on ? { background: "#0b1220", color: "#fff" } : { background: "rgba(255,255,255,.16)", color: "#fff" }}
                 >
-                  {t.label}
+                  {on && autoplay && (
+                    <span
+                      key={`${t.id}-${cycle}`}
+                      aria-hidden
+                      className="rl-hero-tab-progress pointer-events-none absolute inset-y-0 left-0"
+                      style={{
+                        background: "rgba(255,255,255,.16)",
+                        animationDuration: `${HERO_TAB_MS}ms`,
+                        animationPlayState: paused ? "paused" : "running",
+                      }}
+                    />
+                  )}
+                  <span className="relative">{t.label}</span>
                 </button>
               );
             })}
           </div>
+          <style>{`
+            @keyframes rl-hero-tab-progress { from { width: 0%; } to { width: 100%; } }
+            .rl-hero-tab-progress { width: 0%; animation-name: rl-hero-tab-progress; animation-timing-function: linear; animation-fill-mode: forwards; }
+          `}</style>
         </div>
 
         {/* real product screenshot peeking from the bottom edge of the box */}
@@ -317,7 +388,7 @@ function Hero() {
           <div aria-hidden className="absolute -right-4 bottom-10 z-20 hidden w-[196px] rotate-[8deg] lg:block">
             <MiniRatingCard />
           </div>
-          <div className="relative z-10">
+          <div className="relative z-10" {...pauseProps}>
             <ProductWindow id={tab} priority />
           </div>
         </div>
