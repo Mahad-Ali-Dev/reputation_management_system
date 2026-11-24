@@ -56,7 +56,7 @@ export default function TermsPage() {
       <h2>6. Service availability</h2>
       <p>
         We target 99.5% monthly uptime. Downtime, scheduled maintenance, and force-majeure
-        events are excluded from credits. Status: <a href="/status">/status</a>.
+        events are excluded from credits.
       </p>
 
       <h2>7. Termination</h2>

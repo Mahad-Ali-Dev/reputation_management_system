@@ -10,6 +10,9 @@ import {
 } from "@/components/marketing/glass-page";
 import { ArrowUpRight, Download, Mail, Megaphone } from "lucide-react";
 
+// The press kit is sent on request (there is no public brand-assets page).
+const PRESS_KIT_HREF = "mailto:info@repulabs.com?subject=Press%20kit%20request";
+
 const COVERAGE = [
   {
     outlet: "SmartCompany",
@@ -52,8 +55,8 @@ export function PressView() {
         title="Everything you need to write about Repulabs."
         description="Press kit, founder bios, product screenshots and a logo pack, all under permissive terms for editorial use."
       >
-        <HeroButton href="/brand">
-          <Download size={15} /> Download press kit
+        <HeroButton href={PRESS_KIT_HREF}>
+          <Download size={15} /> Request press kit
         </HeroButton>
         <HeroButton href="mailto:info@repulabs.com" ghost>
           Contact media team
@@ -70,7 +73,7 @@ export function PressView() {
               Press kit
             </h2>
             <p className="mt-2 text-[14.5px] leading-relaxed" style={{ color: G.mute }}>
-              The full package, ready to drop into a story.
+              The full package, sent to you on request and ready to drop into a story.
             </p>
             <ul className="mt-5 grid gap-2 sm:grid-cols-2">
               {KIT.map((k) => (
@@ -84,11 +87,11 @@ export function PressView() {
               ))}
             </ul>
             <a
-              href="/brand"
+              href={PRESS_KIT_HREF}
               className="mt-6 inline-flex h-11 w-max items-center gap-2 rounded-full px-5 text-[14px] font-semibold text-white"
               style={{ background: G.pri, boxShadow: "0 12px 24px -12px rgba(37,99,235,.9)" }}
             >
-              Download press kit <ArrowUpRight size={15} />
+              Request press kit <ArrowUpRight size={15} />
             </a>
           </div>
 

@@ -90,8 +90,8 @@ export default function SecurityPage() {
       <h2>5. Incident response</h2>
       <ul>
         <li>
-          24/7 on-call engineering. Service-impacting incidents get a public status update at{" "}
-          <a href="/status">repulabs.com/status</a> within 15 minutes.
+          24/7 on-call engineering. Service-impacting incidents are communicated to affected
+          customers within 15 minutes.
         </li>
         <li>
           Customer-data incidents are disclosed to affected accounts within 72 hours per GDPR Art.

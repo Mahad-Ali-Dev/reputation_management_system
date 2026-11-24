@@ -176,15 +176,6 @@ export function BrandKitPanel({
           </div>
         </div>
 
-        <div
-          className="set-actions"
-          style={{ justifyContent: "flex-start", marginTop: 18 }}
-        >
-          <a href="/brand" className="set-btn set-btn--sm">
-            <Icon name="ext" size={14} className="set-btn__ic" />
-            View brand kit
-          </a>
-        </div>
       </section>
 
       <section className="set-card">
@@ -226,20 +217,6 @@ export function BrandKitPanel({
           </button>
         </div>
 
-        <div
-          className="set-actions"
-          style={{ justifyContent: "flex-start", marginTop: 16 }}
-        >
-          <a
-            href="/brand"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="set-link"
-          >
-            Open full preview
-            <Icon name="ext" size={13} />
-          </a>
-        </div>
       </section>
     </div>
   );

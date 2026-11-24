@@ -41,10 +41,6 @@ export function LandingFooterDark() {
       h: "Resources",
       links: [
         { label: "Docs", href: "/docs" },
-        { label: "API reference", href: "/docs/api" },
-        { label: "Changelog", href: "/changelog" },
-        { label: "Status", href: "/status" },
-        { label: "Brand assets", href: "/brand" },
       ],
     },
     {
@@ -105,9 +101,7 @@ export function LandingFooterDark() {
                     style={{ background: OK, boxShadow: "0 0 8px 2px rgba(16,185,129,0.65)" }}
                   />
                 </span>
-                <Link href="/status" style={{ color: "inherit", textDecoration: "none" }}>
-                  All systems operational
-                </Link>
+                <span>All systems operational</span>
               </div>
               <Link
                 href="/contact"
