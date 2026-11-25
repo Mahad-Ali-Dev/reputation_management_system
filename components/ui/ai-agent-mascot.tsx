@@ -1078,7 +1078,13 @@ export function FrogMascot({
             className="grid transition-[grid-template-rows,opacity] duration-300 ease-out"
             style={{ gridTemplateRows: status ? "1fr" : "0fr", opacity: status ? 1 : 0 }}
           >
-            <div className="overflow-hidden">
+            {/* Clips only vertically while open (that's all the slide needs),
+                so a last letter whose ink overhangs its box, like DM Sans "e",
+                isn't shaved off. Closed, it clips fully so the old status
+                can't widen the pill. */}
+            <div
+              style={status ? { overflowX: "visible", overflowY: "clip" } : { overflow: "hidden" }}
+            >
               <span
                 className={`frog-mascot-status block whitespace-nowrap text-center ${shimmer ? "frog-mascot-shimmer" : ""}`}
                 style={{ fontSize: font * 0.84, lineHeight: 1.3, paddingTop: font * 0.12 }}
