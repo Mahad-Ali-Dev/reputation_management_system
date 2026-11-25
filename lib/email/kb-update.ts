@@ -2,6 +2,7 @@ import { SUPPORT_REPLY_TO } from "@/lib/email/reply-to";
 import {
   BRAND,
   ctaButton,
+  emailCenter,
   emailFrog,
   emailHero,
   emailLabel,
@@ -83,12 +84,17 @@ export async function sendKbUpdateEmail(args: {
 
   const labels = args.changedFields.map((f) => FIELD_LABELS[f] ?? f);
   const count = Math.max(1, labels.length);
-  const bubble = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 6px;"><tr>
+  const bubble = emailCenter(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
     <td bgcolor="#ffffff" style="background:#ffffff;border-radius:18px 18px 18px 6px;padding:9px 16px;box-shadow:0 1px 2px rgba(16,24,40,.05),0 10px 28px -14px rgba(16,24,40,.22);font-size:14px;font-weight:500;color:${BRAND.ink};">I spotted ${count} change${count === 1 ? "" : "s"} on your website</td>
-  </tr></table>`;
+  </tr></table>`,
+    "0 0 6px",
+  );
   const rows = (labels.length > 0 ? labels : ["details"])
     .map(
-      (label) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
+      (
+        label,
+      ) => `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 8px;"><tr>
         <td bgcolor="${BRAND.fill}" style="background:${BRAND.fill};border-radius:14px;padding:13px 16px;">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
             <td width="40" style="width:40px;"><div style="width:28px;height:28px;border-radius:999px;background:${BRAND.okBg};color:${BRAND.ok};font-size:14px;font-weight:700;line-height:28px;text-align:center;">&#10003;</div></td>

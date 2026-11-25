@@ -233,17 +233,35 @@ const TONE_FG: Record<EmailTone, string> = {
   danger: BRAND.danger,
 };
 
+/**
+ * Centre a block in every client. Gmail and Outlook drop `align`/`margin:auto`
+ * on nested tables, so a centred table must sit in a full-width cell that has
+ * align="center" itself. No text-align style on that cell: it would override
+ * the align attribute's table-centring with plain text centring.
+ * `margin` is the vertical spacing around it.
+ */
+export function emailCenter(inner: string, margin = "0"): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:${margin};"><tr>
+    <td align="center">${inner}</td>
+  </tr></table>`;
+}
+
 /** Animated hero icon on a white app-icon tile (`file` is in /assets/repulabs/email). */
 export function emailHeroIcon(file: string): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 20px;"><tr>
-    <td style="background:#ffffff;border-radius:26px;padding:14px;box-shadow:${SHADOW};"><img src="${emailAsset(file)}" width="76" height="76" alt="" style="display:block;width:76px;height:76px;" /></td>
-  </tr></table>`;
+  return emailCenter(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
+    <td bgcolor="#ffffff" style="background:#ffffff;border-radius:26px;padding:14px;box-shadow:${SHADOW};"><img src="${emailAsset(file)}" width="76" height="76" alt="" style="display:block;width:76px;height:76px;" /></td>
+  </tr></table>`,
+    "0 0 20px",
+  );
 }
 
 /** The Repulabs AI frog, animated. Only on brand-tinted heroes (the GIF is matted to it). */
 export function emailFrog(width = 150): string {
   const h = Math.round((width * 190) / 240);
-  return `<img src="${emailAsset("frog.gif")}" width="${width}" height="${h}" alt="Repulabs AI" style="display:block;margin:0 auto;width:${width}px;height:${h}px;" />`;
+  return emailCenter(
+    `<img src="${emailAsset("frog.gif")}" width="${width}" height="${h}" alt="Repulabs AI" style="display:block;margin:0 auto;width:${width}px;height:${h}px;" />`,
+  );
 }
 
 /** Small rounded pill: status badges and tags. */
@@ -276,7 +294,7 @@ export function emailHero(opts: {
   const bg = opts.tint ?? TONE_BG[opts.tone ?? "brand"];
   return `<tr><td style="padding:10px 10px 0;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
-      <td class="rl-hero" bgcolor="${bg}" style="background:${bg};border-radius:20px;padding:34px 28px 32px;text-align:center;">
+      <td class="rl-hero" align="center" bgcolor="${bg}" style="background:${bg};border-radius:20px;padding:34px 28px 32px;text-align:center;">
         ${opts.badge ? `<div style="margin:0 0 16px;">${opts.badge}</div>` : ""}
         ${opts.visual ?? ""}
         <h1 class="rl-h1" style="margin:0;font-family:${FONT_HEAD};font-size:27px;line-height:1.25;font-weight:600;letter-spacing:-0.02em;color:${BRAND.ink};">${opts.title}</h1>
@@ -315,11 +333,16 @@ export function ctaButton(opts: {
   const bg = light ? "#ffffff" : opts.accent || BRAND.primary;
   const fg = light ? BRAND.ink : "#ffffff";
   const glow = light ? "rgba(36,87,255,.9)" : bg;
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:${opts.margin ?? "26px auto 20px"};"><tr>
+  // `margin` is "top auto bottom" (kept for callers); only top/bottom apply now.
+  const [top = "26px", , bottom = "20px"] = (opts.margin ?? "26px auto 20px").split(/\s+/);
+  return emailCenter(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
     <td align="center" bgcolor="${bg}" style="border-radius:999px;box-shadow:0 12px 24px -12px ${glow};">
       <a href="${opts.url}" target="_blank" style="display:inline-block;padding:15px 30px;font-family:${FONT_BODY};font-size:15px;font-weight:600;color:${fg};text-decoration:none;border-radius:999px;">${escapeHtml(opts.label)} &nbsp;&rarr;</a>
     </td>
-  </tr></table>`;
+  </tr></table>`,
+    `${top} 0 ${bottom}`,
+  );
 }
 
 /** Heading inside the card body (h2-sized). */
@@ -514,13 +537,16 @@ export function emailDetailRows(rows: Array<{ label: string; value: string }>): 
 
 /** Tear-off calendar tile for the booking hero. */
 export function emailCalendar(opts: { month: string; day: string; weekday: string }): string {
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 18px;"><tr>
+  return emailCenter(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
     <td width="92" bgcolor="#ffffff" style="width:92px;background:#ffffff;border-radius:18px;box-shadow:${SHADOW};text-align:center;">
       <div style="background:${BRAND.primary};color:#ffffff;font-size:12px;font-weight:700;letter-spacing:.1em;padding:7px 0;border-radius:18px 18px 0 0;">${escapeHtml(opts.month.toUpperCase())}</div>
       <div style="font-family:${FONT_NUM};font-size:38px;line-height:1;font-weight:800;color:${BRAND.ink};padding:12px 0 2px;">${escapeHtml(opts.day)}</div>
       <div style="font-size:12px;color:${BRAND.muted};padding:0 0 12px;">${escapeHtml(opts.weekday)}</div>
     </td>
-  </tr></table>`;
+  </tr></table>`,
+    "0 0 18px",
+  );
 }
 
 /** Big metric tiles. Kept to a table so Outlook lays it out. */
@@ -586,7 +612,10 @@ export function emailRatingSummary(opts: {
 /** Row of five tappable stars that all open `url` (no rating gating). */
 export function emailStarRow(url: string): string {
   const star = `<td style="padding:0 4px;"><a href="${url}" target="_blank" style="display:block;width:46px;height:46px;line-height:46px;border-radius:14px;background:#ffffff;box-shadow:${SHADOW};text-align:center;font-size:24px;color:${BRAND.star};text-decoration:none;">&#9733;</a></td>`;
-  return `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:18px auto 0;"><tr>${star.repeat(5)}</tr></table>`;
+  return emailCenter(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>${star.repeat(5)}</tr></table>`,
+    "18px 0 0",
+  );
 }
 
 /** 0 to 10 recommendation scale. `hrefFor(n)` builds each number's link. */
@@ -690,11 +719,14 @@ export function teamInviteEmail(opts: {
   const org = escapeHtml(opts.orgName);
   const inviter = escapeHtml(opts.inviterName);
 
-  const visual = `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 20px;"><tr>
+  const visual = emailCenter(
+    `<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center"><tr>
     <td>${emailAvatar(opts.inviterName, 64, true)}</td>
     <td style="padding:0 12px;"><div style="width:40px;height:40px;border-radius:999px;background:#ffffff;box-shadow:${SHADOW};"><img src="${emailAsset("icon-send.png")}" width="24" height="24" alt="" style="display:block;width:24px;height:24px;padding:8px;" /></div></td>
     <td><div style="width:64px;height:64px;border-radius:999px;background:#ffffff;box-shadow:${SHADOW};"><img src="${emailAsset("hero-team.gif")}" width="44" height="44" alt="" style="display:block;width:44px;height:44px;padding:10px;" /></div></td>
-  </tr></table>`;
+  </tr></table>`,
+    "0 0 20px",
+  );
 
   const html = emailShell({
     preheader: `${opts.inviterName} invited you to join ${opts.orgName} on Repulabs.`,
