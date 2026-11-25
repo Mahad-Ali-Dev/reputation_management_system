@@ -25,6 +25,7 @@ import { type FaqItem, ScrollFaq } from "@/components/landing/scroll-faq";
 import { StepTimeline, type TimelineStep } from "@/components/landing/step-timeline";
 import { MarketingFooter } from "@/components/landing/marketing-shell";
 import { LandingCommandCenter } from "@/components/landing/sections/command-center";
+import { VideoScrollHero } from "@/components/ui/video-scroll-hero";
 import {
   ArrowRight,
   BadgeCheck,
@@ -709,6 +710,22 @@ function Features() {
 
 /* ═══════════════════════════ PRICING ═══════════════════════════ */
 
+/* ═══════════════════════════ SETUP VIDEO ═══════════════════════════ */
+
+/** Stand-setup walkthrough: starts small and grows to full width on scroll.
+ *  No caption overlay: the video opens on its own title card. */
+function SetupVideo() {
+  return (
+    <section id="video" aria-label="Repulabs stand setup video">
+      <VideoScrollHero
+        videoSrc="/assets/repulabs/landingPage/Repulabs_Stand_Setup_YouTube.mp4"
+        poster="/assets/repulabs/landingPage/stand-setup-poster.jpg"
+        startScale={0.32}
+      />
+    </section>
+  );
+}
+
 /* ═══════════════════════════ COMMAND CENTER ═══════════════════════════ */
 
 /** The multi-location section from the previous landing page (world map, unified
@@ -940,6 +957,7 @@ export function RepulabsLanding() {
       <LandingNav />
       <Hero />
       <StatsStrip />
+      <SetupVideo />
       <Marquee />
       <WhoItsFor />
       <HowItWorks />
