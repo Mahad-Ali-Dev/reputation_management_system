@@ -14,8 +14,8 @@ const btn = "inline-flex h-12 items-center gap-2 rounded-full px-6 text-[15px] f
 
 /**
  * App-wide 404, in the glass design used by the landing and marketing pages:
- * the landing nav, then a raised glass card with the 3D Repulabs AI frog (the
- * same mascot as the dashboard and Ask AI) in "at limit" mode, a gradient "404"
+ * the landing nav, then, straight on the glass page background (no card), the
+ * 3D Repulabs AI frog (the same mascot as the dashboard and Ask AI) in "at limit" mode, a gradient "404"
  * and the way back. The frog is lazy-loaded, so three.js only downloads here.
  */
 export default function NotFound() {
@@ -28,7 +28,7 @@ export default function NotFound() {
       <LandingNav linkBase="/" />
 
       <section className="mx-auto flex w-full max-w-[720px] flex-1 flex-col items-center justify-center px-5 py-14 text-center">
-        <div className="glass-surface glass-surface--raised w-full rounded-[36px] px-6 pb-12 pt-10 sm:px-12">
+        <div className="w-full px-2 pb-6 pt-2">
           {/* The 3D Repulabs AI frog (three.js, lazy-loaded) in "at limit" mode:
               startled, pale and sweating because the page is gone. His name
               pill says what happened. */}
