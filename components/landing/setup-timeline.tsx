@@ -41,7 +41,7 @@ export function SetupTimeline() {
         <StepCard
           minutes="~2 min"
           title="The agent finds & links everything"
-          desc="repulabs locates your Google Business and social listings, imports your historical reviews and builds a voice model from your own content, all on its own."
+          desc="Repulabs locates your Google Business and social listings, imports your historical reviews and builds a voice model from your own content, all on its own."
           points={[
             "Finds your listings for you",
             "Imports historical reviews",

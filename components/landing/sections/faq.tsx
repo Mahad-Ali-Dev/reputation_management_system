@@ -57,7 +57,7 @@ type Faq = {
 const FAQS: Faq[] = [
   {
     id: "faq-setup",
-    question: "How quickly can I set up repulabs?",
+    question: "How quickly can I set up Repulabs?",
     answer:
       "Most teams are sending automated requests within 6 minutes. Connect Google Business, plug in one POS or CRM, and the wizard does the rest.",
     accent: "#7046f7",

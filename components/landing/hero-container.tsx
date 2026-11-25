@@ -199,7 +199,7 @@ function HeroFrame() {
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={`${ART}/home-hero.png`}
-          alt="repulabs reputation command center dashboard"
+          alt="Repulabs reputation command center dashboard"
           decoding="async"
           ref={(n) => {
             if (n && n.complete && n.naturalWidth > 0) setLoaded(true);

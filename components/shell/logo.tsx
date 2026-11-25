@@ -70,7 +70,7 @@ export function Logo({
             top: 1,
           }}
         >
-          repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
+          Repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
         </span>
       )}
     </span>

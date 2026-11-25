@@ -95,7 +95,7 @@ export function AppShell({
             <Icon name="menu" size={18} />
           </button>
 
-          <Link href="/dashboard" className="tb__brand" aria-label="repulabs home">
+          <Link href="/dashboard" className="tb__brand" aria-label="Repulabs home">
             <Image
               src="/favicon.png"
               alt=""
@@ -105,7 +105,7 @@ export function AppShell({
               style={{ borderRadius: 8, objectFit: "contain", flex: "0 0 30px" }}
             />
             <span className="tb__brandname">
-              repu<span>labs</span>
+              Repu<span>labs</span>
             </span>
           </Link>
 

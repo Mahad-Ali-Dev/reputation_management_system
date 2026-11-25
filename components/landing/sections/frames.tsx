@@ -122,7 +122,7 @@ function FrameCell({ frame, isHovered }: { frame: Frame; isHovered: boolean }) {
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={frame.image}
-            alt={`repulabs ${frame.label}`}
+            alt={`Repulabs ${frame.label}`}
             loading="lazy"
             draggable={false}
             className="h-full w-full object-cover object-top"

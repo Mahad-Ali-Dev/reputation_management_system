@@ -13,7 +13,7 @@ export default function ConnectionsLoading() {
     <AppShellServer topBar={<TopBar />} crumbs={["Account", "App Connections"]}>
       <PageHeader
         title="Connections"
-        description="Pull customer data from your CRM and POS, listen on social, and let repulabs ship review requests at the moment of truth."
+        description="Pull customer data from your CRM and POS, listen on social, and let Repulabs ship review requests at the moment of truth."
       />
 
       <div className="grid-4" style={{ gap: 12, marginBottom: 18 }}>

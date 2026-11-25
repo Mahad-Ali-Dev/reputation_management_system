@@ -219,7 +219,7 @@ export function LandingWorkspace() {
 
           <Reveal delay={0.12}>
             <p className="mx-auto mt-6 max-w-[700px] text-[16.5px] leading-[1.6] text-[#5b6473] sm:text-[17.5px]">
-              Stop duct-taping point tools together. repulabs runs the entire reputation
+              Stop duct-taping point tools together. Repulabs runs the entire reputation
               stack in one place, with the same brand voice flowing through every reply.
             </p>
           </Reveal>

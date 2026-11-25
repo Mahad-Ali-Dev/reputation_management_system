@@ -363,7 +363,7 @@ export default async function ConnectionsPage({
             </div>
             <h1 className="ph__title">Connections</h1>
             <p className="ph__sub">
-              Pull customer data from your CRM and POS, listen on social, and let repulabs ship
+              Pull customer data from your CRM and POS, listen on social, and let Repulabs ship
               review requests at the moment of truth.
             </p>
           </div>

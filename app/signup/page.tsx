@@ -195,7 +195,7 @@ function SignupInner() {
           )}
 
           <div className="auth-foot">
-            <span>© repulabs {new Date().getFullYear()}</span>
+            <span>© Repulabs {new Date().getFullYear()}</span>
             <a href="/legal/privacy">Privacy</a>
             <a href="/legal/terms">Terms</a>
           </div>

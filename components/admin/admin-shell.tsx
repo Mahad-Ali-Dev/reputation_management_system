@@ -103,7 +103,7 @@ export function AdminShell({
             <span
               style={{ fontSize: 15, fontWeight: 600, letterSpacing: "-0.02em", color: "#fff" }}
             >
-              repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
+              Repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
             </span>
             <span
               style={{

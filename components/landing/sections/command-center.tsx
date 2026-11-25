@@ -726,7 +726,7 @@ export function LandingCommandCenter({
           {/* 3. Monitoring chart — bottom left */}
           <Reveal delay={0.12} className="h-full">
             <Panel className="space-y-4 p-5 sm:p-6">
-              <PanelKicker icon={<Activity className="h-4 w-4" />} label="repulabs analytics" />
+              <PanelKicker icon={<Activity className="h-4 w-4" />} label="Repulabs analytics" />
               <h3 className="text-xl font-semibold leading-snug tracking-[-0.015em] text-[#0b1220]">
                 Watch the volume climb.{" "}
                 <span className="font-normal text-[#5b6473]">

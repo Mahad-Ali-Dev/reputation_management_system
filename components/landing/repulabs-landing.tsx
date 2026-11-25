@@ -178,7 +178,7 @@ export function LandingNav({ linkBase = "" }: { linkBase?: string } = {}) {
         className={`pointer-events-auto relative mx-auto flex h-14 items-center gap-3 px-5 sm:px-6 ${scrolled ? "w-[90%] max-w-[1180px] rounded-full" : "w-full max-w-[1200px] rounded-none"}`}
         style={headerStyle}
       >
-        <Link href="/" aria-label="repulabs home" style={{ color: "inherit", textDecoration: "none" }}>
+        <Link href="/" aria-label="Repulabs home" style={{ color: "inherit", textDecoration: "none" }}>
           <Logo size={27} />
         </Link>
         {/* From lg up, pinned to the true centre of the bar regardless of the
@@ -585,7 +585,7 @@ function WhoItsFor() {
             <SectionHead
               eyebrow="Who it's for"
               title="Built for the businesses stars matter to."
-              sub="From a single storefront to a portfolio of locations — repulabs scales with you."
+              sub="From a single storefront to a portfolio of locations — Repulabs scales with you."
               center={false}
             />
           }
@@ -847,7 +847,7 @@ function Pricing() {
 const FAQ_ITEMS: FaqItem[] = [
   {
     id: "setup",
-    question: "How quickly can I set up repulabs?",
+    question: "How quickly can I set up Repulabs?",
     answer:
       "Most teams are sending automated requests within 6 minutes. Connect Google Business, plug in one POS or CRM, and the wizard does the rest.",
   },

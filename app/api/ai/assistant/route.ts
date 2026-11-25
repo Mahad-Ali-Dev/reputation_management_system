@@ -48,7 +48,7 @@ const Body = z.object({
   mode: z.enum(["help", "dashboard"]).default("help"),
 });
 
-const SYSTEM_PROMPT = `You are "repulabs Assistant", an in-app help bot for repulabs — a reputation-management SaaS for local businesses.
+const SYSTEM_PROMPT = `You are "Repulabs Assistant", an in-app help bot for Repulabs — a reputation-management SaaS for local businesses.
 
 WHAT THE PRODUCT DOES
 - Aggregates reviews from Google Business Profile (primary), Facebook, and other channels.
@@ -87,7 +87,7 @@ STYLE
 - Speak as the product owner ("you can..."). Never invent features that aren't in this brief.
 - If asked something you don't know, say "I'm not sure — try the docs or info@repulabs.com" instead of making it up.
 - If the user asks how to do something, give the EXACT menu path (e.g. "Settings → Subscription → Cancel").
-- Don't repeat the product description unless the user asks "what is repulabs".`;
+- Don't repeat the product description unless the user asks "what is Repulabs".`;
 
 /**
  * Build an org-scoped context block for `mode: "dashboard"`. Reads a compact

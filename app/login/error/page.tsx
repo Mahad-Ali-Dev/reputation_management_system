@@ -57,7 +57,7 @@ export default async function AuthErrorPage({
           className="auth-brand-logo"
         />
         <span className="auth-brand-name">
-          repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
+          Repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
         </span>
       </header>
 

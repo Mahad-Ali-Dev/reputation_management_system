@@ -240,7 +240,7 @@ function WebsitePreview({
       >
         {/* mock website */}
         <div style={{ padding: "16px 20px", borderBottom: "1px solid var(--uik-divider)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ fontWeight: 700, fontSize: 15 }}>repulabs</span>
+          <span style={{ fontWeight: 700, fontSize: 15 }}>Repulabs</span>
           <span className="uik-mut" style={{ fontSize: 12 }}>Products · Pricing · Resources</span>
         </div>
         <div style={{ padding: "32px 24px" }}>
@@ -688,7 +688,7 @@ function AiView({ config, keyId, currentMode }: { config: WidgetConfigView; keyI
             <PreviewBubble role="bot">We&apos;re open Mon–Fri 9:00 AM–6:00 PM and Sat 10:00 AM–4:00 PM.</PreviewBubble>
           </div>
           <div style={{ padding: "10px 14px", borderTop: "1px solid var(--uik-divider)", textAlign: "center" }}>
-            <span className="uik-mut" style={{ fontSize: 10.5 }}>Powered by repulabs AI</span>
+            <span className="uik-mut" style={{ fontSize: 10.5 }}>Powered by Repulabs AI</span>
           </div>
         </div>
 

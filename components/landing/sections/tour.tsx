@@ -48,7 +48,7 @@ const SECTIONS = [
     description:
       "Google, Facebook and Yelp stream into a single queue the moment they land. AI drafts the reply in your voice, you skim, approve and move on with your day.",
     video: `${VIDEO}/reviews.mp4`,
-    alt: "repulabs Reviews every platform in one moderated queue",
+    alt: "Repulabs Reviews every platform in one moderated queue",
     reverse: false,
   },
   {
@@ -60,7 +60,7 @@ const SECTIONS = [
     description:
       "Upload your FAQs, policies and pricing, the AI learns your business and uses it everywhere: replies, chat, every customer question. Always accurate, always on-brand.",
     video: `${VIDEO}/ai_knowledge_base.mp4`,
-    alt: "repulabs AI Knowledge Base upload docs, the AI learns your business",
+    alt: "Repulabs AI Knowledge Base upload docs, the AI learns your business",
     reverse: true,
   },
   {
@@ -72,7 +72,7 @@ const SECTIONS = [
     description:
       "Draft a week of posts in minutes, publish to Facebook and Instagram on schedule, and keep an eye on every comment, without ever leaving repulabs.",
     video: `${VIDEO}/social_studio.mp4`,
-    alt: "repulabs Social Studio scheduled posts and comment monitoring",
+    alt: "Repulabs Social Studio scheduled posts and comment monitoring",
     reverse: false,
   },
 ] as const;

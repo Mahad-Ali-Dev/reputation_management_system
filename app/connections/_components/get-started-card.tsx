@@ -62,7 +62,7 @@ export function GetStartedCard() {
           style={{ fontSize: 13.5, lineHeight: 1.55, maxWidth: 520, margin: "10px auto 0" }}
         >
           Connections feed the data spine: sync customers from the tools you already use, then let
-          repulabs ship review requests automatically at the moment of truth.
+          Repulabs ship review requests automatically at the moment of truth.
         </p>
       </div>
 

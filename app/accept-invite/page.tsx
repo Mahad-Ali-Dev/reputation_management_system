@@ -53,7 +53,7 @@ function CenteredShell({ children }: { children: React.ReactNode }) {
             style={{ borderRadius: 9, objectFit: "contain" }}
           />
           <div style={{ fontSize: 17, fontWeight: 600, letterSpacing: "-0.025em" }}>
-            repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
+            Repu<span style={{ color: LOGO_SIGNAL }}>labs</span>
           </div>
         </div>
         {children}

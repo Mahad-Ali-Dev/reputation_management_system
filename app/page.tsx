@@ -14,7 +14,7 @@ import { RepulabsLanding } from "@/components/landing/repulabs-landing";
  */
 
 export const metadata = {
-  title: "repulabs — Run your reputation like a system.",
+  title: "Repulabs — Run your reputation like a system.",
   description:
     "The reputation OS for local teams. Reviews, AI replies, requests, a unified inbox, AI phone and autopilot — one premium workspace that keeps every customer moment on brand and on time.",
 };

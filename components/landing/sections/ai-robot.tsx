@@ -151,7 +151,7 @@ export function LandingAiRobot() {
               className="mt-5 max-w-[480px] text-[16px] leading-[1.6] sm:text-[18px]"
               style={{ color: "#aab4cf" }}
             >
-              Every missed call is a missed review. Your repulabs AI phone line
+              Every missed call is a missed review. Your Repulabs AI phone line
               answers instantly, books and reschedules appointments, follows up
               after the visit and turns happy callers into five-star
               reviewers.

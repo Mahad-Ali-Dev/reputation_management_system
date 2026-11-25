@@ -252,7 +252,7 @@ function ShowcaseFrame({
       />
       <PremiumIllustration
         src={`${ART}/${file}`}
-        alt={`${title} repulabs product illustration`}
+        alt={`${title} Repulabs product illustration`}
         glyph={glyph}
         ratio="4 / 3"
         rounded={16}

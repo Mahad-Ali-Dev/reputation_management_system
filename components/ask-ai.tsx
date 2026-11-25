@@ -204,7 +204,7 @@ export function AskAi() {
       {!open && (
         <button
           type="button"
-          aria-label="Ask repulabs assistant"
+          aria-label="Ask Repulabs assistant"
           aria-haspopup="dialog"
           onClick={() => setOpen(true)}
           className="askai-launcher"
@@ -235,7 +235,7 @@ export function AskAi() {
           />
 
           {/* biome-ignore lint/a11y/useSemanticElements: dialog role on aside is intentional for slide-over panels */}
-          <aside role="dialog" aria-label="Ask repulabs assistant" className="askai-sheet">
+          <aside role="dialog" aria-label="Ask Repulabs assistant" className="askai-sheet">
             <header className="askai-head">
               {/* Same frog + sparkle badge as the launcher button. */}
               <span className="askai-mark" aria-hidden="true">

@@ -602,7 +602,7 @@ function EmptyState({
               </span>
               <h3 className="mde-tile__title">Add a device</h3>
               <p className="mde-tile__body">
-                Have a repulabs stand, plaque or card? Scan its QR and enter the code from the box.
+                Have a Repulabs stand, plaque or card? Scan its QR and enter the code from the box.
               </p>
               <ConnectDeviceModal
                 establishments={establishments}

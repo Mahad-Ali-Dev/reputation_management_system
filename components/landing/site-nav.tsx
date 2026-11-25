@@ -160,7 +160,7 @@ export function SiteNav() {
             style={{ height: 40, width: 40, objectFit: "cover" }}
           />
           <span className="text-[22px] font-bold tracking-[-0.02em] text-[#0b1220]">
-            repu<span className="text-[#005AFC]">labs</span>
+            Repu<span className="text-[#005AFC]">labs</span>
           </span>
         </a>
 
