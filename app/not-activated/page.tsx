@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
  * /not-activated — the page customers land on when they scan a QR plaque
  * whose owner hasn't redeemed the activation code yet.
  *
- * A vertical "how it works" flow: each step is a circle (image) with its
+ * The stand-setup video sits under the headline, then a vertical "how it
+ * works" flow: each step is a circle (image) with its
  * instruction beside it, connected by curved arrows — Scan the stand → Sign up
  * → Add your Google review link — then the Activate CTA.
  *
@@ -67,6 +68,30 @@ export default async function NotActivatedPage({
         </div>
 
         <h1 className="na__title">Set up your stand in 3 easy steps</h1>
+
+        {/* The stand-setup walkthrough (same video as the landing page). Plain
+            native player: this page is opened on a phone right after a scan,
+            so it loads nothing until tapped and uses the phone's own controls. */}
+        <figure className="na-video">
+          {/* biome-ignore lint/a11y/useMediaCaption: no captions file yet; the walkthrough's steps are on-screen text and repeated as the step list below */}
+          <video
+            className="na-video__player"
+            controls
+            playsInline
+            preload="none"
+            poster="/assets/repulabs/landingPage/stand-setup-poster.jpg"
+            aria-label="How to set up your Repulabs stand"
+          >
+            <source
+              src="/assets/repulabs/landingPage/Repulabs_Stand_Setup_YouTube.mp4"
+              type="video/mp4"
+            />
+            Your browser can’t play this video.
+          </video>
+          <figcaption className="na-video__cap">
+            Watch the 1½-minute setup, or follow the steps below.
+          </figcaption>
+        </figure>
 
         <div className="na-flow2">
           {STEPS.map((s, i) => {

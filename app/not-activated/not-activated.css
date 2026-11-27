@@ -173,6 +173,26 @@
   margin: 0 0 22px;
 }
 
+/* ---- setup video (under the headline) ---- */
+.na-video {
+  margin: 0 0 26px;
+}
+.na-video__player {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 18px;
+  background: #0b1220;
+  box-shadow: 0 24px 50px -26px rgba(30, 58, 138, 0.55);
+}
+.na-video__cap {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
 /* ---- vertical step flow ---- */
 .na-flow2 {
   display: flex;
